@@ -1,0 +1,6 @@
+[run]
+omit = ./tests/*
+       ./run_mut.py
+       ./run.py
+       ./core/wrappers.py
+       ./cfg/*

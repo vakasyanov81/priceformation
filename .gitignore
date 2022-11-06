@@ -7,7 +7,7 @@ file_prices/
 core/config.py
 *dist/
 .pytest_cache
-.coveragerc
+.coverage
 /parse_config/
 
 venv
