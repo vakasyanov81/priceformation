@@ -28,9 +28,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r common_requirements.txt
         pip install -r dev_requirements.txt
+    - name: Test coverage
+      run: |
+        python -m pytest --cov ./ ./tests --cov-fail-under=90 --cov-config=./.coveragerc --cov-report term-missing:skip-covered  
     - name: Tests with pytest
       run: |
-        python -m pytest ./tests   
+        python -m pytest ./tests    
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
