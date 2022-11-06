@@ -35,7 +35,7 @@ jobs:
         pip install -r dev_requirements.txt
     - name: Test coverage
       run: |
-        python -m pytest --cov ./ ./tests --cov-fail-under=90 --cov-config=./.coveragerc --cov-report term-missing:skip-covered  
+        python -m pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered  
     - name: Tests with pytest
       run: |
         python -m pytest ./tests    
