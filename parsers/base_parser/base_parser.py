@@ -19,6 +19,7 @@ from parsers import data_provider
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 from .base_parser_config import BasePriceParseConfiguration
+from ..data_provider import VendorParams
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
@@ -60,6 +61,8 @@ class BaseParser:
         self.result: List[RowItem] = []
         self._price_config = price_config
         self.type_production = None
+        if not self.is_active:
+            return
         self.logger = LoggerParseProcess(
             repr(self)
         )
@@ -362,7 +365,7 @@ class BaseParser:
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         """ get config for current vendor """
-        return self._price_config.all_vendor_config().get(self.__SUPPLIER_FOLDER_NAME__)
+        return self._price_config.all_vendor_config().get(self.__SUPPLIER_FOLDER_NAME__) or VendorParams(enabled=0)
 
     @classmethod
     def prepare_title(cls, title: str):

@@ -30,6 +30,7 @@ def test_logging_when_wrong_argument():
 
     with patch("core.wrappers.log_msg") as _mock:
         try:
+            # pylint: disable=no-value-for-parameter
             logging_function()
         except TypeError:
             pass
