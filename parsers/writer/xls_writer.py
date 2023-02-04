@@ -4,6 +4,7 @@ write price list logic
 """
 __author__ = "Kasyanov V.A."
 
+import os
 from typing import Optional, Tuple
 import datetime
 from cfg import init_cfg
@@ -23,10 +24,16 @@ class XlsWriter:
         self.driver: IXlsDriver = driver
         self.template: IWriteTemplate = template()
         self.exclude = self.template.exclude()
+        self.create_folder()
         self.driver.init_workbook(self.__FOLDER__, self.get_file_name())
         self.driver.add_sheet("price")
         self.data = parse_result
         self.write()
+
+    def create_folder(self):
+        """ create result folder """
+        if not os.path.exists(self.__FOLDER__):
+            os.makedirs(self.__FOLDER__)
 
     def write(self):
         """ make write """
