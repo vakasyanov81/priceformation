@@ -53,7 +53,7 @@ class TestParsePioner:
 
         assert len(result) == 1
         assert result[0].title == "Автокамера 14.00-24"
-        assert result[0].price_markup == 2350
+        assert result[0].price_markup == 2290
         assert result[0].supplier_name == "Пионер"
         assert result[0].percent_markup == 6.82
 
@@ -111,14 +111,7 @@ class TestParsePioner:
         "params", [
             {
                 "price": 1000,
-                "price_with_markup": 1070,
-                "price_recommended": 1500,
-                "category": "автошины рокбастер xxx"
-            },
-            {
-                "price": 1000,
-                "price_with_markup": 1500,
-                "price_recommended": 1500,
+                "price_with_markup": 1040,
                 "category": "автошины xxx"
             }
         ]

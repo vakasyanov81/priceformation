@@ -25,9 +25,8 @@ class PionerParser(BaseParser):
     __COLUMNS__ = {
         1: RowItem.__TITLE__,
         2: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__PRICE_RECOMMENDED__,
-        6: RowItem.__REST_COUNT__,
-        7: RowItem.__RESERVE_COUNT__
+        4: RowItem.__REST_COUNT__,
+        5: RowItem.__RESERVE_COUNT__
     }
     current_category = None
     current_category_first_chunk = None
@@ -116,15 +115,6 @@ class PionerParser(BaseParser):
         Добавить наценку
         """
 
-        price_opt = item.price_opt
-        price_recommended = item.price_recommended
-        cat_name = self.get_manufacturer_name() or ''
-
-        if not price_opt:
+        if not item.price_opt:
             return
-
-        if 'рокбастер' in cat_name:
-            item.price_markup = self.round_price(price_opt * 1.07)
-            return
-
-        item.price_markup = price_recommended
+        item.price_markup = self.round_price(item.price_opt * 1.04)
