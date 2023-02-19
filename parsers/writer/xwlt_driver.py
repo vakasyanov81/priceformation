@@ -5,7 +5,9 @@ write price list logic via xlsxwriter module
 __author__ = "Kasyanov V.A."
 
 import xlsxwriter
+
 from cfg import init_cfg
+
 from .ixls_driver import IXlsDriver
 
 config = init_cfg()
@@ -55,7 +57,7 @@ class XlsxWriterDriver(IXlsDriver):
 
         self.current_col_index = j
         self.current_row_index = i
-        _len = len(str(_value or ''))
+        _len = len(str(_value or ""))
         if self.col_max_length.get(j) is None or self.col_max_length[j] < _len:
             self.col_max_length[j] = _len
 

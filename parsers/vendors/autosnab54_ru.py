@@ -12,10 +12,10 @@ class Autosnab54Parser(BaseParser):
     """
     logic for autosnab54_ru vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'autosnab54_ru'
+    __SUPPLIER_FOLDER_NAME__ = "autosnab54_ru"
     __START_ROW__ = 2
-    __SUPPLIER_NAME__ = 'Автоснабжение'
-    __SUPPLIER_CODE__ = '6'
+    __SUPPLIER_NAME__ = "Автоснабжение"
+    __SUPPLIER_CODE__ = "6"
 
     __COLUMNS__ = {
         0: RowItem.__TYPE_PRODUCTION__,

@@ -12,10 +12,10 @@ class MimParserBase(BaseParser):
     """
     base logic for mim vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'mim'
+    __SUPPLIER_FOLDER_NAME__ = "mim"
     __START_ROW__ = 2
-    __SUPPLIER_NAME__ = 'Мим'
-    __SUPPLIER_CODE__ = '4'
+    __SUPPLIER_NAME__ = "Мим"
+    __SUPPLIER_CODE__ = "4"
 
     __ROW_ITEM_ADAPTOR__ = RowItemMim
 

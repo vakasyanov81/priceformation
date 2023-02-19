@@ -6,6 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
+
 from .black_list import BlackListProviderFromUserConfig
 
 

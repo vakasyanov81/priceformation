@@ -4,6 +4,7 @@ logic for mim vendor (sheet 2)
 """
 __author__ = "Kasyanov V.A."
 from parsers.row_item.vendors.row_item_mim import RowItemMim
+
 from .mim_base import MimParserBase
 
 
@@ -48,16 +49,16 @@ class MimParser2Sheet(MimParserBase):
     @classmethod
     def get_prepared_title(cls, item: RowItemMim):
         """ prepare title """
-        width = item.width or ''
-        diameter = item.diameter or ''
-        profile = item.profile or ''
-        velocity = item.index_velocity or ''
-        load = item.index_load or ''
-        mark = (item.manufacturer or '').lower().capitalize()
-        model = item.model or ''
-        axis = item.axis or ''
-        layering = item.layering or ''
-        intimacy = item.intimacy or ''
+        width = item.width or ""
+        diameter = item.diameter or ""
+        profile = item.profile or ""
+        velocity = item.index_velocity or ""
+        load = item.index_load or ""
+        mark = (item.manufacturer or "").lower().capitalize()
+        model = item.model or ""
+        axis = item.axis or ""
+        layering = item.layering or ""
+        intimacy = item.intimacy or ""
 
         if profile:
             profile = f"/{profile}"
@@ -76,7 +77,7 @@ class MimParser2Sheet(MimParserBase):
         ]
 
         chunks = [
-            str(chunk or '').strip() or None
+            str(chunk or "").strip() or None
             for chunk in chunks
         ]
 

@@ -5,19 +5,20 @@ tests for four_tochki vendor (sheet 2) after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
+
+from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.four_tochki.four_tochki_2sheet import FourTochkiParser2Sheet
+from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet2 import four_tochki_one_item_result
 from tests.test_parsers.test_vendors.test_mim.price_rules import MimMarkupRulesProviderForTests
 from tests.test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
     StopWordsProviderForTests,
     VendorListProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    vendor_list_config
+    vendor_list_config,
 )
-from parsers.vendors.four_tochki.four_tochki_2sheet import FourTochkiParser2Sheet
-from parsers.row_item.row_item import RowItem
-from parsers.xls_reader import FakeXlsReader
-from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
 
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),

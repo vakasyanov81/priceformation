@@ -4,7 +4,8 @@ init log folder logic
 """
 __author__ = "Kasyanov V.A."
 
-import os
+from pathlib import Path
+
 from cfg import init_cfg
 
 
@@ -24,12 +25,12 @@ def create_logs_folder_if_not_exists(log_folder) -> bool:
 
 def folder_is_exists(folder):
     """ folder is exists? """
-    return os.path.isdir(folder)
+    return Path(folder).is_dir()
 
 
 def create_logs_folder(log_folder):
     """ create logs folder """
-    os.mkdir(log_folder)
+    Path(log_folder).mkdir()
     return True
 
 

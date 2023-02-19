@@ -5,20 +5,22 @@ tests for Pioner vendor after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
+
 import pytest
-from tests.test_parsers.fixtures.pioner import pioner_one_item_result, pioner_one_item_result_with_categories
-from tests.test_parsers.test_vendors.test_parse_poshk import (
-    MarkupRulesProviderForTests,
-    BlackListProviderForTests,
-    StopWordsProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config
-)
+
+from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser
 from parsers.xls_reader import FakeXlsReader
-from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
+from tests.test_parsers.fixtures.pioner import pioner_one_item_result, pioner_one_item_result_with_categories
+from tests.test_parsers.test_vendors.test_parse_poshk import (
+    BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
+    MarkupRulesProviderForTests,
+    StopWordsProviderForTests,
+    VendorListProviderForTests,
+    vendor_list_config,
+)
 
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),

@@ -65,10 +65,10 @@ class ForDrom(IWriteTemplate):
         }
     ]
 
-    __FILE__ = 'price_drom_{now}.xlsx'
+    __FILE__ = "price_drom_{now}.xlsx"
 
     __EXCLUDE__ = {
         RowItem.__REST_COUNT__: [
-            None, ''
+            None, ""
         ]
     }

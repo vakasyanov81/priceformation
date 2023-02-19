@@ -12,10 +12,10 @@ class FourTochkiParserBase(BaseParser):
     """
     base logic for four_tochki vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'four_tochki'
+    __SUPPLIER_FOLDER_NAME__ = "four_tochki"
     __START_ROW__ = 2
-    __SUPPLIER_NAME__ = 'Форточки'
-    __SUPPLIER_CODE__ = '5'
+    __SUPPLIER_NAME__ = "Форточки"
+    __SUPPLIER_CODE__ = "5"
 
     __ROW_ITEM_ADAPTOR__ = RowItemMim
 

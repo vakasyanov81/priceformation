@@ -5,6 +5,7 @@ logic for mim vendor (sheet 3)
 __author__ = "Kasyanov V.A."
 
 from parsers.vendors.mim.mim_2sheet import config_for_sheets23
+
 from .mim_base import MimParserBase
 
 

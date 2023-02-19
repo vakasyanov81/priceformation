@@ -5,11 +5,13 @@ tests write price for drom.ru
 __author__ = "Kasyanov V.A."
 
 from unittest.mock import patch
+
 import pytest
-from parsers.writer.xls_writer import XlsWriter
+
 from parsers.writer.fake_driver import FakeXlwtDriver
-from .fixtures import FixtureTemplate
-from .fixtures import write_data
+from parsers.writer.xls_writer import XlsWriter
+
+from .fixtures import FixtureTemplate, write_data
 
 
 @pytest.mark.parametrize(

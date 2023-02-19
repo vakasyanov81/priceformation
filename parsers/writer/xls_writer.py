@@ -4,11 +4,13 @@ write price list logic
 """
 __author__ = "Kasyanov V.A."
 
-import os
-from typing import Optional, Tuple
 import datetime
+from pathlib import Path
+from typing import Optional, Tuple
+
 from cfg import init_cfg
 from parsers.writer.templates.iwrite_template import IWriteTemplate
+
 from .ixls_driver import IXlsDriver
 from .templates.column_helper import ColumnHelper
 
@@ -32,8 +34,8 @@ class XlsWriter:
 
     def create_folder(self):
         """ create result folder """
-        if not os.path.exists(self.__FOLDER__):
-            os.makedirs(self.__FOLDER__)
+        if not Path(self.__FOLDER__).exists():
+            Path(self.__FOLDER__).mkdir(parents=True)
 
     def write(self):
         """ make write """
@@ -117,7 +119,7 @@ class XlsWriter:
         """ list to string """
         if isinstance(value, list):
             val = [v for v in value if v]
-            return ', '.join(val)
+            return ", ".join(val)
 
         return value
 

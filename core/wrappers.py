@@ -4,17 +4,18 @@ logging decorators
 """
 __author__ = "Kasyanov V.A."
 
+import logging as __logging
 import time
 import traceback
-import logging as __logging
+
 from .log_message import log_msg
 
-CALL_BEGIN_MSG = "Calling method \"{method}\"."
-CALL_END_MSG = "End of call to method \"{method}\" [exec_period] {period}"
+CALL_BEGIN_MSG = 'Calling method "{method}".'
+CALL_END_MSG = 'End of call to method "{method}" [exec_period] {period}'
 CALL_LABEL_MSG = "\n\rLabel {label}"
 CALL_PARAMS_MSG = "\n\rParams: {params}"
-CALL_TRACE_MSG = "Runtime error \"{method}\":\n\r{trace}"
-CALL_RESULT_MSG = "Result \"{method}\": {res}"
+CALL_TRACE_MSG = 'Runtime error "{method}":\n\r{trace}'
+CALL_RESULT_MSG = 'Result "{method}": {res}'
 
 
 def _decorator(func, label=""):

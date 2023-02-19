@@ -4,8 +4,9 @@ base parser config logic
 """
 __author__ = "Kasyanov V.A."
 
-from typing import List, Tuple, NamedTuple, Dict
 from functools import lru_cache
+from typing import Dict, List, NamedTuple, Tuple
+
 from parsers import data_provider
 
 
@@ -77,6 +78,6 @@ class BasePriceParseConfiguration:
         """ config for all vendors """
         vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
         config = {}
-        for vendor_name, vendor_config in vendor_config.items():
-            config[vendor_name] = data_provider.VendorParams(**vendor_config)
+        for vendor_name, _vendor_config in vendor_config.items():
+            config[vendor_name] = data_provider.VendorParams(**_vendor_config)
         return config

@@ -90,6 +90,6 @@ class ForInner(IWriteTemplate):
         "set_to_column_index": 0
     }
 
-    __FILE__ = 'price_{now}.xlsx'
+    __FILE__ = "price_{now}.xlsx"
 
     __EXCLUDE__ = {}

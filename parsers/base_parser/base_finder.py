@@ -6,7 +6,9 @@ __author__ = "Kasyanov V.A."
 
 from functools import lru_cache
 from typing import AnyStr, Optional, Tuple
+
 from parsers.row_item.row_item import RowItem
+
 from .alias_container import AliasContainer
 
 
@@ -87,7 +89,7 @@ class BaseFinder:
 
     def _find(self, lower_alias) -> int:
         """ find alias wrapped whitespace in title, and find in start title, and find in end title """
-        white_space = ' '
+        white_space = " "
         if not self.title_lower:
             return -1
         position = self.title_lower.find(white_space + lower_alias + white_space)

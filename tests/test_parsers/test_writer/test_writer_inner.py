@@ -5,10 +5,12 @@ tests write price for internal use
 __author__ = "Kasyanov V.A."
 
 import datetime
-from parsers.writer.xls_writer import XlsWriter
+
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.for_inner import ForInner
-from .fixtures import write_data, result_body_inner
+from parsers.writer.xls_writer import XlsWriter
+
+from .fixtures import result_body_inner, write_data
 
 
 def test_xls_write_for_inner():
@@ -16,7 +18,7 @@ def test_xls_write_for_inner():
 
     fake_driver = FakeXlwtDriver()
     XlsWriter(fake_driver, write_data, template=ForInner)
-    now = datetime.datetime.now().strftime('%Y-%m-%d')
+    now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     assert fake_driver.file_name == f"price_{now}.xlsx"
     assert fake_driver.folder == "file_prices/result/"

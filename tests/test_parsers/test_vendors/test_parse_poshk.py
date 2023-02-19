@@ -5,17 +5,16 @@ tests for Poshk vendor after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List, Tuple
+
 import pytest
-from tests.test_parsers.fixtures.poshk import poshk_one_item_result
-from tests.test_base_parser.test_manufacturer_finder import map_manufacturer
-from parsers.row_item.row_item import RowItem
-from parsers.vendors.poshk import PoshkParser
-from parsers.xls_reader import FakeXlsReader
-from parsers.vendors.poshk import PoshkPriceParseConfiguration
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams
-)
+
 from parsers import data_provider
+from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.poshk import PoshkParser, PoshkPriceParseConfiguration
+from parsers.xls_reader import FakeXlsReader
+from tests.test_base_parser.test_manufacturer_finder import map_manufacturer
+from tests.test_parsers.fixtures.poshk import poshk_one_item_result
 
 vendor_list_config = {
     "poshk": {
@@ -114,7 +113,7 @@ class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
 
     def get_stop_words_data(self) -> list:
         """ get stop word list """
-        return ['некондиция', '2 сорт', 'восстановленная']
+        return ["некондиция", "2 сорт", "восстановленная"]
 
 
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
