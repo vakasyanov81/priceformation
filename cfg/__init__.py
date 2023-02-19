@@ -10,7 +10,7 @@ __config__ = {
 }
 
 
-class WrongConfigParam(Exception):
+class ConfigParamError(Exception):
     """ wrong configuration Exception """
 
 

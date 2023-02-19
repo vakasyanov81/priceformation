@@ -8,11 +8,11 @@ import json
 from typing import NamedTuple
 
 from cfg.main import MainConfig
-from core.exceptions import CoreException
+from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
 
 
-class WrongVendorListConfigFile(CoreException):
+class VendorListConfigFileError(CoreExceptionError):
     """ Exception for case when user config vendor list is failed to read """
 
 
@@ -43,6 +43,6 @@ class VendorListProviderFromUserConfig(VendorListProviderBase):
                 MainConfig().vendor_list_file_path
             ))
         except FileNotFoundError as exc:
-            raise WrongVendorListConfigFile(
+            raise VendorListConfigFileError(
                 f"Failed to read all vendor settings {MainConfig().vendor_list_file_name}"
             ) from exc

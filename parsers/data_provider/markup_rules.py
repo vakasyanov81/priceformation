@@ -8,11 +8,11 @@ import json
 from typing import Dict, NamedTuple
 
 from cfg.main import MainConfig
-from core.exceptions import CoreException
+from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
 
 
-class WrongPriceRulesConfigFile(CoreException):
+class PriceRulesConfigFileError(CoreExceptionError):
     """ Exception for case when user config price rules is failed to read """
 
 
@@ -69,7 +69,7 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
                 self.get_file_path()
             ))
         except FileNotFoundError as exc:
-            raise WrongPriceRulesConfigFile(
+            raise PriceRulesConfigFileError(
                 f"Filed to read vendor ({self.supplier_name}) settings."
             ) from exc
 

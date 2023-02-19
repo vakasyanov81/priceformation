@@ -44,7 +44,6 @@ class RowItem:
 
     def __init__(self, item: dict):
         """ init """
-        assert isinstance(item, dict)
         self._item = item or {}
 
     @property

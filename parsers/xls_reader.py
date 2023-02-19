@@ -261,7 +261,7 @@ class XlsxReader(XlsReader):
         return values
 
 
-class MaxRowsReached(core.CoreException):
+class MaxRowsReached(core.CoreExceptionError):
     """ max rows reached exception """
     def __init__(self, max_rows_count):
         super().__init__(f"maximum rows ({max_rows_count}) reached")

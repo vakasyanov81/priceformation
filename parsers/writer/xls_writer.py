@@ -5,7 +5,7 @@ write price list logic
 __author__ = "Kasyanov V.A."
 
 import datetime
-import os
+from pathlib import Path
 from typing import Optional, Tuple
 
 from cfg import init_cfg
@@ -34,8 +34,8 @@ class XlsWriter:
 
     def create_folder(self):
         """ create result folder """
-        if not os.path.exists(self.__FOLDER__):
-            os.makedirs(self.__FOLDER__)
+        if not Path(self.__FOLDER__).exists():
+            Path(self.__FOLDER__).mkdir(parents=True)
 
     def write(self):
         """ make write """

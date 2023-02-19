@@ -11,7 +11,7 @@ from .log_message import err_msg
 __STACK_TRACE_LIMIT__ = 10
 
 
-class CoreException(Exception):
+class CoreExceptionError(Exception):
     """ Wrapper on Exception. This logic for logging exception  """
     __MESSAGE__ = None
 
@@ -32,7 +32,7 @@ class CoreException(Exception):
 
 def make_raise(message):
     """ prepare message for raise, logging raise message"""
-    raise CoreException(message)
+    raise CoreExceptionError(message)
 
 
 __ALL__ = [make_raise]

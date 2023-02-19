@@ -104,3 +104,4 @@ def print_log(
     if level_num != logging.INFO:
         msg = f"[{level}]: {msg}"
         msg = colored(msg, _color)
+    print(msg)

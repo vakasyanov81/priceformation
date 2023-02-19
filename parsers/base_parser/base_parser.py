@@ -9,7 +9,7 @@ import math
 from functools import lru_cache
 from typing import List, Type, TypeVar
 
-from core.exceptions import CoreException
+from core.exceptions import CoreExceptionError
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
 from parsers.base_item_actions.calc_percent_markup_item_action import SetPercentMarkupItemAction
@@ -416,7 +416,7 @@ class BaseParser:
         return " ".join(new_chunks)
 
 
-class SupplierNotHavePrices(CoreException):
+class SupplierNotHavePricesError(CoreExceptionError):
     """ exception for case when not prices """
 
 
@@ -427,5 +427,5 @@ def get_file_prices(parser: TBaseParser):
         _list_files += glob.glob(f"file_prices/{parser.__SUPPLIER_FOLDER_NAME__}/{f_tmp}")
 
     if not _list_files:
-        raise SupplierNotHavePrices(f"Прайсов у поставщика ({parser.__SUPPLIER_NAME__}) не обнаружено!")
+        raise SupplierNotHavePricesError(f"Прайсов у поставщика ({parser.__SUPPLIER_NAME__}) не обнаружено!")
     return _list_files
