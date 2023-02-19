@@ -1,0 +1,9 @@
+[tool.ruff]
+select = ["F", "E", "W", "C90",
+          "I", "N", "S", "B", "A",
+          "ISC", "T20", "Q", "PTH"]
+
+line-length = 120
+
+[tool.pyright]
+reportUnnecessaryTypeIgnoreComment="warning"
