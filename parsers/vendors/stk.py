@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-# greenstone
+# stk
 """
 __author__ = "Kasyanov V.A."
 from parsers.base_parser.base_parser import BaseParser
 from parsers.row_item.row_item import RowItem
 
 
-class GreenstoneParser(BaseParser):
+class STKParser(BaseParser):
     """
      parser for Greenstone vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'greenstone'
+    __SUPPLIER_FOLDER_NAME__ = 'stk'
     __START_ROW__ = 14
-    __SUPPLIER_NAME__ = 'Greenstone'
+    __SUPPLIER_NAME__ = 'STK'
     __SUPPLIER_CODE__ = '7'
 
     __COLUMNS__ = {

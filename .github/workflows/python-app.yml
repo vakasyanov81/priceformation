@@ -48,4 +48,4 @@ jobs:
     - name: Lint with pylint
       run: |
         export WORK_DIR=$GITHUB_WORKSPACE
-        python -m pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --ignore=${GITHUB_WORKSPACE}/pipelines/ --output-format=colorized ${GITHUB_WORKSPACE}
+        python -m pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}

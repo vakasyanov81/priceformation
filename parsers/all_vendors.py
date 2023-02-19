@@ -15,7 +15,7 @@ from parsers.vendors.poshk import PoshkParser
 from parsers.vendors.zapaska import ZapaskaPriceAndRestParser
 from parsers.base_parser.base_parser import BasePriceParseConfiguration
 from parsers.vendors.autosnab54_ru import Autosnab54Parser
-from parsers.vendors.greenstone import GreenstoneParser
+from parsers.vendors.stk import STKParser
 
 
 def all_vendors() -> List[Tuple[Type[BaseParser], Optional[Type[BasePriceParseConfiguration]]]]:
@@ -30,5 +30,5 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Optional[Type[BasePriceParseCo
         (PoshkParser, BasePriceParseConfiguration),
         (ZapaskaPriceAndRestParser, BasePriceParseConfiguration),
         (Autosnab54Parser, BasePriceParseConfiguration),
-        (GreenstoneParser, BasePriceParseConfiguration)
+        (STKParser, BasePriceParseConfiguration)
     ]
