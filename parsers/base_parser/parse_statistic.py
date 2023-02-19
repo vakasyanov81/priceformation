@@ -5,6 +5,7 @@ statistic for price formation result
 __author__ = "Kasyanov V.A."
 
 from typing import List
+
 from parsers.row_item.row_item import RowItem
 
 

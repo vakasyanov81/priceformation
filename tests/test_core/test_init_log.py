@@ -5,13 +5,10 @@ test init_log
 __author__ = "Kasyanov V.A."
 
 from unittest.mock import patch
+
 import pytest
-from core.init_log import (
-    create_logs_folder,
-    folder_is_exists,
-    create_logs_folder_if_not_exists,
-    init_log
-)
+
+from core.init_log import create_logs_folder, create_logs_folder_if_not_exists, folder_is_exists, init_log
 
 _FOLDER = "~/some_folder/"
 

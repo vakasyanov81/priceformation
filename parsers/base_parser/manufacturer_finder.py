@@ -4,9 +4,9 @@ find manufacturer, make correct manufacturer in title
 """
 __author__ = "Kasyanov V.A."
 
-from parsers.row_item.row_item import RowItem
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
+from parsers.row_item.row_item import RowItem
 
 
 class ManufacturerFinder:
@@ -35,4 +35,4 @@ class ManufacturerFinder:
 
     def correction_manufacturer(self, rec: RowItem):
         """ correction manufacturer """
-        self._finder.correction_field(rec, field_name='manufacturer', aliases=self.aliases)
+        self._finder.correction_field(rec, field_name="manufacturer", aliases=self.aliases)

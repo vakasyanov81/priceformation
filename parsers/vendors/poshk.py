@@ -5,6 +5,7 @@ logic for posh vendor
 __author__ = "Kasyanov V.A."
 
 import re
+
 from parsers.base_parser.base_parser import BaseParser, BasePriceParseConfiguration
 from parsers.row_item.row_item import RowItem
 
@@ -17,10 +18,10 @@ class PoshkParser(BaseParser):
     """
     logic for posh vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'poshk'
+    __SUPPLIER_FOLDER_NAME__ = "poshk"
     __START_ROW__ = 14
-    __SUPPLIER_NAME__ = 'Пошк'
-    __SUPPLIER_CODE__ = '1'
+    __SUPPLIER_NAME__ = "Пошк"
+    __SUPPLIER_CODE__ = "1"
 
     __COLUMNS__ = {
         0: RowItem.__CODE__,
@@ -62,11 +63,11 @@ class PoshkParser(BaseParser):
         """ get category name by title """
         title = title.lower()
         _available_categories = [
-            'ободная лента',
-            'шина',
-            'покрышка',
-            'камера',
-            'диск'
+            "ободная лента",
+            "шина",
+            "покрышка",
+            "камера",
+            "диск"
         ]
 
         categories_map = {
@@ -85,7 +86,7 @@ class PoshkParser(BaseParser):
     @classmethod
     def clear_and_set_title(cls, item):
         """ clear and set reared title """
-        item.title = item.title.replace(', , шт', '').strip()
+        item.title = item.title.replace(", , шт", "").strip()
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list):
@@ -101,12 +102,12 @@ class PoshkParser(BaseParser):
         :param chunks:
         :return:
         """
-        _re_part_size = r'^\d+\.*\d*'
+        _re_part_size = r"^\d+\.*\d*"
         for index, chunk in enumerate(chunks):
-            if '*' not in chunk:
+            if "*" not in chunk:
                 continue
             if re.match(_re_part_size, chunk):
-                chunks[index] = chunk.replace('*', 'x')
+                chunks[index] = chunk.replace("*", "x")
 
     @classmethod
     def delete_white_spaces(cls, chunks: list):
@@ -115,7 +116,7 @@ class PoshkParser(BaseParser):
         :param chunks:
         :return:
         """
-        _re_part_size = r'R\d+.'  # R22.5 or R20
+        _re_part_size = r"R\d+."  # R22.5 or R20
         if re.match(_re_part_size, chunks[1]):
             chunk = chunks.pop(1)
             chunks[0] += chunk

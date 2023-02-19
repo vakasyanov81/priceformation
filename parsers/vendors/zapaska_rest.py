@@ -3,7 +3,8 @@
 logic for zapaska (rest) vendor
 """
 __author__ = "Kasyanov V.A."
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
+
 from core.log_message import warn_msg
 from parsers.base_parser.base_parser import BaseParser
 from parsers.row_item.row_item import RowItem
@@ -14,10 +15,10 @@ class ZapaskaRestParser(BaseParser):
     """
     Parser rest and price opt for zapaska vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'zapaska'
+    __SUPPLIER_FOLDER_NAME__ = "zapaska"
     __START_ROW__ = 9
-    __SUPPLIER_NAME__ = 'Запаска (остатки)'
-    __SUPPLIER_CODE__ = '2'
+    __SUPPLIER_NAME__ = "Запаска (остатки)"
+    __SUPPLIER_CODE__ = "2"
 
     __COLUMNS__ = {
         0: RowItem.__CODE__,
@@ -27,7 +28,7 @@ class ZapaskaRestParser(BaseParser):
         4: RowItem.__PRICE_PURCHASE__
     }
 
-    __FILE_TEMPLATES__ = ['rest*.xls', 'rest*.xlsx']
+    __FILE_TEMPLATES__ = ["rest*.xls", "rest*.xlsx"]
 
     def __init__(self, price_config, file_prices: list = None, xls_reader=XlsReader, price_mrp=None):
         """ init """

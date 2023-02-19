@@ -4,6 +4,7 @@ logic for four_tochki vendor (sheet 1)
 """
 __author__ = "Kasyanov V.A."
 from parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
+
 from .four_tochki_base import FourTochkiParserBase
 
 
@@ -38,33 +39,33 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
 
     @classmethod
     def get_prepared_title(cls, item: RowItem):
-        width = item.width or ''
-        height_percent = item.height_percent or ''
-        diameter = (item.diameter or '').replace('—', '-')
-        velocity = item.index_velocity or ''
-        load = item.index_load or ''
-        model = item.model or ''
-        ext_diameter = item.ext_diameter or ''
-        us_aff_design = item.us_aff_design or ''
-        mark = (item.manufacturer or '').lower().capitalize()
-        construct = 'R'
-        if '-' in diameter:
-            construct = '-'
-            diameter = diameter.replace('-', '')
+        width = item.width or ""
+        height_percent = item.height_percent or ""
+        diameter = (item.diameter or "").replace("—", "-")
+        velocity = item.index_velocity or ""
+        load = item.index_load or ""
+        model = item.model or ""
+        ext_diameter = item.ext_diameter or ""
+        us_aff_design = item.us_aff_design or ""
+        mark = (item.manufacturer or "").lower().capitalize()
+        construct = "R"
+        if "-" in diameter:
+            construct = "-"
+            diameter = diameter.replace("-", "")
 
         # 205/55R16 BFGoodrich Advantage 94W
         # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
-        width_postfix = '.00'
-        if diameter == '22.5' or height_percent:
-            width_postfix = ''
+        width_postfix = ".00"
+        if diameter == "22.5" or height_percent:
+            width_postfix = ""
 
-        if cls.is_truck_tire(item) and diameter == '16':
-            width_postfix = ''
+        if cls.is_truck_tire(item) and diameter == "16":
+            width_postfix = ""
 
         if height_percent:
             height_percent = f"/{height_percent}"
         else:
-            height_percent = ''
+            height_percent = ""
 
         if cls.is_truck_tire(item):
             title = f"{width}{width_postfix}{height_percent}{construct}{diameter} {mark} {model} {load}{velocity}"

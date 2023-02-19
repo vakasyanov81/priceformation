@@ -4,16 +4,15 @@ base parser logic
 """
 __author__ = "Kasyanov V.A."
 
+from .black_list import BlackListProviderBase, BlackListProviderFromUserConfig
 from .manufacturer_aliases import ManufacturerAliasesProviderBase, ManufacturerAliasesProviderFromUserConfig
 from .markup_rules import (
+    AbsoluteMarkUpRules,
+    MarkUpParams,
+    MarkupRules,
     MarkupRulesProviderBase,
     MarkupRulesProviderFromUserConfig,
-    MarkupRules,
-    AbsoluteMarkUpRules,
-    MarkUpParams
-
 )
-from .black_list import BlackListProviderBase, BlackListProviderFromUserConfig
 from .stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 from .vendor_list import VendorListProviderBase, VendorListProviderFromUserConfig, VendorParams
 

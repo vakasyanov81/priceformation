@@ -6,20 +6,22 @@ __author__ = "Kasyanov V.A."
 
 import glob
 import math
-from typing import List, Type, TypeVar
 from functools import lru_cache
+from typing import List, Type, TypeVar
+
 from core.exceptions import CoreException
-from parsers.xls_reader import XlsReader
-from parsers.base_item_actions.calc_percent_markup_item_action import SetPercentMarkupItemAction
+from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
-from parsers.row_item.row_item import RowItem
+from parsers.base_item_actions.calc_percent_markup_item_action import SetPercentMarkupItemAction
 from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.log_parser_process import LoggerParseProcess
-from parsers import data_provider
+from parsers.row_item.row_item import RowItem
+from parsers.xls_reader import XlsReader
+
+from ..data_provider import VendorParams
+from .base_parser_config import BasePriceParseConfiguration
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
-from .base_parser_config import BasePriceParseConfiguration
-from ..data_provider import VendorParams
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
@@ -28,18 +30,18 @@ class BaseParser:
     """
     base parser logic
     """
-    __SUPPLIER_FOLDER_NAME__ = '__'
+    __SUPPLIER_FOLDER_NAME__ = "__"
     __START_ROW__ = 0
 
-    __SUPPLIER_NAME__ = 'Базовый поставщик'
+    __SUPPLIER_NAME__ = "Базовый поставщик"
     # Описание текущей вкладки
-    __SHEET_INFO__ = ''
-    __SUPPLIER_CODE__ = '*'
+    __SHEET_INFO__ = ""
+    __SUPPLIER_CODE__ = "*"
 
     __COLUMNS__ = {}
     __STOP_WORDS__ = []
 
-    __FILE_TEMPLATES__ = ['price*.xls', 'price*.xlsx']
+    __FILE_TEMPLATES__ = ["price*.xls", "price*.xlsx"]
 
     __SHEET_INDEXES__ = []
     __ENABLE__ = False
@@ -122,7 +124,7 @@ class BaseParser:
         self.logger.log_list_files(self.files)
 
         for _file in self.files:
-            self.type_production = _file.split('_')[-1]
+            self.type_production = _file.split("_")[-1]
             res = self.to_row_items(
                 self.raw_parse(_file)
             )
@@ -243,8 +245,8 @@ class BaseParser:
         return self.xls_reader.get_instance(
             _file,
             {
-                'start_row': (self.__START_ROW__ - 1),
-                'columns': self.__COLUMNS__
+                "start_row": (self.__START_ROW__ - 1),
+                "columns": self.__COLUMNS__
             }
         )
 
@@ -372,7 +374,7 @@ class BaseParser:
         """ make correct title format """
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
-        return ' '.join(chunks)
+        return " ".join(chunks)
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: List[str]) -> List[str]:
@@ -399,7 +401,7 @@ class BaseParser:
         :param title:
         :return:
         """
-        _title = (title or '').strip()
+        _title = (title or "").strip()
         if not _title:
             return title
 
@@ -411,7 +413,7 @@ class BaseParser:
             if not chunk:
                 continue
             new_chunks.append(chunk)
-        return ' '.join(new_chunks)
+        return " ".join(new_chunks)
 
 
 class SupplierNotHavePrices(CoreException):
@@ -422,8 +424,8 @@ def get_file_prices(parser: TBaseParser):
     """ get supplier file-prices """
     _list_files = []
     for f_tmp in parser.__FILE_TEMPLATES__:
-        _list_files += glob.glob(f'file_prices/{parser.__SUPPLIER_FOLDER_NAME__}/{f_tmp}')
+        _list_files += glob.glob(f"file_prices/{parser.__SUPPLIER_FOLDER_NAME__}/{f_tmp}")
 
     if not _list_files:
-        raise SupplierNotHavePrices(f'Прайсов у поставщика ({parser.__SUPPLIER_NAME__}) не обнаружено!')
+        raise SupplierNotHavePrices(f"Прайсов у поставщика ({parser.__SUPPLIER_NAME__}) не обнаружено!")
     return _list_files

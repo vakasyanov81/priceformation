@@ -5,10 +5,11 @@ markup rules provider
 __author__ = "Kasyanov V.A."
 
 import json
-from typing import NamedTuple, Dict
+from typing import Dict, NamedTuple
+
 from cfg.main import MainConfig
-from core.file_reader import read_file
 from core.exceptions import CoreException
+from core.file_reader import read_file
 
 
 class WrongPriceRulesConfigFile(CoreException):

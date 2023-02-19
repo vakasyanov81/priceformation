@@ -11,10 +11,10 @@ class STKParser(BaseParser):
     """
      parser for Greenstone vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'stk'
+    __SUPPLIER_FOLDER_NAME__ = "stk"
     __START_ROW__ = 14
-    __SUPPLIER_NAME__ = 'STK'
-    __SUPPLIER_CODE__ = '7'
+    __SUPPLIER_NAME__ = "STK"
+    __SUPPLIER_CODE__ = "7"
 
     __COLUMNS__ = {
         1: RowItem.__CODE__,

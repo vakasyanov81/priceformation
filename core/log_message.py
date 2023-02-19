@@ -4,11 +4,13 @@ logic logging process
 """
 __author__ = "Kasyanov V.A."
 
-from typing import Literal
-import logging
 import datetime
-from termcolor import colored
+import logging
+from typing import Literal
+
 from colorama import init
+from termcolor import colored
+
 from cfg import init_cfg
 from core.init_log import init_log
 
@@ -102,4 +104,3 @@ def print_log(
     if level_num != logging.INFO:
         msg = f"[{level}]: {msg}"
         msg = colored(msg, _color)
-    print(msg)

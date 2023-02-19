@@ -4,11 +4,13 @@ write price list logic
 """
 __author__ = "Kasyanov V.A."
 
+import datetime
 import os
 from typing import Optional, Tuple
-import datetime
+
 from cfg import init_cfg
 from parsers.writer.templates.iwrite_template import IWriteTemplate
+
 from .ixls_driver import IXlsDriver
 from .templates.column_helper import ColumnHelper
 
@@ -117,7 +119,7 @@ class XlsWriter:
         """ list to string """
         if isinstance(value, list):
             val = [v for v in value if v]
-            return ', '.join(val)
+            return ", ".join(val)
 
         return value
 

@@ -5,6 +5,7 @@ price row item description
 __author__ = "Kasyanov V.A."
 
 import hashlib
+
 from parsers.row_item import row_item_formatter as row_format
 
 
@@ -12,34 +13,34 @@ class RowItem:
     """
     price row item description
     """
-    __CODE__ = 'code'
-    __CODES__ = 'codes'
-    __CODE_MAN__ = 'code_man'
-    __CODE_ART__ = 'code_art'
-    __HASH_TITLE__ = 'hash_title'
-    __TITLE__ = 'title'
-    __TITLE_CHUNKS__ = 'title_chunks'
+    __CODE__ = "code"
+    __CODES__ = "codes"
+    __CODE_MAN__ = "code_man"
+    __CODE_ART__ = "code_art"
+    __HASH_TITLE__ = "hash_title"
+    __TITLE__ = "title"
+    __TITLE_CHUNKS__ = "title_chunks"
 
     # purchase price (цена закупочная)
-    __PRICE_PURCHASE__ = 'price_purchase'
+    __PRICE_PURCHASE__ = "price_purchase"
     # recommended price
-    __PRICE_RECOMMENDED__ = 'price_recommended'
+    __PRICE_RECOMMENDED__ = "price_recommended"
     # цена с учетом наценки
-    __PRICE_WITH_MARKUP__ = 'price_markup'
+    __PRICE_WITH_MARKUP__ = "price_markup"
 
-    __SUPPLIER_NAME_COLUMN__ = 'sup_name'
-    __TYPE_PRODUCTION__ = 'type_production'
-    __BRAND__ = 'brand'
-    __MANUFACTURER_NAME__ = 'manufacturer_name'
+    __SUPPLIER_NAME_COLUMN__ = "sup_name"
+    __TYPE_PRODUCTION__ = "type_production"
+    __BRAND__ = "brand"
+    __MANUFACTURER_NAME__ = "manufacturer_name"
 
-    __PERCENT__ = 'percent'
-    __REST_COUNT__ = 'rest_count'
-    __RESERVE_COUNT__ = 'reserve_count'
+    __PERCENT__ = "percent"
+    __REST_COUNT__ = "rest_count"
+    __RESERVE_COUNT__ = "reserve_count"
 
-    __DELIVERY_PERIOD__ = 'delivery_period'
-    __CONDITION__ = 'condition'
+    __DELIVERY_PERIOD__ = "delivery_period"
+    __CONDITION__ = "condition"
 
-    __AVAILABLE__ = 'available'
+    __AVAILABLE__ = "available"
 
     def __init__(self, item: dict):
         """ init """
@@ -135,7 +136,7 @@ class RowItem:
         """ hash title """
         if not self.title:
             return None
-        return hashlib.md5(self.title.encode('utf-8')).hexdigest()
+        return hashlib.md5(self.title.encode("utf-8")).hexdigest()
 
     @property
     @row_format.money

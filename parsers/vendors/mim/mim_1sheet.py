@@ -4,13 +4,14 @@ logic for mim vendor (sheet 1)
 """
 __author__ = "Kasyanov V.A."
 from parsers.row_item.vendors.row_item_mim import RowItemMim
+
 from .mim_base import MimParserBase
 
 
 def is_number(value: str) -> bool:
     """ value like xx.xx or xx.0 """
     try:
-        return bool(float(value)) and '.' in value
+        return bool(float(value)) and "." in value
     except ValueError:
         return False
 
@@ -46,14 +47,14 @@ class MimParser1Sheet(MimParserBase):
     @classmethod
     def get_prepared_title(cls, item: RowItemMim):
         """ get prepared title """
-        width = item.width or ''
-        diameter = item.diameter or ''
-        profile = item.profile or ''
-        velocity = item.index_velocity or ''
-        load = item.index_load or ''
-        model = item.model or ''
-        mark = (item.manufacturer or '').lower().capitalize()
-        delimiter = 'x' if is_number(profile) else '/'
+        width = item.width or ""
+        diameter = item.diameter or ""
+        profile = item.profile or ""
+        velocity = item.index_velocity or ""
+        load = item.index_load or ""
+        model = item.model or ""
+        mark = (item.manufacturer or "").lower().capitalize()
+        delimiter = "x" if is_number(profile) else "/"
 
         title = f"{width}{delimiter}{profile}R{diameter} {mark} {model} {load}{velocity}"
 

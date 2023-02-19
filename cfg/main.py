@@ -4,12 +4,16 @@ main configuration
 """
 __author__ = "Kasyanov V.A."
 
-import pathlib
-import os
 import datetime
+import os
+import pathlib
+
+from .db import DBConfig
+from .db import get_config as db_cfg
 
 __LOG_FOLDER__ = "logs"
 __USER_PARSE_CONFIG__ = "parse_config"
+__FILE_PRICES__ = "file_prices"
 __VENDOR_LIST_FILE_NAME__ = "vendor_list.json"
 __MARKUP_RULES_FILE_NAME__ = "markup_rules.json"
 __MANUFACTURER_ALIASES_FILE_NAME__ = "manufacturer_aliases.json"
@@ -133,6 +137,11 @@ class MainConfig:
     def is_unittest_mode(self):
         """ for mock in unittests run """
         return __IS_UNITTEST_MODE__
+
+    @classmethod
+    def db(cls) -> DBConfig:
+        """ database config """
+        return db_cfg()
 
 
 def get_config():

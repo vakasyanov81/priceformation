@@ -9,18 +9,18 @@
 """
 __author__ = "Kasyanov V.A."
 from parsers.base_parser.base_parser import BaseParser
-from parsers.row_item.row_item import RowItem
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
+from parsers.row_item.row_item import RowItem
 
 
 class PionerParser(BaseParser):
     """
      parser for pioner vendor
     """
-    __SUPPLIER_FOLDER_NAME__ = 'pioner'
+    __SUPPLIER_FOLDER_NAME__ = "pioner"
     __START_ROW__ = 12
-    __SUPPLIER_NAME__ = 'Пионер'
-    __SUPPLIER_CODE__ = '3'
+    __SUPPLIER_NAME__ = "Пионер"
+    __SUPPLIER_CODE__ = "3"
 
     __COLUMNS__ = {
         1: RowItem.__TITLE__,
@@ -49,10 +49,10 @@ class PionerParser(BaseParser):
     def _set_current_category(self, item):
         """ set current category by title """
         if self.is_category_row(item):
-            self.current_category = (item.title or '').lower().strip()
+            self.current_category = (item.title or "").lower().strip()
         self.current_category_first_chunk = (
-            (self.current_category or '').split('/')[0]
-        ).split(' ')[0]
+            (self.current_category or "").split("/")[0]
+        ).split(" ")[0]
 
     def set_manufacturer_to_title(self, item):
         """ set manufacturer name to title for row item """
@@ -96,7 +96,7 @@ class PionerParser(BaseParser):
         if len(chunks) == 1:
             return None
 
-        if chunks[0] != 'автошины':
+        if chunks[0] != "автошины":
             return None
 
         cur_category_name = chunks[1]

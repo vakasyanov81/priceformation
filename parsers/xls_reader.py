@@ -7,9 +7,11 @@ __author__ = "Kasyanov V.A."
 
 import os
 from typing import List
+
 import xlrd
-import core
 from openpyxl import load_workbook
+
+import core
 from cfg import init_cfg
 
 _MAX_COLUMNS = 50
@@ -59,7 +61,7 @@ class ParamsHelper:
     @property
     def start_row(self) -> int:
         """ start row index """
-        return self.params.get('start_row')
+        return self.params.get("start_row")
 
     @property
     def cur_row(self) -> int:
@@ -74,17 +76,17 @@ class ParamsHelper:
     @property
     def columns(self) -> dict:
         """ mapping columns. {0: "title", 1: "price"...} """
-        return self.params.get('columns')
+        return self.params.get("columns")
 
     @property
     def max_columns(self) -> int:
         """ max columns to be processed """
-        return self.params.get('max_columns') or _MAX_COLUMNS
+        return self.params.get("max_columns") or _MAX_COLUMNS
 
     @property
     def max_rows(self) -> int:
         """ max rows to be processed """
-        return self.params.get('max_rows') or _MAX_ROWS
+        return self.params.get("max_rows") or _MAX_ROWS
 
 
 class XlsReader(IXlsReader, ParamsHelper):
@@ -93,7 +95,7 @@ class XlsReader(IXlsReader, ParamsHelper):
     @classmethod
     def get_instance(cls, file_path, params):
         """ get instance XlsReader / XlsxReader """
-        if '.xlsx' in file_path:
+        if ".xlsx" in file_path:
             return XlsxReader(file_path, params)
         return XlsReader(file_path, params)
 
@@ -131,7 +133,7 @@ class XlsReader(IXlsReader, ParamsHelper):
         """ get sheet list """
 
         if not self.get_sheet_names():
-            core.make_raise('В прайсе отсутствуют вкладки!')
+            core.make_raise("В прайсе отсутствуют вкладки!")
 
         return [
             self.get_sheet_by_name(s_name)
@@ -169,7 +171,7 @@ class XlsReader(IXlsReader, ParamsHelper):
         return self.cur_row_values
 
     @classmethod
-    def row_values(cls, sheet: 'xlrd.sheet.Sheet', cur_row, end_col):
+    def row_values(cls, sheet: "xlrd.sheet.Sheet", cur_row, end_col):
         """ get row values """
         return sheet.row_values(cur_row, end_colx=end_col)
 

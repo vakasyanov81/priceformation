@@ -5,11 +5,13 @@ tests for Poshk vendor after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
-from tests.test_parsers.fixtures.zapaska import zapaska_2file_result
-from parsers.xls_reader import FakeXlsReader
-from parsers.vendors.zapaska_rest import ZapaskaRestParser
-from parsers.row_item.row_item import RowItem
+
 from parsers.base_parser.base_parser import BasePriceParseConfiguration
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.zapaska_rest import ZapaskaRestParser
+from parsers.xls_reader import FakeXlsReader
+from tests.test_parsers.fixtures.zapaska import zapaska_2file_result
+
 from .test_parse_zapaska import parser_config
 
 
@@ -42,30 +44,30 @@ def test_2files():
 
     res = [
         {
-            'code': '00002',
-            'codes': ['00002'],
-            'hash_title': '4d454469fa9bb61110e92a2317896b91',
-            'percent': 22.12,
-            'price_markup': 4900.0,
-            'price_purchase': 4012.4,
-            'price_recommended': 4201.0,
-            'rest_count': 17.0,
-            'sup_name': 'Запаска (остатки)',
-            'title': '00 Сельх.шины',
-            'type_production': ''
+            "code": "00002",
+            "codes": ["00002"],
+            "hash_title": "4d454469fa9bb61110e92a2317896b91",
+            "percent": 22.12,
+            "price_markup": 4900.0,
+            "price_purchase": 4012.4,
+            "price_recommended": 4201.0,
+            "rest_count": 17.0,
+            "sup_name": "Запаска (остатки)",
+            "title": "00 Сельх.шины",
+            "type_production": ""
         },
         {
-            'code': '00003',
-            'codes': ['00003'],
-            'hash_title': 'd25c14e72f2a951230173b9a68f9d294',
-            'percent': 22.12,
-            'price_markup': 4900,
-            'price_purchase': 4012.4,
-            'price_recommended': 4251.0,
-            'rest_count': 10.0,
-            'sup_name': 'Запаска (остатки)',
-            'title': '00 Сельх.шины__1',
-            'type_production': ''
+            "code": "00003",
+            "codes": ["00003"],
+            "hash_title": "d25c14e72f2a951230173b9a68f9d294",
+            "percent": 22.12,
+            "price_markup": 4900,
+            "price_purchase": 4012.4,
+            "price_recommended": 4251.0,
+            "rest_count": 10.0,
+            "sup_name": "Запаска (остатки)",
+            "title": "00 Сельх.шины__1",
+            "type_production": ""
         }
     ]
 

@@ -4,20 +4,15 @@ Make parse all price and make inner an drom prices
 """
 __author__ = "Kasyanov V.A."
 
-from typing import List, Type, Tuple, Optional
-from parsers.all_vendors import all_vendors
-from parsers import data_provider
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfiguration,
-    BasePriceParseConfigurationParams
-)
+from typing import List, Optional, Tuple, Type
 
-from parsers.base_parser.base_parser import (
-    BaseParser
-)
+from parsers import data_provider
+from parsers.all_vendors import all_vendors
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
+from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
-from parsers.writer.templates.all_templates import all_writer_templates
 
 
 class CommonPrice:

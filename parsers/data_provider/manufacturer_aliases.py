@@ -5,6 +5,7 @@ manufacturer aliases provider
 __author__ = "Kasyanov V.A."
 
 import json
+
 from cfg.main import MainConfig
 from core.file_reader import read_file
 

@@ -6,9 +6,10 @@ __author__ = "Kasyanov V.A."
 
 import json
 from typing import NamedTuple
+
 from cfg.main import MainConfig
-from core.file_reader import read_file
 from core.exceptions import CoreException
+from core.file_reader import read_file
 
 
 class WrongVendorListConfigFile(CoreException):

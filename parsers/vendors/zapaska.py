@@ -6,10 +6,10 @@
 """
 __author__ = "Kasyanov V.A."
 from parsers.base_parser.base_parser import BaseParser
-from parsers.vendors.zapaska_rest import ZapaskaRestParser
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.zapaska_rest import ZapaskaRestParser
 
-_SUPPLIER_FOLDER_NAME = 'zapaska'
+_SUPPLIER_FOLDER_NAME = "zapaska"
 
 
 class ZapaskaPriceAndRestParser:
@@ -40,8 +40,8 @@ class ZapaskaParser(BaseParser):
 
     __SUPPLIER_FOLDER_NAME__ = _SUPPLIER_FOLDER_NAME
     __START_ROW__ = 7
-    __SUPPLIER_NAME__ = 'Запаска'
-    __SUPPLIER_CODE__ = '2'
+    __SUPPLIER_NAME__ = "Запаска"
+    __SUPPLIER_CODE__ = "2"
 
     __COLUMNS__ = {
         0: RowItem.__CODE__,

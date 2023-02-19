@@ -5,6 +5,7 @@ container for aliases
 __author__ = "Kasyanov V.A."
 
 from functools import lru_cache
+
 CorrectWord, CorrectLoweredWord, IncorrectLoweredAlias = str, str, str
 
 

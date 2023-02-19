@@ -5,6 +5,7 @@ tests common price parser
 __author__ = "Kasyanov V.A."
 
 from unittest.mock import patch
+
 from parsers.common_price import CommonPrice
 from parsers.row_item.row_item import RowItem
 

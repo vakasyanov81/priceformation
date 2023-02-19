@@ -4,13 +4,13 @@ row item field format logic
 """
 __author__ = "Kasyanov V.A."
 
-from typing import Union, Optional
 from functools import lru_cache
+from typing import Optional, Union
 
 
 def strip_into_str(value: str) -> str:
     """  "_1_500_" -> "1500"   """
-    return value.replace(' ', '')
+    return value.replace(" ", "")
 
 
 def prepare_str_to_float(value: str) -> str:
@@ -20,22 +20,22 @@ def prepare_str_to_float(value: str) -> str:
     "<40" -> "40"
     "более40" -> "40"
     """
-    _to_drop = ['<', '>', 'более']
+    _to_drop = ["<", ">", "более"]
     for drop_item in _to_drop:
-        value = value.replace(drop_item, '')
-    return value.replace(',', '.')
+        value = value.replace(drop_item, "")
+    return value.replace(",", ".")
 
 
-def get_stripped(value, null_value='') -> str:
+def get_stripped(value, null_value="") -> str:
     """ get stripped value """
-    return strip_into(str(value or '')) or null_value
+    return strip_into(str(value or "")) or null_value
 
 
 @lru_cache()
 def strip_into(value: str):
     """ "abc    abc " -> "abc abc"  """
-    _val = value.split(' ')
-    _val = ' '.join([__val.strip() for __val in _val if __val])
+    _val = value.split(" ")
+    _val = " ".join([__val.strip() for __val in _val if __val])
     return _val
 
 
@@ -45,7 +45,7 @@ def get_float(value) -> float:
     return float(
         prepare_str_to_float(
             strip_into_str(
-                get_stripped(value, null_value='0')
+                get_stripped(value, null_value="0")
             )
         )
     )

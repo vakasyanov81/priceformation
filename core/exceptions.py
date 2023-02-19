@@ -5,6 +5,7 @@ raise logic
 __author__ = "Kasyanov V.A."
 
 import traceback
+
 from .log_message import err_msg
 
 __STACK_TRACE_LIMIT__ = 10

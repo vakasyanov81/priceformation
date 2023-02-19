@@ -6,9 +6,9 @@
 """
 __author__ = "Kasyanov V.A."
 
-from parsers.common_price import CommonPrice
-from parsers.base_parser.base_parser import SupplierNotHavePrices
 from core.log_message import print_log
+from parsers.base_parser.base_parser import SupplierNotHavePrices
+from parsers.common_price import CommonPrice
 
 
 def run():
@@ -25,5 +25,5 @@ def run():
         exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

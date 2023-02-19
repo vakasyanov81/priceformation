@@ -5,6 +5,7 @@ init log folder logic
 __author__ = "Kasyanov V.A."
 
 import os
+
 from cfg import init_cfg
 
 

@@ -4,6 +4,7 @@ logic for four_tochki vendor (sheet 2)
 """
 __author__ = "Kasyanov V.A."
 from parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
+
 from .four_tochki_base import FourTochkiParserBase
 
 
@@ -38,15 +39,15 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 
     @classmethod
     def get_prepared_title(cls, item: RowItem):
-        width = item.width or ''
-        diameter = item.diameter or ''
-        model = item.model or ''
-        slot_count = item.slot_count or ''
-        pcd1 = item.pcd1 or ''
-        dia = item.central_diameter or ''
-        color = item.color or ''
-        _et = item.eet or ''
-        mark = (item.manufacturer or '').lower().capitalize()
+        width = item.width or ""
+        diameter = item.diameter or ""
+        model = item.model or ""
+        slot_count = item.slot_count or ""
+        pcd1 = item.pcd1 or ""
+        dia = item.central_diameter or ""
+        color = item.color or ""
+        _et = item.eet or ""
+        mark = (item.manufacturer or "").lower().capitalize()
 
         # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
         title = f"{width}x{diameter} {slot_count}x{pcd1} ET{_et} {dia} {color} {mark} {model}"

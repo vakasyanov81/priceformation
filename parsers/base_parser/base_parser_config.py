@@ -4,8 +4,9 @@ base parser config logic
 """
 __author__ = "Kasyanov V.A."
 
-from typing import List, Tuple, NamedTuple, Dict
 from functools import lru_cache
+from typing import Dict, List, NamedTuple, Tuple
+
 from parsers import data_provider
 
 

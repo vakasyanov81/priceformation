@@ -1,8 +1,10 @@
-import sys
 import os
 import pathlib
 import re
+import sys
+
 from mutpy import commandline
+
 # pylint: skip-file
 
 tests_folder = "tests/test_parsers"
@@ -20,7 +22,7 @@ args = [
 work_dir = str(pathlib.Path(__file__).parent.absolute())
 tests_dir = f"{work_dir}{os.sep}{tests_folder}"
 
-regex = re.compile('test*')
+regex = re.compile("test*")
 
 test_modules = [
     tests_dir + os.sep + name for name in os.listdir(tests_dir)
@@ -36,5 +38,4 @@ args += [
 sys.path.append(tests_dir)
 
 sys.argv = args
-print(args)
 commandline.main(args)

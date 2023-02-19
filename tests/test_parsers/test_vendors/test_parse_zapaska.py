@@ -5,21 +5,22 @@ tests for zapaska vendor after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
+
 import pytest
+
+from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.zapaska_rest import ZapaskaRestParser
+from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
 from tests.test_parsers.test_vendors.test_parse_poshk import (
-    MarkupRulesProviderForTests,
     BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
+    MarkupRulesProviderForTests,
     StopWordsProviderForTests,
     VendorListProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    vendor_list_config
+    vendor_list_config,
 )
-from parsers.xls_reader import FakeXlsReader
-from parsers.vendors.zapaska_rest import ZapaskaRestParser
-from parsers.row_item.row_item import RowItem
-from parsers.base_parser.base_parser_config import BasePriceParseConfiguration, BasePriceParseConfigurationParams
-
 
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),

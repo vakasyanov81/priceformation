@@ -2,11 +2,7 @@
 """ configuration logic """
 __author__ = "Kasyanov V.A."
 
-from . import (
-    db,
-    main
-)
-
+from . import db, main
 
 __config__ = {
     "db": db.get_config(),

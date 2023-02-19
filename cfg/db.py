@@ -4,15 +4,25 @@ configuration for database
 """
 __author__ = "Kasyanov V.A."
 
-__config = {
-    "host": "localhost",
-    "port": 5433,
-    "user": "postgres",
-    "pass": "postgres",
-    "db_name": "price_formation"
-}
+import os
+from typing import NamedTuple
 
 
-def get_config():
+class DBConfig(NamedTuple):
+    host: str
+    port: str
+    user_name: str
+    password: str
+    db_name: str
+
+
+def get_config() -> DBConfig:
     """ get db configuration """
-    return __config
+    from .main import __FILE_PRICES__, __PROJECT_ROOT__
+    return DBConfig(**{
+        "host": "localhost",
+        "port": 5433,
+        "user_name": "postgres",
+        "password": "postgres",
+        "db_name": __PROJECT_ROOT__ + os.sep + __FILE_PRICES__ + os.sep + "price_formation.db"
+    })
