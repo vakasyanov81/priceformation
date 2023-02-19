@@ -38,7 +38,7 @@ jobs:
     - name: Lint code by ruff
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        ruff .
+        python -m ruff .
     - name: Lint with pylint
       run: |
         export WORK_DIR=$GITHUB_WORKSPACE
