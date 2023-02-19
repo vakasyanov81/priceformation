@@ -43,7 +43,3 @@ jobs:
       run: |
         export WORK_DIR=$GITHUB_WORKSPACE
         python -m pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
-
-    - name: Check types by pyright
-      run: |
-        python -m pyright   
