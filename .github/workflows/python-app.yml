@@ -39,12 +39,10 @@ jobs:
           poetry install
       - name: Tests with pytest
         run: |
-          poetry shell
-          pytest ./tests
+          poetry run pytest ${GITHUB_WORKSPACE}/tests
       - name: Test coverage
         run: |
-          poetry shell
-          pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
+          poetry run pytest --cov ${GITHUB_WORKSPACE} ${GITHUB_WORKSPACE}/tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=${GITHUB_WORKSPACE}/.coveragerc --cov-report term-missing:skip-covered
       - name: Lint code by ruff
         run: |
           # stop the build if there are Python syntax errors or undefined names
