@@ -25,9 +25,9 @@ jobs:
         with:
           python-version: "3.11.1"
       - name: Install poetry
-          run: |
-            pip install pipx
-            pipx install poetry
+        run: |
+          pip install pipx
+          pipx install poetry
       - name: Validate the structure of the pyproject.toml
         run: |
           poetry check
