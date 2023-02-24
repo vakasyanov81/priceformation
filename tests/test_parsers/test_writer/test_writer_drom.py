@@ -14,7 +14,7 @@ from .fixtures import result_body_drom, write_data
 
 
 def test_xls_write_for_drom():
-    """ test write price for drom.ru  """
+    """test write price for drom.ru"""
 
     fake_driver = FakeXlwtDriver()
     XlsWriter(fake_driver, write_data, template=ForDrom)

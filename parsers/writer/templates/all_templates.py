@@ -9,8 +9,5 @@ from .for_inner import ForInner
 
 
 def all_writer_templates() -> list:
-    """ get all active vendors """
-    return [
-        ForInner,
-        ForDrom
-    ]
+    """get all active vendors"""
+    return [ForInner, ForDrom]

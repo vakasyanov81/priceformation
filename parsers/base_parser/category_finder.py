@@ -14,16 +14,16 @@ class CategoryFinder:
     """
 
     def __init__(self):
-        """ init """
+        """init"""
         self.aliases = AliasContainer(map_categories)
         self._finder = BaseFinder(self.aliases)
 
     def find(self, item):
-        """ find """
+        """find"""
         return self.find_in_str(item.title)
 
     def find_in_str(self, _str: str):
-        """ find in str """
+        """find in str"""
         category, bad_category = self._finder.find_word_in_title(_str)
         return category, bad_category
 
@@ -32,5 +32,5 @@ map_categories = {
     "Автокамера": ("камеры", "камера", "автокамеры"),
     "Автошина": ("шина", "шины", "автошины"),
     "Диск": ("диски",),
-    "Ободная лента": ()
+    "Ободная лента": (),
 }

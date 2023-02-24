@@ -12,6 +12,7 @@ class FourTochkiParserBase(BaseParser):
     """
     base logic for four_tochki vendor
     """
+
     __SUPPLIER_FOLDER_NAME__ = "four_tochki"
     __START_ROW__ = 2
     __SUPPLIER_NAME__ = "Форточки"
@@ -21,16 +22,16 @@ class FourTochkiParserBase(BaseParser):
 
     @classmethod
     def get_current_category(cls):
-        """ getting current category """
+        """getting current category"""
         raise NotImplementedError()
 
     @classmethod
     def set_category(cls, item):
-        """ set category to row price item """
+        """set category to row price item"""
         item.type_production = cls.get_current_category()
 
     def process(self):
-        """ parse process """
+        """parse process"""
         res = super().process()
         for item in self.result:
             self.add_price_markup(item)

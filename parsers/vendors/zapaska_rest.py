@@ -15,6 +15,7 @@ class ZapaskaRestParser(BaseParser):
     """
     Parser rest and price opt for zapaska vendor
     """
+
     __SUPPLIER_FOLDER_NAME__ = "zapaska"
     __START_ROW__ = 9
     __SUPPLIER_NAME__ = "Запаска (остатки)"
@@ -25,13 +26,19 @@ class ZapaskaRestParser(BaseParser):
         1: RowItem.__CODE_ART__,
         2: RowItem.__TITLE__,
         3: RowItem.__REST_COUNT__,
-        4: RowItem.__PRICE_PURCHASE__
+        4: RowItem.__PRICE_PURCHASE__,
     }
 
     __FILE_TEMPLATES__ = ["rest*.xls", "rest*.xlsx"]
 
-    def __init__(self, price_config, file_prices: list = None, xls_reader=XlsReader, price_mrp=None):
-        """ init """
+    def __init__(
+        self,
+        price_config,
+        file_prices: list = None,
+        xls_reader=XlsReader,
+        price_mrp=None,
+    ):
+        """init"""
         self.price_sup_codes = {}
         self.rest_titles = {}
         self.price_mrp_result = []
@@ -41,11 +48,11 @@ class ZapaskaRestParser(BaseParser):
         super().__init__(price_config, file_prices, xls_reader)
 
     def get_price_mrp_result(self) -> List[RowItem]:
-        """ price mrp result """
+        """price mrp result"""
         return self.price_mrp_result
 
     def process(self):
-        """ parse process """
+        """parse process"""
         count_processed = super().process()
         self.prepare_prices_mrp()
 
@@ -60,23 +67,29 @@ class ZapaskaRestParser(BaseParser):
             self.skip_by_min_rest(item)
 
         if self.not_matched_position:
-            warn_msg(f"Всего несопоставленных позиций: {len(self.not_matched_position)}", need_print_log=True)
-            warn_msg("Полный перечень несопоставленных позиций можно посмотреть в логах.", need_print_log=True)
+            warn_msg(
+                f"Всего несопоставленных позиций: {len(self.not_matched_position)}",
+                need_print_log=True,
+            )
+            warn_msg(
+                "Полный перечень несопоставленных позиций можно посмотреть в логах.",
+                need_print_log=True,
+            )
             for title in self.not_matched_position:
                 warn_msg(title)
 
         return count_processed
 
     def set_rest_and_price_opt(self, rest_result):
-        """ get parse result for ZapaskaRest """
+        """get parse result for ZapaskaRest"""
         self.price_mrp_result = rest_result
 
     def get_item_rest(self, item: RowItem):
-        """ get rest count """
+        """get rest count"""
         return item.rest_count
 
     def prepare_prices_mrp(self):
-        """ join result zapaska parser and zapaska rest parser via vendor position code """
+        """join result zapaska parser and zapaska rest parser via vendor position code"""
         for price_mrp in self.get_price_mrp_result():
             code = price_mrp.code or price_mrp.code_art
 
@@ -84,7 +97,7 @@ class ZapaskaRestParser(BaseParser):
 
     @classmethod
     def _get_price_percent_markup(cls, price):
-        """ get price percent markup """
+        """get price percent markup"""
 
         base_percent = 0.12
         base_percent_step = 0.02
@@ -93,7 +106,7 @@ class ZapaskaRestParser(BaseParser):
             (5000, 10000): base_percent + (base_percent_step * 4),
             (10000, 15000): base_percent + (base_percent_step * 2),
             (15000, 20000): base_percent + base_percent_step,
-            (20000, 25000): base_percent
+            (20000, 25000): base_percent,
         }
 
         default_percent_markup = base_percent
@@ -107,27 +120,26 @@ class ZapaskaRestParser(BaseParser):
 
     @classmethod
     def _make_price_markup(cls, price_recommended, price_opt):
-        """ set markup """
+        """set markup"""
 
         price, _ = cls._make_price_recommended_markup(price_recommended, price_opt)
 
         if not price:
-            price = cls.get_markup(
-                price_opt,
-                cls._get_price_percent_markup(price_opt)
-            )
+            price = cls.get_markup(price_opt, cls._get_price_percent_markup(price_opt))
 
         return cls.make_absolute_markup(price, price_opt)
 
     @classmethod
     def make_absolute_markup(cls, price, price_opt, delta=150):
-        """ check price margin greater than delta """
+        """check price margin greater than delta"""
         if price - price_opt <= delta:
             return price_opt + delta
         return price
 
     @classmethod
-    def _make_price_recommended_markup(cls, price_recommended, price_opt) -> Tuple[Optional[float], Optional[float]]:
+    def _make_price_recommended_markup(
+        cls, price_recommended, price_opt
+    ) -> Tuple[Optional[float], Optional[float]]:
         """
         make markup for recommended price
         :param price_recommended:
@@ -140,22 +152,25 @@ class ZapaskaRestParser(BaseParser):
         percent = cls.calc_percent(price_recommended, price_opt)
 
         # Если наценка менее 8% запускаем алгоритм наценки
-        if not cls._is_small_recommended_price(price_recommended, price_opt, percent=0.08):
+        if not cls._is_small_recommended_price(
+            price_recommended, price_opt, percent=0.08
+        ):
             return price_recommended, percent
 
-        percent = cls._get_price_percent_markup(
-            price_opt
-        )
+        percent = cls._get_price_percent_markup(price_opt)
 
         return cls.get_markup(price_opt, percent), percent
 
     @classmethod
     def _is_small_recommended_price(cls, price_recommended, price_opt, percent) -> bool:
-        """ check margin for recommended price """
-        return price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent
+        """check margin for recommended price"""
+        return (
+            price_recommended
+            and cls.calc_percent(price_recommended, price_opt) <= percent
+        )
 
     def make_price_markup(self, item):
-        """ set markup
+        """set markup
         цена закупа от 0 до 5000 прибавляем наценку 17%
         цена закупа от 5000 до 10000 прибавляем наценку 15%
         цена закупа от 10000 до 15000 прибавляем наценку 13%
@@ -163,7 +178,9 @@ class ZapaskaRestParser(BaseParser):
         """
         code = item.code or item.code_art
 
-        price_recommended = self.price_sup_codes.get(code) or self.find_rest_by_title(item.title)
+        price_recommended = self.price_sup_codes.get(code) or self.find_rest_by_title(
+            item.title
+        )
         price_recommended = price_recommended or 0
         price_opt = item.price_opt
 
@@ -177,10 +194,12 @@ class ZapaskaRestParser(BaseParser):
             self.not_matched_position.append(item.title)
 
         price_with_markup = self._make_price_markup(price_recommended, price_opt)
-        item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
+        item.price_markup = (
+            self.round_price(price_with_markup) if price_with_markup else None
+        )
 
     def find_rest_by_title(self, title):
-        """ find rest by title """
+        """find rest by title"""
         if not self.rest_titles:
             for item in self.get_price_mrp_result():
                 if not item.title:

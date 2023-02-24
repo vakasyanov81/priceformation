@@ -1,8 +1,12 @@
 #!/bin/bash
 cd ..
 export PYTHONPATH=./
-. ./venv/bin/activate
-# python3 -m pip install -r ./dev_requirements.txt
+export WORK_DIR=./
+echo '\n--- ruff ---\n'
 poetry run ruff .
+echo '\n--- black ---\n'
 poetry run black . --check
-deactivate
+# poetry run black . --diff --color
+# poetry run black .
+echo '\n--- pylint ---\n'
+poetry run pylint --rcfile ./pipelines/.pylintrc ./

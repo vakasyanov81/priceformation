@@ -17,12 +17,19 @@ class DBConfig(NamedTuple):
 
 
 def get_config() -> DBConfig:
-    """ get db configuration """
+    """get db configuration"""
     from .main import __FILE_PRICES__, __PROJECT_ROOT__
-    return DBConfig(**{
-        "host": "localhost",
-        "port": 5433,
-        "user_name": "postgres",
-        "password": "postgres",
-        "db_name": __PROJECT_ROOT__ + os.sep + __FILE_PRICES__ + os.sep + "price_formation.db"
-    })
+
+    return DBConfig(
+        **{
+            "host": "localhost",
+            "port": 5433,
+            "user_name": "postgres",
+            "password": "postgres",
+            "db_name": __PROJECT_ROOT__
+            + os.sep
+            + __FILE_PRICES__
+            + os.sep
+            + "price_formation.db",
+        }
+    )

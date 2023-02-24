@@ -11,22 +11,33 @@ from parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(
-    "title, title_new, manufacturer", [
+    "title, title_new, manufacturer",
+    [
         ("  -->    Аеолус <--  ", "--> Aeolus <--", "Aeolus"),
         ("--> БФ гудрич <--", "--> BF Goodrich <--", "BF Goodrich"),
         ("--> Sunrise <--", "--> Sunrise <--", "Sunrise"),
         ("--> RockBuster <--", "--> Rockbuster <--", "Rockbuster"),
-        ("11.00R20 Нк.шз Кама-310 16 150/146K", "11.00R20 НКШЗ Кама-310 16 150/146K", "НКШЗ"),
-        ("Нк.шз 11.00R20 Кама-310 16 150/146K", "НКШЗ 11.00R20 Кама-310 16 150/146K", "НКШЗ"),
-        ("11.00R20 Кама-310 16 150/146K Нк.шз", "11.00R20 Кама-310 16 150/146K НКШЗ", "НКШЗ")
-    ]
+        (
+            "11.00R20 Нк.шз Кама-310 16 150/146K",
+            "11.00R20 НКШЗ Кама-310 16 150/146K",
+            "НКШЗ",
+        ),
+        (
+            "Нк.шз 11.00R20 Кама-310 16 150/146K",
+            "НКШЗ 11.00R20 Кама-310 16 150/146K",
+            "НКШЗ",
+        ),
+        (
+            "11.00R20 Кама-310 16 150/146K Нк.шз",
+            "11.00R20 Кама-310 16 150/146K НКШЗ",
+            "НКШЗ",
+        ),
+    ],
 )
 def test_replace_title_and_add_manufacturer(title, title_new, manufacturer):
-    """ check replace bad manufacturer in title and add correct manufacturer in item.manufacturer   """
+    """check replace bad manufacturer in title and add correct manufacturer in item.manufacturer"""
 
-    item = RowItem({
-        "title": title
-    })
+    item = RowItem({"title": title})
     ManufacturerFinder(map_manufacturer).process(item)
 
     assert item.title == title_new
@@ -69,7 +80,10 @@ map_manufacturer = {
     "Satoya": (),
     "Viatti": (),
     "Amtel": ("Амтел",),
-    "Белшина": ("Белшина", "БШК",),
+    "Белшина": (
+        "Белшина",
+        "БШК",
+    ),
     "Кама": (),
     "Kormoran": ("Корморан",),
     "Hifly": (),
@@ -82,7 +96,10 @@ map_manufacturer = {
     "Aufine": (),
     "Forward": (),
     "Sunfull": (),
-    "Алтайшина": ("Алтайшина", "АШК",),
+    "Алтайшина": (
+        "Алтайшина",
+        "АШК",
+    ),
     "Power Trac": (),
     "Taitong": (),
     "Triangle": (),
@@ -93,7 +110,10 @@ map_manufacturer = {
     "FOMAN": (),
     "Maxxis": (),
     "Goodtyre": (),
-    "Annaite": ("ANNAITE", "HILO",),
+    "Annaite": (
+        "ANNAITE",
+        "HILO",
+    ),
     "Kapsen": (),
     "LongMarch": (),
     "Fronway": (),
@@ -114,5 +134,5 @@ map_manufacturer = {
     "Megami": (),
     "Khomen": (),
     "Remain": (),
-    "Replay": ()
+    "Replay": (),
 }

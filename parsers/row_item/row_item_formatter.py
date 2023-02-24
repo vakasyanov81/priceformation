@@ -9,7 +9,7 @@ from typing import Optional, Union
 
 
 def strip_into_str(value: str) -> str:
-    """  "_1_500_" -> "1500"   """
+    """ "_1_500_" -> "1500" """
     return value.replace(" ", "")
 
 
@@ -27,13 +27,13 @@ def prepare_str_to_float(value: str) -> str:
 
 
 def get_stripped(value, null_value="") -> str:
-    """ get stripped value """
+    """get stripped value"""
     return strip_into(str(value or "")) or null_value
 
 
 @lru_cache()
 def strip_into(value: str):
-    """ "abc    abc " -> "abc abc"  """
+    """ "abc    abc " -> "abc abc" """
     _val = value.split(" ")
     _val = " ".join([__val.strip() for __val in _val if __val])
     return _val
@@ -41,18 +41,14 @@ def strip_into(value: str):
 
 @lru_cache()
 def get_float(value) -> float:
-    """ get float value """
+    """get float value"""
     return float(
-        prepare_str_to_float(
-            strip_into_str(
-                get_stripped(value, null_value="0")
-            )
-        )
+        prepare_str_to_float(strip_into_str(get_stripped(value, null_value="0")))
     )
 
 
 def get_integer(value) -> int:
-    """ get integer value """
+    """get integer value"""
     return int(get_float(value))
 
 
@@ -86,68 +82,65 @@ def get_try_to_int(value: Union[str, float]) -> Optional[Union[int, float]]:
 
 
 def call_wrapper(_self, decorated_func, format_func_getter, *args):
-    """ make call wrapper for property and property-setter """
+    """make call wrapper for property and property-setter"""
     if args:
         return decorated_func(_self, format_func_getter(args[0]))
     return format_func_getter(decorated_func(_self))
 
 
 def text(_func):
-    """ text decorator """
+    """text decorator"""
+
     def wrap(_self, *args):
-        """ wrapper """
+        """wrapper"""
         return call_wrapper(_self, _func, get_stripped, *args)
+
     return wrap
 
 
 def money(_func):
-    """ money decorator """
+    """money decorator"""
     return floated(_func)
 
 
 def floated(_func):
-    """ float-value decorator """
+    """float-value decorator"""
 
     def wrap(_self, *args):
-        """ wrapper """
+        """wrapper"""
         return call_wrapper(_self, _func, get_float, *args)
+
     return wrap
 
 
 def integer(_func):
-    """ integer decorator """
+    """integer decorator"""
 
     def wrap(_self, *args):
-        """ wrapper """
+        """wrapper"""
         return call_wrapper(_self, _func, get_integer, *args)
+
     return wrap
 
 
 def code(_func):
-    """ prepare code """
+    """prepare code"""
 
     def wrap(_self, *args):
-        """ wrapper """
+        """wrapper"""
         return call_wrapper(_self, _func, get_sanitized_code, *args)
 
     return wrap
 
 
 def int_or_float(_func):
-    """ try cast to int """
+    """try cast to int"""
 
     def wrap(_self, *args):
-        """ wrapper """
+        """wrapper"""
         return call_wrapper(_self, _func, get_try_to_int, *args)
 
     return wrap
 
 
-__ALL__ = [
-    text,
-    code,
-    money,
-    floated,
-    integer,
-    int_or_float
-]
+__ALL__ = [text, code, money, floated, integer, int_or_float]

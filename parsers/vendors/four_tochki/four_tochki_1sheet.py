@@ -12,6 +12,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
     """
     parser for four_tochki vendor (sheet 1)
     """
+
     __SUPPLIER_FOLDER_NAME__ = FourTochkiParserBase.__SUPPLIER_FOLDER_NAME__
     __COLUMNS__ = {
         0: RowItem.__CODE__,
@@ -26,7 +27,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         15: RowItem.__US_AFF_DESIGNATION__,
         17: RowItem.__REST_COUNT__,
         18: RowItem.__PRICE_RECOMMENDED__,
-        19: RowItem.__PRICE_PURCHASE__
+        19: RowItem.__PRICE_PURCHASE__,
     }
 
     __SHEET_INFO__ = "Вкладка (шины) #1"
@@ -78,5 +79,5 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
 
     @classmethod
     def is_truck_tire(cls, item: RowItem):
-        """ грузовая шина? """
+        """грузовая шина?"""
         return item.tire_type.lower() == "грузовая"

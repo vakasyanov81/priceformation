@@ -11,8 +11,9 @@ class FakeXlwtDriver(IXlsDriver):
     """
     fake write price list logic
     """
+
     def __init__(self):
-        """ init """
+        """init"""
         self.work_sheet = None
         self.sheet_name = None
         self.width = {}
@@ -26,16 +27,16 @@ class FakeXlwtDriver(IXlsDriver):
         return self
 
     def set_width(self, col_index: int, col_width: int):
-        """ set width """
+        """set width"""
 
         self.width[col_index] = col_width
 
     def write_head(self, names):
-        """ write head """
+        """write head"""
         self.head = names
 
     def write(self, i, j, _value, style=None, _color=None):
-        """ write """
+        """write"""
         self.body[f"cell({i},{j})"] = _value
 
     def init_workbook(self, _folder: str, _file_name: str):
@@ -43,7 +44,7 @@ class FakeXlwtDriver(IXlsDriver):
         self.folder = _folder
 
     def save(self):
-        """ save file """
+        """save file"""
 
     def __repr__(self):
         res = "\n--FakeXlwtDriver--\n"
