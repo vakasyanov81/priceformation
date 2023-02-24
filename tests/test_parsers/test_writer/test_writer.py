@@ -15,15 +15,16 @@ from .fixtures import FixtureTemplate, write_data
 
 
 @pytest.mark.parametrize(
-    "method, call_count", [
+    "method, call_count",
+    [
         ("parsers.writer.fake_driver.FakeXlwtDriver.add_sheet", 1),
         ("parsers.writer.fake_driver.FakeXlwtDriver.write_head", 1),
         ("parsers.writer.fake_driver.FakeXlwtDriver.write", 3),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.save", 1)
-    ]
+        ("parsers.writer.fake_driver.FakeXlwtDriver.save", 1),
+    ],
 )
 def test_xls_write_call_counts(method, call_count):
-    """ test write price for drom.ru  """
+    """test write price for drom.ru"""
 
     with patch(method) as _mock_method:
         fake_driver = FakeXlwtDriver()

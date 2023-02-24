@@ -18,7 +18,7 @@ class BaseFinder:
     """
 
     def __init__(self, alias_container: AliasContainer):
-        """ init """
+        """init"""
         self.alias_container = alias_container
         self._title = None
         self._incorrect_lowers: list = self.alias_container.incorrect_words_lower
@@ -29,11 +29,11 @@ class BaseFinder:
 
     @property
     def title_lower(self):
-        """ lowercase title"""
+        """lowercase title"""
         return self._title.lower() if self._title else self._title
 
     def find_word_in_title(self, title) -> Tuple[Optional[AnyStr], Optional[AnyStr]]:
-        """ find substring in title """
+        """find substring in title"""
         self._title = title
 
         correct_alias, incorrect_alias = self.find_correct()
@@ -60,9 +60,7 @@ class BaseFinder:
         return self._find_from_lower_list(self._correct_lowers, return_correct=True)
 
     def _find_from_lower_list(
-            self,
-            _lowers_list: list,
-            return_correct=False
+        self, _lowers_list: list, return_correct=False
     ) -> Tuple[Optional[AnyStr], Optional[AnyStr]]:
         """
         find by incorrect aliases in title
@@ -77,18 +75,23 @@ class BaseFinder:
             found_position = self._find(_lower_alias)
             if found_position != -1:
                 result_name = _lowers_list[index]
-                founded_word = self._title[found_position: found_position + len(_lower_alias)]
+                next_position = found_position + len(_lower_alias)
+                founded_word = self._title[found_position:next_position]
                 break
 
         if not result_name:
             return None, None
 
-        result = self.alias_container.all_correct_words[index] if return_correct else self._aliases.get(result_name)
+        result = (
+            self.alias_container.all_correct_words[index]
+            if return_correct
+            else self._aliases.get(result_name)
+        )
 
         return result, founded_word
 
     def _find(self, lower_alias) -> int:
-        """ find alias wrapped whitespace in title, and find in start title, and find in end title """
+        """find alias wrapped whitespace in title, and find in start title, and find in end title"""
         white_space = " "
         if not self.title_lower:
             return -1
@@ -99,24 +102,27 @@ class BaseFinder:
         alias_len = len(lower_alias)
         title_len = len(self.title_lower)
 
-        if self.title_lower[0: alias_len] == lower_alias:
+        if self.title_lower[0:alias_len] == lower_alias:
             return 0
 
         if alias_len >= title_len:
             return -1
 
-        if self.title_lower[(title_len - alias_len - 1): title_len] == white_space + lower_alias:
+        if (
+            self.title_lower[(title_len - alias_len - 1) : title_len]
+            == white_space + lower_alias
+        ):
             return title_len - alias_len
 
         return -1
 
     @classmethod
     def replace_alias_in_title(cls, item: RowItem, old_man, new_man):
-        """ replace manufacturer in title chunks """
+        """replace manufacturer in title chunks"""
         item.title = item.title.replace(old_man, new_man)
 
     def correction_field(self, rec: RowItem, field_name, aliases):
-        """ replace property in rec if it has bad signature """
+        """replace property in rec if it has bad signature"""
         l_man = self.str_lower(getattr(rec, field_name))
         if l_man not in aliases.incorrect_words_lower:
             return
@@ -126,5 +132,5 @@ class BaseFinder:
     @classmethod
     @lru_cache()
     def str_lower(cls, _str: str):
-        """ cached lowered string """
+        """cached lowered string"""
         return _str.lower()

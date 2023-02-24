@@ -9,8 +9,9 @@ from parsers.row_item.row_item import RowItem
 
 class STKParser(BaseParser):
     """
-     parser for Greenstone vendor
+    parser for Greenstone vendor
     """
+
     __SUPPLIER_FOLDER_NAME__ = "stk"
     __START_ROW__ = 14
     __SUPPLIER_NAME__ = "STK"
@@ -20,7 +21,7 @@ class STKParser(BaseParser):
         1: RowItem.__CODE__,
         2: RowItem.__TITLE__,
         3: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__
+        4: RowItem.__REST_COUNT__,
     }
 
     def process(self):

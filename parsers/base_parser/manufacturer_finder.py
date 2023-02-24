@@ -15,12 +15,12 @@ class ManufacturerFinder:
     """
 
     def __init__(self, aliases: dict = None):
-        """ init """
+        """init"""
         self.aliases = AliasContainer(aliases)
         self._finder = BaseFinder(self.aliases)
 
     def process(self, item):
-        """ process """
+        """process"""
 
         manufacturer, bad_manufacturer = self._finder.find_word_in_title(item.title)
 
@@ -34,5 +34,7 @@ class ManufacturerFinder:
             self.correction_manufacturer(item)
 
     def correction_manufacturer(self, rec: RowItem):
-        """ correction manufacturer """
-        self._finder.correction_field(rec, field_name="manufacturer", aliases=self.aliases)
+        """correction manufacturer"""
+        self._finder.correction_field(
+            rec, field_name="manufacturer", aliases=self.aliases
+        )

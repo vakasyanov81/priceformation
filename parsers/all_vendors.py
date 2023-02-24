@@ -19,8 +19,10 @@ from parsers.vendors.stk import STKParser
 from parsers.vendors.zapaska import ZapaskaPriceAndRestParser
 
 
-def all_vendors() -> List[Tuple[Type[BaseParser], Optional[Type[BasePriceParseConfiguration]]]]:
-    """ get all active vendors """
+def all_vendors() -> (
+    List[Tuple[Type[BaseParser], Optional[Type[BasePriceParseConfiguration]]]]
+):
+    """get all active vendors"""
     return [
         (MimParser1Sheet, BasePriceParseConfiguration),
         (MimParser2Sheet, BasePriceParseConfiguration),
@@ -31,5 +33,5 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Optional[Type[BasePriceParseCo
         (PoshkParser, BasePriceParseConfiguration),
         (ZapaskaPriceAndRestParser, BasePriceParseConfiguration),
         (Autosnab54Parser, BasePriceParseConfiguration),
-        (STKParser, BasePriceParseConfiguration)
+        (STKParser, BasePriceParseConfiguration),
     ]

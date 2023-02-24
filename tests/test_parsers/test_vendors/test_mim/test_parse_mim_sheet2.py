@@ -27,26 +27,24 @@ parser_config = BasePriceParseConfigurationParams(
     markup_rules_provider=MimMarkupRulesProviderForTests(),
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
-    manufacturer_aliases=ManufacturerAliasesProviderForTests()
+    manufacturer_aliases=ManufacturerAliasesProviderForTests(),
 )
 
 
 def get_fake_parser(parse_result):
-    """ get fake parser """
+    """get fake parser"""
     FakeXlsReader.parse_result = list(parse_result.values())[0]
     return MimParser2Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        price_config=BasePriceParseConfiguration(parser_config)
+        price_config=BasePriceParseConfiguration(parser_config),
     )
 
 
 def test_parse():  # pylint: disable=R0201
-    """ check all field for one price-row """
+    """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(
-        mim_one_item_result()
-    ).get_result()
+    result: List[RowItem] = get_fake_parser(mim_one_item_result()).get_result()
 
     assert len(result) == 1
     assert result[0].title == "295/75R22.5 Hifly HH312 Ведущая M+S PR16 146/143L TL"

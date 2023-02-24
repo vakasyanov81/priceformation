@@ -16,20 +16,23 @@ class ZapaskaPriceAndRestParser:
     """
     combine price parser and rest parser
     """
+
     __SUPPLIER_FOLDER_NAME__ = _SUPPLIER_FOLDER_NAME
 
     def __init__(self, price_config=None):
         self.price_config = price_config
 
     def get_result(self):
-        """ get result """
+        """get result"""
         if not ZapaskaRestParser.is_active:
             return []
-        parser = ZapaskaRestParser(price_mrp=self.get_price_mrp(), price_config=self.price_config)
+        parser = ZapaskaRestParser(
+            price_mrp=self.get_price_mrp(), price_config=self.price_config
+        )
         return parser.get_result()
 
     def get_price_mrp(self):
-        """ get price mrp result """
+        """get price mrp result"""
         return ZapaskaParser(price_config=self.price_config).get_result()
 
 
@@ -47,7 +50,7 @@ class ZapaskaParser(BaseParser):
         0: RowItem.__CODE__,
         1: RowItem.__CODE_ART__,
         2: RowItem.__TITLE__,
-        5: RowItem.__PRICE_RECOMMENDED__
+        5: RowItem.__PRICE_RECOMMENDED__,
     }
 
     def after_process(self):

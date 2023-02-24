@@ -13,6 +13,7 @@ class MimParser3Sheet(MimParserBase):
     """
     parser for mim vendor (sheet 3)
     """
+
     __SUPPLIER_FOLDER_NAME__ = MimParserBase.__SUPPLIER_FOLDER_NAME__
     __COLUMNS__ = config_for_sheets23()
 

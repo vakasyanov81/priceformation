@@ -16,7 +16,7 @@ from .test_parse_zapaska import parser_config
 
 
 def get_fake_parser(rest_result, parse_result):
-    """ get fake parser """
+    """get fake parser"""
 
     def make_result(_self):
         return rest_result.get(_self.file_path)
@@ -27,18 +27,15 @@ def get_fake_parser(rest_result, parse_result):
         xls_reader=FakeXlsReader,
         file_prices=list(rest_result.keys()),
         price_mrp=parse_result,
-        price_config=BasePriceParseConfiguration(parser_config)
+        price_config=BasePriceParseConfiguration(parser_config),
     )
 
 
 def test_2files():
-    """ test combine result from two price file """
+    """test combine result from two price file"""
     rest_result, parse_result = zapaska_2file_result()
 
-    result: List[RowItem] = get_fake_parser(
-        rest_result,
-        parse_result
-    ).get_result()
+    result: List[RowItem] = get_fake_parser(rest_result, parse_result).get_result()
 
     assert len(result) == 2
 
@@ -54,7 +51,7 @@ def test_2files():
             "rest_count": 17.0,
             "sup_name": "Запаска (остатки)",
             "title": "00 Сельх.шины",
-            "type_production": ""
+            "type_production": "",
         },
         {
             "code": "00003",
@@ -67,8 +64,8 @@ def test_2files():
             "rest_count": 10.0,
             "sup_name": "Запаска (остатки)",
             "title": "00 Сельх.шины__1",
-            "type_production": ""
-        }
+            "type_production": "",
+        },
     ]
 
     assert result[0].to_dict() == res[0]

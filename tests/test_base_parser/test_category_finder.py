@@ -11,7 +11,8 @@ from parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(
-    "title, category", [
+    "title, category",
+    [
         ("bla bla автошина bla", "Автошина"),
         ("bla bla шина bla", "Автошина"),
         ("bla bla шины bla", "Автошина"),
@@ -22,14 +23,12 @@ from parsers.row_item.row_item import RowItem
         ("bla bla камера bla Алтайшина", "Автокамера"),
         ("bla bla ободная лента bla", "Ободная лента"),
         ("bla bla Ободная лента bla", "Ободная лента"),
-    ]
+    ],
 )
 def test_find_category_from_title(title, category):
-    """ test find category """
+    """test find category"""
 
-    item = RowItem({
-        "title": title
-    })
+    item = RowItem({"title": title})
 
     found_category, _ = CategoryFinder().find(item)
     assert found_category == category

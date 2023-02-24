@@ -11,13 +11,14 @@ from parsers.row_item.row_item import RowItem
 
 
 class PoshkPriceParseConfiguration(BasePriceParseConfiguration):
-    """ poshk price parser configuration """
+    """poshk price parser configuration"""
 
 
 class PoshkParser(BaseParser):
     """
     logic for posh vendor
     """
+
     __SUPPLIER_FOLDER_NAME__ = "poshk"
     __START_ROW__ = 14
     __SUPPLIER_NAME__ = "Пошк"
@@ -27,7 +28,7 @@ class PoshkParser(BaseParser):
         0: RowItem.__CODE__,
         1: RowItem.__TITLE__,
         2: RowItem.__PRICE_PURCHASE__,
-        3: RowItem.__REST_COUNT__
+        3: RowItem.__REST_COUNT__,
     }
 
     def process(self):
@@ -60,15 +61,9 @@ class PoshkParser(BaseParser):
 
     @classmethod
     def get_category_by_title(cls, title):
-        """ get category name by title """
+        """get category name by title"""
         title = title.lower()
-        _available_categories = [
-            "ободная лента",
-            "шина",
-            "покрышка",
-            "камера",
-            "диск"
-        ]
+        _available_categories = ["ободная лента", "шина", "покрышка", "камера", "диск"]
 
         categories_map = {
             _available_categories[0]: "Ободная лента",
@@ -85,12 +80,12 @@ class PoshkParser(BaseParser):
 
     @classmethod
     def clear_and_set_title(cls, item):
-        """ clear and set reared title """
+        """clear and set reared title"""
         item.title = item.title.replace(", , шт", "").strip()
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list):
-        """ get prepared title chunks """
+        """get prepared title chunks"""
         cls.replace_star_to_cross(chunks)
         cls.delete_white_spaces(chunks)
         return chunks

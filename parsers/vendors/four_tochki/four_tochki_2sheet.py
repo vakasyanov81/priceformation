@@ -12,6 +12,7 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     """
     parser for four_tochki vendor (sheet 2)
     """
+
     __SUPPLIER_FOLDER_NAME__ = FourTochkiParserBase.__SUPPLIER_FOLDER_NAME__
     __COLUMNS__ = {
         0: RowItem.__CODE__,
@@ -26,7 +27,7 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
         10: RowItem.__COLOR__,
         12: RowItem.__REST_COUNT__,
         13: RowItem.__PRICE_RECOMMENDED__,
-        14: RowItem.__PRICE_PURCHASE__
+        14: RowItem.__PRICE_PURCHASE__,
     }
 
     __SHEET_INFO__ = "Вкладка (диски) #2"

@@ -18,11 +18,12 @@ config = init_cfg()
 
 
 class XlsWriter:
-    """ price writer """
+    """price writer"""
+
     __FOLDER__ = f"file_prices{config.main.sep}result{config.main.sep}"
 
     def __init__(self, driver, parse_result: list, template):
-        """ init """
+        """init"""
         self.driver: IXlsDriver = driver
         self.template: IWriteTemplate = template()
         self.exclude = self.template.exclude()
@@ -33,43 +34,39 @@ class XlsWriter:
         self.write()
 
     def create_folder(self):
-        """ create result folder """
+        """create result folder"""
         if not Path(self.__FOLDER__).exists():
             Path(self.__FOLDER__).mkdir(parents=True)
 
     def write(self):
-        """ make write """
-        self.driver.write_head(
-            self.col_names()
-        )
+        """make write"""
+        self.driver.write_head(self.col_names())
         self.write_body()
 
         # сохраняем рабочую книгу
         self.driver.save()
 
     def get_file_name(self):
-        """ get file name for writing """
+        """get file name for writing"""
         return self.template.get_file_name().format(
             now=datetime.datetime.now().strftime("%Y-%m-%d")
         )
 
     def col_names(self) -> list:
-        """ get column names """
+        """get column names"""
         names = []
         for col in self.template.columns():
-            names.append(
-                ColumnHelper(col).name
-            )
+            names.append(ColumnHelper(col).name)
         return names
 
     def write_body(self):
-        """ write body """
+        """write body"""
         data = self.make_exclude()
         for row_index, item in enumerate(data):
             self.write_row(item, row_index, self.get_color(item))
 
     def get_color(self, item) -> Tuple[Optional[str], Optional[int]]:
-        """ get color """
+        """get color"""
         colors = self.template.colors()
         empty = None, None
         if not colors:
@@ -86,7 +83,7 @@ class XlsWriter:
         return color_map.get(column_value), index
 
     def write_row(self, row_item, row_index, color: Tuple = None):
-        """ write row item """
+        """write row item"""
         color_index = color[1] if color else 0
         _color = color[0] if color else None
         for col_index, col in enumerate(self.template.columns()):
@@ -97,16 +94,11 @@ class XlsWriter:
 
             _style = _color if color_index == col_index else None
 
-            self.driver.write(
-                row_index + 1,
-                col_index,
-                val,
-                _color=_style
-            )
+            self.driver.write(row_index + 1, col_index, val, _color=_style)
 
     @classmethod
     def get_value(cls, column: dict, row_item):
-        """ get value for write cell """
+        """get value for write cell"""
         col = ColumnHelper(column)
         if col.skip:
             return None
@@ -116,7 +108,7 @@ class XlsWriter:
 
     @classmethod
     def _to_str(cls, value) -> str:
-        """ list to string """
+        """list to string"""
         if isinstance(value, list):
             val = [v for v in value if v]
             return ", ".join(val)
@@ -124,7 +116,7 @@ class XlsWriter:
         return value
 
     def make_exclude(self):
-        """ filtration """
+        """filtration"""
         included = []
 
         if not self.exclude:

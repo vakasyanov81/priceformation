@@ -45,25 +45,25 @@ class ColumnHelper:
 
     @property
     def style(self):
-        """ column style """
+        """column style"""
         return self.column.get("style") or {}
 
     @property
     def style_width(self):
-        """ column width """
+        """column width"""
         return self.style.get("width")
 
     @property
     def def_value(self):
-        """ default value """
+        """default value"""
         return self.column.get("default_value")
 
     @property
     def field(self):
-        """ filed name in data-row for write """
+        """filed name in data-row for write"""
         return self.column.get("field")
 
     @property
     def skip(self) -> bool:
-        """ if True, then skip column """
+        """if True, then skip column"""
         return bool(self.column.get("skip"))

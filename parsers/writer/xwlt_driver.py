@@ -17,8 +17,9 @@ class XlsxWriterDriver(IXlsDriver):
     """
     write price list logic via xlsxwriter module
     """
+
     def __init__(self):
-        """ init """
+        """init"""
         self.work_book = None
         self.work_sheet = None
         self.current_col_index = 0
@@ -32,7 +33,7 @@ class XlsxWriterDriver(IXlsDriver):
         return self.work_book
 
     def get_workbook(self):
-        """ get workbook """
+        """get workbook"""
         return self.work_book
 
     def add_sheet(self, sheet_name):
@@ -41,13 +42,13 @@ class XlsxWriterDriver(IXlsDriver):
         return self
 
     def write_head(self, names):
-        """ write head """
+        """write head"""
 
         for j, name in enumerate(names):
             self.write(0, j, name, style=self.bold_style())
 
     def write(self, i, j, _value, style=None, _color: str = None):
-        """ write """
+        """write"""
         if _color and not style:
             style = self.color_style(_color)
         if style:
@@ -62,24 +63,24 @@ class XlsxWriterDriver(IXlsDriver):
             self.col_max_length[j] = _len
 
     def save(self):
-        """ save file """
+        """save file"""
         self.work_sheet.autofilter(0, 0, self.current_row_index, self.current_col_index)
         self.set_auto_width()
         self.get_workbook().close()
 
     def set_auto_width(self):
-        """ set auto width by content """
+        """set auto width by content"""
         for col_index, max_len in self.col_max_length.items():
             self.work_sheet.set_column(col_index, col_index, max_len + 4)
 
     def bold_style(self):
-        """ get bold-style object """
+        """get bold-style object"""
         style = self.get_workbook().add_format()
         style.set_bold()
         return style
 
     def color_style(self, color: str):
-        """ get color-style object """
+        """get color-style object"""
         style = self.get_workbook().add_format()
         style.set_bg_color(color)
         return style

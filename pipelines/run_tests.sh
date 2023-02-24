@@ -1,5 +1,5 @@
 #!/bin/bash
 cd ..
 export PYTHONPATH=./
-poetry shell
-pytest ./tests
+# poetry shell
+poetry run pytest ./tests

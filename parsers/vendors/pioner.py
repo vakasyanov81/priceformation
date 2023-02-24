@@ -15,8 +15,9 @@ from parsers.row_item.row_item import RowItem
 
 class PionerParser(BaseParser):
     """
-     parser for pioner vendor
+    parser for pioner vendor
     """
+
     __SUPPLIER_FOLDER_NAME__ = "pioner"
     __START_ROW__ = 12
     __SUPPLIER_NAME__ = "Пионер"
@@ -26,7 +27,7 @@ class PionerParser(BaseParser):
         1: RowItem.__TITLE__,
         2: RowItem.__PRICE_PURCHASE__,
         4: RowItem.__REST_COUNT__,
-        5: RowItem.__RESERVE_COUNT__
+        5: RowItem.__RESERVE_COUNT__,
     }
     current_category = None
     current_category_first_chunk = None
@@ -40,14 +41,12 @@ class PionerParser(BaseParser):
             self.add_price_markup(item)
             self.set_manufacturer_to_title(item)
             self.set_brand(item)
-            ManufacturerFinder(
-                self.price_config().manufacturer_aliases()
-            ).process(item)
+            ManufacturerFinder(self.price_config().manufacturer_aliases()).process(item)
 
         return res
 
     def _set_current_category(self, item):
-        """ set current category by title """
+        """set current category by title"""
         if self.is_category_row(item):
             self.current_category = (item.title or "").lower().strip()
         self.current_category_first_chunk = (
@@ -55,13 +54,11 @@ class PionerParser(BaseParser):
         ).split(" ")[0]
 
     def set_manufacturer_to_title(self, item):
-        """ set manufacturer name to title for row item """
+        """set manufacturer name to title for row item"""
         m_name = self.get_manufacturer_name()
 
         def make_m_name(_m_name):
-            _m_map = {
-                "рокбастер": "RockBuster"
-            }
+            _m_map = {"рокбастер": "RockBuster"}
 
             return _m_map.get(m_name) or m_name
 
@@ -77,17 +74,17 @@ class PionerParser(BaseParser):
         item.title = " ".join(title_chunks)
 
     def set_brand(self, item):
-        """ set brand name """
+        """set brand name"""
         m_name = self.get_manufacturer_name()
         item.brand = m_name
 
     def set_current_category(self, item: RowItem):
-        """ set current category """
+        """set current category"""
         item.type_production = self.current_category_first_chunk
         self.correction_category(item)
 
     def get_manufacturer_name(self):
-        """ determine manufacturer name by current category """
+        """determine manufacturer name by current category"""
         if not self.current_category:
             return None
 
@@ -105,7 +102,7 @@ class PionerParser(BaseParser):
 
     @classmethod
     def get_item_rest(cls, item):
-        """ see base function """
+        """see base function"""
         rest = item.rest_count or 0
         reserve = item.reserve_count or 0
         return rest - reserve

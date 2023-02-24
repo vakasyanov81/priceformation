@@ -19,9 +19,10 @@ CALL_RESULT_MSG = 'Result "{method}": {res}'
 
 
 def _decorator(func, label=""):
-    """ log decorator """
+    """log decorator"""
+
     def wrapped(*args, **kwargs):
-        """ wrapper for super method """
+        """wrapper for super method"""
         result = None
         method = func.__module__ + "." + func.__name__
         start_time = time.time()
@@ -38,11 +39,8 @@ def _decorator(func, label=""):
             result = func(*args, **kwargs)
         except Exception:
             log_msg(
-                CALL_TRACE_MSG.format(
-                    method=method,
-                    trace=traceback.format_exc()
-                ),
-                level=__logging.WARNING
+                CALL_TRACE_MSG.format(method=method, trace=traceback.format_exc()),
+                level=__logging.WARNING,
             )
             raise
         finally:
@@ -60,7 +58,7 @@ def logging(label=""):
     """
 
     def decorate(func, _label=label):
-        """ wrapper for supper method """
+        """wrapper for supper method"""
         return _decorator(func=func, label=_label)
 
     return decorate
