@@ -2,6 +2,7 @@
 cd ..
 export PYTHONPATH=./
 . ./venv/bin/activate
-python3 -m pip install -r ./dev_requirements.txt
-python3 -m ruff .
+# python3 -m pip install -r ./dev_requirements.txt
+poetry run ruff .
+poetry run black . --check
 deactivate

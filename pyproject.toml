@@ -1,3 +1,32 @@
+[tool.poetry]
+name = "priceformation"
+version = "0.1.0"
+description = ""
+authors = ["huck"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+xlrd = "==1.2.0"
+openpyxl = "==3.0.10"
+xlsxwriter = "==3.0.3"
+termcolor = "==2.2.0"
+colorama = "==0.4.6"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "==7.2.1"
+ruff = "==0.0.252"
+pyright = "==1.1.295"
+pytest-cov = "==4.0.0"
+pylint-pytest = "==1.1.2"
+black = "==23.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.ruff]
 select = ["F", "E", "W", "C90",
           "I", "N", "S", "B", "A",
