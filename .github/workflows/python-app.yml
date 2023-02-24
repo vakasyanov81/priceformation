@@ -39,15 +39,15 @@ jobs:
           poetry install
       - name: Tests with pytest
         run: |
-          poetry pytest ./tests
+          poetry run pytest ./tests
       - name: Test coverage
         run: |
-          python -m pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
+          poetry run pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
       - name: Lint code by ruff
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          python -m ruff .
+          poetry run ruff .
       - name: Lint with pylint
         run: |
           export WORK_DIR=$GITHUB_WORKSPACE
-          python -m pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
+          poetry run pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
