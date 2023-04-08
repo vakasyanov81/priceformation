@@ -10,6 +10,8 @@ from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_rest import ZapaskaRestParser
 
 _SUPPLIER_FOLDER_NAME = "zapaska"
+_SUPPLIER_NAME = "Запаска"
+_SUPPLIER_CODE = "2"
 
 
 class ZapaskaPriceAndRestParser:
@@ -18,6 +20,8 @@ class ZapaskaPriceAndRestParser:
     """
 
     __SUPPLIER_FOLDER_NAME__ = _SUPPLIER_FOLDER_NAME
+    __SUPPLIER_NAME__ = _SUPPLIER_NAME
+    __SUPPLIER_CODE__ = _SUPPLIER_CODE
 
     def __init__(self, price_config=None):
         self.price_config = price_config
@@ -43,8 +47,8 @@ class ZapaskaParser(BaseParser):
 
     __SUPPLIER_FOLDER_NAME__ = _SUPPLIER_FOLDER_NAME
     __START_ROW__ = 7
-    __SUPPLIER_NAME__ = "Запаска"
-    __SUPPLIER_CODE__ = "2"
+    __SUPPLIER_NAME__ = _SUPPLIER_NAME
+    __SUPPLIER_CODE__ = _SUPPLIER_CODE
 
     __COLUMNS__ = {
         0: RowItem.__CODE__,
