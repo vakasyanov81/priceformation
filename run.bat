@@ -1,1 +1,1 @@
-py run.py
+poetry run python run.py
