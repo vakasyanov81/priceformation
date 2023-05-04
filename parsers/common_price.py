@@ -4,7 +4,7 @@ Make parse all price and make inner an drom prices
 """
 __author__ = "Kasyanov V.A."
 
-from typing import List, Optional, Tuple, Type
+from typing import Dict, List, NamedTuple, Optional, Tuple, Type
 
 from parsers import data_provider
 from parsers.all_vendors import all_vendors
@@ -16,6 +16,10 @@ from parsers.base_parser.base_parser_config import (
 from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
+
+
+class SupplierInfo(NamedTuple):
+    name: str
 
 
 class CommonPrice:
@@ -67,6 +71,14 @@ class CommonPrice:
         )
         config = vendor[1](default_config) if vendor[1] else None
         return vendor[0](price_config=config)
+
+    @classmethod
+    def supplier_info(cls) -> Dict[str, SupplierInfo]:
+        """Supplier info"""
+        supplier_info = {}
+        for v, _ in all_vendors():
+            supplier_info[v.__SUPPLIER_CODE__] = SupplierInfo(name=v.__SUPPLIER_NAME__)
+        return supplier_info
 
     def write_all_prices(self):
         """

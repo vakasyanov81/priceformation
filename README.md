@@ -36,3 +36,12 @@ file_prices
 ## Technical details:
 - The library https://github.com/python-excel/xlrd is used to work with excel.
 - The library https://github.com/python-excel/xlwt is used for writing to excel
+
+## TODO
+- У номенклатуры поставщика нужен статус активна / неактивна. Когда в прайсе у поставщика удаляется позиция, либо остатки равны нулю, позицию в базе помечаем как неактивную 
+- Если позиция поставщика уже есть в базе, то обновляем цену и остатки.
+
+мим 25700 (70 шт)
+форточки 25200 (30 шт)
+наценка 4%
+цена продажи 26570
