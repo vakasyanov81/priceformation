@@ -12,7 +12,7 @@ from .wrappers import logging
 @logging(label="...reading file...")
 def read_file(file_path):
     """read file"""
-    with Path(file_path).open() as _file:
+    with Path(file_path).open(encoding='UTF-8') as _file:
         return _file.read()
 
 
