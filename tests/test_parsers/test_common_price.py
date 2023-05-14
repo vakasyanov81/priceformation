@@ -16,13 +16,22 @@ class FakeParser:
     """fake parser"""
 
     # pylint: disable=R0903
-    __SUPPLIER_FOLDER_NAME__ = "fake_supplier"
+    _SUPPLIER_FOLDER_NAME = "fake_supplier"
 
     def __init__(self, file_prices: list = None, xls_reader=None, price_config=None):
         pass
 
     @classmethod
+    def supplier_folder_name(cls):
+        return cls._SUPPLIER_FOLDER_NAME
+
+    @classmethod
     def get_result(cls):
+        """fake get result"""
+        return fake_result
+
+    @classmethod
+    def parse(cls):
         """fake get result"""
         return fake_result
 
@@ -31,7 +40,7 @@ class FakeParser:
 def test_parse_all_vendors(mock_all_vendors):
     """test parse for each parser in vendor list"""
 
-    mock_all_vendors.return_value = [(FakeParser, None, {})]
+    mock_all_vendors.return_value = [(FakeParser, None)]
 
     common_price = CommonPrice()
     common_price.parse_all_vendors()

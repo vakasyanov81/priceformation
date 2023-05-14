@@ -9,10 +9,11 @@ from typing import List
 import pytest
 
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfiguration,
     BasePriceParseConfigurationParams,
+    ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.zapaska import zapaska_rest_params
 from parsers.vendors.zapaska_rest import ZapaskaRestParser
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
@@ -31,6 +32,7 @@ parser_config = BasePriceParseConfigurationParams(
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+    parser_params=zapaska_rest_params,
 )
 
 
@@ -41,7 +43,7 @@ def get_fake_parser(rest_result, parse_result):
         xls_reader=FakeXlsReader,
         file_prices=list(rest_result.keys()),
         price_mrp=parse_result,
-        price_config=BasePriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 
@@ -55,7 +57,7 @@ class TestParseZapaska:
 
         rest_result, parse_result = zapaska_one_item_result()
 
-        result: List[RowItem] = get_fake_parser(rest_result, parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(rest_result, parse_result).parse()
 
         res = result[0]
 
@@ -71,7 +73,7 @@ class TestParseZapaska:
         rest_result, parse_result = zapaska_one_item_result()
         self.get_first_row_item(rest_result).rest_count = 3
 
-        result: List[RowItem] = get_fake_parser(rest_result, parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(rest_result, parse_result).parse()
 
         assert len(result) == 0
 
@@ -94,7 +96,7 @@ class TestParseZapaska:
         item.price_opt = price_opt
         parse_result[0].price_recommended = price_recommended
 
-        result: List[RowItem] = get_fake_parser(rest_result, parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(rest_result, parse_result).parse()
 
         assert result[0].price_markup == price_markup
 

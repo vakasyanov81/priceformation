@@ -6,30 +6,58 @@ __author__ = "Kasyanov V.A."
 
 import re
 
-from parsers.base_parser.base_parser import BaseParser, BasePriceParseConfiguration
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser, ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParserParams,
+)
 from parsers.row_item.row_item import RowItem
 
 
-class PoshkPriceParseConfiguration(BasePriceParseConfiguration):
+class PoshkPriceParseConfiguration(ParseConfiguration):
     """poshk price parser configuration"""
+
+
+poshk_params = ParserParams(
+    supplier_folder_name="poshk",
+    start_row=14,
+    supplier_name="Пошк",
+    supplier_code="1",
+    sheet_info="",
+    columns={
+        0: RowItem.__CODE__,
+        1: RowItem.__TITLE__,
+        2: RowItem.__PRICE_PURCHASE__,
+        3: RowItem.__REST_COUNT__,
+    },
+    stop_words=[],
+    file_templates=["price*.xls", "price*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItem,
+)
+
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    poshk_params.supplier_folder_name
+)
+
+poshk_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=poshk_params,
+)
+
+poshk_config = PoshkPriceParseConfiguration(poshk_config)
 
 
 class PoshkParser(BaseParser):
     """
     logic for posh vendor
     """
-
-    __SUPPLIER_FOLDER_NAME__ = "poshk"
-    __START_ROW__ = 14
-    __SUPPLIER_NAME__ = "Пошк"
-    __SUPPLIER_CODE__ = "1"
-
-    __COLUMNS__ = {
-        0: RowItem.__CODE__,
-        1: RowItem.__TITLE__,
-        2: RowItem.__PRICE_PURCHASE__,
-        3: RowItem.__REST_COUNT__,
-    }
 
     def process(self):
         res = super().process()

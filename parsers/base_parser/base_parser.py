@@ -21,7 +21,7 @@ from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
 
 from ..data_provider import VendorParams
-from .base_parser_config import BasePriceParseConfiguration
+from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
@@ -33,60 +33,61 @@ class BaseParser:
     base parser logic
     """
 
-    __SUPPLIER_FOLDER_NAME__ = "__"
-    __START_ROW__ = 0
-
-    __SUPPLIER_NAME__ = "Базовый поставщик"
-    # Описание текущей вкладки
-    __SHEET_INFO__ = ""
-    __SUPPLIER_CODE__ = "*"
-
-    __COLUMNS__ = {}
-    __STOP_WORDS__ = []
-
-    __FILE_TEMPLATES__ = ["price*.xls", "price*.xlsx"]
-
-    __SHEET_INDEXES__ = []
-    __ENABLE__ = False
-
-    __ROW_ITEM_ADAPTOR__ = RowItem
+    # _SUPPLIER_FOLDER_NAME = "__"
+    # __START_ROW__ = 0
+    #
+    # _SUPPLIER_NAME = "Базовый поставщик"
+    # # Описание текущей вкладки
+    # __SHEET_INFO__ = ""
+    # __SUPPLIER_CODE__ = "*"
+    #
+    # __COLUMNS__ = {}
+    # __STOP_WORDS__ = []
+    #
+    # __FILE_TEMPLATES__ = ["price*.xls", "price*.xlsx"]
+    #
+    # __SHEET_INDEXES__ = []
+    # __ENABLE__ = False
+    #
+    # __ROW_ITEM_ADAPTOR__ = RowItem
 
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [
         SetPercentMarkupItemAction
     ]
 
+    _params = None
+    _category_finder = None
+    files = None
+
     def __init__(
         self,
-        price_config: BasePriceParseConfiguration,
+        parse_config: ParseConfiguration = None,
         file_prices: list = None,
         xls_reader=XlsReader,
     ):
         """init"""
         self.result: List[RowItem] = []
-        self._price_config = price_config
+        self._parse_config = parse_config
         self.type_production = None
-        if not self.is_active:
-            return
-        self.logger = LoggerParseProcess(repr(self))
         self.xls_reader = xls_reader
+        self.files = file_prices
+        self.logger = LoggerParseProcess(repr(self))
         self._category_finder = CategoryFinder()
+        self.files = self.files or get_file_prices(self)
 
-        self.files = file_prices or get_file_prices(self)
-        self.init_process()
-
-    def price_config(self) -> BasePriceParseConfiguration:
-        """get price config"""
-        return self._price_config
+    def parse_config(self) -> ParseConfiguration:
+        """get parse config"""
+        return self._parse_config
 
     def markup_rules(self) -> data_provider.MarkupRules:
         """get markup rules for price formation"""
-        return self._price_config.get_markup_rules()
+        return self._parse_config.get_markup_rules()
 
     @lru_cache()
     def get_black_list(self) -> List[str]:
         """get black list price position"""
-        black_list = self._price_config.black_list()
+        black_list = self._parse_config.black_list()
         return self.prepare_black_list(black_list)
 
     def prepare_black_list(self, black_list: List[str]) -> List[str]:
@@ -96,17 +97,21 @@ class BaseParser:
     @lru_cache()
     def get_stop_words(self) -> List[str]:
         """get stop word list"""
-        return self._price_config.stop_words()
+        return self._parse_config.stop_words()
 
-    def init_process(self):
-        """init process"""
+    def set_parse_config(self, parse_sonfig: ParseConfiguration):
+        self._parse_config = parse_sonfig
+
+    def parse(self):
+        """parse"""
         if not self.is_active:
             self.logger.log_disable_status()
-            return
+            return []
         self.logger.log_start()
         self.process()
         self.after_process()
         self.logger.log_finish(ParseResultStatistic(self.result))
+        return self.result
 
     def correction_category(self, item: RowItem):
         """correction category"""
@@ -137,16 +142,19 @@ class BaseParser:
 
     def get_markup_percent(self, price_value: float):
         """get markup percent by price value"""
-        default_percent = self._price_config.get_default_markup_percents()
+        default_percent = self._parse_config.get_default_markup_percents()
 
         if not price_value:
             return default_percent
 
-        for price_rule in self._price_config.get_price_markup_map():
+        for price_rule in self._parse_config.get_price_markup_map():
             if price_rule.min < price_value <= price_rule.max:
                 return price_rule.percent
 
         return default_percent
+
+    def parser_params(self) -> ParserParams:
+        return self.parse_config().parse_config.parser_params
 
     def prepare(self, items):
         """prepare (need refactoring)"""
@@ -160,10 +168,10 @@ class BaseParser:
             if not self.is_valid_title(item.title):
                 continue
 
-            ManufacturerFinder(self._price_config.manufacturer_aliases()).process(item)
+            ManufacturerFinder(self._parse_config.manufacturer_aliases()).process(item)
             self.correction_category(item)
 
-            item.supplier_name = self.__SUPPLIER_NAME__
+            item.supplier_name = self.parser_params().supplier_name
             result.append(item)
 
         return result
@@ -176,9 +184,9 @@ class BaseParser:
 
     def __repr__(self) -> str:
         """get supplier name and sheet info string"""
-        sup_name = f"{self.__class__.__name__}: {self.__SUPPLIER_NAME__}"
-        if self.__SHEET_INFO__:
-            sup_name += f" ({self.__SHEET_INFO__})"
+        sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier_name}"
+        if self.parser_params().sheet_info:
+            sup_name += f" ({self.parser_params().sheet_info})"
         return sup_name
 
     def get_result(self) -> List[RowItem]:
@@ -213,10 +221,9 @@ class BaseParser:
 
         self.result = result
 
-    @classmethod
-    def to_row_items(cls, result: List[dict]) -> List[RowItem]:
+    def to_row_items(self, result: List[dict]) -> List[RowItem]:
         """instance List[RowItem]"""
-        return [cls.__ROW_ITEM_ADAPTOR__(raw_item) for raw_item in result]
+        return [self.parser_params().row_item_adaptor(row_item) for row_item in result]
 
     @classmethod
     def to_raw_result(cls, result: List[RowItem]) -> List[dict]:
@@ -226,12 +233,16 @@ class BaseParser:
     def raw_parse(self, _file: str) -> List[dict]:
         """get raw-data after parse via reader"""
         reader = self.get_xls_reader(_file)
-        return reader.parse(self.__SHEET_INDEXES__)
+        return reader.parse(self.parser_params().sheet_indexes)
 
     def get_xls_reader(self, _file):
         """get xls reader"""
         return self.xls_reader.get_instance(
-            _file, {"start_row": (self.__START_ROW__ - 1), "columns": self.__COLUMNS__}
+            _file,
+            {
+                "start_row": (self.parser_params().start_row - 1),
+                "columns": self.parser_params().columns,
+            },
         )
 
     @classmethod
@@ -368,8 +379,8 @@ class BaseParser:
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         """get config for current vendor"""
-        return self._price_config.all_vendor_config().get(
-            self.__SUPPLIER_FOLDER_NAME__
+        return self._parse_config.all_vendor_config().get(
+            self.parser_params().supplier_folder_name
         ) or VendorParams(enabled=0)
 
     @classmethod
@@ -422,13 +433,13 @@ class SupplierNotHavePricesError(CoreExceptionError):
 def get_file_prices(parser: TBaseParser):
     """get supplier file-prices"""
     _list_files = []
-    for f_tmp in parser.__FILE_TEMPLATES__:
+    for f_tmp in parser.parser_params().file_templates:
         _list_files += glob.glob(
-            f"file_prices/{parser.__SUPPLIER_FOLDER_NAME__}/{f_tmp}"
+            f"file_prices/{parser.parser_params().supplier_folder_name}/{f_tmp}"
         )
 
     if not _list_files:
         raise SupplierNotHavePricesError(
-            f"Прайсов у поставщика ({parser.__SUPPLIER_NAME__}) не обнаружено!"
+            f"Прайсов у поставщика ({parser.parser_params().supplier_name}) не обнаружено!"
         )
     return _list_files

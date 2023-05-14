@@ -9,11 +9,15 @@ from typing import List, Tuple
 import pytest
 
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfiguration,
     BasePriceParseConfigurationParams,
+    ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.mim.mim_1sheet import MimParser1Sheet, RowItemMim
+from parsers.vendors.mim.mim_1sheet import (
+    MimParser1Sheet,
+    RowItemMim,
+    mim_sheet_1_params,
+)
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.mim_sheet1 import mim_one_item_result
 from tests.test_parsers.test_vendors.test_mim.price_rules import (
@@ -33,6 +37,7 @@ parser_config = BasePriceParseConfigurationParams(
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+    parser_params=mim_sheet_1_params,
 )
 
 
@@ -42,7 +47,7 @@ def get_fake_parser(parse_result):
     return MimParser1Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        price_config=BasePriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 
@@ -73,7 +78,7 @@ def test_prepare_title(row_elements, prepared_title):
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(mim_one_item_result()).get_result()
+    result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(result) == 1
     assert result[0].title == "31x10.5R15 Crossleader DSU02 92Y"
@@ -93,7 +98,7 @@ class TestParseMimSheet1:
         parse_result, first_row = self.get_first_row_item(mim_one_item_result())
         first_row.rest_count = 3
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
         assert len(result) == 0
 
     @classmethod
@@ -118,5 +123,5 @@ class TestParseMimSheet1:
 
         parser = get_fake_parser(parse_result)
 
-        result: List[RowItem] = parser.get_result()
+        result: List[RowItem] = parser.parse()
         assert result[0].price_markup == price_with_markup

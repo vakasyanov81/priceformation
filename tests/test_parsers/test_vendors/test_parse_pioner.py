@@ -9,11 +9,11 @@ from typing import List
 import pytest
 
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfiguration,
     BasePriceParseConfigurationParams,
+    ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.pioner import PionerParser
+from parsers.vendors.pioner import PionerParser, pioner_params
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.pioner import (
     pioner_one_item_result,
@@ -34,6 +34,7 @@ parser_config = BasePriceParseConfigurationParams(
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+    parser_params=pioner_params,
 )
 
 
@@ -43,7 +44,7 @@ def get_fake_parser(parse_result):
     return PionerParser(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        price_config=BasePriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 
@@ -55,7 +56,7 @@ class TestParsePioner:
     def test_parse(self):  # pylint: disable=R0201
         """check all field for one price-row"""
 
-        result: List[RowItem] = get_fake_parser(pioner_one_item_result()).get_result()
+        result: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
 
         assert len(result) == 1
         assert result[0].title == "Автокамера 14.00-24"
@@ -68,7 +69,7 @@ class TestParsePioner:
 
         result: List[RowItem] = get_fake_parser(
             pioner_one_item_result_with_categories()
-        ).get_result()
+        ).parse()
 
         assert len(result) == 1
         assert result[0].brand == "triangle"
@@ -79,7 +80,7 @@ class TestParsePioner:
         first_row = self.get_first_row_item(parse_result)
         first_row.rest_count = 3
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 0
 
@@ -90,7 +91,7 @@ class TestParsePioner:
         first_row = self.get_first_row_item(parse_result)
         first_row.price_opt = price_purchase
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 0
 
@@ -101,7 +102,7 @@ class TestParsePioner:
         first_row.rest_count = 10
         first_row.reserve_count = 7
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 0
 
@@ -117,7 +118,7 @@ class TestParsePioner:
         rows[2].price_opt = params.get("price")
         rows[2].price_recommended = params.get("price_recommended")
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 1
         assert result[0].price_markup == params.get("price_with_markup")

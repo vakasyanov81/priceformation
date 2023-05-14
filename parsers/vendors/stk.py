@@ -3,26 +3,54 @@
 # stk
 """
 __author__ = "Kasyanov V.A."
-from parsers.base_parser.base_parser import BaseParser
+
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser, ParserParams
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+)
 from parsers.row_item.row_item import RowItem
+
+stk_params = ParserParams(
+    supplier_folder_name="stk",
+    start_row=14,
+    supplier_name="STK",
+    supplier_code="7",
+    sheet_info="",
+    columns={
+        1: RowItem.__CODE__,
+        2: RowItem.__TITLE__,
+        3: RowItem.__PRICE_PURCHASE__,
+        4: RowItem.__REST_COUNT__,
+    },
+    stop_words=[],
+    file_templates=["price*.xls", "price*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItem,
+)
+
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    stk_params.supplier_folder_name
+)
+
+stk_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=stk_params,
+)
+
+stk_config = ParseConfiguration(stk_config)
 
 
 class STKParser(BaseParser):
     """
     parser for Greenstone vendor
     """
-
-    __SUPPLIER_FOLDER_NAME__ = "stk"
-    __START_ROW__ = 14
-    __SUPPLIER_NAME__ = "STK"
-    __SUPPLIER_CODE__ = "7"
-
-    __COLUMNS__ = {
-        1: RowItem.__CODE__,
-        2: RowItem.__TITLE__,
-        3: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__,
-    }
 
     def process(self):
         res = super().process()

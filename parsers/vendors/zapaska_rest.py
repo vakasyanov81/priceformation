@@ -6,9 +6,50 @@ __author__ = "Kasyanov V.A."
 from typing import List, Optional, Tuple
 
 from core.log_message import warn_msg
+from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+    ParserParams,
+)
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
+
+zapaska_rest_params = ParserParams(
+    supplier_folder_name="zapaska",
+    start_row=9,
+    supplier_name="Запаска (остатки)",
+    supplier_code="2",
+    sheet_info="",
+    columns={
+        0: RowItem.__CODE__,
+        1: RowItem.__CODE_ART__,
+        2: RowItem.__TITLE__,
+        3: RowItem.__REST_COUNT__,
+        4: RowItem.__PRICE_PURCHASE__,
+    },
+    stop_words=[],
+    file_templates=["rest*.xls", "rest*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItem,
+)
+
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    zapaska_rest_params.supplier_folder_name
+)
+
+zapaska_rest_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=zapaska_rest_params,
+)
+
+zapaska_rest_config = ParseConfiguration(zapaska_rest_config)
 
 
 class ZapaskaRestParser(BaseParser):
@@ -16,24 +57,9 @@ class ZapaskaRestParser(BaseParser):
     Parser rest and price opt for zapaska vendor
     """
 
-    __SUPPLIER_FOLDER_NAME__ = "zapaska"
-    __START_ROW__ = 9
-    __SUPPLIER_NAME__ = "Запаска (остатки)"
-    __SUPPLIER_CODE__ = "2"
-
-    __COLUMNS__ = {
-        0: RowItem.__CODE__,
-        1: RowItem.__CODE_ART__,
-        2: RowItem.__TITLE__,
-        3: RowItem.__REST_COUNT__,
-        4: RowItem.__PRICE_PURCHASE__,
-    }
-
-    __FILE_TEMPLATES__ = ["rest*.xls", "rest*.xlsx"]
-
     def __init__(
         self,
-        price_config,
+        parse_config,
         file_prices: list = None,
         xls_reader=XlsReader,
         price_mrp=None,
@@ -45,7 +71,7 @@ class ZapaskaRestParser(BaseParser):
         self.set_rest_and_price_opt(price_mrp)
         self.not_matched_position = []
         self._current_category = None
-        super().__init__(price_config, file_prices, xls_reader)
+        super().__init__(parse_config, file_prices, xls_reader)
 
     def get_price_mrp_result(self) -> List[RowItem]:
         """price mrp result"""

@@ -13,9 +13,9 @@ class Autosnab54Parser(BaseParser):
     logic for autosnab54_ru vendor
     """
 
-    __SUPPLIER_FOLDER_NAME__ = "autosnab54_ru"
+    _SUPPLIER_FOLDER_NAME = "autosnab54_ru"
     __START_ROW__ = 2
-    __SUPPLIER_NAME__ = "Автоснабжение"
+    _SUPPLIER_NAME = "Автоснабжение"
     __SUPPLIER_CODE__ = "6"
 
     __COLUMNS__ = {
