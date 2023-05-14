@@ -1,9 +1,9 @@
 """supplier database logic"""
 from sqlite3 import DatabaseError
-from typing import Dict, Tuple, NamedTuple
+from typing import Dict, NamedTuple, Tuple
 
 from core import err_msg
-from database.db import fetch_all, insert, fetch_scalar, fetch_as_dict
+from database.db import fetch_all, fetch_as_dict, insert
 from parsers.common_price import SupplierInfo
 
 from .exception import DBError
@@ -33,15 +33,17 @@ async def insert_supplier(sup_names: Dict[str, SupplierInfo]):
 
         err_msg(str(_exc))
         err_msg(traceback.format_exc())
-        raise DBError("Ошибка при вставке поставщиков")
+        raise DBError("Ошибка при вставке поставщиков") from _exc
 
 
 def insert_supplier_sql(suppliers: Dict[str, SupplierInfo]) -> Tuple[str, list]:
     """Подготовка вставки данных по поставщикам"""
     # data = ",".join([f"({id_}, '{sup.name}')" for id_, sup in suppliers.items()])
-    data = [(id_, sup.name) for id_, sup in suppliers.items()]
-    sql = f"INSERT INTO supplier (supplier_id, supplier_name) " \
-        f"VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING rowid;"
+    data = [(int(id_), sup.name) for id_, sup in suppliers.items()]
+    sql = (
+        "INSERT INTO supplier (supplier_id, supplier_name) "
+        "VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING rowid;"
+    )
 
     return sql, data
 

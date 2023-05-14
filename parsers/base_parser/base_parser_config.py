@@ -4,10 +4,26 @@ base parser config logic
 """
 __author__ = "Kasyanov V.A."
 
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Tuple, Type
 
 from parsers import data_provider
+from parsers.row_item.row_item import RowItem
+
+
+@dataclass
+class ParserParams:
+    supplier_folder_name: str
+    start_row: int
+    supplier_name: str
+    supplier_code: str
+    sheet_info: str
+    columns: dict
+    stop_words: List[str]
+    file_templates: List[str]
+    sheet_indexes: List
+    row_item_adaptor: Type[RowItem]
 
 
 class BasePriceParseConfigurationParams(NamedTuple):
@@ -18,9 +34,10 @@ class BasePriceParseConfigurationParams(NamedTuple):
     stop_words_provider: data_provider.StopWordsProviderBase
     vendor_list: data_provider.VendorListProviderBase
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase
+    parser_params: ParserParams
 
 
-class BasePriceParseConfiguration:
+class ParseConfiguration:
     """base price parser configuration"""
 
     _markup_rules: data_provider.MarkupRules = None

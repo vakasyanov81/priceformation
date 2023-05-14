@@ -4,21 +4,27 @@ base logic for four_tochki vendor
 """
 __author__ = "Kasyanov V.A."
 
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import BaseParser, ParserParams
 from parsers.row_item.vendors.row_item_mim import RowItemMim
+
+fourtochki_params = ParserParams(
+    supplier_folder_name="four_tochki",
+    start_row=2,
+    supplier_name="Форточки",
+    supplier_code="5",
+    sheet_info="",
+    columns={},
+    stop_words=[],
+    file_templates=["price*.xls", "price*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItemMim,
+)
 
 
 class FourTochkiParserBase(BaseParser):
     """
     base logic for four_tochki vendor
     """
-
-    __SUPPLIER_FOLDER_NAME__ = "four_tochki"
-    __START_ROW__ = 2
-    __SUPPLIER_NAME__ = "Форточки"
-    __SUPPLIER_CODE__ = "5"
-
-    __ROW_ITEM_ADAPTOR__ = RowItemMim
 
     @classmethod
     def get_current_category(cls):

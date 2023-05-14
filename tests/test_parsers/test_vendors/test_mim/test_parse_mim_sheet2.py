@@ -6,9 +6,9 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-from parsers.base_parser.base_parser import BasePriceParseConfiguration
+from parsers.base_parser.base_parser import ParseConfiguration
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.mim.mim_2sheet import MimParser2Sheet
+from parsers.vendors.mim.mim_2sheet import MimParser2Sheet, mim_sheet_2_params
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.mim_sheet2 import mim_one_item_result
 from tests.test_parsers.test_vendors.test_parse_poshk import (
@@ -28,6 +28,7 @@ parser_config = BasePriceParseConfigurationParams(
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+    parser_params=mim_sheet_2_params,
 )
 
 
@@ -37,14 +38,14 @@ def get_fake_parser(parse_result):
     return MimParser2Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        price_config=BasePriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 
 def test_parse():  # pylint: disable=R0201
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(mim_one_item_result()).get_result()
+    result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(result) == 1
     assert result[0].title == "295/75R22.5 Hifly HH312 Ведущая M+S PR16 146/143L TL"

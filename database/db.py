@@ -33,9 +33,7 @@ async def insert(
     return await get_result(cursor, autocommit)
 
 
-async def get_result(
-    cursor: aiosqlite.Cursor, autocommit: bool
-) -> list[dict]:
+async def get_result(cursor: aiosqlite.Cursor, autocommit: bool) -> list[dict]:
     rows = await cursor.fetchall()
     results = []
     for row_ in rows:

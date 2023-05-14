@@ -3,9 +3,17 @@
 logic for mim vendor (sheet 2)
 """
 __author__ = "Kasyanov V.A."
+
+import dataclasses
+
 from parsers.row_item.vendors.row_item_mim import RowItemMim
 
-from .mim_base import MimParserBase
+from ... import data_provider
+from ...base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+)
+from .mim_base import MimParserBase, mim_params
 
 
 def config_for_sheets23():
@@ -32,17 +40,31 @@ def config_for_sheets23():
     )
 
 
+mim_sheet_2_params = dataclasses.replace(mim_params)
+mim_sheet_2_params.sheet_info = "Вкладка #2"
+mim_sheet_2_params.sheet_indexes = [1]
+mim_sheet_2_params.columns = config_for_sheets23()
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    mim_sheet_2_params.supplier_folder_name
+)
+
+mim_sheet_2_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=mim_sheet_2_params,
+)
+
+mim_sheet_2_config = ParseConfiguration(mim_sheet_2_config)
+
+
 class MimParser2Sheet(MimParserBase):
     """
     parser for mim vendor (sheet 2)
     """
-
-    __SUPPLIER_FOLDER_NAME__ = MimParserBase.__SUPPLIER_FOLDER_NAME__
-    __COLUMNS__ = config_for_sheets23()
-
-    __SHEET_INDEXES__ = [1]
-
-    __SHEET_INFO__ = "Вкладка #2"
 
     @classmethod
     def get_current_category(cls):

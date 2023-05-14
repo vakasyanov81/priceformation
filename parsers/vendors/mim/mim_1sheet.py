@@ -3,9 +3,50 @@
 logic for mim vendor (sheet 1)
 """
 __author__ = "Kasyanov V.A."
+
+import dataclasses
+
 from parsers.row_item.vendors.row_item_mim import RowItemMim
 
-from .mim_base import MimParserBase
+from ... import data_provider
+from ...base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+)
+from .mim_base import MimParserBase, mim_params
+
+mim_sheet_1_params = dataclasses.replace(mim_params)
+mim_sheet_1_params.sheet_info = "Вкладка #1"
+mim_sheet_1_params.sheet_indexes = [0]
+mim_sheet_1_params.columns = {
+    0: RowItemMim.__CODE__,
+    1: RowItemMim.__TITLE__,
+    4: RowItemMim.__MANUFACTURER_NAME__,
+    5: RowItemMim.__MODEL__,
+    6: RowItemMim.__DIAMETER__,
+    7: RowItemMim.__WIDTH__,
+    8: RowItemMim.__PROFILE__,
+    10: RowItemMim.__INDEX_VELOCITY__,
+    11: RowItemMim.__INDEX_LOAD__,
+    17: RowItemMim.__REST_COUNT__,
+    19: RowItemMim.__PRICE_PURCHASE__,
+    20: RowItemMim.__PRICE_RECOMMENDED__,
+}
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    mim_sheet_1_params.supplier_folder_name
+)
+
+mim_sheet_1_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=mim_sheet_1_params,
+)
+
+mim_sheet_1_config = ParseConfiguration(mim_sheet_1_config)
 
 
 def is_number(value: str) -> bool:
@@ -20,26 +61,6 @@ class MimParser1Sheet(MimParserBase):
     """
     parser for mim vendor (sheet 1)
     """
-
-    __SUPPLIER_FOLDER_NAME__ = MimParserBase.__SUPPLIER_FOLDER_NAME__
-    __COLUMNS__ = {
-        0: RowItemMim.__CODE__,
-        1: RowItemMim.__TITLE__,
-        4: RowItemMim.__MANUFACTURER_NAME__,
-        5: RowItemMim.__MODEL__,
-        6: RowItemMim.__DIAMETER__,
-        7: RowItemMim.__WIDTH__,
-        8: RowItemMim.__PROFILE__,
-        10: RowItemMim.__INDEX_VELOCITY__,
-        11: RowItemMim.__INDEX_LOAD__,
-        17: RowItemMim.__REST_COUNT__,
-        19: RowItemMim.__PRICE_PURCHASE__,
-        20: RowItemMim.__PRICE_RECOMMENDED__,
-    }
-
-    __SHEET_INFO__ = "Вкладка #1"
-
-    __SHEET_INDEXES__ = [0]
 
     @classmethod
     def get_current_category(cls):

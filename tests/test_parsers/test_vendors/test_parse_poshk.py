@@ -11,7 +11,11 @@ import pytest
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.poshk import PoshkParser, PoshkPriceParseConfiguration
+from parsers.vendors.poshk import (
+    PoshkParser,
+    PoshkPriceParseConfiguration,
+    poshk_params,
+)
 from parsers.xls_reader import FakeXlsReader
 from tests.test_base_parser.test_manufacturer_finder import map_manufacturer
 from tests.test_parsers.fixtures.poshk import poshk_one_item_result
@@ -89,6 +93,7 @@ parser_config = BasePriceParseConfigurationParams(
     stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+    parser_params=poshk_params,
 )
 
 
@@ -98,14 +103,14 @@ def get_fake_parser(parse_result):
     return PoshkParser(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        price_config=PoshkPriceParseConfiguration(parser_config),
+        parse_config=PoshkPriceParseConfiguration(parser_config),
     )
 
 
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(poshk_one_item_result()).get_result()
+    result: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
 
     assert len(result) == 1
     assert result[0].title == "10-16.5 Nortec ER-218 10PR 135B TL спецшина"
@@ -157,7 +162,7 @@ class TestParsePoshk:
         """test define category name by title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
         first_row.title = title
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
         assert result[0].type_production == category
 
     @classmethod
@@ -206,7 +211,7 @@ class TestParsePoshk:
 
         parser = get_fake_parser(parse_result)
 
-        result: List[RowItem] = parser.get_result()
+        result: List[RowItem] = parser.parse()
 
         assert result[0].price_markup == price_with_markup
 
@@ -223,6 +228,6 @@ class TestParsePoshk:
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
         first_row.title = title
 
-        result: List[RowItem] = get_fake_parser(parse_result).get_result()
+        result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 0

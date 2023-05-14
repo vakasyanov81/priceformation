@@ -4,21 +4,49 @@ base logic for mim vendor
 """
 __author__ = "Kasyanov V.A."
 
+from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+    ParserParams,
+)
 from parsers.row_item.vendors.row_item_mim import RowItemMim
+
+mim_params = ParserParams(
+    supplier_folder_name="mim",
+    start_row=2,
+    supplier_name="Мим",
+    supplier_code="4",
+    sheet_info="",
+    columns={},
+    stop_words=[],
+    file_templates=["price*.xls", "price*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItemMim,
+)
+
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    mim_params.supplier_folder_name
+)
+
+mim_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=mim_params,
+)
+
+mim_config = ParseConfiguration(mim_config)
 
 
 class MimParserBase(BaseParser):
     """
     base logic for mim vendor
     """
-
-    __SUPPLIER_FOLDER_NAME__ = "mim"
-    __START_ROW__ = 2
-    __SUPPLIER_NAME__ = "Мим"
-    __SUPPLIER_CODE__ = "4"
-
-    __ROW_ITEM_ADAPTOR__ = RowItemMim
 
     @classmethod
     def get_current_category(cls):

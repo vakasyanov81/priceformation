@@ -43,7 +43,7 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
 
             err_msg(str(_exc))
             err_msg(traceback.format_exc())
-            raise DBError("Ошибка при вставке номенклатуры")
+            raise DBError("Ошибка при вставке номенклатуры") from _exc
     return inserted_count
 
 
@@ -101,7 +101,7 @@ def prepare_to_insert(data: list):
 
 
 SQL_INSERT_NOMENCLATURE = """
-INSERT INTO nomenclature (supplier_id, title, code, price_purchase, price, rest, brand, n_type)
+INSERT INTO nomenclature (supplier_id, title, code, price_purchase, price, rest, brand_id, nomenclature_type_id)
      VALUES {data_}
      ON CONFLICT(supplier_id, title, code) DO NOTHING RETURNING nomenclature_id;
 """

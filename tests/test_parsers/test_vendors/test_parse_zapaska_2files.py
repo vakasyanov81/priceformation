@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-from parsers.base_parser.base_parser import BasePriceParseConfiguration
+from parsers.base_parser.base_parser import ParseConfiguration
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_rest import ZapaskaRestParser
 from parsers.xls_reader import FakeXlsReader
@@ -27,7 +27,7 @@ def get_fake_parser(rest_result, parse_result):
         xls_reader=FakeXlsReader,
         file_prices=list(rest_result.keys()),
         price_mrp=parse_result,
-        price_config=BasePriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 
@@ -35,7 +35,7 @@ def test_2files():
     """test combine result from two price file"""
     rest_result, parse_result = zapaska_2file_result()
 
-    result: List[RowItem] = get_fake_parser(rest_result, parse_result).get_result()
+    result: List[RowItem] = get_fake_parser(rest_result, parse_result).parse()
 
     assert len(result) == 2
 

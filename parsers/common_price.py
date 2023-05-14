@@ -6,13 +6,9 @@ __author__ = "Kasyanov V.A."
 
 from typing import Dict, List, NamedTuple, Optional, Tuple, Type
 
-from parsers import data_provider
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfiguration,
-    BasePriceParseConfigurationParams,
-)
+from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
@@ -42,42 +38,28 @@ class CommonPrice:
 
     def parse_vendors(
         self,
-        vendors: List[
-            Tuple[Type[BaseParser], Optional[Type[BasePriceParseConfiguration]]]
-        ],
+        vendors: List[Tuple[Type[BaseParser], Optional[Type[ParseConfiguration]]]],
     ):
         """
         make parse prices by vendor-list
         :return:
         """
-        for vendor in vendors:
-            self.result += self.instance_vendor(vendor).get_result()
+        for vendor, vendor_config in vendors:
+            self.result += self.instance_vendor(vendor, vendor_config).parse()
 
     @classmethod
     def instance_vendor(
-        cls,
-        vendor: Tuple[Type[BaseParser], Optional[Type[BasePriceParseConfiguration]]],
+        cls, vendor: Type[BaseParser], config: Type[ParseConfiguration] | None
     ):
         """instance vendor"""
-        mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-            vendor[0].__SUPPLIER_FOLDER_NAME__
-        )
-        default_config = BasePriceParseConfigurationParams(
-            markup_rules_provider=mark_up_provider,
-            black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-            stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-            vendor_list=data_provider.VendorListProviderFromUserConfig(),
-            manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        )
-        config = vendor[1](default_config) if vendor[1] else None
-        return vendor[0](price_config=config)
+        return vendor(config)
 
     @classmethod
     def supplier_info(cls) -> Dict[str, SupplierInfo]:
         """Supplier info"""
         supplier_info = {}
         for v, _ in all_vendors():
-            supplier_info[v.__SUPPLIER_CODE__] = SupplierInfo(name=v.__SUPPLIER_NAME__)
+            supplier_info[v.__SUPPLIER_CODE__] = SupplierInfo(name=v.ы)
         return supplier_info
 
     def write_all_prices(self):

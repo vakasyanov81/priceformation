@@ -32,9 +32,6 @@ class Colors:
     UNDERLINE = "\033[4m"
 
 
-MAKE_PRICE_BY_SUPPLIER = "MakePriceBySupplier"
-
-
 class AnswerResult(Enum):
     MAKE_DB_MIGRATION = "MakeDBMigration"
     MAKE_PRICE_BY_SUPPLIER = "MakePriceBySupplier"
@@ -104,7 +101,7 @@ async def _try(method, _async=False, **kwargs):
         exit(1)
 
 
-def run_make_price_by_supplier():
+async def run_make_price_by_supplier():
     common_price = CommonPrice()
     common_price.parse_all_vendors()
     common_price.write_all_prices()
@@ -118,6 +115,6 @@ async def run_save_nomenclature_to_db():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        asyncio.run(run_make_price_by_supplier())
     finally:
         close_db()

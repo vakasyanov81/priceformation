@@ -8,9 +8,50 @@
 # шины рокбастер 7% наценка на крупный опт.
 """
 __author__ = "Kasyanov V.A."
+
+from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+    ParserParams,
+)
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
+
+pioner_params = ParserParams(
+    supplier_folder_name="pioner",
+    start_row=12,
+    supplier_name="Пионер",
+    supplier_code="3",
+    sheet_info="",
+    columns={
+        1: RowItem.__TITLE__,
+        2: RowItem.__PRICE_PURCHASE__,
+        4: RowItem.__REST_COUNT__,
+        5: RowItem.__RESERVE_COUNT__,
+    },
+    stop_words=[],
+    file_templates=["price*.xls", "price*.xlsx"],
+    sheet_indexes=[],
+    row_item_adaptor=RowItem,
+)
+
+
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    pioner_params.supplier_folder_name
+)
+
+pioner_config = BasePriceParseConfigurationParams(
+    markup_rules_provider=mark_up_provider,
+    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+    vendor_list=data_provider.VendorListProviderFromUserConfig(),
+    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+    parser_params=pioner_params,
+)
+
+pioner_config = ParseConfiguration(pioner_config)
 
 
 class PionerParser(BaseParser):
@@ -18,17 +59,6 @@ class PionerParser(BaseParser):
     parser for pioner vendor
     """
 
-    __SUPPLIER_FOLDER_NAME__ = "pioner"
-    __START_ROW__ = 12
-    __SUPPLIER_NAME__ = "Пионер"
-    __SUPPLIER_CODE__ = "3"
-
-    __COLUMNS__ = {
-        1: RowItem.__TITLE__,
-        2: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__,
-        5: RowItem.__RESERVE_COUNT__,
-    }
     current_category = None
     current_category_first_chunk = None
 
@@ -41,7 +71,7 @@ class PionerParser(BaseParser):
             self.add_price_markup(item)
             self.set_manufacturer_to_title(item)
             self.set_brand(item)
-            ManufacturerFinder(self.price_config().manufacturer_aliases()).process(item)
+            ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(item)
 
         return res
 
