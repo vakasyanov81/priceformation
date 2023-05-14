@@ -15,7 +15,6 @@ from database import save_nomenclature_to_db
 from database.db import close_db
 from database.exception import DBError
 from database.init_db import init_db
-from database.supplier import get_statistic
 from parsers.base_parser.base_parser import SupplierNotHavePricesError
 from parsers.common_price import CommonPrice
 
@@ -67,7 +66,6 @@ async def main():
     entry point
     :return:
     """
-    print(await get_statistic())
     while True:
         match ask_action():
             case AnswerResult.MAKE_DB_MIGRATION:
