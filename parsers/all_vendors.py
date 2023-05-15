@@ -24,7 +24,7 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Type[ParseConfiguration]] | No
         (FourTochkiParser2Sheet, fourtochki_sheet_2_config),
         (PionerParser, pioner_config),
         (PoshkParser, poshk_config),
-        (ZapaskaPriceAndRestParser, zapaska_config)
+        (ZapaskaPriceAndRestParser, zapaska_config),
         (Autosnab54Parser, ParseConfiguration),
         (STKParser, stk_config),
     ]
