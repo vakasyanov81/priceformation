@@ -33,24 +33,6 @@ class BaseParser:
     base parser logic
     """
 
-    # _SUPPLIER_FOLDER_NAME = "__"
-    # __START_ROW__ = 0
-    #
-    # _SUPPLIER_NAME = "Базовый поставщик"
-    # # Описание текущей вкладки
-    # __SHEET_INFO__ = ""
-    # __SUPPLIER_CODE__ = "*"
-    #
-    # __COLUMNS__ = {}
-    # __STOP_WORDS__ = []
-    #
-    # __FILE_TEMPLATES__ = ["price*.xls", "price*.xlsx"]
-    #
-    # __SHEET_INDEXES__ = []
-    # __ENABLE__ = False
-    #
-    # __ROW_ITEM_ADAPTOR__ = RowItem
-
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [
         SetPercentMarkupItemAction
@@ -73,8 +55,6 @@ class BaseParser:
         self.xls_reader = xls_reader
         self.files = file_prices
         self.logger = LoggerParseProcess(repr(self))
-        self._category_finder = CategoryFinder()
-        self.files = self.files or get_file_prices(self)
 
     def parse_config(self) -> ParseConfiguration:
         """get parse config"""
@@ -107,6 +87,8 @@ class BaseParser:
         if not self.is_active:
             self.logger.log_disable_status()
             return []
+        self._category_finder = CategoryFinder()
+        self.files = self.files or get_file_prices(self)
         self.logger.log_start()
         self.process()
         self.after_process()
