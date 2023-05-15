@@ -58,8 +58,10 @@ class CommonPrice:
     def supplier_info(cls) -> Dict[str, SupplierInfo]:
         """Supplier info"""
         supplier_info = {}
-        for v, _ in all_vendors():
-            supplier_info[v.__SUPPLIER_CODE__] = SupplierInfo(name=v.ы)
+        for v, config in all_vendors():
+            supplier_info[
+                config.parse_config.parser_params.supplier_code
+            ] = SupplierInfo(name=config.parse_config.parser_params.supplier_name)
         return supplier_info
 
     def write_all_prices(self):
