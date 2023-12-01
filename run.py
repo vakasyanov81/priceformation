@@ -48,10 +48,10 @@ AnswerMap = {
 
 def ask_action() -> AnswerResult:
     _msg = (
-        f"{Colors.HEADER}1 — миграция базы данных, \n"
-        "2 — сформировать общий прайс по прайсам поставщиков, \n"
-        "3 — актуализация базы данных, \n"
-        f"q — выход: {Colors.ENDC}"
+        f"{Colors.HEADER}1 — миграция базы данных \n"
+        "2 — сформировать общий прайс по прайсам поставщиков \n"
+        "3 — записать номенклатуру поставщика в базу данных \n"
+        f"q — выход {Colors.ENDC}"
     )
     while True:
         _answer = AnswerMap.get(input(_msg).strip().lower())
@@ -113,6 +113,6 @@ async def run_save_nomenclature_to_db():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(run_make_price_by_supplier())
+        asyncio.run(main())
     finally:
         close_db()
