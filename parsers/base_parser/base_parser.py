@@ -29,10 +29,6 @@ TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
 
 class BaseParser:
-    """
-    base parser logic
-    """
-
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [
         SetPercentMarkupItemAction
@@ -48,7 +44,6 @@ class BaseParser:
         file_prices: list = None,
         xls_reader=XlsReader,
     ):
-        """init"""
         self.result: List[RowItem] = []
         self._parse_config = parse_config
         self.type_production = None
@@ -57,33 +52,27 @@ class BaseParser:
         self.logger = LoggerParseProcess(repr(self))
 
     def parse_config(self) -> ParseConfiguration:
-        """get parse config"""
         return self._parse_config
 
     def markup_rules(self) -> data_provider.MarkupRules:
-        """get markup rules for price formation"""
         return self._parse_config.get_markup_rules()
 
     @lru_cache()
     def get_black_list(self) -> List[str]:
-        """get black list price position"""
         black_list = self._parse_config.black_list()
         return self.prepare_black_list(black_list)
 
     def prepare_black_list(self, black_list: List[str]) -> List[str]:
-        """prepare black list"""
         return [self.strip_words_in_title(black_title) for black_title in black_list]
 
     @lru_cache()
     def get_stop_words(self) -> List[str]:
-        """get stop word list"""
         return self._parse_config.stop_words()
 
     def set_parse_config(self, parse_sonfig: ParseConfiguration):
         self._parse_config = parse_sonfig
 
     def parse(self):
-        """parse"""
         if not self.is_active:
             self.logger.log_disable_status()
             return []
@@ -96,7 +85,6 @@ class BaseParser:
         return self.result
 
     def correction_category(self, item: RowItem):
-        """correction category"""
         if not item.type_production:
             return
         category, bad_category = self._category_finder.find_in_str(item.type_production)
@@ -104,7 +92,6 @@ class BaseParser:
             item.type_production = category
 
     def process(self):
-        """parse process"""
         result_statistic = 0
         self.logger.log_list_files(self.files)
 
@@ -118,12 +105,10 @@ class BaseParser:
         return result_statistic
 
     def after_process(self):
-        """make after process"""
         self.remove_null_rest()
         self.do_items_actions_after_process()
 
     def get_markup_percent(self, price_value: float):
-        """get markup percent by price value"""
         default_percent = self._parse_config.get_default_markup_percents()
 
         if not price_value:
@@ -139,7 +124,6 @@ class BaseParser:
         return self.parse_config().parse_config.parser_params
 
     def prepare(self, items):
-        """prepare (need refactoring)"""
         result = []
 
         for item in items:
@@ -159,29 +143,24 @@ class BaseParser:
         return result
 
     def do_items_actions_after_process(self):
-        """do after-process actions"""
         for item in self.result:
             for item_action in self._item_actions_after_process:
                 item_action(item).action()
 
     def __repr__(self) -> str:
-        """get supplier name and sheet info string"""
         sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier_name}"
         if self.parser_params().sheet_info:
             sup_name += f" ({self.parser_params().sheet_info})"
         return sup_name
 
     def get_result(self) -> List[RowItem]:
-        """get parse result"""
         return self.result
 
     @property
     def is_active(self):
-        """supplier is active?"""
         return bool(self.get_current_vendor_config().enabled)
 
     def remove_null_rest(self):
-        """remove from self.result items where rest count is Empty (0)"""
         result = []
         for item in self.get_result():
             # rest_count may be ">40", its not convertible to float
@@ -204,21 +183,17 @@ class BaseParser:
         self.result = result
 
     def to_row_items(self, result: List[dict]) -> List[RowItem]:
-        """instance List[RowItem]"""
         return [self.parser_params().row_item_adaptor(row_item) for row_item in result]
 
     @classmethod
     def to_raw_result(cls, result: List[RowItem]) -> List[dict]:
-        """instance List[dict]"""
         return [item.to_dict() for item in result]
 
     def raw_parse(self, _file: str) -> List[dict]:
-        """get raw-data after parse via reader"""
         reader = self.get_xls_reader(_file)
         return reader.parse(self.parser_params().sheet_indexes)
 
     def get_xls_reader(self, _file):
-        """get xls reader"""
         return self.xls_reader.get_instance(
             _file,
             {
@@ -229,22 +204,16 @@ class BaseParser:
 
     @classmethod
     def get_prepared_title(cls, item):
-        """get title with modification (use in child-parser if need)"""
         return item.title
 
     @classmethod
     def set_prepared_title(cls, item: RowItem) -> bool:
-        """
-        set prepared title
-        :return title is prepared
-        """
         prepared_title = cls.get_prepared_title(item)
         title_is_prepared = item.title == prepared_title
         item.title = prepared_title or item.title
         return title_is_prepared
 
     def is_valid_title(self, title: str):
-        """validation for title"""
         return (
             title
             and not self.has_stop_word(title)
@@ -252,42 +221,32 @@ class BaseParser:
         )
 
     def has_stop_word(self, title) -> bool:
-        """checking that title contains a stop word"""
         for s_word in self.get_stop_words():
             if s_word.lower() in title.lower():
                 return True
         return False
 
     def check_title_in_black_list(self, title) -> bool:
-        """checking that title in black list"""
         return title in self.get_black_list()
 
     @classmethod
     def get_min_rest_count(cls):
-        """min rest count value for skip action"""
         return 4
 
     @classmethod
     def get_item_rest(cls, item: RowItem):
-        """get rest count"""
         return item.rest_count
 
     def skip_by_min_rest(self, item: RowItem):
-        """skip row item where rest count less than.."""
         if self.get_item_rest(item) < self.get_min_rest_count():
             item.rest_count = 0
 
     @classmethod
     def round_price(cls, price_value) -> float:
-        """
-        make round price_value
-        125.45 -> 130.0
-        """
         return math.ceil(price_value / 10) * 10
 
     @classmethod
     def is_category_row(cls, item):
-        """determine current category by specific row item"""
         if item.title and not item.price_opt:
             return True
         return False
@@ -295,12 +254,10 @@ class BaseParser:
     @classmethod
     @lru_cache()
     def calc_percent(cls, price_sale, price_purchase):
-        """calc margin percent"""
         return (price_sale - price_purchase) / price_purchase
 
     @lru_cache()
     def recommended_percent_markup(self, item) -> float:
-        """percent markup betwen purchase price and recommended price"""
         price_recommended = item.price_recommended or 0
         price_opt = item.price_opt or 0
         return (
@@ -308,14 +265,12 @@ class BaseParser:
         )
 
     def is_small_recommended_percent(self, item) -> bool:
-        """percent markup is small to much?"""
         return (
             self.recommended_percent_markup(item)
             < self.markup_rules().min_recommended_percent_markup
         )
 
     def is_big_recommended_percent(self, item) -> bool:
-        """percent markup is big?"""
         if not self.markup_rules().max_recommended_percent_markup:
             return False
         return (
@@ -324,19 +279,15 @@ class BaseParser:
         )
 
     def is_small_absolute_markup(self, selling_price, purchase_price) -> bool:
-        """absolute markup from purchase price and selling price is small to much?"""
         return (
             selling_price - purchase_price
             < self.markup_rules().absolute_markup_rules.min_absolute_markup
         )
 
     def get_price_with_absolute_rule_markup(self, price_opt) -> float:
-        """get price as absolute markup from purchase price"""
         return price_opt * self.markup_rules().absolute_markup_rules.markup_percent
 
     def add_price_markup(self, item):
-        """add markup to row item"""
-
         price = item.price_recommended or 0
         price_opt = item.price_opt or 0
 
@@ -356,43 +307,31 @@ class BaseParser:
     @classmethod
     @lru_cache()
     def get_markup(cls, price, percent):
-        """get price with markup"""
         return price * (1 + percent)
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
-        """get config for current vendor"""
         return self._parse_config.all_vendor_config().get(
             self.parser_params().supplier_folder_name
         ) or VendorParams(enabled=0)
 
     @classmethod
     def prepare_title(cls, title: str):
-        """make correct title format"""
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
         return " ".join(chunks)
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: List[str]) -> List[str]:
-        """get prepared title chunks"""
         return chunks
 
     @classmethod
     def strip_chunks_title(cls, chunks: list):
-        """
-        [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]
-        :param chunks:
-        :return:
-        """
+        # [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]
         return [chunk.strip() for chunk in chunks if chunk.strip()]
 
     @classmethod
     def strip_words_in_title(cls, title: str):
-        """
-        " 385/65   R22.5..." -> "385/65 R22.5..."
-        :param title:
-        :return:
-        """
+        # " 385/65   R22.5..." -> "385/65 R22.5..."
         _title = (title or "").strip()
         if not _title:
             return title
@@ -409,11 +348,10 @@ class BaseParser:
 
 
 class SupplierNotHavePricesError(CoreExceptionError):
-    """exception for case when not prices"""
+    pass
 
 
 def get_file_prices(parser: TBaseParser):
-    """get supplier file-prices"""
     _list_files = []
     for f_tmp in parser.parser_params().file_templates:
         _list_files += glob.glob(
