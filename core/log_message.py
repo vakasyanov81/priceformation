@@ -29,6 +29,12 @@ __level_reverse_map__ = {
     "WARNING": logging.WARNING,
 }
 
+__level_color_map__ = {
+    "ERROR": "red",
+    "WARNING": "yellow",
+    "Info": None
+}
+
 
 def err_msg(msg, need_print_log=False):
     """make error message"""
@@ -69,34 +75,35 @@ def log_to_file(msg, level=logging.INFO):
     return True
 
 
-def log_msg(msg, level=logging.INFO, need_print_log=False):
+def log_msg(msg, level=logging.INFO, need_print_log=False, color: Literal["red", "green", "yellow"] | None = None):
     """make log message"""
 
     time_now = datetime.datetime.time(datetime.datetime.now())
     if level == logging.ERROR:
         msg = f"[{time_now}] - {msg}"
 
-    if not cfg.main.is_unittest_mode:
+    if not cfg.main.is_unittest_mode and level == logging.ERROR:
         log_to_file(msg, level=level)
 
     if need_print_log and not cfg.main.is_unittest_mode:
-        print_log(msg, __level_map__.get(level))
+        print_log(msg, __level_map__.get(level), _color=color)
     return True
 
 
 def print_log(
     msg,
     level: Literal["INFO"] | Literal["ERROR"] | Literal["WARNING"] | None = "INFO",
-    _color: Literal["red"] = "red",
+    _color: Literal["red", "green", "yellow"] | None = None,
 ):
     """print log-message"""
 
     # in unit test mode we hide the input of errors on the screen
     if cfg.main.is_unittest_mode and level != logging.INFO:
         return
-
     level_num = __level_reverse_map__.get(level)
+    _msg = ""
     if level_num != logging.INFO:
-        msg = f"[{level}]: {msg}"
-        msg = colored(msg, _color)
-    print(msg)
+        _msg = f"[{level}]: "
+    _msg += f"{msg}"
+    _msg = colored(_msg, _color or __level_color_map__.get(level))
+    print(_msg)

@@ -24,7 +24,7 @@ def get_config() -> DBConfig:
             "port": 5433,
             "user_name": "postgres",
             "password": "postgres",
-            "db_name": "/home/huck/projects/priceformation_web/src/db.sqlite3"
+            "db_name": "/home/huck/petprojects/priceformation_web/src/db.sqlite3"
             # "db_name": __PROJECT_ROOT__
             # + os.sep
             # + __FILE_PRICES__

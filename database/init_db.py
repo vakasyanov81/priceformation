@@ -32,4 +32,4 @@ async def init_db(drop_database=False):
             err_msg(traceback.format_exc())
             raise DBError("Ошибка при инициализации базы данных") from _exc
         finally:
-            log_msg(msg="Миграция базы данных окончена \n", need_print_log=True)
+            log_msg(msg="Миграция базы данных окончена \n", need_print_log=True, color="green")

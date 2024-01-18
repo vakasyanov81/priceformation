@@ -29,7 +29,7 @@ async def make_migration():
     except Exception as exc:
         err_msg(str(exc))
         err_msg(traceback.format_exc())
-        print_log(f"Не предвиденная ощибка // {str(exc)}", level="WARNING")
+        print_log(f"Не предвиденная ошибка // {str(exc)}", level="WARNING")
         exit(1)
 
 
