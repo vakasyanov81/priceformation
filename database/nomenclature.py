@@ -72,16 +72,16 @@ def insert_nomenclature_sql(
 def chunks(data: list, batch_size=200) -> list:
     _chunks = []
     left_index = 0
-    rigth_index = batch_size
+    right_index = batch_size
     while True:
-        if rigth_index >= len(data):
-            rigth_index = len(data)
-            _chunks.append(data[left_index:rigth_index])
+        if right_index >= len(data):
+            right_index = len(data)
+            _chunks.append(data[left_index:right_index])
             break
         else:
-            _chunks.append(data[left_index:rigth_index])
+            _chunks.append(data[left_index:right_index])
 
-        rigth_index += batch_size
+        right_index += batch_size
         left_index += batch_size
     return _chunks
 
