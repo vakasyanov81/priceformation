@@ -48,7 +48,7 @@ AnswerMap = {
 
 def ask_action() -> AnswerResult:
     _msg = (
-        f"{Colors.HEADER}1 — миграция базы данных \n"
+        f"{Colors.BOLD}1 — миграция базы данных \n"
         "2 — сформировать общий прайс по прайсам поставщиков \n"
         "3 — записать номенклатуру поставщика в базу данных \n"
         f"q — выход {Colors.ENDC}"
@@ -90,16 +90,16 @@ async def _try(method, _async=False, **kwargs):
     except KeyboardInterrupt:
         exit(0)
     except DBError as exc:
-        print_log(str(exc), level="WARNING")
+        print_log(str(exc), level="ERROR")
         exit(1)
     except Exception as exc:
         err_msg(str(exc))
         err_msg(traceback.format_exc())
-        print_log(f"Непредвиденная ошибка // {str(exc)}", level="WARNING")
+        print_log(f"Непредвиденная ошибка // {str(exc)}", level="ERROR")
         exit(1)
 
 
-async def run_make_price_by_supplier():
+def run_make_price_by_supplier():
     common_price = CommonPrice()
     common_price.parse_all_vendors()
     common_price.write_all_prices()
