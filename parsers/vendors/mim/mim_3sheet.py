@@ -19,9 +19,7 @@ mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
 mim_sheet_3_params.sheet_info = "Вкладка #3"
 mim_sheet_3_params.sheet_indexes = [2]
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 mim_sheet_3_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

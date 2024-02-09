@@ -14,18 +14,14 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
+    ParseParamsSupplier,
     ParserParams,
-    ParseParamsSupplier
 )
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
 
 pioner_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name='pioner',
-        name='Пионер',
-        code='3'
-    ),
+    supplier=ParseParamsSupplier(folder_name="pioner", name="Пионер", code="3"),
     start_row=12,
     sheet_info="",
     columns={

@@ -9,16 +9,13 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
-    ParserParams, ParseParamsSupplier,
+    ParseParamsSupplier,
+    ParserParams,
 )
 from parsers.row_item.vendors.row_item_mim import RowItemMim
 
 mim_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name='mim',
-        name='Мим',
-        code='4'
-    ),
+    supplier=ParseParamsSupplier(folder_name="mim", name="Мим", code="4"),
     start_row=2,
     sheet_info="",
     columns={},
@@ -31,9 +28,7 @@ mim_params = ParserParams(
 supplier_folder_name = mim_params.supplier.folder_name
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 mim_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

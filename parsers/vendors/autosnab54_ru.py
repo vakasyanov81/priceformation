@@ -9,15 +9,14 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
-    ParserParams, ParseParamsSupplier,
+    ParseParamsSupplier,
+    ParserParams,
 )
 from parsers.row_item.row_item import RowItem
 
 autosnab_params = ParserParams(
     supplier=ParseParamsSupplier(
-        folder_name='autosnab54_ru',
-        name='Автоснабжение',
-        code='6'
+        folder_name="autosnab54_ru", name="Автоснабжение", code="6"
     ),
     start_row=2,
     sheet_info="",

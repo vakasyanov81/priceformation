@@ -5,8 +5,8 @@
 __author__ = "Kasyanov V.A."
 
 import asyncio
-import traceback
 import sys
+import traceback
 
 from core.log_message import err_msg, print_log
 from database.db import close_db

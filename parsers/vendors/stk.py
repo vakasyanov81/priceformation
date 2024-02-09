@@ -8,16 +8,13 @@ from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser, ParserParams
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
-    ParseConfiguration, ParseParamsSupplier,
+    ParseConfiguration,
+    ParseParamsSupplier,
 )
 from parsers.row_item.row_item import RowItem
 
 stk_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name='stk',
-        name='STK',
-        code='7'
-    ),
+    supplier=ParseParamsSupplier(folder_name="stk", name="STK", code="7"),
     start_row=14,
     sheet_info="",
     columns={

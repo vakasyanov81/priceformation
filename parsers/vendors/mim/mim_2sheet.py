@@ -45,9 +45,7 @@ mim_sheet_2_params.sheet_info = "Вкладка #2"
 mim_sheet_2_params.sheet_indexes = [1]
 mim_sheet_2_params.columns = config_for_sheets23()
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 mim_sheet_2_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

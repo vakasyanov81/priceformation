@@ -1,8 +1,8 @@
 #!/bin/bash
 echo '\n--- ruff ---\n'
-poetry run ruff . --fix
+poetry run ruff $WORK_DIR --fix
 echo '\n--- black ---\n'
-poetry run black .
+poetry run black $WORK_DIR
 # poetry run black . --diff --color
 # poetry run black .
 echo '\n--- pylint ---\n'

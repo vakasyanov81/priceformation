@@ -14,10 +14,14 @@ from parsers.vendors.four_tochki.four_tochki_2sheet import (
 )
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet2 import four_tochki_one_item_result
-from tests.test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
+from tests.test_parsers.test_vendors.parse_config import (
+    MimMarkupRulesProviderForTests,
+    make_parse_configuration,
+)
 
-
-parser_config = make_parse_configuration(fourtochki_sheet_2_params, MimMarkupRulesProviderForTests())
+parser_config = make_parse_configuration(
+    fourtochki_sheet_2_params, MimMarkupRulesProviderForTests()
+)
 
 
 def get_fake_parser(parse_result):

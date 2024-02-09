@@ -11,16 +11,15 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
-    ParserParams, ParseParamsSupplier,
+    ParseParamsSupplier,
+    ParserParams,
 )
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
 
 zapaska_rest_params = ParserParams(
     supplier=ParseParamsSupplier(
-        folder_name='zapaska',
-        name='Запаска (остатки)',
-        code='2'
+        folder_name="zapaska", name="Запаска (остатки)", code="2"
     ),
     start_row=9,
     sheet_info="",

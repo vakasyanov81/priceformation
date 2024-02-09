@@ -33,9 +33,7 @@ mim_sheet_1_params.columns = {
     20: RowItemMim.__PRICE_RECOMMENDED__,
 }
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 mim_sheet_1_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

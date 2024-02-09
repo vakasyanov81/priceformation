@@ -18,7 +18,6 @@ from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
 from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
 
-
 parser_config = make_parse_configuration(zapaska_rest_params)
 
 

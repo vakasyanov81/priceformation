@@ -84,14 +84,14 @@ async def main():
 
 
 def run_make_price_by_supplier():
-    """ Make common price list by price list supplier's """
+    """Make common price list by price list supplier's"""
     common_price = CommonPrice()
     common_price.parse_all_vendors()
     common_price.write_all_prices()
 
 
 async def run_save_nomenclature_to_db():
-    """ Save supplier price list to database with data processing """
+    """Save supplier price list to database with data processing"""
     common_price = CommonPrice()
     common_price.parse_all_vendors()
     await save_nomenclature_to_db(common_price)

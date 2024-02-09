@@ -9,11 +9,7 @@ from parsers.base_parser.base_parser_config import ParseParamsSupplier
 from parsers.row_item.vendors.row_item_mim import RowItemMim
 
 fourtochki_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name='four_tochki',
-        name='Форточки',
-        code='5'
-    ),
+    supplier=ParseParamsSupplier(folder_name="four_tochki", name="Форточки", code="5"),
     start_row=2,
     sheet_info="",
     columns={},

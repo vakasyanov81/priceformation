@@ -1,8 +1,14 @@
 """ Parse configuration """
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
-from tests.test_parsers.test_vendors.test_parse_poshk import BlackListProviderForTests, MarkupRulesProviderForTests, \
-    StopWordsProviderForTests, VendorListProviderForTests, ManufacturerAliasesProviderForTests, vendor_list_config
+from tests.test_parsers.test_vendors.test_parse_poshk import (
+    BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
+    MarkupRulesProviderForTests,
+    StopWordsProviderForTests,
+    VendorListProviderForTests,
+    vendor_list_config,
+)
 
 
 def make_parse_configuration(parser_params, markup_rules=None):
@@ -12,7 +18,7 @@ def make_parse_configuration(parser_params, markup_rules=None):
         stop_words_provider=StopWordsProviderForTests(),
         vendor_list=VendorListProviderForTests(vendor_list_config),
         manufacturer_aliases=ManufacturerAliasesProviderForTests(),
-        parser_params=parser_params
+        parser_params=parser_params,
     )
 
 
