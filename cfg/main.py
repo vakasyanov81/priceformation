@@ -142,7 +142,7 @@ class MainConfig:
     @classmethod
     def db(cls) -> DBConfig:
         """database config"""
-        return db_cfg()
+        return db_cfg(__PROJECT_ROOT__)
 
 
 def get_config():
