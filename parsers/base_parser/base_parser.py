@@ -9,7 +9,7 @@ import math
 from functools import lru_cache
 from typing import List, Type, TypeVar
 
-from core.exceptions import CoreExceptionError
+from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
 from parsers.base_item_actions.calc_percent_markup_item_action import (
@@ -137,7 +137,7 @@ class BaseParser:
             ManufacturerFinder(self._parse_config.manufacturer_aliases()).process(item)
             self.correction_category(item)
 
-            item.supplier_name = self.parser_params().supplier_name
+            item.supplier_name = self.parser_params().supplier.name
             result.append(item)
 
         return result
@@ -148,7 +148,7 @@ class BaseParser:
                 item_action(item).action()
 
     def __repr__(self) -> str:
-        sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier_name}"
+        sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier.name}"
         if self.parser_params().sheet_info:
             sup_name += f" ({self.parser_params().sheet_info})"
         return sup_name
@@ -311,7 +311,7 @@ class BaseParser:
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         return self._parse_config.all_vendor_config().get(
-            self.parser_params().supplier_folder_name
+            self.parser_params().supplier.folder_name
         ) or VendorParams(enabled=0)
 
     @classmethod
@@ -347,19 +347,15 @@ class BaseParser:
         return " ".join(new_chunks)
 
 
-class SupplierNotHavePricesError(CoreExceptionError):
-    pass
-
-
 def get_file_prices(parser: TBaseParser):
     _list_files = []
     for f_tmp in parser.parser_params().file_templates:
         _list_files += glob.glob(
-            f"file_prices/{parser.parser_params().supplier_folder_name}/{f_tmp}"
+            f"file_prices/{parser.parser_params().supplier.folder_name}/{f_tmp}"
         )
 
     if not _list_files:
         raise SupplierNotHavePricesError(
-            f"Прайсов у поставщика ({parser.parser_params().supplier_name}) не обнаружено!"
+            f"Прайсов у поставщика ({parser.parser_params().supplier.name}) не обнаружено!"
         )
     return _list_files

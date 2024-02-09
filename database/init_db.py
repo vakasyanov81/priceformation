@@ -13,10 +13,10 @@ cfg = init_cfg()
 
 
 async def init_db(drop_database=False):
-    if Path(get_config().db().db_name).exists() and drop_database:
-        Path(get_config().db().db_name).unlink()
+    if Path(get_config().database().db_name).exists() and drop_database:
+        Path(get_config().database().db_name).unlink()
 
-    backend = get_backend("sqlite:///" + get_config().db().db_name)
+    backend = get_backend("sqlite:///" + get_config().database().db_name)
     migrations = read_migrations(
         cfg.main.project_root + os.sep + "database" + os.sep + "migrations"
     )
@@ -32,4 +32,8 @@ async def init_db(drop_database=False):
             err_msg(traceback.format_exc())
             raise DBError("Ошибка при инициализации базы данных") from _exc
         finally:
-            log_msg(msg="Миграция базы данных окончена \n", need_print_log=True, color="green")
+            log_msg(
+                msg="Миграция базы данных окончена \n",
+                need_print_log=True,
+                color="green",
+            )

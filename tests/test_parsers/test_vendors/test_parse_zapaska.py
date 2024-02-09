@@ -9,7 +9,6 @@ from typing import List
 import pytest
 
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
@@ -17,23 +16,10 @@ from parsers.vendors.zapaska import zapaska_rest_params
 from parsers.vendors.zapaska_rest import ZapaskaRestParser
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
-from tests.test_parsers.test_vendors.test_parse_poshk import (
-    BlackListProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    MarkupRulesProviderForTests,
-    StopWordsProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config,
-)
+from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
 
-parser_config = BasePriceParseConfigurationParams(
-    black_list_provider=BlackListProviderForTests(),
-    markup_rules_provider=MarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
-    vendor_list=VendorListProviderForTests(vendor_list_config),
-    manufacturer_aliases=ManufacturerAliasesProviderForTests(),
-    parser_params=zapaska_rest_params,
-)
+
+parser_config = make_parse_configuration(zapaska_rest_params)
 
 
 def get_fake_parser(rest_result, parse_result):
@@ -52,7 +38,7 @@ class TestParseZapaska:
     tests for Poshk vendor after raw-parser process
     """
 
-    def test_parse(self):  # pylint: disable=R0201
+    def test_parse(self):
         """check all field for one price-row"""
 
         rest_result, parse_result = zapaska_one_item_result()
@@ -68,7 +54,7 @@ class TestParseZapaska:
         assert res.supplier_name == "Запаска (остатки)"
         assert res.percent_markup == 22.12
 
-    def test_small_rest(self):  # pylint: disable=R0201
+    def test_small_rest(self):
         """test exclude price-position with small rest count"""
         rest_result, parse_result = zapaska_one_item_result()
         self.get_first_row_item(rest_result).rest_count = 3

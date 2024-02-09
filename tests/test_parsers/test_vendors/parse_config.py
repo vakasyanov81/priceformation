@@ -1,10 +1,19 @@
-# -*- coding: utf-8 -*-
-"""
-price rules for tests for mim vendor
-"""
-__author__ = "Kasyanov V.A."
-
+""" Parse configuration """
 from parsers import data_provider
+from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+from tests.test_parsers.test_vendors.test_parse_poshk import BlackListProviderForTests, MarkupRulesProviderForTests, \
+    StopWordsProviderForTests, VendorListProviderForTests, ManufacturerAliasesProviderForTests, vendor_list_config
+
+
+def make_parse_configuration(parser_params, markup_rules=None):
+    return BasePriceParseConfigurationParams(
+        black_list_provider=BlackListProviderForTests(),
+        markup_rules_provider=markup_rules or MarkupRulesProviderForTests(),
+        stop_words_provider=StopWordsProviderForTests(),
+        vendor_list=VendorListProviderForTests(vendor_list_config),
+        manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+        parser_params=parser_params
+    )
 
 
 class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):

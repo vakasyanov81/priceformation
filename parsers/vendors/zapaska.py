@@ -39,7 +39,7 @@ zapaska_params.file_templates = ["price*.xls", "price*.xlsx"]
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    zapaska_params.supplier_folder_name
+    zapaska_params.supplier.folder_name
 )
 
 zapaska_config = BasePriceParseConfigurationParams(
@@ -78,7 +78,7 @@ class ZapaskaPriceAndRestParser:
 
     @classmethod
     def supplier_folder_name(cls):
-        return zapaska_params.supplier_folder_name
+        return zapaska_params.supplier.folder_name
 
     def parse(self):
         return self.get_result()

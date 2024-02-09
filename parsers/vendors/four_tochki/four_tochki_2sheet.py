@@ -7,6 +7,7 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
+from .four_tochki_1sheet import supplier_folder_name
 
 from ... import data_provider
 from ...base_parser.base_parser_config import (
@@ -36,7 +37,7 @@ fourtochki_sheet_2_params.columns = {
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    fourtochki_params.supplier_folder_name
+    supplier_folder_name
 )
 
 fourtochki_sheet_2_config = BasePriceParseConfigurationParams(

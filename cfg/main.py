@@ -140,7 +140,7 @@ class MainConfig:
         return __IS_UNITTEST_MODE__
 
     @classmethod
-    def db(cls) -> DBConfig:
+    def database(cls) -> DBConfig:
         """database config"""
         return db_cfg(__PROJECT_ROOT__)
 

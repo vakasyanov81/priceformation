@@ -16,7 +16,7 @@ async def get_suppliers():
 class DBStatistic(NamedTuple):
     supplier_count: int
     brand_count: int
-    nomenclature_by_supllier_count: Dict[int, int]
+    nomenclature_by_supplier_count: Dict[int, int]
 
 
 async def get_statistic() -> DBStatistic:

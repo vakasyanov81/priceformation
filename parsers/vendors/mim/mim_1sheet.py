@@ -13,7 +13,7 @@ from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .mim_base import MimParserBase, mim_params
+from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
 mim_sheet_1_params = dataclasses.replace(mim_params)
 mim_sheet_1_params.sheet_info = "Вкладка #1"
@@ -34,7 +34,7 @@ mim_sheet_1_params.columns = {
 }
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    mim_sheet_1_params.supplier_folder_name
+    supplier_folder_name
 )
 
 mim_sheet_1_config = BasePriceParseConfigurationParams(

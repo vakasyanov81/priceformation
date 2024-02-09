@@ -24,6 +24,6 @@ def get_config(project_root) -> DBConfig:
             "port": 5433,
             "user_name": "postgres",
             "password": "postgres",
-            "db_name": f"{project_root}/db.sqlite3"
+            "db_name": f"{project_root}/db.sqlite3",
         }
     )

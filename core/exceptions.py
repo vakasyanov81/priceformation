@@ -35,3 +35,7 @@ def make_raise(message):
 
 
 __ALL__ = [make_raise]
+
+
+class SupplierNotHavePricesError(CoreExceptionError):
+    pass

@@ -29,11 +29,7 @@ __level_reverse_map__ = {
     "WARNING": logging.WARNING,
 }
 
-__level_color_map__ = {
-    "ERROR": "red",
-    "WARNING": "yellow",
-    "Info": None
-}
+__level_color_map__ = {"ERROR": "red", "WARNING": "yellow", "Info": None}
 
 
 def err_msg(msg, need_print_log=False):
@@ -75,7 +71,12 @@ def log_to_file(msg, level=logging.INFO):
     return True
 
 
-def log_msg(msg, level=logging.INFO, need_print_log=False, color: Literal["red", "green", "yellow"] | None = None):
+def log_msg(
+    msg,
+    level=logging.INFO,
+    need_print_log=False,
+    color: Literal["red", "green", "yellow"] | None = None,
+):
     """make log message"""
 
     time_now = datetime.datetime.time(datetime.datetime.now())

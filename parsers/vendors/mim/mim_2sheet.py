@@ -13,7 +13,7 @@ from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .mim_base import MimParserBase, mim_params
+from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
 
 def config_for_sheets23():
@@ -46,7 +46,7 @@ mim_sheet_2_params.sheet_indexes = [1]
 mim_sheet_2_params.columns = config_for_sheets23()
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    mim_sheet_2_params.supplier_folder_name
+    supplier_folder_name
 )
 
 mim_sheet_2_config = BasePriceParseConfigurationParams(

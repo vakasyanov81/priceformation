@@ -34,9 +34,10 @@ fourtochki_sheet_1_params.columns = {
     19: RowItem.__PRICE_PURCHASE__,
 }
 
+supplier_folder_name = fourtochki_params.supplier.folder_name
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    fourtochki_params.supplier_folder_name
+    supplier_folder_name
 )
 
 fourtochki_sheet_1_config = BasePriceParseConfigurationParams(

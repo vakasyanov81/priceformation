@@ -19,7 +19,7 @@ from tests.test_parsers.test_vendors.test_parse_poshk import (
     vendor_list_config,
 )
 
-from .price_rules import MimMarkupRulesProviderForTests
+from ..parse_config import MimMarkupRulesProviderForTests
 from .test_parse_mim_sheet1 import BasePriceParseConfigurationParams
 
 parser_config = BasePriceParseConfigurationParams(
@@ -42,7 +42,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():  # pylint: disable=R0201
+def test_parse():
     """check all field for one price-row"""
 
     result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()

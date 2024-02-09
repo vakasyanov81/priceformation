@@ -13,11 +13,16 @@ from parsers.row_item.row_item import RowItem
 
 
 @dataclass
+class ParseParamsSupplier:
+    folder_name: str
+    name: str
+    code: str
+
+
+@dataclass
 class ParserParams:
-    supplier_folder_name: str
+    supplier: ParseParamsSupplier
     start_row: int
-    supplier_name: str
-    supplier_code: str
     sheet_info: str
     columns: dict
     stop_words: List[str]

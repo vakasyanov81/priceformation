@@ -8,15 +8,17 @@ from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser, ParserParams
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
-    ParseConfiguration,
+    ParseConfiguration, ParseParamsSupplier,
 )
 from parsers.row_item.row_item import RowItem
 
 stk_params = ParserParams(
-    supplier_folder_name="stk",
+    supplier=ParseParamsSupplier(
+        folder_name='stk',
+        name='STK',
+        code='7'
+    ),
     start_row=14,
-    supplier_name="STK",
-    supplier_code="7",
     sheet_info="",
     columns={
         1: RowItem.__CODE__,
@@ -32,7 +34,7 @@ stk_params = ParserParams(
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    stk_params.supplier_folder_name
+    stk_params.supplier.folder_name
 )
 
 stk_config = BasePriceParseConfigurationParams(
