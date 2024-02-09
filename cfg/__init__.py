@@ -4,7 +4,10 @@ __author__ = "Kasyanov V.A."
 
 from . import db, main
 
-__config__ = {"db": db.get_config(main.get_config().project_root), "main": main.get_config()}
+__config__ = {
+    "db": db.get_config(main.get_config().project_root),
+    "main": main.get_config(),
+}
 
 
 class ConfigParamError(Exception):

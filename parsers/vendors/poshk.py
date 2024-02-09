@@ -10,6 +10,7 @@ from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser, ParseConfiguration
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
+    ParseParamsSupplier,
     ParserParams,
 )
 from parsers.row_item.row_item import RowItem
@@ -20,10 +21,8 @@ class PoshkPriceParseConfiguration(ParseConfiguration):
 
 
 poshk_params = ParserParams(
-    supplier_folder_name="poshk",
+    supplier=ParseParamsSupplier(folder_name="poshk", name="Пошк", code="1"),
     start_row=14,
-    supplier_name="Пошк",
-    supplier_code="1",
     sheet_info="",
     columns={
         0: RowItem.__CODE__,
@@ -39,7 +38,7 @@ poshk_params = ParserParams(
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    poshk_params.supplier_folder_name
+    poshk_params.supplier.folder_name
 )
 
 poshk_config = BasePriceParseConfigurationParams(

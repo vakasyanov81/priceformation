@@ -37,10 +37,6 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install
-      - name: Tests with pytest
-        run: |
-          export PYTHONPATH=${GITHUB_WORKSPACE}
-          poetry run pytest ./tests
       - name: Test coverage
         run: |
           export PYTHONPATH=${GITHUB_WORKSPACE}

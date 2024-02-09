@@ -5,13 +5,12 @@ base logic for four_tochki vendor
 __author__ = "Kasyanov V.A."
 
 from parsers.base_parser.base_parser import BaseParser, ParserParams
+from parsers.base_parser.base_parser_config import ParseParamsSupplier
 from parsers.row_item.vendors.row_item_mim import RowItemMim
 
 fourtochki_params = ParserParams(
-    supplier_folder_name="four_tochki",
+    supplier=ParseParamsSupplier(folder_name="four_tochki", name="Форточки", code="5"),
     start_row=2,
-    supplier_name="Форточки",
-    supplier_code="5",
     sheet_info="",
     columns={},
     stop_words=[],

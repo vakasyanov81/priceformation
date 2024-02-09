@@ -9,7 +9,6 @@ from typing import List
 import pytest
 
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
@@ -19,23 +18,9 @@ from tests.test_parsers.fixtures.pioner import (
     pioner_one_item_result,
     pioner_one_item_result_with_categories,
 )
-from tests.test_parsers.test_vendors.test_parse_poshk import (
-    BlackListProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    MarkupRulesProviderForTests,
-    StopWordsProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config,
-)
+from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
 
-parser_config = BasePriceParseConfigurationParams(
-    black_list_provider=BlackListProviderForTests(),
-    markup_rules_provider=MarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
-    vendor_list=VendorListProviderForTests(vendor_list_config),
-    manufacturer_aliases=ManufacturerAliasesProviderForTests(),
-    parser_params=pioner_params,
-)
+parser_config = make_parse_configuration(pioner_params)
 
 
 def get_fake_parser(parse_result):
@@ -53,7 +38,7 @@ class TestParsePioner:
     tests for Pioner vendor after raw-parser process
     """
 
-    def test_parse(self):  # pylint: disable=R0201
+    def test_parse(self):
         """check all field for one price-row"""
 
         result: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
@@ -64,7 +49,7 @@ class TestParsePioner:
         assert result[0].supplier_name == "Пионер"
         assert result[0].percent_markup == 6.82
 
-    def test_parse_brand(self):  # pylint: disable=R0201
+    def test_parse_brand(self):
         """check all field for one price-row"""
 
         result: List[RowItem] = get_fake_parser(

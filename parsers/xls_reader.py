@@ -255,7 +255,7 @@ class XlsxReader(XlsReader):
     def row_values(cls, sheet, cur_row, end_col):
         values = []
         for i in range(end_col):
-            values.append(sheet.cell(row=(cur_row + 1), column=(i + 1)).value)
+            values.append(sheet.cell((cur_row + 1), (i + 1)).value)
         return values
 
 

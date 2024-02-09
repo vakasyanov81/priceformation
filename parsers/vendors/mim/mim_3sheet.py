@@ -13,15 +13,13 @@ from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .mim_base import MimParserBase
+from .mim_base import MimParserBase, supplier_folder_name
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
 mim_sheet_3_params.sheet_info = "Вкладка #3"
 mim_sheet_3_params.sheet_indexes = [2]
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    mim_sheet_3_params.supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 mim_sheet_3_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

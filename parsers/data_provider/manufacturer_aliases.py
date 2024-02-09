@@ -14,7 +14,7 @@ class ManufacturerAliasesProviderBase:
     """Base data provider with manufacturer aliases"""
 
     def get_aliases(self) -> dict:
-        """get manufacturer aliase"""
+        """get manufacturer alias"""
         raise NotImplementedError
 
 

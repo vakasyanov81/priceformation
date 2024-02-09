@@ -20,9 +20,7 @@ from parsers.vendors.mim.mim_1sheet import (
 )
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.mim_sheet1 import mim_one_item_result
-from tests.test_parsers.test_vendors.test_mim.price_rules import (
-    MimMarkupRulesProviderForTests,
-)
+from tests.test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests
 from tests.test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,

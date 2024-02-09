@@ -11,16 +11,17 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
+    ParseParamsSupplier,
     ParserParams,
 )
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
 
 zapaska_rest_params = ParserParams(
-    supplier_folder_name="zapaska",
+    supplier=ParseParamsSupplier(
+        folder_name="zapaska", name="Запаска (остатки)", code="2"
+    ),
     start_row=9,
-    supplier_name="Запаска (остатки)",
-    supplier_code="2",
     sheet_info="",
     columns={
         0: RowItem.__CODE__,
@@ -37,7 +38,7 @@ zapaska_rest_params = ParserParams(
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    zapaska_rest_params.supplier_folder_name
+    zapaska_rest_params.supplier.folder_name
 )
 
 zapaska_rest_config = BasePriceParseConfigurationParams(
@@ -110,7 +111,8 @@ class ZapaskaRestParser(BaseParser):
         """get parse result for ZapaskaRest"""
         self.price_mrp_result = rest_result
 
-    def get_item_rest(self, item: RowItem):
+    @classmethod
+    def get_item_rest(cls, item: RowItem):
         """get rest count"""
         return item.rest_count
 

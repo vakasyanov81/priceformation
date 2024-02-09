@@ -13,6 +13,7 @@ from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .four_tochki_1sheet import supplier_folder_name
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
@@ -35,9 +36,7 @@ fourtochki_sheet_2_params.columns = {
 }
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    fourtochki_params.supplier_folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
 fourtochki_sheet_2_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

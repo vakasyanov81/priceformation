@@ -11,10 +11,10 @@ from cfg.main import get_config
 async def get_db() -> aiosqlite.Connection:
     cfg = get_config()
     if not getattr(get_db, "db", None):
-        db = await aiosqlite.connect(cfg.db().db_name)
-        get_db.db = db
+        db_ = await aiosqlite.connect(cfg.database().db_name)
+        get_db.db_ = db_
 
-    return get_db.db
+    return get_db.db_
 
 
 async def fetch_all(
@@ -27,8 +27,8 @@ async def fetch_all(
 async def insert(
     sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True
 ) -> list[dict]:
-    db = await get_db()
-    cursor = await db.cursor()
+    db_ = await get_db()
+    cursor = await db_.cursor()
     cursor = await cursor.executemany(sql, params)
     return await get_result(cursor, autocommit)
 
@@ -79,11 +79,11 @@ async def fetch_as_dict(sql: str, params: Iterable[Any] | None = None) -> dict |
 async def execute(
     sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True
 ) -> None:
-    db = await get_db()
+    db_ = await get_db()
     args: tuple[str, Iterable[Any] | None] = (sql, params)
-    await db.execute(*args)
+    await db_.execute(*args)
     if autocommit:
-        await db.commit()
+        await db_.commit()
 
 
 def close_db() -> None:
@@ -95,10 +95,10 @@ async def _async_close_db() -> None:
 
 
 async def _get_cursor(sql: str, params: Iterable[Any] | None) -> aiosqlite.Cursor:
-    db = await get_db()
+    db_ = await get_db()
     args: tuple[str, Iterable[Any] | None] = (sql, params)
-    cursor = await db.execute(*args)
-    db.row_factory = aiosqlite.Row
+    cursor = await db_.execute(*args)
+    db_.row_factory = aiosqlite.Row
     return cursor
 
 

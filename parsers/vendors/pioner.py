@@ -14,16 +14,15 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
+    ParseParamsSupplier,
     ParserParams,
 )
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
 
 pioner_params = ParserParams(
-    supplier_folder_name="pioner",
+    supplier=ParseParamsSupplier(folder_name="pioner", name="Пионер", code="3"),
     start_row=12,
-    supplier_name="Пионер",
-    supplier_code="3",
     sheet_info="",
     columns={
         1: RowItem.__TITLE__,
@@ -39,7 +38,7 @@ pioner_params = ParserParams(
 
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    pioner_params.supplier_folder_name
+    pioner_params.supplier.folder_name
 )
 
 pioner_config = BasePriceParseConfigurationParams(

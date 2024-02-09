@@ -6,10 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-)
+from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.four_tochki.four_tochki_2sheet import (
     FourTochkiParser2Sheet,
@@ -17,24 +14,13 @@ from parsers.vendors.four_tochki.four_tochki_2sheet import (
 )
 from parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet2 import four_tochki_one_item_result
-from tests.test_parsers.test_vendors.test_mim.price_rules import (
+from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
-)
-from tests.test_parsers.test_vendors.test_parse_poshk import (
-    BlackListProviderForTests,
-    ManufacturerAliasesProviderForTests,
-    StopWordsProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config,
+    make_parse_configuration,
 )
 
-parser_config = BasePriceParseConfigurationParams(
-    black_list_provider=BlackListProviderForTests(),
-    markup_rules_provider=MimMarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
-    vendor_list=VendorListProviderForTests(vendor_list_config),
-    manufacturer_aliases=ManufacturerAliasesProviderForTests(),
-    parser_params=fourtochki_sheet_2_params,
+parser_config = make_parse_configuration(
+    fourtochki_sheet_2_params, MimMarkupRulesProviderForTests()
 )
 
 

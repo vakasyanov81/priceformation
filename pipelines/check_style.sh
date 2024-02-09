@@ -1,12 +1,9 @@
 #!/bin/bash
-cd ..
-export PYTHONPATH=./
-export WORK_DIR=./
 echo '\n--- ruff ---\n'
-poetry run ruff . --fix
+poetry run ruff $WORK_DIR --fix
 echo '\n--- black ---\n'
-poetry run black .
+poetry run black $WORK_DIR
 # poetry run black . --diff --color
 # poetry run black .
 echo '\n--- pylint ---\n'
-poetry run pylint --rcfile ./pipelines/.pylintrc ./
+poetry run pylint --rcfile $WORK_DIR/pipelines/.pylintrc $WORK_DIR
