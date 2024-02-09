@@ -15,7 +15,7 @@ class DBConfig(NamedTuple):
     db_name: str
 
 
-def get_config() -> DBConfig:
+def get_config(project_root) -> DBConfig:
     """get db configuration"""
 
     return DBConfig(
@@ -24,11 +24,6 @@ def get_config() -> DBConfig:
             "port": 5433,
             "user_name": "postgres",
             "password": "postgres",
-            "db_name": "/home/huck/petprojects/priceformation_web/src/db.sqlite3"
-            # "db_name": __PROJECT_ROOT__
-            # + os.sep
-            # + __FILE_PRICES__
-            # + os.sep
-            # + "price_formation.db",
+            "db_name": f"{project_root}/db.sqlite3"
         }
     )
