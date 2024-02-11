@@ -1,14 +1,15 @@
-from dataclasses import dataclass
-from decimal import Decimal as Money
+"""nomenclature CRUD logic"""
+import traceback
 from enum import Enum
 from sqlite3 import DatabaseError
 from typing import Dict
 
-from core import err_msg
+from core import err_msg, log_msg
 from database.db import fetch_all, fetch_as_dict
 from parsers.row_item.row_item import RowItem
 
 from .exception import DBError
+from .supplier import get_suppliers, insert_supplier
 
 
 class ProductState(Enum):
@@ -18,20 +19,8 @@ class ProductState(Enum):
     OLD_STATE: 0
 
 
-@dataclass
-class Nomenclature:
-    supplier_id: int
-    title: str
-    code: str
-    price: Money
-    price_purchase: Money
-    rest: int
-    condition: ProductState
-    brand: str
-    nomenclature_type: str
-
-
 async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
+    """insert nomenclature list to database"""
     nom_types = await fetch_as_dict(SQL_GET_NOMENCLATURE_TYPE)
     inserted_count = 0
     for _chunk in chunks(nomenclatures):
@@ -39,8 +28,6 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
             res = await fetch_all(insert_nomenclature_sql(_chunk, suppliers, nom_types))
             inserted_count += len(res)
         except DatabaseError as _exc:
-            import traceback
-
             err_msg(str(_exc))
             err_msg(traceback.format_exc())
             raise DBError("Ошибка при вставке номенклатуры") from _exc
@@ -50,18 +37,19 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
 def insert_nomenclature_sql(
     nomenclatures: list[RowItem], suppliers: dict, nomenclature_type: Dict[str, int]
 ) -> str:
+    """prepare sql query for insert nomenclatures"""
     noms = []
 
-    for n in nomenclatures:
+    for nom in nomenclatures:
         row = [
-            suppliers.get(n.supplier_name),  # supplier_id
-            n.title.replace("'", r"''"),
-            n.code,
-            n.price_opt,
-            n.price_markup,
-            n.rest_count,
-            n.brand,
-            nomenclature_type.get(n.type_production),
+            suppliers.get(nom.supplier_name),  # supplier_id
+            nom.title.replace("'", r"''"),
+            nom.code,
+            nom.price_opt,
+            nom.price_markup,
+            nom.rest_count,
+            nom.brand,
+            nomenclature_type.get(nom.type_production),
         ]
         noms.append(",".join(prepare_to_insert(row)))
     data = ",".join([f"({nom})" for nom in noms])
@@ -70,6 +58,7 @@ def insert_nomenclature_sql(
 
 
 def chunks(data: list, batch_size=200) -> list:
+    """break into batch"""
     _chunks = []
     left_index = 0
     right_index = batch_size
@@ -78,8 +67,7 @@ def chunks(data: list, batch_size=200) -> list:
             right_index = len(data)
             _chunks.append(data[left_index:right_index])
             break
-        else:
-            _chunks.append(data[left_index:right_index])
+        _chunks.append(data[left_index:right_index])
 
         right_index += batch_size
         left_index += batch_size
@@ -87,6 +75,7 @@ def chunks(data: list, batch_size=200) -> list:
 
 
 async def insert_brand(brand: list):
+    """insert brand to database"""
     if not brand:
         return
     data = ",".join([f"('{b}')" for b in brand])
@@ -98,6 +87,37 @@ async def insert_brand(brand: list):
 def prepare_to_insert(data: list):
     """prepare data for insert"""
     return [f"'{d}'" if d else "NULL" for d in data]
+
+
+async def save_nomenclature_to_db(common_price):
+    """save to database"""
+    sup_names = common_price.supplier_info()
+    inserted_supplier_count = 0
+
+    log_msg("-------- Обновление базы данных --------", need_print_log=True)
+    if sup_names:
+        inserted_supplier_count = await insert_supplier(sup_names)
+    log_msg(f"Добавлено поставщиков: {inserted_supplier_count}", need_print_log=True)
+
+    suppliers = await get_suppliers()
+    suppliers = {sup.get("supplier_name"): sup.get("supplier_id") for sup in suppliers}
+    inserted_brand_count = await insert_brand(get_brands(common_price.result)) or 0
+    log_msg(f"Добавлено брэндов: {inserted_brand_count}", need_print_log=True)
+    inserted_nomenclature_count = await insert_nomenclature(
+        common_price.result, suppliers
+    )
+    log_msg(
+        f"Добавлено номенклатуры: {inserted_nomenclature_count}", need_print_log=True
+    )
+
+
+def get_brands(nomenclatures: list[RowItem]) -> list:
+    """get list brand from nomenclature list"""
+    brands = set()
+    for nom in nomenclatures:
+        if nom.manufacturer:
+            brands.add(nom.manufacturer)
+    return list(brands)
 
 
 SQL_INSERT_NOMENCLATURE = """

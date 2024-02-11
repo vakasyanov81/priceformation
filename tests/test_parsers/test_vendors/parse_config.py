@@ -12,6 +12,7 @@ from tests.test_parsers.test_vendors.test_parse_poshk import (
 
 
 def make_parse_configuration(parser_params, markup_rules=None):
+    """make parse configuration"""
     return BasePriceParseConfigurationParams(
         black_list_provider=BlackListProviderForTests(),
         markup_rules_provider=markup_rules or MarkupRulesProviderForTests(),

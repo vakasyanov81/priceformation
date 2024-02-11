@@ -1,6 +1,9 @@
+"""exceptions"""
+
+
 class DBError(Exception):
-    pass
+    """database error"""
 
 
-class NotProvidedError(Exception):
-    pass
+class NotProvidedDatabaseError(Exception):
+    """Not provided database error"""

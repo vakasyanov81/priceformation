@@ -13,9 +13,9 @@ from enum import Enum
 
 from core.async_utils import try_async_call
 from core.log_message import print_log
-from database import save_nomenclature_to_db
 from database.db import close_db
 from database.init_db import init_db
+from database.nomenclature import save_nomenclature_to_db
 from parsers.common_price import CommonPrice
 
 

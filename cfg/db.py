@@ -8,6 +8,8 @@ from typing import NamedTuple
 
 
 class DBConfig(NamedTuple):
+    """database configuration container"""
+
     host: str
     port: str
     user_name: str

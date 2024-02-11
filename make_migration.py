@@ -10,7 +10,7 @@ import traceback
 
 from core.log_message import err_msg, print_log
 from database.db import close_db
-from database.exception import DBError, NotProvidedError
+from database.exception import DBError, NotProvidedDatabaseError
 from database.init_db import init_db
 
 
@@ -27,7 +27,7 @@ async def make_migration():
     except DBError as exc:
         print_log(str(exc), level="WARNING")
         sys.exit(1)
-    except NotProvidedError as exc:
+    except NotProvidedDatabaseError as exc:
         err_msg(str(exc))
         err_msg(traceback.format_exc())
         print_log(f"Не предвиденная ошибка // {str(exc)}", level="WARNING")

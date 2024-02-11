@@ -19,10 +19,12 @@ class FakeParser:
     _SUPPLIER_FOLDER_NAME = "fake_supplier"
 
     def __init__(self, file_prices: list = None, xls_reader=None, price_config=None):
+        """init"""
         pass
 
     @classmethod
     def supplier_folder_name(cls):
+        """supplier folder name"""
         return cls._SUPPLIER_FOLDER_NAME
 
     @classmethod

@@ -25,10 +25,12 @@ from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
-TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
+BaseParserT = TypeVar("BaseParserT", bound="BaseParser")
 
 
 class BaseParser:
+    """Base parser logic"""
+
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [
         SetPercentMarkupItemAction
@@ -52,27 +54,34 @@ class BaseParser:
         self.logger = LoggerParseProcess(repr(self))
 
     def parse_config(self) -> ParseConfiguration:
+        """get parse configuration"""
         return self._parse_config
 
     def markup_rules(self) -> data_provider.MarkupRules:
+        """get markup rules"""
         return self._parse_config.get_markup_rules()
 
     @lru_cache()
     def get_black_list(self) -> List[str]:
+        """get black list"""
         black_list = self._parse_config.black_list()
         return self.prepare_black_list(black_list)
 
     def prepare_black_list(self, black_list: List[str]) -> List[str]:
+        """prepare black list"""
         return [self.strip_words_in_title(black_title) for black_title in black_list]
 
     @lru_cache()
     def get_stop_words(self) -> List[str]:
+        """get stop word list"""
         return self._parse_config.stop_words()
 
-    def set_parse_config(self, parse_sonfig: ParseConfiguration):
-        self._parse_config = parse_sonfig
+    def set_parse_config(self, parse_config: ParseConfiguration):
+        """set parse configuration"""
+        self._parse_config = parse_config
 
     def parse(self):
+        """parse price"""
         if not self.is_active:
             self.logger.log_disable_status()
             return []
@@ -85,6 +94,7 @@ class BaseParser:
         return self.result
 
     def correction_category(self, item: RowItem):
+        """check and fix wrong category title"""
         if not item.type_production:
             return
         category, bad_category = self._category_finder.find_in_str(item.type_production)
@@ -92,6 +102,7 @@ class BaseParser:
             item.type_production = category
 
     def process(self):
+        """main parse process"""
         result_statistic = 0
         self.logger.log_list_files(self.files)
 
@@ -101,14 +112,22 @@ class BaseParser:
             result_statistic += len(res or [])
             self.result += res
         self.remove_without_price_purchase_and_check_valid_title()
-        self.result = self.prepare(self.result)
+        self.result = self.process_price_items(self.result)
         return result_statistic
 
     def after_process(self):
+        """after price parse process"""
         self.remove_null_rest()
-        self.do_items_actions_after_process()
+        self.make_actions_after_process()
+
+    def make_actions_after_process(self):
+        """apply actions with price items"""
+        for item in self.result:
+            for item_action in self._item_actions_after_process:
+                item_action(item).action()
 
     def get_markup_percent(self, price_value: float):
+        """get markup percent"""
         default_percent = self._parse_config.get_default_markup_percents()
 
         if not price_value:
@@ -121,13 +140,14 @@ class BaseParser:
         return default_percent
 
     def parser_params(self) -> ParserParams:
+        """get parse params"""
         return self.parse_config().parse_config.parser_params
 
-    def prepare(self, items):
+    def process_price_items(self, items):
+        """process price items"""
         result = []
 
         for item in items:
-            # сборка тайтла для мим-а
             self.set_prepared_title(item)
 
             # проверка на содержание стоп слов.
@@ -142,11 +162,6 @@ class BaseParser:
 
         return result
 
-    def do_items_actions_after_process(self):
-        for item in self.result:
-            for item_action in self._item_actions_after_process:
-                item_action(item).action()
-
     def __repr__(self) -> str:
         sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier.name}"
         if self.parser_params().sheet_info:
@@ -154,13 +169,16 @@ class BaseParser:
         return sup_name
 
     def get_result(self) -> List[RowItem]:
+        """get result"""
         return self.result
 
     @property
     def is_active(self):
+        """vendor is active?"""
         return bool(self.get_current_vendor_config().enabled)
 
     def remove_null_rest(self):
+        """remove items with null rest"""
         result = []
         for item in self.get_result():
             # rest_count may be ">40", its not convertible to float
@@ -171,7 +189,7 @@ class BaseParser:
         self.result = result
 
     def remove_without_price_purchase_and_check_valid_title(self):
-        """...."""
+        """remove invalid items"""
         result = []
         for item in self.get_result():
             if item.rest_count and not item.price_opt:
@@ -183,17 +201,21 @@ class BaseParser:
         self.result = result
 
     def to_row_items(self, result: List[dict]) -> List[RowItem]:
+        """get list row"""
         return [self.parser_params().row_item_adaptor(row_item) for row_item in result]
 
     @classmethod
     def to_raw_result(cls, result: List[RowItem]) -> List[dict]:
+        """get dictable list"""
         return [item.to_dict() for item in result]
 
     def raw_parse(self, _file: str) -> List[dict]:
+        """run low level parse"""
         reader = self.get_xls_reader(_file)
         return reader.parse(self.parser_params().sheet_indexes)
 
     def get_xls_reader(self, _file):
+        """get xls / xlsx reader instance"""
         return self.xls_reader.get_instance(
             _file,
             {
@@ -204,16 +226,19 @@ class BaseParser:
 
     @classmethod
     def get_prepared_title(cls, item):
+        """get prepared title"""
         return item.title
 
     @classmethod
     def set_prepared_title(cls, item: RowItem) -> bool:
+        """set prepared title in item"""
         prepared_title = cls.get_prepared_title(item)
         title_is_prepared = item.title == prepared_title
         item.title = prepared_title or item.title
         return title_is_prepared
 
     def is_valid_title(self, title: str):
+        """title is valid?"""
         return (
             title
             and not self.has_stop_word(title)
@@ -221,16 +246,19 @@ class BaseParser:
         )
 
     def has_stop_word(self, title) -> bool:
+        """check title contains stop word"""
         for s_word in self.get_stop_words():
             if s_word.lower() in title.lower():
                 return True
         return False
 
     def check_title_in_black_list(self, title) -> bool:
+        """check title in black list"""
         return title in self.get_black_list()
 
     @classmethod
     def get_min_rest_count(cls):
+        """get min rest count"""
         return 4
 
     @classmethod
@@ -238,15 +266,18 @@ class BaseParser:
         return item.rest_count
 
     def skip_by_min_rest(self, item: RowItem):
+        """set rest_count = 0 for item where rest_count less than min"""
         if self.get_item_rest(item) < self.get_min_rest_count():
             item.rest_count = 0
 
     @classmethod
     def round_price(cls, price_value) -> float:
+        """round money"""
         return math.ceil(price_value / 10) * 10
 
     @classmethod
     def is_category_row(cls, item):
+        """item is folder?"""
         if item.title and not item.price_opt:
             return True
         return False
@@ -254,10 +285,12 @@ class BaseParser:
     @classmethod
     @lru_cache()
     def calc_percent(cls, price_sale, price_purchase):
+        """calculate percent"""
         return (price_sale - price_purchase) / price_purchase
 
     @lru_cache()
     def recommended_percent_markup(self, item) -> float:
+        """calculate recommended percent markup"""
         price_recommended = item.price_recommended or 0
         price_opt = item.price_opt or 0
         return (
@@ -265,12 +298,14 @@ class BaseParser:
         )
 
     def is_small_recommended_percent(self, item) -> bool:
+        """is small recommended percent?"""
         return (
             self.recommended_percent_markup(item)
             < self.markup_rules().min_recommended_percent_markup
         )
 
     def is_big_recommended_percent(self, item) -> bool:
+        """big percent?"""
         if not self.markup_rules().max_recommended_percent_markup:
             return False
         return (
@@ -279,6 +314,7 @@ class BaseParser:
         )
 
     def is_small_absolute_markup(self, selling_price, purchase_price) -> bool:
+        """is small abs markup?"""
         return (
             selling_price - purchase_price
             < self.markup_rules().absolute_markup_rules.min_absolute_markup
@@ -347,7 +383,7 @@ class BaseParser:
         return " ".join(new_chunks)
 
 
-def get_file_prices(parser: TBaseParser):
+def get_file_prices(parser: BaseParserT):
     _list_files = []
     for f_tmp in parser.parser_params().file_templates:
         _list_files += glob.glob(

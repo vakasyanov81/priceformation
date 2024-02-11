@@ -1,4 +1,5 @@
 """supplier database logic"""
+import traceback
 from sqlite3 import DatabaseError
 from typing import Dict, NamedTuple, Tuple
 
@@ -10,27 +11,30 @@ from .exception import DBError
 
 
 async def get_suppliers():
+    """fetch all suppliers"""
     return await fetch_all(SQL_GET_ALL_SUPPLIER)
 
 
 class DBStatistic(NamedTuple):
+    """database statist"""
+
     supplier_count: int
     brand_count: int
     nomenclature_by_supplier_count: Dict[int, int]
 
 
 async def get_statistic() -> DBStatistic:
+    """get database statistic"""
     res = await fetch_as_dict(SQL_GET_STATISTIC)
     return DBStatistic(**res)
 
 
 async def insert_supplier(sup_names: Dict[str, SupplierInfo]):
+    """insert supplier"""
     try:
         res = await insert(*insert_supplier_sql(sup_names))
         return len(res)
     except DatabaseError as _exc:
-        import traceback
-
         err_msg(str(_exc))
         err_msg(traceback.format_exc())
         raise DBError("Ошибка при вставке поставщиков") from _exc
