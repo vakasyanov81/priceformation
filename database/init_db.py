@@ -1,4 +1,7 @@
+"""database initialization"""
+
 import os
+import traceback
 from pathlib import Path
 from sqlite3 import DatabaseError
 
@@ -13,6 +16,7 @@ cfg = init_cfg()
 
 
 async def init_db(drop_database=False):
+    """database initialization"""
     if Path(get_config().database().db_name).exists() and drop_database:
         Path(get_config().database().db_name).unlink()
 
@@ -26,8 +30,6 @@ async def init_db(drop_database=False):
         try:
             backend.apply_migrations(backend.to_apply(migrations))
         except DatabaseError as _exc:
-            import traceback
-
             err_msg(str(_exc))
             err_msg(traceback.format_exc())
             raise DBError("Ошибка при инициализации базы данных") from _exc

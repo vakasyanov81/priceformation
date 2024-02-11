@@ -38,4 +38,4 @@ __ALL__ = [make_raise]
 
 
 class SupplierNotHavePricesError(CoreExceptionError):
-    pass
+    """Raise in case supplier have not price"""

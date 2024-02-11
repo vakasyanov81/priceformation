@@ -26,7 +26,71 @@ __IS_UNITTEST_MODE__ = False
 __IS_NEED_PRINT_LOG__ = True
 
 
-class MainConfig:
+class MainCfg:
+    """main configuration property container"""
+
+    @property
+    def vendor_list_file_name(self):
+        """vendor list file name"""
+        return __VENDOR_LIST_FILE_NAME__
+
+    @property
+    def markup_rules_file_name(self):
+        """markup rules file name"""
+        return __MARKUP_RULES_FILE_NAME__
+
+    @property
+    def black_list_file_name(self):
+        """markup rules file name"""
+        return __BLACK_LIST_FILE_NAME__
+
+    @property
+    def stop_words_file_name(self):
+        """stop words file name"""
+        return __STOP_WORDS_FILE_NAME__
+
+    @property
+    def user_config_folder_name(self):
+        """folder name with user configuration"""
+        return __USER_PARSE_CONFIG__
+
+    @property
+    def manufacturer_aliases_file_name(self):
+        """..."""
+        return __MANUFACTURER_ALIASES_FILE_NAME__
+
+    @property
+    def user_config_folder_path(self):
+        """..."""
+        return __PROJECT_ROOT__ + os.sep + self.user_config_folder_name + os.sep
+
+    @property
+    def manufacturer_aliases_file_path(self):
+        """..."""
+        return self.user_config_folder_path + self.manufacturer_aliases_file_name
+
+    @property
+    def markup_rules_file_path(self):
+        """markup rules file"""
+        return self.user_config_folder_path + self.markup_rules_file_name
+
+    @property
+    def black_list_file_path(self):
+        """black list file"""
+        return self.user_config_folder_path + self.black_list_file_name
+
+    @property
+    def stop_words_file_path(self):
+        """stop words file"""
+        return self.user_config_folder_path + self.stop_words_file_name
+
+    @property
+    def vendor_list_file_path(self):
+        """path to vendor list file"""
+        return self.user_config_folder_path + self.vendor_list_file_name
+
+
+class MainConfig(MainCfg):
     """main configuration property container"""
 
     @property
@@ -68,66 +132,6 @@ class MainConfig:
     def current_err_log_file_path(self):
         """path to current log-error file"""
         return self.log_folder_path + self.sep + self.current_err_log_file_name
-
-    @property
-    def vendor_list_file_name(self):
-        """vendor list file name"""
-        return __VENDOR_LIST_FILE_NAME__
-
-    @property
-    def markup_rules_file_name(self):
-        """markup rules file name"""
-        return __MARKUP_RULES_FILE_NAME__
-
-    @property
-    def black_list_file_name(self):
-        """markup rules file name"""
-        return __BLACK_LIST_FILE_NAME__
-
-    @property
-    def stop_words_file_name(self):
-        """stop words file name"""
-        return __STOP_WORDS_FILE_NAME__
-
-    @property
-    def user_config_folder_name(self):
-        """folder name with user configuration"""
-        return __USER_PARSE_CONFIG__
-
-    @property
-    def manufacturer_aliases_file_name(self):
-        """..."""
-        return __MANUFACTURER_ALIASES_FILE_NAME__
-
-    @property
-    def user_config_folder_path(self):
-        """..."""
-        return self.project_root + self.sep + self.user_config_folder_name + os.sep
-
-    @property
-    def manufacturer_aliases_file_path(self):
-        """..."""
-        return self.user_config_folder_path + self.manufacturer_aliases_file_name
-
-    @property
-    def markup_rules_file_path(self):
-        """markup rules file"""
-        return self.user_config_folder_path + self.markup_rules_file_name
-
-    @property
-    def black_list_file_path(self):
-        """black list file"""
-        return self.user_config_folder_path + self.black_list_file_name
-
-    @property
-    def stop_words_file_path(self):
-        """stop words file"""
-        return self.user_config_folder_path + self.stop_words_file_name
-
-    @property
-    def vendor_list_file_path(self):
-        """path to vendor list file"""
-        return self.user_config_folder_path + self.vendor_list_file_name
 
     @property
     def is_need_print_log(self):

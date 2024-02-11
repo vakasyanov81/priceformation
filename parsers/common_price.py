@@ -15,12 +15,14 @@ from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 
 class SupplierInfo(NamedTuple):
+    """supplier info"""
+
     name: str
 
 
 class CommonPrice:
     """
-    Make parse all price and make inner an drom prices
+    Make parse all price and make inner drom prices
     """
 
     def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver):

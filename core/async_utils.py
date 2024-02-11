@@ -1,12 +1,15 @@
+"""Async help logic"""
+import sys
 import traceback
 
 from core import err_msg
 from core.exceptions import SupplierNotHavePricesError
 from core.log_message import print_log
-from database.exception import DBError
+from database.exception import DBError, NotProvidedDatabaseError
 
 
 async def try_async_call(method, _async=False, **kwargs):
+    """Try async method call"""
     try:
         if _async:
             await method(**kwargs)
@@ -14,14 +17,14 @@ async def try_async_call(method, _async=False, **kwargs):
             method(**kwargs)
     except SupplierNotHavePricesError as exc:
         print_log(f"{exc}", level="WARNING")
-        exit(1)
+        sys.exit(1)
     except KeyboardInterrupt:
-        exit(0)
+        sys.exit(0)
     except DBError as exc:
         print_log(str(exc), level="ERROR")
-        exit(1)
-    except Exception as exc:
+        sys.exit(1)
+    except NotProvidedDatabaseError as exc:
         err_msg(str(exc))
         err_msg(traceback.format_exc())
         print_log(f"Непредвиденная ошибка // {str(exc)}", level="ERROR")
-        exit(1)
+        sys.exit(1)
