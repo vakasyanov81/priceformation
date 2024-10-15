@@ -72,6 +72,7 @@ class ParseConfiguration:
             ),
         )
 
+    @lru_cache()
     def get_markup_rules(self):
         """get markup rules and caching"""
         if not self._markup_rules:
@@ -95,14 +96,17 @@ class ParseConfiguration:
             {item.percent for item in self.get_price_markup_map()} or (def_value,)
         )
 
+    @lru_cache()
     def black_list(self) -> List[str]:
         """black list data"""
         return self.parse_config.black_list_provider.get_black_list_data()
 
+    @lru_cache()
     def stop_words(self) -> List[str]:
         """stop words data"""
         return self.parse_config.stop_words_provider.get_stop_words_data()
 
+    @lru_cache()
     def manufacturer_aliases(self) -> dict:
         """manufacturer aliases data"""
         return self.parse_config.manufacturer_aliases.get_aliases()

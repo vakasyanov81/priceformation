@@ -16,4 +16,12 @@ def read_file(file_path):
         return _file.read()
 
 
+def try_read_file(file_path):
+    """try read file"""
+    try:
+        return read_file(file_path)
+    except FileNotFoundError:
+        return ""
+
+
 __ALL__ = [read_file]
