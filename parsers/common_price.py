@@ -6,6 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import Dict, List, NamedTuple, Optional, Tuple, Type
 
+
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -61,9 +62,9 @@ class CommonPrice:
         """Supplier info"""
         supplier_info = {}
         for _, config in all_vendors():
-            supplier_info[
-                config.parse_config.parser_params.supplier_code
-            ] = SupplierInfo(name=config.parse_config.parser_params.supplier_name)
+            supplier_info[config.parse_config.parser_params.supplier_code] = (
+                SupplierInfo(name=config.parse_config.parser_params.supplier_name)
+            )
         return supplier_info
 
     def write_all_prices(self):

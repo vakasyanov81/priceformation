@@ -10,7 +10,6 @@ from typing import Optional, Tuple
 
 from cfg import init_cfg
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-
 from .ixls_driver import IXlsDriver
 from .templates.column_helper import ColumnHelper
 

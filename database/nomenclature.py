@@ -1,4 +1,5 @@
 """nomenclature CRUD logic"""
+
 import traceback
 from enum import Enum
 from sqlite3 import DatabaseError

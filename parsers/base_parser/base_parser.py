@@ -5,9 +5,10 @@ base parser logic
 __author__ = "Kasyanov V.A."
 
 import glob
-import math
 from functools import lru_cache
 from typing import List, Type, TypeVar
+
+import math
 
 from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
@@ -19,11 +20,10 @@ from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
-
-from ..data_provider import VendorParams
 from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
+from ..data_provider import VendorParams
 
 BaseParserT = TypeVar("BaseParserT", bound="BaseParser")
 

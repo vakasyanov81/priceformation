@@ -5,7 +5,7 @@ stop words provider
 __author__ = "Kasyanov V.A."
 
 from cfg.main import MainConfig
-from core.file_reader import read_file
+from core.file_reader import try_read_file
 
 from .black_list import BlackListProviderFromUserConfig
 
@@ -21,8 +21,8 @@ class StopWordsProviderBase:
 class StopWordsProviderFromUserConfig(StopWordsProviderBase):
     """Stop words data provider from user config file."""
 
-    def get_stop_words_data(self):
+    def get_stop_words_data(self) -> list[str]:
         """Get stop words"""
         return BlackListProviderFromUserConfig.split_and_filtration(
-            read_file(MainConfig().stop_words_file_path)
+            try_read_file(MainConfig().stop_words_file_path)
         )

@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 import json
 
 from cfg.main import MainConfig
-from core.file_reader import read_file
+from core.file_reader import try_read_file
 
 
 class ManufacturerAliasesProviderBase:
@@ -23,4 +23,6 @@ class ManufacturerAliasesProviderFromUserConfig(ManufacturerAliasesProviderBase)
 
     def get_aliases(self) -> dict:
         """get manufacturer aliases"""
-        return json.loads(read_file(MainConfig().manufacturer_aliases_file_path))
+        return json.loads(
+            try_read_file(MainConfig().manufacturer_aliases_file_path) or "{}"
+        )
