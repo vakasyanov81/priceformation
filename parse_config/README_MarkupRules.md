@@ -61,7 +61,7 @@
         "max": 501,
         "percent": 0.4
       }
-  }
+  },
   "min_recommended_percent_markup": 0.14,  # минимально допустимая наценка по РРЦ, актуально если у поставщика есть РРЦ
   "max_recommended_percent_markup": 0.27,  # максимально допустимая наценка по РРЦ, актуально если у поставщика есть РРЦ
   "absolute_markup_rules": {
