@@ -7,7 +7,6 @@ __author__ = "Kasyanov V.A."
 import xlsxwriter
 
 from cfg import init_cfg
-
 from .ixls_driver import IXlsDriver
 
 config = init_cfg()

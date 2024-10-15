@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 import json
 
 from cfg.main import MainConfig
-from core.file_reader import read_file, try_read_file
+from core.file_reader import try_read_file
 
 
 class ManufacturerAliasesProviderBase:

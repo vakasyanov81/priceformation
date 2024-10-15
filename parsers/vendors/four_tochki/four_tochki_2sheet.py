@@ -7,14 +7,13 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
-
+from .four_tochki_1sheet import supplier_folder_name
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .four_tochki_1sheet import supplier_folder_name
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_2_params.sheet_info = "Вкладка (шины) #2"
