@@ -1,4 +1,5 @@
 """ Parse configuration """
+
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
 from tests.test_parsers.test_vendors.test_parse_poshk import (

@@ -1,6 +1,4 @@
 #!/bin/bash
-echo '\n--- ruff ---\n'
-poetry run ruff $WORK_DIR --fix
 echo '\n--- black ---\n'
 poetry run black $WORK_DIR
 # poetry run black . --diff --color

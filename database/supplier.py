@@ -1,4 +1,5 @@
 """supplier database logic"""
+
 import traceback
 from sqlite3 import DatabaseError
 from typing import Dict, NamedTuple, Tuple
