@@ -25,6 +25,7 @@ class CategoryFinder:
     def find_in_str(self, _str: str):
         """find in str"""
         category, bad_category = self._finder.find_word_in_title(_str)
+        # print(f"{_str} //result= {category} // {bad_category}")
         return category, bad_category
 
 

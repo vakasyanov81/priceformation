@@ -8,6 +8,7 @@ from functools import lru_cache
 from typing import AnyStr, Optional, Tuple
 
 from parsers.row_item.row_item import RowItem
+
 from .alias_container import AliasContainer
 
 

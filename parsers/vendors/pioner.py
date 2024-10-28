@@ -74,6 +74,13 @@ class PionerParser(BaseParser):
 
         return res
 
+    def skip_by_min_rest(self, item: RowItem):
+        self._set_current_category(item)
+        self.set_current_category(item)
+        if self.is_skipped_item():
+            item.rest_count = 0
+        return super().skip_by_min_rest(item)
+
     def _set_current_category(self, item):
         """set current category by title"""
         if self.is_category_row(item):
@@ -128,6 +135,10 @@ class PionerParser(BaseParser):
         cur_category_name = chunks[1]
 
         return cur_category_name
+
+    def is_skipped_item(self):
+        if 'прочие' in (self.current_category or '').lower():
+            return True
 
     @classmethod
     def get_item_rest(cls, item):

@@ -64,5 +64,5 @@ class MimParserBase(BaseParser):
             self.add_price_markup(item)
             self.skip_by_min_rest(item)
             self.set_category(item)
-            self.correction_category(item)
+            # self.correction_category(item)
         return res

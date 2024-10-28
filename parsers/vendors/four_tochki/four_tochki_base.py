@@ -26,14 +26,14 @@ class FourTochkiParserBase(BaseParser):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls, item):
         """getting current category"""
         raise NotImplementedError()
 
     @classmethod
     def set_category(cls, item):
         """set category to row price item"""
-        item.type_production = cls.get_current_category()
+        item.type_production = cls.get_current_category(item)
 
     def process(self):
         """parse process"""
@@ -42,5 +42,5 @@ class FourTochkiParserBase(BaseParser):
             self.add_price_markup(item)
             self.skip_by_min_rest(item)
             self.set_category(item)
-            self.correction_category(item)
+            # self.correction_category(item)
         return res

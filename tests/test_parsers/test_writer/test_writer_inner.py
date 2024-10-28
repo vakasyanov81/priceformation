@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 tests write price for internal use
 """
+
 __author__ = "Kasyanov V.A."
 
 import datetime

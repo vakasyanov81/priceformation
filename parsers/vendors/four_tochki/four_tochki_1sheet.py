@@ -7,12 +7,13 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_1_params.sheet_info = "Вкладка (шины) #1"
@@ -25,8 +26,10 @@ fourtochki_sheet_1_params.columns = {
     5: RowItem.__HEIGHT_PERCENT__,
     6: RowItem.__DIAMETER__,
     7: RowItem.__INDEX_LOAD__,
+    8: RowItem.__SEASON__,
     9: RowItem.__TIRE_TYPE__,
     10: RowItem.__EXT_DIAMETER__,
+    11: RowItem.__SPIKE__,
     15: RowItem.__US_AFF_DESIGNATION__,
     17: RowItem.__REST_COUNT__,
     18: RowItem.__PRICE_RECOMMENDED__,
@@ -55,8 +58,23 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
     """
 
     @classmethod
-    def get_current_category(cls):
-        return "Автошина"
+    def get_current_category(cls, item: RowItem):
+        tyre_type_dict = {
+            'грузовая': 'Грузовая шина',
+            'легковая': 'Легковая шина',
+            'спецтехника': 'Спецшина',
+            'мото': 'Мотошина',
+
+        }
+        return tyre_type_dict.get(item.tire_type.lower().strip()) or 'Автошина'
+
+    def add_price_markup(self, item: RowItem):
+        if item.price_recommended:
+            price = item.price_recommended
+        else:
+            price_opt = item.price_opt or 0
+            price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
+        item.price_markup = self.round_price(price)
 
     @classmethod
     def get_prepared_title(cls, item: RowItem):
@@ -99,5 +117,5 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
 
     @classmethod
     def is_truck_tire(cls, item: RowItem):
-        """грузовая шина?"""
+        """Грузовая шина?"""
         return item.tire_type.lower() == "грузовая"

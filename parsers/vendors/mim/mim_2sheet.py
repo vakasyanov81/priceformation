@@ -7,12 +7,13 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from parsers.row_item.vendors.row_item_mim import RowItemMim
-from .mim_base import MimParserBase, mim_params, supplier_folder_name
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
 
 def config_for_sheets23():
@@ -66,7 +67,19 @@ class MimParser2Sheet(MimParserBase):
     @classmethod
     def get_current_category(cls):
         """current category"""
-        return "Шина"
+        return "Грузовая шина"
+
+    def get_markup_percent(self, price_value: float):
+        """Для грузовых позиций наценка"""
+        # TODO: добавить настройку наценок для грузовой шины в настройки
+        if price_value <= 13000:
+            return 0.07
+        return 0.05
+
+    def add_price_markup(self, item: RowItemMim):
+        price_opt = item.price_opt or 0
+        price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
+        item.price_markup = self.round_price(price)
 
     @classmethod
     def get_prepared_title(cls, item: RowItemMim):

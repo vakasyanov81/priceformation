@@ -23,8 +23,10 @@ autosnab_params = ParserParams(
     columns={
         0: RowItem.__TYPE_PRODUCTION__,
         2: RowItem.__TITLE__,
-        3: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__,
+        3: RowItem.__SEASON__,
+        4: RowItem.__SPIKE__,
+        5: RowItem.__PRICE_PURCHASE__,
+        6: RowItem.__REST_COUNT__,
     },
     stop_words=[],
     file_templates=["price*.xls", "price*.xlsx"],

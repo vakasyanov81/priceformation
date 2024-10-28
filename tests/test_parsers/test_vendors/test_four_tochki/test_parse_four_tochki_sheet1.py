@@ -19,9 +19,7 @@ from tests.test_parsers.test_vendors.parse_config import (
     make_parse_configuration,
 )
 
-parser_config = make_parse_configuration(
-    fourtochki_sheet_1_params, MimMarkupRulesProviderForTests()
-)
+parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRulesProviderForTests())
 
 
 def get_fake_parser(parse_result):
@@ -41,7 +39,7 @@ def test_parse():
 
     assert len(result) == 3
     assert result[0].title == "205/55R16 BF Goodrich Advantage 94W"
-    assert result[0].type_production == "Автошина"
+    assert result[0].type_production == "Легковая шина"
     assert result[0].price_markup == 7340
     assert result[0].supplier_name == "Форточки"
     assert result[0].percent_markup == 27.17

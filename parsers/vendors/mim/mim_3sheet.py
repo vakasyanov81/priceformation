@@ -7,12 +7,13 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
-from .mim_base import MimParserBase, supplier_folder_name
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .mim_base import MimParserBase, supplier_folder_name
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
 mim_sheet_3_params.sheet_info = "Вкладка #3"
