@@ -18,11 +18,7 @@ class IWriteTemplate:
     def get_file_name(self):
         """get exclude"""
         file_field = "__FILE__"
-        return (
-            getattr(self, file_field)
-            if hasattr(self, file_field)
-            else "default_result.xls"
-        )
+        return getattr(self, file_field) if hasattr(self, file_field) else "default_result.xls"
 
     def columns(self):
         """get columns"""

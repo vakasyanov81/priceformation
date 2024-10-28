@@ -60,13 +60,12 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
     @classmethod
     def get_current_category(cls, item: RowItem):
         tyre_type_dict = {
-            'грузовая': 'Грузовая шина',
-            'легковая': 'Легковая шина',
-            'спецтехника': 'Спецшина',
-            'мото': 'Мотошина',
-
+            "грузовая": "Грузовая шина",
+            "легковая": "Легковая шина",
+            "спецтехника": "Спецшина",
+            "мото": "Мотошина",
         }
-        return tyre_type_dict.get(item.tire_type.lower().strip()) or 'Автошина'
+        return tyre_type_dict.get(item.tire_type.lower().strip()) or "Автошина"
 
     def add_price_markup(self, item: RowItem):
         if item.price_recommended:

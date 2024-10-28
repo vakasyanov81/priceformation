@@ -15,9 +15,7 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 
 autosnab_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name="autosnab54_ru", name="Автоснабжение", code="6"
-    ),
+    supplier=ParseParamsSupplier(folder_name="autosnab54_ru", name="Автоснабжение", code="6"),
     start_row=2,
     sheet_info="",
     columns={
@@ -35,9 +33,7 @@ autosnab_params = ParserParams(
 )
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    autosnab_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(autosnab_params.supplier.folder_name)
 
 autosnab_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

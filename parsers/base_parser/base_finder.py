@@ -82,11 +82,7 @@ class BaseFinder:
         if not result_name:
             return None, None
 
-        result = (
-            self.alias_container.all_correct_words[index]
-            if return_correct
-            else self._aliases.get(result_name)
-        )
+        result = self.alias_container.all_correct_words[index] if return_correct else self._aliases.get(result_name)
 
         return result, founded_word
 
@@ -108,10 +104,7 @@ class BaseFinder:
         if alias_len >= title_len:
             return -1
 
-        if (
-            self.title_lower[(title_len - alias_len - 1) : title_len]
-            == white_space + lower_alias
-        ):
+        if self.title_lower[(title_len - alias_len - 1) : title_len] == white_space + lower_alias:
             return title_len - alias_len
 
         return -1

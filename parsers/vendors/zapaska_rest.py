@@ -18,9 +18,7 @@ from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
 
 zapaska_rest_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name="zapaska", name="Запаска (остатки)", code="2"
-    ),
+    supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (остатки)", code="2"),
     start_row=9,
     sheet_info="",
     columns={
@@ -37,9 +35,7 @@ zapaska_rest_params = ParserParams(
 )
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    zapaska_rest_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_rest_params.supplier.folder_name)
 
 zapaska_rest_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -165,9 +161,7 @@ class ZapaskaRestParser(BaseParser):
         return price
 
     @classmethod
-    def _make_price_recommended_markup(
-        cls, price_recommended, price_opt
-    ) -> Tuple[Optional[float], Optional[float]]:
+    def _make_price_recommended_markup(cls, price_recommended, price_opt) -> Tuple[Optional[float], Optional[float]]:
         """
         make markup for recommended price
         :param price_recommended:
@@ -180,9 +174,7 @@ class ZapaskaRestParser(BaseParser):
         percent = cls.calc_percent(price_recommended, price_opt)
 
         # Если наценка менее 8% запускаем алгоритм наценки
-        if not cls._is_small_recommended_price(
-            price_recommended, price_opt, percent=0.08
-        ):
+        if not cls._is_small_recommended_price(price_recommended, price_opt, percent=0.08):
             return price_recommended, percent
 
         percent = cls._get_price_percent_markup(price_opt)
@@ -192,10 +184,7 @@ class ZapaskaRestParser(BaseParser):
     @classmethod
     def _is_small_recommended_price(cls, price_recommended, price_opt, percent) -> bool:
         """check margin for recommended price"""
-        return (
-            price_recommended
-            and cls.calc_percent(price_recommended, price_opt) <= percent
-        )
+        return price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent
 
     def make_price_markup(self, item):
         """set markup
@@ -206,9 +195,7 @@ class ZapaskaRestParser(BaseParser):
         """
         code = item.code or item.code_art
 
-        price_recommended = self.price_sup_codes.get(code) or self.find_rest_by_title(
-            item.title
-        )
+        price_recommended = self.price_sup_codes.get(code) or self.find_rest_by_title(item.title)
         price_recommended = price_recommended or 0
         price_opt = item.price_opt
 
@@ -222,9 +209,7 @@ class ZapaskaRestParser(BaseParser):
             self.not_matched_position.append(item.title)
 
         price_with_markup = self._make_price_markup(price_recommended, price_opt)
-        item.price_markup = (
-            self.round_price(price_with_markup) if price_with_markup else None
-        )
+        item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
 
     def find_rest_by_title(self, title):
         """find rest by title"""

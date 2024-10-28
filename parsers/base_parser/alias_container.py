@@ -40,12 +40,7 @@ class AliasContainer:
         """
         reversed_map = {}
         for correct_name, incorrect_names in self.map_aliases.items():
-            reversed_map.update(
-                {
-                    incorrect_name.lower(): correct_name
-                    for incorrect_name in incorrect_names
-                }
-            )
+            reversed_map.update({incorrect_name.lower(): correct_name for incorrect_name in incorrect_names})
         return reversed_map
 
     @property
