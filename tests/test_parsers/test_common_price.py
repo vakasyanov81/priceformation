@@ -48,3 +48,8 @@ def test_parse_all_vendors(mock_all_vendors):
     common_price.parse_all_vendors()
 
     assert common_price.result == fake_result
+
+
+def test_suppliers_info():
+    common_price = CommonPrice()
+    common_price.supplier_info()

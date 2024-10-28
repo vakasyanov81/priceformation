@@ -12,8 +12,8 @@ openpyxl = "==3.0.10"
 xlsxwriter = "==3.0.3"
 termcolor = "==2.2.0"
 colorama = "==0.4.6"
-aiosqlite = "==0.18.0"
-yoyo-migrations = "==8.2.0"
+aiosqlite = "==0.20.0"
+yoyo-migrations = "==9.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
