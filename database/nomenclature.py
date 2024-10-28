@@ -6,11 +6,11 @@ from sqlite3 import DatabaseError
 from typing import Dict
 
 from core import err_msg, log_msg
-from database.db import fetch_all, fetch_as_dict
+from database.db import fetch_all, fetch_as_dict, get_db
 from parsers.row_item.row_item import RowItem
 
 from .exception import DBError
-from .supplier import get_suppliers, insert_supplier
+from .supplier import get_suppliers, insert_supplier, get_statistic
 
 
 class ProductState(Enum):
@@ -26,11 +26,15 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
     inserted_count = 0
     for _chunk in chunks(nomenclatures):
         try:
-            res = await fetch_all(insert_nomenclature_sql(_chunk, suppliers, nom_types))
+            res = await fetch_all(
+                insert_nomenclature_sql(_chunk, suppliers, nom_types), autocommit=True
+            )
             inserted_count += len(res)
         except DatabaseError as _exc:
             err_msg(str(_exc))
             err_msg(traceback.format_exc())
+            await (await get_db()).rollback()
+            await (await get_db()).close()
             raise DBError("Ошибка при вставке номенклатуры") from _exc
     return inserted_count
 
@@ -55,6 +59,7 @@ def insert_nomenclature_sql(
         noms.append(",".join(prepare_to_insert(row)))
     data = ",".join([f"({nom})" for nom in noms])
     sql = SQL_INSERT_NOMENCLATURE.format(data_=data)
+    print(sql)
     return sql
 
 
@@ -78,9 +83,10 @@ def chunks(data: list, batch_size=200) -> list:
 async def insert_brand(brand: list):
     """insert brand to database"""
     if not brand:
-        return
+        return 0
     data = ",".join([f"('{b}')" for b in brand])
     sql = SQL_INSERT_BRAND.format(data_=data)
+    print(sql)
     res = await fetch_all(sql)
     return len(res)
 
@@ -93,12 +99,16 @@ def prepare_to_insert(data: list):
 async def save_nomenclature_to_db(common_price):
     """save to database"""
     sup_names = common_price.supplier_info()
-    inserted_supplier_count = 0
+    supplier_count_before = (await get_statistic()).supplier_count
 
     log_msg("-------- Обновление базы данных --------", need_print_log=True)
     if sup_names:
-        inserted_supplier_count = await insert_supplier(sup_names)
-    log_msg(f"Добавлено поставщиков: {inserted_supplier_count}", need_print_log=True)
+        await insert_supplier(sup_names)
+    supplier_count_after = (await get_statistic()).supplier_count
+    log_msg(
+        f"Добавлено поставщиков: {supplier_count_after - supplier_count_before}",
+        need_print_log=True,
+    )
 
     suppliers = await get_suppliers()
     suppliers = {sup.get("supplier_name"): sup.get("supplier_id") for sup in suppliers}

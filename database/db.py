@@ -13,7 +13,7 @@ from cfg.main import get_config
 async def get_db() -> aiosqlite.Connection:
     """get database connection"""
     cfg = get_config()
-    if not getattr(get_db, "db", None):
+    if not getattr(get_db, "db_", None):
         db_ = await aiosqlite.connect(cfg.database().db_name)
         get_db.db_ = db_
 
@@ -28,14 +28,15 @@ async def fetch_all(
     return await get_result(cursor, autocommit)
 
 
-async def insert(
-    sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True
-) -> list[dict]:
+async def insert(sql: str, params: Iterable[Any] | None = None) -> list[dict]:
     """insert data"""
     db_ = await get_db()
-    cursor = await db_.cursor()
-    cursor = await cursor.executemany(sql, params)
-    return await get_result(cursor, autocommit)
+    result = []
+    for par in params:
+        cursor = await db_.cursor()
+        cursor = await cursor.execute(sql, par)
+        result.append(await cursor.fetchall())
+    return result
 
 
 async def get_result(cursor: aiosqlite.Cursor, autocommit: bool) -> list[dict]:
@@ -104,6 +105,7 @@ def close_db() -> None:
 async def _async_close_db() -> None:
     """async close database connection"""
     await (await get_db()).close()
+    delattr(get_db, "db_")
 
 
 async def _get_cursor(sql: str, params: Iterable[Any] | None) -> aiosqlite.Cursor:

@@ -16,6 +16,10 @@ cfg = init_cfg()
 
 
 async def init_db(drop_database=False):
+    init_db_sync(drop_database)
+
+
+def init_db_sync(drop_database=False):
     """database initialization"""
     if Path(get_config().database().db_name).exists() and drop_database:
         Path(get_config().database().db_name).unlink()

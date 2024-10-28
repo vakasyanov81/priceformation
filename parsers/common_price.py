@@ -62,8 +62,8 @@ class CommonPrice:
         """Supplier info"""
         supplier_info = {}
         for _, config in all_vendors():
-            supplier_info[config.parse_config.parser_params.supplier_code] = (
-                SupplierInfo(name=config.parse_config.parser_params.supplier_name)
+            supplier_info[config.parse_config.parser_params.supplier.code] = (
+                SupplierInfo(name=config.parse_config.parser_params.supplier.name)
             )
         return supplier_info
 

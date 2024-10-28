@@ -14,6 +14,7 @@ from .db import get_config as db_cfg
 __LOG_FOLDER__ = "logs"
 __USER_PARSE_CONFIG__ = "parse_config"
 __FILE_PRICES__ = "file_prices"
+__FILE_PRICES_RESULT__ = "result"
 __VENDOR_LIST_FILE_NAME__ = "vendor_list.json"
 __MARKUP_RULES_FILE_NAME__ = "markup_rules.json"
 __MANUFACTURER_ALIASES_FILE_NAME__ = "manufacturer_aliases.json"
@@ -28,6 +29,16 @@ __IS_NEED_PRINT_LOG__ = True
 
 class MainCfg:
     """main configuration property container"""
+
+    @property
+    def folder_file_prices(self):
+        """folder where vendor prices are stored"""
+        return __FILE_PRICES__
+
+    @property
+    def folder_file_prices_result(self):
+        """folder where price formation results are stored"""
+        return f"{self.folder_file_prices}{os.sep}{__FILE_PRICES_RESULT__}"
 
     @property
     def vendor_list_file_name(self):

@@ -45,10 +45,10 @@ def insert_supplier_sql(suppliers: Dict[str, SupplierInfo]) -> Tuple[str, list]:
     """Подготовка вставки данных по поставщикам"""
     # data = ",".join([f"({id_}, '{sup.name}')" for id_, sup in suppliers.items()])
     data = [(int(id_), sup.name) for id_, sup in suppliers.items()]
-    sql = (
-        "INSERT INTO supplier (supplier_id, supplier_name) "
-        "VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING rowid;"
-    )
+    sql = """
+         INSERT INTO supplier (supplier_id, supplier_name)
+         VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING supplier_id
+    """
 
     return sql, data
 
@@ -68,7 +68,7 @@ SELECT json_object(
                'supplier_count',
                (SELECT COUNT(*)
                 FROM supplier),
-               'nomenclature_by_supllier_count',
+               'nomenclature_by_supplier_count',
                (SELECT * FROM NOM_STAT),
                'brand_count',
                (SELECT COUNT(*)

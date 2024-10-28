@@ -19,7 +19,7 @@ config = init_cfg()
 class XlsWriter:
     """price writer"""
 
-    __FOLDER__ = f"file_prices{config.main.sep}result{config.main.sep}"
+    __FOLDER__ = f"{config.main.folder_file_prices_result}{config.main.sep}"
 
     def __init__(self, driver, parse_result: list, template):
         """init"""
