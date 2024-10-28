@@ -15,16 +15,16 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 
 autosnab_params = ParserParams(
-    supplier=ParseParamsSupplier(
-        folder_name="autosnab54_ru", name="Автоснабжение", code="6"
-    ),
+    supplier=ParseParamsSupplier(folder_name="autosnab54_ru", name="Автоснабжение", code="6"),
     start_row=2,
     sheet_info="",
     columns={
         0: RowItem.__TYPE_PRODUCTION__,
         2: RowItem.__TITLE__,
-        3: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__,
+        3: RowItem.__SEASON__,
+        4: RowItem.__SPIKE__,
+        5: RowItem.__PRICE_PURCHASE__,
+        6: RowItem.__REST_COUNT__,
     },
     stop_words=[],
     file_templates=["price*.xls", "price*.xlsx"],
@@ -33,9 +33,7 @@ autosnab_params = ParserParams(
 )
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    autosnab_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(autosnab_params.supplier.folder_name)
 
 autosnab_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

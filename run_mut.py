@@ -18,9 +18,7 @@ tests_dir = f"{work_dir}{os.sep}{tests_folder}"
 
 regex = re.compile("test*")
 
-test_modules = [
-    tests_dir + os.sep + name for name in os.listdir(tests_dir) if re.match(regex, name)
-]
+test_modules = [tests_dir + os.sep + name for name in os.listdir(tests_dir) if re.match(regex, name)]
 
 args += test_modules
 args += ["--runner", "pytest"]

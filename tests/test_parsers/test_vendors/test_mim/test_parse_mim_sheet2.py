@@ -49,7 +49,7 @@ def test_parse():
 
     assert len(result) == 1
     assert result[0].title == "295/75R22.5 Hifly HH312 Ведущая M+S PR16 146/143L TL"
-    assert result[0].type_production == "Автошина"
-    assert result[0].price_markup == 25990.0
+    assert result[0].type_production == "Грузовая шина"
+    assert result[0].price_markup == 24360.0
     assert result[0].supplier_name == "Мим"
-    assert result[0].percent_markup == 12.03
+    assert result[0].percent_markup == 5

@@ -6,7 +6,6 @@ __author__ = "Kasyanov V.A."
 
 from typing import Dict, List, NamedTuple, Optional, Tuple, Type
 
-
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -16,14 +15,12 @@ from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 
 class SupplierInfo(NamedTuple):
-    """supplier info"""
-
     name: str
 
 
 class CommonPrice:
     """
-    Make parse all price and make inner drom prices
+    Make parse all price and make inner an drom prices
     """
 
     def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
@@ -51,9 +48,7 @@ class CommonPrice:
             self.result += self.instance_vendor(vendor, vendor_config).parse()
 
     @classmethod
-    def instance_vendor(
-        cls, vendor: Type[BaseParser], config: Type[ParseConfiguration] | None
-    ):
+    def instance_vendor(cls, vendor: Type[BaseParser], config: Type[ParseConfiguration] | None):
         """instance vendor"""
         return vendor(config)
 
@@ -62,8 +57,8 @@ class CommonPrice:
         """Supplier info"""
         supplier_info = {}
         for _, config in all_vendors():
-            supplier_info[config.parse_config.parser_params.supplier.code] = (
-                SupplierInfo(name=config.parse_config.parser_params.supplier.name)
+            supplier_info[config.parse_config.parser_params.supplier.code] = SupplierInfo(
+                name=config.parse_config.parser_params.supplier.name
             )
         return supplier_info
 

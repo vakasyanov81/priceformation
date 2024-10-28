@@ -42,6 +42,8 @@ class RowItem:
     __CONDITION__ = "condition"
 
     __AVAILABLE__ = "available"
+    __SEASON__ = "season"
+    __SPIKE__ = "spike"
 
     def __init__(self, item: dict):
         """init"""
@@ -216,6 +218,30 @@ class RowItem:
     def rest_count(self, rest_count):
         """rest count setter"""
         self._item[self.__REST_COUNT__] = rest_count
+
+    @property
+    @row_format.text
+    def season(self):
+        """season"""
+        return self._item.get(self.__SEASON__)
+
+    @season.setter
+    @row_format.text
+    def season(self, season):
+        """season setter"""
+        self._item[self.__SEASON__] = season
+
+    @property
+    @row_format.text
+    def spike(self):
+        """spike"""
+        return self._item.get(self.__SPIKE__)
+
+    @spike.setter
+    @row_format.text
+    def spike(self, spike):
+        """spike setter"""
+        self._item[self.__SPIKE__] = spike
 
     @property
     @row_format.integer

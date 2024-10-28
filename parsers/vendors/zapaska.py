@@ -38,9 +38,7 @@ zapaska_params.supplier_name = _SUPPLIER_NAME
 zapaska_params.file_templates = ["price*.xls", "price*.xlsx"]
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    zapaska_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_params.supplier.folder_name)
 
 zapaska_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -68,9 +66,7 @@ class ZapaskaPriceAndRestParser:
         """get result"""
         if not ZapaskaRestParser.is_active:
             return []
-        return ZapaskaRestParser(
-            price_mrp=self.get_price_mrp(), parse_config=zapaska_rest_config
-        ).parse()
+        return ZapaskaRestParser(price_mrp=self.get_price_mrp(), parse_config=zapaska_rest_config).parse()
 
     def get_price_mrp(self):
         """get price mrp result"""

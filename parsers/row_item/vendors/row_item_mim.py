@@ -19,9 +19,7 @@ class RowItemMim(RowItem):
     __DIAMETER__ = "diameter"
     __EXT_DIAMETER__ = "ext_diameter"
     __SLOT_COUNT__ = "slot_count"  # кол-во отверстий
-    __US_AFF_DESIGNATION__ = (
-        "american_affiliation_designation"  # американское обозначение принадлежности
-    )
+    __US_AFF_DESIGNATION__ = "american_affiliation_designation"  # американское обозначение принадлежности
     __PCD1__ = "pcd1"
     __PCD2__ = "pcd2"
     __CENTRAL_DIAMETER__ = "central_diameter"

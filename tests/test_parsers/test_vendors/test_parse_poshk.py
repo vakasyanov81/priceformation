@@ -49,9 +49,7 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
         }
 
 
-class ManufacturerAliasesProviderForTests(
-    data_provider.ManufacturerAliasesProviderBase
-):
+class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
     """manufacturer aliases data provider for tests"""
 
     def get_aliases(self) -> dict:

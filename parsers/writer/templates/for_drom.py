@@ -15,6 +15,8 @@ class ForDrom(IWriteTemplate):
         {"Тип товара": {"style": {"width": 40}, "field": RowItem.__TYPE_PRODUCTION__}},
         {"Бренд": {"style": {"width": 30}, "field": RowItem.__BRAND__, "skip": True}},
         {"Номенклатура": {"style": {"width": 30}, "field": RowItem.__TITLE__}},
+        {"Сезон": {"field": RowItem.__SEASON__}},
+        {"Шип": {"field": RowItem.__SPIKE__}},
         {"Цена": {"field": RowItem.__PRICE_WITH_MARKUP__}},
         {"Остаток": {"field": RowItem.__REST_COUNT__}},
         {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},

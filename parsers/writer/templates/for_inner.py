@@ -13,7 +13,7 @@ class ForInner(IWriteTemplate):
 
     __COLUMNS__ = [
         {
-            "Категория": {
+            "Тип товара": {
                 "style": {"width": 256 * 10},
                 "field": RowItem.__TYPE_PRODUCTION__,
             }
@@ -25,6 +25,8 @@ class ForInner(IWriteTemplate):
             }
         },
         {"Номенклатура": {"style": {"width": 256 * 100}, "field": RowItem.__TITLE__}},
+        {"Сезон": {"field": RowItem.__SEASON__}},
+        {"Шип": {"field": RowItem.__SPIKE__}},
         {
             "Цена закуп.": {
                 "style": {"width": 256 * 15},
@@ -46,6 +48,9 @@ class ForInner(IWriteTemplate):
                 "field": RowItem.__SUPPLIER_NAME_COLUMN__,
             }
         },
+        {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},
+        {"Срок доставки": {"field": RowItem.__DELIVERY_PERIOD__}},
+        {"Состояние": {"field": RowItem.__CONDITION__, "default_value": "Новое"}},
     ]
 
     __COLOR__ = {

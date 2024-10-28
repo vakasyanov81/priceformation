@@ -37,9 +37,7 @@ pioner_params = ParserParams(
 )
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    pioner_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(pioner_params.supplier.folder_name)
 
 pioner_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -74,13 +72,18 @@ class PionerParser(BaseParser):
 
         return res
 
+    def skip_by_min_rest(self, item: RowItem):
+        self._set_current_category(item)
+        self.set_current_category(item)
+        if self.is_skipped_item():
+            item.rest_count = 0
+        return super().skip_by_min_rest(item)
+
     def _set_current_category(self, item):
         """set current category by title"""
         if self.is_category_row(item):
             self.current_category = (item.title or "").lower().strip()
-        self.current_category_first_chunk = (
-            (self.current_category or "").split("/")[0]
-        ).split(" ")[0]
+        self.current_category_first_chunk = ((self.current_category or "").split("/")[0]).split(" ")[0]
 
     def set_manufacturer_to_title(self, item):
         """set manufacturer name to title for row item"""
@@ -128,6 +131,10 @@ class PionerParser(BaseParser):
         cur_category_name = chunks[1]
 
         return cur_category_name
+
+    def is_skipped_item(self):
+        if "прочие" in (self.current_category or "").lower():
+            return True
 
     @classmethod
     def get_item_rest(cls, item):

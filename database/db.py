@@ -20,9 +20,7 @@ async def get_db() -> aiosqlite.Connection:
     return get_db.db_
 
 
-async def fetch_all(
-    sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True
-) -> list[dict]:
+async def fetch_all(sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True) -> list[dict]:
     """fetch all data"""
     cursor = await _get_cursor(sql, params)
     return await get_result(cursor, autocommit)
@@ -51,9 +49,7 @@ async def get_result(cursor: aiosqlite.Cursor, autocommit: bool) -> list[dict]:
     return results
 
 
-async def fetch_one(
-    sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = False
-) -> dict | None:
+async def fetch_one(sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = False) -> dict | None:
     """fetch one row"""
     cursor = await _get_cursor(sql, params)
     row_ = await cursor.fetchone()
@@ -86,9 +82,7 @@ async def fetch_as_dict(sql: str, params: Iterable[Any] | None = None) -> dict |
     return result
 
 
-async def execute(
-    sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True
-) -> None:
+async def execute(sql: str, params: Iterable[Any] | None = None, *, autocommit: bool = True) -> None:
     """execute query"""
     db_ = await get_db()
     args: tuple[str, Iterable[Any] | None] = (sql, params)

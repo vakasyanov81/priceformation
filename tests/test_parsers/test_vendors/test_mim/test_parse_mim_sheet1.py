@@ -80,7 +80,7 @@ def test_parse():
 
     assert len(result) == 1
     assert result[0].title == "31x10.5R15 Crossleader DSU02 92Y"
-    assert result[0].type_production == "Автошина"
+    assert result[0].type_production == "Легковая шина"
     assert result[0].price_markup == 4220
     assert result[0].supplier_name == "Мим"
     assert result[0].percent_markup == 22.07
@@ -108,9 +108,9 @@ class TestParseMimSheet1:
     @pytest.mark.parametrize(
         "price, price_recommended, price_with_markup",
         [
-            (1000, 2000, 1270),  # РРЦ выше максимальной наценки
+            (1000, 2000, 2000),  # РРЦ выше максимальной наценки
             (1000, 1200, 1200),  # РРЦ ниже максимальной наценки
-            (1000, 1100, 1220),  # РРЦ ниже минимальной наценки
+            (1000, 1100, 1500),  # РРЦ ниже минимальной наценки
         ],
     )
     def test_markup(self, price, price_recommended, price_with_markup):

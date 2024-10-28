@@ -14,8 +14,6 @@ from parsers.row_item.row_item import RowItem
 
 @dataclass
 class ParseParamsSupplier:
-    """Supplier parse params"""
-
     folder_name: str
     name: str
     code: str
@@ -23,8 +21,6 @@ class ParseParamsSupplier:
 
 @dataclass
 class ParserParams:
-    """Parse params"""
-
     supplier: ParseParamsSupplier
     start_row: int
     sheet_info: str
@@ -61,18 +57,11 @@ class ParseConfiguration:
         """dict -> named tuple"""
         return data_provider.MarkupRules(
             markup_rules=markup_data.get("markup_rules"),
-            min_recommended_percent_markup=markup_data.get(
-                "min_recommended_percent_markup"
-            ),
-            max_recommended_percent_markup=markup_data.get(
-                "max_recommended_percent_markup"
-            ),
-            absolute_markup_rules=data_provider.AbsoluteMarkUpRules(
-                **markup_data.get("absolute_markup_rules", {})
-            ),
+            min_recommended_percent_markup=markup_data.get("min_recommended_percent_markup"),
+            max_recommended_percent_markup=markup_data.get("max_recommended_percent_markup"),
+            absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**markup_data.get("absolute_markup_rules", {})),
         )
 
-    @lru_cache()
     def get_markup_rules(self):
         """get markup rules and caching"""
         if not self._markup_rules:
@@ -84,29 +73,22 @@ class ParseConfiguration:
         """get tuple with markup params and caching"""
         if not self._price_markup_map:
             _price_markup_map = list(self.get_markup_rules().markup_rules.values())
-            _price_markup_map = [
-                data_provider.MarkUpParams(**rule) for rule in _price_markup_map
-            ]
+            _price_markup_map = [data_provider.MarkUpParams(**rule) for rule in _price_markup_map]
             self._price_markup_map = tuple(_price_markup_map)
         return self._price_markup_map
 
     def get_default_markup_percents(self, def_value=0.0) -> float:
         """get default (minimal) markup percent"""
-        return min(
-            {item.percent for item in self.get_price_markup_map()} or (def_value,)
-        )
+        return min({item.percent for item in self.get_price_markup_map()} or (def_value,))
 
-    @lru_cache()
     def black_list(self) -> List[str]:
         """black list data"""
         return self.parse_config.black_list_provider.get_black_list_data()
 
-    @lru_cache()
     def stop_words(self) -> List[str]:
         """stop words data"""
         return self.parse_config.stop_words_provider.get_stop_words_data()
 
-    @lru_cache()
     def manufacturer_aliases(self) -> dict:
         """manufacturer aliases data"""
         return self.parse_config.manufacturer_aliases.get_aliases()
