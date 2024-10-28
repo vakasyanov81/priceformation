@@ -52,9 +52,7 @@ class TestParsePioner:
     def test_parse_brand(self):
         """check all field for one price-row"""
 
-        result: List[RowItem] = get_fake_parser(
-            pioner_one_item_result_with_categories()
-        ).parse()
+        result: List[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
 
         assert len(result) == 1
         assert result[0].brand == "triangle"

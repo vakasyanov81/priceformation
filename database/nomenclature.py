@@ -26,9 +26,7 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
     inserted_count = 0
     for _chunk in chunks(nomenclatures):
         try:
-            res = await fetch_all(
-                insert_nomenclature_sql(_chunk, suppliers, nom_types), autocommit=True
-            )
+            res = await fetch_all(insert_nomenclature_sql(_chunk, suppliers, nom_types), autocommit=True)
             inserted_count += len(res)
         except DatabaseError as _exc:
             err_msg(str(_exc))
@@ -39,9 +37,7 @@ async def insert_nomenclature(nomenclatures: list[RowItem], suppliers: dict):
     return inserted_count
 
 
-def insert_nomenclature_sql(
-    nomenclatures: list[RowItem], suppliers: dict, nomenclature_type: Dict[str, int]
-) -> str:
+def insert_nomenclature_sql(nomenclatures: list[RowItem], suppliers: dict, nomenclature_type: Dict[str, int]) -> str:
     """prepare sql query for insert nomenclatures"""
     noms = []
 
@@ -114,12 +110,8 @@ async def save_nomenclature_to_db(common_price):
     suppliers = {sup.get("supplier_name"): sup.get("supplier_id") for sup in suppliers}
     inserted_brand_count = await insert_brand(get_brands(common_price.result)) or 0
     log_msg(f"Добавлено брэндов: {inserted_brand_count}", need_print_log=True)
-    inserted_nomenclature_count = await insert_nomenclature(
-        common_price.result, suppliers
-    )
-    log_msg(
-        f"Добавлено номенклатуры: {inserted_nomenclature_count}", need_print_log=True
-    )
+    inserted_nomenclature_count = await insert_nomenclature(common_price.result, suppliers)
+    log_msg(f"Добавлено номенклатуры: {inserted_nomenclature_count}", need_print_log=True)
 
 
 def get_brands(nomenclatures: list[RowItem]) -> list:

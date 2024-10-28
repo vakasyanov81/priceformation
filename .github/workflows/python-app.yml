@@ -44,7 +44,7 @@ jobs:
       - name: Lint code by black
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          poetry run black ${GITHUB_WORKSPACE} --check
+          poetry run black ${GITHUB_WORKSPACE} --check --line-length 120 --target-version py311
       - name: Lint with pylint
         run: |
           export WORK_DIR=$GITHUB_WORKSPACE
