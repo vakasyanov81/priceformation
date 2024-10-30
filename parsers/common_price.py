@@ -6,9 +6,11 @@ __author__ = "Kasyanov V.A."
 
 from typing import Dict, List, NamedTuple, Optional, Tuple, Type
 
+from core import warn_msg
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
@@ -34,7 +36,10 @@ class CommonPrice:
         make parse all prices
         :return:
         """
-        self.parse_vendors(all_vendors())
+        try:
+            self.parse_vendors(all_vendors())
+        except VendorListConfigFileError:
+            warn_msg("Отсутствует файл конфигурации parse_config/vendor_list.json", need_print_log=True)
 
     def parse_vendors(
         self,
