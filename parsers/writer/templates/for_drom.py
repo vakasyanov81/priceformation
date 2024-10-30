@@ -13,7 +13,7 @@ class ForDrom(IWriteTemplate):
 
     __COLUMNS__ = [
         {"Тип товара": {"style": {"width": 40}, "field": RowItem.__TYPE_PRODUCTION__}},
-        {"Бренд": {"style": {"width": 30}, "field": RowItem.__BRAND__}},
+        {"Бренд": {"style": {"width": 30}, "field": RowItem.__MANUFACTURER_NAME__}},
         {"Номенклатура": {"style": {"width": 30}, "field": RowItem.__TITLE__}},
         {"Сезон": {"field": RowItem.__SEASON__}},
         {"Шип": {"field": RowItem.__SPIKE__}},
