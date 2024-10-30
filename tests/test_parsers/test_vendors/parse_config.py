@@ -40,7 +40,7 @@ class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
             "min_recommended_percent_markup": 0.14,
             "max_recommended_percent_markup": 0.27,
             "absolute_markup_rules": {
-                "min_absolute_markup": 200,
+                "min_absolute_markup": 300,
                 "markup_percent": 1.5,
             },
         }

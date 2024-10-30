@@ -108,9 +108,9 @@ class TestParseMimSheet1:
     @pytest.mark.parametrize(
         "price, price_recommended, price_with_markup",
         [
-            (1000, 2000, 2000),  # РРЦ выше максимальной наценки
-            (1000, 1200, 1200),  # РРЦ ниже максимальной наценки
-            (1000, 1100, 1500),  # РРЦ ниже минимальной наценки
+            (1000, 2000, 2000),
+            (1000, 1200, 1500),
+            (1000, 1100, 1500),
         ],
     )
     def test_markup(self, price, price_recommended, price_with_markup):
