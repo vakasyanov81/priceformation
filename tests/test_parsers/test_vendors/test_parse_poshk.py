@@ -9,11 +9,10 @@ from typing import List, Tuple
 import pytest
 
 from parsers import data_provider
-from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.poshk import (
     PoshkParser,
-    PoshkPriceParseConfiguration,
     poshk_params,
 )
 from parsers.xls_reader import FakeXlsReader
@@ -101,7 +100,7 @@ def get_fake_parser(parse_result):
     return PoshkParser(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
-        parse_config=PoshkPriceParseConfiguration(parser_config),
+        parse_config=ParseConfiguration(parser_config),
     )
 
 

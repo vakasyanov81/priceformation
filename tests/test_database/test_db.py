@@ -8,7 +8,6 @@ from cfg.db import DBConfig
 from database.db import close_db
 from database.init_db import init_db_sync
 from database.supplier import insert_supplier
-from parsers.common_price import SupplierInfo
 import sqlite3
 
 TEST_ROOT = str(pathlib.Path(__file__).parent.absolute())
@@ -37,8 +36,8 @@ class TestDB(unittest.TestCase):
         async def check_insert():
             inserted_count = await insert_supplier(
                 {
-                    "10": SupplierInfo(name="test_supplier"),
-                    "22": SupplierInfo(name="test_supplier_1"),
+                    "10": "test_supplier",
+                    "22": "test_supplier_1",
                 }
             )
             assert inserted_count == 2

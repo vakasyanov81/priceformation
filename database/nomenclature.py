@@ -7,6 +7,7 @@ from typing import Dict
 
 from core import err_msg, log_msg
 from database.db import fetch_all, fetch_as_dict, get_db
+from parsers.common_price import CommonPrice
 from parsers.row_item.row_item import RowItem
 
 from .exception import DBError
@@ -92,7 +93,7 @@ def prepare_to_insert(data: list):
     return [f"'{d}'" if d else "NULL" for d in data]
 
 
-async def save_nomenclature_to_db(common_price):
+async def save_nomenclature_to_db(common_price: CommonPrice):
     """save to database"""
     sup_names = common_price.supplier_info()
     supplier_count_before = (await get_statistic()).supplier_count
@@ -108,9 +109,9 @@ async def save_nomenclature_to_db(common_price):
 
     suppliers = await get_suppliers()
     suppliers = {sup.get("supplier_name"): sup.get("supplier_id") for sup in suppliers}
-    inserted_brand_count = await insert_brand(get_brands(common_price.result)) or 0
+    inserted_brand_count = await insert_brand(get_brands(common_price.get_result())) or 0
     log_msg(f"Добавлено брэндов: {inserted_brand_count}", need_print_log=True)
-    inserted_nomenclature_count = await insert_nomenclature(common_price.result, suppliers)
+    inserted_nomenclature_count = await insert_nomenclature(common_price.get_result(), suppliers)
     log_msg(f"Добавлено номенклатуры: {inserted_nomenclature_count}", need_print_log=True)
 
 

@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 import glob
 import math
 from functools import lru_cache
-from typing import List, Type, TypeVar
+from typing import List, Type, TypeVar, Protocol
 
 from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
@@ -28,7 +28,23 @@ from .parse_statistic import ParseResultStatistic
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
 
-class BaseParser:
+class Parser(Protocol):
+
+    @classmethod
+    def supplier_folder_name(cls) -> str:
+        pass
+
+    @classmethod
+    def get_result(cls) -> List[RowItem]:
+        """get result"""
+        pass
+
+    def parse(self) -> List[RowItem]:
+        """get result"""
+        pass
+
+
+class BaseParser(Parser):
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
 
@@ -67,8 +83,8 @@ class BaseParser:
     def get_stop_words(self) -> List[str]:
         return self._parse_config.stop_words()
 
-    def set_parse_config(self, parse_sonfig: ParseConfiguration):
-        self._parse_config = parse_sonfig
+    def set_parse_config(self, parse_config: ParseConfiguration):
+        self._parse_config = parse_config
 
     def parse(self):
         if not self.is_active:
