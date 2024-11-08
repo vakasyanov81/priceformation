@@ -4,8 +4,6 @@ tests common price parser
 """
 __author__ = "Kasyanov V.A."
 
-from unittest.mock import patch
-
 from parsers.common_price import CommonPrice
 from parsers.row_item.row_item import RowItem
 
@@ -38,16 +36,12 @@ class FakeParser:
         return fake_result
 
 
-@patch("parsers.common_price.all_vendors")
-def test_parse_all_vendors(mock_all_vendors):
+def test_parse_all_vendors():
     """test parse for each parser in vendor list"""
 
-    mock_all_vendors.return_value = [(FakeParser, None)]
-
     common_price = CommonPrice()
-    common_price.parse_all_vendors()
-
-    assert common_price.result == fake_result
+    common_price.parse_all_vendors([(FakeParser, None)])
+    assert common_price.get_result() == fake_result
 
 
 def test_suppliers_info():

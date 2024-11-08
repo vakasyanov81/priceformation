@@ -6,7 +6,7 @@ from typing import Dict, NamedTuple, Tuple
 
 from core import err_msg
 from database.db import fetch_all, fetch_as_dict, insert
-from parsers.common_price import SupplierInfo
+from parsers.common_price import SupplierName, SupplierCode
 
 from .exception import DBError
 
@@ -30,7 +30,7 @@ async def get_statistic() -> DBStatistic:
     return DBStatistic(**res)
 
 
-async def insert_supplier(sup_names: Dict[str, SupplierInfo]):
+async def insert_supplier(sup_names: Dict[SupplierCode, SupplierName]):
     """insert supplier"""
     try:
         res = await insert(*insert_supplier_sql(sup_names))
@@ -41,10 +41,10 @@ async def insert_supplier(sup_names: Dict[str, SupplierInfo]):
         raise DBError("Ошибка при вставке поставщиков") from _exc
 
 
-def insert_supplier_sql(suppliers: Dict[str, SupplierInfo]) -> Tuple[str, list]:
+def insert_supplier_sql(suppliers: Dict[SupplierCode, SupplierName]) -> Tuple[str, list]:
     """Подготовка вставки данных по поставщикам"""
     # data = ",".join([f"({id_}, '{sup.name}')" for id_, sup in suppliers.items()])
-    data = [(int(id_), sup.name) for id_, sup in suppliers.items()]
+    data = [(int(id_), sup_name) for id_, sup_name in suppliers.items()]
     sql = """
          INSERT INTO supplier (supplier_id, supplier_name)
          VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING supplier_id

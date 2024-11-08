@@ -16,10 +16,6 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 
 
-class PoshkPriceParseConfiguration(ParseConfiguration):
-    """poshk price parser configuration"""
-
-
 poshk_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="poshk", name="Пошк", code="1"),
     start_row=14,
@@ -48,7 +44,7 @@ poshk_config = BasePriceParseConfigurationParams(
     parser_params=poshk_params,
 )
 
-poshk_config = PoshkPriceParseConfiguration(poshk_config)
+poshk_config = ParseConfiguration(poshk_config)
 
 
 class PoshkParser(BaseParser):

@@ -24,6 +24,9 @@ from parsers.vendors.poshk import PoshkParser, poshk_config
 from parsers.vendors.stk import STKParser, stk_config
 from parsers.vendors.zapaska import ZapaskaPriceAndRestParser, zapaska_config
 
+SupplierName = str
+SupplierCode = str
+
 
 def all_vendors() -> List[Tuple[Type[BaseParser], Type[ParseConfiguration]] | None]:
     """get all active vendors"""
@@ -39,3 +42,13 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Type[ParseConfiguration]] | No
         (Autosnab54Parser, autosnab_config),
         (STKParser, stk_config),
     ]
+
+
+def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
+    """Supplier info"""
+    _supplier_info = {}
+    for _, config in all_vendors():
+        _supplier_info[config.parse_config.parser_params.supplier.code] = (
+            config.parse_config.parser_params.supplier.name
+        )
+    return _supplier_info

@@ -5,8 +5,8 @@ fixtures for four_tochki sheet1 vendor
 __author__ = "Kasyanov V.A."
 
 
-def four_tochki_one_item_result():
-    """one file, one price row parse result"""
+def four_tochki_many_item_result():
+    """one file, many price row parse result"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [
             {
@@ -53,6 +53,29 @@ def four_tochki_one_item_result():
                 "price_recommended": 23010,
                 "price_purchase": 21912,
                 "tire_type": "Грузовая",
+            },
+        ]
+    }
+
+
+def four_tochki_one_item_result(diameter: str = "R16"):
+    """one file, one price row parse result"""
+    return {
+        "file_prices\\four_tochki\\price.xlsx": [
+            {
+                "code": "527719",
+                "manufacturer_name": "BFGoodrich",
+                "model": "Advantage",
+                "width": 205,
+                "height_percent": 55,
+                "diameter": diameter,
+                "index_load": "94W",
+                "ext_diameter": 0,
+                "american_affiliation_designation": None,
+                "rest_count": "более 40",
+                "price_recommended": 7340,
+                "price_purchase": 5772,
+                "tire_type": "Легковая",
             },
         ]
     }

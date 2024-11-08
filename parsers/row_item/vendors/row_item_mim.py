@@ -61,8 +61,6 @@ class RowItemMim(RowItem):
     def diameter(self):
         """diameter"""
         diameter = self._item.get(self.__DIAMETER__)
-        # need for 4tochki vendor
-        diameter = str(diameter).replace("R", "")
         return diameter
 
     @property

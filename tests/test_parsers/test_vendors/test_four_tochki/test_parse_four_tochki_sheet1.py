@@ -13,7 +13,7 @@ from parsers.vendors.four_tochki.four_tochki_1sheet import (
     fourtochki_sheet_1_params,
 )
 from parsers.xls_reader import FakeXlsReader
-from tests.test_parsers.fixtures.four_tochki_sheet1 import four_tochki_one_item_result
+from tests.test_parsers.fixtures.four_tochki_sheet1 import four_tochki_many_item_result, four_tochki_one_item_result
 from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
     make_parse_configuration,
@@ -35,7 +35,7 @@ def get_fake_parser(parse_result):
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
+    result: List[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
 
     assert len(result) == 3
     assert result[0].title == "205/55R16 BF Goodrich Advantage 94W"
@@ -51,3 +51,16 @@ def test_parse():
 
     # грузовая шина
     assert result[2].title == "235/75R17.5 BF Goodrich Route Control D 132/130M"
+
+
+def test_replace_diameter():
+    """check replace RZ -> ZR"""
+
+    result: List[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
+
+    assert len(result) == 1
+    assert result[0].title == "205/55ZR16 BF Goodrich Advantage 94W"
+    assert result[0].type_production == "Легковая шина"
+    assert result[0].price_markup == 7340
+    assert result[0].supplier_name == "Форточки"
+    assert result[0].percent_markup == 27.17

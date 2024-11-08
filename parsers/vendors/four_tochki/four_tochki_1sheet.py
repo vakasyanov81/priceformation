@@ -80,6 +80,8 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         width = item.width or ""
         height_percent = item.height_percent or ""
         diameter = (item.diameter or "").replace("—", "-")
+        # need for 4tochki vendor
+        diameter = str(diameter).replace("R", "")
         velocity = item.index_velocity or ""
         load = item.index_load or ""
         model = item.model or ""
@@ -105,12 +107,15 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         else:
             height_percent = ""
 
+        construct_diameter = f"{construct}{diameter}"
+        construct_diameter = construct_diameter.replace("RZ", "ZR")
+
         if cls.is_truck_tire(item):
-            title = f"{width}{width_postfix}{height_percent}{construct}{diameter} {mark} {model} {load}{velocity}"
+            title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
         elif ext_diameter:
-            title = f"{ext_diameter}x{width}{construct}{diameter} {mark} {model} {load} {us_aff_design}"
+            title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_design}"
         else:
-            title = f"{width}{height_percent}{construct}{diameter} {mark} {model} {load}{velocity}"
+            title = f"{width}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
 
         return title
 

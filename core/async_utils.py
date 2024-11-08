@@ -9,8 +9,8 @@ from core.log_message import print_log
 from database.exception import DBError, NotProvidedDatabaseError
 
 
-async def try_async_call(method, _async=False, **kwargs):
-    """Try async method call"""
+async def try_call(method, _async=False, **kwargs):
+    """Try method call"""
     try:
         if _async:
             await method(**kwargs)
