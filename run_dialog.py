@@ -1,7 +1,7 @@
 from enum import Enum
 
-from cfg.color import Colors
-from core.log_message import print_log
+from src.cfg.color import Colors
+from src.core.log_message import print_log
 
 
 class AnswerResult(Enum):

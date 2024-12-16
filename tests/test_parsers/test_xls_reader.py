@@ -6,9 +6,9 @@ __author__ = "Kasyanov V.A."
 
 import pytest
 
-from parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
+from src.parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
 
-_FILE_PATH = "tests/test_parsers/fixtures/price.xlsx"
+_FILE_PATH = "../tests/test_parsers/fixtures/price.xlsx"
 _PARSE_PARAMS = {"start_row": 1, "columns": {0: "col_0", 1: "col_1"}}
 
 SHEET_1 = [

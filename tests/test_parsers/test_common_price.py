@@ -4,8 +4,8 @@ tests common price parser
 """
 __author__ = "Kasyanov V.A."
 
-from parsers.common_price import CommonPrice
-from parsers.row_item.row_item import RowItem
+from src.parsers.common_price import CommonPrice
+from src.parsers.row_item.row_item import RowItem
 
 fake_result = [RowItem({"title": 1})]
 

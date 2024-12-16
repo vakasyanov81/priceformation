@@ -1,14 +1,13 @@
-import pathlib
-import unittest
-from unittest.mock import patch, MagicMock
-
 import asyncio
-
-from cfg.db import DBConfig
-from database.db import close_db
-from database.init_db import init_db_sync
-from database.supplier import insert_supplier
+import pathlib
 import sqlite3
+import unittest
+from unittest.mock import MagicMock, patch
+
+from src.cfg.db import DBConfig
+from src.database.db import close_db
+from src.database.init_db import init_db_sync
+from src.database.supplier import insert_supplier
 
 TEST_ROOT = str(pathlib.Path(__file__).parent.absolute())
 
@@ -25,10 +24,10 @@ def get_db_config():
     )
 
 
-@patch("cfg.main.MainConfig.database", MagicMock(return_value=get_db_config()))
+@patch("src.cfg.main.MainConfig.database", MagicMock(return_value=get_db_config()))
 class TestDB(unittest.TestCase):
 
-    @patch("cfg.main.MainConfig.database", MagicMock(return_value=get_db_config()))
+    @patch("src.cfg.main.MainConfig.database", MagicMock(return_value=get_db_config()))
     def setUp(self):
         init_db_sync(drop_database=True)
 
@@ -52,8 +51,7 @@ class TestDB(unittest.TestCase):
             VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING *
         """
         cursor.execute(sql, (1, "test_supplier"))
-        res = cursor.fetchall()
-        print(res)
+        cursor.fetchall()
         connection.commit()
 
     def tearDown(self):
