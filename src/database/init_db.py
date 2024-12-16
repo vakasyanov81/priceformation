@@ -25,7 +25,7 @@ def init_db_sync(drop_database=False):
         Path(get_config().database().db_name).unlink()
 
     backend = get_backend("sqlite:///" + get_config().database().db_name)
-    migrations = read_migrations(cfg.main.project_root + os.sep + "database" + os.sep + "migrations")
+    migrations = read_migrations(cfg.main.project_root + os.sep + "src" + os.sep + "database" + os.sep + "migrations")
 
     with backend.lock():
         # Apply any outstanding migrations

@@ -9,7 +9,7 @@ from src.database.db import close_db
 from src.database.init_db import init_db_sync
 from src.database.supplier import insert_supplier
 
-TEST_ROOT = str(pathlib.Path(__file__).parent.absolute())
+TEST_ROOT = str(pathlib.Path(__file__).parent.parent.absolute())
 
 
 def get_db_config():

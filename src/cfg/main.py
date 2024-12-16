@@ -21,7 +21,8 @@ __MANUFACTURER_ALIASES_FILE_NAME__ = "manufacturer_aliases.json"
 __BLACK_LIST_FILE_NAME__ = "black_list"
 __STOP_WORDS_FILE_NAME__ = "stop_words"
 
-__PROJECT_ROOT__ = str(pathlib.Path(__file__).parent.parent.absolute())
+__PROJECT_ROOT__ = str(pathlib.Path(__file__).parent.parent.parent.absolute())
+__PROJECT_SRC__ = str(pathlib.Path(__file__).parent.parent.absolute())
 
 __IS_UNITTEST_MODE__ = False
 __IS_NEED_PRINT_LOG__ = True
@@ -110,6 +111,11 @@ class MainConfig(MainCfg):
         return __PROJECT_ROOT__
 
     @property
+    def project_src(self):
+        """path to project src directory"""
+        return __PROJECT_SRC__
+
+    @property
     def sep(self):
         """folder separator"""
         return os.sep
@@ -157,7 +163,7 @@ class MainConfig(MainCfg):
     @classmethod
     def database(cls) -> DBConfig:
         """database config"""
-        return db_cfg(__PROJECT_ROOT__)
+        return db_cfg(__PROJECT_SRC__)
 
 
 def get_config():
