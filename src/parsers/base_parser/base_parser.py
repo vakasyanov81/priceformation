@@ -8,6 +8,7 @@ import glob
 import math
 from functools import lru_cache
 from typing import List, Protocol, Type, TypeVar
+from src.cfg import init_cfg
 
 from src.core.exceptions import SupplierNotHavePricesError
 from src.parsers import data_provider
@@ -356,8 +357,9 @@ class BaseParser(Parser):
 
 def get_file_prices(parser: TBaseParser):
     _list_files = []
+    cfg = init_cfg()
     for f_tmp in parser.parser_params().file_templates:
-        _list_files += glob.glob(f"src/file_prices/{parser.parser_params().supplier.folder_name}/{f_tmp}")
+        _list_files += glob.glob(f"{cfg.main.folder_file_prices}/{parser.parser_params().supplier.folder_name}/{f_tmp}")
 
     if not _list_files:
         raise SupplierNotHavePricesError(
