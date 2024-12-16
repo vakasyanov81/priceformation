@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from parsers.writer.fake_driver import FakeXlwtDriver
-from parsers.writer.xls_writer import XlsWriter
+from src.parsers.writer.fake_driver import FakeXlwtDriver
+from src.parsers.writer.xls_writer import XlsWriter
 
 from .fixtures import FixtureTemplate, write_data
 
@@ -17,10 +17,10 @@ from .fixtures import FixtureTemplate, write_data
 @pytest.mark.parametrize(
     "method, call_count",
     [
-        ("parsers.writer.fake_driver.FakeXlwtDriver.add_sheet", 1),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.write_head", 1),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.write", 3),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.save", 1),
+        ("src.parsers.writer.fake_driver.FakeXlwtDriver.add_sheet", 1),
+        ("src.parsers.writer.fake_driver.FakeXlwtDriver.write_head", 1),
+        ("src.parsers.writer.fake_driver.FakeXlwtDriver.write", 3),
+        ("src.parsers.writer.fake_driver.FakeXlwtDriver.save", 1),
     ],
 )
 def test_xls_write_call_counts(method, call_count):

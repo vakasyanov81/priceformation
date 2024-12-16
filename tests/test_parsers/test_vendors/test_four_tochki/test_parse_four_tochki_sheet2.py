@@ -6,13 +6,13 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_2sheet import (
+from src.parsers.base_parser.base_parser_config import ParseConfiguration
+from src.parsers.row_item.row_item import RowItem
+from src.parsers.vendors.four_tochki.four_tochki_2sheet import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,
 )
-from parsers.xls_reader import FakeXlsReader
+from src.parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet2 import four_tochki_one_item_result
 from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,

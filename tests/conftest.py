@@ -18,5 +18,5 @@ def pytest_make_parametrize_id(val):
 @pytest.fixture(scope="session", autouse=True)
 def default_session_fixture():
     """set flag for all tests"""
-    with patch("cfg.main.__IS_UNITTEST_MODE__", True):
+    with patch("src.cfg.main.__IS_UNITTEST_MODE__", True):
         yield

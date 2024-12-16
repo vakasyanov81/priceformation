@@ -6,8 +6,8 @@ __author__ = "Kasyanov V.A."
 
 import pytest
 
-from parsers.base_parser.manufacturer_finder import ManufacturerFinder
-from parsers.row_item.row_item import RowItem
+from src.parsers.base_parser.manufacturer_finder import ManufacturerFinder
+from src.parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(
