@@ -4,12 +4,12 @@
 __pycache__/
 *.py[cod]
 *.log
-src/file_prices/
+file_prices/
 src/core/config.py
 *dist/
 .pytest_cache
 .coverage
-/src/parse_config/
 
 venv
 pyrightconfig.json
+/parse_config/
