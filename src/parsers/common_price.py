@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import TypeVar
 
-from src.core import warn_msg
+from src.core import warn_msg, err_msg
 from src.parsers.all_vendors import all_vendor_supplier_info
 from src.parsers.base_parser.base_parser import BaseParser, Parser
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
@@ -18,7 +18,9 @@ from src.parsers.writer.xwlt_driver import XlsxWriterDriver
 SupplierName = str
 SupplierCode = str
 
-VendorList = TypeVar("VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]])
+VendorList = TypeVar(
+    "VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]]
+)
 
 
 class CommonPrice:
@@ -37,11 +39,20 @@ class CommonPrice:
         make parse all prices
         :return:
         """
-        try:
-            for vendor, vendor_config in vendors:
-                self._result += vendor(vendor_config).parse()
-        except VendorListConfigFileError:
-            warn_msg("Отсутствует файл конфигурации parse_config/vendor_list.json", need_print_log=True)
+        for vendor, vendor_config in vendors:
+            _parser = vendor(vendor_config)
+            try:
+                self._result += _parser.parse()
+            except VendorListConfigFileError:
+                warn_msg(
+                    "Отсутствует файл конфигурации parse_config/vendor_list.json",
+                    need_print_log=True,
+                )
+            except Exception as exc:
+                err_msg(
+                    f"Ошибка разбора прайса поставщика {repr(_parser)} // {str(exc)}"
+                )
+                raise exc
 
     @classmethod
     def supplier_info(cls) -> dict[SupplierCode, SupplierName]:
