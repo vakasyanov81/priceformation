@@ -36,7 +36,7 @@ jobs:
           poetry check --lock
       - name: Install dependencies
         run: |
-          poetry install
+          poetry install --no-root
       - name: Test coverage
         run: |
           export PYTHONPATH=${GITHUB_WORKSPACE}
