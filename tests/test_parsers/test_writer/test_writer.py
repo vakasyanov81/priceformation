@@ -14,6 +14,12 @@ from src.parsers.writer.xls_writer import XlsWriter
 from .fixtures import FixtureTemplate, write_data
 
 
+class TestXlsWriter(XlsWriter):
+
+    def create_folder(self):
+        pass
+
+
 @pytest.mark.parametrize(
     "method, call_count",
     [
@@ -28,6 +34,6 @@ def test_xls_write_call_counts(method, call_count):
 
     with patch(method) as _mock_method:
         fake_driver = FakeXlwtDriver()
-        XlsWriter(fake_driver, write_data, template=FixtureTemplate)
+        TestXlsWriter(fake_driver, write_data, template=FixtureTemplate)
 
     assert _mock_method.call_count == call_count
