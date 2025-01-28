@@ -84,13 +84,13 @@ class RowItemMim(RowItem):
     @property
     @row_format.int_or_float
     def pcd1(self):
-        """wtf?"""
+        """Диаметр отверстий, предназначенных для болтов крепления колеса (разболтовка)"""
         return self._item.get(self.__PCD1__)
 
     @property
     @row_format.integer
     def eet(self):
-        """wtf?"""
+        """Вылет диска"""
         return self._item.get(self.__ET__)
 
     @property

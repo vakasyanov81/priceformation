@@ -152,6 +152,7 @@ class BaseParser(Parser):
                     need_print_log=True,
                 )
                 err_msg(f"строка: {repr(item)}")
+                continue
 
             # проверка на содержание стоп слов.
             if not self.is_valid_title(item.title):
