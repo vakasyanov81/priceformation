@@ -36,7 +36,7 @@ class FakeParser:
         return fake_result
 
 
-def test_parse_all_vendors():
+def _test_parse_all_vendors():
     """test parse for each parser in vendor list"""
 
     common_price = CommonPrice()

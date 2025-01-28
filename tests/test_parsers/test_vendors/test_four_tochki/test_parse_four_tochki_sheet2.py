@@ -13,7 +13,10 @@ from src.parsers.vendors.four_tochki.four_tochki_2sheet import (
     fourtochki_sheet_2_params,
 )
 from src.parsers.xls_reader import FakeXlsReader
-from tests.test_parsers.fixtures.four_tochki_sheet2 import four_tochki_one_item_result
+from tests.test_parsers.fixtures.four_tochki_sheet2 import (
+    four_tochki_one_item_result,
+    four_tochki_invalid_item_result,
+)
 from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
     make_parse_configuration,
@@ -43,3 +46,10 @@ def test_parse():
     assert result[0].price_markup == 8270
     assert result[0].supplier_name == "Форточки"
     assert result[0].percent_markup == 14.7
+
+
+def test_parse_with_invalid_item():
+    """one invalid item is skipped"""
+
+    result: List[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
+    assert len(result) == 1

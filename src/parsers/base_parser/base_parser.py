@@ -25,6 +25,7 @@ from ..data_provider import VendorParams
 from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
+from ...core import err_msg
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
@@ -142,8 +143,15 @@ class BaseParser(Parser):
         result = []
 
         for item in items:
-            # сборка тайтла для мим-а
-            self.set_prepared_title(item)
+            # сборка наименования
+            try:
+                self.set_prepared_title(item)
+            except ValueError as err:
+                err_msg(
+                    f"Не удалось разобрать строку у поставщика: {repr(self)} // {err}",
+                    need_print_log=True,
+                )
+                err_msg(f"строка: {repr(item)}")
 
             # проверка на содержание стоп слов.
             if not self.is_valid_title(item.title):
