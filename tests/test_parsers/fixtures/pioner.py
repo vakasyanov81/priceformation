@@ -11,7 +11,7 @@ def pioner_one_item_result():
         "file_prices\\pioner\\price.xls": [
             {
                 "title": "Автокамера 14.00-24",
-                "price_purchase": 2200.0,
+                "price_purchase": "2200,0 Руб.",
                 "price_recommended": 2350.0,
                 "rest_count": 20.0,
                 "reserve_count": "",

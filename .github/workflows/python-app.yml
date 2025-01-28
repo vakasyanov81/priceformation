@@ -33,10 +33,10 @@ jobs:
           poetry check
       - name: Verify that poetry.lock is consistent with pyproject.toml
         run: |
-          poetry lock --check
+          poetry check --lock
       - name: Install dependencies
         run: |
-          poetry install
+          poetry install --no-root
       - name: Test coverage
         run: |
           export PYTHONPATH=${GITHUB_WORKSPACE}

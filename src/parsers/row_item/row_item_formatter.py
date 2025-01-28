@@ -21,9 +21,12 @@ def prepare_str_to_float(value: str) -> str:
     "более40" -> "40"
     """
     _to_drop = ["<", ">", "более"]
+    value = value.lower()
     for drop_item in _to_drop:
         value = value.replace(drop_item, "")
-    return value.replace(",", ".")
+    value = value.replace(",", ".")
+    value = value.replace("руб.", "")
+    return value
 
 
 def get_stripped(value, null_value="") -> str:
