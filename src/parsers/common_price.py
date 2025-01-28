@@ -18,9 +18,7 @@ from src.parsers.writer.xwlt_driver import XlsxWriterDriver
 SupplierName = str
 SupplierCode = str
 
-VendorList = TypeVar(
-    "VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]]
-)
+VendorList = TypeVar("VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]])
 
 
 class CommonPrice:
@@ -49,9 +47,7 @@ class CommonPrice:
                     need_print_log=True,
                 )
             except Exception as exc:
-                err_msg(
-                    f"Ошибка разбора прайса поставщика {repr(_parser)} // {str(exc)}"
-                )
+                err_msg(f"Ошибка разбора прайса поставщика {repr(_parser)} // {str(exc)}")
                 raise exc
 
     @classmethod
