@@ -35,7 +35,7 @@ class LoggerParseProcess:
             _log_msg(f"Обработано позиций - {result_statistic.count_items()} ")
             _log_msg(f"Наценка (%) - Мин: {min_percent}, Макс: {max_percent} ")
             _log_msg(f"Наценка (Руб.) - Мин: {min_margin}, Макс: {max_margin} ")
-        _log_msg(f"{self.parser_repr} // финиш")
+            _log_msg(f"{self.parser_repr} // финиш")
         _log_msg("--------------------------------------------------------")
 
     @classmethod

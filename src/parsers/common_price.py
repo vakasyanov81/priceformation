@@ -4,9 +4,10 @@ Make parse all price and make inner and drom prices
 """
 __author__ = "Kasyanov V.A."
 
+import time
 from typing import TypeVar
 
-from src.core import warn_msg, err_msg
+from src.core import warn_msg, err_msg, log_msg
 from src.parsers.all_vendors import all_vendor_supplier_info
 from src.parsers.base_parser.base_parser import BaseParser, Parser
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
@@ -37,6 +38,8 @@ class CommonPrice:
         make parse all prices
         :return:
         """
+        start_time = time.time()
+        log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
         for vendor, vendor_config in vendors:
             _parser = vendor(vendor_config)
             try:
@@ -49,6 +52,11 @@ class CommonPrice:
             except Exception as exc:
                 err_msg(f"Ошибка разбора прайса поставщика {repr(_parser)} // {str(exc)}")
                 raise exc
+        elapsed_time = time.time() - start_time
+        log_msg(
+            f"\n===== Окончание разбора прайсов ({elapsed_time:.2f} секунд) ========\n",
+            need_print_log=True,
+        )
 
     @classmethod
     def supplier_info(cls) -> dict[SupplierCode, SupplierName]:

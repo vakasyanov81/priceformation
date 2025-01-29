@@ -141,14 +141,14 @@ class BaseParser(Parser):
 
     def prepare(self, items):
         result = []
-
-        for item in items:
+        start_row = self._parse_config.parse_config.parser_params.start_row
+        for row_id, item in enumerate(items, start=start_row):
             # сборка наименования
             try:
                 self.set_prepared_title(item)
             except ValueError as err:
                 err_msg(
-                    f"Не удалось разобрать строку у поставщика: {repr(self)} // {err}",
+                    f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(self)} // {err}",
                     need_print_log=True,
                 )
                 err_msg(f"строка: {repr(item)}")

@@ -5,6 +5,8 @@ tests for four_tochki vendor (sheet 2) after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
+from unittest import mock
+from unittest.mock import patch
 
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
 from src.parsers.row_item.row_item import RowItem
@@ -51,5 +53,16 @@ def test_parse():
 def test_parse_with_invalid_item():
     """one invalid item is skipped"""
 
-    result: List[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
+    with patch("src.core.log_message.log_msg") as mock_log_msg:
+        result: List[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
     assert len(result) == 1
+    assert mock_log_msg.call_count == 2
+
+    assert (
+        mock_log_msg.mock_calls[0].args[0] == "Не удалось разобрать строку (№ 3) у поставщика: FourTochkiParser2Sheet:"
+        " Форточки (Вкладка (шины) #2) // could not convert string to float: 'invalidvalue'"
+    )
+    assert mock_log_msg.mock_calls[0].kwargs == {"level": 40, "need_print_log": True}
+
+    assert "{'code': 'WHS198858', 'manufacturer_name': 'Alcasta'" in mock_log_msg.mock_calls[1].args[0]
+    assert mock_log_msg.mock_calls[1].kwargs == {"level": 40, "need_print_log": False}
