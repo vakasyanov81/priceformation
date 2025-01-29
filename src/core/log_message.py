@@ -88,7 +88,7 @@ def log_msg(
 
     if need_print_log and not cfg.main.is_unittest_mode:
         print_log(msg, __level_map__.get(level), _color=color)
-    return True
+    return msg
 
 
 def print_log(
