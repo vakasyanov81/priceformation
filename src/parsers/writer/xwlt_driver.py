@@ -75,6 +75,7 @@ class XlsxWriterDriver(IXlsDriver):
 
     def set_auto_width(self):
         """set auto width by content"""
+        # TODO: fix it
         map_ = {
             1: "A",
             2: "B",
