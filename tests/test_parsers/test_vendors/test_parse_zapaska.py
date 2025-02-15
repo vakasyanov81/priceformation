@@ -11,10 +11,10 @@ import pytest
 from src.parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.zapaska import zapaska_rest_params
 from src.parsers.vendors.zapaska_rest import ZapaskaRestParser
-from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
 from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
 

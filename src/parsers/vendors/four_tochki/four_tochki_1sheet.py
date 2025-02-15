@@ -7,13 +7,12 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from src.parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
-
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_1_params.sheet_info = "Вкладка (шины) #1"
@@ -109,7 +108,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         """
         width = item.width or ""
         height_percent = str(item.height_percent or "")
-        height_percent = height_percent.replace('999', 'L')
+        height_percent = height_percent.replace("999", "L")
         diameter = (item.diameter or "").replace("—", "-")
         # need for 4tochki vendor
         diameter = str(diameter).replace("R", "")
@@ -135,16 +134,16 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
             width_postfix = ""
         if cls.is_truck_tire(item) and diameter == "16":
             width_postfix = ""
-        if width == '10' and diameter == '20':
+        if width == "10" and diameter == "20":
             width_postfix = ".00"
 
-        if cls.is_special_tire(item) and height_percent and height_percent != 'L' and '.' not in width:
+        if cls.is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
             width_postfix = ".0"
 
-        if height_percent == 'L':
+        if height_percent == "L":
             width_postfix = height_percent
 
-        if height_percent and height_percent != 'L':
+        if height_percent and height_percent != "L":
             height_percent = f"/{height_percent}"
         else:
             height_percent = ""

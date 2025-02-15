@@ -10,12 +10,12 @@ import pytest
 
 from src.parsers import data_provider
 from src.parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
+from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.poshk import (
     PoshkParser,
     poshk_params,
 )
-from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_base_parser.test_manufacturer_finder import map_manufacturer
 from tests.test_parsers.fixtures.poshk import poshk_one_item_result
 

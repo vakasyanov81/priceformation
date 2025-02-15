@@ -9,7 +9,6 @@ from src.core import err_msg, log_msg
 from src.database.db import fetch_all, fetch_as_dict, get_db
 from src.parsers.common_price import CommonPrice
 from src.parsers.row_item.row_item import RowItem
-
 from .exception import DBError
 from .supplier import get_statistic, get_suppliers, insert_supplier
 

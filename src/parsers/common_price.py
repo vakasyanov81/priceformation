@@ -15,7 +15,7 @@ from src.parsers.base_parser.nomenclature_correction import get_nomenclature_cor
 from src.parsers.data_provider.vendor_list import VendorListConfigFileError
 from src.parsers.writer.templates.all_templates import all_writer_templates
 from src.parsers.writer.xls_writer import XlsWriter
-from src.parsers.writer.xwlt_driver import XlsxWriterDriver, XlsxWriterDriverV2
+from src.parsers.writer.xwlt_driver import XlsxWriterDriverV2
 
 SupplierName = str
 SupplierCode = str

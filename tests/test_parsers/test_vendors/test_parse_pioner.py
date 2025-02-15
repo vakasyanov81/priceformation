@@ -11,9 +11,9 @@ import pytest
 from src.parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.pioner import PionerParser, pioner_params
-from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.pioner import (
     pioner_one_item_result,
     pioner_one_item_result_with_categories,

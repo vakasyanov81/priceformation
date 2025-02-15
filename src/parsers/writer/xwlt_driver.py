@@ -4,12 +4,11 @@ write price list logic via xlsxwriter module
 """
 __author__ = "Kasyanov V.A."
 
-import xlsxwriter
 import openpyxl
+import xlsxwriter
 from openpyxl.styles import Font, Color, PatternFill
 
 from src.cfg import init_cfg
-
 from .ixls_driver import IXlsDriver
 
 config = init_cfg()
