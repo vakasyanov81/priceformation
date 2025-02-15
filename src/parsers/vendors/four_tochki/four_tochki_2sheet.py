@@ -7,32 +7,36 @@ __author__ = "Kasyanov V.A."
 import dataclasses
 
 from src.parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
-
+from .four_tochki_1sheet import supplier_folder_name
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from .four_tochki_1sheet import supplier_folder_name
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
-fourtochki_sheet_2_params.sheet_info = "Вкладка (шины) #2"
+fourtochki_sheet_2_params.sheet_info = "Вкладка (диски) #2"
 fourtochki_sheet_2_params.sheet_indexes = [1]
 fourtochki_sheet_2_params.columns = {
     0: RowItem.__CODE__,
-    1: RowItem.__MANUFACTURER_NAME__,
-    2: RowItem.__MODEL__,
-    3: RowItem.__WIDTH__,
-    4: RowItem.__DIAMETER__,
-    5: RowItem.__SLOT_COUNT__,
-    6: RowItem.__PCD1__,
-    8: RowItem.__ET__,
-    9: RowItem.__CENTRAL_DIAMETER__,
-    10: RowItem.__COLOR__,
-    12: RowItem.__REST_COUNT__,
-    13: RowItem.__PRICE_RECOMMENDED__,
-    14: RowItem.__PRICE_PURCHASE__,
+    2: RowItem.__MANUFACTURER_NAME__,
+    3: RowItem.__MODEL__,
+    4: RowItem.__COLOR__,
+    5: RowItem.__WIDTH__,
+    6: RowItem.__DIAMETER__,
+    7: RowItem.__SLOT_COUNT__,
+    8: RowItem.__PCD1__,
+    9: RowItem.__PCD2__,
+    10: RowItem.__ET__,
+    11: RowItem.__CENTRAL_DIAMETER__,
+    12: RowItem.__FASTENER__,
+    13: RowItem.__DISK_TYPE__,
+    14: RowItem.__DISK_TYPE_1__,
+    15: RowItem.__MAIN_COLOR__,
+    18: RowItem.__REST_COUNT__,
+    19: RowItem.__PRICE_RECOMMENDED__,
+    20: RowItem.__PRICE_PURCHASE__,
 }
 
 

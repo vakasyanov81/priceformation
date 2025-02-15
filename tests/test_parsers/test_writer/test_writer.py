@@ -10,7 +10,6 @@ import pytest
 
 from src.parsers.writer.fake_driver import FakeXlwtDriver
 from src.parsers.writer.xls_writer import XlsWriter
-
 from .fixtures import FixtureTemplate, write_data
 
 

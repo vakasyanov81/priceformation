@@ -1,0 +1,35 @@
+{
+  "markup_rules": {
+    "rule_22": {
+      "min": 0,
+      "max": 5001,
+      "percent": 0.20
+    },
+    "rule_22_1": {
+      "min": 5000,
+      "max": 10001,
+      "percent": 0.19
+    },
+    "rule_22_2": {
+      "min": 10000,
+      "max": 15001,
+      "percent": 0.18
+    },
+    "rule_14": {
+      "min": 15000,
+      "max": 20001,
+      "percent": 0.17
+    },
+    "rule_12": {
+      "min": 20000,
+      "max": 25001,
+      "percent": 0.15
+    }
+  },
+  "min_recommended_percent_markup": 0.15,
+  "max_recommended_percent_markup": 0,
+  "absolute_markup_rules": {
+    "min_absolute_markup": 300,
+    "markup_percent": 1.5
+  }
+ }

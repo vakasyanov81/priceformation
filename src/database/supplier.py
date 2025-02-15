@@ -7,7 +7,6 @@ from typing import Dict, NamedTuple, Tuple
 from src.core import err_msg
 from src.database.db import fetch_all, fetch_as_dict, insert
 from src.parsers.common_price import SupplierCode, SupplierName
-
 from .exception import DBError
 
 

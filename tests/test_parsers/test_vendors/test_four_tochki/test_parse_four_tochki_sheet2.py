@@ -5,16 +5,15 @@ tests for four_tochki vendor (sheet 2) after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
-from unittest import mock
 from unittest.mock import patch
 
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
+from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.four_tochki.four_tochki_2sheet import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,
 )
-from src.parsers.xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet2 import (
     four_tochki_one_item_result,
     four_tochki_invalid_item_result,
@@ -60,7 +59,7 @@ def test_parse_with_invalid_item():
 
     assert (
         mock_log_msg.mock_calls[0].args[0] == "Не удалось разобрать строку (№ 3) у поставщика: FourTochkiParser2Sheet:"
-        " Форточки (Вкладка (шины) #2) // could not convert string to float: 'invalidvalue'"
+        " Форточки (Вкладка (диски) #2) // could not convert string to float: 'invalidvalue'"
     )
     assert mock_log_msg.mock_calls[0].kwargs == {"level": 40, "need_print_log": True}
 

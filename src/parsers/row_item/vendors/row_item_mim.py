@@ -24,8 +24,14 @@ class RowItemMim(RowItem):
     __PCD2__ = "pcd2"
     __CENTRAL_DIAMETER__ = "central_diameter"
     __TIRE_TYPE__ = "tire_type"
+    # Надпись на боковине
+    __INSCRIPTION_ON_THE_SIDE__ = "inscription_on_the_side"
+    # Тяжелая шина, можно ехать на спущенной
+    __RUN_FLAT__ = "run_flat"
     __ET__ = "et"
     __COLOR__ = "color"
+    # основной цвет
+    __MAIN_COLOR__ = "main_color"
     __PROFILE__ = "profile"
     __INDEX_VELOCITY__ = "index_velocity"
     __INDEX_LOAD__ = "index_load"
@@ -37,6 +43,13 @@ class RowItemMim(RowItem):
     __LAYERING__ = "layering"
     # камерность
     __INTIMACY__ = "intimacy"
+    # наличие и тип камеры
+    __CAMERA_TYPE__ = "camera_type"
+    # крепеж
+    __FASTENER__ = "fastener"
+    __DISK_TYPE__ = "disk_type"
+    # вид диска - легковой / грузовой
+    __DISK_TYPE_1__ = "disk_type_1"
 
     @property
     @row_format.text
@@ -152,6 +165,12 @@ class RowItemMim(RowItem):
     def layering(self):
         """layering"""
         return self._item.get(self.__LAYERING__)
+
+    @property
+    @row_format.text
+    def camera_type(self):
+        """camera_type"""
+        return self._item.get(self.__CAMERA_TYPE__)
 
     @property
     @row_format.text

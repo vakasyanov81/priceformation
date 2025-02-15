@@ -18,6 +18,8 @@ from src.parsers.row_item.row_item import RowItem
         ("bla bla шины bla", "Автошина"),
         ("bla bla диски bla", "Диск"),
         ("bla bla диск bla", "Диск"),
+        ("bla bla автодиск bla", "Диск"),
+        ("bla bla автодиски bla", "Диск"),
         ("bla bla камеры bla", "Автокамера"),
         ("bla bla камера bla", "Автокамера"),
         ("bla bla камера bla Алтайшина", "Автокамера"),

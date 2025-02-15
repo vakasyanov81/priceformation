@@ -4,4 +4,4 @@ pip install pipx
 pipx install poetry
 poetry check
 poetry check --lock
-poetry install
+poetry install --no-root

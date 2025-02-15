@@ -8,8 +8,7 @@ __author__ = "Kasyanov V.A."
 from pathlib import Path
 from typing import List
 
-import xlrd
-from openpyxl import load_workbook
+from python_calamine import CalamineWorkbook
 
 from src import core
 from src.cfg import init_cfg
@@ -29,30 +28,6 @@ class IXlsReader:
     def parse(self, sheet_indexes: list = None):
         """do parse"""
         raise NotImplementedError
-
-
-class FakeXlsReader:
-    """fake xls reader"""
-
-    parse_result = None
-
-    @classmethod
-    def get_instance(cls, file_path, params):
-        """get instance FakeXlsReader"""
-        return FakeXlsReader(file_path, params)
-
-    def __init__(self, file_path, params):
-        """init"""
-        self.file_path = file_path
-        self.params = params
-        self.sheet_indexes = None
-
-    def parse(self, sheet_indexes: list = None):
-        """do parse"""
-        # pylint: disable=E1102
-
-        self.sheet_indexes = sheet_indexes
-        return self.parse_result() if callable(self.parse_result) else self.parse_result
 
 
 class ParamsHelper:
@@ -99,10 +74,7 @@ class XlsReader(IXlsReader, ParamsHelper):
         """get instance XlsReader / XlsxReader"""
         if not Path(file_path).exists():
             raise FileNotFoundError
-
-        if ".xlsx" in file_path:
-            return XlsxReader(file_path, params)
-        return XlsReader(file_path, params)
+        return cls(file_path, params)
 
     def __init__(self, file_path, params):
         """init"""
@@ -114,13 +86,14 @@ class XlsReader(IXlsReader, ParamsHelper):
 
     def open_book(self, file_path):
         """open book"""
+        # TODO: fix crutch
         file_path = str(Path(cfg.main.project_root, file_path)).replace("src/src/", "src/")
         self.book = self._open_book(file_path)
 
     @classmethod
     def _open_book(cls, file_path):
         """open book"""
-        return xlrd.open_workbook(file_path)
+        return CalamineWorkbook.from_path(file_path)
 
     def skipped_rows(self):
         """get skipped rows count value"""
@@ -128,11 +101,11 @@ class XlsReader(IXlsReader, ParamsHelper):
 
     def get_sheet_names(self) -> str:
         """get sheet names"""
-        return self.book.sheet_names()
+        return self.book.sheet_names
 
     def get_sheet_by_name(self, s_name):
         """get sheet by name"""
-        return self.book.sheet_by_name(s_name)
+        return self.book.get_sheet_by_name(s_name).to_python(skip_empty_area=False)
 
     def sheets(self) -> list:
         """get sheet list"""
@@ -170,14 +143,12 @@ class XlsReader(IXlsReader, ParamsHelper):
         return self.cur_row_values
 
     @classmethod
-    def row_values(cls, sheet: "xlrd.sheet.Sheet", cur_row, end_col):
-        """get row values"""
-        return sheet.row_values(cur_row, end_colx=end_col)
+    def row_values(cls, sheet, cur_row, end_col):
+        return sheet[cur_row][0:end_col]
 
     @classmethod
     def sheet_cols(cls, sheet):
-        """number of columns on sheet"""
-        return sheet.ncols
+        return len(sheet[0])
 
     def is_empty_row(self):
         """row is empty?"""
@@ -226,34 +197,6 @@ class XlsReader(IXlsReader, ParamsHelper):
             result[col_name] = val
 
         return result
-
-
-class XlsxReader(XlsReader):
-    """xlsx reader"""
-
-    @classmethod
-    def _open_book(cls, file_path):
-        """open book"""
-        return load_workbook(file_path)
-
-    def get_sheet_names(self) -> str:
-        """get sheet names"""
-        return self.book.sheetnames
-
-    def get_sheet_by_name(self, s_name):
-        """get sheet by name"""
-        return self.book[s_name]
-
-    @classmethod
-    def sheet_cols(cls, sheet):
-        return sheet.max_column
-
-    @classmethod
-    def row_values(cls, sheet, cur_row, end_col):
-        values = []
-        for i in range(end_col):
-            values.append(sheet.cell((cur_row + 1), (i + 1)).value)
-        return values
 
 
 class MaxRowsReached(core.CoreExceptionError):
