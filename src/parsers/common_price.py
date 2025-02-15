@@ -15,7 +15,7 @@ from src.parsers.base_parser.nomenclature_correction import get_nomenclature_cor
 from src.parsers.data_provider.vendor_list import VendorListConfigFileError
 from src.parsers.writer.templates.all_templates import all_writer_templates
 from src.parsers.writer.xls_writer import XlsWriter
-from src.parsers.writer.xwlt_driver import XlsxWriterDriverV2
+from src.parsers.writer.xwlt_driver import XlsxWriterDriver
 
 SupplierName = str
 SupplierCode = str
@@ -28,7 +28,7 @@ class CommonPrice:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriverV2):
+    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver

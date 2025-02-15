@@ -8,7 +8,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 openpyxl = "==3.0.10"
-xlsxwriter = "==3.0.3"
 termcolor = "==2.2.0"
 colorama = "==0.4.6"
 aiosqlite = "==0.20.0"
