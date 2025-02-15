@@ -18,7 +18,7 @@ from src.parsers.vendors.mim.mim_1sheet import (
     RowItemMim,
     mim_sheet_1_params,
 )
-from src.parsers.xls_reader import FakeXlsReader
+from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.mim_sheet1 import mim_one_item_result
 from tests.test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests
 from tests.test_parsers.test_vendors.test_parse_poshk import (

@@ -59,7 +59,7 @@ class ForInner(IWriteTemplate):
             "Пошк": "blue",
             "Мим": "#f7d5d2",
             "Запаска (остатки)": "#99706d",
-            "Пионер": "#658c68",
+            "Форточки": "#658c68",
         },
         "set_to_column_index": 0,
     }

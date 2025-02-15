@@ -9,7 +9,7 @@ from typing import List
 from src.parsers.base_parser.base_parser import ParseConfiguration
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.zapaska_rest import ZapaskaRestParser
-from src.parsers.xls_reader import FakeXlsReader
+from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.zapaska import zapaska_2file_result
 
 from .test_parse_zapaska import parser_config

@@ -7,13 +7,13 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-xlrd = "==1.2.0"
 openpyxl = "==3.0.10"
 xlsxwriter = "==3.0.3"
 termcolor = "==2.2.0"
 colorama = "==0.4.6"
 aiosqlite = "==0.20.0"
 yoyo-migrations = "==9.0.0"
+python_calamine = "==0.3.1"
 
 
 [tool.poetry.group.dev.dependencies]

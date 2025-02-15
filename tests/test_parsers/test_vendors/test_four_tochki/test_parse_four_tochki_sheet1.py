@@ -8,11 +8,12 @@ from typing import List
 
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
 from src.parsers.row_item.row_item import RowItem
+from src.parsers.row_item.vendors.row_item_mim import RowItemMim
 from src.parsers.vendors.four_tochki.four_tochki_1sheet import (
     FourTochkiParser1Sheet,
     fourtochki_sheet_1_params,
 )
-from src.parsers.xls_reader import FakeXlsReader
+from src.parsers.fake_xls_reader import FakeXlsReader
 from tests.test_parsers.fixtures.four_tochki_sheet1 import four_tochki_many_item_result, four_tochki_one_item_result
 from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
@@ -64,3 +65,96 @@ def test_replace_diameter():
     assert result[0].price_markup == 7340
     assert result[0].supplier_name == "Форточки"
     assert result[0].percent_markup == 27.17
+
+
+def test_prepare_title_replace_999():
+    """999 -> L"""
+
+    row = RowItemMim(
+        {
+            RowItemMim.__HEIGHT_PERCENT__: "999",
+            RowItemMim.__WIDTH__: "11",
+            RowItemMim.__DIAMETER__: "--20",
+        }
+    )
+
+    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    assert prepared_title == "11L-20"
+
+
+def test_prepare_title_width_two_zero():
+    """10.00-20 Armour TI300 16PR TTF"""
+
+    row = RowItemMim(
+        {
+            RowItemMim.__WIDTH__: 10,
+            RowItemMim.__DIAMETER__: "--20",
+            RowItemMim.__MANUFACTURER_NAME__: "Armour",
+            RowItemMim.__MODEL__: "TI300",
+            RowItemMim.__LAYERING__: "16PR",
+            RowItemMim.__CAMERA_TYPE__: "TTF",
+        }
+    )
+
+    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    assert prepared_title == "10.00-20 Armour TI300 16PR TTF"
+
+
+def test_prepare_title_width_one_zero():
+    """10.0/75-15.3 Forerunner QH602 R-4 12PR TL"""
+
+    row = RowItemMim(
+        {
+            RowItemMim.__WIDTH__: 10,
+            RowItemMim.__HEIGHT_PERCENT__: 75,
+            RowItemMim.__DIAMETER__: "--15.3",
+            RowItemMim.__MANUFACTURER_NAME__: "Forerunner",
+            RowItemMim.__MODEL__: "QH602 R-4",
+            RowItemMim.__LAYERING__: "12PR",
+            RowItemMim.__CAMERA_TYPE__: "TL",
+            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+        }
+    )
+
+    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    assert prepared_title == "10.0/75-15.3 Forerunner QH602 R-4 12PR TL"
+
+
+def test_prepare_title_width_1():
+    """11L-15 Galaxy Rib Implement I-1 12PR TL"""
+
+    row = RowItemMim(
+        {
+            RowItemMim.__WIDTH__: "11",
+            RowItemMim.__HEIGHT_PERCENT__: "999",
+            RowItemMim.__DIAMETER__: "--15",
+            RowItemMim.__MANUFACTURER_NAME__: "Galaxy",
+            RowItemMim.__MODEL__: "Rib Implement I-1",
+            RowItemMim.__LAYERING__: "12PR",
+            RowItemMim.__CAMERA_TYPE__: "TL",
+            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+        }
+    )
+
+    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    assert prepared_title == "11L-15 Galaxy Rib Implement I-1 12PR TL"
+
+
+def test_prepare_title_1():
+    """..."""
+
+    row = RowItemMim(
+        {
+            RowItemMim.__WIDTH__: "12.5",
+            RowItemMim.__HEIGHT_PERCENT__: 80,
+            RowItemMim.__DIAMETER__: "--18",
+            RowItemMim.__MANUFACTURER_NAME__: "Armour",
+            RowItemMim.__MODEL__: "L-5B",
+            RowItemMim.__LAYERING__: "16",
+            RowItemMim.__CAMERA_TYPE__: "TL",
+            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+        }
+    )
+
+    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    assert prepared_title == "12.5/80-18 Armour L-5B 16 TL"

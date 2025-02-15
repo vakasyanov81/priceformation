@@ -11,10 +11,11 @@ from src.core import warn_msg, err_msg, log_msg
 from src.parsers.all_vendors import all_vendor_supplier_info
 from src.parsers.base_parser.base_parser import BaseParser, Parser
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
+from src.parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
 from src.parsers.data_provider.vendor_list import VendorListConfigFileError
 from src.parsers.writer.templates.all_templates import all_writer_templates
 from src.parsers.writer.xls_writer import XlsWriter
-from src.parsers.writer.xwlt_driver import XlsxWriterDriver
+from src.parsers.writer.xwlt_driver import XlsxWriterDriver, XlsxWriterDriverV2
 
 SupplierName = str
 SupplierCode = str
@@ -27,7 +28,7 @@ class CommonPrice:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
+    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriverV2):
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver
@@ -67,13 +68,17 @@ class CommonPrice:
         """get result"""
         return self._result
 
+    def nomenclature_title_correction(self):
+        for item in self._result:
+            item.title = get_nomenclature_corrected_title(item.title)
+
     def write_all_prices(self):
         """
         Make prices for all active templates
         :return:
         """
         # TODO add test
-
+        self.nomenclature_title_correction()
         for write_template in all_writer_templates():
             self.xls_writer(
                 self.write_driver(),
