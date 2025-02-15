@@ -1,0 +1,23 @@
+{
+  "poshk": {
+    "enabled": 0
+  },
+  "zapaska": {
+    "enabled": 0
+  },
+  "mim": {
+    "enabled": 1
+  },
+  "pioner": {
+    "enabled": 1
+  },
+  "four_tochki": {
+    "enabled": 1
+  },
+  "autosnab54_ru": {
+    "enabled": 0
+  },
+  "stk": {
+    "enabled": 0
+  }
+}
