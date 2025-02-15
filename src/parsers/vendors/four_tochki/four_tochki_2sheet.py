@@ -35,7 +35,6 @@ fourtochki_sheet_2_params.columns = {
     13: RowItem.__DISK_TYPE__,
     14: RowItem.__DISK_TYPE_1__,
     15: RowItem.__MAIN_COLOR__,
-
     18: RowItem.__REST_COUNT__,
     19: RowItem.__PRICE_RECOMMENDED__,
     20: RowItem.__PRICE_PURCHASE__,
