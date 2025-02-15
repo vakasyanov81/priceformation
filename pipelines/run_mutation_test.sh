@@ -1,6 +1,6 @@
 #!/bin/bash
 cd ..
 export PYTHONPATH=./
-flake8 /home/huck/petprojects/priceformation/src --select=WPS
+# flake8 [absolute path to src] --select=WPS
 
 # mutmut run
