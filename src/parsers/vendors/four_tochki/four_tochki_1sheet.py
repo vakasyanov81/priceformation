@@ -106,7 +106,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         :param item:
         :return:
         """
-        width = item.width or ""
+        width = (item.width or "").replace(".0", "")
         height_percent = str(item.height_percent or "")
         height_percent = height_percent.replace("999", "L")
         diameter = (item.diameter or "").replace("—", "-")
