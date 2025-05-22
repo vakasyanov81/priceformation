@@ -28,6 +28,29 @@ def four_tochki_one_item_result():
     }
 
 
+def four_tochki_one_item_result_1():
+    """one file, one price row parse result"""
+    return {
+        "file_prices\\four_tochki\\price.xlsx": [
+            {
+                "code": "WHS063592",
+                "manufacturer_name": "СКАД",
+                "model": "Ягуар (КЛ147)",
+                "width": 5.5,
+                "diameter": 14.0,  # .0 -лишнее
+                "slot_count": 4,
+                "pcd1": 98,
+                "et": 38,
+                "central_diameter": 58.6,
+                "color": "Алмаз",
+                "rest_count": 4,
+                "price_recommended": 8261,
+                "price_purchase": 7210,
+            }
+        ]
+    }
+
+
 def four_tochki_invalid_item_result():
     """one file, two price row parse result with invalid one invalid row"""
     return {

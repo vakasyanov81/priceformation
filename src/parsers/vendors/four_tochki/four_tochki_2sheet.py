@@ -66,7 +66,7 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     @classmethod
     def get_prepared_title(cls, item: RowItem):
         width = item.width or ""
-        diameter = item.diameter or ""
+        diameter = (item.diameter or "").replace(".0", "")
         model = item.model or ""
         slot_count = item.slot_count or ""
         pcd1 = item.pcd1 or ""
