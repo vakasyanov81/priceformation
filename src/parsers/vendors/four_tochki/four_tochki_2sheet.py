@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 import dataclasses
 
-from src.parsers.row_item.vendors.row_item_mim import RowItemMim as RowItem
+from src.parsers.row_item.row_item import RowItem
 from .four_tochki_1sheet import supplier_folder_name
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from ... import data_provider

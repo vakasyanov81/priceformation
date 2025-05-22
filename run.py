@@ -11,11 +11,13 @@ import sys
 
 from run_dialog import AnswerResult, ask_action
 from src.core.async_utils import try_call
+from src.core.log_message import print_log
 from src.database.db import close_db
 from src.database.init_db import init_db
 from src.database.nomenclature import save_nomenclature_to_db
 from src.parsers.all_vendors import all_vendors
 from src.parsers.common_price import CommonPrice
+from src.parsers.vendors.zapaska import load_data
 
 
 async def main():
@@ -36,6 +38,8 @@ async def response_processing():
             await try_call(run_make_price_by_supplier)
         case AnswerResult.SAVE_PRICE_TO_DB:
             await try_call(run_save_nomenclature_to_db, _async=True)
+        case AnswerResult.UPDATE_ZAPASKA_DATA:
+            await try_call(run_upload_zapaska_data)
         case AnswerResult.EXIT:
             sys.exit(0)
 
@@ -45,6 +49,12 @@ def run_make_price_by_supplier():
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
     common_price.write_all_prices()
+
+
+def run_upload_zapaska_data():
+    """Load zapaska data from api"""
+    load_data()
+    print_log("*** Данные успешно загружены. ***\n")
 
 
 async def run_save_nomenclature_to_db():

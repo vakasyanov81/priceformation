@@ -9,7 +9,6 @@ from typing import List
 from src.parsers.base_parser.base_parser_config import ParseConfiguration
 from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
-from src.parsers.row_item.vendors.row_item_mim import RowItemMim
 from src.parsers.vendors.four_tochki.four_tochki_1sheet import (
     FourTochkiParser1Sheet,
     fourtochki_sheet_1_params,
@@ -70,11 +69,11 @@ def test_replace_diameter():
 def test_prepare_title_replace_999():
     """999 -> L"""
 
-    row = RowItemMim(
+    row = RowItem(
         {
-            RowItemMim.__HEIGHT_PERCENT__: "999",
-            RowItemMim.__WIDTH__: "11",
-            RowItemMim.__DIAMETER__: "--20",
+            RowItem.__HEIGHT_PERCENT__: "999",
+            RowItem.__WIDTH__: "11",
+            RowItem.__DIAMETER__: "--20",
         }
     )
 
@@ -85,14 +84,14 @@ def test_prepare_title_replace_999():
 def test_prepare_title_width_two_zero():
     """10.00-20 Armour TI300 16PR TTF"""
 
-    row = RowItemMim(
+    row = RowItem(
         {
-            RowItemMim.__WIDTH__: 10,
-            RowItemMim.__DIAMETER__: "--20",
-            RowItemMim.__MANUFACTURER_NAME__: "Armour",
-            RowItemMim.__MODEL__: "TI300",
-            RowItemMim.__LAYERING__: "16PR",
-            RowItemMim.__CAMERA_TYPE__: "TTF",
+            RowItem.__WIDTH__: 10,
+            RowItem.__DIAMETER__: "--20",
+            RowItem.__MANUFACTURER_NAME__: "Armour",
+            RowItem.__MODEL__: "TI300",
+            RowItem.__LAYERING__: "16PR",
+            RowItem.__CAMERA_TYPE__: "TTF",
         }
     )
 
@@ -103,16 +102,16 @@ def test_prepare_title_width_two_zero():
 def test_prepare_title_width_one_zero():
     """10.0/75-15.3 Forerunner QH602 R-4 12PR TL"""
 
-    row = RowItemMim(
+    row = RowItem(
         {
-            RowItemMim.__WIDTH__: 10,
-            RowItemMim.__HEIGHT_PERCENT__: 75,
-            RowItemMim.__DIAMETER__: "--15.3",
-            RowItemMim.__MANUFACTURER_NAME__: "Forerunner",
-            RowItemMim.__MODEL__: "QH602 R-4",
-            RowItemMim.__LAYERING__: "12PR",
-            RowItemMim.__CAMERA_TYPE__: "TL",
-            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+            RowItem.__WIDTH__: 10,
+            RowItem.__HEIGHT_PERCENT__: 75,
+            RowItem.__DIAMETER__: "--15.3",
+            RowItem.__MANUFACTURER_NAME__: "Forerunner",
+            RowItem.__MODEL__: "QH602 R-4",
+            RowItem.__LAYERING__: "12PR",
+            RowItem.__CAMERA_TYPE__: "TL",
+            RowItem.__TIRE_TYPE__: "Спецтехника",
         }
     )
 
@@ -123,16 +122,16 @@ def test_prepare_title_width_one_zero():
 def test_prepare_title_width_1():
     """11L-15 Galaxy Rib Implement I-1 12PR TL"""
 
-    row = RowItemMim(
+    row = RowItem(
         {
-            RowItemMim.__WIDTH__: "11",
-            RowItemMim.__HEIGHT_PERCENT__: "999",
-            RowItemMim.__DIAMETER__: "--15",
-            RowItemMim.__MANUFACTURER_NAME__: "Galaxy",
-            RowItemMim.__MODEL__: "Rib Implement I-1",
-            RowItemMim.__LAYERING__: "12PR",
-            RowItemMim.__CAMERA_TYPE__: "TL",
-            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+            RowItem.__WIDTH__: "11",
+            RowItem.__HEIGHT_PERCENT__: "999",
+            RowItem.__DIAMETER__: "--15",
+            RowItem.__MANUFACTURER_NAME__: "Galaxy",
+            RowItem.__MODEL__: "Rib Implement I-1",
+            RowItem.__LAYERING__: "12PR",
+            RowItem.__CAMERA_TYPE__: "TL",
+            RowItem.__TIRE_TYPE__: "Спецтехника",
         }
     )
 
@@ -143,16 +142,16 @@ def test_prepare_title_width_1():
 def test_prepare_title_1():
     """..."""
 
-    row = RowItemMim(
+    row = RowItem(
         {
-            RowItemMim.__WIDTH__: "12.5",
-            RowItemMim.__HEIGHT_PERCENT__: 80,
-            RowItemMim.__DIAMETER__: "--18",
-            RowItemMim.__MANUFACTURER_NAME__: "Armour",
-            RowItemMim.__MODEL__: "L-5B",
-            RowItemMim.__LAYERING__: "16",
-            RowItemMim.__CAMERA_TYPE__: "TL",
-            RowItemMim.__TIRE_TYPE__: "Спецтехника",
+            RowItem.__WIDTH__: "12.5",
+            RowItem.__HEIGHT_PERCENT__: 80,
+            RowItem.__DIAMETER__: "--18",
+            RowItem.__MANUFACTURER_NAME__: "Armour",
+            RowItem.__MODEL__: "L-5B",
+            RowItem.__LAYERING__: "16",
+            RowItem.__CAMERA_TYPE__: "TL",
+            RowItem.__TIRE_TYPE__: "Спецтехника",
         }
     )
 

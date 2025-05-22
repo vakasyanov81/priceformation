@@ -8,6 +8,7 @@ __author__ = "Kasyanov V.A."
 
 import dataclasses
 
+from src.cfg import init_cfg
 from src.parsers import data_provider
 from src.parsers.base_parser.base_parser import BaseParser
 from src.parsers.base_parser.base_parser_config import (
@@ -20,6 +21,8 @@ from src.parsers.vendors.zapaska_rest import (
     zapaska_rest_config,
     zapaska_rest_params,
 )
+from http.client import HTTPSConnection
+from base64 import b64encode
 
 _SUPPLIER_FOLDER_NAME = "zapaska"
 _SUPPLIER_NAME = "Запаска"
@@ -50,6 +53,41 @@ zapaska_config = BasePriceParseConfigurationParams(
 )
 
 zapaska_config = ParseConfiguration(zapaska_config)
+
+
+# Authorization token: we need to base 64 encode it
+# and then decode it to acsii as python 3 stores it as a byte string
+def basic_auth(username, password):
+    token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    return f"Basic {token}"
+
+
+def get_data(url: str) -> str:
+    api_cfg = mark_up_provider.get_markup_data().get("api")
+    username = api_cfg.get("login")
+    password = api_cfg.get("password")
+
+    # This sets up the https connection
+    connection = HTTPSConnection("ka2.sibzapaska.ru:16500")
+    # then connect
+    headers = {"Authorization": basic_auth(username, password)}
+    connection.request("GET", url, headers=headers)
+    # get the response back
+    res = connection.getresponse()
+    return res.read().decode("utf-8")
+
+
+def save_data(data: str, filename: str):
+    folder = init_cfg().main.folder_file_prices + "/" + zapaska_params.supplier.folder_name
+    root = init_cfg().main.project_root
+    with open(f"{root}/{folder}/{filename}", "w") as file_:
+        file_.write(data)
+
+
+def load_data():
+    # save_data('{"d": 1}', filename="tire.json")
+    save_data(get_data("/API/hs/V2/GetTires"), filename="tire.json")
+    save_data(get_data("/API/hs/V2/GetDisk"), filename="disk.json")
 
 
 class ZapaskaPriceAndRestParser:

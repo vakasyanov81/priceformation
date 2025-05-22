@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 import dataclasses
 
-from src.parsers.row_item.vendors.row_item_mim import RowItemMim
+from src.parsers.row_item.row_item import RowItem
 from .mim_base import MimParserBase, mim_params, supplier_folder_name
 from ... import data_provider
 from ...base_parser.base_parser_config import (
@@ -18,20 +18,20 @@ mim_sheet_1_params = dataclasses.replace(mim_params)
 mim_sheet_1_params.sheet_info = "Вкладка #1"
 mim_sheet_1_params.sheet_indexes = [0]
 mim_sheet_1_params.columns = {
-    0: RowItemMim.__CODE__,
-    1: RowItemMim.__TITLE__,
-    3: RowItemMim.__SEASON__,
-    4: RowItemMim.__MANUFACTURER_NAME__,
-    5: RowItemMim.__MODEL__,
-    6: RowItemMim.__DIAMETER__,
-    7: RowItemMim.__WIDTH__,
-    8: RowItemMim.__PROFILE__,
-    9: RowItemMim.__SPIKE__,
-    10: RowItemMim.__INDEX_VELOCITY__,
-    11: RowItemMim.__INDEX_LOAD__,
-    17: RowItemMim.__REST_COUNT__,
-    19: RowItemMim.__PRICE_PURCHASE__,
-    20: RowItemMim.__PRICE_RECOMMENDED__,
+    0: RowItem.__CODE__,
+    1: RowItem.__TITLE__,
+    3: RowItem.__SEASON__,
+    4: RowItem.__MANUFACTURER_NAME__,
+    5: RowItem.__MODEL__,
+    6: RowItem.__DIAMETER__,
+    7: RowItem.__WIDTH__,
+    8: RowItem.__PROFILE__,
+    9: RowItem.__SPIKE__,
+    10: RowItem.__INDEX_VELOCITY__,
+    11: RowItem.__INDEX_LOAD__,
+    17: RowItem.__REST_COUNT__,
+    19: RowItem.__PRICE_PURCHASE__,
+    20: RowItem.__PRICE_RECOMMENDED__,
 }
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
@@ -66,7 +66,7 @@ class MimParser1Sheet(MimParserBase):
         return "Легковая шина"
 
     @classmethod
-    def get_prepared_title(cls, item: RowItemMim):
+    def get_prepared_title(cls, item: RowItem):
         """get prepared title"""
         width = item.width or ""
         diameter = item.diameter or ""

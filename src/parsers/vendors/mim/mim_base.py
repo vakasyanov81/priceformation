@@ -12,7 +12,7 @@ from src.parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from src.parsers.row_item.vendors.row_item_mim import RowItemMim
+from src.parsers.row_item.row_item import RowItem
 
 mim_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="mim", name="Мим", code="4"),
@@ -22,7 +22,7 @@ mim_params = ParserParams(
     stop_words=[],
     file_templates=["price*.xls", "price*.xlsx"],
     sheet_indexes=[],
-    row_item_adaptor=RowItemMim,
+    row_item_adaptor=RowItem,
 )
 
 supplier_folder_name = mim_params.supplier.folder_name

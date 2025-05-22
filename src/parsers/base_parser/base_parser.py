@@ -87,7 +87,7 @@ class BaseParser(Parser):
     def set_parse_config(self, parse_config: ParseConfiguration):
         self._parse_config = parse_config
 
-    def parse(self):
+    def parse(self) -> List[RowItem]:
         if not self.is_active:
             self.logger.log_disable_status()
             return []
