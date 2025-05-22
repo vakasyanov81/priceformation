@@ -16,7 +16,6 @@ from src.parsers.fake_xls_reader import FakeXlsReader
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.mim.mim_1sheet import (
     MimParser1Sheet,
-    RowItemMim,
     mim_sheet_1_params,
 )
 from tests.test_parsers.fixtures.mim_sheet1 import mim_one_item_result
@@ -61,7 +60,7 @@ def get_fake_parser(parse_result):
 def test_prepare_title(row_elements, prepared_title):
     """check prepare title"""
 
-    item = RowItemMim(
+    item = RowItem(
         {
             "title": "",
             "width": row_elements[0],

@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from src.parsers.base_parser.base_parser import BaseParser, ParserParams
 from src.parsers.base_parser.base_parser_config import ParseParamsSupplier
-from src.parsers.row_item.vendors.row_item_mim import RowItemMim
+from src.parsers.row_item.row_item import RowItem
 
 fourtochki_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="four_tochki", name="Форточки", code="5"),
@@ -16,7 +16,7 @@ fourtochki_params = ParserParams(
     stop_words=[],
     file_templates=["price*.xls", "price*.xlsx"],
     sheet_indexes=[],
-    row_item_adaptor=RowItemMim,
+    row_item_adaptor=RowItem,
 )
 
 

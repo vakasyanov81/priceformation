@@ -10,6 +10,7 @@ class AnswerResult(Enum):
     MAKE_DB_MIGRATION = "MakeDBMigration"
     MAKE_PRICE_BY_SUPPLIER = "MakePriceBySupplier"
     SAVE_PRICE_TO_DB = "SavePriceToDB"
+    UPDATE_ZAPASKA_DATA = "UpdateZapaskaData"
     EXIT = "Exit"
 
 
@@ -19,6 +20,7 @@ def ask_action() -> AnswerResult:
         f"{Colors.BOLD}1 — миграция базы данных \n"
         "2 — сформировать общий прайс по прайсам поставщиков \n"
         "3 — записать номенклатуру поставщика в базу данных \n"
+        "4 — Обновить данные Запаски\n"
         f"q — выход {Colors.END_COLOR}"
     )
     while True:
@@ -32,5 +34,6 @@ AnswerMap = {
     "1": AnswerResult.MAKE_DB_MIGRATION,
     "2": AnswerResult.MAKE_PRICE_BY_SUPPLIER,
     "3": AnswerResult.SAVE_PRICE_TO_DB,
+    "4": AnswerResult.UPDATE_ZAPASKA_DATA,
     "q": AnswerResult.EXIT,
 }
