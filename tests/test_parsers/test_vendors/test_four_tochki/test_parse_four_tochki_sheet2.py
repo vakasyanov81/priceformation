@@ -17,6 +17,7 @@ from src.parsers.vendors.four_tochki.four_tochki_2sheet import (
 from tests.test_parsers.fixtures.four_tochki_sheet2 import (
     four_tochki_one_item_result,
     four_tochki_invalid_item_result,
+    four_tochki_one_item_result_1,
 )
 from tests.test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
@@ -43,6 +44,15 @@ def test_parse():
 
     assert len(result) == 1
     assert result[0].title == "6.5x16 5x114.3 ET45 60.1 MBMF Alcasta M35"
+    assert result[0].type_production == "Диск"
+    assert result[0].price_markup == 8270
+    assert result[0].supplier_name == "Форточки"
+    assert result[0].percent_markup == 14.7
+
+    result: List[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
+
+    assert len(result) == 1
+    assert result[0].title == "5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)"
     assert result[0].type_production == "Диск"
     assert result[0].price_markup == 8270
     assert result[0].supplier_name == "Форточки"
