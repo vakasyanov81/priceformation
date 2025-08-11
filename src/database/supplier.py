@@ -15,6 +15,7 @@ async def get_suppliers():
     return await fetch_all(SQL_GET_ALL_SUPPLIER)
 
 
+# pylint: disable=too-many-class-parents
 class DBStatistic(NamedTuple):
     """database statist"""
 

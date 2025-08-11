@@ -69,6 +69,7 @@ class CommonPrice:
         return self._result
 
     def nomenclature_title_correction(self):
+        """make correct nomenclature title"""
         for item in self._result:
             item.title = get_nomenclature_corrected_title(item.title)
 

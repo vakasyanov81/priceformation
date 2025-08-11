@@ -16,6 +16,7 @@ cfg = init_cfg()
 
 
 async def init_db(drop_database=False):
+    """initialize database"""
     init_db_sync(drop_database)
 
 

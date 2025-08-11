@@ -6,6 +6,10 @@ __author__ = "Kasyanov V.A."
 
 
 class ColumnHelper:
+    """
+    helper for write-column structure
+    """
+
     def __init__(self, col: dict):
         """
         dict with column name and info

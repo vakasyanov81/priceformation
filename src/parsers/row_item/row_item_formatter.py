@@ -5,7 +5,7 @@ row item field format logic
 __author__ = "Kasyanov V.A."
 
 from functools import lru_cache
-from typing import Optional, Union
+from typing import Union
 
 
 def strip_into_str(value: str) -> str:
@@ -64,9 +64,9 @@ def get_sanitized_code(value):
     return get_stripped(value)
 
 
-def get_try_to_int(value: Union[str, float]) -> Optional[Union[int, float]]:
+def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
     """
-    Try Make correct str to int
+    Try Make correct str to int or float
     """
 
     if value is None:
@@ -139,7 +139,7 @@ def int_or_float(_func):
 
     def wrap(_self, *args):
         """wrapper"""
-        return call_wrapper(_self, _func, get_try_to_int, *args)
+        return call_wrapper(_self, _func, get_try_to_int_or_float, *args)
 
     return wrap
 

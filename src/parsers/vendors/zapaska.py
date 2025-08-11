@@ -7,6 +7,8 @@
 __author__ = "Kasyanov V.A."
 
 import dataclasses
+from base64 import b64encode
+from http.client import HTTPSConnection
 
 from src.cfg import init_cfg
 from src.parsers import data_provider
@@ -21,8 +23,6 @@ from src.parsers.vendors.zapaska_rest import (
     zapaska_rest_config,
     zapaska_rest_params,
 )
-from http.client import HTTPSConnection
-from base64 import b64encode
 
 _SUPPLIER_FOLDER_NAME = "zapaska"
 _SUPPLIER_NAME = "Запаска"
@@ -58,11 +58,13 @@ zapaska_config = ParseConfiguration(zapaska_config)
 # Authorization token: we need to base 64 encode it
 # and then decode it to acsii as python 3 stores it as a byte string
 def basic_auth(username, password):
+    """auth"""
     token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
     return f"Basic {token}"
 
 
 def get_data(url: str) -> str:
+    """get data from ulr api"""
     api_cfg = mark_up_provider.get_markup_data().get("api")
     username = api_cfg.get("login")
     password = api_cfg.get("password")
@@ -78,13 +80,15 @@ def get_data(url: str) -> str:
 
 
 def save_data(data: str, filename: str):
+    """save data to file"""
     folder = init_cfg().main.folder_file_prices + "/" + zapaska_params.supplier.folder_name
     root = init_cfg().main.project_root
-    with open(f"{root}/{folder}/{filename}", "w") as file_:
+    with open(f"{root}/{folder}/{filename}", "w", encoding="utf-8") as file_:
         file_.write(data)
 
 
 def load_data():
+    """load (tire / disk) data from file"""
     # save_data('{"d": 1}', filename="tire.json")
     save_data(get_data("/API/hs/V2/GetTires"), filename="tire.json")
     save_data(get_data("/API/hs/V2/GetDisk"), filename="disk.json")
@@ -98,6 +102,7 @@ class ZapaskaPriceAndRestParser:
     _parser = None
 
     def __init__(self, price_config=None):
+        """init"""
         self.price_config = price_config
 
     def get_result(self):
@@ -112,9 +117,11 @@ class ZapaskaPriceAndRestParser:
 
     @classmethod
     def supplier_folder_name(cls):
+        """supplier folder name"""
         return zapaska_params.supplier.folder_name
 
     def parse(self):
+        """get result"""
         return self.get_result()
 
 
@@ -124,4 +131,4 @@ class ZapaskaParser(BaseParser):
     """
 
     def after_process(self):
-        pass
+        """dummy"""

@@ -14,6 +14,8 @@ from src.parsers.row_item.row_item import RowItem
 
 @dataclass
 class ParseParamsSupplier:
+    """suppler params"""
+
     folder_name: str
     name: str
     code: str
@@ -21,6 +23,8 @@ class ParseParamsSupplier:
 
 @dataclass
 class ParserParams:
+    """parser params"""
+
     supplier: ParseParamsSupplier
     start_row: int
     sheet_info: str
