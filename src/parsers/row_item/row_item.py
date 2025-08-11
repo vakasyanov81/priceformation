@@ -51,6 +51,7 @@ class RowItem:
     __DIAMETER__ = "diameter"
     __EXT_DIAMETER__ = "ext_diameter"
     __SLOT_COUNT__ = "slot_count"  # кол-во отверстий
+    __SLOT_DIAMETER__ = "slot_diameter"  # диаметр отверстий
     __US_AFF_DESIGNATION__ = "american_affiliation_designation"  # американское обозначение принадлежности
     __PCD1__ = "pcd1"
     __PCD2__ = "pcd2"
@@ -348,6 +349,12 @@ class RowItem:
         return self._item.get(self.__EXT_DIAMETER__)
 
     @property
+    @row_format.int_or_float
+    def slot_diameter(self):
+        """slot diameter"""
+        return self._item.get(self.__SLOT_DIAMETER__)
+
+    @property
     @row_format.integer
     def slot_count(self):
         """slot count"""
@@ -366,7 +373,7 @@ class RowItem:
         return self._item.get(self.__PCD1__)
 
     @property
-    @row_format.integer
+    @row_format.int_or_float
     def eet(self):
         """Вылет диска"""
         return self._item.get(self.__ET__)

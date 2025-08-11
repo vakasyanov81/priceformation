@@ -22,7 +22,8 @@ from src.parsers.vendors.mim.mim_3sheet import MimParser3Sheet, mim_sheet_3_conf
 from src.parsers.vendors.pioner import BaseParser, PionerParser, pioner_config
 from src.parsers.vendors.poshk import PoshkParser, poshk_config
 from src.parsers.vendors.stk import STKParser, stk_config
-from src.parsers.vendors.zapaska import ZapaskaPriceAndRestParser, zapaska_config
+from src.parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_config
+from src.parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_config
 
 SupplierName = str
 SupplierCode = str
@@ -38,7 +39,8 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Type[ParseConfiguration]] | No
         (FourTochkiParser2Sheet, fourtochki_sheet_2_config),
         (PionerParser, pioner_config),
         (PoshkParser, poshk_config),
-        (ZapaskaPriceAndRestParser, zapaska_config),
+        (ZapaskaDiskJSON, zapaska_config),
+        (ZapaskaTireJSON, zapaska_tire_config),
         (Autosnab54Parser, autosnab_config),
         (STKParser, stk_config),
     ]

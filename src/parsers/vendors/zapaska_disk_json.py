@@ -28,8 +28,11 @@ zapaska_params = ParserParams(
         "rest": RowItem.__REST_COUNT__,
         "price": RowItem.__PRICE_PURCHASE__,
         "retail": RowItem.__PRICE_RECOMMENDED__,
-        "diam_center": RowItem.__DIAMETER__,
+        "diam_center": RowItem.__CENTRAL_DIAMETER__,
+        "holes": RowItem.__SLOT_COUNT__,
+        "diam_holes": RowItem.__SLOT_DIAMETER__,
         "ET": RowItem.__ET__,
+        "brand": RowItem.__MANUFACTURER_NAME__,
     },
     stop_words=[],
     file_templates=["disk.json"],
@@ -99,18 +102,6 @@ class ZapaskaDiskJSON(BaseParser):
             self.make_price_markup(item)
             self.skip_by_min_rest(item)
 
-        if self.not_matched_position:
-            warn_msg(
-                f"Всего несопоставленных позиций: {len(self.not_matched_position)}",
-                need_print_log=True,
-            )
-            warn_msg(
-                "Полный перечень несопоставленных позиций можно посмотреть в логах.",
-                need_print_log=True,
-            )
-            for title in self.not_matched_position:
-                warn_msg(title)
-
         return count_processed
 
     def set_rest_and_price_opt(self, rest_result):
@@ -135,14 +126,15 @@ class ZapaskaDiskJSON(BaseParser):
         diameter = item.diameter or ""
         model = item.model or ""
         slot_count = item.slot_count or ""
-        pcd1 = item.pcd1 or ""
         dia = item.central_diameter or ""
+        slot_diameter = item.slot_diameter or ""
         color = item.color or ""
         _et = item.eet or ""
+        brand = item.brand or ""
         mark = (item.manufacturer or "").lower().capitalize()
 
         # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{width}x{diameter} {slot_count}x{pcd1} ET{_et} {dia} {color} {mark} {model}"
+        title = f"{brand} {model} {width}*{diameter} {slot_count}*{slot_diameter} ET{_et} D{dia} {color} {mark}"
 
         # Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF
         # brand model width * diameter holes * diam_holes ET{et} D{diam_center} color
