@@ -18,9 +18,9 @@ from tests.test_parsers.fixtures.pioner import (
     pioner_one_item_result,
     pioner_one_item_result_with_categories,
 )
-from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
+from tests.test_parsers.test_vendors.parse_config import make_parse_configuration, PionerMarkupRulesProviderForTests
 
-parser_config = make_parse_configuration(pioner_params)
+parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests)
 
 
 def get_fake_parser(parse_result):
@@ -45,9 +45,9 @@ class TestParsePioner:
 
         assert len(result) == 1
         assert result[0].title == "Автокамера 14.00-24"
-        assert result[0].price_markup == 2290
+        assert result[0].price_markup == 2310
         assert result[0].supplier_name == "Пионер"
-        assert result[0].percent_markup == 6.82
+        assert result[0].percent_markup == 5
 
     def test_parse_brand(self):
         """check all field for one price-row"""
@@ -91,7 +91,13 @@ class TestParsePioner:
 
     @pytest.mark.parametrize(
         "params",
-        [{"price": 1000, "price_with_markup": 1040, "category": "автошины xxx"}],
+        [
+            {"price": 1000, "price_with_markup": 1200, "category": "автошины xxx"},
+            {"price": 1500, "price_with_markup": 1770, "category": "автошины xxx"},
+            {"price": 6000, "price_with_markup": 6730, "category": "автошины xxx"},
+            {"price": 20000, "price_with_markup": 21400, "category": "автошины xxx"},
+            {"price": 150000, "price_with_markup": 157500, "category": "автошины xxx"},
+        ],
     )
     def test_markup(self, params):
         """test markup"""
