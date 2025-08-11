@@ -52,6 +52,7 @@ class PoshkParser(BaseParser):
     """
 
     def process(self):
+        """process price parse"""
         res = super().process()
         for item in self.result:
             self.add_price_markup(item)

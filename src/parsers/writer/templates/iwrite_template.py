@@ -6,6 +6,8 @@ __author__ = "Kasyanov V.A."
 
 
 class IWriteTemplate:
+    """interface for writing template"""
+
     __EMPTY_COLUMN__ = "empty_column"
 
     """ write template interface """

@@ -1,3 +1,6 @@
+"""fake xls reader"""
+
+
 class FakeXlsReader:
     """fake xls reader"""
 

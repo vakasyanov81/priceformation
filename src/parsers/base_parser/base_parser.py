@@ -30,19 +30,17 @@ TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
 
 class Parser(Protocol):
+    """parser protocol"""
 
     @classmethod
     def supplier_folder_name(cls) -> str:
-        pass
+        """supplier folder name"""
 
-    @classmethod
-    def get_result(cls) -> List[RowItem]:
+    def get_result(self) -> List[RowItem]:
         """get result"""
-        pass
 
     def parse(self) -> List[RowItem]:
         """get result"""
-        pass
 
 
 class BaseParser(Parser):
@@ -115,7 +113,7 @@ class BaseParser(Parser):
             res = self.to_row_items(self.raw_parse(_file))
             result_statistic += len(res or [])
             self.result += res
-        self.remove_without_price_purchase_and_check_valid_title()
+        self.remove_wo_price_purchase_and_check_title()
         self.result = self.prepare(self.result)
         return result_statistic
 
@@ -194,7 +192,7 @@ class BaseParser(Parser):
 
         self.result = result
 
-    def remove_without_price_purchase_and_check_valid_title(self):
+    def remove_wo_price_purchase_and_check_title(self):
         """...."""
         result = []
         for item in self.get_result():
@@ -263,10 +261,12 @@ class BaseParser(Parser):
 
     @classmethod
     def round_price(cls, price_value) -> float:
+        """rounding to cents"""
         return math.ceil(price_value / 10) * 10
 
     @classmethod
     def is_category_row(cls, item):
+        """is category row?"""
         if item.title and not item.price_opt:
             return True
         return False
@@ -274,29 +274,36 @@ class BaseParser(Parser):
     @classmethod
     @lru_cache()
     def calc_percent(cls, price_sale, price_purchase):
+        """calc margin percentage"""
         return (price_sale - price_purchase) / price_purchase
 
     @lru_cache()
     def recommended_percent_markup(self, item) -> float:
+        """calculate recommended percent markup"""
         price_recommended = item.price_recommended or 0
         price_opt = item.price_opt or 0
         return self.calc_percent(price_recommended, price_opt) if price_recommended else 0
 
     def is_small_recommended_percent(self, item) -> bool:
+        """absolute percent markup is small?"""
         return self.recommended_percent_markup(item) < self.markup_rules().min_recommended_percent_markup
 
     def is_big_recommended_percent(self, item) -> bool:
+        """recommended supplier markup percent is big?"""
         if not self.markup_rules().max_recommended_percent_markup:
             return False
         return self.recommended_percent_markup(item) > self.markup_rules().max_recommended_percent_markup
 
     def is_small_absolute_markup(self, selling_price, purchase_price) -> bool:
+        """absolute markup is small?"""
         return selling_price - purchase_price < self.markup_rules().absolute_markup_rules.min_absolute_markup
 
     def get_price_with_absolute_rule_markup(self, price_opt) -> float:
+        """absolute markup value"""
         return price_opt * self.markup_rules().absolute_markup_rules.markup_percent
 
     def add_price_markup(self, item: RowItem):
+        """calculate and fill price_markup field"""
         price = item.price_recommended or 0
         price_opt = item.price_opt or 0
 
@@ -314,15 +321,18 @@ class BaseParser(Parser):
     @classmethod
     @lru_cache()
     def get_markup(cls, price, percent):
+        """get price with absolute markup"""
         return price * (1 + percent)
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
+        """get vendor configuration"""
         return self._parse_config.all_vendor_config().get(self.parser_params().supplier.folder_name) or VendorParams(
             enabled=0
         )
 
     @classmethod
     def prepare_title(cls, title: str):
+        """prepare title"""
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
         return " ".join(chunks)
@@ -333,12 +343,12 @@ class BaseParser(Parser):
 
     @classmethod
     def strip_chunks_title(cls, chunks: list):
-        # [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]
+        """# [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]"""
         return [chunk.strip() for chunk in chunks if chunk.strip()]
 
     @classmethod
     def strip_words_in_title(cls, title: str):
-        # " 385/65   R22.5..." -> "385/65 R22.5..."
+        """ " 385/65   R22.5..." -> "385/65 R22.5..." """
         _title = (title or "").strip()
         if not _title:
             return title
@@ -364,6 +374,7 @@ class BaseParser(Parser):
 
 
 def get_file_prices(parser: TBaseParser):
+    """get file prices"""
     _list_files = []
     cfg = init_cfg()
     for f_tmp in parser.parser_params().file_templates:

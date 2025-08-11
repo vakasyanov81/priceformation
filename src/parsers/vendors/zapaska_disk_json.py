@@ -7,7 +7,6 @@ __author__ = "Kasyanov V.A."
 import json
 from typing import List, Optional, Tuple
 
-from src.core.log_message import warn_msg
 from src.parsers import data_provider
 from src.parsers.base_parser.base_parser import BaseParser
 from src.parsers.base_parser.base_parser_config import (
@@ -73,6 +72,7 @@ class ZapaskaDiskJSON(BaseParser):
         return self.price_mrp_result
 
     def raw_parse(self, _file: str) -> List[dict]:
+        """raw parse"""
         with open(_file, "r", encoding="utf-8") as file_:
             data = file_.read()
         data = json.loads(data)
@@ -81,6 +81,7 @@ class ZapaskaDiskJSON(BaseParser):
 
     @classmethod
     def rename_fields(cls, rows: list[dict]):
+        """rename fields"""
         columns = zapaska_params.columns
         for row in rows:
             for column_json, column_price in columns.items():
@@ -122,6 +123,7 @@ class ZapaskaDiskJSON(BaseParser):
 
     @classmethod
     def get_prepared_title(cls, item: RowItem):
+        """get prepared title"""
         width = item.width or ""
         diameter = item.diameter or ""
         model = item.model or ""

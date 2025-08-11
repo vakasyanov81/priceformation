@@ -59,6 +59,7 @@ class PionerParser(BaseParser):
     current_category_first_chunk = None
 
     def process(self):
+        """process parse"""
         res = super().process()
         for item in self.result:
             self.skip_by_min_rest(item)
@@ -83,6 +84,7 @@ class PionerParser(BaseParser):
         item.percent_markup = markup_percent * 100
 
     def skip_by_min_rest(self, item: RowItem):
+        """skip by min rest"""
         self._set_current_category(item)
         self.set_current_category(item)
         if self.is_skipped_item():
@@ -142,9 +144,11 @@ class PionerParser(BaseParser):
 
         return cur_category_name
 
-    def is_skipped_item(self):
+    def is_skipped_item(self) -> bool:
+        """skip row by category"""
         if "прочие" in (self.current_category or "").lower():
             return True
+        return False
 
     @classmethod
     def get_item_rest(cls, item):

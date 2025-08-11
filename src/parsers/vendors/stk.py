@@ -50,6 +50,7 @@ class STKParser(BaseParser):
     """
 
     def process(self):
+        """process price parse"""
         res = super().process()
         for item in self.result:
             self.skip_by_min_rest(item)

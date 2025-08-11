@@ -7,6 +7,7 @@ __author__ = "Kasyanov V.A."
 from typing import NamedTuple
 
 
+# pylint: disable=too-many-class-parents
 class DBConfig(NamedTuple):
     """database configuration container"""
 
