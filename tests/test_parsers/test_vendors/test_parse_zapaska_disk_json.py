@@ -6,8 +6,6 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-import pytest
-
 from src.parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
@@ -32,18 +30,16 @@ class TestParseZapaskaDiskJSON:
     tests for Poshk vendor after raw-parser process
     """
 
-    def _test_parse(self):
+    def test_parse(self):
         """check all field for one price-row"""
 
-        result: List[RowItem] = get_fake_parser(
-            ["/home/huck/petprojects/priceformation/tests/test_parsers/fixtures/zapaska_disk.json"]
-        ).parse()
+        result: List[RowItem] = get_fake_parser(["../fixtures/zapaska_disk.json"]).parse()
 
         res = result[0]
 
         assert len(result) == 1
         assert res.title == "Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF"
-        assert res.price_markup == 4900
-        assert res.price_recommended == 4201
-        assert res.supplier_name == "Запаска (остатки)"
-        assert res.percent_markup == 22.12
+        assert res.price_markup == 28750.0
+        assert res.price_recommended == 29500.0
+        assert res.supplier_name == "Запаска (диски)"
+        assert res.percent_markup == 12.02

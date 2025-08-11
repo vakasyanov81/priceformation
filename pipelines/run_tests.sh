@@ -2,4 +2,4 @@
 cd ..
 export PYTHONPATH=./
 # poetry shell
-poetry run pytest ./tests
+poetry run pytest ./tests --verbose --lf --maxfail=3
