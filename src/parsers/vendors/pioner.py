@@ -36,7 +36,6 @@ pioner_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(pioner_params.supplier.folder_name)
 
 pioner_config = BasePriceParseConfigurationParams(
@@ -71,6 +70,17 @@ class PionerParser(BaseParser):
             ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(item)
 
         return res
+
+    def add_price_markup(self, item):
+        """
+        Добавить наценку
+        """
+
+        price = item.price_opt
+        markup_percent = self.get_markup_percent(price)
+        price = (markup_percent + 1) * price
+        item.price_markup = self.round_price(price)
+        item.percent_markup = markup_percent * 100
 
     def skip_by_min_rest(self, item: RowItem):
         self._set_current_category(item)
@@ -142,12 +152,3 @@ class PionerParser(BaseParser):
         rest = item.rest_count or 0
         reserve = item.reserve_count or 0
         return rest - reserve
-
-    def add_price_markup(self, item):
-        """
-        Добавить наценку
-        """
-
-        if not item.price_opt:
-            return
-        item.price_markup = self.round_price(item.price_opt * 1.04)
