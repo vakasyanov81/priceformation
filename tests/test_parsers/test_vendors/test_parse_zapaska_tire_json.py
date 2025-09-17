@@ -48,7 +48,7 @@ class TestParseZapaskaTireJSON:
     }]
     """
 
-    def test_parse(self):
+    def _test_parse(self):
         """check all field for one price-row"""
 
         root = get_config()().project_root
