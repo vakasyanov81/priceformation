@@ -113,6 +113,10 @@ class PionerParser(BaseParser):
 
         title_chunks = title.split(" ")
 
+        ttl = title.lower()
+        if make_m_name(m_name).lower() in ttl:
+            return
+
         title_chunks[0] = f"{title_chunks[0]} {make_m_name(m_name)}"
 
         item.title = " ".join(title_chunks)
