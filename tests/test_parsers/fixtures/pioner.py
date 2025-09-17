@@ -28,7 +28,7 @@ def pioner_one_item_result_with_categories():
             {"title": "Автошины"},
             {"title": "Автошины TRIANGLE"},
             {
-                "title": "Автокамера 14.00-24",
+                "title": "185/75R16C Triangle TR646 104/102Q 8PR TL",
                 "price_purchase": 2200.0,
                 "price_recommended": 2350.0,
                 "rest_count": 20.0,

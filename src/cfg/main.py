@@ -18,6 +18,7 @@ __FILE_PRICES_RESULT__ = "result"
 __VENDOR_LIST_FILE_NAME__ = "vendor_list.json"
 __MARKUP_RULES_FILE_NAME__ = "markup_rules.json"
 __MANUFACTURER_ALIASES_FILE_NAME__ = "manufacturer_aliases.json"
+__TITLE_ALIASES_FILE_NAME__ = "title_aliases.json"
 __BLACK_LIST_FILE_NAME__ = "black_list"
 __STOP_WORDS_FILE_NAME__ = "stop_words"
 
@@ -72,6 +73,11 @@ class MainCfg:
         return __MANUFACTURER_ALIASES_FILE_NAME__
 
     @property
+    def title_aliases_file_name(self):
+        """..."""
+        return __TITLE_ALIASES_FILE_NAME__
+
+    @property
     def user_config_folder_path(self):
         """..."""
         return __PROJECT_ROOT__ + os.sep + self.user_config_folder_name + os.sep
@@ -80,6 +86,11 @@ class MainCfg:
     def manufacturer_aliases_file_path(self):
         """..."""
         return self.user_config_folder_path + self.manufacturer_aliases_file_name
+
+    @property
+    def title_aliases_file_path(self):
+        """..."""
+        return self.user_config_folder_path + self.title_aliases_file_name
 
     @property
     def markup_rules_file_path(self):

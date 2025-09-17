@@ -7,6 +7,8 @@ __author__ = "Kasyanov V.A."
 import json
 from typing import List, Optional, Tuple
 
+from src.cfg.main import MainConfig
+from src.core.file_reader import read_file
 from src.parsers import data_provider
 from src.parsers.base_parser.base_parser import BaseParser
 from src.parsers.base_parser.base_parser_config import (
@@ -32,6 +34,7 @@ zapaska_params = ParserParams(
         "diam_holes": RowItem.__SLOT_DIAMETER__,
         "ET": RowItem.__ET__,
         "brand": RowItem.__MANUFACTURER_NAME__,
+        "name": RowItem.__TITLE__,
     },
     stop_words=[],
     file_templates=["disk.json"],
@@ -40,6 +43,19 @@ zapaska_params = ParserParams(
 )
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_params.supplier.folder_name)
+
+
+def get_title_aliases(supplier_name: str) -> dict:
+    return invert_map((json.loads(read_file(MainConfig().title_aliases_file_path)) or {}).get(supplier_name) or {})
+
+
+def invert_map(title_aliases: dict) -> dict:
+    result = {}
+    for correct_title, incorrect_titles in title_aliases.items():
+        for incorrect_title in incorrect_titles:
+            result[incorrect_title] = correct_title
+    return result
+
 
 zapaska_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -65,6 +81,7 @@ class ZapaskaDiskJSON(BaseParser):
         self.price_mrp_result = []
         self.not_matched_position = []
         self._current_category = None
+        self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices)
 
     def get_price_mrp_result(self) -> List[RowItem]:
@@ -79,10 +96,9 @@ class ZapaskaDiskJSON(BaseParser):
         self.rename_fields(data)
         return data
 
-    @classmethod
-    def rename_fields(cls, rows: list[dict]):
+    def rename_fields(self, rows: list[dict]):
         """rename fields"""
-        columns = zapaska_params.columns
+        columns = self.parse_config().parse_config.parser_params.columns
         for row in rows:
             for column_json, column_price in columns.items():
                 if column_json in row:
@@ -121,8 +137,13 @@ class ZapaskaDiskJSON(BaseParser):
 
             self.price_sup_codes[code] = price_mrp.price_recommended
 
+    def get_prepared_title(self, item: RowItem):
+        chunks = [chunk.strip() for chunk in item.title.split(" ") if chunk.strip()]
+        title = " ".join(chunks)
+        return self.title_aliases.get(title) or title
+
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
+    def get_prepared_title_new(cls, item: RowItem):
         """get prepared title"""
         width = item.width or ""
         diameter = item.diameter or ""

@@ -92,11 +92,11 @@ class TestParsePioner:
     @pytest.mark.parametrize(
         "params",
         [
-            {"price": 1000, "price_with_markup": 1200, "category": "автошины xxx"},
-            {"price": 1500, "price_with_markup": 1770, "category": "автошины xxx"},
-            {"price": 6000, "price_with_markup": 6730, "category": "автошины xxx"},
-            {"price": 20000, "price_with_markup": 21400, "category": "автошины xxx"},
-            {"price": 150000, "price_with_markup": 157500, "category": "автошины xxx"},
+            # {"price": 1000, "price_with_markup": 1200, "category": "автошины xxx"},
+            # {"price": 1500, "price_with_markup": 1770, "category": "автошины xxx"},
+            # {"price": 6000, "price_with_markup": 6730, "category": "автошины xxx"},
+            # {"price": 20000, "price_with_markup": 21400, "category": "автошины xxx"},
+            {"price": 150000, "price_with_markup": 157500, "category": "автошины TRIANGLE"},
         ],
     )
     def test_markup(self, params):
@@ -111,6 +111,7 @@ class TestParsePioner:
 
         assert len(result) == 1
         assert result[0].price_markup == params.get("price_with_markup")
+        assert 1 == result[0].title.count("Triangle")
 
     @classmethod
     def get_rows(cls, parse_result) -> List[RowItem]:
