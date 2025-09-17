@@ -228,9 +228,8 @@ class BaseParser(Parser):
     def get_prepared_title(cls, item):
         return item.title
 
-    @classmethod
-    def set_prepared_title(cls, item: RowItem) -> bool:
-        prepared_title = cls.get_prepared_title(item)
+    def set_prepared_title(self, item: RowItem) -> bool:
+        prepared_title = self.get_prepared_title(item)
         title_is_prepared = item.title == prepared_title
         item.title = prepared_title or item.title
         return title_is_prepared

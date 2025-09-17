@@ -28,6 +28,10 @@ zapaska_tire_params = ParserParams(
         "holes": RowItem.__SLOT_COUNT__,
         "diam_holes": RowItem.__SLOT_DIAMETER__,
         "ET": RowItem.__ET__,
+        "height": RowItem.__HEIGHT_PERCENT__,
+        "load_index": RowItem.__INDEX_LOAD__,
+        "speed_index": RowItem.__INDEX_VELOCITY__,
+        "name": RowItem.__TITLE__,
     },
     stop_words=[],
     file_templates=["tire.json"],
@@ -55,21 +59,63 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
     """
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
-        width = item.width or ""
-        diameter = item.diameter or ""
+    def get_prepared_title_new(cls, item: RowItem):
+        width = (item.width or "").replace(".0", "")
+        height_percent = str(item.height_percent or "")
+        height_percent = height_percent.replace("999", "L")
+        diameter = (item.diameter or "").replace("—", "-")
+        # need for 4tochki vendor
+        diameter = str(diameter).replace("R", "")
+        velocity = item.index_velocity or ""
+        load = item.index_load or ""
         model = item.model or ""
-        slot_count = item.slot_count or ""
-        dia = item.central_diameter or ""
-        slot_diameter = item.slot_diameter or ""
-        color = item.color or ""
-        _et = item.eet or ""
         brand = item.brand or ""
+        ext_diameter = item.ext_diameter or ""
+        us_aff_design = item.us_aff_design or ""
         mark = (item.manufacturer or "").lower().capitalize()
+        layering = item.layering or ""
+        camera_type = item.camera_type or ""
+        construct = "R"
+        if "-" in diameter:
+            construct = "-"
+            diameter = diameter.replace("-", "")
 
-        # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{brand} {model} {width}*{diameter} {slot_count}*{slot_diameter} ET{_et} D{dia} {color} {mark}"
+        # 205/55R16 BFGoodrich Advantage 94W
+        # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
+        width_postfix = ""
+        if cls.is_truck_tire(item):
+            width_postfix = ".00"
+        if diameter == "22.5" or height_percent:
+            width_postfix = ""
+        if cls.is_truck_tire(item) and diameter == "16":
+            width_postfix = ""
+        if width == "10" and diameter == "20":
+            width_postfix = ".00"
 
-        # Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF
-        # brand model width * diameter holes * diam_holes ET{et} D{diam_center} color
-        return title
+        if cls.is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
+            width_postfix = ".0"
+
+        if height_percent == "L":
+            width_postfix = height_percent
+
+        if height_percent and height_percent != "L":
+            height_percent = f"/{height_percent}"
+        else:
+            height_percent = ""
+
+        construct_diameter = f"{construct}{diameter}"
+        construct_diameter = construct_diameter.replace("RZ", "ZR")
+
+        if cls.is_truck_tire(item):
+            title = (
+                f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {brand} {model} {load}{velocity}"
+            )
+        elif ext_diameter:
+            title = f"{ext_diameter}x{width}{construct_diameter} {mark} {brand} {model} {load} {us_aff_design}"
+        else:
+            title = (
+                f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {brand} {model} {layering}"
+                f" {camera_type} {load}{velocity}"
+            )
+
+        return title.strip()
