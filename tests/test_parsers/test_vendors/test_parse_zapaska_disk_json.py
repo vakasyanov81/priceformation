@@ -31,7 +31,7 @@ class TestParseZapaskaDiskJSON:
     tests for Poshk vendor after raw-parser process
     """
 
-    def _test_parse(self):
+    def test_parse(self):
         """check all field for one price-row"""
 
         root = get_config()().project_root

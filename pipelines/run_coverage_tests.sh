@@ -2,4 +2,4 @@
 cd ..
 export PYTHONPATH=./
 # poetry shell
-coverage run --branch -m pytest ./tests  --cov-report term-missing:skip-covered --cov-config=./.coveragerc
+poetry run pytest --cov ./ ./tests  --cov-report term-missing:skip-covered --cov-config=./.coveragerc
