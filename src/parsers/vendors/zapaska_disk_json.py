@@ -46,7 +46,10 @@ mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_param
 
 
 def get_title_aliases(supplier_name: str) -> dict:
-    return invert_map((json.loads(read_file(MainConfig().title_aliases_file_path)) or {}).get(supplier_name) or {})
+    try:
+        return invert_map((json.loads(read_file(MainConfig().title_aliases_file_path)) or {}).get(supplier_name) or {})
+    except FileNotFoundError:
+        return {}
 
 
 def invert_map(title_aliases: dict) -> dict:
