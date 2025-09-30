@@ -32,6 +32,7 @@ zapaska_tire_params = ParserParams(
         "load_index": RowItem.__INDEX_LOAD__,
         "speed_index": RowItem.__INDEX_VELOCITY__,
         "name": RowItem.__TITLE__,
+        "category": RowItem.__TYPE_PRODUCTION__,
     },
     stop_words=[],
     file_templates=["tire.json"],
@@ -58,8 +59,11 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
     Parser rest and price opt for zapaska vendor
     """
 
+    _type_production = "Шины"
+
     @classmethod
     def get_prepared_title_new(cls, item: RowItem):
+        """get prepared title"""
         width = (item.width or "").replace(".0", "")
         height_percent = str(item.height_percent or "")
         height_percent = height_percent.replace("999", "L")
@@ -108,14 +112,14 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
         if cls.is_truck_tire(item):
             title = (
-                f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {brand} {model} {load}{velocity}"
+                f"{width}{width_postfix}{height_percent}{construct_diameter} {brand} {mark} {model} {load}{velocity}"
             )
         elif ext_diameter:
-            title = f"{ext_diameter}x{width}{construct_diameter} {mark} {brand} {model} {load} {us_aff_design}"
+            title = f"{ext_diameter}x{width}{construct_diameter} {brand} {mark} {model} {load} {us_aff_design}"
         else:
-            title = (
-                f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {brand} {model} {layering}"
-                f" {camera_type} {load}{velocity}"
-            )
+            title = f"{width}{width_postfix}{height_percent}{construct_diameter} {brand} {mark} {model} {layering} {camera_type} {load}{velocity}"
 
         return title.strip()
+
+    def get_type_production(self, item: RowItem):
+        return item.type_production
