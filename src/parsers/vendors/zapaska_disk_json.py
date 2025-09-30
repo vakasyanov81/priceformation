@@ -35,6 +35,7 @@ zapaska_params = ParserParams(
         "ET": RowItem.__ET__,
         "brand": RowItem.__MANUFACTURER_NAME__,
         "name": RowItem.__TITLE__,
+        "category": RowItem.__TYPE_PRODUCTION__,
     },
     stop_words=[],
     file_templates=["disk.json"],
@@ -77,6 +78,8 @@ class ZapaskaDiskJSON(BaseParser):
     Parser rest and price opt for zapaska vendor
     """
 
+    _type_production = "Диск"
+
     def __init__(self, parse_config, file_prices: list = None):
         """init"""
         self.price_sup_codes = {}
@@ -113,16 +116,15 @@ class ZapaskaDiskJSON(BaseParser):
         self.prepare_prices_mrp()
 
         for item in self.result:
-            if self.is_category_row(item):
-                current_category, _ = self._category_finder.find(item)
-                self._current_category = current_category or self._current_category
-            else:
-                item.type_production = self._current_category
-
             self.make_price_markup(item)
             self.skip_by_min_rest(item)
-
+            item.type_production = self.get_type_production(item)
+            if not item.type_production:
+                item.rest_count = 0
         return count_processed
+
+    def get_type_production(self, item: RowItem):
+        return self._type_production
 
     def set_rest_and_price_opt(self, rest_result):
         """get parse result for ZapaskaRest"""
