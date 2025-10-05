@@ -136,7 +136,7 @@ class BaseParser(Parser):
     def parser_params(self) -> ParserParams:
         return self.parse_config().parse_config.parser_params
 
-    def prepare(self, items):
+    def prepare(self, items: list[RowItem]):
         result = []
         start_row = self._parse_config.parse_config.parser_params.start_row
         for row_id, item in enumerate(items, start=start_row):
@@ -160,6 +160,7 @@ class BaseParser(Parser):
 
             item.supplier_name = self.parser_params().supplier.name
             item.spike = self.get_spike_title(item)
+            item.season = self.replace_season(item)
             result.append(item)
 
         return result
@@ -191,6 +192,11 @@ class BaseParser(Parser):
             result.append(item)
 
         self.result = result
+
+    @classmethod
+    def replace_season(cls, item: RowItem) -> str | None:
+        replaced_seasons = {"зима": "Зимняя", "лето": "Летняя"}
+        return replaced_seasons.get(item.season.lower()) or item.season
 
     def remove_wo_price_purchase_and_check_title(self):
         """...."""
