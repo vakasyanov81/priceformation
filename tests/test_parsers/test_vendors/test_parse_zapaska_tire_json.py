@@ -64,3 +64,4 @@ class TestParseZapaskaTireJSON:
         assert res.price_recommended == 24670.0
         assert res.supplier_name == "Запаска (шины)"
         assert res.percent_markup == 12.04
+        assert res.season == "Летняя"
