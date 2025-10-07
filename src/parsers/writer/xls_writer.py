@@ -30,6 +30,7 @@ class XlsWriter:
         self.driver.init_workbook(self.__FOLDER__, self.get_file_name())
         self.driver.add_sheet("price")
         self.data = parse_result
+        self.driver.set_column_format(self.template.get_columns_format())
         self.write()
 
     def create_folder(self):
