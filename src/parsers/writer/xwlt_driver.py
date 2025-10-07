@@ -51,6 +51,14 @@ class XlsxWriterDriver(IXlsDriver):
         for j, name in enumerate(names):
             self.write(0, j, name, style=Font(bold=True))
 
+    def set_column_format(self, column_format: dict[int, str]):
+        """
+        set column format
+        :param column_format: dict[column_index, '@']
+        """
+        for index, c_format in column_format.items():
+            self.work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
+
     def write(self, i, j, _value, style=None, _color: str = None):
         """write"""
         i += self.row_index_at
@@ -73,26 +81,20 @@ class XlsxWriterDriver(IXlsDriver):
         self.get_workbook().save(self._file_name)
         self.get_workbook().close()
 
+    @classmethod
+    def number_to_excel_column(cls, number: int) -> str:
+        """
+        Конвертирует номер колонки в символьное обозначение Excel
+        1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, и т.д.
+        """
+        result = ""
+        while number > 0:
+            number, remainder = divmod(number - 1, 26)
+            result = chr(65 + remainder) + result
+        return result
+
     def set_auto_width(self):
         """set auto width by content"""
-        # TODO: fix it
-        map_ = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
-            7: "G",
-            8: "H",
-            9: "I",
-            10: "J",
-            11: "K",
-            12: "L",
-            13: "M",
-            14: "N",
-            15: "O",
-            16: "P",
-        }
+
         for col_index, max_len in self.col_max_length.items():
-            self.work_sheet.column_dimensions[map_.get(col_index)].width = max_len + 4
+            self.work_sheet.column_dimensions[self.number_to_excel_column(col_index)].width = max_len + 4

@@ -71,3 +71,8 @@ class ColumnHelper:
     def skip(self) -> bool:
         """if True, then skip column"""
         return bool(self.column.get("skip"))
+
+    @property
+    def format(self):
+        """default value"""
+        return self.column.get("format")

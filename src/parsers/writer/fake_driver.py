@@ -46,6 +46,13 @@ class FakeXlwtDriver(IXlsDriver):
     def save(self):
         """save file"""
 
+    def set_column_format(self, column_format: dict[int, str]):
+        """
+        set column format
+        :param column_format: dict['column_name', '#,##0.00" ₽"']
+        """
+        return {}
+
     def __repr__(self):
         res = "\n--FakeXlwtDriver--\n"
         res += f"filename: {self.file_name}\n"

@@ -16,6 +16,13 @@ class IXlsDriver:
         """write head"""
         raise NotImplementedError
 
+    def set_column_format(self, column_format: dict[int, str]):
+        """
+        set column format
+        :param column_format: dict['column_name', '#,##0.00" ₽"']
+        """
+        raise NotImplementedError
+
     def write(self, i, j, _value, style=None, _color=None):
         """write"""
         raise NotImplementedError
