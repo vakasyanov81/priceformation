@@ -33,6 +33,7 @@ zapaska_tire_params = ParserParams(
         "speed_index": RowItem.__INDEX_VELOCITY__,
         "name": RowItem.__TITLE__,
         "category": RowItem.__TYPE_PRODUCTION__,
+        "studded": RowItem.__SPIKE__,
     },
     stop_words=[],
     file_templates=["tire.json"],
