@@ -492,18 +492,19 @@ testutils = ["gitpython (>3)"]
 
 [[package]]
 name = "pylint-pytest"
-version = "1.1.2"
+version = "1.1.8"
 description = "A Pylint plugin to suppress pytest-related false positives."
 optional = false
 python-versions = ">=3.6"
 groups = ["dev"]
 files = [
-    {file = "pylint_pytest-1.1.2-py2.py3-none-any.whl", hash = "sha256:fb20ef318081cee3d5febc631a7b9c40fa356b05e4f769d6e60a337e58c8879b"},
+    {file = "pylint_pytest-1.1.8-py3-none-any.whl", hash = "sha256:8a532c1709c161406b8459bfc414c57a32a4ab488efd4bc97a22a21cb235331f"},
+    {file = "pylint_pytest-1.1.8.tar.gz", hash = "sha256:5c862c88870aa8eb1b376df48ab9e820b5bdadfe37d965aa9ac567a6305955ca"},
 ]
 
 [package.dependencies]
-pylint = "*"
-pytest = ">=4.6"
+pylint = ">=2"
+pytest = ">=4.6,<=8.2.0"
 
 [[package]]
 name = "pyright"
@@ -910,4 +911,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "48975fd26d9abdbada936fdab14598a494ebeb2bc4ae83c393696ea208bf07a6"
+content-hash = "42e03707d622c808c88865c952be5cd5b30457e4ec7a19d8bea80f3a0e6b7117"
