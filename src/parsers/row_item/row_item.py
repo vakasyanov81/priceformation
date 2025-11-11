@@ -83,6 +83,10 @@ class RowItem:
     __DISK_TYPE__ = "disk_type"
     # вид диска - легковой / грузовой
     __DISK_TYPE_1__ = "disk_type_1"
+    # группировка по параметрам, для поиска дублей
+    __GROUP_BY_PARAMS__ = "group_by_params"
+    # порядок записей в списке
+    __ORDER__ = "order"
 
     def __init__(self, item: dict):
         """init"""
@@ -449,3 +453,27 @@ class RowItem:
     def intimacy(self):
         """intimacy"""
         return self._item.get(self.__INTIMACY__)
+
+    @property
+    @row_format.integer
+    def order(self) -> int:
+        """Порядковый номер в списке"""
+        return self._item.get(self.__ORDER__)
+
+    @order.setter
+    @row_format.integer
+    def order(self, order: int):
+        """order"""
+        self._item[self.__ORDER__] = order
+
+    @property
+    @row_format.integer
+    def group_by_params(self) -> int:
+        """ID группы наименований с одинаковыми параметрами. Поле нужно для целей поиска дублей наименований."""
+        return self._item.get(self.__GROUP_BY_PARAMS__)
+
+    @group_by_params.setter
+    @row_format.integer
+    def group_by_params(self, group_id: int):
+        """group_by_params"""
+        self._item[self.__GROUP_BY_PARAMS__] = group_id
