@@ -118,8 +118,7 @@ class BaseParser(Parser):
         return result_statistic
 
     def after_process(self):
-        self.remove_null_rest_and_set_order()
-        self.group_by_params()
+        self.remove_null_rest()
         self.do_items_actions_after_process()
 
     def get_markup_percent(self, price_value: float):
@@ -184,36 +183,15 @@ class BaseParser(Parser):
     def is_active(self):
         return bool(self.get_current_vendor_config().enabled)
 
-    def remove_null_rest_and_set_order(self):
+    def remove_null_rest(self):
         result = []
-        current_order = 1
         for item in self.get_result():
             # rest_count may be ">40", its not convertible to float
             if not item.price_opt or not item.rest_count:
                 continue
-            item.order = current_order
-            current_order += 1
             result.append(item)
 
         self.result = result
-
-    def group_by_params(self):
-        """Группировка списка по параметрам"""
-        group_id = 0
-        current_key = None
-
-        def group_key(item_: RowItem):
-            return item_.type_production
-
-        self.result = sorted(self.result, key=group_key)
-        for item in self.result:
-            _key = group_key(item)
-            if current_key != _key:
-                current_key = _key
-                group_id += 1
-            item.group_by_params = group_id
-
-        self.result = sorted(self.result, key=lambda x: x.order)
 
     @classmethod
     def replace_season(cls, item: RowItem) -> str | None:
