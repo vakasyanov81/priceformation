@@ -87,6 +87,10 @@ class RowItem:
     __GROUP_BY_PARAMS__ = "group_by_params"
     # порядок записей в списке
     __ORDER__ = "order"
+    # кандидат среди дублей наименований
+    __DOUBLE_CANDIDATE__ = "double_candidate"
+    # пометка, что наименование является дублем
+    __IS_DOUBLE__ = "is_double"
 
     def __init__(self, item: dict):
         """init"""
@@ -477,3 +481,23 @@ class RowItem:
     def group_by_params(self, group_id: int):
         """group_by_params"""
         self._item[self.__GROUP_BY_PARAMS__] = group_id
+
+    @property
+    def is_double(self) -> bool:
+        """Пометка, что наименование является дублем"""
+        return bool(self._item.get(self.__IS_DOUBLE__))
+
+    @is_double.setter
+    def is_double(self, is_double: bool):
+        """is_double"""
+        self._item[self.__IS_DOUBLE__] = int(is_double)
+
+    @property
+    def double_candidate(self) -> bool:
+        """Кандидат среди дублей наименований"""
+        return bool(self._item.get(self.__DOUBLE_CANDIDATE__))
+
+    @double_candidate.setter
+    def double_candidate(self, double_candidate: bool):
+        """double_candidate"""
+        self._item[self.__DOUBLE_CANDIDATE__] = int(double_candidate)
