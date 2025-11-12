@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" configuration logic """
+"""configuration logic"""
 __author__ = "Kasyanov V.A."
 
 from . import db, main
