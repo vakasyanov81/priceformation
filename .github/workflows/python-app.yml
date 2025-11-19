@@ -19,33 +19,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.11.1
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11.1"
-      - name: Install poetry
+          python-version-file: "pyproject.toml"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install project dependency
         run: |
-          pip install pipx
-          pipx install poetry
-      - name: Validate the structure of the pyproject.toml
-        run: |
-          poetry check
-      - name: Verify that poetry.lock is consistent with pyproject.toml
-        run: |
-          poetry check --lock
-      - name: Install dependencies
-        run: |
-          poetry install --no-root
+          uv sync --locked --all-extras --dev
       - name: Test coverage
         run: |
           export PYTHONPATH=${GITHUB_WORKSPACE}
-          poetry run pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
+          uv run pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
       - name: Lint code by black
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          poetry run black ${GITHUB_WORKSPACE} --check --line-length 120 --skip-string-normalization --target-version py311
+          uv run black ${GITHUB_WORKSPACE} --check --line-length 120 --skip-string-normalization --target-version py311
       - name: Lint with pylint
         run: |
           export WORK_DIR=$GITHUB_WORKSPACE
-          poetry run pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
+          uv run pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
