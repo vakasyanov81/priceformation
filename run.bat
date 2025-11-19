@@ -1,2 +1,1 @@
-uv sync --no-dev --locked
-uv run python run.py
+uv run --no-dev --locked python run.py
