@@ -1,4 +1,4 @@
 #!/bin/bash
 export PYTHONPATH=./
-uv sync --no-default-groups
+uv sync --no-dev --locked
 uv run python run.py
