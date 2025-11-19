@@ -4,6 +4,10 @@ logic for zapaska (rest) vendor
 """
 __author__ = "Kasyanov V.A."
 
+from base64 import b64encode
+from http.client import HTTPSConnection
+
+from src.cfg import init_cfg
 from .zapaska_disk_json import ZapaskaDiskJSON
 from .. import data_provider
 from ..base_parser.base_parser_config import (
@@ -12,6 +16,7 @@ from ..base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+
 from ..row_item.row_item import RowItem
 
 zapaska_tire_params = ParserParams(
