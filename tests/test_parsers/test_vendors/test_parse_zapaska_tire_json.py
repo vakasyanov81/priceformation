@@ -5,6 +5,9 @@ tests for zapaska (json) tire vendor after raw-parser process
 __author__ = "Kasyanov V.A."
 
 from typing import List
+from unittest import skip
+
+import pytest
 
 from src.cfg.main import get_config
 from src.parsers.base_parser.base_parser_config import (
@@ -12,6 +15,7 @@ from src.parsers.base_parser.base_parser_config import (
 )
 from src.parsers.row_item.row_item import RowItem
 from src.parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
+from tests.test_parsers.fixtures.zapaska import zapaska_one_item_result
 from tests.test_parsers.test_vendors.parse_config import make_parse_configuration
 
 parser_config = make_parse_configuration(zapaska_tire_params)
@@ -65,3 +69,29 @@ class TestParseZapaskaTireJSON:
         assert res.supplier_name == "Запаска (шины)"
         assert res.percent_markup == 12.04
         assert res.season == "Летняя"
+
+    @pytest.mark.parametrize(
+        "prices",
+        [
+            (100, 400, 400),
+            (1000, 1100, 1150),
+            (10000, 11000, 11000),
+            (20000, 20020, 22410),
+            (20000, 25000, 25000),
+            (60000, 60100, 67200),
+        ],
+    )
+    @skip
+    def test_markup(self, prices):
+        """test calculation price-markup"""
+        price_opt, price_recommended, price_markup = prices
+        root = get_config()().project_root
+        obj = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
+        result: List[RowItem] = obj.parse()
+        assert result[0].price_markup == price_markup
+
+    @classmethod
+    def get_first_row_item(cls, parse_result) -> RowItem:
+        """get first item from parse result"""
+        file = list(parse_result.keys())[0]
+        return RowItem(parse_result[file][0])

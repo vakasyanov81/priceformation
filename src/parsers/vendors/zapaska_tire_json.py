@@ -4,6 +4,10 @@ logic for zapaska (rest) vendor
 """
 __author__ = "Kasyanov V.A."
 
+from base64 import b64encode
+from http.client import HTTPSConnection
+
+from src.cfg import init_cfg
 from .zapaska_disk_json import ZapaskaDiskJSON
 from .. import data_provider
 from ..base_parser.base_parser_config import (
@@ -12,6 +16,7 @@ from ..base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+
 from ..row_item.row_item import RowItem
 
 zapaska_tire_params = ParserParams(
@@ -124,3 +129,42 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     def get_type_production(self, item: RowItem):
         return item.type_production
+
+
+# Authorization token: we need to base 64 encode it
+# and then decode it to acsii as python 3 stores it as a byte string
+def basic_auth(username, password):
+    """auth"""
+    token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    return f"Basic {token}"
+
+
+def get_data(url: str) -> str:
+    """get data from ulr api"""
+    api_cfg = mark_up_provider.get_markup_data().get("api")
+    username = api_cfg.get("login")
+    password = api_cfg.get("password")
+
+    # This sets up the https connection
+    connection = HTTPSConnection("ka2.sibzapaska.ru:16500")
+    # then connect
+    headers = {"Authorization": basic_auth(username, password)}
+    connection.request("GET", url, headers=headers)
+    # get the response back
+    res = connection.getresponse()
+    return res.read().decode("utf-8")
+
+
+def save_data(data: str, filename: str):
+    """save data to file"""
+    folder = init_cfg().main.folder_file_prices + "/" + zapaska_tire_params.supplier.folder_name
+    root = init_cfg().main.project_root
+    with open(f"{root}/{folder}/{filename}", "w", encoding="utf-8") as file_:
+        file_.write(data)
+
+
+def load_data():
+    """load (tire / disk) data from file"""
+    # save_data('{"d": 1}', filename="tire.json")
+    save_data(get_data("/API/hs/V2/GetTires"), filename="tire.json")
+    save_data(get_data("/API/hs/V2/GetDisk"), filename="disk.json")
