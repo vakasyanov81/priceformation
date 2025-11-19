@@ -64,7 +64,7 @@ def test_prepare_title(row_elements, prepared_title):
         {
             "title": "",
             "width": row_elements[0],
-            "profile": row_elements[1],
+            "height_percent": row_elements[1],
             "diameter": row_elements[2],
         }
     )

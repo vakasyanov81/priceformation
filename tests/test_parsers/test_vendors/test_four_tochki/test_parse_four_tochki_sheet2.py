@@ -73,5 +73,6 @@ def test_parse_with_invalid_item():
     )
     assert mock_log_msg.mock_calls[0].kwargs == {"level": 40, "need_print_log": True}
 
-    assert "{'code': 'WHS198858', 'manufacturer_name': 'Alcasta'" in mock_log_msg.mock_calls[1].args[0]
+    assert "Alcasta" in mock_log_msg.mock_calls[1].args[0]
+    assert "WHS198858" in mock_log_msg.mock_calls[1].args[0]
     assert mock_log_msg.mock_calls[1].kwargs == {"level": 40, "need_print_log": False}

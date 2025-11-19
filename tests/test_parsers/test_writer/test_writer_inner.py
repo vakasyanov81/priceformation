@@ -8,7 +8,7 @@ import datetime
 import os
 
 from src.parsers.writer.fake_driver import FakeXlwtDriver
-from src.parsers.writer.templates.for_inner import ForInner
+from src.parsers.writer.templates.tmpl.for_inner import ForInner
 from .fixtures import result_body_inner, write_data
 from .test_writer import TestXlsWriter
 

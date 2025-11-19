@@ -15,7 +15,7 @@ def mim_one_item_result():
                 "manufacturer_name": "HIFLY",
                 "model": "HH312",
                 "width": "295",
-                "profile": "75",
+                "height_percent": "75",
                 "construction_type": "R",
                 "diameter": "22.5",
                 "axis": "Ведущая M+S",

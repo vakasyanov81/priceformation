@@ -5,6 +5,7 @@ price row item description
 __author__ = "Kasyanov V.A."
 
 import hashlib
+import json
 
 from src.parsers.row_item import row_item_formatter as row_format
 
@@ -50,9 +51,12 @@ class RowItem:
     __MARK__ = "mark"
     __DIAMETER__ = "diameter"
     __EXT_DIAMETER__ = "ext_diameter"
+    # толщина диска
+    __DISK_THICKNESS__ = "disc_thickness"
     __SLOT_COUNT__ = "slot_count"  # кол-во отверстий
     __SLOT_DIAMETER__ = "slot_diameter"  # диаметр отверстий
     __US_AFF_DESIGNATION__ = "american_affiliation_designation"  # американское обозначение принадлежности
+    # сверловка отверстий в дисках, бывает под один размер бывает универсальный тип под два размера
     __PCD1__ = "pcd1"
     __PCD2__ = "pcd2"
     __CENTRAL_DIAMETER__ = "central_diameter"
@@ -61,11 +65,11 @@ class RowItem:
     __INSCRIPTION_ON_THE_SIDE__ = "inscription_on_the_side"
     # Тяжелая шина, можно ехать на спущенной
     __RUN_FLAT__ = "run_flat"
+    # вылет - конструктивная особенность диска, выступ крепежной части относительно центра
     __ET__ = "et"
     __COLOR__ = "color"
     # основной цвет
     __MAIN_COLOR__ = "main_color"
-    __PROFILE__ = "profile"
     __INDEX_VELOCITY__ = "index_velocity"
     __INDEX_LOAD__ = "index_load"
     __MODEL__ = "model"
@@ -318,12 +322,17 @@ class RowItem:
         """to dict"""
         return self._item
 
+    @classmethod
+    def from_dict(cls, dictable_str: str) -> "RowItem":
+        """from dict"""
+        return cls(json.loads(dictable_str))
+
     def clone(self):
         """clone"""
         return RowItem(self.to_dict())
 
     def __repr__(self):
-        return str(self.__dict__)
+        return str(self.to_dict())
 
     @property
     @row_format.text
@@ -332,7 +341,7 @@ class RowItem:
         return self._item.get(self.__WIDTH__)
 
     @property
-    @row_format.integer
+    @row_format.text
     def height_percent(self):
         """height percent"""
         return self._item.get(self.__HEIGHT_PERCENT__)
@@ -406,12 +415,6 @@ class RowItem:
 
     @property
     @row_format.text
-    def profile(self):
-        """profile"""
-        return self._item.get(self.__PROFILE__)
-
-    @property
-    @row_format.text
     def index_velocity(self):
         """index velocity"""
         return self._item.get(self.__INDEX_VELOCITY__)
@@ -439,6 +442,12 @@ class RowItem:
     def axis(self):
         """axis"""
         return self._item.get(self.__AXIS__)
+
+    @property
+    @row_format.text
+    def disk_thickness(self):
+        """Толщина диска"""
+        return self._item.get(self.__DISK_THICKNESS__)
 
     @property
     @row_format.text

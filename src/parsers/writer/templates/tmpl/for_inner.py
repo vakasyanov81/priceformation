@@ -41,17 +41,17 @@ class ForInner(IWriteTemplate):
         {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},
         {"Срок доставки": {"field": RowItem.__DELIVERY_PERIOD__}},
         {"Состояние": {"field": RowItem.__CONDITION__, "default_value": "Новое"}},
-        {"Группа по параметрам": {"field": RowItem.__GROUP_BY_PARAMS__, "default_value": "1"}},
-        {
-            "Дубль": {
-                "field": RowItem.__IS_DOUBLE__,
-            }
-        },
-        {
-            "Главный дубль": {
-                "field": RowItem.__DOUBLE_CANDIDATE__,
-            }
-        },
+        # {"Группа по параметрам": {"field": RowItem.__GROUP_BY_PARAMS__, "default_value": "1"}},
+        # {
+        #     "Дубль": {
+        #         "field": RowItem.__IS_DOUBLE__,
+        #     }
+        # },
+        # {
+        #     "Главный дубль": {
+        #         "field": RowItem.__DOUBLE_CANDIDATE__,
+        #     }
+        # },
     ]
 
     __COLOR__ = {
