@@ -235,7 +235,7 @@ requires-dist = [
     { name = "colorama", specifier = "==0.4.6" },
     { name = "openpyxl", specifier = "==3.1.5" },
     { name = "python-calamine", specifier = "==0.5.4" },
-    { name = "termcolor", specifier = "==2.2.0" },
+    { name = "termcolor", specifier = "==3.2.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -394,11 +394,11 @@ wheels = [
 
 [[package]]
 name = "termcolor"
-version = "2.2.0"
+version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e5/4e/b2a54a21092ad2d5d70b0140e4080811bee06a39cc8481651579fe865c89/termcolor-2.2.0.tar.gz", hash = "sha256:dfc8ac3f350788f23b2947b3e6cfa5a53b630b612e6cd8965a015a776020b99a", size = 11340, upload-time = "2023-01-03T17:23:11.922Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/56/ab275c2b56a5e2342568838f0d5e3e66a32354adcc159b495e374cda43f5/termcolor-3.2.0.tar.gz", hash = "sha256:610e6456feec42c4bcd28934a8c87a06c3fa28b01561d46aa09a9881b8622c58", size = 14423, upload-time = "2025-10-25T19:11:42.586Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/f4/8ddd8a684b4c005345f45740a449d93d0af7ccecd91319d0f4426cf08b36/termcolor-2.2.0-py3-none-any.whl", hash = "sha256:91ddd848e7251200eac969846cbae2dacd7d71c2871e92733289e7e3666f48e7", size = 6584, upload-time = "2023-01-03T17:23:10.399Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/d5/141f53d7c1eb2a80e6d3e9a390228c3222c27705cbe7f048d3623053f3ca/termcolor-3.2.0-py3-none-any.whl", hash = "sha256:a10343879eba4da819353c55cb8049b0933890c2ebf9ad5d3ecd2bb32ea96ea6", size = 7698, upload-time = "2025-10-25T19:11:41.536Z" },
 ]
 
 [[package]]
