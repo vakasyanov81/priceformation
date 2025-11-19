@@ -52,4 +52,3 @@ def run_upload_zapaska_data():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
