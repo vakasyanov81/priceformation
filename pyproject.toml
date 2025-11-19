@@ -3,7 +3,7 @@ name = "priceformation"
 version = "0.1.0"
 description = ""
 authors = [{ name = "huck" }]
-requires-python = "==3.13,<4"
+requires-python = "==3.13.*,<4"
 readme = "README.md"
 dependencies = [
     "openpyxl==3.1.5",
