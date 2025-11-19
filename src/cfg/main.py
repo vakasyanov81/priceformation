@@ -8,8 +8,6 @@ import datetime
 import os
 import pathlib
 
-from .db import DBConfig
-from .db import get_config as db_cfg
 
 __LOG_FOLDER__ = "logs"
 __USER_PARSE_CONFIG__ = "parse_config"
@@ -170,11 +168,6 @@ class MainConfig(MainCfg):
     def is_unittest_mode(self):
         """for mock in unittests run"""
         return __IS_UNITTEST_MODE__
-
-    @classmethod
-    def database(cls) -> DBConfig:
-        """database config"""
-        return db_cfg(__PROJECT_SRC__)
 
 
 def get_config():

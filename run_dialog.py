@@ -7,9 +7,7 @@ from src.core.log_message import print_log
 class AnswerResult(Enum):
     """Main actions"""
 
-    MAKE_DB_MIGRATION = "MakeDBMigration"
     MAKE_PRICE_BY_SUPPLIER = "MakePriceBySupplier"
-    SAVE_PRICE_TO_DB = "SavePriceToDB"
     UPDATE_ZAPASKA_DATA = "UpdateZapaskaData"
     EXIT = "Exit"
 
@@ -17,10 +15,9 @@ class AnswerResult(Enum):
 def ask_action() -> AnswerResult:
     """Main console menu"""
     _msg = (
-        f"{Colors.BOLD}1 — миграция базы данных \n"
-        "2 — сформировать общий прайс по прайсам поставщиков \n"
-        "3 — записать номенклатуру поставщика в базу данных \n"
-        "4 — Выгрузить прайсы запаски по API\n"
+        f"{Colors.BOLD}"
+        "1 — сформировать общий прайс по прайсам поставщиков \n"
+        "2 — Выгрузить прайсы запаски по API\n"
         f"q — выход {Colors.END_COLOR}"
     )
     while True:
@@ -31,9 +28,7 @@ def ask_action() -> AnswerResult:
 
 
 AnswerMap = {
-    "1": AnswerResult.MAKE_DB_MIGRATION,
-    "2": AnswerResult.MAKE_PRICE_BY_SUPPLIER,
-    "3": AnswerResult.SAVE_PRICE_TO_DB,
-    "4": AnswerResult.UPDATE_ZAPASKA_DATA,
+    "1": AnswerResult.MAKE_PRICE_BY_SUPPLIER,
+    "2": AnswerResult.UPDATE_ZAPASKA_DATA,
     "q": AnswerResult.EXIT,
 }
