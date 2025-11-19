@@ -1,4 +1,3 @@
 #!/bin/bash
 cd ..
-export PYTHONPATH=./
-uv sync
+uv sync --locked
