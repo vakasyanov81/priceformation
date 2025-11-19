@@ -2,10 +2,9 @@
 """configuration logic"""
 __author__ = "Kasyanov V.A."
 
-from . import db, main
+from . import main
 
 __config__ = {
-    "db": db.get_config(main.get_config().project_root),
     "main": main.get_config(),
 }
 
@@ -26,11 +25,6 @@ class ConfigCompiler:
     def main(self) -> main.MainConfig:
         """main section"""
         return self._config.get("main")()
-
-    @property
-    def database(self):
-        """data base section"""
-        raise self._config.get("db")()
 
 
 def init_cfg(_cfg=None):
