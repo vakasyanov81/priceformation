@@ -13,10 +13,35 @@ from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from ...row_item.row_item import RowItem
+
+
+def config_for_sheets3():
+    """get config for sheets 3 parsers"""
+    return dict(
+        {
+            0: RowItem.__CODE__,
+            1: RowItem.__TITLE__,
+            3: RowItem.__MANUFACTURER_NAME__,
+            4: RowItem.__MODEL__,
+            6: RowItem.__DIAMETER__,
+            7: RowItem.__WIDTH__,
+            8: RowItem.__SLOT_COUNT__,
+            9: RowItem.__PCD1__,
+            11: RowItem.__ET__,
+            12: RowItem.__CENTRAL_DIAMETER__,
+            15: RowItem.__DISK_THICKNESS__,
+            20: RowItem.__REST_COUNT__,
+            22: RowItem.__PRICE_PURCHASE__,
+            23: RowItem.__PRICE_RECOMMENDED__,
+        }
+    )
+
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
 mim_sheet_3_params.sheet_info = "Вкладка #3"
 mim_sheet_3_params.sheet_indexes = [2]
+mim_sheet_3_params.columns = config_for_sheets3()
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 

@@ -47,7 +47,7 @@ def test_parse():
     result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(result) == 1
-    assert result[0].title == "295/75R22.5 Hifly HH312 Ведущая M+S PR16 146/143L TL"
+    assert result[0].title == "295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S"
     assert result[0].type_production == "Грузовая шина"
     assert result[0].price_markup == 24360.0
     assert result[0].supplier_name == "Мим"

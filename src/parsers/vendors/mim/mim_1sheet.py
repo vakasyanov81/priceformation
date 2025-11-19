@@ -25,7 +25,7 @@ mim_sheet_1_params.columns = {
     5: RowItem.__MODEL__,
     6: RowItem.__DIAMETER__,
     7: RowItem.__WIDTH__,
-    8: RowItem.__PROFILE__,
+    8: RowItem.__HEIGHT_PERCENT__,
     9: RowItem.__SPIKE__,
     10: RowItem.__INDEX_VELOCITY__,
     11: RowItem.__INDEX_LOAD__,
@@ -48,10 +48,10 @@ mim_sheet_1_config = BasePriceParseConfigurationParams(
 mim_sheet_1_config = ParseConfiguration(mim_sheet_1_config)
 
 
-def is_number(value: str) -> bool:
+def is_number(value: str | int | float) -> bool:
     """value like xx.xx or xx.0"""
     try:
-        return bool(float(value)) and "." in value
+        return bool(float(value)) and "." in str(value)
     except ValueError:
         return False
 
@@ -70,7 +70,7 @@ class MimParser1Sheet(MimParserBase):
         """get prepared title"""
         width = item.width or ""
         diameter = item.diameter or ""
-        profile = item.profile or ""
+        profile = item.height_percent or ""
         velocity = item.index_velocity or ""
         load = item.index_load or ""
         model = item.model or ""

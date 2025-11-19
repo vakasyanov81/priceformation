@@ -16,7 +16,7 @@ def mim_one_item_result():
                 "model": "DSU02",
                 "diameter": "15",
                 "width": "31",
-                "profile": "10.5",
+                "height_percent": "10.5",
                 "index_velocity": "Y",
                 "index_load": "92",
                 "rest_count": 4.0,

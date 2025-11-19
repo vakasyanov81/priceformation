@@ -15,8 +15,8 @@ from ...base_parser.base_parser_config import (
 )
 
 
-def config_for_sheets23():
-    """get config for sheets 2, 3 parsers"""
+def config_for_sheets2():
+    """get config for sheets 2 parsers"""
     return dict(
         {
             0: RowItem.__CODE__,
@@ -24,7 +24,7 @@ def config_for_sheets23():
             3: RowItem.__MANUFACTURER_NAME__,
             4: RowItem.__MODEL__,
             6: RowItem.__WIDTH__,
-            7: RowItem.__PROFILE__,
+            7: RowItem.__HEIGHT_PERCENT__,
             8: RowItem.__CONSTRUCTION_TYPE__,
             9: RowItem.__DIAMETER__,
             11: RowItem.__AXIS__,
@@ -42,7 +42,7 @@ def config_for_sheets23():
 mim_sheet_2_params = dataclasses.replace(mim_params)
 mim_sheet_2_params.sheet_info = "Вкладка #2"
 mim_sheet_2_params.sheet_indexes = [1]
-mim_sheet_2_params.columns = config_for_sheets23()
+mim_sheet_2_params.columns = config_for_sheets2()
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
@@ -85,7 +85,7 @@ class MimParser2Sheet(MimParserBase):
         """prepare title"""
         width = item.width or ""
         diameter = item.diameter or ""
-        profile = item.profile or ""
+        profile = item.height_percent or ""
         velocity = item.index_velocity or ""
         load = item.index_load or ""
         mark = (item.manufacturer or "").lower().capitalize()
@@ -100,15 +100,7 @@ class MimParser2Sheet(MimParserBase):
         if diameter:
             diameter = f"R{diameter}"
 
-        chunks = [
-            f"{width}{profile}{diameter}",
-            mark,
-            model,
-            axis,
-            layering,
-            f"{load}{velocity}",
-            intimacy,
-        ]
+        chunks = [f"{width}{profile}{diameter}", mark, model, layering, f"{load}{velocity}", intimacy, axis]
 
         chunks = [str(chunk or "").strip() or None for chunk in chunks]
 
