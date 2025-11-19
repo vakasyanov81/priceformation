@@ -22,7 +22,7 @@ pytest-cov = "==7.0.0"
 pylint-pytest = "==1.1.8"
 black = "==25.11.0"
 pylint = "==2.16.2"
-ruff = "==0.0.250"
+ruff = "==0.14.5"
 
 
 [build-system]
