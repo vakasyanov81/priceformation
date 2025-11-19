@@ -1,2 +1,2 @@
-poetry install --no-root
-poetry run python run.py
+uv sync --no-dev --locked
+uv run python run.py
