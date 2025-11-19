@@ -10,14 +10,14 @@ import os
 from src.parsers.writer.fake_driver import FakeXlwtDriver
 from src.parsers.writer.templates.tmpl.for_drom import ForDrom
 from .fixtures import result_body_drom, write_data
-from .test_writer import TestXlsWriter
+from .test_writer import FakeXlsWriter
 
 
 def test_xls_write_for_drom():
     """test write price for drom.ru"""
 
     fake_driver = FakeXlwtDriver()
-    TestXlsWriter(fake_driver, write_data, template=ForDrom)
+    FakeXlsWriter(fake_driver, write_data, template=ForDrom)
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     assert fake_driver.file_name == f"price_drom_{now}.xlsx"
