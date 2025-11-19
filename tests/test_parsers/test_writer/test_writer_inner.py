@@ -10,14 +10,14 @@ import os
 from src.parsers.writer.fake_driver import FakeXlwtDriver
 from src.parsers.writer.templates.tmpl.for_inner import ForInner
 from .fixtures import result_body_inner, write_data
-from .test_writer import TestXlsWriter
+from .test_writer import FakeXlsWriter
 
 
 def test_xls_write_for_inner():
     """test write price for internal use"""
 
     fake_driver = FakeXlwtDriver()
-    TestXlsWriter(fake_driver, write_data, template=ForInner)
+    FakeXlsWriter(fake_driver, write_data, template=ForInner)
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     assert fake_driver.file_name == f"price_{now}.xlsx"
