@@ -19,24 +19,26 @@ from src.parsers.base_parser.base_parser_config import (
 )
 from src.parsers.row_item.row_item import RowItem
 
+
+column_mapping = {
+    "cae": RowItem.__CODE_ART__,
+    "rest": RowItem.__REST_COUNT__,
+    "price": RowItem.__PRICE_PURCHASE__,
+    "retail": RowItem.__PRICE_RECOMMENDED__,
+    "diam_center": RowItem.__CENTRAL_DIAMETER__,
+    "holes": RowItem.__SLOT_COUNT__,
+    "diam_holes": RowItem.__SLOT_DIAMETER__,
+    "ET": RowItem.__ET__,
+    "brand": RowItem.__MANUFACTURER_NAME__,
+    "name": RowItem.__TITLE__,
+    "category": RowItem.__TYPE_PRODUCTION__,
+}
+
 zapaska_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (диски)", code="2"),
     start_row=0,
     sheet_info="",
-    columns={
-        RowItem.__CODE__: RowItem.__CODE__,
-        "cae": RowItem.__CODE_ART__,
-        "rest": RowItem.__REST_COUNT__,
-        "price": RowItem.__PRICE_PURCHASE__,
-        "retail": RowItem.__PRICE_RECOMMENDED__,
-        "diam_center": RowItem.__CENTRAL_DIAMETER__,
-        "holes": RowItem.__SLOT_COUNT__,
-        "diam_holes": RowItem.__SLOT_DIAMETER__,
-        "ET": RowItem.__ET__,
-        "brand": RowItem.__MANUFACTURER_NAME__,
-        "name": RowItem.__TITLE__,
-        "category": RowItem.__TYPE_PRODUCTION__,
-    },
+    columns=column_mapping,
     stop_words=[],
     file_templates=["disk.json"],
     sheet_indexes=[],
@@ -146,37 +148,6 @@ class ZapaskaDiskJSON(BaseParser):
         chunks = [chunk.strip() for chunk in item.title.split(" ") if chunk.strip()]
         title = " ".join(chunks)
         return self.title_aliases.get(title) or title
-
-    @classmethod
-    def get_prepared_title_new(cls, item: RowItem):
-        """get prepared title"""
-        width = item.width or ""
-        diameter = item.diameter or ""
-        model = item.model or ""
-        slot_count = item.slot_count or ""
-        dia = item.central_diameter or ""
-        slot_diameter = item.slot_diameter or ""
-        color = item.color or ""
-        _et = item.eet or ""
-        brand = item.brand or ""
-        mark = (item.manufacturer or "").lower().capitalize()
-
-        # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{brand} {model} {width}*{diameter} {slot_count}*{slot_diameter} ET{_et} D{dia} {color} {mark}"
-
-        # Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF
-        # brand model width * diameter holes * diam_holes ET{et} D{diam_center} color
-        return title
-
-    @classmethod
-    def is_truck_tire(cls, item: RowItem):
-        """Грузовая шина?"""
-        return item.tire_type.lower() == "грузовая"
-
-    @classmethod
-    def is_special_tire(cls, item: RowItem):
-        """Спецтехника?"""
-        return item.tire_type.lower() == "спецтехника"
 
     @classmethod
     def _get_price_percent_markup(cls, price):
