@@ -82,90 +82,95 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         item.price_markup = self.round_price(price)
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
-        """
-        1) Форточки:
-        10-20 Armour TI300
-        на
-        10.00-20 Armour TI300 16PR TTF
+    def get_prepared_title(cls, item: RowItem) -> str:
+        return get_prepared_title(item)
 
-        2). Форточки:
-        10/75-15.3 Forerunner QH602 R-4
-        на
-        10.0/75-15.3 Forerunner QH602 R-4 12PR TL
 
-        3) Форточки:
-        11/999-15 Galaxy Rib Implement I-1
-        на
-        11L-15 Galaxy Rib Implement I-1 12PR TL
+def get_prepared_title(item: RowItem) -> str:
+    """
+    1) Форточки:
+    10-20 Armour TI300
+    на
+    10.00-20 Armour TI300 16PR TTF
 
-        4) МИМ:
-        16.5/70R18 Белшина КФ-97 10 149A TTF
-        на
-        16.5/70-18 Белшина КФ-97 10 149A TTF
-        :param item:
-        :return:
-        """
-        width = (item.width or "").replace(".0", "")
-        height_percent = str(item.height_percent or "")
-        height_percent = height_percent.replace("999", "L")
-        diameter = (item.diameter or "").replace("—", "-")
-        # need for 4tochki vendor
-        diameter = str(diameter).replace("R", "")
-        velocity = item.index_velocity or ""
-        load = item.index_load or ""
-        model = item.model or ""
-        ext_diameter = item.ext_diameter or ""
-        us_aff_design = item.us_aff_design or ""
-        mark = (item.manufacturer or "").lower().capitalize()
-        layering = item.layering or ""
-        camera_type = item.camera_type or ""
-        construct = "R"
-        if "-" in diameter:
-            construct = "-"
-            diameter = diameter.replace("-", "")
+    2). Форточки:
+    10/75-15.3 Forerunner QH602 R-4
+    на
+    10.0/75-15.3 Forerunner QH602 R-4 12PR TL
 
-        # 205/55R16 BFGoodrich Advantage 94W
-        # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
+    3) Форточки:
+    11/999-15 Galaxy Rib Implement I-1
+    на
+    11L-15 Galaxy Rib Implement I-1 12PR TL
+
+    4) МИМ:
+    16.5/70R18 Белшина КФ-97 10 149A TTF
+    на
+    16.5/70-18 Белшина КФ-97 10 149A TTF
+    :param item:
+    :return:
+    """
+    width = (item.width or "").replace(".0", "")
+    height_percent = str(item.height_percent or "")
+    height_percent = height_percent.replace("999", "L")
+    diameter = (item.diameter or "").replace("—", "-")
+    # need for 4tochki vendor
+    diameter = str(diameter).replace("R", "")
+    velocity = item.index_velocity or ""
+    load = item.index_load or ""
+    model = item.model or ""
+    ext_diameter = item.ext_diameter or ""
+    us_aff_design = item.us_aff_design or ""
+    mark = (item.manufacturer or "").lower().capitalize()
+    layering = item.layering or ""
+    camera_type = item.camera_type or ""
+    construct = "R"
+    if "-" in diameter:
+        construct = "-"
+        diameter = diameter.replace("-", "")
+
+    # 205/55R16 BFGoodrich Advantage 94W
+    # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
+    width_postfix = ""
+    if is_truck_tire(item):
+        width_postfix = ".00"
+    if diameter == "22.5" or height_percent:
         width_postfix = ""
-        if cls.is_truck_tire(item):
-            width_postfix = ".00"
-        if diameter == "22.5" or height_percent:
-            width_postfix = ""
-        if cls.is_truck_tire(item) and diameter == "16":
-            width_postfix = ""
-        if width == "10" and diameter == "20":
-            width_postfix = ".00"
+    if is_truck_tire(item) and diameter == "16":
+        width_postfix = ""
+    if width == "10" and diameter == "20":
+        width_postfix = ".00"
 
-        if cls.is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
-            width_postfix = ".0"
+    if is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
+        width_postfix = ".0"
 
-        if height_percent == "L":
-            width_postfix = height_percent
+    if height_percent == "L":
+        width_postfix = height_percent
 
-        if height_percent and height_percent != "L":
-            height_percent = f"/{height_percent}"
-        else:
-            height_percent = ""
+    if height_percent and height_percent != "L":
+        height_percent = f"/{height_percent}"
+    else:
+        height_percent = ""
 
-        construct_diameter = f"{construct}{diameter}"
-        construct_diameter = construct_diameter.replace("RZ", "ZR")
+    construct_diameter = f"{construct}{diameter}"
+    construct_diameter = construct_diameter.replace("RZ", "ZR")
 
-        if cls.is_truck_tire(item):
-            title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
-        elif ext_diameter:
-            title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_design}"
-        else:
-            title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {layering} {camera_type} {load}{velocity}"
+    if is_truck_tire(item):
+        title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
+    elif ext_diameter:
+        title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_design}"
+    else:
+        title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {layering} {camera_type} {load}{velocity}"
 
-        return title.strip()
+    return title.strip()
 
-    @classmethod
-    def is_truck_tire(cls, item: RowItem):
-        """Грузовая шина?"""
-        return item.tire_type.lower() == "грузовая"
 
-    @classmethod
-    def is_special_tire(cls, item: RowItem):
-        """Спецтехника?"""
-        return item.tire_type.lower() == "спецтехника"
+def is_truck_tire(item: RowItem):
+    """Грузовая шина?"""
+    return item.tire_type.lower() == "грузовая"
+
+
+def is_special_tire(item: RowItem):
+    """Спецтехника?"""
+    return item.tire_type.lower() == "спецтехника"
+

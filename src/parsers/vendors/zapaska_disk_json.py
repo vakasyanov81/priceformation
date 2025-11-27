@@ -148,37 +148,6 @@ class ZapaskaDiskJSON(BaseParser):
         return self.title_aliases.get(title) or title
 
     @classmethod
-    def get_prepared_title_new(cls, item: RowItem):
-        """get prepared title"""
-        width = item.width or ""
-        diameter = item.diameter or ""
-        model = item.model or ""
-        slot_count = item.slot_count or ""
-        dia = item.central_diameter or ""
-        slot_diameter = item.slot_diameter or ""
-        color = item.color or ""
-        _et = item.eet or ""
-        brand = item.brand or ""
-        mark = (item.manufacturer or "").lower().capitalize()
-
-        # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{brand} {model} {width}*{diameter} {slot_count}*{slot_diameter} ET{_et} D{dia} {color} {mark}"
-
-        # Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF
-        # brand model width * diameter holes * diam_holes ET{et} D{diam_center} color
-        return title
-
-    @classmethod
-    def is_truck_tire(cls, item: RowItem):
-        """Грузовая шина?"""
-        return item.tire_type.lower() == "грузовая"
-
-    @classmethod
-    def is_special_tire(cls, item: RowItem):
-        """Спецтехника?"""
-        return item.tire_type.lower() == "спецтехника"
-
-    @classmethod
     def _get_price_percent_markup(cls, price):
         """get price percent markup"""
 

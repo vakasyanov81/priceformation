@@ -67,66 +67,6 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     _type_production = "Шины"
 
-    @classmethod
-    def get_prepared_title_new(cls, item: RowItem):
-        """get prepared title"""
-        width = (item.width or "").replace(".0", "")
-        height_percent = str(item.height_percent or "")
-        height_percent = height_percent.replace("999", "L")
-        diameter = (item.diameter or "").replace("—", "-")
-        # need for 4tochki vendor
-        diameter = str(diameter).replace("R", "")
-        velocity = item.index_velocity or ""
-        load = item.index_load or ""
-        model = item.model or ""
-        brand = item.brand or ""
-        ext_diameter = item.ext_diameter or ""
-        us_aff_design = item.us_aff_design or ""
-        mark = (item.manufacturer or "").lower().capitalize()
-        layering = item.layering or ""
-        camera_type = item.camera_type or ""
-        construct = "R"
-        if "-" in diameter:
-            construct = "-"
-            diameter = diameter.replace("-", "")
-
-        # 205/55R16 BFGoodrich Advantage 94W
-        # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
-        width_postfix = ""
-        if cls.is_truck_tire(item):
-            width_postfix = ".00"
-        if diameter == "22.5" or height_percent:
-            width_postfix = ""
-        if cls.is_truck_tire(item) and diameter == "16":
-            width_postfix = ""
-        if width == "10" and diameter == "20":
-            width_postfix = ".00"
-
-        if cls.is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
-            width_postfix = ".0"
-
-        if height_percent == "L":
-            width_postfix = height_percent
-
-        if height_percent and height_percent != "L":
-            height_percent = f"/{height_percent}"
-        else:
-            height_percent = ""
-
-        construct_diameter = f"{construct}{diameter}"
-        construct_diameter = construct_diameter.replace("RZ", "ZR")
-
-        if cls.is_truck_tire(item):
-            title = (
-                f"{width}{width_postfix}{height_percent}{construct_diameter} {brand} {mark} {model} {load}{velocity}"
-            )
-        elif ext_diameter:
-            title = f"{ext_diameter}x{width}{construct_diameter} {brand} {mark} {model} {load} {us_aff_design}"
-        else:
-            title = f"{width}{width_postfix}{height_percent}{construct_diameter} {brand} {mark} {model} {layering} {camera_type} {load}{velocity}"
-
-        return title.strip()
-
     def get_type_production(self, item: RowItem):
         return item.type_production
 
