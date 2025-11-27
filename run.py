@@ -9,12 +9,13 @@ __author__ = "Kasyanov V.A."
 import asyncio
 import sys
 
-from parsers.vendors.zapaska_tire_json import load_data
 from run_dialog import AnswerResult, ask_action
 from src.core.async_utils import try_call
 from src.core.log_message import print_log
 from src.parsers.all_vendors import all_vendors
 from src.parsers.common_price import CommonPrice
+from src.parsers.common_price_output import CommonPriceOut
+from src.parsers.vendors.zapaska_tire_json import load_data
 
 
 async def main():
@@ -41,7 +42,7 @@ def run_make_price_by_supplier():
     """Make common price list by price list supplier's"""
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
-    common_price.write_all_prices()
+    CommonPriceOut(common_price.get_result()).write_all_prices()
 
 
 def run_upload_zapaska_data():
