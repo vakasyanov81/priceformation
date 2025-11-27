@@ -21,17 +21,17 @@ from src.parsers.row_item.row_item import RowItem
 
 
 column_mapping = {
-        "cae": RowItem.__CODE_ART__,
-        "rest": RowItem.__REST_COUNT__,
-        "price": RowItem.__PRICE_PURCHASE__,
-        "retail": RowItem.__PRICE_RECOMMENDED__,
-        "diam_center": RowItem.__CENTRAL_DIAMETER__,
-        "holes": RowItem.__SLOT_COUNT__,
-        "diam_holes": RowItem.__SLOT_DIAMETER__,
-        "ET": RowItem.__ET__,
-        "brand": RowItem.__MANUFACTURER_NAME__,
-        "name": RowItem.__TITLE__,
-        "category": RowItem.__TYPE_PRODUCTION__,
+    "cae": RowItem.__CODE_ART__,
+    "rest": RowItem.__REST_COUNT__,
+    "price": RowItem.__PRICE_PURCHASE__,
+    "retail": RowItem.__PRICE_RECOMMENDED__,
+    "diam_center": RowItem.__CENTRAL_DIAMETER__,
+    "holes": RowItem.__SLOT_COUNT__,
+    "diam_holes": RowItem.__SLOT_DIAMETER__,
+    "ET": RowItem.__ET__,
+    "brand": RowItem.__MANUFACTURER_NAME__,
+    "name": RowItem.__TITLE__,
+    "category": RowItem.__TYPE_PRODUCTION__,
 }
 
 zapaska_params = ParserParams(
