@@ -8,7 +8,7 @@ from base64 import b64encode
 from http.client import HTTPSConnection
 
 from src.cfg import init_cfg
-from .zapaska_disk_json import ZapaskaDiskJSON
+from .zapaska_disk_json import ZapaskaDiskJSON, column_mapping
 from .. import data_provider
 from ..base_parser.base_parser_config import (
     ParserParams,
@@ -19,27 +19,21 @@ from ..base_parser.base_parser_config import (
 
 from ..row_item.row_item import RowItem
 
+column_mapping = dict(column_mapping)
+column_mapping.update(
+    {
+        "height": RowItem.__HEIGHT_PERCENT__,
+        "load_index": RowItem.__INDEX_LOAD__,
+        "speed_index": RowItem.__INDEX_VELOCITY__,
+        "studded": RowItem.__SPIKE__,
+    }
+)
+
 zapaska_tire_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (шины)", code="22"),
     start_row=0,
     sheet_info="",
-    columns={
-        RowItem.__CODE__: RowItem.__CODE__,
-        "cae": RowItem.__CODE_ART__,
-        "rest": RowItem.__REST_COUNT__,
-        "price": RowItem.__PRICE_PURCHASE__,
-        "retail": RowItem.__PRICE_RECOMMENDED__,
-        "diam_center": RowItem.__CENTRAL_DIAMETER__,
-        "holes": RowItem.__SLOT_COUNT__,
-        "diam_holes": RowItem.__SLOT_DIAMETER__,
-        "ET": RowItem.__ET__,
-        "height": RowItem.__HEIGHT_PERCENT__,
-        "load_index": RowItem.__INDEX_LOAD__,
-        "speed_index": RowItem.__INDEX_VELOCITY__,
-        "name": RowItem.__TITLE__,
-        "category": RowItem.__TYPE_PRODUCTION__,
-        "studded": RowItem.__SPIKE__,
-    },
+    columns=column_mapping,
     stop_words=[],
     file_templates=["tire.json"],
     sheet_indexes=[],

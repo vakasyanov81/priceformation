@@ -19,12 +19,8 @@ from src.parsers.base_parser.base_parser_config import (
 )
 from src.parsers.row_item.row_item import RowItem
 
-zapaska_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (диски)", code="2"),
-    start_row=0,
-    sheet_info="",
-    columns={
-        RowItem.__CODE__: RowItem.__CODE__,
+
+column_mapping = {
         "cae": RowItem.__CODE_ART__,
         "rest": RowItem.__REST_COUNT__,
         "price": RowItem.__PRICE_PURCHASE__,
@@ -36,7 +32,13 @@ zapaska_params = ParserParams(
         "brand": RowItem.__MANUFACTURER_NAME__,
         "name": RowItem.__TITLE__,
         "category": RowItem.__TYPE_PRODUCTION__,
-    },
+}
+
+zapaska_params = ParserParams(
+    supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (диски)", code="2"),
+    start_row=0,
+    sheet_info="",
+    columns=column_mapping,
     stop_words=[],
     file_templates=["disk.json"],
     sheet_indexes=[],
