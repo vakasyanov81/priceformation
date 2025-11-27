@@ -173,4 +173,3 @@ def is_truck_tire(item: RowItem):
 def is_special_tire(item: RowItem):
     """Спецтехника?"""
     return item.tire_type.lower() == "спецтехника"
-
