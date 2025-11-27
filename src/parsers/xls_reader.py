@@ -86,8 +86,6 @@ class XlsReader(IXlsReader, ParamsHelper):
 
     def open_book(self, file_path):
         """open book"""
-        # TODO: fix crutch
-        file_path = str(Path(cfg.main.project_root, file_path)).replace("src/src/", "src/")
         self.book = self._open_book(file_path)
 
     @classmethod
