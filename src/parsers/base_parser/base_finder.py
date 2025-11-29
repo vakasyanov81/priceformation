@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 from functools import lru_cache
 from typing import AnyStr, Optional, Tuple
 
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 from .alias_container import AliasContainer
 
 

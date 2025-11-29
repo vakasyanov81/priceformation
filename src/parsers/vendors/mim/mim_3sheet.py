@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 import dataclasses
 
-from src.parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
+from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
 from .mim_base import MimParserBase, supplier_folder_name
 from ... import data_provider
 from ...base_parser.base_parser_config import (

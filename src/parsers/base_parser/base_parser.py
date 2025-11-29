@@ -9,22 +9,22 @@ import math
 from functools import lru_cache
 from typing import List, Protocol, Type, TypeVar
 
-from src.cfg import init_cfg
-from src.core.exceptions import SupplierNotHavePricesError
-from src.parsers import data_provider
-from src.parsers.base_item_actions.base_item_action import BaseItemAction
-from src.parsers.base_item_actions.calc_percent_markup_item_action import (
+from cfg import init_cfg
+from core.exceptions import SupplierNotHavePricesError
+from parsers import data_provider
+from parsers.base_item_actions.base_item_action import BaseItemAction
+from parsers.base_item_actions.calc_percent_markup_item_action import (
     SetPercentMarkupItemAction,
 )
-from src.parsers.base_parser.category_finder import CategoryFinder
-from src.parsers.base_parser.log_parser_process import LoggerParseProcess
-from src.parsers.row_item.row_item import RowItem
-from src.parsers.xls_reader import XlsReader
+from parsers.base_parser.category_finder import CategoryFinder
+from parsers.base_parser.log_parser_process import LoggerParseProcess
+from parsers.row_item.row_item import RowItem
+from parsers.xls_reader import XlsReader
 from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 from ..data_provider import VendorParams
-from ...core import err_msg
+from core import err_msg
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 

@@ -4,7 +4,7 @@ stubs for tests for Zapaska vendor
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 
 
 def zapaska_one_item_result():

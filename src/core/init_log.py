@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from pathlib import Path
 
-from src.cfg import init_cfg
+from cfg import init_cfg
 
 
 def init_log():

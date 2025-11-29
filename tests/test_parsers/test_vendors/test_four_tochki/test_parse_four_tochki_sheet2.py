@@ -7,19 +7,19 @@ __author__ = "Kasyanov V.A."
 from typing import List
 from unittest.mock import patch
 
-from src.parsers.base_parser.base_parser_config import ParseConfiguration
-from src.parsers.fake_xls_reader import FakeXlsReader
-from src.parsers.row_item.row_item import RowItem
-from src.parsers.vendors.four_tochki.four_tochki_2sheet import (
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.fake_xls_reader import FakeXlsReader
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.four_tochki.four_tochki_2sheet import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,
 )
-from tests.test_parsers.fixtures.four_tochki_sheet2 import (
+from test_parsers.fixtures.four_tochki_sheet2 import (
     four_tochki_one_item_result,
     four_tochki_invalid_item_result,
     four_tochki_one_item_result_1,
 )
-from tests.test_parsers.test_vendors.parse_config import (
+from test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
     make_parse_configuration,
 )
@@ -62,7 +62,7 @@ def test_parse():
 def test_parse_with_invalid_item():
     """one invalid item is skipped"""
 
-    with patch("src.core.log_message.log_msg") as mock_log_msg:
+    with patch("core.log_message.log_msg") as mock_log_msg:
         result: List[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
     assert len(result) == 1
     assert mock_log_msg.call_count == 2

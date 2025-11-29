@@ -4,9 +4,9 @@ base logic for four_tochki vendor
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers.base_parser.base_parser import BaseParser, ParserParams
-from src.parsers.base_parser.base_parser_config import ParseParamsSupplier
-from src.parsers.row_item.row_item import RowItem
+from parsers.base_parser.base_parser import BaseParser, ParserParams
+from parsers.base_parser.base_parser_config import ParseParamsSupplier
+from parsers.row_item.row_item import RowItem
 
 fourtochki_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="four_tochki", name="Форточки", code="5"),

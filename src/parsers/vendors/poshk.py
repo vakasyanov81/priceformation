@@ -6,14 +6,14 @@ __author__ = "Kasyanov V.A."
 
 import re
 
-from src.parsers import data_provider
-from src.parsers.base_parser.base_parser import BaseParser, ParseConfiguration
-from src.parsers.base_parser.base_parser_config import (
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser, ParseConfiguration
+from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseParamsSupplier,
     ParserParams,
 )
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 
 poshk_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="poshk", name="Пошк", code="1"),

@@ -10,8 +10,8 @@ from typing import List
 
 from python_calamine import CalamineWorkbook
 
-from src import core
-from src.cfg import init_cfg
+import core
+from cfg import init_cfg
 
 _MAX_COLUMNS = 50
 _MAX_ROWS = 10000

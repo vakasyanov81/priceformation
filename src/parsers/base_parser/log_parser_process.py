@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import Optional
 
-from src.core.log_message import log_msg, warn_msg
+from core.log_message import log_msg, warn_msg
 from .parse_statistic import ParseResultStatistic
 
 

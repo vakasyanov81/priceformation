@@ -6,8 +6,8 @@ __author__ = "Kasyanov V.A."
 
 import pytest
 
-from src.cfg import init_cfg
-from src.parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
+from cfg import init_cfg
+from parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
 
 config = init_cfg()
 

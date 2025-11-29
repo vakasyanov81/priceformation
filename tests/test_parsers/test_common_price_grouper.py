@@ -5,8 +5,8 @@ tests common price parser
 __author__ = "Kasyanov V.A."
 
 
-from src.parsers.common_price_grouper import CommonPriceGrouper
-from src.parsers.row_item.row_item import RowItem
+from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.row_item.row_item import RowItem
 
 
 def test_grouper():

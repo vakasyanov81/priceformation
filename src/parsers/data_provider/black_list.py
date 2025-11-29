@@ -4,8 +4,8 @@ black list provider
 """
 __author__ = "Kasyanov V.A."
 
-from src.cfg.main import MainConfig
-from src.core.file_reader import read_file
+from cfg.main import MainConfig
+from core.file_reader import read_file
 
 
 class BlackListProviderBase:

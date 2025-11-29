@@ -7,14 +7,14 @@ __author__ = "Kasyanov V.A."
 import time
 from typing import TypeVar
 
-from src.core import warn_msg, err_msg, log_msg
-from src.parsers.all_vendors import all_vendor_supplier_info
-from src.parsers.base_parser.base_parser import Parser
-from src.parsers.base_parser.base_parser_config import ParseConfiguration
-from src.parsers.common_price_grouper import CommonPriceGrouper
-from src.parsers.data_provider.vendor_list import VendorListConfigFileError
-from src.parsers.writer.xls_writer import XlsWriter
-from src.parsers.writer.xwlt_driver import XlsxWriterDriver
+from core import warn_msg, err_msg, log_msg
+from parsers.all_vendors import all_vendor_supplier_info
+from parsers.base_parser.base_parser import Parser
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.data_provider.vendor_list import VendorListConfigFileError
+from parsers.writer.xls_writer import XlsWriter
+from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 SupplierName = str
 SupplierCode = str

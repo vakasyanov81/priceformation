@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Dict, List, NamedTuple, Tuple, Type
 
-from src.parsers import data_provider
-from src.parsers.row_item.row_item import RowItem
+from parsers import data_provider
+from parsers.row_item.row_item import RowItem
 
 
 @dataclass

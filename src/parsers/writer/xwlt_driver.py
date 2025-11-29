@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 import openpyxl
 from openpyxl.styles import Font, Color, PatternFill
 
-from src.cfg import init_cfg
+from cfg import init_cfg
 from .ixls_driver import IXlsDriver
 
 config = init_cfg()

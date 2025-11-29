@@ -7,9 +7,9 @@ __author__ = "Kasyanov V.A."
 import json
 from typing import Dict, NamedTuple
 
-from src.cfg.main import MainConfig
-from src.core.exceptions import CoreExceptionError
-from src.core.file_reader import read_file
+from cfg.main import MainConfig
+from core.exceptions import CoreExceptionError
+from core.file_reader import read_file
 
 
 class PriceRulesConfigFileError(CoreExceptionError):

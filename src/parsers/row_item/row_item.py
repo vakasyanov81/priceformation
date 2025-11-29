@@ -7,7 +7,7 @@ __author__ = "Kasyanov V.A."
 import hashlib
 import json
 
-from src.parsers.row_item import row_item_formatter as row_format
+from parsers.row_item import row_item_formatter as row_format
 
 
 class RowItem:

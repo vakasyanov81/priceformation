@@ -2,8 +2,8 @@
 
 import sys
 
-from src.core.exceptions import SupplierNotHavePricesError
-from src.core.log_message import print_log
+from core.exceptions import SupplierNotHavePricesError
+from core.log_message import print_log
 
 
 async def try_call(method, _async=False, **kwargs):

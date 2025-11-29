@@ -4,7 +4,7 @@ write template interface
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers.writer.templates.column_helper import ColumnHelper
+from parsers.writer.templates.column_helper import ColumnHelper
 
 
 class IWriteTemplate:
