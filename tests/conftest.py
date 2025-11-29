@@ -4,12 +4,11 @@ global fixtures
 """
 __author__ = "Kasyanov V.A."
 
+import os
+import sys
 from unittest.mock import patch
 
 import pytest
-
-import sys
-import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../tests')))

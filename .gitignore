@@ -9,6 +9,8 @@ src/core/config.py
 *dist/
 .pytest_cache
 .coverage
+.testmondata
+mutants
 
 venv
 pyrightconfig.json
