@@ -8,17 +8,17 @@ from typing import List
 
 import pytest
 
-from src.parsers.base_parser.base_parser_config import (
+from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
-from src.parsers.fake_xls_reader import FakeXlsReader
-from src.parsers.row_item.row_item import RowItem
-from src.parsers.vendors.pioner import PionerParser, pioner_params
-from tests.test_parsers.fixtures.pioner import (
+from parsers.fake_xls_reader import FakeXlsReader
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.pioner import PionerParser, pioner_params
+from test_parsers.fixtures.pioner import (
     pioner_one_item_result,
     pioner_one_item_result_with_categories,
 )
-from tests.test_parsers.test_vendors.parse_config import make_parse_configuration, PionerMarkupRulesProviderForTests
+from test_parsers.test_vendors.parse_config import make_parse_configuration, PionerMarkupRulesProviderForTests
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests)
 

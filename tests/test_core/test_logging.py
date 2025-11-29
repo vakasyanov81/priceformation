@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from unittest.mock import patch
 
-from src.core.wrappers import logging
+from core.wrappers import logging
 
 
 @logging(label="test_logging")
@@ -16,7 +16,7 @@ def logging_function(param1: int, param2: int, **_dict):
 
 def test_logging():
     param1, param2 = 10, 20
-    with patch("src.core.wrappers.log_msg") as _mock:
+    with patch("core.wrappers.log_msg") as _mock:
         logging_function(param1, param2, other_param="some text")
     assert _mock.call_count == 3
     assert "Calling method" in str(_mock.call_args_list[0].args[0])
@@ -29,7 +29,7 @@ def test_logging():
 def test_logging_when_wrong_argument():
     """test logging call function with wrong argument"""
 
-    with patch("src.core.wrappers.log_msg") as _mock:
+    with patch("core.wrappers.log_msg") as _mock:
         try:
             # pylint: disable=no-value-for-parameter
             logging_function()

@@ -6,7 +6,7 @@ __author__ = "Kasyanov V.A."
 
 from typing import List
 
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 
 
 class ParseResultStatistic:

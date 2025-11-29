@@ -7,8 +7,8 @@ __author__ = "Kasyanov V.A."
 import datetime
 import os
 
-from src.parsers.writer.fake_driver import FakeXlwtDriver
-from src.parsers.writer.templates.tmpl.for_drom import ForDrom
+from parsers.writer.fake_driver import FakeXlwtDriver
+from parsers.writer.templates.tmpl.for_drom import ForDrom
 from .fixtures import result_body_drom, write_data
 from .test_writer import FakeXlsWriter
 

@@ -6,8 +6,8 @@ __author__ = "Kasyanov V.A."
 
 import pytest
 
-from src.parsers.base_parser.category_finder import CategoryFinder
-from src.parsers.row_item.row_item import RowItem
+from parsers.base_parser.category_finder import CategoryFinder
+from parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(

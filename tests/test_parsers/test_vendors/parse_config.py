@@ -1,8 +1,8 @@
 """Parse configuration"""
 
-from src.parsers import data_provider
-from src.parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
-from tests.test_parsers.test_vendors.test_parse_poshk import (
+from parsers import data_provider
+from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
     MarkupRulesProviderForTests,

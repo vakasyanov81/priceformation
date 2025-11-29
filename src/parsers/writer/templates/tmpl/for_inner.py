@@ -4,8 +4,8 @@ write template for internal use
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers.row_item.row_item import RowItem
-from src.parsers.writer.templates.iwrite_template import IWriteTemplate
+from parsers.row_item.row_item import RowItem
+from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 
 class ForInner(IWriteTemplate):

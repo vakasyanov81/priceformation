@@ -7,17 +7,17 @@ __author__ = "Kasyanov V.A."
 import json
 from typing import List, Optional, Tuple
 
-from src.cfg.main import MainConfig
-from src.core.file_reader import read_file
-from src.parsers import data_provider
-from src.parsers.base_parser.base_parser import BaseParser
-from src.parsers.base_parser.base_parser_config import (
+from cfg.main import MainConfig
+from core.file_reader import read_file
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 
 
 column_mapping = {

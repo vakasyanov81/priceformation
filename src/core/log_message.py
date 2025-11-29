@@ -11,8 +11,8 @@ from typing import Literal
 from colorama import init
 from termcolor import colored
 
-from src.cfg import init_cfg
-from src.core.init_log import init_log
+from cfg import init_cfg
+from core.init_log import init_log
 
 cfg = init_cfg()
 init()

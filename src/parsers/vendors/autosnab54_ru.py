@@ -4,15 +4,15 @@ logic for autosnab54_ru vendor
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers import data_provider
-from src.parsers.base_parser.base_parser import BaseParser
-from src.parsers.base_parser.base_parser_config import (
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
-from src.parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import RowItem
 
 autosnab_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="autosnab54_ru", name="Автоснабжение", code="6"),

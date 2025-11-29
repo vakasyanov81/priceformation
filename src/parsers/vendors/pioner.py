@@ -9,16 +9,16 @@
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers import data_provider
-from src.parsers.base_parser.base_parser import BaseParser
-from src.parsers.base_parser.base_parser_config import (
+from parsers import data_provider
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
-from src.parsers.base_parser.manufacturer_finder import ManufacturerFinder
-from src.parsers.row_item.row_item import RowItem
+from parsers.base_parser.manufacturer_finder import ManufacturerFinder
+from parsers.row_item.row_item import RowItem
 
 pioner_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="pioner", name="Пионер", code="3"),

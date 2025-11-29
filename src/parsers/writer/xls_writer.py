@@ -8,8 +8,8 @@ import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 
-from src.cfg import init_cfg
-from src.parsers.writer.templates.iwrite_template import IWriteTemplate
+from cfg import init_cfg
+from parsers.writer.templates.iwrite_template import IWriteTemplate
 from .ixls_driver import IXlsDriver
 from .templates.column_helper import ColumnHelper
 

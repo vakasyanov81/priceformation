@@ -4,8 +4,8 @@ ind category, and set
 """
 __author__ = "Kasyanov V.A."
 
-from src.parsers.base_parser.alias_container import AliasContainer
-from src.parsers.base_parser.base_finder import BaseFinder
+from parsers.base_parser.alias_container import AliasContainer
+from parsers.base_parser.base_finder import BaseFinder
 
 
 class CategoryFinder:

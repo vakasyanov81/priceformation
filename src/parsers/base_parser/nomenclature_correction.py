@@ -3,7 +3,7 @@ from pathlib import Path
 
 from python_calamine import CalamineWorkbook
 
-from src.cfg.main import MainConfig
+from cfg.main import MainConfig
 
 
 def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
