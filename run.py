@@ -10,12 +10,12 @@ import asyncio
 import sys
 
 from run_dialog import AnswerResult, ask_action
-from src.core.async_utils import try_call
-from src.core.log_message import print_log
-from src.parsers.all_vendors import all_vendors
-from src.parsers.common_price import CommonPrice
-from src.parsers.common_price_output import CommonPriceOut
-from src.parsers.vendors.zapaska_tire_json import load_data
+from core.async_utils import try_call
+from core.log_message import print_log
+from parsers.all_vendors import all_vendors
+from parsers.common_price import CommonPrice
+from parsers.common_price_output import CommonPriceOut
+from parsers.vendors.zapaska_tire_json import load_data
 
 
 async def main():
