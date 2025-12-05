@@ -69,7 +69,9 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
         try:
             return json.loads(read_file(self.get_file_path()))
         except FileNotFoundError as exc:
-            raise PriceRulesConfigFileError(f"Filed to read vendor ({self.supplier_name}) settings.") from exc
+            raise PriceRulesConfigFileError(
+                f"Filed to read vendor ({self.supplier_name}) settings."
+            ) from exc
 
     def get_file_path(self):
         """Get user config file path by supplier name or by default"""

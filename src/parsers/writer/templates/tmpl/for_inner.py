@@ -25,9 +25,21 @@ class ForInner(IWriteTemplate):
         {"Номенклатура": {"style": {"width": 256 * 100}, "field": RowItem.__TITLE__}},
         {"Сезон": {"field": RowItem.__SEASON__}},
         {"Шип": {"field": RowItem.__SPIKE__}},
-        {"Цена закуп.": {"style": {"width": 256 * 15}, "field": RowItem.__PRICE_PURCHASE__, "format": "@"}},
+        {
+            "Цена закуп.": {
+                "style": {"width": 256 * 15},
+                "field": RowItem.__PRICE_PURCHASE__,
+                "format": "@",
+            }
+        },
         {"Цена": {"field": RowItem.__PRICE_WITH_MARKUP__}},
-        {"Рекомендуемая Цена": {"style": {"width": 256 * 25}, "field": RowItem.__PRICE_RECOMMENDED__, "format": "@"}},
+        {
+            "Рекомендуемая Цена": {
+                "style": {"width": 256 * 25},
+                "field": RowItem.__PRICE_RECOMMENDED__,
+                "format": "@",
+            }
+        },
         {"Наценка %": {"style": {"width": 256 * 15}, "field": RowItem.__PERCENT__}},
         {"Остаток": {"field": RowItem.__REST_COUNT__}},
         {

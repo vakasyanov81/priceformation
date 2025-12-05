@@ -43,7 +43,9 @@ class Parser(Protocol):
 
 class BaseParser(Parser):
     _item_actions: List[Type[BaseItemAction]] = []
-    _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
+    _item_actions_after_process: List[Type[BaseItemAction]] = [
+        SetPercentMarkupItemAction
+    ]
 
     _params = None
     _category_finder = None
@@ -239,7 +241,11 @@ class BaseParser(Parser):
         return title_is_prepared
 
     def is_valid_title(self, title: str):
-        return title and not self.has_stop_word(title) and not self.check_title_in_black_list(title)
+        return (
+            title
+            and not self.has_stop_word(title)
+            and not self.check_title_in_black_list(title)
+        )
 
     def has_stop_word(self, title) -> bool:
         for s_word in self.get_stop_words():
@@ -285,21 +291,32 @@ class BaseParser(Parser):
         """calculate recommended percent markup"""
         price_recommended = item.price_recommended or 0
         price_opt = item.price_opt or 0
-        return self.calc_percent(price_recommended, price_opt) if price_recommended else 0
+        return (
+            self.calc_percent(price_recommended, price_opt) if price_recommended else 0
+        )
 
     def is_small_recommended_percent(self, item) -> bool:
         """absolute percent markup is small?"""
-        return self.recommended_percent_markup(item) < self.markup_rules().min_recommended_percent_markup
+        return (
+            self.recommended_percent_markup(item)
+            < self.markup_rules().min_recommended_percent_markup
+        )
 
     def is_big_recommended_percent(self, item) -> bool:
         """recommended supplier markup percent is big?"""
         if not self.markup_rules().max_recommended_percent_markup:
             return False
-        return self.recommended_percent_markup(item) > self.markup_rules().max_recommended_percent_markup
+        return (
+            self.recommended_percent_markup(item)
+            > self.markup_rules().max_recommended_percent_markup
+        )
 
     def is_small_absolute_markup(self, selling_price, purchase_price) -> bool:
         """absolute markup is small?"""
-        return selling_price - purchase_price < self.markup_rules().absolute_markup_rules.min_absolute_markup
+        return (
+            selling_price - purchase_price
+            < self.markup_rules().absolute_markup_rules.min_absolute_markup
+        )
 
     def get_price_with_absolute_rule_markup(self, price_opt) -> float:
         """absolute markup value"""
@@ -314,7 +331,9 @@ class BaseParser(Parser):
             price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
 
         if self.is_big_recommended_percent(item) and not item.price_recommended:
-            price = self.get_markup(price_opt, self.markup_rules().max_recommended_percent_markup)
+            price = self.get_markup(
+                price_opt, self.markup_rules().max_recommended_percent_markup
+            )
 
         if self.is_small_absolute_markup(price, price_opt):
             price = self.get_price_with_absolute_rule_markup(price_opt)
@@ -329,9 +348,9 @@ class BaseParser(Parser):
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         """get vendor configuration"""
-        return self._parse_config.all_vendor_config().get(self.parser_params().supplier.folder_name) or VendorParams(
-            enabled=0
-        )
+        return self._parse_config.all_vendor_config().get(
+            self.parser_params().supplier.folder_name
+        ) or VendorParams(enabled=0)
 
     @classmethod
     def prepare_title(cls, title: str):
@@ -381,7 +400,9 @@ def get_file_prices(parser: TBaseParser):
     _list_files = []
     cfg = init_cfg()
     for f_tmp in parser.parser_params().file_templates:
-        _list_files += glob.glob(f"{cfg.main.folder_file_prices}/{parser.parser_params().supplier.folder_name}/{f_tmp}")
+        _list_files += glob.glob(
+            f"{cfg.main.folder_file_prices}/{parser.parser_params().supplier.folder_name}/{f_tmp}"
+        )
 
     if not _list_files:
         raise SupplierNotHavePricesError(

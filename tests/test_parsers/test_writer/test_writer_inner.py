@@ -2,7 +2,6 @@
 tests write price for internal use
 """
 
-
 import datetime
 import os
 

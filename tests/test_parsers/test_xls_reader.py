@@ -10,11 +10,18 @@ from parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
 config = init_cfg()
 
 _FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price.xlsx"
-_OLD_FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price_old.xls"
-_PIONER_FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price_pioner.xlsx"
+_OLD_FILE_PATH = (
+    str(config.main.project_root) + "/tests/test_parsers/fixtures/price_old.xls"
+)
+_PIONER_FILE_PATH = (
+    str(config.main.project_root) + "/tests/test_parsers/fixtures/price_pioner.xlsx"
+)
 _PARSE_PARAMS = {"start_row": 1, "columns": {0: "col_0", 1: "col_1"}}
 
-_PIONER_PARSE_PARAMS = {"start_row": 12, "columns": {1: "c1", 2: "c2", 4: "c4", 5: "c5"}}
+_PIONER_PARSE_PARAMS = {
+    "start_row": 12,
+    "columns": {1: "c1", 2: "c2", 4: "c4", 5: "c5"},
+}
 
 SHEET_1 = [
     {"col_0": 87674341266.0, "col_1": "CROSSLEADER  225/40/18  Y 92 DSU02"},
@@ -77,5 +84,15 @@ def test_xlsx_with_skipped_first_column():
     parse_res = reader.parse([0])
 
     assert len(parse_res) == 2
-    assert parse_res[0] == {"c1": "Автокамера 16.9-24", "c2": 5000.0, "c4": 16.0, "c5": ""}
-    assert parse_res[1] == {"c1": "Автокамера 16.9-28", "c2": 5500.0, "c4": 16.0, "c5": ""}
+    assert parse_res[0] == {
+        "c1": "Автокамера 16.9-24",
+        "c2": 5000.0,
+        "c4": 16.0,
+        "c5": "",
+    }
+    assert parse_res[1] == {
+        "c1": "Автокамера 16.9-28",
+        "c2": 5500.0,
+        "c4": 16.0,
+        "c5": "",
+    }

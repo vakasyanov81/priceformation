@@ -28,7 +28,9 @@ stk_params = ParserParams(
 )
 
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(stk_params.supplier.folder_name)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    stk_params.supplier.folder_name
+)
 
 stk_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,

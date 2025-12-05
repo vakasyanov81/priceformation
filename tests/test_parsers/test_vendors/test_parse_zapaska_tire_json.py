@@ -2,7 +2,6 @@
 tests for zapaska (json) tire vendor after raw-parser process
 """
 
-
 from typing import List
 from unittest import skip
 

@@ -43,7 +43,9 @@ def strip_into(value: str):
 @lru_cache()
 def get_float(value) -> float:
     """get float value"""
-    return float(prepare_str_to_float(strip_into_str(get_stripped(value, null_value="0"))))
+    return float(
+        prepare_str_to_float(strip_into_str(get_stripped(value, null_value="0")))
+    )
 
 
 def get_integer(value) -> int:

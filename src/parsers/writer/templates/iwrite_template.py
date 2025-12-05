@@ -24,7 +24,11 @@ class IWriteTemplate:
     def get_file_name(self):
         """get exclude"""
         file_field = "__FILE__"
-        return getattr(self, file_field) if hasattr(self, file_field) else "default_result.xls"
+        return (
+            getattr(self, file_field)
+            if hasattr(self, file_field)
+            else "default_result.xls"
+        )
 
     def columns(self) -> list[dict]:
         """get columns"""
@@ -56,4 +60,8 @@ class IWriteTemplate:
 
     def get_columns_format(self) -> dict[int, str]:
         """{1: "@ or 0.00 or ..."}"""
-        return {self.get_column_index(c_title): col.format for c_title, col in self.get_columns().items() if col.format}
+        return {
+            self.get_column_index(c_title): col.format
+            for c_title, col in self.get_columns().items()
+            if col.format
+        }

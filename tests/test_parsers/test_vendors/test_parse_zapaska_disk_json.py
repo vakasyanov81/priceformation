@@ -2,7 +2,6 @@
 tests for zapaska vendor after raw-parser process
 """
 
-
 from typing import List
 
 from cfg.main import get_config
@@ -34,7 +33,9 @@ class TestParseZapaskaDiskJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        result: List[RowItem] = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]).parse()
+        result: List[RowItem] = get_fake_parser(
+            [f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]
+        ).parse()
 
         res = result[0]
 

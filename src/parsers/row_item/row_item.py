@@ -53,7 +53,9 @@ class RowItem:
     __DISK_THICKNESS__ = "disc_thickness"
     __SLOT_COUNT__ = "slot_count"  # кол-во отверстий
     __SLOT_DIAMETER__ = "slot_diameter"  # диаметр отверстий
-    __US_AFF_DESIGNATION__ = "american_affiliation_designation"  # американское обозначение принадлежности
+    __US_AFF_DESIGNATION__ = (
+        "american_affiliation_designation"  # американское обозначение принадлежности
+    )
     # сверловка отверстий в дисках, бывает под один размер бывает универсальный тип под два размера
     __PCD1__ = "pcd1"
     __PCD2__ = "pcd2"

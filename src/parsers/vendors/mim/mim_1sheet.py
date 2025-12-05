@@ -75,6 +75,8 @@ class MimParser1Sheet(MimParserBase):
         mark = (item.manufacturer or "").lower().capitalize()
         delimiter = "x" if is_number(profile) else "/"
 
-        title = f"{width}{delimiter}{profile}R{diameter} {mark} {model} {load}{velocity}"
+        title = (
+            f"{width}{delimiter}{profile}R{diameter} {mark} {model} {load}{velocity}"
+        )
 
         return title

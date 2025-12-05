@@ -7,7 +7,10 @@ from typing import List, Tuple
 import pytest
 
 from parsers import data_provider
-from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+)
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.poshk import (
@@ -46,7 +49,9 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
         }
 
 
-class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
+class ManufacturerAliasesProviderForTests(
+    data_provider.ManufacturerAliasesProviderBase
+):
     """manufacturer aliases data provider for tests"""
 
     def get_aliases(self) -> dict:

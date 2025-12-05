@@ -1,6 +1,7 @@
 """
 xls read logic
 """
+
 # pylint: disable=missing-function-docstring
 
 from pathlib import Path
@@ -120,7 +121,11 @@ class XlsReader(IXlsReader, ParamsHelper):
         if self.is_end_row():
             return None
 
-        end_col = self.sheet_cols(sheet) if self.sheet_cols(sheet) <= self.max_columns else self.max_columns
+        end_col = (
+            self.sheet_cols(sheet)
+            if self.sheet_cols(sheet) <= self.max_columns
+            else self.max_columns
+        )
         cur_row = self.cur_row
         self.cur_row += 1
 
@@ -128,7 +133,9 @@ class XlsReader(IXlsReader, ParamsHelper):
             raise MaxRowsReached(self.max_rows)
 
         try:
-            self.cur_row_values = [_(cell) for cell in self.row_values(sheet, cur_row, end_col)]
+            self.cur_row_values = [
+                _(cell) for cell in self.row_values(sheet, cur_row, end_col)
+            ]
         except IndexError:
             self.cur_row_values = [None]
 

@@ -28,7 +28,9 @@ column_mapping.update(
 )
 
 zapaska_tire_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (шины)", code="22"),
+    supplier=ParseParamsSupplier(
+        folder_name="zapaska", name="Запаска (шины)", code="22"
+    ),
     start_row=0,
     sheet_info="",
     columns=column_mapping,
@@ -38,7 +40,9 @@ zapaska_tire_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_tire_params.supplier.folder_name)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
+    zapaska_tire_params.supplier.folder_name
+)
 
 zapaska_tire_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -89,7 +93,11 @@ def get_data(url: str) -> str:
 
 def save_data(data: str, filename: str):
     """save data to file"""
-    folder = init_cfg().main.folder_file_prices + "/" + zapaska_tire_params.supplier.folder_name
+    folder = (
+        init_cfg().main.folder_file_prices
+        + "/"
+        + zapaska_tire_params.supplier.folder_name
+    )
     root = init_cfg().main.project_root
     with open(f"{root}/{folder}/{filename}", "w", encoding="utf-8") as file_:
         file_.write(data)

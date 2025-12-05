@@ -98,7 +98,15 @@ class MimParser2Sheet(MimParserBase):
         if diameter:
             diameter = f"R{diameter}"
 
-        chunks = [f"{width}{profile}{diameter}", mark, model, layering, f"{load}{velocity}", intimacy, axis]
+        chunks = [
+            f"{width}{profile}{diameter}",
+            mark,
+            model,
+            layering,
+            f"{load}{velocity}",
+            intimacy,
+            axis,
+        ]
 
         chunks = [str(chunk or "").strip() or None for chunk in chunks]
 

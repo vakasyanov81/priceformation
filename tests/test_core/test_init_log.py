@@ -47,8 +47,12 @@ def test_folder_is_exists(mock_os_isdir, folder_is_exist):
 
 
 @patch("core.init_log.folder_is_exists")
-@pytest.mark.parametrize("folder_is_exist, folder_created", [(True, False), (False, True)])
-def test_create_logs_folder_if_not_exists(mock_folder_is_exists, folder_is_exist, folder_created):
+@pytest.mark.parametrize(
+    "folder_is_exist, folder_created", [(True, False), (False, True)]
+)
+def test_create_logs_folder_if_not_exists(
+    mock_folder_is_exists, folder_is_exist, folder_created
+):
     """test create logs folder if not exists"""
 
     mock_folder_is_exists.return_value = folder_is_exist

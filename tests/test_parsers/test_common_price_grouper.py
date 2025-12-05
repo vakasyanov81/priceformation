@@ -2,7 +2,6 @@
 tests common price parser
 """
 
-
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.row_item.row_item import RowItem
 

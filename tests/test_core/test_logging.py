@@ -21,7 +21,9 @@ def test_logging():
     assert f"Params: ({param1}, {param2})" in str(_mock.call_args_list[0].args[0])
     assert "{'other_param': 'some text'}" in str(_mock.call_args_list[0].args[0])
     assert "Result" in str(_mock.call_args_list[1].args[0])
-    assert f'logging_function": {param1 + param2}' in str(_mock.call_args_list[1].args[0])
+    assert f'logging_function": {param1 + param2}' in str(
+        _mock.call_args_list[1].args[0]
+    )
 
 
 def test_logging_when_wrong_argument():
@@ -40,7 +42,9 @@ def test_logging_when_wrong_argument():
     assert "Label test_logging" in str(_mock.call_args_list[0].args[0])
 
     assert "Runtime error" in str(_mock.call_args_list[1].args[0])
-    assert "missing 2 required positional arguments" in str(_mock.call_args_list[1].args[0])
+    assert "missing 2 required positional arguments" in str(
+        _mock.call_args_list[1].args[0]
+    )
 
     assert "Result" in str(_mock.call_args_list[2].args[0])
     assert ": None" in str(_mock.call_args_list[2].args[0])
