@@ -40,4 +40,5 @@ jobs:
       - name: Lint with pylint
         run: |
           export WORK_DIR="$GITHUB_WORKSPACE"
+          export TESTS_DIR="$GITHUB_WORKSPACE"/tests
           uv run pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
