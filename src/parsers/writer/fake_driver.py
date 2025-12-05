@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 write price list logic via xlwt module
 """
-__author__ = "Kasyanov V.A."
 
 from .ixls_driver import IXlsDriver
 

@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 write template for drom.ru
 """
 
-__author__ = "Kasyanov V.A."
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 

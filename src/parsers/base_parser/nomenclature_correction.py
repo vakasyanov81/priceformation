@@ -8,9 +8,12 @@ from cfg.main import MainConfig
 
 def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
     if getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", None) is None:
-        get_nomenclature_corrected_title.corrected_nomenclatures_ = load_file()
+        setattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", load_file())
 
-    return get_nomenclature_corrected_title.corrected_nomenclatures_.get(nomenclature_title) or nomenclature_title
+    return (
+        getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", {}).get(nomenclature_title)
+        or nomenclature_title
+    )
 
 
 def load_file() -> dict:

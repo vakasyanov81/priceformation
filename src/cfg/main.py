@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 main configuration
 """
-__author__ = "Kasyanov V.A."
 
 import datetime
 import os
 import pathlib
-
 
 __LOG_FOLDER__ = "logs"
 __USER_PARSE_CONFIG__ = "parse_config"

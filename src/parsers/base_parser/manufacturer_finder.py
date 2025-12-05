@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 find manufacturer, make correct manufacturer in title
 """
-__author__ = "Kasyanov V.A."
 
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder

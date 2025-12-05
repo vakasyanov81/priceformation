@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Make parse all price and make inner and drom prices
 """
-__author__ = "Kasyanov V.A."
 
 import time
 from typing import TypeVar
@@ -39,7 +37,10 @@ class CommonPrice:
         :return:
         """
         start_time = time.time()
-        log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
+        log_msg(
+            "\n============== Начало разбора прайсов =================\n",
+            need_print_log=True,
+        )
         for vendor, vendor_config in vendors:
             self.parse_vendor(vendor(vendor_config))
         grouper = CommonPriceGrouper(self.get_result())

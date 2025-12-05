@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 manufacturer aliases provider
 """
-__author__ = "Kasyanov V.A."
 
 import json
 

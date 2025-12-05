@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 container for aliases
 """
-__author__ = "Kasyanov V.A."
 
 from functools import lru_cache
 

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests for Pioner vendor after raw-parser process
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List
 
@@ -18,7 +16,10 @@ from test_parsers.fixtures.pioner import (
     pioner_one_item_result,
     pioner_one_item_result_with_categories,
 )
-from test_parsers.test_vendors.parse_config import make_parse_configuration, PionerMarkupRulesProviderForTests
+from test_parsers.test_vendors.parse_config import (
+    make_parse_configuration,
+    PionerMarkupRulesProviderForTests,
+)
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests)
 
@@ -96,7 +97,11 @@ class TestParsePioner:
             # {"price": 1500, "price_with_markup": 1770, "category": "автошины xxx"},
             # {"price": 6000, "price_with_markup": 6730, "category": "автошины xxx"},
             # {"price": 20000, "price_with_markup": 21400, "category": "автошины xxx"},
-            {"price": 150000, "price_with_markup": 157500, "category": "автошины TRIANGLE"},
+            {
+                "price": 150000,
+                "price_with_markup": 157500,
+                "category": "автошины TRIANGLE",
+            },
         ],
     )
     def test_markup(self, params):

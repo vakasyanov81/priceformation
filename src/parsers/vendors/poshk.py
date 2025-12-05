@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logic for posh vendor
 """
-__author__ = "Kasyanov V.A."
 
 import re
 

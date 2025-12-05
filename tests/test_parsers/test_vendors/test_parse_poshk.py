@@ -1,15 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 tests for Poshk vendor after raw-parser process
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List, Tuple
 
 import pytest
 
 from parsers import data_provider
-from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+)
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.poshk import (

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 vendor list provider
 """
-__author__ = "Kasyanov V.A."
 
 import json
 from typing import NamedTuple

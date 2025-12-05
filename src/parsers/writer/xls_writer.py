@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 write price list logic
 """
-__author__ = "Kasyanov V.A."
 
 import datetime
 from pathlib import Path

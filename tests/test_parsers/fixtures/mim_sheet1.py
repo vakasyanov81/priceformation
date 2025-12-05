@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 fixtures for Mim vendor
 """
-__author__ = "Kasyanov V.A."
 
 
 def mim_one_item_result():

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 helper for write-column structure
 """
-__author__ = "Kasyanov V.A."
 
 
 class ColumnHelper:

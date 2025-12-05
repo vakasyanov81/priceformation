@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 test init_log
 """
-__author__ = "Kasyanov V.A."
 
 from unittest.mock import patch
 

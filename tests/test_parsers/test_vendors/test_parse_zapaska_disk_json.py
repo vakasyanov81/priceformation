@@ -2,8 +2,6 @@
 tests for zapaska vendor after raw-parser process
 """
 
-__author__ = "Kasyanov V.A."
-
 from typing import List
 
 from cfg.main import get_config

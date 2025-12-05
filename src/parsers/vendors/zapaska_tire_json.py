@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logic for zapaska (rest) vendor
 """
-__author__ = "Kasyanov V.A."
 
 from base64 import b64encode
 from http.client import HTTPSConnection

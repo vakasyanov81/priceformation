@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 read file logic
 """
-__author__ = "Kasyanov V.A."
 
 from pathlib import Path
 

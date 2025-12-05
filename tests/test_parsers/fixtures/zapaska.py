@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 stubs for tests for Zapaska vendor
 """
-__author__ = "Kasyanov V.A."
 
 from parsers.row_item.row_item import RowItem
 

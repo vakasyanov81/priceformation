@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests find manufacturer in title
 """
-__author__ = "Kasyanov V.A."
 
 import pytest
 

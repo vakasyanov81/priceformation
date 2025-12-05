@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """configuration logic"""
-__author__ = "Kasyanov V.A."
 
 from . import main
 

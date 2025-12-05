@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 raise logic
 """
-__author__ = "Kasyanov V.A."
 
 import traceback
 

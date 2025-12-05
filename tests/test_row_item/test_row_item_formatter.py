@@ -1,6 +1,10 @@
 import pytest
 
-from parsers.row_item.row_item_formatter import get_try_to_int_or_float, get_integer, get_float
+from parsers.row_item.row_item_formatter import (
+    get_try_to_int_or_float,
+    get_integer,
+    get_float,
+)
 
 
 def test_get_try_to_int_or_float():

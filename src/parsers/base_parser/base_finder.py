@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 find word in title
 """
-__author__ = "Kasyanov V.A."
 
 from functools import lru_cache
 from typing import AnyStr, Optional, Tuple

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 fixtures for Pioner vendor
 """
-__author__ = "Kasyanov V.A."
 
 
 def pioner_one_item_result():

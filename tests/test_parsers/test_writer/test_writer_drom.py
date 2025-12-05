@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests write price for drom.ru
 """
-__author__ = "Kasyanov V.A."
 
 import datetime
 import os

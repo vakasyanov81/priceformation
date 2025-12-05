@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 statistic for price formation result
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List
 

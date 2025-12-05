@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 log, raise interfaces
 """
-__author__ = "Kasyanov V.A."
 
 from .exceptions import CoreExceptionError, make_raise
 from .log_message import err_msg, log_msg, warn_msg

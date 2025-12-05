@@ -1,8 +1,8 @@
 [project]
 name = "priceformation"
 version = "0.1.0"
-description = ""
-authors = [{ name = "va.kasyanov" }]
+description = "A utility for small businesses. It simplifies working with price lists from tire suppliers."
+authors = [{ name = "Vladimir Kasyanov", email = "va.kasyanov81@yandex.ru" }]
 requires-python = "==3.13.*,<4"
 readme = "README.md"
 dependencies = [
@@ -22,6 +22,9 @@ dev = [
     "pylint==4.0.3",
     "ruff==0.14.5",
     "pytest-testmon==2.1.4",
+    "pytest-randomly==4.0.1",
+    "pytest-xdist==3.8.0",
+    "wemake-python-styleguide==1.4.0",
 ]
 
 [build-system]
@@ -31,6 +34,18 @@ build-backend = "hatchling.build"
 [tool.hatch.build]
 only-include = ["src"]
 sources = ["src"]
+
+[tool.black]
+line-length = 120
+preview = true
+skip-string-normalization = true # we use '
+target-version = [ 'py311' ]
+# Exclude intentionally bad files:
+extend-exclude = '''
+(
+  tests/.*/__snapshots__/.* | tests/fixtures/.*
+)
+'''
 
 [tool.ruff]
 select = ["F", "E", "W", "C90",
@@ -44,12 +59,29 @@ ignore=["B019", "A003", "S324"]
 "tests/*.py" = ["S101"]
 "core/log_message.py" = ["T201"]
 
+[tool.ruff.format]
+quote-style = "single"
+
 [tool.pyright]
 reportUnnecessaryTypeIgnoreComment="warning"
 
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
+]
+
+addopts = [
+    "--strict-config",
+    # pytest-xdist
+    "-n=2",
+    # pytest-cov
+    "--cov=src",
+    "--cov=tests",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=10",
 ]
 norecursedirs = [
     ".git",
@@ -60,6 +92,6 @@ norecursedirs = [
 [tool.mutmut]
 paths_to_mutate = [ "src/" ]
 backup="False"
-runner='python -m pytest -x -q --tb=no --testmon -o addopts="" '
+pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true

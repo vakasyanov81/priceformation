@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 fixtures for four_tochki sheet2 vendor
 """
-__author__ = "Kasyanov V.A."
 
 
 def four_tochki_one_item_result():
