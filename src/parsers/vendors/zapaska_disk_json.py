@@ -17,7 +17,6 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 
-
 column_mapping = {
     "cae": RowItem.__CODE_ART__,
     "rest": RowItem.__REST_COUNT__,

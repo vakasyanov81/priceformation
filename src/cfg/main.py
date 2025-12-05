@@ -6,7 +6,6 @@ import datetime
 import os
 import pathlib
 
-
 __LOG_FOLDER__ = "logs"
 __USER_PARSE_CONFIG__ = "parse_config"
 __FILE_PRICES__ = "file_prices"

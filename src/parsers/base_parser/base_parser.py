@@ -223,7 +223,7 @@ class BaseParser(Parser):
         return self.xls_reader.get_instance(
             _file,
             {
-                "start_row": (self.parser_params().start_row - 1),
+                "start_row": self.parser_params().start_row - 1,
                 "columns": self.parser_params().columns,
             },
         )

@@ -29,4 +29,4 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
         _black_list = black_list.split(_newline)
         _black_list = [black_title.strip(f" {_newline}") for black_title in _black_list if black_title]
         _black_list = [black_title for black_title in _black_list if black_title]
-        return black_list
+        return _black_list

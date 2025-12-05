@@ -35,6 +35,18 @@ build-backend = "hatchling.build"
 only-include = ["src"]
 sources = ["src"]
 
+[tool.black]
+line-length = 120
+preview = true
+skip-string-normalization = true # we use '
+target-version = [ 'py311' ]
+# Exclude intentionally bad files:
+extend-exclude = '''
+(
+  tests/.*/__snapshots__/.* | tests/fixtures/.*
+)
+'''
+
 [tool.ruff]
 select = ["F", "E", "W", "C90",
           "I", "N", "S", "B", "A",
@@ -46,6 +58,9 @@ ignore=["B019", "A003", "S324"]
 [tool.ruff.per-file-ignores]
 "tests/*.py" = ["S101"]
 "core/log_message.py" = ["T201"]
+
+[tool.ruff.format]
+quote-style = "single"
 
 [tool.pyright]
 reportUnnecessaryTypeIgnoreComment="warning"

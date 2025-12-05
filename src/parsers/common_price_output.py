@@ -5,7 +5,6 @@ Make parse all price and make inner and drom prices
 from parsers.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
-from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
