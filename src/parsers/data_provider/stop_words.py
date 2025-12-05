@@ -21,6 +21,4 @@ class StopWordsProviderFromUserConfig(StopWordsProviderBase):
 
     def get_stop_words_data(self):
         """Get stop words"""
-        return BlackListProviderFromUserConfig.split_and_filtration(
-            read_file(MainConfig().stop_words_file_path)
-        )
+        return BlackListProviderFromUserConfig.split_and_filtration(read_file(MainConfig().stop_words_file_path))

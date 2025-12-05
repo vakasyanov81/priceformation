@@ -33,9 +33,7 @@ class TestParseZapaskaDiskJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        result: List[RowItem] = get_fake_parser(
-            [f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]
-        ).parse()
+        result: List[RowItem] = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]).parse()
 
         res = result[0]
 

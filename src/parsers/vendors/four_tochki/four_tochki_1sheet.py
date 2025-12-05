@@ -139,12 +139,7 @@ def get_prepared_title(item: RowItem) -> str:
     if width == "10" and diameter == "20":
         width_postfix = ".00"
 
-    if (
-        is_special_tire(item)
-        and height_percent
-        and height_percent != "L"
-        and "." not in width
-    ):
+    if is_special_tire(item) and height_percent and height_percent != "L" and "." not in width:
         width_postfix = ".0"
 
     if height_percent == "L":

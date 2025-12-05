@@ -16,9 +16,7 @@ class CommonPriceOut:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(
-        self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver
-    ):
+    def __init__(self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver

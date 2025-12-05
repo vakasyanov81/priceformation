@@ -34,9 +34,7 @@ pioner_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(
-    pioner_params.supplier.folder_name
-)
+mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(pioner_params.supplier.folder_name)
 
 pioner_config = BasePriceParseConfigurationParams(
     markup_rules_provider=mark_up_provider,
@@ -95,9 +93,7 @@ class PionerParser(BaseParser):
         """set current category by title"""
         if self.is_category_row(item):
             self.current_category = (item.title or "").lower().strip()
-        self.current_category_first_chunk = (
-            (self.current_category or "").split("/")[0]
-        ).split(" ")[0]
+        self.current_category_first_chunk = ((self.current_category or "").split("/")[0]).split(" ")[0]
 
     def set_manufacturer_to_title(self, item):
         """set manufacturer name to title for row item"""

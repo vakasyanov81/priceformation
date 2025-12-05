@@ -20,9 +20,7 @@ from test_parsers.test_vendors.parse_config import (
     make_parse_configuration,
 )
 
-parser_config = make_parse_configuration(
-    fourtochki_sheet_1_params, MimMarkupRulesProviderForTests()
-)
+parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRulesProviderForTests())
 
 
 def get_fake_parser(parse_result):
@@ -59,9 +57,7 @@ def test_parse():
 def test_replace_diameter():
     """check replace RZ -> ZR"""
 
-    result: List[RowItem] = get_fake_parser(
-        four_tochki_one_item_result(diameter="RZ16")
-    ).parse()
+    result: List[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
 
     assert len(result) == 1
     assert result[0].title == "205/55ZR16 BF Goodrich Advantage 94W"

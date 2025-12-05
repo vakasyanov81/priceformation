@@ -7,18 +7,11 @@ from cfg.main import MainConfig
 
 
 def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
-    if (
-        getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", None)
-        is None
-    ):
-        setattr(
-            get_nomenclature_corrected_title, "corrected_nomenclatures_", load_file()
-        )
+    if getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", None) is None:
+        setattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", load_file())
 
     return (
-        getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", {}).get(
-            nomenclature_title
-        )
+        getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", {}).get(nomenclature_title)
         or nomenclature_title
     )
 

@@ -46,9 +46,7 @@ class XlsWriter:
 
     def get_file_name(self):
         """get file name for writing"""
-        return self.template.get_file_name().format(
-            now=datetime.datetime.now().strftime("%Y-%m-%d")
-        )
+        return self.template.get_file_name().format(now=datetime.datetime.now().strftime("%Y-%m-%d"))
 
     def col_names(self) -> list:
         """get column names"""

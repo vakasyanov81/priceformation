@@ -17,9 +17,7 @@ from parsers.writer.xwlt_driver import XlsxWriterDriver
 SupplierName = str
 SupplierCode = str
 
-VendorList = TypeVar(
-    "VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]]
-)
+VendorList = TypeVar("VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]])
 
 
 class CommonPrice:
@@ -47,9 +45,7 @@ class CommonPrice:
             self.parse_vendor(vendor(vendor_config))
         grouper = CommonPriceGrouper(self.get_result())
         self._result = grouper.group_by_params().get_items()
-        log_msg(
-            f"\nКоличество дублей: {grouper.get_double_count()}\n", need_print_log=True
-        )
+        log_msg(f"\nКоличество дублей: {grouper.get_double_count()}\n", need_print_log=True)
         elapsed_time = time.time() - start_time
 
         log_msg(

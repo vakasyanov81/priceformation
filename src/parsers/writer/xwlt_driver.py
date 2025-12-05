@@ -55,9 +55,7 @@ class XlsxWriterDriver(IXlsDriver):
         :param column_format: dict[column_index, '@']
         """
         for index, c_format in column_format.items():
-            self.work_sheet.column_dimensions[
-                self.number_to_excel_column(index)
-            ].number_format = c_format
+            self.work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
 
     def write(self, i, j, _value, style=None, _color: str = None):
         """write"""
@@ -67,9 +65,7 @@ class XlsxWriterDriver(IXlsDriver):
         if style:
             cell.font = style
         if _color:
-            cell.fill = PatternFill(
-                fgColor=Color(rgb=_color.lstrip("#")), fill_type="solid"
-            )
+            cell.fill = PatternFill(fgColor=Color(rgb=_color.lstrip("#")), fill_type="solid")
 
         self.current_col_index = j
         self.current_row_index = i
@@ -99,6 +95,4 @@ class XlsxWriterDriver(IXlsDriver):
         """set auto width by content"""
 
         for col_index, max_len in self.col_max_length.items():
-            self.work_sheet.column_dimensions[
-                self.number_to_excel_column(col_index)
-            ].width = (max_len + 4)
+            self.work_sheet.column_dimensions[self.number_to_excel_column(col_index)].width = max_len + 4
