@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 main configuration
 """
-__author__ = "Kasyanov V.A."
 
 import datetime
 import os

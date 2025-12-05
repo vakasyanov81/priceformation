@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logging decorators
 """
-__author__ = "Kasyanov V.A."
 
 import logging as __logging
 import time

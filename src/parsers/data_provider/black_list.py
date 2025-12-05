@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 black list provider
 """
-__author__ = "Kasyanov V.A."
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
@@ -28,7 +26,11 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
     def split_and_filtration(cls, black_list: str):
         """Split data from file by `new-line` sign and filtration"""
         _newline = "\n"
-        black_list = black_list.split(_newline)
-        black_list = [black_title.strip(f" {_newline}") for black_title in black_list if black_title]
-        black_list = [black_title for black_title in black_list if black_title]
+        _black_list = black_list.split(_newline)
+        _black_list = [
+            black_title.strip(f" {_newline}")
+            for black_title in _black_list
+            if black_title
+        ]
+        _black_list = [black_title for black_title in _black_list if black_title]
         return black_list

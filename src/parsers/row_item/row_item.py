@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 price row item description
 """
-__author__ = "Kasyanov V.A."
 
 import hashlib
 import json

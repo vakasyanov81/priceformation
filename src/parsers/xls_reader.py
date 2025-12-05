@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 xls read logic
 """
 # pylint: disable=missing-function-docstring
-__author__ = "Kasyanov V.A."
 
 from pathlib import Path
 from typing import List

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 base item action logic
 """
-__author__ = "Kasyanov V.A."
 
 from parsers.row_item.row_item import RowItem
 

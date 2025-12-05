@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 fixtures for Poshk vendor
 """
-__author__ = "Kasyanov V.A."
 
 
 def poshk_one_item_result():

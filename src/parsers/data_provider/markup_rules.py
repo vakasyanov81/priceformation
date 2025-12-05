@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 markup rules provider
 """
-__author__ = "Kasyanov V.A."
 
 import json
 from typing import Dict, NamedTuple

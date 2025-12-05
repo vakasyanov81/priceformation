@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 stop words provider
 """
-__author__ = "Kasyanov V.A."
 
 from cfg.main import MainConfig
 from core.file_reader import read_file

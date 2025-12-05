@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests for Mim vendor (sheet 2) after raw-parser process
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List
 

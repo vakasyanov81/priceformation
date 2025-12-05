@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 write price list interface
 """
-__author__ = "Kasyanov V.A."
 
 
 class IXlsDriver:

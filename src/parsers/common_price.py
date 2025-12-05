@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Make parse all price and make inner and drom prices
 """
-__author__ = "Kasyanov V.A."
 
 import time
 from typing import TypeVar

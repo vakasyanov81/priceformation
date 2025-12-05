@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 write price list logic via xlsxwriter module
 """
-__author__ = "Kasyanov V.A."
 
 import openpyxl
 from openpyxl.styles import Font, Color, PatternFill

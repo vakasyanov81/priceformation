@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests for Poshk vendor after raw-parser process
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List, Tuple
 

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 base parser config logic
 """
-__author__ = "Kasyanov V.A."
 
 from dataclasses import dataclass
 from functools import lru_cache

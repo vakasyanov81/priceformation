@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logging parse process
 """
-__author__ = "Kasyanov V.A."
 
 from typing import Optional
 

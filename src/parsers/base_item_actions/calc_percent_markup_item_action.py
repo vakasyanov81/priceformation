@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 price markup action
 """
-__author__ = "Kasyanov V.A."
 
 from .base_item_action import BaseItemAction
 

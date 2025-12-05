@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 base parser logic
 """
-__author__ = "Kasyanov V.A."
 
 from .black_list import BlackListProviderBase, BlackListProviderFromUserConfig
 from .manufacturer_aliases import (

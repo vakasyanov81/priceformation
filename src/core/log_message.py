@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logic logging process
 """
-__author__ = "Kasyanov V.A."
 
 import datetime
 import logging

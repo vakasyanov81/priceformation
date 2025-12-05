@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logic for zapaska (rest) vendor
 """
-__author__ = "Kasyanov V.A."
 
 import json
 from typing import List, Optional, Tuple

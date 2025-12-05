@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 logic for four_tochki vendor (sheet 1)
 """
-__author__ = "Kasyanov V.A."
 
 import dataclasses
 

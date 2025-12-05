@@ -2,7 +2,6 @@
 tests write price for internal use
 """
 
-__author__ = "Kasyanov V.A."
 
 import datetime
 import os

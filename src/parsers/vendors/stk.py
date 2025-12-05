@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 # stk
 """
-__author__ = "Kasyanov V.A."
 
 from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser, ParserParams

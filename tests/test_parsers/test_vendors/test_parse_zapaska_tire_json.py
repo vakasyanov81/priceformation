@@ -2,7 +2,6 @@
 tests for zapaska (json) tire vendor after raw-parser process
 """
 
-__author__ = "Kasyanov V.A."
 
 from typing import List
 from unittest import skip

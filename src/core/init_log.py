@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 init log folder logic
 """
-__author__ = "Kasyanov V.A."
 
 from pathlib import Path
 

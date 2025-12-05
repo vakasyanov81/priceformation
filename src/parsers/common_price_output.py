@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Make parse all price and make inner and drom prices
 """
-__author__ = "Kasyanov V.A."
 
 from parsers.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.writer.templates.all_templates import all_writer_templates
-from parsers.writer.templates.tmpl.double import Doubles
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
@@ -19,7 +16,9 @@ class CommonPriceOut:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
+    def __init__(
+        self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver
+    ):
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver
@@ -43,11 +42,3 @@ class CommonPriceOut:
                 BaseParser.to_raw_result(self.items),
                 write_template,
             )
-        # self.write_double()
-
-    def write_double(self):
-        self.xls_writer(
-            self.write_driver(),
-            BaseParser.to_raw_result(CommonPriceGrouper(self.items).get_double_items()),
-            Doubles,
-        )

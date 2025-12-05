@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 tests parse xlsx file
 """
-__author__ = "Kasyanov V.A."
 
 import pytest
 

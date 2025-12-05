@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 row item field format logic
 """
-__author__ = "Kasyanov V.A."
 
 from functools import lru_cache
 from typing import Union

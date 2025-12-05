@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 global fixtures
 """
-__author__ = "Kasyanov V.A."
 
 import os
 import sys
@@ -10,13 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../tests')))
-
-
-def pytest_make_parametrize_id(val):
-    """for unicode representation"""
-    return repr(val)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../tests")))
 
 
 @pytest.fixture(scope="session", autouse=True)

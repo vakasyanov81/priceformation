@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 collection all active vendors
 """
-__author__ = "Kasyanov V.A."
 
 from typing import List, Tuple, Type
 

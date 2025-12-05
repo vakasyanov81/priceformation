@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 write template interface
 """
-__author__ = "Kasyanov V.A."
 
 from parsers.writer.templates.column_helper import ColumnHelper
 
