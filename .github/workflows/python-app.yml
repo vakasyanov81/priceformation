@@ -39,6 +39,5 @@ jobs:
           uv run black ${GITHUB_WORKSPACE} --check --line-length 120 --skip-string-normalization --target-version py311
       - name: Lint with pylint
         run: |
-          export SRC_DIR="$GITHUB_WORKSPACE"/src
-          export TESTS_DIR="$GITHUB_WORKSPACE"/tests
+          export WORK_DIR="$GITHUB_WORKSPACE"
           uv run pylint --rcfile ${GITHUB_WORKSPACE}/pipelines/.pylintrc --output-format=colorized ${GITHUB_WORKSPACE}
