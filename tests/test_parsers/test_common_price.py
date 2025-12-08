@@ -14,7 +14,7 @@ class FakeParser:
     # pylint: disable=R0903
     _SUPPLIER_FOLDER_NAME = "fake_supplier"
 
-    def __init__(self, file_prices: list = None, xls_reader=None, price_config=None):
+    def __init__(self, file_prices: list | None = None, xls_reader=None, price_config=None):
         """init"""
         pass
 

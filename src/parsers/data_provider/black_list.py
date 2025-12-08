@@ -17,7 +17,7 @@ class BlackListProviderBase:
 class BlackListProviderFromUserConfig(BlackListProviderBase):
     """Black list data provider from user config file."""
 
-    def get_black_list_data(self):
+    def get_black_list_data(self) -> list[str]:
         """Get black list data"""
         black_list = read_file(MainConfig().black_list_file_path) or ""
         return self.split_and_filtration(black_list)

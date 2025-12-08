@@ -6,15 +6,12 @@ from core.exceptions import SupplierNotHavePricesError
 from core.log_message import print_log
 
 
-async def try_call(method, _async=False, **kwargs):
+def try_call(method, **kwargs):
     """Try method call"""
     try:
-        if _async:
-            await method(**kwargs)
-        else:
-            method(**kwargs)
+        method(**kwargs)
     except SupplierNotHavePricesError as exc:
-        print_log(f"{exc}", level="WARNING")
+        print_log(f"{exc}", level=logging.WARNING)
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(0)

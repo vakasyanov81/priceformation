@@ -6,8 +6,8 @@ import dataclasses
 
 from parsers.row_item.row_item import RowItem
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
-from ... import data_provider
-from ...base_parser.base_parser_config import (
+from parsers import data_provider
+from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )

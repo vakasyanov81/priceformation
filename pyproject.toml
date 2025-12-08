@@ -25,6 +25,7 @@ dev = [
     "pytest-randomly==4.0.1",
     "pytest-xdist==3.8.0",
     "wemake-python-styleguide==1.4.0",
+    "mypy==1.19.0"
 ]
 
 [build-system]
@@ -95,3 +96,10 @@ backup="False"
 pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
+
+[tool.mypy]
+# The mypy configurations: http://bit.ly/2zEl9WI
+ignore_missing_imports = true
+strict = true
+local_partial_types = true
+warn_unreachable = true

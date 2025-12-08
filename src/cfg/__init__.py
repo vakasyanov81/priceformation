@@ -1,8 +1,11 @@
 """configuration logic"""
 
+from typing import TypeAlias
 from . import main
 
-__config__ = {
+ConfigType: TypeAlias = dict[str, type[main.MainConfig]]
+
+__config__: ConfigType = {
     "main": main.get_config(),
 }
 
@@ -14,18 +17,17 @@ class ConfigParamError(Exception):
 class ConfigCompiler:
     """combine all config modules"""
 
-    def __init__(self, config: dict, is_unit_test_mode=False):
+    def __init__(self, config: ConfigType) -> None:
         """init"""
         self._config = config
-        self.is_unit_test_mode = is_unit_test_mode
 
     @property
     def main(self) -> main.MainConfig:
         """main section"""
-        return self._config.get("main")()
+        return main.get_config()()
 
 
-def init_cfg(_cfg=None):
+def init_cfg(_cfg: ConfigType | None = None) -> ConfigCompiler:
     """get access to configuration"""
     return ConfigCompiler(_cfg or __config__)
 
