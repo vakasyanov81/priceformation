@@ -4,7 +4,6 @@
 2. Формирование прайсов (для внутреннего использования, для дрома и т.д.)
 """
 
-import asyncio
 import sys
 
 from run_dialog import AnswerResult, ask_action
@@ -16,38 +15,38 @@ from parsers.common_price_output import CommonPriceOut
 from parsers.vendors.zapaska_tire_json import load_data
 
 
-async def main():
+def main() -> None:
     """
     entry point
     :return:
     """
     while True:
-        await response_processing()
+        response_processing()
 
 
-async def response_processing():
+def response_processing() -> None:
     """Ask questions"""
     match ask_action():
         case AnswerResult.MAKE_PRICE_BY_SUPPLIER:
-            await try_call(run_make_price_by_supplier)
+            try_call(run_make_price_by_supplier)
         case AnswerResult.UPDATE_ZAPASKA_DATA:
-            await try_call(run_upload_zapaska_data)
+            try_call(run_upload_zapaska_data)
         case AnswerResult.EXIT:
             sys.exit(0)
 
 
-def run_make_price_by_supplier():
+def run_make_price_by_supplier() -> None:
     """Make common price list by price list supplier's"""
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
     CommonPriceOut(common_price.get_result()).write_all_prices()
 
 
-def run_upload_zapaska_data():
+def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
     load_data()
     print_log("*** Данные успешно загружены. ***\n")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

@@ -16,7 +16,7 @@ def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
     )
 
 
-def load_file() -> dict:
+def load_file() -> dict[str, str]:
     vendor_nomenclature_title_index = 0
     correct_nomenclature_title_index = 1
     _file = MainConfig().user_config_folder_path + os.sep + "correct-nomenclature.xlsx"
@@ -26,14 +26,14 @@ def load_file() -> dict:
     wb = CalamineWorkbook.from_path(_file)
 
     data = wb.get_sheet_by_name("Sheet1").to_python()
-    result_data = {}
+    result_data: dict[str, str] = {}
 
     for i, data_ in enumerate(data):
         # skip header
         if i == 0:
             continue
-        vendor_nomenclature_title = data_[vendor_nomenclature_title_index]
-        correct_nomenclature_title = data_[correct_nomenclature_title_index]
+        vendor_nomenclature_title = str(data_[vendor_nomenclature_title_index])
+        correct_nomenclature_title = str(data_[correct_nomenclature_title_index])
         if vendor_nomenclature_title and correct_nomenclature_title:
             result_data[vendor_nomenclature_title] = correct_nomenclature_title
     return result_data

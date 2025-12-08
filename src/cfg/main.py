@@ -20,7 +20,7 @@ __STOP_WORDS_FILE_NAME__ = "stop_words"
 __PROJECT_ROOT__ = str(pathlib.Path(__file__).parent.parent.parent.absolute())
 __PROJECT_SRC__ = str(pathlib.Path(__file__).parent.parent.absolute())
 
-__IS_UNITTEST_MODE__ = False
+
 __IS_NEED_PRINT_LOG__ = True
 
 
@@ -161,12 +161,7 @@ class MainConfig(MainCfg):
         """need show log on window via print() function"""
         return __IS_NEED_PRINT_LOG__
 
-    @property
-    def is_unittest_mode(self):
-        """for mock in unittests run"""
-        return __IS_UNITTEST_MODE__
 
-
-def get_config():
+def get_config() -> type[MainConfig]:
     """get db configuration"""
     return MainConfig

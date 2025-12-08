@@ -4,7 +4,7 @@ logic logging process
 
 import datetime
 import logging
-from typing import Literal
+from typing import Callable, Literal
 
 from colorama import init
 from termcolor import colored
@@ -21,6 +21,11 @@ __level_map__ = {
     logging.WARNING: "WARNING",
 }
 
+
+def get_log_level_text(log_level: int) -> str:
+    return __level_map__.get(log_level) or "INFO"
+
+
 __level_reverse_map__ = {
     "ERROR": logging.ERROR,
     "INFO": logging.INFO,
@@ -30,14 +35,14 @@ __level_reverse_map__ = {
 __level_color_map__ = {"ERROR": "red", "WARNING": "yellow", "Info": None}
 
 
-def err_msg(msg, need_print_log=False):
+def err_msg(message: str, need_print_log: bool = False) -> str:
     """make error message"""
-    return log_msg(msg, level=logging.ERROR, need_print_log=need_print_log)
+    return log_msg(message, level=logging.ERROR, need_print_log=need_print_log)
 
 
-def warn_msg(msg, need_print_log=False):
+def warn_msg(message: str, need_print_log: bool = False):
     """make warning message"""
-    return log_msg(msg, level=logging.WARNING, need_print_log=need_print_log)
+    return log_msg(message, level=logging.WARNING, need_print_log=need_print_log)
 
 
 def resolve_log_path(level=logging.INFO):
@@ -47,7 +52,7 @@ def resolve_log_path(level=logging.INFO):
     return log_file_map.get(level) or cfg.main.current_log_file_path
 
 
-def resolve_log_method(level=logging.INFO):
+def resolve_log_method(level=logging.INFO) -> Callable:
     """get logging method by log-level"""
     log_method_mapping = {
         logging.INFO: logging.info,
@@ -55,24 +60,24 @@ def resolve_log_method(level=logging.INFO):
         logging.ERROR: logging.error,
     }
 
-    return log_method_mapping.get(level)
+    return log_method_mapping.get(level) or logging.info
 
 
-def log_to_file(msg, level=logging.INFO):
+def log_to_file(message: str, level=logging.INFO) -> bool:
     """make log to file"""
     init_log()
 
     logging.basicConfig(filename=resolve_log_path(level), level=level)
 
-    resolve_log_method(level)(msg)
+    resolve_log_method(level)(message)
 
     return True
 
 
 def log_msg(
-    msg,
-    level=logging.INFO,
-    need_print_log=False,
+    msg: str,
+    level: int = logging.INFO,
+    need_print_log: bool = False,
     color: Literal["red", "green", "yellow"] | None = None,
 ):
     """make log message"""
@@ -81,28 +86,25 @@ def log_msg(
     if level == logging.ERROR:
         msg = f"[{time_now}] - {msg}"
 
-    if not cfg.main.is_unittest_mode and level == logging.ERROR:
+    if level == logging.ERROR:
         log_to_file(msg, level=level)
 
-    if need_print_log and not cfg.main.is_unittest_mode:
-        print_log(msg, __level_map__.get(level), _color=color)
+    if need_print_log:
+        print_log(msg, level, _color=color)
     return msg
 
 
 def print_log(
-    msg,
-    level: Literal["INFO"] | Literal["ERROR"] | Literal["WARNING"] | None = "INFO",
+    msg: str,
+    level: int = logging.INFO,
     _color: Literal["red", "green", "yellow"] | None = None,
 ):
     """print log-message"""
 
-    # in unit test mode we hide the input of errors on the screen
-    if cfg.main.is_unittest_mode and level != logging.INFO:
-        return
-    level_num = __level_reverse_map__.get(level)
     _msg = ""
-    if level_num != logging.INFO:
-        _msg = f"[{level}]: "
+    level_title = get_log_level_text(level)
+    if level != logging.INFO:
+        _msg = f"[{level_title}]: "
     _msg += f"{msg}"
-    _msg = colored(_msg, _color or __level_color_map__.get(level))
+    _msg = colored(_msg, _color or __level_color_map__.get(level_title))
     print(_msg)
