@@ -3,7 +3,7 @@ row item field format logic
 """
 
 from functools import lru_cache
-from typing import Union
+from typing import Callable, Union
 
 
 def strip_into_str(value: str) -> str:
@@ -61,6 +61,18 @@ def get_sanitized_code(value):
 
     return get_stripped(value)
 
+def get_try_to_int_or_str(code: str) -> int | str:
+    """
+    Try correct get_sanitized_code
+    """
+    try:
+        code_new = get_try_to_int_or_float(code) or 0
+        if isinstance(code_new, float):
+            raise ValueError
+        return int(code_new)
+    except ValueError:
+        return code    
+
 
 def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
     """
@@ -71,11 +83,11 @@ def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
         return value
 
     try:
-        value = float(value)
-        value_int = int(value)
-        if value - value_int:
+        floated_value = float(value)
+        integer_value = int(floated_value)
+        if floated_value - integer_value:
             raise ValueError
-        return value_int
+        return integer_value
     except ValueError:
         return float(value)
 

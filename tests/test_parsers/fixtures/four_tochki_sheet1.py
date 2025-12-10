@@ -12,7 +12,7 @@ def four_tochki_many_item_result():
                 "manufacturer_name": "BFGoodrich",
                 "model": "Advantage",
                 "width": 205,
-                "height_percent": 55,
+                "height_percent": 55.0,
                 "diameter": "R16",
                 "index_load": "94W",
                 "ext_diameter": 0,

@@ -7,7 +7,7 @@ from typing import List
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_1sheet import (
+from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
     fourtochki_sheet_1_params,
 )

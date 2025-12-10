@@ -24,7 +24,7 @@ Sheet: TypeAlias = list[Row]
 DSheet: TypeAlias = list[DRow]
 
 IndexToHeader: TypeAlias = dict[int, str]
-
+ParseParams: TypeAlias = dict[str, int | IndexToHeader]
 
 init_cfg()
 
@@ -34,7 +34,7 @@ class IXlsReader:
 
     # pylint: disable=R0903
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
+    def parse(self, sheet_indexes: list | None = None):
         """do parse"""
         raise NotImplementedError
 
