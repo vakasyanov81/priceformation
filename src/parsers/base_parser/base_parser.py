@@ -305,7 +305,7 @@ class BaseParser(Parser):
         """absolute markup value"""
         return price_opt * self.markup_rules().absolute_markup_rules.markup_percent
 
-    def add_price_markup(self, item: RowItem):
+    def add_price_markup(self, item: RowItem) -> None:
         """calculate and fill price_markup field"""
         price = item.price_recommended or 0
         price_opt = item.price_opt or 0
@@ -323,7 +323,7 @@ class BaseParser(Parser):
 
     @classmethod
     @lru_cache()
-    def get_markup(cls, price, percent):
+    def get_markup(cls, price, percent) -> float:
         """get price with absolute markup"""
         return price * (1 + percent)
 
@@ -334,7 +334,7 @@ class BaseParser(Parser):
         )
 
     @classmethod
-    def prepare_title(cls, title: str):
+    def prepare_title(cls, title: str) -> str:
         """prepare title"""
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
@@ -345,12 +345,12 @@ class BaseParser(Parser):
         return chunks
 
     @classmethod
-    def strip_chunks_title(cls, chunks: list):
+    def strip_chunks_title(cls, chunks: list) -> list[str]:
         """# [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]"""
         return [chunk.strip() for chunk in chunks if chunk.strip()]
 
     @classmethod
-    def strip_words_in_title(cls, title: str):
+    def strip_words_in_title(cls, title: str) -> str:
         """ " 385/65   R22.5..." -> "385/65 R22.5..." """
         _title = (title or "").strip()
         if not _title:
@@ -367,7 +367,7 @@ class BaseParser(Parser):
         return " ".join(new_chunks)
 
     @classmethod
-    def get_spike_title(cls, item: RowItem):
+    def get_spike_title(cls, item: RowItem) -> str:
         """Наличие шипа"""
         if not item.spike:
             return ""

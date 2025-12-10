@@ -1,1 +1,0 @@
-uv run --no-dev --locked python run.py

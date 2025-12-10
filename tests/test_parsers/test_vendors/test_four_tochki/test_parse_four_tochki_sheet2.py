@@ -8,7 +8,7 @@ from unittest.mock import patch
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_2sheet import (
+from parsers.vendors.four_tochki.four_tochki_sheet2 import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,
 )
