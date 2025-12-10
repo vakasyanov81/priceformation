@@ -109,7 +109,7 @@ def get_prepared_title(item: RowItem) -> str:
     :param item:
     :return:
     """
-    width = (item.width or "")
+    width = item.width or ""
     height_percent = str(item.height_percent or "")
     height_percent = height_percent.replace("999", "L")
     height_percent = get_try_to_int_or_str(height_percent)

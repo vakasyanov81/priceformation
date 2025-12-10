@@ -61,6 +61,7 @@ def get_sanitized_code(value):
 
     return get_stripped(value)
 
+
 def get_try_to_int_or_str(code: str) -> int | str:
     """
     Try correct get_sanitized_code
@@ -71,7 +72,7 @@ def get_try_to_int_or_str(code: str) -> int | str:
             raise ValueError
         return int(code_new)
     except ValueError:
-        return code    
+        return code
 
 
 def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
