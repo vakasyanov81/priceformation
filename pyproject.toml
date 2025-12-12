@@ -20,7 +20,7 @@ dev = [
     "pytest-cov==7.0.0",
     "black==25.11.0",
     "pylint==4.0.4",
-    "ruff==0.14.7",
+    "ruff==0.14.8",
     "pytest-testmon==2.2.0",
     "pytest-randomly==4.0.1",
     "pytest-xdist==3.8.0",
