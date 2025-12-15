@@ -18,7 +18,7 @@ dev = [
     "mutmut==3.4.0",
     "pyright==1.1.407",
     "pytest-cov==7.0.0",
-    "black==25.11.0",
+    "black==25.12.0",
     "pylint==4.0.4",
     "ruff==0.14.8",
     "pytest-testmon==2.2.0",
