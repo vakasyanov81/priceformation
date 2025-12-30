@@ -2,7 +2,7 @@ from zeep import Client, helpers
 
 wsdl_url = "http://api-b2b.4tochki.ru/WCF/ClientService.svc?wsdl"
 API_LOGIN = 'autosnab54'
-API_PASSWORD = '33754beN'
+API_PASSWORD = '...'
 client = Client(wsdl=wsdl_url)
 codes = ['AB6011U']
 
