@@ -60,7 +60,7 @@ class PoshkParser(BaseParser):
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, item) -> None:
         """
         Добавить наценку
         """
@@ -71,7 +71,7 @@ class PoshkParser(BaseParser):
         item.price_markup = self.round_price(price)
         item.percent_markup = markup_percent * 100
 
-    def set_type_production(self, item):
+    def set_type_production(self, item) -> None:
         """
         Задать категорию
         """
@@ -98,7 +98,7 @@ class PoshkParser(BaseParser):
         return "Разное"
 
     @classmethod
-    def clear_and_set_title(cls, item):
+    def clear_and_set_title(cls, item) -> None:
         """clear and set reared title"""
         item.title = item.title.replace(", , шт", "").strip()
 
@@ -110,7 +110,7 @@ class PoshkParser(BaseParser):
         return chunks
 
     @classmethod
-    def replace_star_to_cross(cls, chunks: list):
+    def replace_star_to_cross(cls, chunks: list) -> None:
         """
         ... 6.00*17.5 ... -> ... 6.00x17.5 ...
         :param chunks:
@@ -124,7 +124,7 @@ class PoshkParser(BaseParser):
                 chunks[index] = chunk.replace("*", "x")
 
     @classmethod
-    def delete_white_spaces(cls, chunks: list):
+    def delete_white_spaces(cls, chunks: list) -> None:
         """
         385/65  R22.5... -> 385/65R22.5...
         :param chunks:

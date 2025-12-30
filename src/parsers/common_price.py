@@ -5,16 +5,11 @@ Make parse all price and make inner and drom prices
 
 import time
 
-from typing import TypeVar
 
 
 from core import warn_msg, err_msg, log_msg
 
-from parsers.all_vendors import all_vendor_supplier_info
-
-from parsers.base_parser.base_parser import Parser
-
-from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.all_vendors import VendorList, all_vendor_supplier_info
 
 from parsers.common_price_grouper import CommonPriceGrouper
 
@@ -29,8 +24,6 @@ SupplierName = str
 SupplierCode = str
 
 
-VendorList = TypeVar("VendorList", bound=list[tuple[type[Parser], type[ParseConfiguration] | None]])
-
 
 class CommonPrice:
     """
@@ -38,7 +31,7 @@ class CommonPrice:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
+    def __init__(self, xls_writer=XlsWriter, write_driver=XlsxWriterDriver) -> None:
         """init"""
 
         self.xls_writer = xls_writer
@@ -47,7 +40,7 @@ class CommonPrice:
 
         self._result = []
 
-    def parse_all_vendors(self, vendors: VendorList):
+    def parse_all_vendors(self, vendors: VendorList) -> None:
         """
 
         make parse all prices

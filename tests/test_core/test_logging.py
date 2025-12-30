@@ -12,7 +12,7 @@ def logging_function(param1: int, param2: int, **_dict):
     return param1 + param2
 
 
-def test_logging():
+def test_logging() -> None:
     param1, param2 = 10, 20
     with patch("core.wrappers.log_msg") as _mock:
         logging_function(param1, param2, other_param="some text")
@@ -24,7 +24,7 @@ def test_logging():
     assert f'logging_function": {param1 + param2}' in str(_mock.call_args_list[1].args[0])
 
 
-def test_logging_when_wrong_argument():
+def test_logging_when_wrong_argument() -> None:
     """test logging call function with wrong argument"""
 
     with patch("core.wrappers.log_msg") as _mock:

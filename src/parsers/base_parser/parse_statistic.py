@@ -12,7 +12,7 @@ class ParseResultStatistic:
     statistic for price formation result
     """
 
-    def __init__(self, parse_result: List[RowItem]):
+    def __init__(self, parse_result: List[RowItem]) -> None:
         """init"""
         self._parse_result = [item for item in parse_result if item.price_opt]
 

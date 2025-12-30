@@ -61,5 +61,5 @@ class MimParser3Sheet(MimParserBase):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         return "Диск"

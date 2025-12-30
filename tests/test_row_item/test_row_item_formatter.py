@@ -7,7 +7,7 @@ from parsers.row_item.row_item_formatter import (
 )
 
 
-def test_get_try_to_int_or_float():
+def test_get_try_to_int_or_float() -> None:
     """Try cast string to int or float"""
     with pytest.raises(ValueError):
         get_try_to_int_or_float("invalid value")
@@ -16,7 +16,7 @@ def test_get_try_to_int_or_float():
     assert 10.5 == get_try_to_int_or_float("10.5")
 
 
-def test_get_integer():
+def test_get_integer() -> None:
     """Try cast string to int"""
     with pytest.raises(ValueError):
         get_integer("invalid value")

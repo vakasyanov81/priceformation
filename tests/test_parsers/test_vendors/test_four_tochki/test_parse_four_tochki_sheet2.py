@@ -35,7 +35,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     result: List[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
@@ -57,7 +57,7 @@ def test_parse():
     assert result[0].percent_markup == 14.7
 
 
-def test_parse_with_invalid_item():
+def test_parse_with_invalid_item() -> None:
     """one invalid item is skipped"""
 
     with patch("core.log_message.log_msg") as mock_log_msg:

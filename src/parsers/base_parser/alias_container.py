@@ -12,7 +12,7 @@ class AliasContainer:
     container for aliases
     """
 
-    def __init__(self, map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias]]):
+    def __init__(self, map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias]]) -> None:
         """
         :param map_aliases: {
             correct_word_1: (

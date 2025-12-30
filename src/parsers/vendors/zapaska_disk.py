@@ -79,7 +79,7 @@ class ZapaskaDiskJSON(BaseParser):
 
     _type_production = "Диск"
 
-    def __init__(self, parse_config, file_prices: list = None):
+    def __init__(self, parse_config, file_prices: list | None = None) -> None:
         """init"""
         self.price_sup_codes = {}
         self.rest_titles = {}
@@ -87,7 +87,7 @@ class ZapaskaDiskJSON(BaseParser):
         self.not_matched_position = []
         self._current_category = None
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
-        super().__init__(parse_config, file_prices)
+        super().__init__(parse_config, file_prices or [])
 
     def get_price_mrp_result(self) -> List[RowItem]:
         """price mrp result"""
@@ -101,7 +101,7 @@ class ZapaskaDiskJSON(BaseParser):
         self.rename_fields(data)
         return data
 
-    def rename_fields(self, rows: list[dict]):
+    def rename_fields(self, rows: list[dict]) -> None:
         """rename fields"""
         columns = self.parse_config().parse_config.parser_params.columns
         for row in rows:
@@ -125,7 +125,7 @@ class ZapaskaDiskJSON(BaseParser):
     def get_type_production(self, item: RowItem):
         return self._type_production
 
-    def set_rest_and_price_opt(self, rest_result):
+    def set_rest_and_price_opt(self, rest_result) -> None:
         """get parse result for ZapaskaRest"""
         self.price_mrp_result = rest_result
 
@@ -134,7 +134,7 @@ class ZapaskaDiskJSON(BaseParser):
         """get rest count"""
         return item.rest_count
 
-    def prepare_prices_mrp(self):
+    def prepare_prices_mrp(self) -> None:
         """join result zapaska parser and zapaska rest parser via vendor position code"""
         for price_mrp in self.get_price_mrp_result():
             code = price_mrp.code or price_mrp.code_art
@@ -213,7 +213,7 @@ class ZapaskaDiskJSON(BaseParser):
         """check margin for recommended price"""
         return price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent
 
-    def make_price_markup(self, item):
+    def make_price_markup(self, item) -> None:
         """set markup
         цена закупа от 0 до 5000 прибавляем наценку 17%
         цена закупа от 5000 до 10000 прибавляем наценку 15%

@@ -11,7 +11,7 @@ from .fixtures import result_body_inner, write_data
 from .test_writer import FakeXlsWriter
 
 
-def test_xls_write_for_inner():
+def test_xls_write_for_inner() -> None:
     """test write price for internal use"""
 
     fake_driver = FakeXlwtDriver()

@@ -5,7 +5,7 @@ base parser logic
 import glob
 import math
 from functools import lru_cache
-from typing import List, Protocol, Type, TypeVar
+from typing import Protocol, Type, TypeVar
 
 from cfg import init_cfg
 from core.exceptions import SupplierNotHavePricesError
@@ -30,20 +30,22 @@ TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 class Parser(Protocol):
     """parser protocol"""
 
-    @classmethod
-    def supplier_folder_name(cls) -> str:
+    def supplier_folder_name(self) -> str:
         """supplier folder name"""
+        ...
 
-    def get_result(self) -> List[RowItem]:
+    def get_result(self) -> list[RowItem]:
         """get result"""
+        ...
 
-    def parse(self) -> List[RowItem]:
+    def parse(self) -> list[RowItem]:
         """get result"""
+        ...
 
 
 class BaseParser(Parser):
-    _item_actions: List[Type[BaseItemAction]] = []
-    _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
+    _item_actions: list[Type[BaseItemAction]] = []
+    _item_actions_after_process: list[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
 
     _params = None
     _category_finder = None
@@ -51,11 +53,11 @@ class BaseParser(Parser):
 
     def __init__(
         self,
-        parse_config: ParseConfiguration = None,
-        file_prices: list = None,
+        parse_config: ParseConfiguration | None = None,
+        file_prices: list | None = None,
         xls_reader=XlsReader,
-    ):
-        self.result: List[RowItem] = []
+    ) -> None:
+        self.result: list[RowItem] = []
         self._parse_config = parse_config
         self.type_production = None
         self.xls_reader = xls_reader
@@ -69,21 +71,21 @@ class BaseParser(Parser):
         return self._parse_config.get_markup_rules()
 
     @lru_cache()
-    def get_black_list(self) -> List[str]:
+    def get_black_list(self) -> list[str]:
         black_list = self._parse_config.black_list()
         return self.prepare_black_list(black_list)
 
-    def prepare_black_list(self, black_list: List[str]) -> List[str]:
+    def prepare_black_list(self, black_list: list[str]) -> list[str]:
         return [self.strip_words_in_title(black_title) for black_title in black_list]
 
     @lru_cache()
-    def get_stop_words(self) -> List[str]:
+    def get_stop_words(self) -> list[str]:
         return self._parse_config.stop_words()
 
-    def set_parse_config(self, parse_config: ParseConfiguration):
+    def set_parse_config(self, parse_config: ParseConfiguration) -> None:
         self._parse_config = parse_config
 
-    def parse(self) -> List[RowItem]:
+    def parse(self) -> list[RowItem]:
         if not self.is_active:
             self.logger.log_disable_status()
             return []
@@ -95,7 +97,7 @@ class BaseParser(Parser):
         self.logger.log_finish(ParseResultStatistic(self.result))
         return self.result
 
-    def correction_category(self, item: RowItem):
+    def correction_category(self, item: RowItem) -> None:
         if not item.type_production:
             return
         category, bad_category = self._category_finder.find_in_str(item.type_production)
@@ -115,7 +117,7 @@ class BaseParser(Parser):
         self.result = self.prepare(self.result)
         return result_statistic
 
-    def after_process(self):
+    def after_process(self) -> None:
         self.remove_null_rest()
         self.do_items_actions_after_process()
 
@@ -163,7 +165,7 @@ class BaseParser(Parser):
 
         return result
 
-    def do_items_actions_after_process(self):
+    def do_items_actions_after_process(self) -> None:
         for item in self.result:
             for item_action in self._item_actions_after_process:
                 item_action(item).action()
@@ -174,14 +176,14 @@ class BaseParser(Parser):
             sup_name += f" ({self.parser_params().sheet_info})"
         return sup_name
 
-    def get_result(self) -> List[RowItem]:
+    def get_result(self) -> list[RowItem]:
         return self.result
 
     @property
     def is_active(self):
         return bool(self.get_current_vendor_config().enabled)
 
-    def remove_null_rest(self):
+    def remove_null_rest(self) -> None:
         result = []
         for item in self.get_result():
             # rest_count may be ">40", its not convertible to float
@@ -194,9 +196,9 @@ class BaseParser(Parser):
     @classmethod
     def replace_season(cls, item: RowItem) -> str | None:
         replaced_seasons = {"зима": "Зимняя", "лето": "Летняя"}
-        return replaced_seasons.get(item.season.lower()) or item.season
+        return replaced_seasons.get((item.season or "").lower()) or item.season
 
-    def remove_wo_price_purchase_and_check_title(self):
+    def remove_wo_price_purchase_and_check_title(self) -> None:
         """...."""
         result = []
         for item in self.get_result():
@@ -208,14 +210,14 @@ class BaseParser(Parser):
 
         self.result = result
 
-    def to_row_items(self, result: List[dict]) -> List[RowItem]:
+    def to_row_items(self, result: list[dict]) -> list[RowItem]:
         return [self.parser_params().row_item_adaptor(row_item) for row_item in result]
 
     @classmethod
-    def to_raw_result(cls, result: List[RowItem]) -> List[dict]:
+    def to_raw_result(cls, result: list[RowItem]) -> list[dict]:
         return [item.to_dict() for item in result]
 
-    def raw_parse(self, _file: str) -> List[dict]:
+    def raw_parse(self, _file: str) -> list[dict]:
         reader = self.get_xls_reader(_file)
         return reader.parse(self.parser_params().sheet_indexes)
 
@@ -251,14 +253,14 @@ class BaseParser(Parser):
         return title in self.get_black_list()
 
     @classmethod
-    def get_min_rest_count(cls):
+    def get_min_rest_count(cls) -> int:
         return 4
 
     @classmethod
     def get_item_rest(cls, item: RowItem):
         return item.rest_count
 
-    def skip_by_min_rest(self, item: RowItem):
+    def skip_by_min_rest(self, item: RowItem) -> None:
         if self.get_item_rest(item) < self.get_min_rest_count():
             item.rest_count = 0
 
@@ -268,7 +270,7 @@ class BaseParser(Parser):
         return math.ceil(price_value / 10) * 10
 
     @classmethod
-    def is_category_row(cls, item):
+    def is_category_row(cls, item) -> bool:
         """is category row?"""
         if item.title and not item.price_opt:
             return True
@@ -341,11 +343,11 @@ class BaseParser(Parser):
         return " ".join(chunks)
 
     @classmethod
-    def _prepare_title_chunks(cls, chunks: List[str]) -> List[str]:
+    def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:
         return chunks
 
     @classmethod
-    def strip_chunks_title(cls, chunks: list) -> list[str]:
+    def strip_chunks_title(cls, chunks: list[str]) -> list[str]:
         """# [" 385/65  ", " R22.5", ...] -> ["385/65", "R22.5", ...]"""
         return [chunk.strip() for chunk in chunks if chunk.strip()]
 
@@ -376,7 +378,7 @@ class BaseParser(Parser):
         return ""
 
 
-def get_file_prices(parser: TBaseParser):
+def get_file_prices(parser: TBaseParser) -> list[str]:
     """get file prices"""
     _list_files = []
     cfg = init_cfg()

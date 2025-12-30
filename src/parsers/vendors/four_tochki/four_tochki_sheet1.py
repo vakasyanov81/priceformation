@@ -72,7 +72,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         }
         return tyre_type_dict.get(item.tire_type.lower().strip()) or "Автошина"
 
-    def add_price_markup(self, item: RowItem):
+    def add_price_markup(self, item: RowItem) -> None:
         if item.price_recommended:
             price = item.price_recommended
         else:

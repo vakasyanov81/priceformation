@@ -10,7 +10,7 @@ from core.log_message import log_msg, warn_msg
 from .parse_statistic import ParseResultStatistic
 
 
-def _log_msg(msg: str):
+def _log_msg(msg: str) -> None:
     """log msg"""
     log_msg(msg, need_print_log=True)
 
@@ -18,17 +18,17 @@ def _log_msg(msg: str):
 class LoggerParseProcess:
     """logging parse process"""
 
-    def __init__(self, parser_repr: str):
+    def __init__(self, parser_repr: str) -> None:
         """init"""
 
         self.parser_repr: str = parser_repr
 
-    def log_start(self):
+    def log_start(self) -> None:
         """logging start parse process"""
 
         _log_msg(f"{self.parser_repr} // старт")
 
-    def log_finish(self, result_statistic: Optional[ParseResultStatistic] = None):
+    def log_finish(self, result_statistic: Optional[ParseResultStatistic] = None) -> None:
         """logging finish parse process"""
 
         if result_statistic:
@@ -47,12 +47,12 @@ class LoggerParseProcess:
         _log_msg("--------------------------------------------------------")
 
     @classmethod
-    def log_list_files(cls, files):
+    def log_list_files(cls, files) -> None:
         """logging files list"""
 
         _log_msg(f"список файлов для обработки - {files}")
 
-    def log_disable_status(self):
+    def log_disable_status(self) -> None:
         """logging disabled"""
 
         warn_msg(f"поставщик {self.parser_repr} не активен", need_print_log=True)

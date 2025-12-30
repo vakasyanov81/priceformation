@@ -56,7 +56,7 @@ class STKParser(BaseParser):
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, item) -> None:
         """
         Добавить наценку
         """

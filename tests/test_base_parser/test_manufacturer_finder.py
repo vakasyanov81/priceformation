@@ -32,7 +32,7 @@ from parsers.row_item.row_item import RowItem
         ),
     ],
 )
-def test_replace_title_and_add_manufacturer(title, title_new, manufacturer):
+def test_replace_title_and_add_manufacturer(title, title_new, manufacturer) -> None:
     """check replace bad manufacturer in title and add correct manufacturer in item.manufacturer"""
 
     item = RowItem({"title": title})

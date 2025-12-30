@@ -4,6 +4,7 @@ logic for mim vendor (sheet 1)
 
 import dataclasses
 
+from parsers.base_parser.base_parser import Parser
 from parsers.row_item.row_item import RowItem
 from parsers.row_item.row_item_formatter import get_try_to_int_or_str
 from .mim_base import MimParserBase, mim_params, supplier_folder_name
@@ -55,13 +56,13 @@ def is_number(value: str | int | float) -> bool:
         return False
 
 
-class MimParser1Sheet(MimParserBase):
+class MimParser1Sheet(MimParserBase, Parser):
     """
     parser for mim vendor (sheet 1)
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         return "Легковая шина"
 
     @classmethod

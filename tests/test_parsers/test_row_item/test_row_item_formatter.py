@@ -3,15 +3,15 @@ import pytest
 
 
 @pytest.mark.parametrize('code, assert_result', [("1", 1), ("1.0", 1), ("1.5", 1.5), ("0.5", 0.5), (None, None)])
-def test_try_to_int_or_float(code, assert_result):
+def test_try_to_int_or_float(code, assert_result) -> None:
     assert assert_result == get_try_to_int_or_float(code)
 
 
-def test_try_to_int_or_float_raise_for_str():
+def test_try_to_int_or_float_raise_for_str() -> None:
     with pytest.raises(ValueError):
         get_try_to_int_or_float("bar")
 
 
 @pytest.mark.parametrize('code, assert_result', [("1", 1), ("1.0", 1), ("1.5", "1.5"), ('bar', 'bar')])
-def test_try_to_int_or_str(code, assert_result):
+def test_try_to_int_or_str(code, assert_result) -> None:
     assert assert_result == get_try_to_int_or_str(code)

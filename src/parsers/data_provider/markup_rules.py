@@ -41,7 +41,7 @@ class MarkupRules(NamedTuple):
 class MarkupRulesProviderBase:
     """Base markup rules data provider."""
 
-    def __init__(self, supplier_name: str = None):
+    def __init__(self, supplier_name: str = None) -> None:
         """
         :param str supplier_name:
         """
@@ -60,18 +60,18 @@ class MarkupRulesProviderBase:
 class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
     """Markup rules data provider from user config file."""
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict:
         """Get markup data from user config file."""
         return self.try_markup_data_for_supplier()
 
-    def try_markup_data_for_supplier(self):
+    def try_markup_data_for_supplier(self) -> dict:
         """Try get markup data."""
         try:
             return json.loads(read_file(self.get_file_path()))
         except FileNotFoundError as exc:
             raise PriceRulesConfigFileError(f"Filed to read vendor ({self.supplier_name}) settings.") from exc
 
-    def get_file_path(self):
+    def get_file_path(self) -> str:
         """Get user config file path by supplier name or by default"""
         if self.supplier_name:
             return MainConfig().markup_rules_file_path.replace(

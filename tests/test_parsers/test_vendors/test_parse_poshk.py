@@ -76,7 +76,7 @@ class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
     """Base data provider with supplier config"""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """set test config"""
         self.config = config or {}
 
@@ -105,7 +105,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     result: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
@@ -131,7 +131,7 @@ def test_parse():
         ("... i*cept", "... i*cept"),
     ],
 )
-def test_prepare_title(title, prepared_title):
+def test_prepare_title(title, prepared_title) -> None:
     """check prepare title"""
 
     item = RowItem({"title": title})
@@ -156,7 +156,7 @@ class TestParsePoshk:
             ("some камера product", "Автокамера"),
         ],
     )
-    def test_set_category(self, title, category):
+    def test_set_category(self, title, category) -> None:
         """test define category name by title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
         first_row.title = title
@@ -202,7 +202,7 @@ class TestParsePoshk:
             (100000, 107000),
         ],
     )
-    def test_markup(self, price, price_with_markup):
+    def test_markup(self, price, price_with_markup) -> None:
         """test calculation price-markup"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
         first_row.price_opt = price
@@ -221,7 +221,7 @@ class TestParsePoshk:
             "185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт",
         ],
     )
-    def test_stop_words(self, title):
+    def test_stop_words(self, title) -> None:
         """test exclude price position by stop word in title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
         first_row.title = title

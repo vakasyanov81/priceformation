@@ -94,7 +94,7 @@ class RowItem:
     # пометка, что наименование является дублем
     __IS_DOUBLE__ = "is_double"
 
-    def __init__(self, item: dict):
+    def __init__(self, item: dict) -> None:
         """init"""
         self._item = item or {}
 
@@ -106,7 +106,7 @@ class RowItem:
 
     @code.setter
     @row_format.code
-    def code(self, code):
+    def code(self, code) -> None:
         """code setter"""
         self._item[self.__CODE__] = code
 
@@ -125,7 +125,7 @@ class RowItem:
 
     @code_man.setter
     @row_format.code
-    def code_man(self, code_man):
+    def code_man(self, code_man) -> None:
         """code manufacturer setter"""
         self._item[self.__CODE_MAN__] = code_man
 
@@ -137,7 +137,7 @@ class RowItem:
 
     @code_art.setter
     @row_format.code
-    def code_art(self, code_art):
+    def code_art(self, code_art) -> None:
         """article setter"""
         self._item[self.__CODE_ART__] = code_art
 
@@ -149,7 +149,7 @@ class RowItem:
 
     @title.setter
     @row_format.text
-    def title(self, title):
+    def title(self, title) -> None:
         """title setter"""
         self._item[self.__TITLE__] = title
 
@@ -161,7 +161,7 @@ class RowItem:
 
     @manufacturer.setter
     @row_format.text
-    def manufacturer(self, manufacturer):
+    def manufacturer(self, manufacturer) -> None:
         """manufacturer setter"""
         self._item[self.__MANUFACTURER_NAME__] = manufacturer
 
@@ -180,7 +180,7 @@ class RowItem:
 
     @price_opt.setter
     @row_format.money
-    def price_opt(self, price_opt):
+    def price_opt(self, price_opt) -> None:
         """price purchase setter"""
         self._item[self.__PRICE_PURCHASE__] = price_opt
 
@@ -192,7 +192,7 @@ class RowItem:
 
     @price_recommended.setter
     @row_format.money
-    def price_recommended(self, price_recommended):
+    def price_recommended(self, price_recommended) -> None:
         """recommended price setter"""
         self._item[self.__PRICE_RECOMMENDED__] = price_recommended
 
@@ -204,7 +204,7 @@ class RowItem:
 
     @price_markup.setter
     @row_format.money
-    def price_markup(self, price_markup):
+    def price_markup(self, price_markup) -> None:
         """price with markup setter"""
         self._item[self.__PRICE_WITH_MARKUP__] = price_markup
 
@@ -216,7 +216,7 @@ class RowItem:
 
     @supplier_name.setter
     @row_format.text
-    def supplier_name(self, supplier_name):
+    def supplier_name(self, supplier_name) -> None:
         """supplier name setter"""
         self._item[self.__SUPPLIER_NAME_COLUMN__] = supplier_name
 
@@ -228,7 +228,7 @@ class RowItem:
 
     @type_production.setter
     @row_format.text
-    def type_production(self, type_production):
+    def type_production(self, type_production) -> None:
         """type production setter"""
         self._item[self.__TYPE_PRODUCTION__] = type_production
 
@@ -240,7 +240,7 @@ class RowItem:
 
     @brand.setter
     @row_format.text
-    def brand(self, brand):
+    def brand(self, brand) -> None:
         """brand setter"""
         self._item[self.__BRAND__] = brand
 
@@ -252,7 +252,7 @@ class RowItem:
 
     @percent_markup.setter
     @row_format.floated
-    def percent_markup(self, percent_markup):
+    def percent_markup(self, percent_markup) -> None:
         """percent markup setter"""
         self._item[self.__PERCENT__] = percent_markup
 
@@ -264,7 +264,7 @@ class RowItem:
 
     @rest_count.setter
     @row_format.integer
-    def rest_count(self, rest_count):
+    def rest_count(self, rest_count) -> None:
         """rest count setter"""
         self._item[self.__REST_COUNT__] = rest_count
 
@@ -276,7 +276,7 @@ class RowItem:
 
     @season.setter
     @row_format.text
-    def season(self, season):
+    def season(self, season) -> None:
         """season setter"""
         self._item[self.__SEASON__] = season
 
@@ -288,7 +288,7 @@ class RowItem:
 
     @spike.setter
     @row_format.text
-    def spike(self, spike):
+    def spike(self, spike) -> None:
         """spike setter"""
         self._item[self.__SPIKE__] = spike
 
@@ -300,7 +300,7 @@ class RowItem:
 
     @reserve_count.setter
     @row_format.integer
-    def reserve_count(self, reserve_count):
+    def reserve_count(self, reserve_count) -> None:
         """reserve count"""
         self._item[self.__RESERVE_COUNT__] = reserve_count
 
@@ -329,7 +329,7 @@ class RowItem:
         """clone"""
         return RowItem(self.to_dict())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.to_dict())
 
     @property
@@ -473,7 +473,7 @@ class RowItem:
 
     @order.setter
     @row_format.integer
-    def order(self, order: int):
+    def order(self, order: int) -> None:
         """order"""
         self._item[self.__ORDER__] = order
 
@@ -485,7 +485,7 @@ class RowItem:
 
     @group_by_params.setter
     @row_format.integer
-    def group_by_params(self, group_id: int):
+    def group_by_params(self, group_id: int) -> None:
         """group_by_params"""
         self._item[self.__GROUP_BY_PARAMS__] = group_id
 
@@ -495,7 +495,7 @@ class RowItem:
         return bool(self._item.get(self.__IS_DOUBLE__))
 
     @is_double.setter
-    def is_double(self, is_double: bool):
+    def is_double(self, is_double: bool) -> None:
         """is_double"""
         self._item[self.__IS_DOUBLE__] = int(is_double)
 
@@ -505,6 +505,6 @@ class RowItem:
         return bool(self._item.get(self.__DOUBLE_CANDIDATE__))
 
     @double_candidate.setter
-    def double_candidate(self, double_candidate: bool):
+    def double_candidate(self, double_candidate: bool) -> None:
         """double_candidate"""
         self._item[self.__DOUBLE_CANDIDATE__] = int(double_candidate)

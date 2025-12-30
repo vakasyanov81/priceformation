@@ -64,7 +64,7 @@ class XlsReader(IXlsReader):
             raise FileNotFoundError
         return cls(file_path, params)
 
-    def __init__(self, file_path: str, params: dict[str, Any]):
+    def __init__(self, file_path: str, params: dict[str, Any]) -> None:
         """init"""
         self.cur_row_values: Row | None = None
         self._skipped_empty_rows = 0

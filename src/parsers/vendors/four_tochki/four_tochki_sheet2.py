@@ -58,11 +58,11 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     """
 
     @classmethod
-    def get_current_category(cls, item):
+    def get_current_category(cls, item) -> str:
         return "Диск"
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
+    def get_prepared_title(cls, item: RowItem) -> str:
         width = item.width or ""
         diameter = (item.diameter or "").replace(".0", "")
         model = item.model or ""

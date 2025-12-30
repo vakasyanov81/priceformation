@@ -6,7 +6,7 @@ from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.row_item.row_item import RowItem
 
 
-def test_grouper():
+def test_grouper() -> None:
     """
     ---- грузовая шина
     315/80R22.5 Кама NU 701 156/150K                      форточки

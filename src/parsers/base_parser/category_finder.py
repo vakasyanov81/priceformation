@@ -11,7 +11,7 @@ class CategoryFinder:
     find category, and set
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """init"""
         self.aliases = AliasContainer(map_categories)
         self._finder = BaseFinder(self.aliases)

@@ -11,7 +11,7 @@ class FakeXlsReader:
         """get instance FakeXlsReader"""
         return FakeXlsReader(file_path, params)
 
-    def __init__(self, file_path, params):
+    def __init__(self, file_path, params) -> None:
         """init"""
         self.file_path = file_path
         self.params = params

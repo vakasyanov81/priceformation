@@ -16,7 +16,7 @@ class XlsxWriterDriver(IXlsDriver):
     write price list logic via openpyxl module
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """init"""
         self.work_book = None
         self.work_sheet = None
@@ -43,13 +43,13 @@ class XlsxWriterDriver(IXlsDriver):
         self.work_sheet = sheet
         return self
 
-    def write_head(self, names):
+    def write_head(self, names) -> None:
         """write head"""
 
         for j, name in enumerate(names):
             self.write(0, j, name, style=Font(bold=True))
 
-    def set_column_format(self, column_format: dict[int, str]):
+    def set_column_format(self, column_format: dict[int, str]) -> None:
         """
         set column format
         :param column_format: dict[column_index, '@']
@@ -57,7 +57,7 @@ class XlsxWriterDriver(IXlsDriver):
         for index, c_format in column_format.items():
             self.work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
 
-    def write(self, i, j, _value, style=None, _color: str = None):
+    def write(self, i, j, _value, style=None, _color: str = None) -> None:
         """write"""
         i += self.row_index_at
         j += self.row_index_at
@@ -73,7 +73,7 @@ class XlsxWriterDriver(IXlsDriver):
         if self.col_max_length.get(j) is None or self.col_max_length[j] < _len:
             self.col_max_length[j] = _len
 
-    def save(self):
+    def save(self) -> None:
         """save file"""
         self.set_auto_width()
         self.get_workbook().save(self._file_name)
@@ -91,7 +91,7 @@ class XlsxWriterDriver(IXlsDriver):
             result = chr(65 + remainder) + result
         return result
 
-    def set_auto_width(self):
+    def set_auto_width(self) -> None:
         """set auto width by content"""
 
         for col_index, max_len in self.col_max_length.items():

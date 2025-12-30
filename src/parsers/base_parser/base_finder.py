@@ -14,7 +14,7 @@ class BaseFinder:
     find word in title
     """
 
-    def __init__(self, alias_container: AliasContainer):
+    def __init__(self, alias_container: AliasContainer) -> None:
         """init"""
         self.alias_container = alias_container
         self._title = None
@@ -107,11 +107,11 @@ class BaseFinder:
         return -1
 
     @classmethod
-    def replace_alias_in_title(cls, item: RowItem, old_man, new_man):
+    def replace_alias_in_title(cls, item: RowItem, old_man, new_man) -> None:
         """replace manufacturer in title chunks"""
         item.title = item.title.replace(old_man, new_man)
 
-    def correction_field(self, rec: RowItem, field_name, aliases):
+    def correction_field(self, rec: RowItem, field_name, aliases) -> None:
         """replace property in rec if it has bad signature"""
         l_man = self.str_lower(getattr(rec, field_name))
         if l_man not in aliases.incorrect_words_lower:

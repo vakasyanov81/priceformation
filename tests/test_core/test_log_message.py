@@ -4,7 +4,7 @@ import logging
 from core.log_message import print_log
 
 
-def test_print_log_info_level():
+def test_print_log_info_level() -> None:
     out = StringIO()
     with redirect_stdout(out):
         print_log('message')
@@ -12,7 +12,7 @@ def test_print_log_info_level():
     assert out.getvalue() == 'message\n'
 
 
-def test_print_log_error_level():
+def test_print_log_error_level() -> None:
     out = StringIO()
     with redirect_stdout(out):
         print_log('message', level=logging.ERROR)

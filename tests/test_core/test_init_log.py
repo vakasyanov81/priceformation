@@ -16,7 +16,7 @@ from core.init_log import (
 _FOLDER = "~/some_folder/"
 
 
-def test_init_log():
+def test_init_log() -> None:
     """test init log"""
 
     with patch("core.init_log.create_logs_folder_if_not_exists") as _mock:
@@ -27,7 +27,7 @@ def test_init_log():
 
 
 @patch("pathlib.Path.mkdir")
-def test_create_logs_folder(mock_os_mkdir):
+def test_create_logs_folder(mock_os_mkdir) -> None:
     """test create logs folder"""
 
     create_logs_folder(_FOLDER)
@@ -36,7 +36,7 @@ def test_create_logs_folder(mock_os_mkdir):
 
 @patch("pathlib.Path.is_dir")
 @pytest.mark.parametrize("folder_is_exist", [True, False])
-def test_folder_is_exists(mock_os_isdir, folder_is_exist):
+def test_folder_is_exists(mock_os_isdir, folder_is_exist) -> None:
     """test folder is exists"""
 
     mock_os_isdir.return_value = folder_is_exist
@@ -48,7 +48,7 @@ def test_folder_is_exists(mock_os_isdir, folder_is_exist):
 
 @patch("core.init_log.folder_is_exists")
 @pytest.mark.parametrize("folder_is_exist, folder_created", [(True, False), (False, True)])
-def test_create_logs_folder_if_not_exists(mock_folder_is_exists, folder_is_exist, folder_created):
+def test_create_logs_folder_if_not_exists(mock_folder_is_exists, folder_is_exist, folder_created) -> None:
     """test create logs folder if not exists"""
 
     mock_folder_is_exists.return_value = folder_is_exist

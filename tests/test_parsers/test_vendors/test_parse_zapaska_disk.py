@@ -9,8 +9,8 @@ from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.zapaska_disk_json import zapaska_params
-from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON
+from parsers.vendors.zapaska_disk import zapaska_params
+from parsers.vendors.zapaska_disk import ZapaskaDiskJSON
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 parser_config = make_parse_configuration(zapaska_params)
@@ -29,7 +29,7 @@ class TestParseZapaskaDiskJSON:
     tests for Poshk vendor after raw-parser process
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         root = get_config()().project_root

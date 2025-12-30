@@ -12,7 +12,7 @@ class IWriteTemplate:
 
     """ write template interface """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._columns_formated: dict[str, ColumnHelper] | None = None
         self._column_names: list[str] | None = None
 

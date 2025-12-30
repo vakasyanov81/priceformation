@@ -12,7 +12,7 @@ from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
+from parsers.vendors.zapaska_tire import ZapaskaTireJSON, zapaska_tire_params
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 parser_config = make_parse_configuration(zapaska_tire_params)
@@ -49,7 +49,7 @@ class TestParseZapaskaTireJSON:
     }]
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         root = get_config()().project_root
@@ -79,7 +79,7 @@ class TestParseZapaskaTireJSON:
         ],
     )
     @skip
-    def test_markup(self, prices):
+    def test_markup(self, prices) -> None:
         """test calculation price-markup"""
         price_opt, price_recommended, price_markup = prices
         root = get_config()().project_root

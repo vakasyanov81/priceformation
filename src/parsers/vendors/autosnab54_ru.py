@@ -59,6 +59,6 @@ class Autosnab54Parser(BaseParser):
         return res
 
     @classmethod
-    def get_min_rest_count(cls):
+    def get_min_rest_count(cls) -> int:
         """min rest count value for skip action"""
         return 0

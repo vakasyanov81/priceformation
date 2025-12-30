@@ -13,7 +13,7 @@ from .fixtures import FixtureTemplate, write_data
 
 class FakeXlsWriter(XlsWriter):
 
-    def create_folder(self):
+    def create_folder(self) -> None:
         pass
 
 
@@ -26,7 +26,7 @@ class FakeXlsWriter(XlsWriter):
         ("parsers.writer.fake_driver.FakeXlwtDriver.save", 1),
     ],
 )
-def test_xls_write_call_counts(method, call_count):
+def test_xls_write_call_counts(method, call_count) -> None:
     """test write price for drom.ru"""
 
     with patch(method) as _mock_method:

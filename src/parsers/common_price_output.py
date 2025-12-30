@@ -15,18 +15,18 @@ class CommonPriceOut:
     Make parse all price and make inner and drom prices
     """
 
-    def __init__(self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver):
+    def __init__(self, items: list[RowItem], xls_writer=XlsWriter, write_driver=XlsxWriterDriver) -> None:
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver
         self.items = items
 
-    def nomenclature_title_correction(self):
+    def nomenclature_title_correction(self) -> None:
         """make correct nomenclature title"""
         for item in self.items:
             item.title = get_nomenclature_corrected_title(item.title)
 
-    def write_all_prices(self):
+    def write_all_prices(self) -> None:
         """
         Make prices for all active templates
         :return:

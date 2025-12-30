@@ -11,7 +11,7 @@ from .fixtures import result_body_drom, write_data
 from .test_writer import FakeXlsWriter
 
 
-def test_xls_write_for_drom():
+def test_xls_write_for_drom() -> None:
     """test write price for drom.ru"""
 
     fake_driver = FakeXlwtDriver()

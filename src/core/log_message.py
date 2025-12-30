@@ -98,7 +98,7 @@ def print_log(
     msg: str,
     level: int = logging.INFO,
     _color: Literal["red", "green", "yellow"] | None = None,
-):
+) -> None:
     """print log-message"""
 
     _msg = ""

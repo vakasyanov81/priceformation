@@ -51,6 +51,7 @@ class ForInner(IWriteTemplate):
         {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},
         {"Срок доставки": {"field": RowItem.__DELIVERY_PERIOD__}},
         {"Состояние": {"field": RowItem.__CONDITION__, "default_value": "Новое"}},
+        {"Артикул": {"field": RowItem.__CODE__}},
         # {"Группа по параметрам": {"field": RowItem.__GROUP_BY_PARAMS__, "default_value": "1"}},
         # {
         #     "Дубль": {

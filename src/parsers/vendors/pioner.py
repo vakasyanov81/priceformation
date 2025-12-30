@@ -70,7 +70,7 @@ class PionerParser(BaseParser):
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, item) -> None:
         """
         Добавить наценку
         """
@@ -89,13 +89,13 @@ class PionerParser(BaseParser):
             item.rest_count = 0
         return super().skip_by_min_rest(item)
 
-    def _set_current_category(self, item):
+    def _set_current_category(self, item) -> None:
         """set current category by title"""
         if self.is_category_row(item):
             self.current_category = (item.title or "").lower().strip()
         self.current_category_first_chunk = ((self.current_category or "").split("/")[0]).split(" ")[0]
 
-    def set_manufacturer_to_title(self, item):
+    def set_manufacturer_to_title(self, item) -> None:
         """set manufacturer name to title for row item"""
         m_name = self.get_manufacturer_name()
 
@@ -119,12 +119,12 @@ class PionerParser(BaseParser):
 
         item.title = " ".join(title_chunks)
 
-    def set_brand(self, item):
+    def set_brand(self, item) -> None:
         """set brand name"""
         m_name = self.get_manufacturer_name()
         item.brand = m_name
 
-    def set_current_category(self, item: RowItem):
+    def set_current_category(self, item: RowItem) -> None:
         """set current category"""
         item.type_production = self.current_category_first_chunk
         self.correction_category(item)

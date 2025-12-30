@@ -25,7 +25,7 @@ from parsers.row_item.row_item import RowItem
         ("bla bla Ободная лента bla", "Ободная лента"),
     ],
 )
-def test_find_category_from_title(title, category):
+def test_find_category_from_title(title, category) -> None:
     """test find category"""
 
     item = RowItem({"title": title})

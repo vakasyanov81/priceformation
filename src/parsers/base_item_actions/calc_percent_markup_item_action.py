@@ -26,12 +26,12 @@ class SetPercentMarkupItemAction(BaseItemAction):
         return self.item.percent_markup
 
     @property
-    def empty_price_markup(self):
+    def empty_price_markup(self) -> bool:
         """has not price markup value"""
         return not self.item.price_markup
 
     @property
-    def calculated(self):
+    def calculated(self) -> bool:
         """validation"""
         return not (self.already_calculated or self.empty_price_markup)
 

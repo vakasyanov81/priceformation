@@ -39,7 +39,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()

@@ -29,7 +29,7 @@ class FourTochkiParserBase(BaseParser):
         raise NotImplementedError()
 
     @classmethod
-    def set_category(cls, item):
+    def set_category(cls, item) -> None:
         """set category to row price item"""
         item.type_production = cls.get_current_category(item)
 

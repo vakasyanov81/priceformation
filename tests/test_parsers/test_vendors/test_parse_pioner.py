@@ -39,7 +39,7 @@ class TestParsePioner:
     tests for Pioner vendor after raw-parser process
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         result: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
@@ -50,7 +50,7 @@ class TestParsePioner:
         assert result[0].supplier_name == "Пионер"
         assert result[0].percent_markup == 5
 
-    def test_parse_brand(self):
+    def test_parse_brand(self) -> None:
         """check all field for one price-row"""
 
         result: List[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
@@ -58,7 +58,7 @@ class TestParsePioner:
         assert len(result) == 1
         assert result[0].brand == "triangle"
 
-    def test_small_rest(self):
+    def test_small_rest(self) -> None:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
@@ -69,7 +69,7 @@ class TestParsePioner:
         assert len(result) == 0
 
     @pytest.mark.parametrize("price_purchase", [0, None])
-    def test_null_price_purchase(self, price_purchase):
+    def test_null_price_purchase(self, price_purchase) -> None:
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
@@ -79,7 +79,7 @@ class TestParsePioner:
 
         assert len(result) == 0
 
-    def test_small_rest_1(self):
+    def test_small_rest_1(self) -> None:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
@@ -104,7 +104,7 @@ class TestParsePioner:
             },
         ],
     )
-    def test_markup(self, params):
+    def test_markup(self, params) -> None:
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
         rows = self.get_rows(parse_result)

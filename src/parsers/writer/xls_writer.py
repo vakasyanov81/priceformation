@@ -19,7 +19,7 @@ class XlsWriter:
 
     __FOLDER__ = f"file_prices{config.main.sep}result{config.main.sep}"
 
-    def __init__(self, driver, parse_result: list, template):
+    def __init__(self, driver, parse_result: list, template) -> None:
         """init"""
         self.driver: IXlsDriver = driver
         self.template: IWriteTemplate = template()
@@ -31,12 +31,12 @@ class XlsWriter:
         self.driver.set_column_format(self.template.get_columns_format())
         self.write()
 
-    def create_folder(self):
+    def create_folder(self) -> None:
         """create result folder"""
         if not Path(self.__FOLDER__).exists():
             Path(self.__FOLDER__).mkdir(parents=True)
 
-    def write(self):
+    def write(self) -> None:
         """make write"""
         self.driver.write_head(self.col_names())
         self.write_body()
@@ -55,7 +55,7 @@ class XlsWriter:
             names.append(ColumnHelper(col).name)
         return names
 
-    def write_body(self):
+    def write_body(self) -> None:
         """write body"""
         data = self.make_exclude()
         for row_index, item in enumerate(data):
@@ -78,7 +78,7 @@ class XlsWriter:
             return empty
         return color_map.get(column_value), index
 
-    def write_row(self, row_item, row_index, color: Tuple = None):
+    def write_row(self, row_item, row_index, color: Tuple = None) -> None:
         """write row item"""
         color_index = color[1] if color else 0
         _color = color[0] if color else None

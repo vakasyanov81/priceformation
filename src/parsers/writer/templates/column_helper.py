@@ -8,7 +8,7 @@ class ColumnHelper:
     helper for write-column structure
     """
 
-    def __init__(self, col: dict):
+    def __init__(self, col: dict) -> None:
         """
         dict with column name and info
         :param col:

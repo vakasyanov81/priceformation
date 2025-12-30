@@ -50,9 +50,9 @@ class ParseConfiguration:
     _markup_rules: data_provider.MarkupRules = None
     _price_markup_map: Tuple[data_provider.MarkUpParams] = None
 
-    def __init__(self, parse_config: BasePriceParseConfigurationParams):
+    def __init__(self, parse_config: Type[BasePriceParseConfigurationParams]) -> None:
         """init"""
-        self.parse_config: BasePriceParseConfigurationParams = parse_config
+        self.parse_config: Type[BasePriceParseConfigurationParams] = parse_config
 
     @classmethod
     def extract_markup_rules(cls, markup_data: dict):

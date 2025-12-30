@@ -7,7 +7,7 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 write_data = [
     {
-        "code": 87674341266.0,
+        "code": "x100",
         "title": "225/40R18 Crossleader 92Y",
         "mark": "CROSSLEADER",
         "model": "DSU02",
@@ -40,6 +40,7 @@ result_body_inner = {
     "cell(1,10)": "Мим",
     "cell(1,11)": "В наличии",
     "cell(1,13)": "Новое",
+    "cell(1,14)": "x100",
     # "cell(1,14)": "1",
     "cell(1,2)": "225/40R18 Crossleader 92Y",
     "cell(1,5)": 3457.0,

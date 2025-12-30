@@ -65,7 +65,7 @@ def make_old_reader():
         ([0, 1, 2], 6, SHEET_1 + SHEET_2 + SHEET_3, make_old_reader()),
     ],
 )
-def test_xls_rows_count_and_result(sheets, rows_count, result, reader):
+def test_xls_rows_count_and_result(sheets, rows_count, result, reader) -> None:
     """test rows count and result"""
     parse_res = reader.parse(sheets)
 
@@ -74,7 +74,7 @@ def test_xls_rows_count_and_result(sheets, rows_count, result, reader):
     assert parse_res == result
 
 
-def test_xlsx_with_skipped_first_column():
+def test_xlsx_with_skipped_first_column() -> None:
     """test rows count and result"""
     reader = XlsReader.get_instance(_PIONER_FILE_PATH, _PIONER_PARSE_PARAMS)
     parse_res = reader.parse([0])

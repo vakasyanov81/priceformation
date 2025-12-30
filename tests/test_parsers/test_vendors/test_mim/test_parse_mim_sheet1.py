@@ -55,7 +55,7 @@ def get_fake_parser(parse_result):
         (("30", "9", "15"), "30/9R15"),
     ],
 )
-def test_prepare_title(row_elements, prepared_title):
+def test_prepare_title(row_elements, prepared_title) -> None:
     """check prepare title"""
 
     item = RowItem(
@@ -70,7 +70,7 @@ def test_prepare_title(row_elements, prepared_title):
     assert title == prepared_title
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
@@ -88,7 +88,7 @@ class TestParseMimSheet1:
     tests for Mim vendor (sheet 1) after raw-parser process
     """
 
-    def test_small_rest(self):
+    def test_small_rest(self) -> None:
         """test exclude price-position by small rest count"""
         parse_result, first_row = self.get_first_row_item(mim_one_item_result())
         first_row.rest_count = 3
@@ -110,7 +110,7 @@ class TestParseMimSheet1:
             (1000, 1100, 1500),
         ],
     )
-    def test_markup(self, price, price_recommended, price_with_markup):
+    def test_markup(self, price, price_recommended, price_with_markup) -> None:
         """test calculation price-markup"""
         parse_result, first_row = self.get_first_row_item(mim_one_item_result())
         first_row.price_opt = price

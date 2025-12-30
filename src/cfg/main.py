@@ -33,7 +33,7 @@ class MainCfg:
         return __FILE_PRICES__
 
     @property
-    def folder_file_prices_result(self):
+    def folder_file_prices_result(self) -> str:
         """folder where price formation results are stored"""
         return f"{self.folder_file_prices}{os.sep}{__FILE_PRICES_RESULT__}"
 
@@ -137,12 +137,12 @@ class MainConfig(MainCfg):
         return self.project_root + self.sep + self.log_folder_name
 
     @property
-    def current_log_file_name(self):
+    def current_log_file_name(self) -> str:
         """current log file name"""
         return f"log_{datetime.date.today()}.log"
 
     @property
-    def current_err_log_file_name(self):
+    def current_err_log_file_name(self) -> str:
         """current log-error file name"""
         return f"error_{datetime.date.today()}.log"
 

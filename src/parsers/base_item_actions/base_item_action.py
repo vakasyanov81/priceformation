@@ -9,7 +9,7 @@ class BaseItemAction:
     """Abstract base price item action"""
 
     # pylint: disable=R0903
-    def __init__(self, item: RowItem):
+    def __init__(self, item: RowItem) -> None:
         """init"""
         self.item = item
 

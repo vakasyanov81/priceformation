@@ -4,7 +4,7 @@ from parsers.row_item.row_item import RowItem
 class CommonPriceGrouper:
     """Группировка результата разбора прайсов поставщиков по параметрам наименований"""
 
-    def __init__(self, items: list[RowItem]):
+    def __init__(self, items: list[RowItem]) -> None:
         self.items = items
         self._is_grouped_items = None
 
@@ -37,7 +37,7 @@ class CommonPriceGrouper:
         return self.items
 
     @classmethod
-    def mark_double_items(cls, items: list[RowItem]):
+    def mark_double_items(cls, items: list[RowItem]) -> None:
         """Проставить признаки дублей"""
         if len(items) < 2:
             return
@@ -61,7 +61,7 @@ class CommonPriceGrouper:
             self.group_by_params()
         return [item for item in self.items if item.is_double or item.double_candidate]
 
-    def set_order(self):
+    def set_order(self) -> None:
         """set order"""
         current_order = 1
         for item in self.items:
