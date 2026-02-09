@@ -381,7 +381,10 @@ def get_file_prices(parser: TBaseParser):
     _list_files = []
     cfg = init_cfg()
     for f_tmp in parser.parser_params().file_templates:
-        _list_files += glob.glob(f"{cfg.main.folder_file_prices}/{parser.parser_params().supplier.folder_name}/{f_tmp}")
+        _list_files += glob.glob(
+            f"{cfg.main.project_root}/{cfg.main.folder_file_prices}"
+            f"/{parser.parser_params().supplier.folder_name}/{f_tmp}"
+        )
 
     if not _list_files:
         raise SupplierNotHavePricesError(

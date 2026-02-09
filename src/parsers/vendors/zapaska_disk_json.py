@@ -220,14 +220,9 @@ class ZapaskaDiskJSON(BaseParser):
         цена закупа от 10000 до 15000 прибавляем наценку 13%
         цена закупа от 15000 до 20000 прибавляем наценку 10%
         """
-        code = item.code or item.code_art
 
-        price_recommended = self.price_sup_codes.get(code) or self.find_rest_by_title(item.title)
-        price_recommended = price_recommended or 0
+        price_recommended = item.price_recommended or 0
         price_opt = item.price_opt
-
-        if price_recommended:
-            item.price_recommended = price_recommended
 
         if not price_opt:
             return
