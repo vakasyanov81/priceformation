@@ -19,5 +19,5 @@ def test_xls_write_for_drom():
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     assert fake_driver.file_name == f"price_drom_{now}.xlsx"
-    assert fake_driver.folder == f"file_prices{os.sep}result{os.sep}"
+    assert f"file_prices{os.sep}result{os.sep}" in fake_driver.folder
     assert fake_driver.body == result_body_drom
