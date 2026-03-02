@@ -19,7 +19,7 @@ dev = [
     "pyright==1.1.408",
     "pytest-cov==7.0.0",
     "black==26.1.0",
-    "pylint==4.0.4",
+    "pylint==4.0.5",
     "ruff==0.15.2",
     "pytest-testmon==2.2.0",
     "pytest-randomly==4.0.1",
