@@ -137,6 +137,13 @@ class MainConfig(MainCfg):
         return self.project_root + self.sep + self.log_folder_name
 
     @property
+    def result_folder_path(self):
+        """path to result folder"""
+        _BASE_PATH = pathlib.Path(self.project_root)
+        _RESULT_FOLDER = str(_BASE_PATH.joinpath("file_prices", "result"))
+        return _RESULT_FOLDER
+
+    @property
     def current_log_file_name(self):
         """current log file name"""
         return f"log_{datetime.date.today()}.log"

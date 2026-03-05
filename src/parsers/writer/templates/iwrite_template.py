@@ -16,10 +16,10 @@ class IWriteTemplate:
         self._columns_formated: dict[str, ColumnHelper] | None = None
         self._column_names: list[str] | None = None
 
-    def exclude(self):
+    def exclude(self) -> dict:
         """get exclude"""
         ex_field = "__EXCLUDE__"
-        return getattr(self, ex_field) if hasattr(self, ex_field) else []
+        return getattr(self, ex_field) if hasattr(self, ex_field) else {}
 
     def get_file_name(self):
         """get exclude"""
