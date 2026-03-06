@@ -414,7 +414,7 @@ dev = [
     { name = "pytest-testmon", specifier = "==2.2.0" },
     { name = "pytest-xdist", specifier = "==3.8.0" },
     { name = "ruff", specifier = "==0.15.4" },
-    { name = "wemake-python-styleguide", specifier = "==1.5.0" },
+    { name = "wemake-python-styleguide", specifier = "==1.6.0" },
 ]
 
 [[package]]
@@ -732,14 +732,14 @@ wheels = [
 
 [[package]]
 name = "wemake-python-styleguide"
-version = "1.5.0"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "flake8" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0a/06/a0968903b6d41de7c41b8d8cc6a31471894365fe0c7b13684a3e6faa956d/wemake_python_styleguide-1.5.0.tar.gz", hash = "sha256:a764b30bd298ecd3ca9d5cd64b7776dec9a529d728291e8b8076a56649d6cce1", size = 156819, upload-time = "2025-12-22T19:39:10.812Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/9a/2928a1562adc8c7343912280d600bbf3ec6bbf6a764af41374c2a308bd19/wemake_python_styleguide-1.6.0.tar.gz", hash = "sha256:9d834573a9ca089b48b8ce0e8bffd69d33f18be53d4a4667bbbe4438750328e8", size = 158285, upload-time = "2026-02-26T18:31:58.755Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/2a/9e303a946df30335695b60c0f75dc49a5f339cf4a101772522c88d4133f7/wemake_python_styleguide-1.5.0-py3-none-any.whl", hash = "sha256:0743a8d1a748e3b84cad5804de4e6211641cd77e5ea0e4aaeec1993765e7f6c0", size = 219957, upload-time = "2025-12-22T19:39:09.076Z" },
+    { url = "https://files.pythonhosted.org/packages/83/1d/ac904c1baaa2ba15a2c85011534dfb30254f8e79d2c9c5996ed6f55b9eb8/wemake_python_styleguide-1.6.0-py3-none-any.whl", hash = "sha256:11f3d25e83e3edec01c33af85c4e62e4886890b8710fe7af86920575912d14f2", size = 221573, upload-time = "2026-02-26T18:32:00.334Z" },
 ]
