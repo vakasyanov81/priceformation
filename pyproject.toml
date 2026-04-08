@@ -25,7 +25,7 @@ dev = [
     "pytest-randomly==4.0.1",
     "pytest-xdist==3.8.0",
     "wemake-python-styleguide==1.6.1",
-    "mypy==1.19.1"
+    "mypy==1.20.0"
 ]
 
 [build-system]
