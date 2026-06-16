@@ -27,9 +27,9 @@ class CommonPrice:
     """
 
     def __init__(
-            self,
-            xls_writer: type[XlsWriter] = XlsWriter,
-            write_driver: type[XlsxWriterDriver] = XlsxWriterDriver,
+        self,
+        xls_writer: type[XlsWriter] = XlsWriter,
+        write_driver: type[XlsxWriterDriver] = XlsxWriterDriver,
     ) -> None:
         self.xls_writer = xls_writer
         self.write_driver = write_driver
@@ -40,8 +40,7 @@ class CommonPrice:
         self._result.clear()  # защищаемся от накопления при повторных вызовах
 
         start_time = time.monotonic()
-        log_msg("\n============== Начало разбора прайсов =================\n",
-                need_print_log=True)
+        log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
 
         for vendor_cls, vendor_config in vendors:
             self.parse_vendor(vendor_cls(vendor_config))
@@ -49,12 +48,10 @@ class CommonPrice:
         grouper = CommonPriceGrouper(self._result)
         self._result = grouper.group_by_params().get_items()
 
-        log_msg(f"\nКоличество дублей: {grouper.get_double_count()}\n",
-                need_print_log=True)
+        log_msg(f"\nКоличество дублей: {grouper.get_double_count()}\n", need_print_log=True)
 
         elapsed = time.monotonic() - start_time
-        log_msg(f"\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n",
-                need_print_log=True)
+        log_msg(f"\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n", need_print_log=True)
 
     def parse_vendor(self, parser: Parser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к общему результату."""

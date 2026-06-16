@@ -1,0 +1,6 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.4.2          # используйте актуальную версию
+    hooks:
+      - id: black
+        args: ["--line-length", "120", "--skip-string-normalization", "--target-version", "py311"]

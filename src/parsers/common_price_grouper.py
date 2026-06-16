@@ -74,8 +74,9 @@ class CommonPriceGrouper:
         """Получить список дублей."""
         if not self._is_grouped:
             self.group_by_params()
-        return [item for item in self.items if
-                getattr(item, 'is_double', False) or getattr(item, 'double_candidate', False)]
+        return [
+            item for item in self.items if getattr(item, 'is_double', False) or getattr(item, 'double_candidate', False)
+        ]
 
     @classmethod
     def group_key(cls, item: RowItem) -> Tuple[str, ...]:
@@ -104,11 +105,27 @@ class CommonPriceGrouper:
 
         type_prod = (item.type_production or "").lower()
 
-        return sanitize_value([
-            type_prod, width, diameter, profile, velocity, load,
-            model, mark, axis, layering, slot_count, dia,
-            slot_diameter, color, brand, _et, intimacy
-        ])
+        return sanitize_value(
+            [
+                type_prod,
+                width,
+                diameter,
+                profile,
+                velocity,
+                load,
+                model,
+                mark,
+                axis,
+                layering,
+                slot_count,
+                dia,
+                slot_diameter,
+                color,
+                brand,
+                _et,
+                intimacy,
+            ]
+        )
 
     @classmethod
     def define_intimacy(cls, item: RowItem) -> Optional[str]:
