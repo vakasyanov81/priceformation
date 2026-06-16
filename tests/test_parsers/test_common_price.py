@@ -39,7 +39,7 @@ def _test_parse_all_vendors():
 
     common_price = CommonPrice()
     common_price.parse_all_vendors([(FakeParser, None)])
-    assert common_price.get_result() == fake_result
+    assert common_price.result == fake_result
 
 
 def test_suppliers_info():
