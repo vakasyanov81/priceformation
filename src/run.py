@@ -39,7 +39,7 @@ def run_make_price_by_supplier() -> None:
     """Make common price list by price list supplier's"""
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
-    CommonPriceOut(common_price.get_result()).write_all_prices()
+    CommonPriceOut(common_price.result).write_all_prices()
 
 
 def run_upload_zapaska_data() -> None:
