@@ -1,9 +1,9 @@
 import pytest
 
+from parsers.row_item.row_item import RowItem
 from parsers.row_item.row_item_formatter import (
     get_try_to_int_or_float,
     get_integer,
-    get_float,
 )
 
 
@@ -23,3 +23,10 @@ def test_get_integer():
     assert 10 == get_integer("10")
     assert 10 == get_integer("10.0")
     assert 10 == get_integer("10.5")
+
+
+def test_row_item_set_boolean():
+    row = RowItem()
+    # row = RowItem({'double_candidate': False})
+    print(type(row.double_candidate))
+    row.double_candidate = True

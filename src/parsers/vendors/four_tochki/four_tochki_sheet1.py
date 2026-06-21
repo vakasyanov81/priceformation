@@ -17,28 +17,28 @@ fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_1_params.sheet_info = "Вкладка (шины) #1"
 fourtochki_sheet_1_params.sheet_indexes = [0]
 fourtochki_sheet_1_params.columns = {
-    0: RowItem.__CODE__,
-    2: RowItem.__MANUFACTURER_NAME__,
-    3: RowItem.__MODEL__,
-    4: RowItem.__WIDTH__,
-    5: RowItem.__HEIGHT_PERCENT__,
-    6: RowItem.__DIAMETER__,
-    7: RowItem.__INDEX_LOAD__,
-    8: RowItem.__INDEX_VELOCITY__,
-    9: RowItem.__SEASON__,
-    10: RowItem.__TIRE_TYPE__,
-    11: RowItem.__EXT_DIAMETER__,
-    12: RowItem.__SPIKE__,
-    13: RowItem.__INSCRIPTION_ON_THE_SIDE__,
-    14: RowItem.__RUN_FLAT__,
-    15: RowItem.__US_AFF_DESIGNATION__,
-    16: RowItem.__CAMERA_TYPE__,
-    17: RowItem.__AXIS__,
-    18: RowItem.__LAYERING__,
-    19: RowItem.__CONSTRUCTION_TYPE__,
-    20: RowItem.__REST_COUNT__,
-    21: RowItem.__PRICE_RECOMMENDED__,
-    22: RowItem.__PRICE_PURCHASE__,
+    0: RowItem.code.name,
+    2: RowItem.manufacturer.name,
+    3: RowItem.model.name,
+    4: RowItem.width.name,
+    5: RowItem.height_percent.name,
+    6: RowItem.diameter.name,
+    7: RowItem.index_load.name,
+    8: RowItem.index_velocity.name,
+    9: RowItem.season.name,
+    10: RowItem.tire_type.name,
+    11: RowItem.ext_diameter.name,
+    12: RowItem.spike.name,
+    13: RowItem.inscription_on_the_side.name,
+    14: RowItem.run_flat.name,
+    15: RowItem.us_aff_designation.name,
+    16: RowItem.camera_type.name,
+    17: RowItem.axis.name,
+    18: RowItem.layering.name,
+    19: RowItem.construction_type.name,
+    20: RowItem.rest_count.name,
+    21: RowItem.price_recommended.name,
+    22: RowItem.price_opt.name,
 }
 
 supplier_folder_name = fourtochki_params.supplier.folder_name
@@ -121,7 +121,7 @@ def get_prepared_title(item: RowItem) -> str:
     load = item.index_load or ""
     model = item.model or ""
     ext_diameter = item.ext_diameter or ""
-    us_aff_design = item.us_aff_design or ""
+    us_aff_designation = item.us_aff_designation or ""
     mark = (item.manufacturer or "").lower().capitalize()
     layering = item.layering or ""
     camera_type = item.camera_type or ""
@@ -159,7 +159,7 @@ def get_prepared_title(item: RowItem) -> str:
     if is_truck_tire(item):
         title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
     elif ext_diameter:
-        title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_design}"
+        title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_designation}"
     else:
         title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {layering} {camera_type} {load}{velocity}"
 
@@ -168,9 +168,9 @@ def get_prepared_title(item: RowItem) -> str:
 
 def is_truck_tire(item: RowItem):
     """Грузовая шина?"""
-    return item.tire_type.lower() == "грузовая"
+    return item.tire_type.lower() == "грузовая" if item.tire_type else False
 
 
 def is_special_tire(item: RowItem):
     """Спецтехника?"""
-    return item.tire_type.lower() == "спецтехника"
+    return item.tire_type.lower() == "спецтехника" if item.tire_type else False

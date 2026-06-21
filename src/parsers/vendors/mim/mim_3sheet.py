@@ -18,20 +18,20 @@ def config_for_sheets3():
     """get config for sheets 3 parsers"""
     return dict(
         {
-            0: RowItem.__CODE__,
-            1: RowItem.__TITLE__,
-            3: RowItem.__MANUFACTURER_NAME__,
-            4: RowItem.__MODEL__,
-            6: RowItem.__DIAMETER__,
-            7: RowItem.__WIDTH__,
-            8: RowItem.__SLOT_COUNT__,
-            9: RowItem.__PCD1__,
-            11: RowItem.__ET__,
-            12: RowItem.__CENTRAL_DIAMETER__,
-            15: RowItem.__DISK_THICKNESS__,
-            20: RowItem.__REST_COUNT__,
-            22: RowItem.__PRICE_PURCHASE__,
-            23: RowItem.__PRICE_RECOMMENDED__,
+            0: RowItem.code.name,
+            1: RowItem.title.name,
+            3: RowItem.manufacturer.name,
+            4: RowItem.model.name,
+            6: RowItem.diameter.name,
+            7: RowItem.width.name,
+            8: RowItem.slot_count.name,
+            9: RowItem.pcd1.name,
+            11: RowItem.eet.name,
+            12: RowItem.central_diameter.name,
+            15: RowItem.disk_thickness.name,
+            20: RowItem.rest_count.name,
+            22: RowItem.price_opt.name,
+            23: RowItem.price_recommended.name,
         }
     )
 

@@ -127,7 +127,7 @@ class BaseParser(Parser):
 
         for price_rule in self._parse_config.get_price_markup_map():
             if price_rule.min < price_value <= price_rule.max:
-                return price_rule.percent
+                return price_rule.percent_markup
 
         return default_percent
 
@@ -147,6 +147,13 @@ class BaseParser(Parser):
                     need_print_log=True,
                 )
                 err_msg(f"строка: {repr(item)}")
+                continue
+            if item.parse_errors:
+                err_msg(
+                    f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(self)} // {item.parse_errors}",
+                    need_print_log=True,
+                )
+                err_msg(f"строка: {repr(item.to_dict())}")
                 continue
 
             # проверка на содержание стоп слов.
@@ -193,6 +200,8 @@ class BaseParser(Parser):
 
     @classmethod
     def replace_season(cls, item: RowItem) -> str | None:
+        if not item.season:
+            return
         replaced_seasons = {"зима": "Зимняя", "лето": "Летняя"}
         return replaced_seasons.get(item.season.lower()) or item.season
 

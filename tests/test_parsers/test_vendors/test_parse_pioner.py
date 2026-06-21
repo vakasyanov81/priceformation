@@ -62,18 +62,18 @@ class TestParsePioner:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row.rest_count = 3
+        first_row['rest_count'] = 3
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(result) == 0
 
-    @pytest.mark.parametrize("price_purchase", [0, None])
-    def test_null_price_purchase(self, price_purchase):
+    @pytest.mark.parametrize("price_opt", [0, None])
+    def test_null_price_opt(self, price_opt):
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row.price_opt = price_purchase
+        first_row['price_opt'] = price_opt
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -83,8 +83,8 @@ class TestParsePioner:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row.rest_count = 10
-        first_row.reserve_count = 7
+        first_row['rest_count'] = 10
+        first_row['reserve_count'] = 7
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -108,9 +108,9 @@ class TestParsePioner:
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
         rows = self.get_rows(parse_result)
-        rows[1].title = params.get("category")
-        rows[2].price_opt = params.get("price")
-        rows[2].price_recommended = params.get("price_recommended")
+        rows[1]['title'] = params.get("category")
+        rows[2]['price_opt'] = params.get("price")
+        rows[2]['price_recommended'] = params.get("price_recommended")
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -119,12 +119,12 @@ class TestParsePioner:
         assert 1 == result[0].title.count("Triangle")
 
     @classmethod
-    def get_rows(cls, parse_result) -> List[RowItem]:
+    def get_rows(cls, parse_result) -> List[dict]:
         """get first item from parse result"""
         file = list(parse_result.keys())[0]
-        return [RowItem(item) for item in parse_result[file]]
+        return parse_result[file]
 
     @classmethod
-    def get_first_row_item(cls, parse_result) -> RowItem:
+    def get_first_row_item(cls, parse_result) -> dict:
         """get first item from parse result"""
         return cls.get_rows(parse_result)[0]

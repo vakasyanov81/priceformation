@@ -36,15 +36,15 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
         """get markup rules"""
         return {
             "markup_rules": {
-                "rule_70": {"min": 0, "max": 200, "percent": 0.7},
-                "rule_50": {"min": 200, "max": 300, "percent": 0.5},
-                "rule_40": {"min": 300, "max": 500, "percent": 0.4},
-                "rule_30": {"min": 500, "max": 1500, "percent": 0.3},
-                "rule_25": {"min": 1500, "max": 5000, "percent": 0.25},
-                "rule_15": {"min": 5000, "max": 8000, "percent": 0.15},
-                "rule_14": {"min": 8000, "max": 20000, "percent": 0.14},
-                "rule_8": {"min": 20000, "max": 30000, "percent": 0.08},
-                "rule_7": {"min": 30000, "max": 60000, "percent": 0.07},
+                "rule_70": {"min": 0, "max": 200, "percent_markup": 0.7},
+                "rule_50": {"min": 200, "max": 300, "percent_markup": 0.5},
+                "rule_40": {"min": 300, "max": 500, "percent_markup": 0.4},
+                "rule_30": {"min": 500, "max": 1500, "percent_markup": 0.3},
+                "rule_25": {"min": 1500, "max": 5000, "percent_markup": 0.25},
+                "rule_15": {"min": 5000, "max": 8000, "percent_markup": 0.15},
+                "rule_14": {"min": 8000, "max": 20000, "percent_markup": 0.14},
+                "rule_8": {"min": 20000, "max": 30000, "percent_markup": 0.08},
+                "rule_7": {"min": 30000, "max": 60000, "percent_markup": 0.07},
             }
         }
 
@@ -159,15 +159,15 @@ class TestParsePoshk:
     def test_set_category(self, title, category):
         """test define category name by title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row.title = title
+        first_row['title'] = title
         result: List[RowItem] = get_fake_parser(parse_result).parse()
         assert result[0].type_production == category
 
     @classmethod
-    def get_first_row_item(cls, _result) -> Tuple[dict, RowItem]:
+    def get_first_row_item(cls, _result) -> Tuple[dict, dict]:
         """get first item from parse result"""
         file = list(_result.keys())[0]
-        return _result, RowItem(_result[file][0])
+        return _result, _result[file][0]
 
     @pytest.mark.parametrize(
         "price, price_with_markup",
@@ -205,7 +205,7 @@ class TestParsePoshk:
     def test_markup(self, price, price_with_markup):
         """test calculation price-markup"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row.price_opt = price
+        first_row['price_opt'] = price
 
         parser = get_fake_parser(parse_result)
 
@@ -224,7 +224,7 @@ class TestParsePoshk:
     def test_stop_words(self, title):
         """test exclude price position by stop word in title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row.title = title
+        first_row['title'] = title
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 

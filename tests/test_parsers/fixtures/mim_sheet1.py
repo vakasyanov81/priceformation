@@ -18,7 +18,7 @@ def mim_one_item_result():
                 "index_velocity": "Y",
                 "index_load": "92",
                 "rest_count": 4.0,
-                "price_purchase": 3457.0,
+                "price_opt": 3457.0,
                 "price_recommended": 0,
             }
         ]
