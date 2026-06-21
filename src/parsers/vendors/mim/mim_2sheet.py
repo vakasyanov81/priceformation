@@ -17,22 +17,22 @@ def config_for_sheets2():
     """get config for sheets 2 parsers"""
     return dict(
         {
-            0: RowItem.__CODE__,
-            1: RowItem.__TITLE__,
-            3: RowItem.__MANUFACTURER_NAME__,
-            4: RowItem.__MODEL__,
-            6: RowItem.__WIDTH__,
-            7: RowItem.__HEIGHT_PERCENT__,
-            8: RowItem.__CONSTRUCTION_TYPE__,
-            9: RowItem.__DIAMETER__,
-            11: RowItem.__AXIS__,
-            12: RowItem.__INTIMACY__,
-            13: RowItem.__LAYERING__,
-            14: RowItem.__INDEX_LOAD__,
-            15: RowItem.__INDEX_VELOCITY__,
-            20: RowItem.__REST_COUNT__,
-            22: RowItem.__PRICE_PURCHASE__,
-            23: RowItem.__PRICE_RECOMMENDED__,
+            0: RowItem.code.name,
+            1: RowItem.title.name,
+            3: RowItem.manufacturer.name,
+            4: RowItem.model.name,
+            6: RowItem.width.name,
+            7: RowItem.height_percent.name,
+            8: RowItem.construction_type.name,
+            9: RowItem.diameter.name,
+            11: RowItem.axis.name,
+            12: RowItem.intimacy.name,
+            13: RowItem.layering.name,
+            14: RowItem.index_load.name,
+            15: RowItem.index_velocity.name,
+            20: RowItem.rest_count.name,
+            22: RowItem.price_opt.name,
+            23: RowItem.price_recommended,
         }
     )
 

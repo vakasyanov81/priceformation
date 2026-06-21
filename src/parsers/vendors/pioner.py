@@ -23,10 +23,10 @@ pioner_params = ParserParams(
     start_row=12,
     sheet_info="",
     columns={
-        1: RowItem.__TITLE__,
-        2: RowItem.__PRICE_PURCHASE__,
-        4: RowItem.__REST_COUNT__,
-        5: RowItem.__RESERVE_COUNT__,
+        1: RowItem.title.name,
+        2: RowItem.price_opt.name,
+        4: RowItem.rest_count.name,
+        5: RowItem.reserve_count.name,
     },
     stop_words=[],
     file_templates=["price*.xls", "price*.xlsx"],
@@ -75,8 +75,8 @@ class PionerParser(BaseParser):
         Добавить наценку
         """
 
-        price = item.price_opt
-        markup_percent = self.get_markup_percent(price)
+        price = item.price_opt or 0
+        markup_percent = self.get_markup_percent(price) or 0
         price = (markup_percent + 1) * price
         item.price_markup = self.round_price(price)
         item.percent_markup = markup_percent * 100

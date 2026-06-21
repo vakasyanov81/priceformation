@@ -22,12 +22,12 @@ def mim_one_item_result():
                 "index_load": "146/143",
                 "index_velocity": "L",
                 "rest_count": 5.0,
-                "price_purchase": 23200.0,
+                "price_opt": 23200.0,
                 "price_recommended": 23725.0,
-                "sup_name": "Мим",
+                "supplier_name": "Мим",
                 "price_markup": 0.0,
                 "type_production": "Диск",
-                "percent": 0,
+                "percent_markup": 0,
             }
         ]
     }

@@ -22,4 +22,6 @@ def test_xls_write_for_inner():
 
     assert fake_driver.file_name == f"price_{now}.xlsx"
     assert f"file_prices{os.sep}result" in fake_driver.get_folder()
+    print('\n [*]', fake_driver.body)
+    print('\n [*]', result_body_inner)
     assert fake_driver.body == result_body_inner

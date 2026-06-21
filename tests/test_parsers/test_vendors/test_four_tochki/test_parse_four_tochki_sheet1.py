@@ -46,6 +46,7 @@ def test_parse():
     assert result[0].percent_markup == 27.17
 
     # метрический размер
+    print('[*]', result[1].title)
     assert result[1].title == "31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT"
     assert result[1].price_markup == 24870
     assert result[1].percent_markup == 27.04
@@ -72,9 +73,9 @@ def test_prepare_title_replace_999():
 
     row = RowItem(
         {
-            RowItem.__HEIGHT_PERCENT__: "999",
-            RowItem.__WIDTH__: "11",
-            RowItem.__DIAMETER__: "--20",
+            RowItem.height_percent.name: "999",
+            RowItem.width.name: "11",
+            RowItem.diameter.name: "--20",
         }
     )
 
@@ -87,12 +88,12 @@ def test_prepare_title_width_two_zero():
 
     row = RowItem(
         {
-            RowItem.__WIDTH__: 10,
-            RowItem.__DIAMETER__: "--20",
-            RowItem.__MANUFACTURER_NAME__: "Armour",
-            RowItem.__MODEL__: "TI300",
-            RowItem.__LAYERING__: "16PR",
-            RowItem.__CAMERA_TYPE__: "TTF",
+            RowItem.width.name: 10,
+            RowItem.diameter.name: "--20",
+            RowItem.manufacturer.name: "Armour",
+            RowItem.model.name: "TI300",
+            RowItem.layering.name: "16PR",
+            RowItem.camera_type.name: "TTF",
         }
     )
 
@@ -105,14 +106,14 @@ def test_prepare_title_width_one_zero():
 
     row = RowItem(
         {
-            RowItem.__WIDTH__: 10,
-            RowItem.__HEIGHT_PERCENT__: 75,
-            RowItem.__DIAMETER__: "--15.3",
-            RowItem.__MANUFACTURER_NAME__: "Forerunner",
-            RowItem.__MODEL__: "QH602 R-4",
-            RowItem.__LAYERING__: "12PR",
-            RowItem.__CAMERA_TYPE__: "TL",
-            RowItem.__TIRE_TYPE__: "Спецтехника",
+            RowItem.width.name: 10,
+            RowItem.height_percent.name: 75,
+            RowItem.diameter.name: "--15.3",
+            RowItem.manufacturer.name: "Forerunner",
+            RowItem.model.name: "QH602 R-4",
+            RowItem.layering.name: "12PR",
+            RowItem.camera_type.name: "TL",
+            RowItem.tire_type.name: "Спецтехника",
         }
     )
 
@@ -125,14 +126,14 @@ def test_prepare_title_width_1():
 
     row = RowItem(
         {
-            RowItem.__WIDTH__: "11",
-            RowItem.__HEIGHT_PERCENT__: "999",
-            RowItem.__DIAMETER__: "--15",
-            RowItem.__MANUFACTURER_NAME__: "Galaxy",
-            RowItem.__MODEL__: "Rib Implement I-1",
-            RowItem.__LAYERING__: "12PR",
-            RowItem.__CAMERA_TYPE__: "TL",
-            RowItem.__TIRE_TYPE__: "Спецтехника",
+            RowItem.width.name: "11",
+            RowItem.height_percent.name: "999",
+            RowItem.diameter.name: "--15",
+            RowItem.manufacturer.name: "Galaxy",
+            RowItem.model.name: "Rib Implement I-1",
+            RowItem.layering.name: "12PR",
+            RowItem.camera_type.name: "TL",
+            RowItem.tire_type.name: "Спецтехника",
         }
     )
 
@@ -145,14 +146,14 @@ def test_prepare_title_1():
 
     row = RowItem(
         {
-            RowItem.__WIDTH__: "12.5",
-            RowItem.__HEIGHT_PERCENT__: 80,
-            RowItem.__DIAMETER__: "--18",
-            RowItem.__MANUFACTURER_NAME__: "Armour",
-            RowItem.__MODEL__: "L-5B",
-            RowItem.__LAYERING__: "16",
-            RowItem.__CAMERA_TYPE__: "TL",
-            RowItem.__TIRE_TYPE__: "Спецтехника",
+            RowItem.width.name: "12.5",
+            RowItem.height_percent.name: 80,
+            RowItem.diameter.name: "--18",
+            RowItem.manufacturer.name: "Armour",
+            RowItem.model.name: "L-5B",
+            RowItem.layering.name: "16",
+            RowItem.camera_type.name: "TL",
+            RowItem.tire_type.name: "Спецтехника",
         }
     )
 

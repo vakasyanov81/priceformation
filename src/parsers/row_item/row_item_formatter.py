@@ -3,7 +3,7 @@ row item field format logic
 """
 
 from functools import lru_cache
-from typing import Callable, Union
+from typing import Callable, Union, Any
 
 
 def strip_into_str(value: str) -> str:
@@ -62,17 +62,17 @@ def get_sanitized_code(value):
     return get_stripped(value)
 
 
-def get_try_to_int_or_str(code: str) -> int | str:
+def get_try_to_int_or_str(code_value: str) -> int | str:
     """
     Try correct get_sanitized_code
     """
     try:
-        code_new = get_try_to_int_or_float(code) or 0
+        code_new = get_try_to_int_or_float(code_value) or 0
         if isinstance(code_new, float):
             raise ValueError
         return int(code_new)
     except ValueError:
-        return code
+        return code_value
 
 
 def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
@@ -93,66 +93,39 @@ def get_try_to_int_or_float(value: Union[str, float]) -> int | float | None:
         return float(value)
 
 
-def call_wrapper(_self, decorated_func, format_func_getter, *args):
-    """make call wrapper for property and property-setter"""
-    if args:
-        return decorated_func(_self, format_func_getter(args[0]))
-    return format_func_getter(decorated_func(_self))
-
-
-def text(_func):
+def text(value: Any):
     """text decorator"""
-
-    def wrap(_self, *args):
-        """wrapper"""
-        return call_wrapper(_self, _func, get_stripped, *args)
-
-    return wrap
+    return get_stripped(value)
 
 
-def money(_func):
+def money(value: Any):
     """money decorator"""
-    return floated(_func)
+    return floated(value)
 
 
-def floated(_func):
+def floated(value: Any):
     """float-value decorator"""
-
-    def wrap(_self, *args):
-        """wrapper"""
-        return call_wrapper(_self, _func, get_float, *args)
-
-    return wrap
+    return get_float(value)
 
 
-def integer(_func):
+def integer(value: Any):
     """integer decorator"""
-
-    def wrap(_self, *args):
-        """wrapper"""
-        return call_wrapper(_self, _func, get_integer, *args)
-
-    return wrap
+    return get_integer(value)
 
 
-def code(_func):
+def code(value: Any):
     """prepare code"""
-
-    def wrap(_self, *args):
-        """wrapper"""
-        return call_wrapper(_self, _func, get_sanitized_code, *args)
-
-    return wrap
+    return get_sanitized_code(value)
 
 
-def int_or_float(_func):
+def int_or_float(value: Any):
     """try cast to int"""
-
-    def wrap(_self, *args):
-        """wrapper"""
-        return call_wrapper(_self, _func, get_try_to_int_or_float, *args)
-
-    return wrap
+    return get_try_to_int_or_float(value)
 
 
-__ALL__ = [text, code, money, floated, integer, int_or_float]
+def boolean(value: Any):
+    """try cast to boolean"""
+    return bool(value)
+
+
+__ALL__ = [text, code, money, floated, integer, int_or_float, boolean]

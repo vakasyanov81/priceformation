@@ -20,10 +20,10 @@ from ..row_item.row_item import RowItem
 column_mapping = dict(column_mapping)
 column_mapping.update(
     {
-        "height": RowItem.__HEIGHT_PERCENT__,
-        "load_index": RowItem.__INDEX_LOAD__,
-        "speed_index": RowItem.__INDEX_VELOCITY__,
-        "studded": RowItem.__SPIKE__,
+        "height": RowItem.height_percent.name,
+        "load_index": RowItem.index_load.name,
+        "speed_index": RowItem.index_velocity.name,
+        "studded": RowItem.spike.name,
     }
 )
 

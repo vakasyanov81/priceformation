@@ -17,20 +17,20 @@ mim_sheet_1_params = dataclasses.replace(mim_params)
 mim_sheet_1_params.sheet_info = "Вкладка #1"
 mim_sheet_1_params.sheet_indexes = [0]
 mim_sheet_1_params.columns = {
-    0: RowItem.__CODE__,
-    1: RowItem.__TITLE__,
-    3: RowItem.__SEASON__,
-    4: RowItem.__MANUFACTURER_NAME__,
-    5: RowItem.__MODEL__,
-    6: RowItem.__DIAMETER__,
-    7: RowItem.__WIDTH__,
-    8: RowItem.__HEIGHT_PERCENT__,
-    9: RowItem.__SPIKE__,
-    10: RowItem.__INDEX_VELOCITY__,
-    11: RowItem.__INDEX_LOAD__,
-    17: RowItem.__REST_COUNT__,
-    19: RowItem.__PRICE_PURCHASE__,
-    20: RowItem.__PRICE_RECOMMENDED__,
+    0: RowItem.code.name,
+    1: RowItem.title.name,
+    3: RowItem.season.name,
+    4: RowItem.manufacturer.name,
+    5: RowItem.model.name,
+    6: RowItem.diameter.name,
+    7: RowItem.width.name,
+    8: RowItem.height_percent.name,
+    9: RowItem.spike.name,
+    10: RowItem.index_velocity.name,
+    11: RowItem.index_load.name,
+    17: RowItem.rest_count.name,
+    19: RowItem.price_opt.name,
+    20: RowItem.price_recommended.name,
 }
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)

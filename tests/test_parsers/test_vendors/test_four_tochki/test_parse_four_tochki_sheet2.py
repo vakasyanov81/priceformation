@@ -65,10 +65,12 @@ def test_parse_with_invalid_item():
     assert len(result) == 1
     assert mock_log_msg.call_count == 2
 
-    assert (
-        mock_log_msg.mock_calls[0].args[0] == "Не удалось разобрать строку (№ 3) у поставщика: FourTochkiParser2Sheet:"
-        " Форточки (Вкладка (диски) #2) // could not convert string to float: 'invalid value'"
-    )
+    log_arg_value = mock_log_msg.mock_calls[0].args[0]
+
+    assert "Не удалось разобрать строку (№ 3) у поставщика: " in log_arg_value
+    assert "FourTochkiParser2Sheet" in log_arg_value
+    assert "value': 'invalid value'" in log_arg_value
+    assert "could not convert string to float: 'invalid value'" in log_arg_value
     assert mock_log_msg.mock_calls[0].kwargs == {"level": 40, "need_print_log": True}
 
     assert "Alcasta" in mock_log_msg.mock_calls[1].args[0]

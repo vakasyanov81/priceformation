@@ -17,12 +17,12 @@ write_data = [
         "index_velocity": "Y",
         "index_load": "92",
         "rest_count": 4.0,
-        "price_purchase": 3457.0,
+        "price_opt": 3457.0,
         "price_recommended": "",
-        "sup_name": "Мим",
+        "supplier_name": "Мим",
         "price_markup": 3980.0,
         "type_production": "Автошина",
-        "percent": 15.13,
+        "percent_markup": 15.13,
     }
 ]
 
@@ -53,7 +53,7 @@ class FixtureTemplate(IWriteTemplate):
     """fixture template"""
 
     __COLUMNS__ = [
-        {"Номенклатура": {"field": RowItem.__TITLE__}},
-        {"Цена": {"field": RowItem.__PRICE_WITH_MARKUP__}},
-        {"Остаток": {"field": RowItem.__REST_COUNT__}},
+        {"Номенклатура": {"field": RowItem.title.name}},
+        {"Цена": {"field": RowItem.price_markup.name}},
+        {"Остаток": {"field": RowItem.rest_count.name}},
     ]

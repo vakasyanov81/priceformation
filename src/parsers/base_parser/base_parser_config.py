@@ -81,7 +81,7 @@ class ParseConfiguration:
 
     def get_default_markup_percents(self, def_value=0.0) -> float:
         """get default (minimal) markup percent"""
-        return min({item.percent for item in self.get_price_markup_map()} or (def_value,))
+        return min({item.percent_markup for item in self.get_price_markup_map()} or (def_value,))
 
     def black_list(self) -> List[str]:
         """black list data"""

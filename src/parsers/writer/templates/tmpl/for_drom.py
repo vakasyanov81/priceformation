@@ -10,18 +10,18 @@ class ForDrom(IWriteTemplate):
     """write template for drom.ru"""
 
     __COLUMNS__ = [
-        {"Тип товара": {"style": {"width": 40}, "field": RowItem.__TYPE_PRODUCTION__}},
-        {"Бренд": {"style": {"width": 30}, "field": RowItem.__MANUFACTURER_NAME__}},
-        {"Номенклатура": {"style": {"width": 30}, "field": RowItem.__TITLE__}},
-        {"Сезон": {"field": RowItem.__SEASON__}},
-        {"Шип": {"field": RowItem.__SPIKE__}},
-        {"Цена": {"field": RowItem.__PRICE_WITH_MARKUP__}, "format": "@"},
-        {"Остаток": {"field": RowItem.__REST_COUNT__}},
-        {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},
-        {"Срок доставки": {"field": RowItem.__DELIVERY_PERIOD__}},
-        {"Состояние": {"field": RowItem.__CONDITION__, "default_value": "Новое"}},
+        {"Тип товара": {"style": {"width": 40}, "field": RowItem.type_production.name}},
+        {"Бренд": {"style": {"width": 30}, "field": RowItem.manufacturer.name}},
+        {"Номенклатура": {"style": {"width": 30}, "field": RowItem.title.name}},
+        {"Сезон": {"field": RowItem.season.name}},
+        {"Шип": {"field": RowItem.spike.name}},
+        {"Цена": {"field": RowItem.price_markup.name}, "format": "@"},
+        {"Остаток": {"field": RowItem.rest_count.name}},
+        {"Наличие": {"field": RowItem.available.name, "default_value": "В наличии"}},
+        {"Срок доставки": {"field": RowItem.delivery_period.name}},
+        {"Состояние": {"field": RowItem.condition.name, "default_value": "Новое"}},
     ]
 
     __FILE__ = "price_drom_{now}.xlsx"
 
-    __EXCLUDE__ = {RowItem.__REST_COUNT__: [None, ""]}
+    __EXCLUDE__ = {RowItem.rest_count.name: [None, ""]}

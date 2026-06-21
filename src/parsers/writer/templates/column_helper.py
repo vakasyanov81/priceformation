@@ -17,7 +17,7 @@ class ColumnHelper:
                 "style": {
                     "width": 256 * 15
                 },
-                "field": RowItem.__TYPE_PRODUCTION__
+                "field": RowItem.type_production.name
             }
         }
         """
@@ -32,7 +32,7 @@ class ColumnHelper:
             "style": {
                 "width": 256 * 15
             },
-            "field": RowItem.__TYPE_PRODUCTION__
+            "field": RowItem.type_production.name
         }
         """
         return list(self._col.values())[0]

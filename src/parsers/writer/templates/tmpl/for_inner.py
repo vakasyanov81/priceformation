@@ -13,44 +13,44 @@ class ForInner(IWriteTemplate):
         {
             "Тип товара": {
                 "style": {"width": 256 * 10},
-                "field": RowItem.__TYPE_PRODUCTION__,
+                "field": RowItem.type_production.name,
             }
         },
         {
             "Бренд": {
                 "style": {"width": 356 * 15},
-                "field": RowItem.__MANUFACTURER_NAME__,
+                "field": RowItem.manufacturer.name,
             }
         },
-        {"Номенклатура": {"style": {"width": 256 * 100}, "field": RowItem.__TITLE__}},
-        {"Сезон": {"field": RowItem.__SEASON__}},
-        {"Шип": {"field": RowItem.__SPIKE__}},
+        {"Номенклатура": {"style": {"width": 256 * 100}, "field": RowItem.title.name}},
+        {"Сезон": {"field": RowItem.season.name}},
+        {"Шип": {"field": RowItem.spike.name}},
         {
             "Цена закуп.": {
                 "style": {"width": 256 * 15},
-                "field": RowItem.__PRICE_PURCHASE__,
+                "field": RowItem.price_opt.name,
                 "format": "@",
             }
         },
-        {"Цена": {"field": RowItem.__PRICE_WITH_MARKUP__}},
+        {"Цена": {"field": RowItem.price_markup.name}},
         {
             "Рекомендуемая Цена": {
                 "style": {"width": 256 * 25},
-                "field": RowItem.__PRICE_RECOMMENDED__,
+                "field": RowItem.price_recommended.name,
                 "format": "@",
             }
         },
-        {"Наценка %": {"style": {"width": 256 * 15}, "field": RowItem.__PERCENT__}},
-        {"Остаток": {"field": RowItem.__REST_COUNT__}},
+        {"Наценка %": {"style": {"width": 256 * 15}, "field": RowItem.percent_markup.name}},
+        {"Остаток": {"field": RowItem.rest_count.name}},
         {
             "Поставщик": {
                 "style": {"width": 256 * 15},
-                "field": RowItem.__SUPPLIER_NAME_COLUMN__,
+                "field": RowItem.supplier_name.name,
             }
         },
-        {"Наличие": {"field": RowItem.__AVAILABLE__, "default_value": "В наличии"}},
-        {"Срок доставки": {"field": RowItem.__DELIVERY_PERIOD__}},
-        {"Состояние": {"field": RowItem.__CONDITION__, "default_value": "Новое"}},
+        {"Наличие": {"field": RowItem.available.name, "default_value": "В наличии"}},
+        {"Срок доставки": {"field": RowItem.delivery_period.name}},
+        {"Состояние": {"field": RowItem.condition.name, "default_value": "Новое"}},
         # {"Группа по параметрам": {"field": RowItem.__GROUP_BY_PARAMS__, "default_value": "1"}},
         # {
         #     "Дубль": {
@@ -65,7 +65,7 @@ class ForInner(IWriteTemplate):
     ]
 
     __COLOR__ = {
-        "by_column": RowItem.__SUPPLIER_NAME_COLUMN__,
+        "by_column": RowItem.supplier_name.name,
         "with_map": {
             "Пошк": "blue",
             "Мим": "#f7d5d2",

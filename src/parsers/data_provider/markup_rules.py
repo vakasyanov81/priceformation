@@ -19,7 +19,7 @@ class MarkUpParams(NamedTuple):
 
     min: float = 0
     max: float = 0
-    percent: float = 0
+    percent_markup: float = 0
 
 
 class AbsoluteMarkUpRules(NamedTuple):

@@ -15,12 +15,12 @@ def four_tochki_one_item_result():
                 "diameter": 16,
                 "slot_count": 5,
                 "pcd1": 114.3,
-                "et": 45,
+                "eet": 45,
                 "central_diameter": 60.1,
                 "color": "MBMF",
                 "rest_count": 4,
                 "price_recommended": 8261,
-                "price_purchase": 7210,
+                "price_opt": 7210,
             }
         ]
     }
@@ -38,12 +38,12 @@ def four_tochki_one_item_result_1():
                 "diameter": 14.0,  # .0 -лишнее
                 "slot_count": 4,
                 "pcd1": 98,
-                "et": 38,
+                "eet": 38,
                 "central_diameter": 58.6,
                 "color": "Алмаз",
                 "rest_count": 4,
                 "price_recommended": 8261,
-                "price_purchase": 7210,
+                "price_opt": 7210,
             }
         ]
     }
@@ -61,12 +61,12 @@ def four_tochki_invalid_item_result():
                 "diameter": 16,
                 "slot_count": 5,
                 "pcd1": 114.3,
-                "et": 45,
+                "eet": 45,
                 "central_diameter": 60.1,
                 "color": "MBMF",
                 "rest_count": 4,
                 "price_recommended": 8261,
-                "price_purchase": 7210,
+                "price_opt": 7210,
             },
             {
                 "code": "WHS198858",
@@ -76,12 +76,12 @@ def four_tochki_invalid_item_result():
                 "diameter": 16,
                 "slot_count": 5,
                 "pcd1": 114.3,
-                "et": "invalid value",  # here we expect the number, this item will be skipped
+                "eet": "invalid value",  # here we expect the number, this item will be skipped
                 "central_diameter": 60.1,
                 "color": "MBMF",
                 "rest_count": 4,
                 "price_recommended": 8261,
-                "price_purchase": 7210,
+                "price_opt": 7210,
             },
         ]
     }

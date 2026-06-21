@@ -75,6 +75,8 @@ def test_parse():
 
     result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
+    print(result)
+
     assert len(result) == 1
     assert result[0].title == "31x10.5R15 Crossleader DSU02 92Y"
     assert result[0].type_production == "Легковая шина"
@@ -91,16 +93,16 @@ class TestParseMimSheet1:
     def test_small_rest(self):
         """test exclude price-position by small rest count"""
         parse_result, first_row = self.get_first_row_item(mim_one_item_result())
-        first_row.rest_count = 3
+        first_row['rest_count'] = 3
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
         assert len(result) == 0
 
     @classmethod
-    def get_first_row_item(cls, _result) -> Tuple[dict, RowItem]:
+    def get_first_row_item(cls, _result) -> Tuple[dict, dict]:
         """get first item from parse result"""
         file = list(_result.keys())[0]
-        return _result, RowItem(_result[file][0])
+        return _result, _result[file][0]
 
     @pytest.mark.parametrize(
         "price, price_recommended, price_with_markup",
@@ -113,8 +115,8 @@ class TestParseMimSheet1:
     def test_markup(self, price, price_recommended, price_with_markup):
         """test calculation price-markup"""
         parse_result, first_row = self.get_first_row_item(mim_one_item_result())
-        first_row.price_opt = price
-        first_row.price_recommended = price_recommended
+        first_row['price_opt'] = price
+        first_row['price_recommended'] = price_recommended
 
         parser = get_fake_parser(parse_result)
 
