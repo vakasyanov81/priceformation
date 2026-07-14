@@ -49,16 +49,16 @@ extend-exclude = '''
 '''
 
 [tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
 select = ["F", "E", "W", "C90",
           "I", "N", "S", "B", "A",
           "ISC", "T20", "Q", "PTH"]
 
-line-length = 120
-ignore=["B019", "A003", "S324"]
-
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101"]
-"core/log_message.py" = ["T201"]
+"src/core/log_message.py" = ["T201"]
 
 [tool.ruff.format]
 quote-style = "single"

@@ -139,9 +139,9 @@ class MainConfig(MainCfg):
     @property
     def result_folder_path(self):
         """path to result folder"""
-        _BASE_PATH = pathlib.Path(self.project_root)
-        _RESULT_FOLDER = str(_BASE_PATH.joinpath("file_prices", "result"))
-        return _RESULT_FOLDER + os.sep
+        base_path = pathlib.Path(self.project_root)
+        result_folder = str(base_path.joinpath("file_prices", "result"))
+        return result_folder + os.sep
 
     @property
     def current_log_file_name(self):

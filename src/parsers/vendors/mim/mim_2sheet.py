@@ -5,12 +5,13 @@ logic for mim vendor (sheet 2)
 import dataclasses
 
 from parsers.row_item.row_item import RowItem
-from .mim_base import MimParserBase, mim_params, supplier_folder_name
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
 
 def config_for_sheets2():

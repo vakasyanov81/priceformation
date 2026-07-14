@@ -1,5 +1,7 @@
+"""Группировка строк прайса по параметрам наименования."""
+
 from itertools import groupby
-from typing import List, Optional, Tuple, Any
+from typing import Any, List, Optional, Tuple
 
 from parsers.row_item.row_item import RowItem
 
@@ -29,7 +31,7 @@ class CommonPriceGrouper:
         sorted_items = sorted(self.items, key=self.group_key)
 
         group_id = 0
-        for key, group_iter in groupby(sorted_items, key=self.group_key):
+        for _key, group_iter in groupby(sorted_items, key=self.group_key):
             group_id += 1
             group_items = list(group_iter)
 
@@ -48,6 +50,7 @@ class CommonPriceGrouper:
         return self
 
     def get_items(self) -> List[RowItem]:
+        """Получить сгруппированные позиции."""
         if not self._is_grouped:
             self.group_by_params()
         return self.items
@@ -75,11 +78,11 @@ class CommonPriceGrouper:
         if not self._is_grouped:
             self.group_by_params()
         return [
-            item for item in self.items if getattr(item, 'is_double', False) or getattr(item, 'double_candidate', False)
+            item for item in self.items if getattr(item, "is_double", False) or getattr(item, "double_candidate", False)
         ]
 
     @classmethod
-    def group_key(cls, item: RowItem) -> Tuple[str, ...]:
+    def group_key(cls, item: RowItem) -> Tuple[str, ...]:  # pylint: disable=too-many-locals
         """Ключ группировки."""
         width = item.width
         diameter = item.diameter
@@ -129,6 +132,7 @@ class CommonPriceGrouper:
 
     @classmethod
     def define_intimacy(cls, item: RowItem) -> Optional[str]:
+        """Определить камерность (TL/TT/TTF) из title."""
         l_title = (item.title or "").lower()
         diameter_str = str(item.diameter or 0).replace(",", ".")
 

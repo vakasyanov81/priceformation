@@ -5,6 +5,8 @@ tests for Poshk vendor after raw-parser process
 from typing import List, Tuple
 
 import pytest
+from test_base_parser.test_manufacturer_finder import map_manufacturer
+from test_parsers.fixtures.poshk import poshk_one_item_result
 
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import (
@@ -17,8 +19,6 @@ from parsers.vendors.poshk import (
     PoshkParser,
     poshk_params,
 )
-from test_base_parser.test_manufacturer_finder import map_manufacturer
-from test_parsers.fixtures.poshk import poshk_one_item_result
 
 vendor_list_config = {
     "poshk": {"enabled": 1},
@@ -50,6 +50,7 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
 
 
 class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
+    # pylint: disable=too-few-public-methods
     """manufacturer aliases data provider for tests"""
 
     def get_aliases(self) -> dict:
@@ -58,6 +59,7 @@ class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProvi
 
 
 class BlackListProviderForTests(data_provider.BlackListProviderBase):
+    # pylint: disable=too-few-public-methods
     """black list data provider for tests"""
 
     def get_black_list_data(self) -> list:
@@ -66,6 +68,7 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
 
 
 class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
+    # pylint: disable=too-few-public-methods
     """stop words data provider for tests"""
 
     def get_stop_words_data(self) -> list:
@@ -74,6 +77,7 @@ class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
 
 
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
+    # pylint: disable=too-few-public-methods
     """Base data provider with supplier config"""
 
     def __init__(self, config):
@@ -159,7 +163,7 @@ class TestParsePoshk:
     def test_set_category(self, title, category):
         """test define category name by title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row['title'] = title
+        first_row["title"] = title
         result: List[RowItem] = get_fake_parser(parse_result).parse()
         assert result[0].type_production == category
 
@@ -205,7 +209,7 @@ class TestParsePoshk:
     def test_markup(self, price, price_with_markup):
         """test calculation price-markup"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row['price_opt'] = price
+        first_row["price_opt"] = price
 
         parser = get_fake_parser(parse_result)
 
@@ -224,7 +228,7 @@ class TestParsePoshk:
     def test_stop_words(self, title):
         """test exclude price position by stop word in title"""
         parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
-        first_row['title'] = title
+        first_row["title"] = title
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 

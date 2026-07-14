@@ -5,7 +5,7 @@
 import time
 from typing import TypeAlias
 
-from core import warn_msg, err_msg, log_msg
+from core import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendor_supplier_info
 from parsers.base_parser.base_parser import Parser
 from parsers.base_parser.base_parser_config import ParseConfiguration

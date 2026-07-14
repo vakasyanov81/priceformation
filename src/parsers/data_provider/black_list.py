@@ -6,7 +6,7 @@ from cfg.main import MainConfig
 from core.file_reader import read_file
 
 
-class BlackListProviderBase:
+class BlackListProviderBase:  # pylint: disable=too-few-public-methods
     """Base black list data provider"""
 
     def get_black_list_data(self):

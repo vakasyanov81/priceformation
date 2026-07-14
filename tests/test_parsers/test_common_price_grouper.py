@@ -66,4 +66,4 @@ def test_grouper():
     )
 
     grouper = CommonPriceGrouper([item1, item2])
-    print(grouper.get_double_items())
+    grouper.get_double_items()

@@ -3,7 +3,7 @@ row item field format logic
 """
 
 from functools import lru_cache
-from typing import Callable, Union, Any
+from typing import Any, Union
 
 
 def strip_into_str(value: str) -> str:

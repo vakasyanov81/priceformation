@@ -58,7 +58,7 @@ class XlsReader(IXlsReader):
     """xls reader"""
 
     @classmethod
-    def get_instance(cls, file_path: str, params: dict[str, Any]) -> 'XlsReader':
+    def get_instance(cls, file_path: str, params: dict[str, Any]) -> "XlsReader":
         """get instance XlsReader / XlsxReader"""
         if not Path(file_path).exists():
             raise FileNotFoundError
@@ -67,6 +67,7 @@ class XlsReader(IXlsReader):
     def __init__(self, file_path: str, params: dict[str, Any]):
         """init"""
         self.cur_row_values: Row | None = None
+        self.cur_row = 0
         self._skipped_empty_rows = 0
         self.book: CalamineWorkbook | None = None
         self.params: ParamsHelper = ParamsHelper(**params)
@@ -139,7 +140,7 @@ class XlsReader(IXlsReader):
         return len(sheet[0])
 
     def _get_cur_row_values(self) -> Row:
-        return self.cur_row_values or list()
+        return self.cur_row_values or []
 
     def is_empty_row(self) -> bool:
         """row is empty?"""

@@ -9,10 +9,12 @@ from core.wrappers import logging
 
 @logging(label="test_logging")
 def logging_function(param1: int, param2: int, **_dict):
+    """decorated function for logging wrapper test"""
     return param1 + param2
 
 
 def test_logging():
+    """logging wrapper emits call/result messages"""
     param1, param2 = 10, 20
     with patch("core.wrappers.log_msg") as _mock:
         logging_function(param1, param2, other_param="some text")

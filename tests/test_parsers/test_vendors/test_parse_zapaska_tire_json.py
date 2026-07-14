@@ -6,6 +6,7 @@ from typing import List
 from unittest import skip
 
 import pytest
+from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from cfg.main import get_config
 from parsers.base_parser.base_parser_config import (
@@ -13,7 +14,6 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
-from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 parser_config = make_parse_configuration(zapaska_tire_params)
 
@@ -81,7 +81,7 @@ class TestParseZapaskaTireJSON:
     @skip
     def test_markup(self, prices):
         """test calculation price-markup"""
-        price_opt, price_recommended, price_markup = prices
+        _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
         obj = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
         result: List[RowItem] = obj.parse()

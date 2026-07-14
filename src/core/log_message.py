@@ -23,6 +23,7 @@ __level_map__ = {
 
 
 def get_log_level_text(log_level: int) -> str:
+    """Map logging level int to text label."""
     return __level_map__.get(log_level) or "INFO"
 
 

@@ -3,9 +3,10 @@ write price list logic via xlsxwriter module
 """
 
 import openpyxl
-from openpyxl.styles import Font, Color, PatternFill
+from openpyxl.styles import Color, Font, PatternFill
 
 from cfg import init_cfg
+
 from .ixls_driver import IXlsDriver
 
 config = init_cfg()

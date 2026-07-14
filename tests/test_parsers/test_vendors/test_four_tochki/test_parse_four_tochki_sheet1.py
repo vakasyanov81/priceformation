@@ -4,13 +4,6 @@ tests for four_tochki vendor (sheet 1) after raw-parser process
 
 from typing import List
 
-from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_sheet1 import (
-    FourTochkiParser1Sheet,
-    fourtochki_sheet_1_params,
-)
 from test_parsers.fixtures.four_tochki_sheet1 import (
     four_tochki_many_item_result,
     four_tochki_one_item_result,
@@ -18,6 +11,14 @@ from test_parsers.fixtures.four_tochki_sheet1 import (
 from test_parsers.test_vendors.parse_config import (
     MimMarkupRulesProviderForTests,
     make_parse_configuration,
+)
+
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.fake_xls_reader import FakeXlsReader
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.four_tochki.four_tochki_sheet1 import (
+    FourTochkiParser1Sheet,
+    fourtochki_sheet_1_params,
 )
 
 parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRulesProviderForTests())
@@ -46,7 +47,6 @@ def test_parse():
     assert result[0].percent_markup == 27.17
 
     # метрический размер
-    print('[*]', result[1].title)
     assert result[1].title == "31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT"
     assert result[1].price_markup == 24870
     assert result[1].percent_markup == 27.04

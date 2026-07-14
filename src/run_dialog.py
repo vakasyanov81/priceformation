@@ -1,3 +1,5 @@
+"""CLI dialog for main console actions."""
+
 from enum import Enum
 
 from cfg.color import Colors
@@ -12,6 +14,13 @@ class AnswerResult(Enum):
     EXIT = "Exit"
 
 
+ANSWER_MAP = {
+    "1": AnswerResult.MAKE_PRICE_BY_SUPPLIER,
+    "2": AnswerResult.UPDATE_ZAPASKA_DATA,
+    "q": AnswerResult.EXIT,
+}
+
+
 def ask_action() -> AnswerResult:
     """Main console menu"""
     _msg = (
@@ -21,14 +30,7 @@ def ask_action() -> AnswerResult:
         f"q — выход {Colors.END_COLOR}"
     )
     while True:
-        _answer = AnswerMap.get(input(_msg).strip().lower())
+        _answer = ANSWER_MAP.get(input(_msg).strip().lower())
         if _answer:
             return _answer
         print_log("Не понял, давай ещё раз. \n")
-
-
-AnswerMap = {
-    "1": AnswerResult.MAKE_PRICE_BY_SUPPLIER,
-    "2": AnswerResult.UPDATE_ZAPASKA_DATA,
-    "q": AnswerResult.EXIT,
-}

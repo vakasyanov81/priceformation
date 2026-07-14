@@ -208,6 +208,7 @@ fabric.properties
 ### Custom ###
 # Buggy:
 .vscode/
+.cursor/
 
 # Used for testing:
 ex.py
