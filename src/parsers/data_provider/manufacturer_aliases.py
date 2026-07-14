@@ -9,6 +9,7 @@ from core.file_reader import read_file
 
 
 class ManufacturerAliasesProviderBase:
+    # pylint: disable=too-few-public-methods
     """Base data provider with manufacturer aliases"""
 
     def get_aliases(self) -> dict:
@@ -17,6 +18,7 @@ class ManufacturerAliasesProviderBase:
 
 
 class ManufacturerAliasesProviderFromUserConfig(ManufacturerAliasesProviderBase):
+    # pylint: disable=too-few-public-methods
     """Base data provider with manufacturer aliases from user config file"""
 
     def get_aliases(self) -> dict:

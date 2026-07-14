@@ -1,5 +1,7 @@
 """tests for CLI entrypoint handlers"""
 
+# pylint: disable=import-outside-toplevel
+
 from unittest.mock import MagicMock, patch
 
 from run_dialog import AnswerResult

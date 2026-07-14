@@ -46,6 +46,7 @@ def make_exclude(products: list, exclude: dict) -> list:
 
 
 def get_result_folder_name() -> str:
+    """Result folder path from config."""
     return config.main.result_folder_path
 
 

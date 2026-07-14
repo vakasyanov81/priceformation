@@ -21,7 +21,7 @@ from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser, pioner_params
 
-parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests)
+parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests())
 
 
 def get_fake_parser(parse_result):

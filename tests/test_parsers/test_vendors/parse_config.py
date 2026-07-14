@@ -50,8 +50,7 @@ class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
 class PionerMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for mim supplier tests"""
 
-    @classmethod
-    def get_markup_data(cls):
+    def get_markup_data(self):
         """get markup rules"""
         return {
             "markup_rules": {

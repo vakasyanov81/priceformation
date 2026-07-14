@@ -86,7 +86,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         return get_prepared_title(item)
 
 
-def get_prepared_title(item: RowItem) -> str:
+def get_prepared_title(item: RowItem) -> str:  # pylint: disable=too-many-locals
     """
     1) Форточки:
     10-20 Armour TI300

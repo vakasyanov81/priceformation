@@ -1,5 +1,7 @@
 """tests for markup rules provider"""
 
+# pylint: disable=missing-function-docstring
+
 from unittest.mock import patch
 
 import pytest

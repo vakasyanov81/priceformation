@@ -37,6 +37,7 @@ class IWriteTemplate:
         return getattr(self, col_field) if hasattr(self, col_field) else {}
 
     def get_columns(self) -> dict[str, ColumnHelper]:
+        """cached columns as ColumnHelper map"""
         if self._columns_formated is None:
             self._columns_formated = {}
             for column in self.columns():
@@ -45,6 +46,7 @@ class IWriteTemplate:
         return self._columns_formated
 
     def get_column_names(self) -> list[str]:
+        """ordered column titles"""
         if self._column_names is None:
             self._column_names = []
             for name, _ in self.get_columns().items():
@@ -52,6 +54,7 @@ class IWriteTemplate:
         return self._column_names
 
     def get_column_index(self, name: str) -> int:
+        """1-based column index by name"""
         return self.get_column_names().index(name) + 1
 
     def get_columns_format(self) -> dict[int, str]:

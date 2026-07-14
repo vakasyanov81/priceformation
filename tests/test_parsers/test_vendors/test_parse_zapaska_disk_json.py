@@ -24,7 +24,7 @@ def get_fake_parser(file_prices: list[str]):
     )
 
 
-class TestParseZapaskaDiskJSON:
+class TestParseZapaskaDiskJSON:  # pylint: disable=too-few-public-methods
     """
     tests for Poshk vendor after raw-parser process
     """

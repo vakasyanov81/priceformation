@@ -1,5 +1,7 @@
 """tests for IXlsDriver abstract interface"""
 
+# pylint: disable=missing-function-docstring
+
 import pytest
 
 from parsers.writer.ixls_driver import IXlsDriver

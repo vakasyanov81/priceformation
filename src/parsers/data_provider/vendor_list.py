@@ -20,7 +20,7 @@ class VendorParams(NamedTuple):
     enabled: int
 
 
-class VendorListProviderBase:
+class VendorListProviderBase:  # pylint: disable=too-few-public-methods
     """Base data provider with supplier config"""
 
     def get_config_vendor_list(self):

@@ -1,3 +1,5 @@
+"""tests for print_log output"""
+
 import logging
 from contextlib import redirect_stdout
 from io import StringIO
@@ -6,6 +8,7 @@ from core.log_message import print_log
 
 
 def test_print_log_info_level():
+    """info level prints bare message"""
     out = StringIO()
     with redirect_stdout(out):
         print_log("message")
@@ -14,6 +17,7 @@ def test_print_log_info_level():
 
 
 def test_print_log_error_level():
+    """error level prints prefixed message"""
     out = StringIO()
     with redirect_stdout(out):
         print_log("message", level=logging.ERROR)

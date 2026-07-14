@@ -81,7 +81,7 @@ class TestParseZapaskaTireJSON:
     @skip
     def test_markup(self, prices):
         """test calculation price-markup"""
-        price_opt, price_recommended, price_markup = prices
+        _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
         obj = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
         result: List[RowItem] = obj.parse()

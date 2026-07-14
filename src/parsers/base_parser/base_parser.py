@@ -25,7 +25,7 @@ from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
-TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
+TBaseParser = TypeVar("TBaseParser", bound="BaseParser")  # pylint: disable=invalid-name
 
 
 class Parser(Protocol):
@@ -42,6 +42,8 @@ class Parser(Protocol):
         """get result"""
 
 
+# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class BaseParser(Parser):
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
@@ -207,7 +209,7 @@ class BaseParser(Parser):
     @classmethod
     def replace_season(cls, item: RowItem) -> str | None:
         if not item.season:
-            return
+            return None
         replaced_seasons = {"зима": "Зимняя", "лето": "Летняя"}
         return replaced_seasons.get(item.season.lower()) or item.season
 

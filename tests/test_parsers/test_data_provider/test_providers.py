@@ -1,5 +1,7 @@
 """tests for black list and vendor list providers"""
 
+# pylint: disable=missing-function-docstring
+
 from unittest.mock import patch
 
 import pytest

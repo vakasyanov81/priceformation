@@ -2,6 +2,8 @@
 price row item description
 """
 
+# pylint: disable=missing-function-docstring
+
 import hashlib
 import json
 from functools import cache

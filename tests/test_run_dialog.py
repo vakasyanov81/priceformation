@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from run_dialog import AnswerMap, AnswerResult, ask_action
+from run_dialog import ANSWER_MAP, AnswerResult, ask_action
 
 
 def test_answer_map_keys():
     """пункты меню соответствуют ожидаемым действиям"""
-    assert AnswerMap["1"] == AnswerResult.MAKE_PRICE_BY_SUPPLIER
-    assert AnswerMap["2"] == AnswerResult.UPDATE_ZAPASKA_DATA
-    assert AnswerMap["q"] == AnswerResult.EXIT
+    assert ANSWER_MAP["1"] == AnswerResult.MAKE_PRICE_BY_SUPPLIER
+    assert ANSWER_MAP["2"] == AnswerResult.UPDATE_ZAPASKA_DATA
+    assert ANSWER_MAP["q"] == AnswerResult.EXIT
 
 
 def test_ask_action_retries():

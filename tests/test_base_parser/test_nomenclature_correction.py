@@ -16,7 +16,7 @@ def test_load_file_missing(tmp_path):
     """нет файла — пустой словарь"""
     with patch("parsers.base_parser.nomenclature_correction.MainConfig") as mock_cfg:
         mock_cfg.return_value.user_config_folder_path = str(tmp_path)
-        assert noc.load_file() == {}
+        assert not noc.load_file()
 
 
 def test_load_file_reads_xlsx(tmp_path):

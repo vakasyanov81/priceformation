@@ -62,4 +62,5 @@ class FakeXlwtDriver(IXlsDriver):
         return res
 
     def get_folder(self) -> str:
+        """folder for fake workbook"""
         return self.folder or ""

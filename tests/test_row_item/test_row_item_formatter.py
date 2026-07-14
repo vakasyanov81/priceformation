@@ -1,3 +1,5 @@
+"""tests for row item boolean field"""
+
 import pytest
 
 from parsers.row_item.row_item import RowItem
@@ -26,6 +28,7 @@ def test_get_integer():
 
 
 def test_row_item_set_boolean():
+    """boolean field accepts True"""
     row = RowItem()
     # row = RowItem({'double_candidate': False})
     row.double_candidate = True

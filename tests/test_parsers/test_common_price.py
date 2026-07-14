@@ -72,5 +72,6 @@ def test_parse_vendor_reraises():
 
 
 def test_suppliers_info():
+    """supplier_info returns dict"""
     common_price = CommonPrice()
     assert isinstance(common_price.supplier_info(), dict)

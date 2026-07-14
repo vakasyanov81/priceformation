@@ -50,6 +50,7 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
 
 
 class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
+    # pylint: disable=too-few-public-methods
     """manufacturer aliases data provider for tests"""
 
     def get_aliases(self) -> dict:
@@ -58,6 +59,7 @@ class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProvi
 
 
 class BlackListProviderForTests(data_provider.BlackListProviderBase):
+    # pylint: disable=too-few-public-methods
     """black list data provider for tests"""
 
     def get_black_list_data(self) -> list:
@@ -66,6 +68,7 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
 
 
 class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
+    # pylint: disable=too-few-public-methods
     """stop words data provider for tests"""
 
     def get_stop_words_data(self) -> list:
@@ -74,6 +77,7 @@ class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
 
 
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
+    # pylint: disable=too-few-public-methods
     """Base data provider with supplier config"""
 
     def __init__(self, config):

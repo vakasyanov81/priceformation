@@ -15,7 +15,7 @@ class ConfigParamError(Exception):
     """wrong configuration Exception"""
 
 
-class ConfigCompiler:
+class ConfigCompiler:  # pylint: disable=too-few-public-methods
     """combine all config modules"""
 
     def __init__(self, config: ConfigType) -> None:
