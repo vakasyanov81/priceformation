@@ -32,7 +32,7 @@ jobs:
       - name: Test coverage
         run: |
           export PYTHONPATH=${GITHUB_WORKSPACE}
-          uv run pytest --cov ./ ./tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
+          uv run pytest --cov ./ ./tests ./integration_tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
       - name: Lint code by black
         run: |
           # stop the build if there are Python syntax errors or undefined names
