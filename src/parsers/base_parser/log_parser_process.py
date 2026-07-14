@@ -4,7 +4,6 @@ logging parse process
 
 from typing import Optional
 
-
 from core.log_message import log_msg, warn_msg
 
 from .parse_statistic import ParseResultStatistic

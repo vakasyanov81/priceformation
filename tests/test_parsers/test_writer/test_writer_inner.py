@@ -4,10 +4,11 @@ tests write price for internal use
 
 import datetime
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_inner import ForInner
+
 from .fixtures import result_body_inner, write_data
 from .test_writer import XlsWriter
 
@@ -22,6 +23,4 @@ def test_xls_write_for_inner():
 
     assert fake_driver.file_name == f"price_{now}.xlsx"
     assert f"file_prices{os.sep}result" in fake_driver.get_folder()
-    print('\n [*]', fake_driver.body)
-    print('\n [*]', result_body_inner)
     assert fake_driver.body == result_body_inner

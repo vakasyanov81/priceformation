@@ -6,6 +6,7 @@ from typing import List
 from unittest import skip
 
 import pytest
+from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from cfg.main import get_config
 from parsers.base_parser.base_parser_config import (
@@ -13,7 +14,6 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
-from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 parser_config = make_parse_configuration(zapaska_tire_params)
 

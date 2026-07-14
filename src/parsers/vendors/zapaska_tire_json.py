@@ -4,18 +4,19 @@ logic for zapaska (rest) vendor
 
 from base64 import b64encode
 from http.client import HTTPSConnection
+from pathlib import Path
 
 from cfg import init_cfg
-from .zapaska_disk_json import ZapaskaDiskJSON, column_mapping
+
 from .. import data_provider
 from ..base_parser.base_parser_config import (
-    ParserParams,
-    ParseParamsSupplier,
     BasePriceParseConfigurationParams,
     ParseConfiguration,
+    ParseParamsSupplier,
+    ParserParams,
 )
-
 from ..row_item.row_item import RowItem
+from .zapaska_disk_json import ZapaskaDiskJSON, column_mapping
 
 column_mapping = dict(column_mapping)
 column_mapping.update(
@@ -91,7 +92,7 @@ def save_data(data: str, filename: str):
     """save data to file"""
     folder = init_cfg().main.folder_file_prices + "/" + zapaska_tire_params.supplier.folder_name
     root = init_cfg().main.project_root
-    with open(f"{root}/{folder}/{filename}", "w", encoding="utf-8") as file_:
+    with Path(f"{root}/{folder}/{filename}").open("w", encoding="utf-8") as file_:
         file_.write(data)
 
 

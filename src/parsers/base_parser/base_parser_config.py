@@ -3,7 +3,6 @@ base parser config logic
 """
 
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Dict, List, NamedTuple, Tuple, Type
 
 from parsers import data_provider
@@ -53,6 +52,7 @@ class ParseConfiguration:
     def __init__(self, parse_config: BasePriceParseConfigurationParams):
         """init"""
         self.parse_config: BasePriceParseConfigurationParams = parse_config
+        self._all_vendor_config: Dict[str, data_provider.VendorParams] | None = None
 
     @classmethod
     def extract_markup_rules(cls, markup_data: dict):
@@ -95,11 +95,12 @@ class ParseConfiguration:
         """manufacturer aliases data"""
         return self.parse_config.manufacturer_aliases.get_aliases()
 
-    @lru_cache()
     def all_vendor_config(self) -> Dict[str, data_provider.VendorParams]:
         """config for all vendors"""
-        vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
-        config = {}
-        for vendor_name, _vendor_config in vendor_config.items():
-            config[vendor_name] = data_provider.VendorParams(**_vendor_config)
-        return config
+        if self._all_vendor_config is None:
+            vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
+            config = {}
+            for vendor_name, _vendor_config in vendor_config.items():
+                config[vendor_name] = data_provider.VendorParams(**_vendor_config)
+            self._all_vendor_config = config
+        return self._all_vendor_config

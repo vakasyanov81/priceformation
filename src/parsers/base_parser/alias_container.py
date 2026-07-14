@@ -2,7 +2,7 @@
 container for aliases
 """
 
-from functools import lru_cache
+from functools import cached_property
 
 CorrectWord, CorrectLoweredWord, IncorrectLoweredAlias = str, str, str
 
@@ -25,8 +25,7 @@ class AliasContainer:
         """
         self.map_aliases = map_aliases
 
-    @property
-    @lru_cache()
+    @cached_property
     def reversed_map(self) -> dict[IncorrectLoweredAlias, CorrectWord]:
         """
         :return {
@@ -43,38 +42,32 @@ class AliasContainer:
             reversed_map.update({incorrect_name.lower(): correct_name for incorrect_name in incorrect_names})
         return reversed_map
 
-    @property
-    @lru_cache()
+    @cached_property
     def all_correct_words(self) -> list[CorrectWord]:
         """collected all correct words"""
         return self.sort_by_length(list(self.map_aliases.keys()))
 
-    @property
-    @lru_cache()
+    @cached_property
     def all_correct_words_lower(self) -> list[CorrectLoweredWord]:
         """collected all correct words in lowercase"""
         return self.to_lowercase(self.all_correct_words)
 
-    @property
-    @lru_cache()
+    @cached_property
     def incorrect_words(self) -> list:
         """collected all incorrect words"""
         return self.sort_by_length(list(self.reversed_map.keys()))
 
-    @property
-    @lru_cache()
+    @cached_property
     def incorrect_words_lower(self) -> list[IncorrectLoweredAlias]:
         """collected all incorrect words in lowercase"""
         return self.to_lowercase(self.incorrect_words)
 
-    @property
-    @lru_cache()
+    @cached_property
     def correct_words(self) -> list:
         """collected all correct words"""
         return self.sort_by_length(list(self.reversed_map.values()))
 
-    @property
-    @lru_cache()
+    @cached_property
     def correct_words_lower(self) -> list:
         """collected all correct words in lowercase"""
         return self.to_lowercase(self.correct_words)

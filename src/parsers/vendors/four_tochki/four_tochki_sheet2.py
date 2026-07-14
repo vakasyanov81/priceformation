@@ -5,13 +5,14 @@ logic for four_tochki vendor (sheet 2)
 import dataclasses
 
 from parsers.row_item.row_item import RowItem
-from .four_tochki_sheet1 import supplier_folder_name
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
+from .four_tochki_sheet1 import supplier_folder_name
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_2_params.sheet_info = "Вкладка (диски) #2"

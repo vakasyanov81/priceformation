@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import List, Optional, Tuple, Any
+from typing import Any, List, Optional, Tuple
 
 from parsers.row_item.row_item import RowItem
 
@@ -29,7 +29,7 @@ class CommonPriceGrouper:
         sorted_items = sorted(self.items, key=self.group_key)
 
         group_id = 0
-        for key, group_iter in groupby(sorted_items, key=self.group_key):
+        for _key, group_iter in groupby(sorted_items, key=self.group_key):
             group_id += 1
             group_items = list(group_iter)
 
@@ -75,7 +75,7 @@ class CommonPriceGrouper:
         if not self._is_grouped:
             self.group_by_params()
         return [
-            item for item in self.items if getattr(item, 'is_double', False) or getattr(item, 'double_candidate', False)
+            item for item in self.items if getattr(item, "is_double", False) or getattr(item, "double_candidate", False)
         ]
 
     @classmethod

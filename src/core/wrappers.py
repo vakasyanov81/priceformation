@@ -17,7 +17,7 @@ CALL_TRACE_MSG = 'Runtime error "{method}":\n\r{trace}'
 CALL_RESULT_MSG = 'Result "{method}": {res}'
 
 
-RT = TypeVar('RT')  # return type
+RT = TypeVar("RT")  # return type
 
 
 def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:

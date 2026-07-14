@@ -4,14 +4,15 @@ logic for four_tochki vendor (sheet 1)
 
 import dataclasses
 
-from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_formatter import get_try_to_int_or_str
-from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item_formatter import get_try_to_int_or_str
+
+from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 
 fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_1_params.sheet_info = "Вкладка (шины) #1"
@@ -130,6 +131,31 @@ def get_prepared_title(item: RowItem) -> str:
         construct = "-"
         diameter = diameter.replace("-", "")
 
+    width_postfix = _resolve_width_postfix(item, width, height_percent, diameter)
+
+    if height_percent and height_percent != "L":
+        height_percent = f"/{height_percent}"
+    else:
+        height_percent = ""
+
+    construct_diameter = f"{construct}{diameter}"
+    construct_diameter = construct_diameter.replace("RZ", "ZR")
+
+    if is_truck_tire(item):
+        title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
+    elif ext_diameter:
+        title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_designation}"
+    else:
+        title = (
+            f"{width}{width_postfix}{height_percent}{construct_diameter} "
+            f"{mark} {model} {layering} {camera_type} {load}{velocity}"
+        )
+
+    return title.strip()
+
+
+def _resolve_width_postfix(item: RowItem, width: str, height_percent: str, diameter: str) -> str:
+    """подбирает суффикс ширины для title"""
     # 205/55R16 BFGoodrich Advantage 94W
     # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
     width_postfix = ""
@@ -148,22 +174,7 @@ def get_prepared_title(item: RowItem) -> str:
     if height_percent == "L":
         width_postfix = height_percent
 
-    if height_percent and height_percent != "L":
-        height_percent = f"/{height_percent}"
-    else:
-        height_percent = ""
-
-    construct_diameter = f"{construct}{diameter}"
-    construct_diameter = construct_diameter.replace("RZ", "ZR")
-
-    if is_truck_tire(item):
-        title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {load}{velocity}"
-    elif ext_diameter:
-        title = f"{ext_diameter}x{width}{construct_diameter} {mark} {model} {load} {us_aff_designation}"
-    else:
-        title = f"{width}{width_postfix}{height_percent}{construct_diameter} {mark} {model} {layering} {camera_type} {load}{velocity}"
-
-    return title.strip()
+    return width_postfix
 
 
 def is_truck_tire(item: RowItem):

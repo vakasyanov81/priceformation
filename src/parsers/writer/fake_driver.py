@@ -62,4 +62,4 @@ class FakeXlwtDriver(IXlsDriver):
         return res
 
     def get_folder(self) -> str:
-        return self.folder or ''
+        return self.folder or ""

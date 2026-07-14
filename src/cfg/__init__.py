@@ -1,6 +1,7 @@
 """configuration logic"""
 
 from typing import TypeAlias
+
 from . import main
 
 ConfigType: TypeAlias = dict[str, type[main.MainConfig]]

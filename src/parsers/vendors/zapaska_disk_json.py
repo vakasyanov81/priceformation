@@ -3,6 +3,7 @@ logic for zapaska (rest) vendor
 """
 
 import json
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from cfg.main import MainConfig
@@ -95,7 +96,7 @@ class ZapaskaDiskJSON(BaseParser):
 
     def raw_parse(self, _file: str) -> List[dict]:
         """raw parse"""
-        with open(_file, "r", encoding="utf-8") as file_:
+        with Path(_file).open(encoding="utf-8") as file_:
             data = file_.read()
         data = json.loads(data)
         self.rename_fields(data)

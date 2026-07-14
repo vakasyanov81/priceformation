@@ -5,21 +5,22 @@ tests for four_tochki vendor (sheet 2) after raw-parser process
 from typing import List
 from unittest.mock import patch
 
+from test_parsers.fixtures.four_tochki_sheet2 import (
+    four_tochki_invalid_item_result,
+    four_tochki_one_item_result,
+    four_tochki_one_item_result_1,
+)
+from test_parsers.test_vendors.parse_config import (
+    MimMarkupRulesProviderForTests,
+    make_parse_configuration,
+)
+
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.four_tochki.four_tochki_sheet2 import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,
-)
-from test_parsers.fixtures.four_tochki_sheet2 import (
-    four_tochki_one_item_result,
-    four_tochki_invalid_item_result,
-    four_tochki_one_item_result_1,
-)
-from test_parsers.test_vendors.parse_config import (
-    MimMarkupRulesProviderForTests,
-    make_parse_configuration,
 )
 
 parser_config = make_parse_configuration(fourtochki_sheet_2_params, MimMarkupRulesProviderForTests())

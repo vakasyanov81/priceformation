@@ -5,6 +5,14 @@ tests for Pioner vendor after raw-parser process
 from typing import List
 
 import pytest
+from test_parsers.fixtures.pioner import (
+    pioner_one_item_result,
+    pioner_one_item_result_with_categories,
+)
+from test_parsers.test_vendors.parse_config import (
+    PionerMarkupRulesProviderForTests,
+    make_parse_configuration,
+)
 
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -12,14 +20,6 @@ from parsers.base_parser.base_parser_config import (
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser, pioner_params
-from test_parsers.fixtures.pioner import (
-    pioner_one_item_result,
-    pioner_one_item_result_with_categories,
-)
-from test_parsers.test_vendors.parse_config import (
-    make_parse_configuration,
-    PionerMarkupRulesProviderForTests,
-)
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests)
 
@@ -62,7 +62,7 @@ class TestParsePioner:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row['rest_count'] = 3
+        first_row["rest_count"] = 3
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -73,7 +73,7 @@ class TestParsePioner:
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row['price_opt'] = price_opt
+        first_row["price_opt"] = price_opt
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -83,8 +83,8 @@ class TestParsePioner:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = self.get_first_row_item(parse_result)
-        first_row['rest_count'] = 10
-        first_row['reserve_count'] = 7
+        first_row["rest_count"] = 10
+        first_row["reserve_count"] = 7
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -108,9 +108,9 @@ class TestParsePioner:
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
         rows = self.get_rows(parse_result)
-        rows[1]['title'] = params.get("category")
-        rows[2]['price_opt'] = params.get("price")
-        rows[2]['price_recommended'] = params.get("price_recommended")
+        rows[1]["title"] = params.get("category")
+        rows[2]["price_opt"] = params.get("price")
+        rows[2]["price_recommended"] = params.get("price_recommended")
 
         result: List[RowItem] = get_fake_parser(parse_result).parse()
 

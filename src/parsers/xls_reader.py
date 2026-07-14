@@ -58,7 +58,7 @@ class XlsReader(IXlsReader):
     """xls reader"""
 
     @classmethod
-    def get_instance(cls, file_path: str, params: dict[str, Any]) -> 'XlsReader':
+    def get_instance(cls, file_path: str, params: dict[str, Any]) -> "XlsReader":
         """get instance XlsReader / XlsxReader"""
         if not Path(file_path).exists():
             raise FileNotFoundError

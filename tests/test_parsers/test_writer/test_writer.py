@@ -2,12 +2,13 @@
 tests write price for drom.ru
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.xls_writer import XlsWriter, create_result_folder
+
 from .fixtures import FixtureTemplate, write_data
 
 

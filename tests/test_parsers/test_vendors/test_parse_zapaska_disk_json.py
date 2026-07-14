@@ -4,14 +4,14 @@ tests for zapaska vendor after raw-parser process
 
 from typing import List
 
+from test_parsers.test_vendors.parse_config import make_parse_configuration
+
 from cfg.main import get_config
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.zapaska_disk_json import zapaska_params
-from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON
-from test_parsers.test_vendors.parse_config import make_parse_configuration
+from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
 
 parser_config = make_parse_configuration(zapaska_params)
 

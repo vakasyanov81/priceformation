@@ -2,12 +2,13 @@
 base parser logic
 """
 
-import glob
 import math
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Protocol, Type, TypeVar
 
 from cfg import init_cfg
+from core import err_msg
 from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
@@ -18,11 +19,11 @@ from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import XlsReader
+
+from ..data_provider import VendorParams
 from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
-from ..data_provider import VendorParams
-from core import err_msg
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
@@ -61,6 +62,8 @@ class BaseParser(Parser):
         self.xls_reader = xls_reader
         self.files = file_prices
         self.logger = LoggerParseProcess(repr(self))
+        self._black_list: List[str] | None = None
+        self._stop_words: List[str] | None = None
 
     def parse_config(self) -> ParseConfiguration:
         return self._parse_config
@@ -68,20 +71,23 @@ class BaseParser(Parser):
     def markup_rules(self) -> data_provider.MarkupRules:
         return self._parse_config.get_markup_rules()
 
-    @lru_cache()
     def get_black_list(self) -> List[str]:
-        black_list = self._parse_config.black_list()
-        return self.prepare_black_list(black_list)
+        if self._black_list is None:
+            self._black_list = self.prepare_black_list(self._parse_config.black_list())
+        return self._black_list
 
     def prepare_black_list(self, black_list: List[str]) -> List[str]:
         return [self.strip_words_in_title(black_title) for black_title in black_list]
 
-    @lru_cache()
     def get_stop_words(self) -> List[str]:
-        return self._parse_config.stop_words()
+        if self._stop_words is None:
+            self._stop_words = self._parse_config.stop_words()
+        return self._stop_words
 
     def set_parse_config(self, parse_config: ParseConfiguration):
         self._parse_config = parse_config
+        self._black_list = None
+        self._stop_words = None
 
     def parse(self) -> List[RowItem]:
         if not self.is_active:
@@ -289,7 +295,6 @@ class BaseParser(Parser):
         """calc margin percentage"""
         return (price_sale - price_purchase) / price_purchase
 
-    @lru_cache()
     def recommended_percent_markup(self, item) -> float:
         """calculate recommended percent markup"""
         price_recommended = item.price_recommended or 0
@@ -389,11 +394,11 @@ def get_file_prices(parser: TBaseParser):
     """get file prices"""
     _list_files = []
     cfg = init_cfg()
+    supplier_folder = (
+        Path(cfg.main.project_root) / cfg.main.folder_file_prices / parser.parser_params().supplier.folder_name
+    )
     for f_tmp in parser.parser_params().file_templates:
-        _list_files += glob.glob(
-            f"{cfg.main.project_root}/{cfg.main.folder_file_prices}"
-            f"/{parser.parser_params().supplier.folder_name}/{f_tmp}"
-        )
+        _list_files += [str(path) for path in supplier_folder.glob(f_tmp)]
 
     if not _list_files:
         raise SupplierNotHavePricesError(

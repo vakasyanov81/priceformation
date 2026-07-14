@@ -5,13 +5,13 @@ logic for mim vendor (sheet 1)
 import dataclasses
 
 from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_formatter import get_try_to_int_or_str
-from .mim_base import MimParserBase, mim_params, supplier_folder_name
+
 from ... import data_provider
 from ...base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
 mim_sheet_1_params = dataclasses.replace(mim_params)
 mim_sheet_1_params.sheet_info = "Вкладка #1"
