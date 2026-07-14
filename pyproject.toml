@@ -58,6 +58,7 @@ select = ["F", "E", "W", "C90",
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101"]
+"integration_tests/*.py" = ["S101"]
 "src/core/log_message.py" = ["T201"]
 
 [tool.ruff.format]
@@ -69,6 +70,7 @@ reportUnnecessaryTypeIgnoreComment="warning"
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
+    "integration_tests",
 ]
 
 addopts = [

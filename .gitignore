@@ -216,8 +216,11 @@ setup.py
 
 
 
-file_prices/
+/file_prices/
+!integration_tests/file_prices_for_test/**/*.xls
+!integration_tests/file_prices_for_test/**/*.xlsx
 src/core/config.py
 .testmondata
 mutants
 /parse_config/
+integration_tests/result_for_test/
