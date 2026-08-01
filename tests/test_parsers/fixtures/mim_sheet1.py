@@ -2,8 +2,10 @@
 fixtures for Mim vendor
 """
 
+from typing import Any
 
-def mim_one_item_result():
+
+def mim_one_item_result() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\mim\\price.xlsx": [

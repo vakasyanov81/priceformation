@@ -3,7 +3,7 @@ markup rules provider
 """
 
 import json
-from typing import Dict, NamedTuple
+from typing import Any, Dict, NamedTuple, cast
 
 from cfg.main import MainConfig
 from core.exceptions import CoreExceptionError
@@ -22,7 +22,7 @@ class MarkUpParams(NamedTuple):
     percent_markup: float = 0
 
 
-def markup_params_from_rule(rule: dict) -> MarkUpParams:
+def markup_params_from_rule(rule: dict[str, Any]) -> MarkUpParams:
     """JSON rule → MarkUpParams. Accepts ``percent`` or ``percent_markup``."""
     percent = rule.get("percent_markup", rule.get("percent", 0))
     return MarkUpParams(
@@ -42,7 +42,7 @@ class AbsoluteMarkUpRules(NamedTuple):
 class MarkupRules(NamedTuple):
     """container for vendor markup rules"""
 
-    markup_rules: Dict[str, MarkUpParams]
+    markup_rules: Dict[str, dict[str, Any]]
     min_recommended_percent_markup: float = 0
     max_recommended_percent_markup: float = 0
     absolute_markup_rules: AbsoluteMarkUpRules = AbsoluteMarkUpRules(0, 0)
@@ -51,18 +51,18 @@ class MarkupRules(NamedTuple):
 class MarkupRulesProviderBase:
     """Base markup rules data provider."""
 
-    def __init__(self, supplier_name: str = None):
+    def __init__(self, supplier_name: str | None = None) -> None:
         """
         :param str supplier_name:
         """
         self._supplier_name = supplier_name
 
     @property
-    def supplier_name(self):
+    def supplier_name(self) -> str | None:
         """supplier name"""
         return self._supplier_name
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict[str, Any]:
         """Abstract method. Get markup data."""
         raise NotImplementedError
 
@@ -70,18 +70,18 @@ class MarkupRulesProviderBase:
 class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
     """Markup rules data provider from user config file."""
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict[str, Any]:
         """Get markup data from user config file."""
         return self.try_markup_data_for_supplier()
 
-    def try_markup_data_for_supplier(self):
+    def try_markup_data_for_supplier(self) -> dict[str, Any]:
         """Try get markup data."""
         try:
-            return json.loads(read_file(self.get_file_path()))
+            return cast(dict[str, Any], json.loads(read_file(self.get_file_path())))
         except FileNotFoundError as exc:
             raise PriceRulesConfigFileError(f"Filed to read vendor ({self.supplier_name}) settings.") from exc
 
-    def get_file_path(self):
+    def get_file_path(self) -> str:
         """Get user config file path by supplier name or by default"""
         if self.supplier_name:
             return MainConfig().markup_rules_file_path.replace(

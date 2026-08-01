@@ -2,6 +2,8 @@
 tests find category in title
 """
 
+from typing import Any
+
 import pytest
 
 from parsers.base_parser.category_finder import CategoryFinder
@@ -25,7 +27,7 @@ from parsers.row_item.row_item import RowItem
         ("bla bla Ободная лента bla", "Ободная лента"),
     ],
 )
-def test_find_category_from_title(title, category):
+def test_find_category_from_title(title: Any, category: Any) -> None:
     """test find category"""
 
     row_item = RowItem({"title": title})

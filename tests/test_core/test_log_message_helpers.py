@@ -16,18 +16,18 @@ _UNKNOWN_LEVEL = 999
 _UNKNOWN_METHOD_LEVEL = 12345
 
 
-def test_get_log_level_text_known():
+def test_get_log_level_text_known() -> None:
     """известные уровни"""
     assert get_log_level_text(logging.ERROR) == "ERROR"
     assert get_log_level_text(logging.WARNING) == "WARNING"
 
 
-def test_get_log_level_text_fallback():
+def test_get_log_level_text_fallback() -> None:
     """неизвестный уровень → INFO"""
     assert get_log_level_text(_UNKNOWN_LEVEL) == "INFO"
 
 
-def test_resolve_log_path_by_level():
+def test_resolve_log_path_by_level() -> None:
     """ERROR идёт в err-лог, остальное — в обычный"""
     with patch("core.log_message.cfg") as mock_cfg:
         mock_cfg.main.current_err_log_file_path = "/var/log/priceformation/err.log"
@@ -36,7 +36,7 @@ def test_resolve_log_path_by_level():
         assert resolve_log_path(logging.INFO) == "/var/log/priceformation/info.log"
 
 
-def test_resolve_log_method_mapping():
+def test_resolve_log_method_mapping() -> None:
     """маппинг методов logging по уровню"""
     assert resolve_log_method(logging.ERROR) is logging.error
     assert resolve_log_method(logging.WARNING) is logging.warning
@@ -44,7 +44,7 @@ def test_resolve_log_method_mapping():
     assert resolve_log_method(_UNKNOWN_METHOD_LEVEL) is logging.info
 
 
-def test_warn_msg_delegates():
+def test_warn_msg_delegates() -> None:
     """warn_msg вызывает log_msg с WARNING"""
     with patch("core.log_message.log_msg", return_value="w") as mock_log:
         assert warn_msg("attention", need_print_log=True) == "w"
@@ -55,14 +55,14 @@ def test_warn_msg_delegates():
         )
 
 
-def test_err_msg_delegates():
+def test_err_msg_delegates() -> None:
     """err_msg вызывает log_msg с ERROR"""
     with patch("core.log_message.log_msg", return_value="e") as mock_log:
         assert err_msg("bad", need_print_log=False) == "e"
         mock_log.assert_called_once_with("bad", level=logging.ERROR, need_print_log=False)
 
 
-def test_log_msg_error_writes_file():
+def test_log_msg_error_writes_file() -> None:
     """ERROR-уровень пишет в файл и возвращает сообщение со временем"""
     with (
         patch("core.log_message.log_to_file") as mock_file,

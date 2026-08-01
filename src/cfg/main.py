@@ -28,82 +28,82 @@ class MainCfg:
     """main configuration property container"""
 
     @property
-    def folder_file_prices(self):
+    def folder_file_prices(self) -> str:
         """folder where vendor prices are stored"""
         return __FILE_PRICES__
 
     @property
-    def folder_file_prices_result(self):
+    def folder_file_prices_result(self) -> str:
         """folder where price formation results are stored"""
         return f"{self.folder_file_prices}{os.sep}{__FILE_PRICES_RESULT__}"
 
     @property
-    def vendor_list_file_name(self):
+    def vendor_list_file_name(self) -> str:
         """vendor list file name"""
         return __VENDOR_LIST_FILE_NAME__
 
     @property
-    def markup_rules_file_name(self):
+    def markup_rules_file_name(self) -> str:
         """markup rules file name"""
         return __MARKUP_RULES_FILE_NAME__
 
     @property
-    def black_list_file_name(self):
+    def black_list_file_name(self) -> str:
         """markup rules file name"""
         return __BLACK_LIST_FILE_NAME__
 
     @property
-    def stop_words_file_name(self):
+    def stop_words_file_name(self) -> str:
         """stop words file name"""
         return __STOP_WORDS_FILE_NAME__
 
     @property
-    def user_config_folder_name(self):
+    def user_config_folder_name(self) -> str:
         """folder name with user configuration"""
         return __USER_PARSE_CONFIG__
 
     @property
-    def manufacturer_aliases_file_name(self):
+    def manufacturer_aliases_file_name(self) -> str:
         """..."""
         return __MANUFACTURER_ALIASES_FILE_NAME__
 
     @property
-    def title_aliases_file_name(self):
+    def title_aliases_file_name(self) -> str:
         """..."""
         return __TITLE_ALIASES_FILE_NAME__
 
     @property
-    def user_config_folder_path(self):
+    def user_config_folder_path(self) -> str:
         """..."""
         return __PROJECT_ROOT__ + os.sep + self.user_config_folder_name + os.sep
 
     @property
-    def manufacturer_aliases_file_path(self):
+    def manufacturer_aliases_file_path(self) -> str:
         """..."""
         return self.user_config_folder_path + self.manufacturer_aliases_file_name
 
     @property
-    def title_aliases_file_path(self):
+    def title_aliases_file_path(self) -> str:
         """..."""
         return self.user_config_folder_path + self.title_aliases_file_name
 
     @property
-    def markup_rules_file_path(self):
+    def markup_rules_file_path(self) -> str:
         """markup rules file"""
         return self.user_config_folder_path + self.markup_rules_file_name
 
     @property
-    def black_list_file_path(self):
+    def black_list_file_path(self) -> str:
         """black list file"""
         return self.user_config_folder_path + self.black_list_file_name
 
     @property
-    def stop_words_file_path(self):
+    def stop_words_file_path(self) -> str:
         """stop words file"""
         return self.user_config_folder_path + self.stop_words_file_name
 
     @property
-    def vendor_list_file_path(self):
+    def vendor_list_file_path(self) -> str:
         """path to vendor list file"""
         return self.user_config_folder_path + self.vendor_list_file_name
 
@@ -112,61 +112,61 @@ class MainConfig(MainCfg):
     """main configuration property container"""
 
     @property
-    def project_root(self):
+    def project_root(self) -> str:
         """path to project root directory"""
         return __PROJECT_ROOT__
 
     @property
-    def project_src(self):
+    def project_src(self) -> str:
         """path to project src directory"""
         return __PROJECT_SRC__
 
     @property
-    def sep(self):
+    def sep(self) -> str:
         """folder separator"""
         return os.sep
 
     @property
-    def log_folder_name(self):
+    def log_folder_name(self) -> str:
         """logs folder name"""
         return __LOG_FOLDER__
 
     @property
-    def log_folder_path(self):
+    def log_folder_path(self) -> str:
         """path to logs folder"""
         return self.project_root + self.sep + self.log_folder_name
 
     @property
-    def result_folder_path(self):
+    def result_folder_path(self) -> str:
         """path to result folder"""
         base_path = pathlib.Path(self.project_root)
         result_folder = str(base_path.joinpath("file_prices", "result"))
         return result_folder + os.sep
 
     @property
-    def current_log_file_name(self):
+    def current_log_file_name(self) -> str:
         """current log file name"""
         today = datetime.date.today()
         return f"log_{today}.log"
 
     @property
-    def current_err_log_file_name(self):
+    def current_err_log_file_name(self) -> str:
         """current log-error file name"""
         today = datetime.date.today()
         return f"error_{today}.log"
 
     @property
-    def current_log_file_path(self):
+    def current_log_file_path(self) -> str:
         """path to current log file"""
         return self.log_folder_path + self.sep + self.current_log_file_name
 
     @property
-    def current_err_log_file_path(self):
+    def current_err_log_file_path(self) -> str:
         """path to current log-error file"""
         return self.log_folder_path + self.sep + self.current_err_log_file_name
 
     @property
-    def is_need_print_log(self):
+    def is_need_print_log(self) -> bool:
         """need show log on window via print() function"""
         return __IS_NEED_PRINT_LOG__
 

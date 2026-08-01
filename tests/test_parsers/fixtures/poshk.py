@@ -2,8 +2,10 @@
 fixtures for Poshk vendor
 """
 
+from typing import Any
 
-def poshk_one_item_result():
+
+def poshk_one_item_result() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\poshk\\price.xls": [

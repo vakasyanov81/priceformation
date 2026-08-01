@@ -2,6 +2,8 @@
 tests parse xlsx file
 """
 
+from typing import Any
+
 import pytest
 
 from cfg import init_cfg
@@ -45,12 +47,12 @@ SHEET_3 = [
 ]
 
 
-def make_reader():
+def make_reader() -> XlsReader:
     """make reader"""
     return XlsReader.get_instance(_FILE_PATH, _PARSE_PARAMS)
 
 
-def make_old_reader():
+def make_old_reader() -> XlsReader:
     """make old reader"""
     return XlsReader.get_instance(_OLD_FILE_PATH, _PARSE_PARAMS)
 
@@ -66,7 +68,7 @@ def make_old_reader():
         ([0, 1, 2], 6, SHEET_1 + SHEET_2 + SHEET_3, make_old_reader()),
     ],
 )
-def test_xls_rows_count_and_result(sheets, rows_count, expected_rows, reader):
+def test_xls_rows_count_and_result(sheets: Any, rows_count: Any, expected_rows: Any, reader: Any) -> None:
     """test rows count and result"""
     parse_res = reader.parse(sheets)
 
@@ -75,7 +77,7 @@ def test_xls_rows_count_and_result(sheets, rows_count, expected_rows, reader):
     assert parse_res == expected_rows
 
 
-def test_xlsx_with_skipped_first_column():
+def test_xlsx_with_skipped_first_column() -> None:
     """test rows count and result"""
     reader = XlsReader.get_instance(_PIONER_FILE_PATH, _PIONER_PARSE_PARAMS)
     parse_res = reader.parse([0])

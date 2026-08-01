@@ -46,16 +46,16 @@ supplier_folder_name = fourtochki_params.supplier.folder_name
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-fourtochki_sheet_1_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=fourtochki_sheet_1_params,
+fourtochki_sheet_1_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=fourtochki_sheet_1_params,
+    )
 )
-
-fourtochki_sheet_1_config = ParseConfiguration(fourtochki_sheet_1_config)
 
 
 class FourTochkiParser1Sheet(FourTochkiParserBase):
@@ -64,7 +64,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
     """
 
     @classmethod
-    def get_current_category(cls, row_item: RowItem):
+    def get_current_category(cls, row_item: RowItem) -> str:
         tyre_type_dict = {
             "грузовая": "Грузовая шина",
             "легковая": "Легковая шина",
@@ -73,7 +73,7 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         }
         return tyre_type_dict.get(row_item.tire_type.lower().strip()) or "Автошина"
 
-    def add_price_markup(self, row_item: RowItem):
+    def add_price_markup(self, row_item: RowItem) -> None:
         if row_item.price_recommended:
             price = row_item.price_recommended
         else:
@@ -191,11 +191,11 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
     return width_postfix
 
 
-def is_truck_tire(row_item: RowItem):
+def is_truck_tire(row_item: RowItem) -> bool:
     """Грузовая шина?"""
     return row_item.tire_type.lower() == "грузовая" if row_item.tire_type else False
 
 
-def is_special_tire(row_item: RowItem):
+def is_special_tire(row_item: RowItem) -> bool:
     """Спецтехника?"""
     return row_item.tire_type.lower() == "спецтехника" if row_item.tire_type else False

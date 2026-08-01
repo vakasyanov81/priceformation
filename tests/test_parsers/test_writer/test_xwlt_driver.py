@@ -1,6 +1,7 @@
 """tests for openpyxl writer driver"""
 
 from pathlib import Path
+from typing import Any
 
 from openpyxl.styles import Font
 
@@ -11,7 +12,7 @@ _COL_Z = 26
 _COL_AA = 27
 
 
-def test_number_to_excel_column():
+def test_number_to_excel_column() -> None:
     """конвертация индекса колонки в букву Excel"""
     assert XlsxWriterDriver.number_to_excel_column(_COL_A) == "A"
     assert XlsxWriterDriver.number_to_excel_column(_COL_Z) == "Z"
@@ -19,7 +20,7 @@ def test_number_to_excel_column():
     assert XlsxWriterDriver.number_to_excel_column(0) == ""
 
 
-def test_xlsx_writer_full_cycle(tmp_path):
+def test_xlsx_writer_full_cycle(tmp_path: Any) -> None:
     """создание книги, запись шапки/ячеек, формат и сохранение"""
     driver = XlsxWriterDriver()
     folder = f"{tmp_path}/"
@@ -30,6 +31,7 @@ def test_xlsx_writer_full_cycle(tmp_path):
     assert driver.init_workbook(folder, file_name) is workbook
 
     driver.add_sheet("Prices")
+    assert driver.work_sheet is not None
     assert driver.work_sheet.title == "Prices"
 
     driver.write_head(["ColA", "ColB"])

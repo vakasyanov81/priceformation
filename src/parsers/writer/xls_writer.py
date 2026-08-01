@@ -4,6 +4,7 @@ write price list logic
 
 import datetime
 from pathlib import Path
+from typing import Any, TypeAlias
 
 from cfg import init_cfg
 from parsers.writer.ixls_driver import IXlsDriver
@@ -12,27 +13,32 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 config = init_cfg()
 
+RowColor: TypeAlias = tuple[str | None, int | None]
+PriceRow: TypeAlias = dict[str, Any]
 
-def get_value(column: dict, row_item: dict) -> str | None:
+
+def get_value(column: dict[str, Any], row_item: PriceRow) -> str | None:
     """get value for write cell"""
     col = ColumnHelper(column)
     if col.skip:
         return None
 
-    raw_value = row_item.get(col.field) or col.def_value
+    field_name = col.field
+    raw_value = row_item.get(field_name) if field_name else None
+    raw_value = raw_value or col.def_value
     return _to_str(raw_value)
 
 
-def _to_str(raw_value) -> str:
+def _to_str(raw_value: object) -> str:
     """list to string"""
     if isinstance(raw_value, list):
         filtered_items = [element for element in raw_value if element]
         return ", ".join(filtered_items)
 
-    return raw_value
+    return raw_value  # type: ignore[return-value]
 
 
-def make_exclude(products: list, exclude: dict) -> list:
+def make_exclude(products: list[PriceRow], exclude: dict[str, Any]) -> list[PriceRow]:
     """filtration"""
     if not exclude:
         return products
@@ -50,7 +56,7 @@ def get_result_folder_name() -> str:
     return config.main.result_folder_path
 
 
-def create_result_folder():
+def create_result_folder() -> None:
     """create result folder"""
     if not Path(get_result_folder_name()).exists():
         Path(get_result_folder_name()).mkdir(parents=True)
@@ -59,7 +65,7 @@ def create_result_folder():
 class XlsWriter:
     """price writer"""
 
-    def __init__(self, driver, parse_result: list, template):
+    def __init__(self, driver: IXlsDriver, parse_result: list[PriceRow], template: type[IWriteTemplate]) -> None:
         """init"""
         self.driver: IXlsDriver = driver
         self.template: IWriteTemplate = template()
@@ -71,7 +77,7 @@ class XlsWriter:
         self.driver.set_column_format(self.template.get_columns_format())
         self.write()
 
-    def write(self):
+    def write(self) -> None:
         """make write"""
         # write header
         self.driver.write_head(self.col_names())
@@ -84,20 +90,20 @@ class XlsWriter:
         # save workbook
         self.driver.save()
 
-    def get_file_name(self):
+    def get_file_name(self) -> str:
         """get file name for writing"""
         file_template = self.template.get_file_name()
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         return file_template.format(now=current_date)
 
-    def col_names(self) -> list:
+    def col_names(self) -> list[str]:
         """get column names"""
         names = []
         for col in self.template.columns():
             names.append(ColumnHelper(col).name)
         return names
 
-    def _get_color(self, product) -> tuple[str | None, int | None]:
+    def _get_color(self, product: PriceRow) -> RowColor:
         """get color"""
         colors = self.template.colors()
         if not colors:
@@ -118,7 +124,7 @@ class XlsWriter:
         index = colors.get("set_to_column_index")
         return color_map.get(column_value), index
 
-    def _write_row(self, row_item, row_index, color: tuple | None = None):
+    def _write_row(self, row_item: PriceRow, row_index: int, color: RowColor | None = None) -> None:
         """write row item"""
         for col_index, col in enumerate(self.template.columns()):
             cell_value = get_value(col, row_item)

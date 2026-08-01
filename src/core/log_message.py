@@ -4,7 +4,7 @@ logic logging process
 
 import datetime
 import logging
-from typing import Callable, Literal
+from typing import Any, Callable, Literal
 
 from colorama import init
 from termcolor import colored
@@ -41,19 +41,19 @@ def err_msg(message: str, need_print_log: bool = False) -> str:
     return log_msg(message, level=logging.ERROR, need_print_log=need_print_log)
 
 
-def warn_msg(message: str, need_print_log: bool = False):
+def warn_msg(message: str, need_print_log: bool = False) -> str:
     """make warning message"""
     return log_msg(message, level=logging.WARNING, need_print_log=need_print_log)
 
 
-def resolve_log_path(level=logging.INFO):
+def resolve_log_path(level: int = logging.INFO) -> str:
     """get directory path for logging by log-level"""
     log_file_map = {logging.ERROR: cfg.main.current_err_log_file_path}
 
     return log_file_map.get(level) or cfg.main.current_log_file_path
 
 
-def resolve_log_method(level=logging.INFO) -> Callable:
+def resolve_log_method(level: int = logging.INFO) -> Callable[..., Any]:
     """get logging method by log-level"""
     log_method_mapping = {
         logging.INFO: logging.info,
@@ -64,7 +64,7 @@ def resolve_log_method(level=logging.INFO) -> Callable:
     return log_method_mapping.get(level) or logging.info
 
 
-def log_to_file(message: str, level=logging.INFO) -> bool:
+def log_to_file(message: str, level: int = logging.INFO) -> bool:
     """make log to file"""
     init_log()
     logging.basicConfig(filename=resolve_log_path(level), level=level)
@@ -77,7 +77,7 @@ def log_msg(
     level: int = logging.INFO,
     need_print_log: bool = False,
     color: Literal["red", "green", "yellow"] | None = None,
-):
+) -> str:
     """make log message"""
 
     time_now = datetime.datetime.time(datetime.datetime.now())
@@ -96,7 +96,7 @@ def print_log(
     msg: str,
     level: int = logging.INFO,
     _color: Literal["red", "green", "yellow"] | None = None,
-):
+) -> None:
     """print log-message"""
 
     level_title = get_log_level_text(level)

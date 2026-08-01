@@ -33,16 +33,16 @@ autosnab_params = ParserParams(
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(autosnab_params.supplier.folder_name)
 
-autosnab_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=autosnab_params,
+autosnab_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=autosnab_params,
+    )
 )
-
-autosnab_config = ParseConfiguration(autosnab_config)
 
 
 class Autosnab54Parser(BaseParser):
@@ -50,7 +50,7 @@ class Autosnab54Parser(BaseParser):
     logic for autosnab54_ru vendor
     """
 
-    def process(self):
+    def process(self) -> int:
         """parse process"""
         res = super().process()
         for row_item in self.parsed_items:
@@ -59,6 +59,6 @@ class Autosnab54Parser(BaseParser):
         return res
 
     @classmethod
-    def get_min_rest_count(cls):
+    def get_min_rest_count(cls) -> int:
         """min rest count value for skip action"""
         return 0

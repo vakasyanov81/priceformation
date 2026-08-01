@@ -5,9 +5,10 @@ logic for posh vendor
 import re
 
 from parsers import data_provider
-from parsers.base_parser.base_parser import BaseParser, ParseConfiguration
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
+    ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
@@ -36,16 +37,16 @@ poshk_params = ParserParams(
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(poshk_params.supplier.folder_name)
 
-poshk_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=poshk_params,
+poshk_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=poshk_params,
+    )
 )
-
-poshk_config = ParseConfiguration(poshk_config)
 
 
 class PoshkParser(BaseParser):
@@ -53,7 +54,7 @@ class PoshkParser(BaseParser):
     logic for posh vendor
     """
 
-    def process(self):
+    def process(self) -> int:
         """process price parse"""
         res = super().process()
         for row_item in self.parsed_items:
@@ -64,7 +65,7 @@ class PoshkParser(BaseParser):
 
         return res
 
-    def add_price_markup(self, row_item):
+    def add_price_markup(self, row_item: RowItem) -> None:
         """
         Добавить наценку
         """
@@ -75,7 +76,7 @@ class PoshkParser(BaseParser):
         row_item.price_markup = self.round_price(price)
         row_item.percent_markup = markup_percent * 100
 
-    def set_type_production(self, row_item):
+    def set_type_production(self, row_item: RowItem) -> None:
         """
         Задать категорию
         """
@@ -83,7 +84,7 @@ class PoshkParser(BaseParser):
         row_item.type_production = self.get_category_by_title(row_item.title)
 
     @classmethod
-    def get_category_by_title(cls, title):
+    def get_category_by_title(cls, title: str) -> str:
         """get category name by title"""
         title = title.lower()
         available_categories = ["ободная лента", "шина", "покрышка", "камера", "диск"]
@@ -102,19 +103,19 @@ class PoshkParser(BaseParser):
         return "Разное"
 
     @classmethod
-    def clear_and_set_title(cls, row_item):
+    def clear_and_set_title(cls, row_item: RowItem) -> None:
         """clear and set reared title"""
         row_item.title = row_item.title.replace(", , шт", "").strip()
 
     @classmethod
-    def _prepare_title_chunks(cls, chunks: list):
+    def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:
         """get prepared title chunks"""
         cls.replace_star_to_cross(chunks)
         cls.delete_white_spaces(chunks)
         return chunks
 
     @classmethod
-    def replace_star_to_cross(cls, chunks: list):
+    def replace_star_to_cross(cls, chunks: list[str]) -> None:
         """
         ... 6.00*17.5 ... -> ... 6.00x17.5 ...
         :param chunks:
@@ -127,7 +128,7 @@ class PoshkParser(BaseParser):
                 chunks[index] = chunk.replace("*", "x")
 
     @classmethod
-    def delete_white_spaces(cls, chunks: list):
+    def delete_white_spaces(cls, chunks: list[str]) -> None:
         """
         385/65  R22.5... -> 385/65R22.5...
         :param chunks:

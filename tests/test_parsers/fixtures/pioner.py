@@ -2,8 +2,10 @@
 fixtures for Pioner vendor
 """
 
+from typing import Any
 
-def pioner_one_item_result():
+
+def pioner_one_item_result() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\pioner\\price.xls": [
@@ -19,7 +21,7 @@ def pioner_one_item_result():
     }
 
 
-def pioner_one_item_result_with_categories():
+def pioner_one_item_result_with_categories() -> dict[str, Any]:
     """one file, one price row parse result with categories"""
     return {
         "file_prices\\pioner\\price.xls": [

@@ -7,7 +7,7 @@ from io import StringIO
 from core.log_message import print_log
 
 
-def test_print_log_info_level():
+def test_print_log_info_level() -> None:
     """info level prints bare message"""
     out = StringIO()
     with redirect_stdout(out):
@@ -16,7 +16,7 @@ def test_print_log_info_level():
     assert out.getvalue() == "message\n"
 
 
-def test_print_log_error_level():
+def test_print_log_error_level() -> None:
     """error level prints prefixed message"""
     out = StringIO()
     with redirect_stdout(out):

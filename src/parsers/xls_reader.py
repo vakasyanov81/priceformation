@@ -30,7 +30,7 @@ init_cfg()
 class IXlsReader:
     """interface xls reader"""
 
-    def parse(self, sheet_indexes: list | None = None):
+    def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
         """do parse"""
         raise NotImplementedError
 
@@ -189,7 +189,7 @@ class XlsReader(IXlsReader):
         return row_dict
 
 
-class MaxRowsReached(core.CoreExceptionError):  # type: ignore
+class MaxRowsReached(core.CoreExceptionError):
     """max rows reached exception"""
 
     def __init__(self, max_rows_count: int) -> None:

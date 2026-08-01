@@ -16,7 +16,7 @@ from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
 parser_config = make_parse_configuration(zapaska_params)
 
 
-def get_fake_parser(file_prices: list[str]):
+def get_fake_parser(file_prices: list[str]) -> ZapaskaDiskJSON:
     """get fake parser"""
     return ZapaskaDiskJSON(
         file_prices=file_prices,
@@ -29,7 +29,7 @@ class TestParseZapaskaDiskJSON:
     tests for Poshk vendor after raw-parser process
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         root = get_config()().project_root

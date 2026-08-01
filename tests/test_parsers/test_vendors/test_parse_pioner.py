@@ -2,7 +2,7 @@
 tests for Pioner vendor after raw-parser process
 """
 
-from typing import List
+from typing import Any, List
 
 import pytest
 from test_parsers.fixtures.pioner import (
@@ -25,7 +25,7 @@ from parsers.vendors.pioner import PionerParser, pioner_params
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests())
 
 
-def get_fake_parser(parse_result):
+def get_fake_parser(parse_result: Any) -> PionerParser:
     """get fake parser"""
     FakeXlsReader.parse_result = list(parse_result.values())[0]
     return PionerParser(
@@ -40,7 +40,7 @@ class TestParsePioner:
     tests for Pioner vendor after raw-parser process
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         parsed_items: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
@@ -51,7 +51,7 @@ class TestParsePioner:
         assert parsed_items[0].supplier_name == "Пионер"
         assert parsed_items[0].percent_markup == 5
 
-    def test_parse_brand(self):
+    def test_parse_brand(self) -> None:
         """check all field for one price-row"""
 
         parsed_items: List[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
@@ -59,7 +59,7 @@ class TestParsePioner:
         assert len(parsed_items) == 1
         assert parsed_items[0].brand == "triangle"
 
-    def test_small_rest(self):
+    def test_small_rest(self) -> None:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
@@ -70,7 +70,7 @@ class TestParsePioner:
         assert len(parsed_items) == 0
 
     @pytest.mark.parametrize("price_opt", [0, None])
-    def test_null_price_opt(self, price_opt):
+    def test_null_price_opt(self, price_opt: Any) -> None:
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
@@ -80,7 +80,7 @@ class TestParsePioner:
 
         assert len(parsed_items) == 0
 
-    def test_small_rest_1(self):
+    def test_small_rest_1(self) -> None:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
@@ -105,7 +105,7 @@ class TestParsePioner:
             },
         ],
     )
-    def test_markup(self, markup_case):
+    def test_markup(self, markup_case: Any) -> None:
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
         rows = get_rows(parse_result)

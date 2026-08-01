@@ -15,12 +15,12 @@ from parsers.data_provider.vendor_list import (
 _TO_LOG = "to_log"
 
 
-def test_black_list_base_raises():
+def test_black_list_base_raises() -> None:
     with pytest.raises(NotImplementedError):
         BlackListProviderBase().get_black_list_data()
 
 
-def test_black_list_from_config():
+def test_black_list_from_config() -> None:
     with (
         patch("parsers.data_provider.black_list.read_file", return_value="a\nb\n"),
         patch("parsers.data_provider.black_list.MainConfig") as mock_cfg,
@@ -29,12 +29,12 @@ def test_black_list_from_config():
         assert BlackListProviderFromUserConfig().get_black_list_data() == ["a", "b"]
 
 
-def test_vendor_list_base_raises():
+def test_vendor_list_base_raises() -> None:
     with pytest.raises(NotImplementedError):
         VendorListProviderBase().get_config_vendor_list()
 
 
-def test_vendor_list_file_missing():
+def test_vendor_list_file_missing() -> None:
     with (
         patch.object(CoreExceptionError, _TO_LOG),
         patch(

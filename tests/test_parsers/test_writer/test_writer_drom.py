@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_drom import ForDrom
+from parsers.writer.xls_writer import XlsWriter
 
 from .fixtures import result_body_drom, write_data
-from .test_writer import XlsWriter
 
 
 @patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None))
-def test_xls_write_for_drom():
+def test_xls_write_for_drom() -> None:
     """test write price for drom.ru"""
 
     fake_driver = FakeXlwtDriver()

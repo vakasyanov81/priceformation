@@ -35,16 +35,16 @@ mim_sheet_1_params.columns = {
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-mim_sheet_1_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=mim_sheet_1_params,
+mim_sheet_1_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=mim_sheet_1_params,
+    )
 )
-
-mim_sheet_1_config = ParseConfiguration(mim_sheet_1_config)
 
 
 def is_number(candidate: str | int | float) -> bool:
@@ -61,11 +61,11 @@ class MimParser1Sheet(MimParserBase):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         return "Легковая шина"
 
     @classmethod
-    def get_prepared_title(cls, row_item: RowItem):
+    def get_prepared_title(cls, row_item: RowItem) -> str:
         """get prepared title"""
         profile = row_item.height_percent or ""
         delimiter = "x" if is_number(profile) else "/"

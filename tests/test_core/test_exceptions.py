@@ -15,7 +15,7 @@ class _CustomError(CoreExceptionError):
     __MESSAGE__ = "default msg"  # noqa: WPS115
 
 
-def test_core_exception_logs_message():
+def test_core_exception_logs_message() -> None:
     """CoreExceptionError пишет в лог и сохраняет сообщение"""
     with patch.object(CoreExceptionError, _TO_LOG) as mock_log:
         exc = CoreExceptionError("ошибка")
@@ -23,26 +23,26 @@ def test_core_exception_logs_message():
         mock_log.assert_called_once_with("ошибка")
 
 
-def test_core_exception_default_message():
+def test_core_exception_default_message() -> None:
     """без аргумента берётся __MESSAGE__"""
     with patch.object(CoreExceptionError, _TO_LOG):
         assert str(_CustomError()) == "default msg"
 
 
-def test_make_raise():
+def test_make_raise() -> None:
     """make_raise поднимает CoreExceptionError"""
     with patch.object(CoreExceptionError, _TO_LOG):
         with pytest.raises(CoreExceptionError, match="fail"):
             make_raise("fail")
 
 
-def test_supplier_error_type():
+def test_supplier_error_type() -> None:
     """SupplierNotHavePricesError наследует CoreExceptionError"""
     with patch.object(CoreExceptionError, _TO_LOG):
         assert isinstance(SupplierNotHavePricesError("empty"), CoreExceptionError)
 
 
-def test_to_log_calls_err_msg():
+def test_to_log_calls_err_msg() -> None:
     """to_log формирует stack-trace и вызывает err_msg"""
     with patch("core.exceptions.err_msg") as mock_err:
         CoreExceptionError.to_log("trace-me")

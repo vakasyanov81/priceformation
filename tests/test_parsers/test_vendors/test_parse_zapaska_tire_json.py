@@ -2,7 +2,7 @@
 tests for zapaska (json) tire vendor after raw-parser process
 """
 
-from typing import List
+from typing import Any, List
 from unittest import skip
 
 import pytest
@@ -18,7 +18,7 @@ from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_para
 parser_config = make_parse_configuration(zapaska_tire_params)
 
 
-def get_fake_parser(file_prices: list[str]):
+def get_fake_parser(file_prices: list[str]) -> ZapaskaTireJSON:
     """get fake parser"""
     return ZapaskaTireJSON(
         file_prices=file_prices,
@@ -49,7 +49,7 @@ class TestParseZapaskaTireJSON:
     }]
     """
 
-    def test_parse(self):
+    def test_parse(self) -> None:
         """check all field for one price-row"""
 
         root = get_config()().project_root
@@ -78,8 +78,8 @@ class TestParseZapaskaTireJSON:
             (60000, 60100, 67200),
         ],
     )
-    @skip
-    def test_markup(self, prices):
+    @skip("markup parametrize not ready")
+    def test_markup(self, prices: Any) -> None:
         """test calculation price-markup"""
         _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root

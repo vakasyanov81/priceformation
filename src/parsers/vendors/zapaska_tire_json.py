@@ -42,16 +42,16 @@ zapaska_tire_params = ParserParams(
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_tire_params.supplier.folder_name)
 
-zapaska_tire_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=zapaska_tire_params,
+zapaska_tire_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=zapaska_tire_params,
+    )
 )
-
-zapaska_tire_config = ParseConfiguration(zapaska_tire_config)
 
 
 class ZapaskaTireJSON(ZapaskaDiskJSON):
@@ -61,11 +61,11 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     _type_production = "Шины"
 
-    def get_type_production(self, row_item: RowItem):
+    def get_type_production(self, row_item: RowItem) -> str:
         return row_item.type_production
 
 
-def basic_auth(username, password):
+def basic_auth(username: str, password: str) -> str:
     """auth"""
     token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
     return f"Basic {token}"
@@ -82,7 +82,7 @@ def get_data(url: str, api_config: ZapaskaApiConfig | None = None) -> str:
     return res.read().decode("utf-8")
 
 
-def save_data(json_data: str, filename: str):
+def save_data(json_data: str, filename: str) -> None:
     """save data to file"""
     main_cfg = init_cfg().main
     file_path = (
@@ -92,7 +92,7 @@ def save_data(json_data: str, filename: str):
         out_file.write(json_data)
 
 
-def load_data():
+def load_data() -> None:
     """load (tire / disk) data from file"""
     save_data(get_data("/API/hs/V2/GetTires"), filename="tire.json")
     save_data(get_data("/API/hs/V2/GetDisk"), filename="disk.json")

@@ -20,14 +20,14 @@ _PREFERRED = 0.1
 _RULE_MAX = 50
 
 
-def test_markup_rules_base():
+def test_markup_rules_base() -> None:
     provider = MarkupRulesProviderBase("s1")
     assert provider.supplier_name == "s1"
     with pytest.raises(NotImplementedError):
         provider.get_markup_data()
 
 
-def test_markup_path_with_supplier():
+def test_markup_path_with_supplier() -> None:
     provider = MarkupRulesProviderFromUserConfig("stk")
     with patch("parsers.data_provider.markup_rules.MainConfig") as mock_cfg:
         mock_cfg.return_value.markup_rules_file_path = "/cfg/markup_rules.json"
@@ -35,14 +35,14 @@ def test_markup_path_with_supplier():
         assert provider.get_file_path() == "/cfg/stk_markup_rules.json"
 
 
-def test_markup_path_default():
+def test_markup_path_default() -> None:
     provider = MarkupRulesProviderFromUserConfig()
     with patch("parsers.data_provider.markup_rules.MainConfig") as mock_cfg:
         mock_cfg.return_value.markup_rules_file_path = "/cfg/markup_rules.json"
         assert provider.get_file_path() == "/cfg/markup_rules.json"
 
 
-def test_markup_missing_file():
+def test_markup_missing_file() -> None:
     provider = MarkupRulesProviderFromUserConfig("stk")
     with (
         patch.object(CoreExceptionError, _TO_LOG),
@@ -56,17 +56,17 @@ def test_markup_missing_file():
         provider.get_markup_data()
 
 
-def test_rule_accepts_percent_key():
+def test_rule_accepts_percent_key() -> None:
     markup = markup_params_from_rule({"min": 0, "max": 100, "percent": _PERCENT})
     assert markup == data_provider.MarkUpParams(min=0, max=100, percent_markup=_PERCENT)
 
 
-def test_rule_accepts_percent_markup_key():
+def test_rule_accepts_percent_markup_key() -> None:
     markup = markup_params_from_rule({"min": 10, "max": _RULE_MAX, "percent_markup": _PERCENT_ALT})
     assert markup == data_provider.MarkUpParams(min=10, max=_RULE_MAX, percent_markup=_PERCENT_ALT)
 
 
-def test_rule_prefers_percent_markup():
+def test_rule_prefers_percent_markup() -> None:
     markup = markup_params_from_rule(
         {"min": 0, "max": 1, "percent": 0.5, "percent_markup": _PREFERRED},
     )

@@ -2,7 +2,7 @@
 tests for Poshk vendor after raw-parser process
 """
 
-from typing import List
+from typing import Any, List, cast
 
 import pytest
 from test_base_parser.test_manufacturer_finder import map_manufacturer
@@ -33,7 +33,7 @@ vendor_list_config = {
 class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for tests"""
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict[str, Any]:
         """get markup rules"""
         return {
             "markup_rules": {
@@ -53,15 +53,15 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
 class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
     """manufacturer aliases data provider for tests"""
 
-    def get_aliases(self) -> dict:
+    def get_aliases(self) -> dict[str, Any]:
         """get manufacturer aliases"""
-        return map_manufacturer
+        return cast(dict[str, Any], map_manufacturer)
 
 
 class BlackListProviderForTests(data_provider.BlackListProviderBase):
     """black list data provider for tests"""
 
-    def get_black_list_data(self) -> list:
+    def get_black_list_data(self) -> list[str]:
         """get black list"""
         return ["wrong title", "wrong title 2"]
 
@@ -69,7 +69,7 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
 class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
     """stop words data provider for tests"""
 
-    def get_stop_words_data(self) -> list:
+    def get_stop_words_data(self) -> list[str]:
         """get stop word list"""
         return ["некондиция", "2 сорт", "восстановленная"]
 
@@ -77,13 +77,13 @@ class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
     """Base data provider with supplier config"""
 
-    def __init__(self, config):
+    def __init__(self, config: Any) -> None:
         """set test config"""
         self.config = config or {}
 
-    def get_config_vendor_list(self):
+    def get_config_vendor_list(self) -> dict[str, Any]:
         """get config"""
-        return self.config
+        return cast(dict[str, Any], self.config)
 
 
 parser_config = BasePriceParseConfigurationParams(
@@ -96,7 +96,7 @@ parser_config = BasePriceParseConfigurationParams(
 )
 
 
-def get_fake_parser(parse_result):
+def get_fake_parser(parse_result: Any) -> PoshkParser:
     """get fake parser"""
     FakeXlsReader.parse_result = list(parse_result.values())[0]
     return PoshkParser(
@@ -106,7 +106,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     parsed_items: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
@@ -132,7 +132,7 @@ def test_parse():
         ("... i*cept", "... i*cept"),
     ],
 )
-def test_prepare_title(title, prepared_title):
+def test_prepare_title(title: Any, prepared_title: Any) -> None:
     """check prepare title"""
 
     row_item = RowItem({"title": title})
@@ -157,7 +157,7 @@ class TestParsePoshk:
             ("some камера product", "Автокамера"),
         ],
     )
-    def test_set_category(self, title, category):
+    def test_set_category(self, title: Any, category: Any) -> None:
         """test define category name by title"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
@@ -198,7 +198,7 @@ class TestParsePoshk:
             (100000, 107000),
         ],
     )
-    def test_markup(self, price, price_with_markup):
+    def test_markup(self, price: Any, price_with_markup: Any) -> None:
         """test calculation price-markup"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
@@ -218,7 +218,7 @@ class TestParsePoshk:
             "185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт",
         ],
     )
-    def test_stop_words(self, title):
+    def test_stop_words(self, title: Any) -> None:
         """test exclude price position by stop word in title"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
