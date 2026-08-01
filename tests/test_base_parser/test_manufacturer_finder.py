@@ -35,11 +35,11 @@ from parsers.row_item.row_item import RowItem
 def test_replace_title_and_add_manufacturer(title, title_new, manufacturer):
     """check replace bad manufacturer in title and add correct manufacturer in item.manufacturer"""
 
-    item = RowItem({"title": title})
-    ManufacturerFinder(map_manufacturer).process(item)
+    row_item = RowItem({"title": title})
+    ManufacturerFinder(map_manufacturer).process(row_item)
 
-    assert item.title == title_new
-    assert item.manufacturer == manufacturer
+    assert row_item.title == title_new
+    assert row_item.manufacturer == manufacturer
 
 
 map_manufacturer = {

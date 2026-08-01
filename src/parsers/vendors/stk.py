@@ -53,17 +53,17 @@ class STKParser(BaseParser):
     def process(self):
         """process price parse"""
         res = super().process()
-        for item in self.result:
-            self.skip_by_min_rest(item)
-            self.add_price_markup(item)
+        for row_item in self.parsed_items:
+            self.skip_by_min_rest(row_item)
+            self.add_price_markup(row_item)
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, row_item):
         """
         Добавить наценку
         """
 
-        if not item.price_opt:
+        if not row_item.price_opt:
             return
-        item.price_markup = self.round_price(item.price_opt * STK_PRICE_MARKUP_MULTIPLIER)
+        row_item.price_markup = self.round_price(row_item.price_opt * STK_PRICE_MARKUP_MULTIPLIER)

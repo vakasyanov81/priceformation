@@ -14,20 +14,20 @@ class ParseResultStatistic:
 
     def __init__(self, parse_result: List[RowItem]):
         """init"""
-        self._parse_result = [item for item in parse_result if item.price_opt]
+        self._parse_result = [row_item for row_item in parse_result if row_item.price_opt]
 
     def real_percents_markup(self):
         """real min / max percent markup for parse result"""
         if not self._parse_result:
             return 0, 0
-        percents = [item.percent_markup for item in self._parse_result]
+        percents = [row_item.percent_markup for row_item in self._parse_result]
         return min(percents), max(percents)
 
     def real_absolute_markup(self):
         """real absolute min / max markup for parse result"""
         if not self._parse_result:
             return 0, 0
-        margins = [item.price_markup - item.price_opt for item in self._parse_result]
+        margins = [row_item.price_markup - row_item.price_opt for row_item in self._parse_result]
         return min(margins), max(margins)
 
     def count_items(self):

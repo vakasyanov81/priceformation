@@ -44,11 +44,11 @@ def get_fake_parser(parse_result):
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
+    parsed_items: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
-    assert len(result) == 1
-    assert result[0].title == "295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S"
-    assert result[0].type_production == "Грузовая шина"
-    assert result[0].price_markup == 24360.0
-    assert result[0].supplier_name == "Мим"
-    assert result[0].percent_markup == 5
+    assert len(parsed_items) == 1
+    assert parsed_items[0].title == "295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S"
+    assert parsed_items[0].type_production == "Грузовая шина"
+    assert parsed_items[0].price_markup == 24360.0
+    assert parsed_items[0].supplier_name == "Мим"
+    assert parsed_items[0].percent_markup == 5

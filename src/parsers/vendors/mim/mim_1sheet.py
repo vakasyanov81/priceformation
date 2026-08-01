@@ -47,10 +47,10 @@ mim_sheet_1_config = BasePriceParseConfigurationParams(
 mim_sheet_1_config = ParseConfiguration(mim_sheet_1_config)
 
 
-def is_number(value: str | int | float) -> bool:
+def is_number(candidate: str | int | float) -> bool:
     """value like xx.xx or xx.0"""
     try:
-        return bool(float(value)) and "." in str(value)
+        return bool(float(candidate)) and "." in str(candidate)
     except ValueError:
         return False
 
@@ -65,17 +65,22 @@ class MimParser1Sheet(MimParserBase):
         return "Легковая шина"
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
+    def get_prepared_title(cls, row_item: RowItem):
         """get prepared title"""
-        width = item.width or ""
-        diameter = item.diameter or ""
-        profile = item.height_percent or ""
-        velocity = item.index_velocity or ""
-        load = item.index_load or ""
-        model = item.model or ""
-        mark = (item.manufacturer or "").lower().capitalize()
+        profile = row_item.height_percent or ""
         delimiter = "x" if is_number(profile) else "/"
+        mark = (row_item.manufacturer or "").lower().capitalize()
+        return _mim1_title(row_item, profile, delimiter, mark)
 
-        title = f"{width}{delimiter}{profile}R{diameter} {mark} {model} {load}{velocity}"
 
-        return title
+def _mim1_title(row_item: RowItem, profile: str, delimiter: str, mark: str) -> str:
+    """Собрать title легковой шины MIM sheet1."""
+    size = "{0}{1}{2}R{3}".format(row_item.width or "", delimiter, profile, row_item.diameter or "")
+    return " ".join(
+        (
+            size,
+            mark,
+            row_item.model or "",
+            "{0}{1}".format(row_item.index_load or "", row_item.index_velocity or ""),
+        ),
+    )

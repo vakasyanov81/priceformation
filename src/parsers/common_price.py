@@ -33,11 +33,11 @@ class CommonPrice:
     ) -> None:
         self.xls_writer = xls_writer
         self.write_driver = write_driver
-        self._result: list = []
+        self._parsed_items: list = []
 
     def parse_all_vendors(self, vendors: VendorList) -> None:
         """Запускает парсинг по всем поставщикам и группирует результат."""
-        self._result.clear()  # защищаемся от накопления при повторных вызовах
+        self._parsed_items.clear()  # защищаемся от накопления при повторных вызовах
 
         start_time = time.monotonic()
         log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
@@ -45,8 +45,8 @@ class CommonPrice:
         for vendor_cls, vendor_config in vendors:
             self.parse_vendor(vendor_cls(vendor_config))
 
-        grouper = CommonPriceGrouper(self._result)
-        self._result = grouper.group_by_params().get_items()
+        grouper = CommonPriceGrouper(self._parsed_items)
+        self._parsed_items = grouper.group_by_params().get_row_items()
 
         log_msg(f"\nКоличество дублей: {grouper.get_double_count()}\n", need_print_log=True)
 
@@ -56,7 +56,7 @@ class CommonPrice:
     def parse_vendor(self, parser: Parser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к общему результату."""
         try:
-            self._result.extend(parser.parse())
+            self._parsed_items.extend(parser.parse())
 
         except VendorListConfigFileError:
             warn_msg(
@@ -69,9 +69,9 @@ class CommonPrice:
             raise
 
     @property
-    def result(self) -> list:
+    def parsed_items(self) -> list:
         """Итоговый список записей."""
-        return self._result
+        return self._parsed_items
 
     def supplier_info(self) -> dict[SupplierCode, SupplierName]:
         """Возвращает отображение код поставщика → название."""

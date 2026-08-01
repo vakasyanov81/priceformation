@@ -56,7 +56,7 @@ def make_old_reader():
 
 
 @pytest.mark.parametrize(
-    "sheets, rows_count, result, reader",
+    "sheets, rows_count, expected_rows, reader",
     [
         ([0], 2, SHEET_1, make_reader()),
         ([0, 1], 4, SHEET_1 + SHEET_2, make_reader()),
@@ -66,13 +66,13 @@ def make_old_reader():
         ([0, 1, 2], 6, SHEET_1 + SHEET_2 + SHEET_3, make_old_reader()),
     ],
 )
-def test_xls_rows_count_and_result(sheets, rows_count, result, reader):
+def test_xls_rows_count_and_result(sheets, rows_count, expected_rows, reader):
     """test rows count and result"""
     parse_res = reader.parse(sheets)
 
     assert len(parse_res) == rows_count
     assert reader.skipped_rows() == __SKIPPED_EMPTY_ROW__
-    assert parse_res == result
+    assert parse_res == expected_rows
 
 
 def test_xlsx_with_skipped_first_column():

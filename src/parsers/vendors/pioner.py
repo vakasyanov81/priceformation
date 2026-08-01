@@ -61,43 +61,43 @@ class PionerParser(BaseParser):
     def process(self):
         """process parse"""
         res = super().process()
-        for item in self.result:
-            self.skip_by_min_rest(item)
-            self._set_current_category(item)
-            self.set_current_category(item)
-            self.add_price_markup(item)
-            self.set_manufacturer_to_title(item)
-            self.set_brand(item)
-            ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(item)
+        for row_item in self.parsed_items:
+            self.skip_by_min_rest(row_item)
+            self._set_current_category(row_item)
+            self.set_current_category(row_item)
+            self.add_price_markup(row_item)
+            self.set_manufacturer_to_title(row_item)
+            self.set_brand(row_item)
+            ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(row_item)
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, row_item):
         """
         Добавить наценку
         """
 
-        price = item.price_opt or 0
+        price = row_item.price_opt or 0
         markup_percent = self.get_markup_percent(price) or 0
         price = (markup_percent + 1) * price
-        item.price_markup = self.round_price(price)
-        item.percent_markup = markup_percent * 100
+        row_item.price_markup = self.round_price(price)
+        row_item.percent_markup = markup_percent * 100
 
-    def skip_by_min_rest(self, item: RowItem):
+    def skip_by_min_rest(self, row_item: RowItem):
         """skip by min rest"""
-        self._set_current_category(item)
-        self.set_current_category(item)
+        self._set_current_category(row_item)
+        self.set_current_category(row_item)
         if self.is_skipped_item():
-            item.rest_count = 0
-        return super().skip_by_min_rest(item)
+            row_item.rest_count = 0
+        return super().skip_by_min_rest(row_item)
 
-    def _set_current_category(self, item):
+    def _set_current_category(self, row_item):
         """set current category by title"""
-        if self.is_category_row(item):
-            self.current_category = (item.title or "").lower().strip()
+        if self.is_category_row(row_item):
+            self.current_category = (row_item.title or "").lower().strip()
         self.current_category_first_chunk = ((self.current_category or "").split("/")[0]).split(" ")[0]
 
-    def set_manufacturer_to_title(self, item):
+    def set_manufacturer_to_title(self, row_item):
         """set manufacturer name to title for row item"""
         m_name = self.get_manufacturer_name()
 
@@ -105,10 +105,10 @@ class PionerParser(BaseParser):
             manufacturer_map = {"рокбастер": "RockBuster"}
             return manufacturer_map.get(m_name) or m_name
 
-        if not m_name or not item.price_opt:
+        if not m_name or not row_item.price_opt:
             return
 
-        title = item.title
+        title = row_item.title
         title_chunks = title.split(" ")
 
         ttl = title.lower()
@@ -116,17 +116,17 @@ class PionerParser(BaseParser):
             return
 
         title_chunks[0] = f"{title_chunks[0]} {make_m_name(m_name)}"
-        item.title = " ".join(title_chunks)
+        row_item.title = " ".join(title_chunks)
 
-    def set_brand(self, item):
+    def set_brand(self, row_item):
         """set brand name"""
         m_name = self.get_manufacturer_name()
-        item.brand = m_name
+        row_item.brand = m_name
 
-    def set_current_category(self, item: RowItem):
+    def set_current_category(self, row_item: RowItem):
         """set current category"""
-        item.type_production = self.current_category_first_chunk
-        self.correction_category(item)
+        row_item.type_production = self.current_category_first_chunk
+        self.correction_category(row_item)
 
     def get_manufacturer_name(self):
         """determine manufacturer name by current category"""
@@ -152,8 +152,8 @@ class PionerParser(BaseParser):
         return False
 
     @classmethod
-    def get_item_rest(cls, item):
+    def get_item_rest(cls, row_item):
         """see base function"""
-        rest = item.rest_count or 0
-        reserve = item.reserve_count or 0
+        rest = row_item.rest_count or 0
+        reserve = row_item.reserve_count or 0
         return rest - reserve

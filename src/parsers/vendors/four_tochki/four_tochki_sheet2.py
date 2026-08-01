@@ -59,22 +59,28 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     """
 
     @classmethod
-    def get_current_category(cls, item):
+    def get_current_category(cls, row_item):
         return "Диск"
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
-        width = item.width or ""
-        diameter = (item.diameter or "").replace(".0", "")
-        model = item.model or ""
-        slot_count = item.slot_count or ""
-        pcd1 = item.pcd1 or ""
-        dia = item.central_diameter or ""
-        color = item.color or ""
-        et = item.eet or ""
-        mark = (item.manufacturer or "").lower().capitalize()
+    def get_prepared_title(cls, row_item: RowItem):
+        mark = (row_item.manufacturer or "").lower().capitalize()
+        diameter = (row_item.diameter or "").replace(".0", "")
+        return _disk_title(row_item, mark, diameter)
 
-        # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{width}x{diameter} {slot_count}x{pcd1} ET{et} {dia} {color} {mark} {model}"
 
-        return title
+def _disk_title(row_item: RowItem, mark: str, diameter: str) -> str:
+    """Title диска: size bolts ET dia color mark model."""
+    size = "x".join((str(row_item.width or ""), diameter))
+    bolts = "x".join((str(row_item.slot_count or ""), str(row_item.pcd1 or "")))
+    return " ".join(
+        (
+            size,
+            bolts,
+            "ET{0}".format(row_item.eet or ""),
+            str(row_item.central_diameter or ""),
+            str(row_item.color or ""),
+            mark,
+            str(row_item.model or ""),
+        ),
+    )

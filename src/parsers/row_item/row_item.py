@@ -21,6 +21,11 @@ FIELD_FORMAT = {
 DEFAULT_VALUES = {("price_opt", "price_recommended", "price_markup"): 0}
 
 
+def _format_field(attr_value: Any, formatter: Any) -> Any:
+    """Применить formatter или text по умолчанию."""
+    return formatter(attr_value) if formatter else row_format.text(attr_value)
+
+
 @cache
 def field_format() -> dict[str, Any]:
     fields = {}
@@ -54,13 +59,13 @@ class FieldDescriptor:
     def __get__(self, instance, owner) -> Self | Any:
         if instance is None:
             return self
-        return instance._data.get(self.name) or default_values().get(self.name)
+        return instance._key_value_store.get(self.name) or default_values().get(self.name)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, attr_value):
         try:
-            instance._data[self.name] = self._setter(value)
+            instance._key_value_store[self.name] = self._setter(attr_value)
         except ValueError as err:
-            instance._errors[self.name] = {"value": value, "error": str(err)}
+            instance._errors[self.name] = {"value": attr_value, "error": str(err)}
 
 
 class RowItem:
@@ -154,20 +159,24 @@ class RowItem:
     double_candidate: FieldDescriptor | bool = FieldDescriptor("double_candidate")
     is_double: FieldDescriptor | bool = FieldDescriptor("is_double")
 
-    def __init__(self, item: dict = None):
+    def __init__(self, raw_row: dict = None):
         """init"""
-        item = item or {}
-        self._data = {}
+        self._key_value_store = {}
         self._errors = {}
-        formatters = field_format()
+        self._load_raw_row(raw_row or {})
 
-        for key, value in item.items():
-            formatter = formatters.get(key)
-            try:
-                default = row_format.text
-                self._data[key] = formatter(value) if formatter else default(value)
-            except ValueError as err:
-                self._errors[key] = {"value": value, "error": str(err)}
+    def _load_raw_row(self, raw_row: dict) -> None:
+        """Заполнить store из сырого словаря."""
+        formatters = field_format()
+        for key, attr_value in raw_row.items():
+            self._set_raw_field(key, attr_value, formatters)
+
+    def _set_raw_field(self, key: str, attr_value: Any, formatters: dict) -> None:
+        """Отформатировать и сохранить одно поле."""
+        try:
+            self._key_value_store[key] = _format_field(attr_value, formatters.get(key))
+        except ValueError as err:
+            self._errors[key] = {"value": attr_value, "error": str(err)}
 
     @property
     def parse_errors(self) -> dict[str, Any]:
@@ -187,11 +196,11 @@ class RowItem:
         return hashlib.md5(self.title.encode("utf-8"), usedforsecurity=False).hexdigest()
 
     @classmethod
-    def from_dict(cls, dictable_str: str) -> "RowItem":
+    def from_dict(cls, serialized_data: str | dict) -> "RowItem":
         """from dict"""
-        data = json.loads(dictable_str) if isinstance(dictable_str, str) else dictable_str
-        return cls(data)
+        parsed_data = json.loads(serialized_data) if isinstance(serialized_data, str) else serialized_data
+        return cls(parsed_data)
 
     def to_dict(self):
         """to dict"""
-        return dict(self._data)
+        return dict(self._key_value_store)

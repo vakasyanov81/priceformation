@@ -56,31 +56,31 @@ class PoshkParser(BaseParser):
     def process(self):
         """process price parse"""
         res = super().process()
-        for item in self.result:
-            self.add_price_markup(item)
-            self.clear_and_set_title(item)
-            item.title = self.prepare_title(item.title)
-            self.set_type_production(item)
+        for row_item in self.parsed_items:
+            self.add_price_markup(row_item)
+            self.clear_and_set_title(row_item)
+            row_item.title = self.prepare_title(row_item.title)
+            self.set_type_production(row_item)
 
         return res
 
-    def add_price_markup(self, item):
+    def add_price_markup(self, row_item):
         """
         Добавить наценку
         """
 
-        price = item.price_opt
+        price = row_item.price_opt
         markup_percent = self.get_markup_percent(price)
         price = (markup_percent + 1) * price
-        item.price_markup = self.round_price(price)
-        item.percent_markup = markup_percent * 100
+        row_item.price_markup = self.round_price(price)
+        row_item.percent_markup = markup_percent * 100
 
-    def set_type_production(self, item):
+    def set_type_production(self, row_item):
         """
         Задать категорию
         """
 
-        item.type_production = self.get_category_by_title(item.title)
+        row_item.type_production = self.get_category_by_title(row_item.title)
 
     @classmethod
     def get_category_by_title(cls, title):
@@ -102,9 +102,9 @@ class PoshkParser(BaseParser):
         return "Разное"
 
     @classmethod
-    def clear_and_set_title(cls, item):
+    def clear_and_set_title(cls, row_item):
         """clear and set reared title"""
-        item.title = item.title.replace(", , шт", "").strip()
+        row_item.title = row_item.title.replace(", , шт", "").strip()
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list):

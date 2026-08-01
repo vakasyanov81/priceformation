@@ -17,19 +17,19 @@ class ManufacturerFinder:
         self.aliases = AliasContainer(aliases)
         self._finder = BaseFinder(self.aliases)
 
-    def process(self, item):
+    def process(self, row_item):
         """process"""
 
-        manufacturer, bad_manufacturer = self._finder.find_word_in_title(item.title)
+        manufacturer, bad_manufacturer = self._finder.find_word_in_title(row_item.title)
 
         if bad_manufacturer and manufacturer:
-            self._finder.replace_alias_in_title(item, bad_manufacturer, manufacturer)
+            self._finder.replace_alias_in_title(row_item, bad_manufacturer, manufacturer)
 
         # replace manufacturer
         if manufacturer:
-            item.manufacturer = manufacturer
-        elif item.manufacturer:
-            self.correction_manufacturer(item)
+            row_item.manufacturer = manufacturer
+        elif row_item.manufacturer:
+            self.correction_manufacturer(row_item)
 
     def correction_manufacturer(self, rec: RowItem):
         """correction manufacturer"""

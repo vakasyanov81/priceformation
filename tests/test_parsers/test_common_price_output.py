@@ -34,7 +34,7 @@ def test_write_all_prices():
         patch.object(out, "nomenclature_title_correction") as mock_corr,
         patch("parsers.common_price_output.all_writer_templates", return_value=[object()]),
         patch(
-            "parsers.common_price_output.BaseParser.to_raw_result",
+            "parsers.common_price_output.BaseParser.to_raw_dicts",
             return_value=[{_TITLE: "t1"}],
         ),
     ):

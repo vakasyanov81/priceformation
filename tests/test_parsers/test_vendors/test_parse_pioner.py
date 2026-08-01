@@ -13,6 +13,7 @@ from test_parsers.test_vendors.parse_config import (
     PionerMarkupRulesProviderForTests,
     make_parse_configuration,
 )
+from test_parsers.test_vendors.parse_result_helpers import get_first_row_item, get_rows
 
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -42,56 +43,56 @@ class TestParsePioner:
     def test_parse(self):
         """check all field for one price-row"""
 
-        result: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
+        parsed_items: List[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
 
-        assert len(result) == 1
-        assert result[0].title == "Автокамера 14.00-24"
-        assert result[0].price_markup == 2310
-        assert result[0].supplier_name == "Пионер"
-        assert result[0].percent_markup == 5
+        assert len(parsed_items) == 1
+        assert parsed_items[0].title == "Автокамера 14.00-24"
+        assert parsed_items[0].price_markup == 2310
+        assert parsed_items[0].supplier_name == "Пионер"
+        assert parsed_items[0].percent_markup == 5
 
     def test_parse_brand(self):
         """check all field for one price-row"""
 
-        result: List[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
+        parsed_items: List[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
 
-        assert len(result) == 1
-        assert result[0].brand == "triangle"
+        assert len(parsed_items) == 1
+        assert parsed_items[0].brand == "triangle"
 
     def test_small_rest(self):
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
-        first_row = self.get_first_row_item(parse_result)
+        first_row = get_first_row_item(parse_result)
         first_row["rest_count"] = 3
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
-        assert len(result) == 0
+        assert len(parsed_items) == 0
 
     @pytest.mark.parametrize("price_opt", [0, None])
     def test_null_price_opt(self, price_opt):
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
-        first_row = self.get_first_row_item(parse_result)
+        first_row = get_first_row_item(parse_result)
         first_row["price_opt"] = price_opt
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
-        assert len(result) == 0
+        assert len(parsed_items) == 0
 
     def test_small_rest_1(self):
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
-        first_row = self.get_first_row_item(parse_result)
+        first_row = get_first_row_item(parse_result)
         first_row["rest_count"] = 10
         first_row["reserve_count"] = 7
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
-        assert len(result) == 0
+        assert len(parsed_items) == 0
 
     @pytest.mark.parametrize(
-        "params",
+        "markup_case",
         [
             # {"price": 1000, "price_with_markup": 1200, "category": "автошины xxx"},
             # {"price": 1500, "price_with_markup": 1770, "category": "автошины xxx"},
@@ -104,27 +105,16 @@ class TestParsePioner:
             },
         ],
     )
-    def test_markup(self, params):
+    def test_markup(self, markup_case):
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
-        rows = self.get_rows(parse_result)
-        rows[1]["title"] = params.get("category")
-        rows[2]["price_opt"] = params.get("price")
-        rows[2]["price_recommended"] = params.get("price_recommended")
+        rows = get_rows(parse_result)
+        rows[1]["title"] = markup_case.get("category")
+        rows[2]["price_opt"] = markup_case.get("price")
+        rows[2]["price_recommended"] = markup_case.get("price_recommended")
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
-        assert len(result) == 1
-        assert result[0].price_markup == params.get("price_with_markup")
-        assert 1 == result[0].title.count("Triangle")
-
-    @classmethod
-    def get_rows(cls, parse_result) -> List[dict]:
-        """get first item from parse result"""
-        file = list(parse_result.keys())[0]
-        return parse_result[file]
-
-    @classmethod
-    def get_first_row_item(cls, parse_result) -> dict:
-        """get first item from parse result"""
-        return cls.get_rows(parse_result)[0]
+        assert len(parsed_items) == 1
+        assert parsed_items[0].price_markup == markup_case.get("price_with_markup")
+        assert 1 == parsed_items[0].title.count("Triangle")

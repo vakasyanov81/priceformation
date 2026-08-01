@@ -16,9 +16,9 @@ class CategoryFinder:
         self.aliases = AliasContainer(map_categories)
         self._finder = BaseFinder(self.aliases)
 
-    def find(self, item):
+    def find(self, row_item):
         """find"""
-        return self.find_in_str(item.title)
+        return self.find_in_str(row_item.title)
 
     def find_in_str(self, _str: str):
         """find in str"""

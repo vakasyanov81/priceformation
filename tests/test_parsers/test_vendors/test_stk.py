@@ -32,10 +32,10 @@ def test_process_markup_and_rest():
     parser = object.__new__(STKParser)
     row_ok = RowItem({"price_opt": _PRICE_OPT, "rest_count": 10})
     row_low = RowItem({"price_opt": _LOW_OPT, "rest_count": 1})
-    parser.result = [row_ok, row_low]
+    parser.parsed_items = [row_ok, row_low]
 
-    with patch("parsers.vendors.stk.BaseParser.process", return_value=parser.result):
-        assert parser.process() == parser.result
+    with patch("parsers.vendors.stk.BaseParser.process", return_value=parser.parsed_items):
+        assert parser.process() == parser.parsed_items
 
     assert row_ok.price_markup == _MARKUP
     assert row_ok.rest_count == 10

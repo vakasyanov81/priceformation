@@ -54,19 +54,19 @@ class XlsReader(IXlsReader):
     """xls reader"""
 
     @classmethod
-    def get_instance(cls, file_path: str, params: dict[str, Any]) -> "XlsReader":
+    def get_instance(cls, file_path: str, reader_params: dict[str, Any]) -> "XlsReader":
         """get instance XlsReader / XlsxReader"""
         if not Path(file_path).exists():
             raise FileNotFoundError
-        return cls(file_path, params)
+        return cls(file_path, reader_params)
 
-    def __init__(self, file_path: str, params: dict[str, Any]):
+    def __init__(self, file_path: str, reader_params: dict[str, Any]):
         """init"""
         self.cur_row_values: Row | None = None
         self.cur_row = 0
         self._skipped_empty_rows = 0
         self.book: CalamineWorkbook | None = None
-        self.params: ParamsHelper = ParamsHelper(**params)
+        self.reader_params: ParamsHelper = ParamsHelper(**reader_params)
         self.open_book(file_path)
 
     def open_book(self, file_path: str) -> None:
@@ -108,13 +108,15 @@ class XlsReader(IXlsReader):
             return False
 
         end_col = (
-            self.sheet_cols(sheet) if self.sheet_cols(sheet) <= self.params.max_columns else self.params.max_columns
+            self.sheet_cols(sheet)
+            if self.sheet_cols(sheet) <= self.reader_params.max_columns
+            else self.reader_params.max_columns
         )
         cur_row = self.cur_row
         self.cur_row += 1
 
-        if self.cur_row > self.params.max_rows:
-            raise MaxRowsReached(self.params.max_rows)
+        if self.cur_row > self.reader_params.max_rows:
+            raise MaxRowsReached(self.reader_params.max_rows)
 
         try:
             self.cur_row_values = [_strip_cell_value(cell) for cell in self.row_values(sheet, cur_row, end_col)]
@@ -140,8 +142,8 @@ class XlsReader(IXlsReader):
 
     def is_empty_row(self) -> bool:
         """row is empty?"""
-        for value in self._get_cur_row_values():
-            if value:
+        for cell_content in self._get_cur_row_values():
+            if cell_content:
                 return False
         return True
 
@@ -159,7 +161,7 @@ class XlsReader(IXlsReader):
 
         for sheet_index in sheet_indexes:
             self._skipped_empty_rows = 0
-            self.cur_row = self.params.start_row
+            self.cur_row = self.reader_params.start_row
             rows += self.parse_sheet(self.sheets()[sheet_index])
 
         return rows
@@ -177,14 +179,14 @@ class XlsReader(IXlsReader):
     def to_dict(self, row: Row) -> DRow:
         """row to dict"""
 
-        result: dict[str, Any] = {}
-        col_numbers = list(self.params.columns.keys())
+        row_dict: dict[str, Any] = {}
+        col_numbers = list(self.reader_params.columns.keys())
         for col_number in col_numbers:
-            val = row[col_number]
-            col_name = str(self.params.columns.get(col_number))
-            result[col_name] = val
+            row_value = row[col_number]
+            col_name = str(self.reader_params.columns.get(col_number))
+            row_dict[col_name] = row_value
 
-        return result
+        return row_dict
 
 
 class MaxRowsReached(core.CoreExceptionError):  # type: ignore

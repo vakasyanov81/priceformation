@@ -27,13 +27,13 @@ class FakeParser:
         return cls._SUPPLIER_FOLDER_NAME
 
     @classmethod
-    def get_result(cls):
-        """fake get result"""
+    def get_parsed_items(cls):
+        """fake get parsed items"""
         return fake_result
 
     @classmethod
     def parse(cls):
-        """fake get result"""
+        """fake parse"""
         return fake_result
 
 
@@ -42,7 +42,7 @@ def test_parse_all_vendors():
     common_price = CommonPrice()
     with patch("parsers.common_price.log_msg"):
         common_price.parse_all_vendors([(FakeParser, None)])
-    assert common_price.result == fake_result
+    assert common_price.parsed_items == fake_result
 
 
 def test_parse_vendor_config_error():
@@ -55,7 +55,7 @@ def test_parse_vendor_config_error():
     with patch("parsers.common_price.warn_msg") as mock_warn:
         common_price.parse_vendor(parser)
         mock_warn.assert_called_once()
-        assert common_price.result == []
+        assert common_price.parsed_items == []
 
 
 def test_parse_vendor_reraises():

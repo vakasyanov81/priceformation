@@ -16,19 +16,19 @@ class SetPercentMarkupItemAction(BaseItemAction):
         """
 
         if self.calculated:
-            self.item.percent_markup = self.markup_percent
+            self.row_item.percent_markup = self.markup_percent
 
-        return self.item
+        return self.row_item
 
     @property
     def already_calculated(self):
         """already calculated"""
-        return self.item.percent_markup
+        return self.row_item.percent_markup
 
     @property
     def empty_price_markup(self):
         """has not price markup value"""
-        return not self.item.price_markup
+        return not self.row_item.price_markup
 
     @property
     def calculated(self):
@@ -38,7 +38,7 @@ class SetPercentMarkupItemAction(BaseItemAction):
     @property
     def markup(self):
         """calculate markup"""
-        return (self.item.price_markup / self.item.price_opt) - 1
+        return (self.row_item.price_markup / self.row_item.price_opt) - 1
 
     @property
     def markup_percent(self):

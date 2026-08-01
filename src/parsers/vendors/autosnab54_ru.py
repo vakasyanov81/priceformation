@@ -53,8 +53,8 @@ class Autosnab54Parser(BaseParser):
     def process(self):
         """parse process"""
         res = super().process()
-        for item in self.result:
-            item.price_markup = item.price_opt
+        for row_item in self.parsed_items:
+            row_item.price_markup = row_item.price_opt
 
         return res
 

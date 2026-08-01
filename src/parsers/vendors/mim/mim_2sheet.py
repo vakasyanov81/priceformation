@@ -78,45 +78,35 @@ class MimParser2Sheet(MimParserBase):
             return TRUCK_TIRE_MARKUP_LOW
         return TRUCK_TIRE_MARKUP_HIGH
 
-    def add_price_markup(self, item: RowItem):
-        price_opt = item.price_opt or 0
+    def add_price_markup(self, row_item: RowItem):
+        price_opt = row_item.price_opt or 0
         price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
-        item.price_markup = self.round_price(price)
+        row_item.price_markup = self.round_price(price)
 
     @classmethod
-    def get_prepared_title(cls, item: RowItem):
+    def get_prepared_title(cls, row_item: RowItem):
         """prepare title"""
-        width = item.width or ""
-        diameter = item.diameter or ""
-        profile = item.height_percent or ""
-        velocity = item.index_velocity or ""
-        load = item.index_load or ""
-        mark = (item.manufacturer or "").lower().capitalize()
-        model = item.model or ""
-        axis = item.axis or ""
-        layering = item.layering or ""
-        intimacy = item.intimacy or ""
+        return " ".join(cls._title_chunks(row_item))
 
-        if profile:
-            profile = f"/{profile}"
+    @classmethod
+    def _size_chunk(cls, row_item: RowItem) -> str:
+        """Кусок размера width/profileRdiameter."""
+        profile = "/{0}".format(row_item.height_percent) if row_item.height_percent else ""
+        diameter = "R{0}".format(row_item.diameter) if row_item.diameter else ""
+        return "".join((str(row_item.width or ""), profile, diameter))
 
-        if diameter:
-            diameter = f"R{diameter}"
-
-        chunks = [
-            f"{width}{profile}{diameter}",
+    @classmethod
+    def _title_chunks(cls, row_item: RowItem) -> list[str]:
+        """Ненулевые части title."""
+        mark = (row_item.manufacturer or "").lower().capitalize()
+        load_vel = "{0}{1}".format(row_item.index_load or "", row_item.index_velocity or "")
+        raw = [
+            cls._size_chunk(row_item),
             mark,
-            model,
-            layering,
-            f"{load}{velocity}",
-            intimacy,
-            axis,
+            row_item.model,
+            row_item.layering,
+            load_vel,
+            row_item.intimacy,
+            row_item.axis,
         ]
-
-        chunks = [str(chunk or "").strip() or None for chunk in chunks]
-
-        chunks = [chunk for chunk in chunks if chunk]
-
-        title = " ".join(chunks)
-
-        return title
+        return [str(chunk).strip() for chunk in raw if str(chunk or "").strip()]
