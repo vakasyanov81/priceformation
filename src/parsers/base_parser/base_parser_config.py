@@ -74,9 +74,9 @@ class ParseConfiguration:
     def get_price_markup_map(self) -> Tuple[data_provider.MarkUpParams]:
         """get tuple with markup params and caching"""
         if not self._price_markup_map:
-            _price_markup_map = list(self.get_markup_rules().markup_rules.values())
-            _price_markup_map = [data_provider.MarkUpParams(**rule) for rule in _price_markup_map]
-            self._price_markup_map = tuple(_price_markup_map)
+            raw_rules = list(self.get_markup_rules().markup_rules.values())
+            mapped_rules = [data_provider.markup_params_from_rule(rule) for rule in raw_rules]
+            self._price_markup_map = tuple(mapped_rules)
         return self._price_markup_map
 
     def get_default_markup_percents(self, def_value=0.0) -> float:

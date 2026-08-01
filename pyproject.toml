@@ -57,8 +57,11 @@ select = ["F", "E", "W", "C90",
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101"]
+"tests/**/*.py" = ["S101"]
+"tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106"]
 "integration_tests/*.py" = ["S101"]
 "src/core/log_message.py" = ["T201"]
+"src/cfg/zapaska_api.py" = ["S105"]
 
 [tool.ruff.format]
 quote-style = "single"

@@ -22,6 +22,16 @@ class MarkUpParams(NamedTuple):
     percent_markup: float = 0
 
 
+def markup_params_from_rule(rule: dict) -> MarkUpParams:
+    """JSON rule → MarkUpParams. Accepts ``percent`` or ``percent_markup``."""
+    percent = rule.get("percent_markup", rule.get("percent", 0))
+    return MarkUpParams(
+        min=rule.get("min", 0),
+        max=rule.get("max", 0),
+        percent_markup=percent,
+    )
+
+
 class AbsoluteMarkUpRules(NamedTuple):
     """container for markup rule (absolute markup)"""
 

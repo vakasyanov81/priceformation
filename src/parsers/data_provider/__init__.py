@@ -13,6 +13,7 @@ from .markup_rules import (
     MarkupRules,
     MarkupRulesProviderBase,
     MarkupRulesProviderFromUserConfig,
+    markup_params_from_rule,
 )
 from .stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 from .vendor_list import (
@@ -28,6 +29,7 @@ __ALL__ = [
     MarkupRules,
     AbsoluteMarkUpRules,
     MarkUpParams,
+    markup_params_from_rule,
     MarkupRulesProviderFromUserConfig,
     BlackListProviderBase,
     BlackListProviderFromUserConfig,
