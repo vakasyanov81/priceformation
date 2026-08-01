@@ -5,13 +5,19 @@ from unittest.mock import patch
 import pytest
 
 from core.exceptions import CoreExceptionError
+from parsers import data_provider
 from parsers.data_provider.markup_rules import (
     MarkupRulesProviderBase,
     MarkupRulesProviderFromUserConfig,
     PriceRulesConfigFileError,
+    markup_params_from_rule,
 )
 
 _TO_LOG = "to_log"
+_PERCENT = 0.2
+_PERCENT_ALT = 0.15
+_PREFERRED = 0.1
+_RULE_MAX = 50
 
 
 def test_markup_rules_base():
@@ -48,3 +54,20 @@ def test_markup_missing_file():
         pytest.raises(PriceRulesConfigFileError),
     ):
         provider.get_markup_data()
+
+
+def test_rule_accepts_percent_key():
+    markup = markup_params_from_rule({"min": 0, "max": 100, "percent": _PERCENT})
+    assert markup == data_provider.MarkUpParams(min=0, max=100, percent_markup=_PERCENT)
+
+
+def test_rule_accepts_percent_markup_key():
+    markup = markup_params_from_rule({"min": 10, "max": _RULE_MAX, "percent_markup": _PERCENT_ALT})
+    assert markup == data_provider.MarkUpParams(min=10, max=_RULE_MAX, percent_markup=_PERCENT_ALT)
+
+
+def test_rule_prefers_percent_markup():
+    markup = markup_params_from_rule(
+        {"min": 0, "max": 1, "percent": 0.5, "percent_markup": _PREFERRED},
+    )
+    assert markup.percent_markup == pytest.approx(_PREFERRED)
