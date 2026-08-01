@@ -23,21 +23,21 @@ def load_file() -> dict[str, str]:
     """Load title corrections from correct-nomenclature.xlsx."""
     vendor_nomenclature_title_index = 0
     correct_nomenclature_title_index = 1
-    _file = MainConfig().user_config_folder_path + os.sep + "correct-nomenclature.xlsx"
-    if not Path(_file).exists():
+    file_path = f"{MainConfig().user_config_folder_path}{os.sep}correct-nomenclature.xlsx"
+    if not Path(file_path).exists():
         return {}
 
-    wb = CalamineWorkbook.from_path(_file)
+    wb = CalamineWorkbook.from_path(file_path)
 
     data = wb.get_sheet_by_name("Sheet1").to_python()
     result_data: dict[str, str] = {}
 
-    for i, data_ in enumerate(data):
+    for row_index, row_data in enumerate(data):
         # skip header
-        if i == 0:
+        if row_index == 0:
             continue
-        vendor_nomenclature_title = str(data_[vendor_nomenclature_title_index])
-        correct_nomenclature_title = str(data_[correct_nomenclature_title_index])
+        vendor_nomenclature_title = str(row_data[vendor_nomenclature_title_index])
+        correct_nomenclature_title = str(row_data[correct_nomenclature_title_index])
         if vendor_nomenclature_title and correct_nomenclature_title:
             result_data[vendor_nomenclature_title] = correct_nomenclature_title
     return result_data

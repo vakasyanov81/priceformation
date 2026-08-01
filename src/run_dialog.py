@@ -23,14 +23,14 @@ ANSWER_MAP = {
 
 def ask_action() -> AnswerResult:
     """Main console menu"""
-    _msg = (
+    msg = (
         f"{Colors.BOLD}"
         "1 — сформировать общий прайс по прайсам поставщиков \n"
         "2 — Выгрузить прайсы запаски по API\n"
         f"q — выход {Colors.END_COLOR}"
     )
     while True:
-        _answer = ANSWER_MAP.get(input(_msg).strip().lower())
-        if _answer:
-            return _answer
+        answer = ANSWER_MAP.get(input(msg).strip().lower())
+        if answer:
+            return answer
         print_log("Не понял, давай ещё раз. \n")

@@ -25,8 +25,8 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
     @classmethod
     def split_and_filtration(cls, black_list: str):
         """Split data from file by `new-line` sign and filtration"""
-        _newline = "\n"
-        _black_list = black_list.split(_newline)
-        _black_list = [black_title.strip(f" {_newline}") for black_title in _black_list if black_title]
-        _black_list = [black_title for black_title in _black_list if black_title]
-        return _black_list
+        newline = "\n"
+        split_lines = black_list.split(newline)
+        split_lines = [black_title.strip(f" {newline}") for black_title in split_lines if black_title]
+        split_lines = [black_title for black_title in split_lines if black_title]
+        return split_lines

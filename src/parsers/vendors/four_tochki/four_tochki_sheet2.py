@@ -71,10 +71,10 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
         pcd1 = item.pcd1 or ""
         dia = item.central_diameter or ""
         color = item.color or ""
-        _et = item.eet or ""
+        et = item.eet or ""
         mark = (item.manufacturer or "").lower().capitalize()
 
         # 6,5x16 5x114,3 ET45 60,1 MBMF Alcasta M35
-        title = f"{width}x{diameter} {slot_count}x{pcd1} ET{_et} {dia} {color} {mark} {model}"
+        title = f"{width}x{diameter} {slot_count}x{pcd1} ET{et} {dia} {color} {mark} {model}"
 
         return title

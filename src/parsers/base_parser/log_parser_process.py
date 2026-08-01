@@ -29,19 +29,12 @@ class LoggerParseProcess:
 
     def log_finish(self, result_statistic: Optional[ParseResultStatistic] = None):
         """logging finish parse process"""
-
         if result_statistic:
-
             min_percent, max_percent = result_statistic.real_percents_markup()
-
             min_margin, max_margin = result_statistic.real_absolute_markup()
-
             _log_msg(f"Обработано позиций - {result_statistic.count_items()} ")
-
             _log_msg(f"Наценка (%) - Мин: {min_percent}, Макс: {max_percent} ")
-
             _log_msg(f"Наценка (Руб.) - Мин: {min_margin}, Макс: {max_margin} ")
-
             _log_msg(f"{self.parser_repr} // финиш")
         _log_msg("--------------------------------------------------------")
 
@@ -53,7 +46,5 @@ class LoggerParseProcess:
 
     def log_disable_status(self):
         """logging disabled"""
-
         warn_msg(f"поставщик {self.parser_repr} не активен", need_print_log=True)
-
         self.log_finish()

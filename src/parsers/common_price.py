@@ -73,7 +73,6 @@ class CommonPrice:
         """Итоговый список записей."""
         return self._result
 
-    @staticmethod
-    def supplier_info() -> dict[SupplierCode, SupplierName]:
+    def supplier_info(self) -> dict[SupplierCode, SupplierName]:
         """Возвращает отображение код поставщика → название."""
         return all_vendor_supplier_info()

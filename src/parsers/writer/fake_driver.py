@@ -33,9 +33,9 @@ class FakeXlwtDriver(IXlsDriver):
         """write head"""
         self.head = names
 
-    def write(self, i, j, _value, style=None, _color=None):
+    def write(self, row_idx, col_idx, _value, style=None, _color=None):
         """write"""
-        self.body[f"cell({i},{j})"] = _value
+        self.body[f"cell({row_idx},{col_idx})"] = _value
 
     def init_workbook(self, _folder: str, _file_name: str):
         self.file_name = _file_name
@@ -52,14 +52,15 @@ class FakeXlwtDriver(IXlsDriver):
         return {}
 
     def __repr__(self):
-        res = "\n--FakeXlwtDriver--\n"
-        res += f"filename: {self.file_name}\n"
-        res += f"folder: {self.folder}\n"
-        res += f"sheet_name: {self.sheet_name}\n"
-        res += f"col_width: {self.width}\n"
-        res += f"head: {self.head}\n"
-        res += f"body: {self.body}\n"
-        return res
+        return (
+            f"\n--FakeXlwtDriver--\n"
+            f"filename: {self.file_name}\n"
+            f"folder: {self.folder}\n"
+            f"sheet_name: {self.sheet_name}\n"
+            f"col_width: {self.width}\n"
+            f"head: {self.head}\n"
+            f"body: {self.body}\n"
+        )
 
     def get_folder(self) -> str:
         """folder for fake workbook"""

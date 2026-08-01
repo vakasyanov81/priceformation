@@ -67,20 +67,23 @@ class BaseFinder:
         """
         result_name = None
         founded_word = None
-        index = None
+        matched_index = None
 
-        for index, _lower_alias in enumerate(_lowers_list):
-            found_position = self._find(_lower_alias)
+        for index, lower_alias in enumerate(_lowers_list):
+            found_position = self._find(lower_alias)
             if found_position != -1:
                 result_name = _lowers_list[index]
-                next_position = found_position + len(_lower_alias)
+                matched_index = index
+                next_position = found_position + len(lower_alias)
                 founded_word = self._title[found_position:next_position]
                 break
 
         if not result_name:
             return None, None
 
-        result = self.alias_container.all_correct_words[index] if return_correct else self._aliases.get(result_name)
+        result = (
+            self.alias_container.all_correct_words[matched_index] if return_correct else self._aliases.get(result_name)
+        )
 
         return result, founded_word
 
@@ -96,7 +99,7 @@ class BaseFinder:
         alias_len = len(lower_alias)
         title_len = len(self.title_lower)
 
-        if self.title_lower[0:alias_len] == lower_alias:
+        if self.title_lower[:alias_len] == lower_alias:
             return 0
 
         if alias_len >= title_len:

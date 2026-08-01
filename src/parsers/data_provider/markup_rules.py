@@ -43,8 +43,8 @@ class MarkupRules(NamedTuple):
     """container for vendor markup rules"""
 
     markup_rules: Dict[str, MarkUpParams]
-    min_recommended_percent_markup: float = 0.0
-    max_recommended_percent_markup: float = 0.0
+    min_recommended_percent_markup: float = 0
+    max_recommended_percent_markup: float = 0
     absolute_markup_rules: AbsoluteMarkUpRules = AbsoluteMarkUpRules(0, 0)
 
 

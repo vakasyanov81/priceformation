@@ -8,7 +8,7 @@ from parsers.row_item.row_item import RowItem
 
 def sanitize_value(values: List[Any]) -> Tuple[str, ...]:
     """Преобразует значения в строки, корректно обрабатывая None."""
-    return tuple(str(val) if val is not None else "" for val in values)
+    return tuple("" if val is None else str(val) for val in values)
 
 
 class CommonPriceGrouper:
@@ -44,7 +44,7 @@ class CommonPriceGrouper:
 
         # 3. Сортируем итоговый список: сначала по группе, потом по исходному порядку.
         # Это лучше, чем просто восстанавливать исходный порядок, так как дубли остаются рядом.
-        self.items.sort(key=lambda x: (x.group_by_params, x.order))
+        self.items.sort(key=lambda row_item: (row_item.group_by_params, row_item.order))
 
         self._is_grouped = True
         return self
@@ -61,7 +61,7 @@ class CommonPriceGrouper:
         if len(items) < 2:
             return
 
-        min_price_item = min(items, key=lambda x: x.price_markup)
+        min_price_item = min(items, key=lambda row_item: row_item.price_markup)
 
         for item in items:
             if item.order == min_price_item.order:
@@ -100,7 +100,7 @@ class CommonPriceGrouper:
         dia = item.central_diameter
         slot_diameter = item.slot_diameter
         color = item.color
-        _et = item.eet
+        et = item.eet
 
         brand = (item.brand or "").lower()
         if brand == mark:
@@ -125,7 +125,7 @@ class CommonPriceGrouper:
                 slot_diameter,
                 color,
                 brand,
-                _et,
+                et,
                 intimacy,
             ]
         )
@@ -136,18 +136,17 @@ class CommonPriceGrouper:
         l_title = (item.title or "").lower()
         diameter_str = str(item.diameter or 0).replace(",", ".")
 
-        is_float_diameter = False
         try:
             is_float_diameter = not float(diameter_str).is_integer()
         except (ValueError, TypeError):
-            pass  # Если не удалось преобразовать, считаем, что не float
+            is_float_diameter = False
 
         # split() без аргументов автоматически обрабатывает множественные пробелы
         title_chunks = l_title.split()
 
-        for intimacy_ in ("tl", "tt", "ttf"):
-            if intimacy_ in title_chunks:
-                return intimacy_.upper()
+        for intimacy in ("tl", "tt", "ttf"):
+            if intimacy in title_chunks:
+                return intimacy.upper()
 
         type_prod = (item.type_production or "").lower()
         if "грузовая" in type_prod and is_float_diameter:

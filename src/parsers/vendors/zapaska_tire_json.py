@@ -84,10 +84,12 @@ def get_data(url: str, api_config: ZapaskaApiConfig | None = None) -> str:
 
 def save_data(data: str, filename: str):
     """save data to file"""
-    folder = init_cfg().main.folder_file_prices + "/" + zapaska_tire_params.supplier.folder_name
-    root = init_cfg().main.project_root
-    with Path(f"{root}/{folder}/{filename}").open("w", encoding="utf-8") as file_:
-        file_.write(data)
+    main_cfg = init_cfg().main
+    file_path = (
+        Path(main_cfg.project_root) / main_cfg.folder_file_prices / zapaska_tire_params.supplier.folder_name / filename
+    )
+    with file_path.open("w", encoding="utf-8") as out_file:
+        out_file.write(data)
 
 
 def load_data():

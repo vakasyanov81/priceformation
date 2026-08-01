@@ -46,9 +46,7 @@ def all_vendors() -> List[Tuple[Type[BaseParser], Type[ParseConfiguration]] | No
 
 def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
     """Supplier info"""
-    _supplier_info = {}
+    supplier_info = {}
     for _, config in all_vendors():
-        _supplier_info[config.parse_config.parser_params.supplier.code] = (
-            config.parse_config.parser_params.supplier.name
-        )
-    return _supplier_info
+        supplier_info[config.parse_config.parser_params.supplier.code] = config.parse_config.parser_params.supplier.name
+    return supplier_info
