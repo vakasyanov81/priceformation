@@ -17,6 +17,24 @@ EXCEL_ALPHABET_SIZE = 26
 EXCEL_COLUMN_A_ORD = 65
 
 
+def number_to_excel_column(number: int) -> str:
+    """
+    Конвертирует номер колонки в символьное обозначение Excel
+    1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, и т.д.
+    """
+    column_label = ""
+    while number > 0:
+        number, remainder = divmod(number - 1, EXCEL_ALPHABET_SIZE)
+        column_label = chr(EXCEL_COLUMN_A_ORD + remainder) + column_label
+    return column_label
+
+
+def solid_fill(_color: str) -> PatternFill:
+    """Solid PatternFill from #RRGGBB / RRGGBB."""
+    rgb = Color(rgb=_color.lstrip("#"))
+    return PatternFill(fgColor=rgb, fill_type="solid")
+
+
 class XlsxWriterDriver(IXlsDriver):
     """
     write price list logic via openpyxl module
@@ -39,12 +57,10 @@ class XlsxWriterDriver(IXlsDriver):
 
         return self.work_book
 
-    def get_workbook(self) -> Any:
-        """get workbook"""
-        return self.work_book
-
     def add_sheet(self, sheet_name: str) -> "XlsxWriterDriver":
-        sheet = self.get_workbook().active
+        if self.work_book is None:
+            raise RuntimeError("workbook is not initialized")
+        sheet = self.work_book.active
         sheet.title = sheet_name
         self.work_sheet = sheet
         return self
@@ -55,20 +71,15 @@ class XlsxWriterDriver(IXlsDriver):
         for col_idx, name in enumerate(names):
             self.write(0, col_idx, name, style=Font(bold=True))
 
-    def _require_work_sheet(self) -> Any:
-        """Active worksheet; raises if sheet was not added."""
-        if self.work_sheet is None:
-            raise RuntimeError("worksheet is not initialized")
-        return self.work_sheet
-
     def set_column_format(self, column_format: dict[int, str]) -> None:
         """
         set column format
         :param column_format: dict[column_index, '@']
         """
-        work_sheet = self._require_work_sheet()
+        if self.work_sheet is None:
+            raise RuntimeError("worksheet is not initialized")
         for index, c_format in column_format.items():
-            work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
+            self.work_sheet.column_dimensions[number_to_excel_column(index)].number_format = c_format
 
     def write(
         self,
@@ -79,42 +90,28 @@ class XlsxWriterDriver(IXlsDriver):
         _color: str | None = None,
     ) -> None:
         """write"""
-        work_sheet = self._require_work_sheet()
+        if self.work_sheet is None:
+            raise RuntimeError("worksheet is not initialized")
         row_idx += self.row_index_at
         col_idx += self.row_index_at
-        cell = work_sheet.cell(row=row_idx, column=col_idx, value=cell_content)
+        cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=cell_content)
         if style:
             cell.font = style
         if _color:
-            cell.fill = PatternFill(fgColor=Color(rgb=_color.lstrip("#")), fill_type="solid")
+            cell.fill = solid_fill(_color)
 
         self.current_col_index = col_idx
         self.current_row_index = row_idx
         content_length = len(str(cell_content or ""))
-        if self.col_max_length.get(col_idx) is None or self.col_max_length[col_idx] < content_length:
+        known_max = self.col_max_length.get(col_idx)
+        if known_max is None or known_max < content_length:
             self.col_max_length[col_idx] = content_length
 
     def save(self) -> None:
         """save file"""
-        self.set_auto_width()
-        self.get_workbook().save(self._file_name)
-        self.get_workbook().close()
-
-    @classmethod
-    def number_to_excel_column(cls, number: int) -> str:
-        """
-        Конвертирует номер колонки в символьное обозначение Excel
-        1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, и т.д.
-        """
-        column_label = ""
-        while number > 0:
-            number, remainder = divmod(number - 1, EXCEL_ALPHABET_SIZE)
-            column_label = chr(EXCEL_COLUMN_A_ORD + remainder) + column_label
-        return column_label
-
-    def set_auto_width(self) -> None:
-        """set auto width by content"""
-        work_sheet = self._require_work_sheet()
-
+        if self.work_sheet is None or self.work_book is None:
+            raise RuntimeError("workbook is not initialized")
         for col_index, max_len in self.col_max_length.items():
-            work_sheet.column_dimensions[self.number_to_excel_column(col_index)].width = max_len + 4
+            self.work_sheet.column_dimensions[number_to_excel_column(col_index)].width = max_len + 4
+        self.work_book.save(self._file_name)
+        self.work_book.close()

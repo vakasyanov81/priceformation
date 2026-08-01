@@ -3,13 +3,11 @@
 import logging
 from unittest.mock import patch
 
-from core.log_message import (
-    err_msg,
+from core.log_message import err_msg, log_msg, warn_msg
+from core.log_resolve import (
     get_log_level_text,
-    log_msg,
     resolve_log_method,
     resolve_log_path,
-    warn_msg,
 )
 
 _UNKNOWN_LEVEL = 999
@@ -29,7 +27,7 @@ def test_get_log_level_text_fallback() -> None:
 
 def test_resolve_log_path_by_level() -> None:
     """ERROR идёт в err-лог, остальное — в обычный"""
-    with patch("core.log_message.cfg") as mock_cfg:
+    with patch("core.log_resolve.cfg") as mock_cfg:
         mock_cfg.main.current_err_log_file_path = "/var/log/priceformation/err.log"
         mock_cfg.main.current_log_file_path = "/var/log/priceformation/info.log"
         assert resolve_log_path(logging.ERROR) == "/var/log/priceformation/err.log"

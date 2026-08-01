@@ -22,4 +22,5 @@ class ManufacturerAliasesProviderFromUserConfig(ManufacturerAliasesProviderBase)
 
     def get_aliases(self) -> dict[str, Any]:
         """get manufacturer aliases"""
-        return cast(dict[str, Any], json.loads(read_file(MainConfig().manufacturer_aliases_file_path)))
+        raw: str = read_file(MainConfig().manufacturer_aliases_file_path)
+        return cast(dict[str, Any], json.loads(raw))

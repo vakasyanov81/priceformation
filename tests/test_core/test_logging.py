@@ -21,11 +21,13 @@ def test_logging() -> None:
     with patch("core.wrappers.log_msg") as mock_log_msg:
         logging_function(param1, param2, other_param="some text")
     assert mock_log_msg.call_count == 3
-    assert "Calling method" in str(mock_log_msg.call_args_list[0].args[0])
-    assert f"Params: ({param1}, {param2})" in str(mock_log_msg.call_args_list[0].args[0])
-    assert "{'other_param': 'some text'}" in str(mock_log_msg.call_args_list[0].args[0])
-    assert "Result" in str(mock_log_msg.call_args_list[1].args[0])
-    assert f'logging_function": {expected_result}' in str(mock_log_msg.call_args_list[1].args[0])
+    first_msg = str(mock_log_msg.call_args_list[0].args[0])
+    second_msg = str(mock_log_msg.call_args_list[1].args[0])
+    assert "Calling method" in first_msg
+    assert f"Params: ({param1}, {param2})" in first_msg
+    assert "{'other_param': 'some text'}" in first_msg
+    assert "Result" in second_msg
+    assert f'logging_function": {expected_result}' in second_msg
 
 
 def test_logging_when_wrong_argument() -> None:

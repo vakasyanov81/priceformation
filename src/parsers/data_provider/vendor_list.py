@@ -39,8 +39,14 @@ class VendorListProviderFromUserConfig(VendorListProviderBase):
     def try_get_config_vendor_list(cls) -> dict[str, Any]:
         """safety get configuration for vendors"""
         try:
-            return cast(dict[str, Any], json.loads(read_file(MainConfig().vendor_list_file_path)))
+            return cls._load_vendor_list_json()
         except FileNotFoundError as exc:
             raise VendorListConfigFileError(
                 f"Failed to read all vendor settings {MainConfig().vendor_list_file_name}"
             ) from exc
+
+    @classmethod
+    def _load_vendor_list_json(cls) -> dict[str, Any]:
+        """Read and parse vendor list JSON."""
+        raw: str = read_file(MainConfig().vendor_list_file_path)
+        return cast(dict[str, Any], json.loads(raw))

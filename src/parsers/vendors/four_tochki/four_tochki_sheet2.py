@@ -72,7 +72,9 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 def _disk_title(row_item: RowItem, mark: str, diameter: str) -> str:
     """Title диска: size bolts ET dia color mark model."""
     size = "x".join((str(row_item.width or ""), diameter))
-    bolts = "x".join((str(row_item.slot_count or ""), str(row_item.pcd1 or "")))
+    slot_count = str(row_item.slot_count or "")
+    pcd1 = str(row_item.pcd1 or "")
+    bolts = "x".join((slot_count, pcd1))
     return " ".join(
         (
             size,

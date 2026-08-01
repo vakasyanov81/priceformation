@@ -77,9 +77,14 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
     def try_markup_data_for_supplier(self) -> dict[str, Any]:
         """Try get markup data."""
         try:
-            return cast(dict[str, Any], json.loads(read_file(self.get_file_path())))
+            return self._load_markup_json()
         except FileNotFoundError as exc:
             raise PriceRulesConfigFileError(f"Filed to read vendor ({self.supplier_name}) settings.") from exc
+
+    def _load_markup_json(self) -> dict[str, Any]:
+        """Read and parse markup JSON file."""
+        raw: str = read_file(self.get_file_path())
+        return cast(dict[str, Any], json.loads(raw))
 
     def get_file_path(self) -> str:
         """Get user config file path by supplier name or by default"""

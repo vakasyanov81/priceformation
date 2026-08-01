@@ -16,7 +16,6 @@ class IWriteTemplate:
 
     def __init__(self) -> None:
         self._columns_formated: dict[str, ColumnHelper] | None = None
-        self._column_names: list[str] | None = None
 
     def exclude(self) -> dict[str, Any]:
         """get exclude"""
@@ -47,18 +46,10 @@ class IWriteTemplate:
                 self._columns_formated[column_helper.name] = column_helper
         return self._columns_formated
 
-    def get_column_names(self) -> list[str]:
-        """ordered column titles"""
-        if self._column_names is None:
-            self._column_names = []
-            for name, _ in self.get_columns().items():
-                self._column_names.append(name)
-        return self._column_names
-
-    def get_column_index(self, name: str) -> int:
-        """1-based column index by name"""
-        return self.get_column_names().index(name) + 1
-
     def get_columns_format(self) -> dict[int, str]:
         """{1: "@ or 0.00 or ..."}"""
-        return {self.get_column_index(c_title): col.format for c_title, col in self.get_columns().items() if col.format}
+        formats = {}
+        for index, col in enumerate(self.get_columns().values(), start=1):
+            if col.format:
+                formats[index] = col.format
+        return formats

@@ -43,6 +43,17 @@ class BasePriceParseConfigurationParams(NamedTuple):
     parser_params: ParserParams
 
 
+def extract_markup_rules(markup_data: dict[str, Any]) -> data_provider.MarkupRules:
+    """dict -> named tuple"""
+    raw_rules = markup_data.get("markup_rules") or {}
+    return data_provider.MarkupRules(
+        markup_rules=cast(dict[str, dict[str, Any]], raw_rules),
+        min_recommended_percent_markup=float(markup_data.get("min_recommended_percent_markup") or 0),
+        max_recommended_percent_markup=float(markup_data.get("max_recommended_percent_markup") or 0),
+        absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**markup_data.get("absolute_markup_rules", {})),
+    )
+
+
 class ParseConfiguration:
     """base price parser configuration"""
 
@@ -54,22 +65,11 @@ class ParseConfiguration:
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self._all_vendor_config: Dict[str, data_provider.VendorParams] | None = None
 
-    @classmethod
-    def extract_markup_rules(cls, markup_data: dict[str, Any]) -> data_provider.MarkupRules:
-        """dict -> named tuple"""
-        raw_rules = markup_data.get("markup_rules") or {}
-        return data_provider.MarkupRules(
-            markup_rules=cast(dict[str, dict[str, Any]], raw_rules),
-            min_recommended_percent_markup=float(markup_data.get("min_recommended_percent_markup") or 0),
-            max_recommended_percent_markup=float(markup_data.get("max_recommended_percent_markup") or 0),
-            absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**markup_data.get("absolute_markup_rules", {})),
-        )
-
     def get_markup_rules(self) -> data_provider.MarkupRules:
         """get markup rules and caching"""
         if not self._markup_rules:
             markup_data = self.parse_config.markup_rules_provider.get_markup_data() or {}
-            self._markup_rules = self.extract_markup_rules(markup_data)
+            self._markup_rules = extract_markup_rules(markup_data)
         return self._markup_rules
 
     def get_price_markup_map(self) -> tuple[data_provider.MarkUpParams, ...]:
@@ -79,10 +79,6 @@ class ParseConfiguration:
             mapped_rules = [data_provider.markup_params_from_rule(rule) for rule in raw_rules]
             self._price_markup_map = tuple(mapped_rules)
         return self._price_markup_map
-
-    def get_default_markup_percents(self, def_value: float = 0) -> float:
-        """get default (minimal) markup percent"""
-        return min({markup_rule.percent_markup for markup_rule in self.get_price_markup_map()} or (def_value,))
 
     def black_list(self) -> List[str]:
         """black list data"""

@@ -75,7 +75,9 @@ class MimParser1Sheet(MimParserBase):
 
 def _mim1_title(row_item: RowItem, profile: str, delimiter: str, mark: str) -> str:
     """Собрать title легковой шины MIM sheet1."""
-    size = "{0}{1}{2}R{3}".format(row_item.width or "", delimiter, profile, row_item.diameter or "")
+    width = row_item.width or ""
+    diameter = row_item.diameter or ""
+    size = "{0}{1}{2}R{3}".format(width, delimiter, profile, diameter)
     return " ".join(
         (
             size,

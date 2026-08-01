@@ -72,7 +72,9 @@ class FieldDescriptor(Generic[_TValue]):
     ) -> Self | _TValue:
         if instance is None:
             return self
-        stored = instance._key_value_store.get(self.name) or default_values().get(self.name)
+        stored = instance._key_value_store.get(self.name)
+        if not stored:
+            stored = default_values().get(self.name)
         return cast(_TValue, stored)
 
     def __set__(self, instance: RowItem, attr_value: Any) -> None:
@@ -183,14 +185,10 @@ class RowItem:
         """Заполнить store из сырого словаря."""
         formatters = field_format()
         for key, attr_value in raw_row.items():
-            self._set_raw_field(key, attr_value, formatters)
-
-    def _set_raw_field(self, key: str, attr_value: Any, formatters: dict[str, Any]) -> None:
-        """Отформатировать и сохранить одно поле."""
-        try:
-            self._key_value_store[key] = _format_field(attr_value, formatters.get(key))
-        except ValueError as err:
-            self._errors[key] = {"value": attr_value, "error": str(err)}
+            try:
+                self._key_value_store[key] = _format_field(attr_value, formatters.get(key))
+            except ValueError as err:
+                self._errors[key] = {"value": attr_value, "error": str(err)}
 
     @property
     def parse_errors(self) -> dict[str, Any]:

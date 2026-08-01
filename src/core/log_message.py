@@ -4,34 +4,15 @@ logic logging process
 
 import datetime
 import logging
-from typing import Any, Callable, Literal
+from typing import Literal
 
 from colorama import init
 from termcolor import colored
 
-from cfg import init_cfg
 from core.init_log import init_log
+from core.log_resolve import get_log_level_text, resolve_log_method, resolve_log_path
 
-cfg = init_cfg()
 init()
-
-__level_map__ = {
-    logging.ERROR: "ERROR",
-    logging.INFO: "INFO",
-    logging.WARNING: "WARNING",
-}
-
-
-def get_log_level_text(log_level: int) -> str:
-    """Map logging level int to text label."""
-    return __level_map__.get(log_level) or "INFO"
-
-
-__level_reverse_map__ = {
-    "ERROR": logging.ERROR,
-    "INFO": logging.INFO,
-    "WARNING": logging.WARNING,
-}
 
 __level_color_map__ = {"ERROR": "red", "WARNING": "yellow", "Info": None}
 
@@ -44,24 +25,6 @@ def err_msg(message: str, need_print_log: bool = False) -> str:
 def warn_msg(message: str, need_print_log: bool = False) -> str:
     """make warning message"""
     return log_msg(message, level=logging.WARNING, need_print_log=need_print_log)
-
-
-def resolve_log_path(level: int = logging.INFO) -> str:
-    """get directory path for logging by log-level"""
-    log_file_map = {logging.ERROR: cfg.main.current_err_log_file_path}
-
-    return log_file_map.get(level) or cfg.main.current_log_file_path
-
-
-def resolve_log_method(level: int = logging.INFO) -> Callable[..., Any]:
-    """get logging method by log-level"""
-    log_method_mapping = {
-        logging.INFO: logging.info,
-        logging.WARNING: logging.warning,
-        logging.ERROR: logging.error,
-    }
-
-    return log_method_mapping.get(level) or logging.info
 
 
 def log_to_file(message: str, level: int = logging.INFO) -> bool:

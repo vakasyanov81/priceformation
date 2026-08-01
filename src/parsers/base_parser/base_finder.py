@@ -10,6 +10,17 @@ from parsers.row_item.row_item import RowItem
 from .alias_container import AliasContainer
 
 
+@lru_cache()
+def str_lower(_str: str) -> str:
+    """cached lowered string"""
+    return _str.lower()
+
+
+def replace_alias_in_title(row_item: RowItem, old_man: str, new_man: str) -> None:
+    """replace manufacturer in title chunks"""
+    row_item.title = row_item.title.replace(old_man, new_man)
+
+
 class BaseFinder:
     """
     find word in title
@@ -21,8 +32,6 @@ class BaseFinder:
         self._title: str | None = None
         self._incorrect_lowers: list[str] = self.alias_container.incorrect_words_lower
         self._correct_lowers: list[str] = self.alias_container.all_correct_words_lower
-        self._incorrect: list[str] = self.alias_container.incorrect_words
-        self._correct: list[str] = self.alias_container.correct_words
         self._aliases: dict[str, str] = self.alias_container.reversed_map
 
     @property
@@ -33,29 +42,10 @@ class BaseFinder:
     def find_word_in_title(self, title: str) -> Tuple[Optional[str], Optional[str]]:
         """find substring in title"""
         self._title = title
-
-        correct_alias, incorrect_alias = self.find_correct()
-
+        correct_alias, incorrect_alias = self._find_from_lower_list(self._correct_lowers, return_correct=True)
         if correct_alias:
             return correct_alias, incorrect_alias
-
-        return self.find_incorrect()
-
-    def find_incorrect(self) -> Tuple[Optional[str], Optional[str]]:
-        """
-        find by incorrect aliases in title
-        :return (correct alias, founded incorrect alias)
-        ex: Adidas, abibas
-        """
         return self._find_from_lower_list(self._incorrect_lowers)
-
-    def find_correct(self) -> Tuple[Optional[str], Optional[str]]:
-        """
-        find by correct aliases in title
-        :return (correct alias, founded correct alias in other register)
-        ex: Adidas, adidas
-        """
-        return self._find_from_lower_list(self._correct_lowers, return_correct=True)
 
     def _find_from_lower_list(
         self,
@@ -94,41 +84,26 @@ class BaseFinder:
     def _find(self, lower_alias: str) -> int:
         """find alias wrapped whitespace in title, and find in start title, and find in end title"""
         white_space = " "
-        if not self.title_lower:
+        title_lower = self.title_lower
+        if not title_lower:
             return -1
-        position = self.title_lower.find(white_space + lower_alias + white_space)
+        position = title_lower.find(white_space + lower_alias + white_space)
         if position != -1:
             return position + 1
 
         alias_len = len(lower_alias)
-        title_len = len(self.title_lower)
-
-        if self.title_lower[:alias_len] == lower_alias:
+        if title_lower[:alias_len] == lower_alias:
             return 0
 
-        if alias_len >= title_len:
-            return -1
-
-        if self.title_lower[(title_len - alias_len - 1) : title_len] == white_space + lower_alias:
-            return title_len - alias_len
-
+        suffix = white_space + lower_alias
+        if len(title_lower) > alias_len and title_lower.endswith(suffix):
+            return len(title_lower) - alias_len
         return -1
-
-    @classmethod
-    def replace_alias_in_title(cls, row_item: RowItem, old_man: str, new_man: str) -> None:
-        """replace manufacturer in title chunks"""
-        row_item.title = row_item.title.replace(old_man, new_man)
 
     def correction_field(self, rec: RowItem, field_name: str, aliases: AliasContainer) -> None:
         """replace property in rec if it has bad signature"""
-        l_man = self.str_lower(getattr(rec, field_name))
+        l_man = str_lower(getattr(rec, field_name))
         if l_man not in aliases.incorrect_words_lower:
             return
         index = aliases.incorrect_words_lower.index(l_man)
         setattr(rec, field_name, aliases.correct_words_lower[index])
-
-    @classmethod
-    @lru_cache()
-    def str_lower(cls, _str: str) -> str:
-        """cached lowered string"""
-        return _str.lower()

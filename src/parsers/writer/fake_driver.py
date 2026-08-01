@@ -26,11 +26,6 @@ class FakeXlwtDriver(IXlsDriver):
         self.sheet_name = sheet_name
         return self
 
-    def set_width(self, col_index: int, col_width: int) -> None:
-        """set width"""
-
-        self.width[col_index] = col_width
-
     def write_head(self, names: list[str]) -> None:
         """write head"""
         self.head = names
@@ -58,18 +53,3 @@ class FakeXlwtDriver(IXlsDriver):
         set column format
         :param column_format: dict['column_name', '#,##0.00" ₽"']
         """
-
-    def __repr__(self) -> str:
-        return (
-            f"\n--FakeXlwtDriver--\n"
-            f"filename: {self.file_name}\n"
-            f"folder: {self.folder}\n"
-            f"sheet_name: {self.sheet_name}\n"
-            f"col_width: {self.width}\n"
-            f"head: {self.head}\n"
-            f"body: {self.body}\n"
-        )
-
-    def get_folder(self) -> str:
-        """folder for fake workbook"""
-        return self.folder or ""

@@ -4,7 +4,7 @@ logic for zapaska (rest) vendor
 
 import json
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, List, TypeAlias, cast
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
@@ -17,8 +17,11 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.zapaska_disk_markup import make_price_markup_value
 
-_BASE_PERCENT = 0.12
+JsonRow: TypeAlias = dict[str, Any]
+JsonRows: TypeAlias = list[JsonRow]
+ColumnMap: TypeAlias = dict[str, str]
 
 column_mapping = {
     "cae": RowItem.code_art.name,
@@ -51,9 +54,15 @@ mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_param
 def get_title_aliases(supplier_name: str) -> dict[str, Any]:
     """Load title aliases for supplier from user config."""
     try:
-        return invert_map((json.loads(read_file(MainConfig().title_aliases_file_path)) or {}).get(supplier_name) or {})
+        return _load_title_aliases(supplier_name)
     except FileNotFoundError:
         return {}
+
+
+def _load_title_aliases(supplier_name: str) -> dict[str, Any]:
+    """Read title aliases JSON and invert map for supplier."""
+    raw = json.loads(read_file(MainConfig().title_aliases_file_path)) or {}
+    return invert_map(raw.get(supplier_name) or {})
 
 
 def invert_map(title_aliases: dict[str, Any]) -> dict[str, Any]:
@@ -63,6 +72,14 @@ def invert_map(title_aliases: dict[str, Any]) -> dict[str, Any]:
         for incorrect_title in incorrect_titles:
             inverted[incorrect_title] = correct_title
     return inverted
+
+
+def rename_fields(rows: JsonRows, columns: ColumnMap) -> None:
+    """Rename JSON keys to RowItem field names."""
+    for row in rows:
+        for source_key, target_key in columns.items():
+            if source_key in row:
+                row[target_key] = row.pop(source_key)
 
 
 zapaska_config = ParseConfiguration(
@@ -75,8 +92,6 @@ zapaska_config = ParseConfiguration(
         parser_params=zapaska_params,
     )
 )
-
-MIN_RECOMMENDED_MARGIN_PERCENT = 0.08
 
 
 class ZapaskaDiskJSON(BaseParser):
@@ -96,30 +111,22 @@ class ZapaskaDiskJSON(BaseParser):
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices)
 
-    def get_price_mrp_result(self) -> List[RowItem]:
-        """price mrp result"""
-        return self.price_mrp_result
-
     def raw_parse(self, text_json_file_full_path: str) -> List[dict[str, Any]]:
         """raw parse"""
         with Path(text_json_file_full_path).open(encoding="utf-8") as out_file:
             text_data = out_file.read()
-        dictable_data = cast(list[dict[str, Any]], json.loads(text_data))
-        self.rename_fields(dictable_data)
+        loaded = json.loads(text_data)
+        dictable_data = cast(list[dict[str, Any]], loaded)
+        parser_params = self.parse_config().parse_config.parser_params
+        rename_fields(dictable_data, cast(dict[str, str], parser_params.columns))
         return dictable_data
-
-    def rename_fields(self, rows: list[dict[str, Any]]) -> None:
-        """rename fields"""
-        columns = cast(dict[str, str], self.parse_config().parse_config.parser_params.columns)
-        for row in rows:
-            for column_json, column_price in columns.items():
-                if column_json in row:
-                    row[column_price] = row.pop(column_json)
 
     def process(self) -> int:
         """parse process"""
         count_processed = super().process()
-        self.prepare_prices_mrp()
+        for price_mrp in self.price_mrp_result:
+            code = price_mrp.code or price_mrp.code_art
+            self.price_sup_codes[code] = price_mrp.price_recommended
 
         for row_item in self.parsed_items:
             self.make_price_markup(row_item)
@@ -133,91 +140,20 @@ class ZapaskaDiskJSON(BaseParser):
         """Return fixed type production for disk prices."""
         return self._type_production
 
-    def set_rest_and_price_opt(self, rest_result: List[RowItem]) -> None:
-        """get parse result for ZapaskaRest"""
-        self.price_mrp_result = rest_result
-
     @classmethod
     def get_item_rest(cls, row_item: RowItem) -> int:
         """get rest count"""
         return row_item.rest_count
 
-    def prepare_prices_mrp(self) -> None:
-        """join result zapaska parser and zapaska rest parser via vendor position code"""
-        for price_mrp in self.get_price_mrp_result():
-            code = price_mrp.code or price_mrp.code_art
-
-            self.price_sup_codes[code] = price_mrp.price_recommended
-
     def get_prepared_title(self, row_item: RowItem) -> str:  # type: ignore[override]
         """Normalize title spaces and apply title aliases."""
-        chunks = [chunk.strip() for chunk in row_item.title.split(" ") if chunk.strip()]
+        chunks = []
+        for chunk in row_item.title.split(" "):
+            stripped = chunk.strip()
+            if stripped:
+                chunks.append(stripped)
         title = " ".join(chunks)
         return self.title_aliases.get(title) or title
-
-    @classmethod
-    def _get_price_percent_markup(cls, price: float) -> float:
-        """get price percent markup"""
-        return next(
-            (percent for bounds, percent in cls._percent_map().items() if bounds[0] <= price < bounds[1]),
-            _BASE_PERCENT,
-        )
-
-    @classmethod
-    def _percent_map(cls) -> dict[tuple[int, int], float]:
-        """Карта наценок по диапазонам цены."""
-        step = 0.02
-        return {
-            (0, 5000): _BASE_PERCENT + step * 5,
-            (5000, 10000): _BASE_PERCENT + step * 4,
-            (10000, 15000): _BASE_PERCENT + step * 2,
-            (15000, 20000): _BASE_PERCENT + step,
-            (20000, 25000): _BASE_PERCENT,
-        }
-
-    @classmethod
-    def _make_price_markup(cls, price_recommended: float, price_opt: float) -> float:
-        """set markup"""
-        price, _ = cls._make_price_recommended_markup(price_recommended, price_opt)
-        if not price:
-            price = cls.get_markup(price_opt, cls._get_price_percent_markup(price_opt))
-
-        return cls.make_absolute_markup(price, price_opt)
-
-    @classmethod
-    def make_absolute_markup(cls, price: float, price_opt: float, delta: int = 150) -> float:
-        """check price margin greater than delta"""
-        if price - price_opt <= delta:
-            return price_opt + delta
-        return price
-
-    @classmethod
-    def _make_price_recommended_markup(
-        cls, price_recommended: float, price_opt: float
-    ) -> Tuple[Optional[float], Optional[float]]:
-        """
-        make markup for recommended price
-        :param price_recommended:
-        :param price_opt:
-        :return: price_with_markup, percent_markup
-        """
-        if not price_recommended:
-            return None, None
-
-        percent = cls.calc_percent(price_recommended, price_opt)
-
-        # Если наценка менее 8% запускаем алгоритм наценки
-        if not cls._is_small_recommended_price(price_recommended, price_opt, percent=MIN_RECOMMENDED_MARGIN_PERCENT):
-            return price_recommended, percent
-
-        percent = cls._get_price_percent_markup(price_opt)
-
-        return cls.get_markup(price_opt, percent), percent
-
-    @classmethod
-    def _is_small_recommended_price(cls, price_recommended: float, price_opt: float, percent: float) -> bool:
-        """check margin for recommended price"""
-        return bool(price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent)
 
     def make_price_markup(self, row_item: RowItem) -> None:
         """set markup
@@ -236,14 +172,5 @@ class ZapaskaDiskJSON(BaseParser):
         if not price_recommended:
             self.not_matched_position.append(row_item.title)
 
-        price_with_markup = self._make_price_markup(price_recommended, price_opt)
+        price_with_markup = make_price_markup_value(price_recommended, price_opt)
         row_item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
-
-    def find_rest_by_title(self, title: str) -> Optional[float]:
-        """find rest by title"""
-        if not self.rest_titles:
-            for row_item in self.get_price_mrp_result():
-                if not row_item.title:
-                    continue
-                self.rest_titles[row_item.title.lower().strip()] = row_item.price_recommended
-        return self.rest_titles.get(title.lower().strip())

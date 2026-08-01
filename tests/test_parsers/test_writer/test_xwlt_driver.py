@@ -5,7 +5,7 @@ from typing import Any
 
 from openpyxl.styles import Font
 
-from parsers.writer.xwlt_driver import XlsxWriterDriver
+from parsers.writer.xwlt_driver import XlsxWriterDriver, number_to_excel_column
 
 _COL_A = 1
 _COL_Z = 26
@@ -14,10 +14,10 @@ _COL_AA = 27
 
 def test_number_to_excel_column() -> None:
     """конвертация индекса колонки в букву Excel"""
-    assert XlsxWriterDriver.number_to_excel_column(_COL_A) == "A"
-    assert XlsxWriterDriver.number_to_excel_column(_COL_Z) == "Z"
-    assert XlsxWriterDriver.number_to_excel_column(_COL_AA) == "AA"
-    assert XlsxWriterDriver.number_to_excel_column(0) == ""
+    assert number_to_excel_column(_COL_A) == "A"
+    assert number_to_excel_column(_COL_Z) == "Z"
+    assert number_to_excel_column(_COL_AA) == "AA"
+    assert number_to_excel_column(0) == ""
 
 
 def test_xlsx_writer_full_cycle(tmp_path: Any) -> None:
@@ -27,9 +27,8 @@ def test_xlsx_writer_full_cycle(tmp_path: Any) -> None:
     file_name = "out.xlsx"
     workbook = driver.init_workbook(folder, file_name)
 
-    assert workbook is driver.get_workbook()
+    assert workbook is driver.work_book
     assert driver.init_workbook(folder, file_name) is workbook
-
     driver.add_sheet("Prices")
     assert driver.work_sheet is not None
     assert driver.work_sheet.title == "Prices"
