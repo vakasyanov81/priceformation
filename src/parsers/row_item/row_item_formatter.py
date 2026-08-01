@@ -18,9 +18,9 @@ def prepare_str_to_float(value: str) -> str:
     "<40" -> "40"
     "более40" -> "40"
     """
-    _to_drop = ["<", ">", "более"]
+    to_drop = ["<", ">", "более"]
     value = value.lower()
-    for drop_item in _to_drop:
+    for drop_item in to_drop:
         value = value.replace(drop_item, "")
     value = value.replace(",", ".")
     value = value.replace("руб.", "")
@@ -35,9 +35,9 @@ def get_stripped(value, null_value="") -> str:
 @lru_cache()
 def strip_into(value: str):
     """ "abc    abc " -> "abc abc" """
-    _val = value.split(" ")
-    _val = " ".join([__val.strip() for __val in _val if __val])
-    return _val
+    parts = value.split(" ")
+    parts = " ".join([part.strip() for part in parts if part])
+    return parts
 
 
 @lru_cache()

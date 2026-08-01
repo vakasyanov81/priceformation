@@ -13,6 +13,10 @@ from ...base_parser.base_parser_config import (
 )
 from .mim_base import MimParserBase, mim_params, supplier_folder_name
 
+TRUCK_TIRE_PRICE_THRESHOLD = 13000
+TRUCK_TIRE_MARKUP_LOW = 0.07
+TRUCK_TIRE_MARKUP_HIGH = 0.05
+
 
 def config_for_sheets2():
     """get config for sheets 2 parsers"""
@@ -70,9 +74,9 @@ class MimParser2Sheet(MimParserBase):
     def get_markup_percent(self, price_value: float):
         """Для грузовых позиций наценка"""
         # TODO: добавить настройку наценок для грузовой шины в настройки
-        if price_value <= 13000:
-            return 0.07
-        return 0.05
+        if price_value <= TRUCK_TIRE_PRICE_THRESHOLD:
+            return TRUCK_TIRE_MARKUP_LOW
+        return TRUCK_TIRE_MARKUP_HIGH
 
     def add_price_markup(self, item: RowItem):
         price_opt = item.price_opt or 0

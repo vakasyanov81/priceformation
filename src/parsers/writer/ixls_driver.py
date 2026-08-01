@@ -21,7 +21,7 @@ class IXlsDriver:
         """
         raise NotImplementedError
 
-    def write(self, i, j, _value, style=None, _color=None):
+    def write(self, row_idx, col_idx, _value, style=None, _color=None):
         """write"""
         raise NotImplementedError
 

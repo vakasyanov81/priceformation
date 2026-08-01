@@ -112,9 +112,9 @@ class BaseParser(Parser):
         result_statistic = 0
         self.logger.log_list_files(self.files)
 
-        for _file in self.files:
-            self.type_production = _file.split("_")[-1]
-            res = self.to_row_items(self.raw_parse(_file))
+        for price_file in self.files:
+            self.type_production = price_file.split("_")[-1]
+            res = self.to_row_items(self.raw_parse(price_file))
             result_statistic += len(res or [])
             self.result += res
         self.remove_wo_price_purchase_and_check_title()
@@ -182,9 +182,12 @@ class BaseParser(Parser):
                 item_action(item).action()
 
     def __repr__(self) -> str:
-        sup_name = f"{self.__class__.__name__}: {self.parser_params().supplier.name}"
-        if self.parser_params().sheet_info:
-            sup_name += f" ({self.parser_params().sheet_info})"
+        class_name = self.__class__.__name__
+        supplier_name = self.parser_params().supplier.name
+        sup_name = f"{class_name}: {supplier_name}"
+        sheet_info = self.parser_params().sheet_info
+        if sheet_info:
+            sup_name = f"{sup_name} ({sheet_info})"
         return sup_name
 
     def get_result(self) -> List[RowItem]:
@@ -366,8 +369,8 @@ class BaseParser(Parser):
     @classmethod
     def strip_words_in_title(cls, title: str) -> str:
         """ " 385/65   R22.5..." -> "385/65 R22.5..." """
-        _title = (title or "").strip()
-        if not _title:
+        stripped_title = (title or "").strip()
+        if not stripped_title:
             return title
 
         chunks = title.split()
@@ -392,16 +395,13 @@ class BaseParser(Parser):
 
 def get_file_prices(parser: TBaseParser):
     """get file prices"""
-    _list_files = []
     cfg = init_cfg()
     supplier_folder = (
         Path(cfg.main.project_root) / cfg.main.folder_file_prices / parser.parser_params().supplier.folder_name
     )
-    for f_tmp in parser.parser_params().file_templates:
-        _list_files += [str(path) for path in supplier_folder.glob(f_tmp)]
+    list_files = [str(path) for f_tmp in parser.parser_params().file_templates for path in supplier_folder.glob(f_tmp)]
 
-    if not _list_files:
-        raise SupplierNotHavePricesError(
-            f"Прайсов у поставщика ({parser.parser_params().supplier.name}) не обнаружено!"
-        )
-    return _list_files
+    if not list_files:
+        supplier_name = parser.parser_params().supplier.name
+        raise SupplierNotHavePricesError(f"Прайсов у поставщика ({supplier_name}) не обнаружено!")
+    return list_files

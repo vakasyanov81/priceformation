@@ -19,11 +19,11 @@ _FOLDER = "~/some_folder/"
 def test_init_log():
     """test init log"""
 
-    with patch("core.init_log.create_logs_folder_if_not_exists") as _mock:
+    with patch("core.init_log.create_logs_folder_if_not_exists") as mock_create_logs_folder:
         init_log()
 
-    assert _mock.call_count == 1
-    assert _mock.call_args[0][0] is not None
+    assert mock_create_logs_folder.call_count == 1
+    assert mock_create_logs_folder.call_args[0][0] is not None
 
 
 @patch("pathlib.Path.mkdir")

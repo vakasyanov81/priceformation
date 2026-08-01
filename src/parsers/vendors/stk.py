@@ -11,9 +11,12 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 
+STK_START_ROW = 14
+STK_PRICE_MARKUP_MULTIPLIER = 1.06
+
 stk_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="stk", name="STK", code="7"),
-    start_row=14,
+    start_row=STK_START_ROW,
     sheet_info="",
     columns={
         1: RowItem.code.name,
@@ -63,4 +66,4 @@ class STKParser(BaseParser):
 
         if not item.price_opt:
             return
-        item.price_markup = self.round_price(item.price_opt * 1.06)
+        item.price_markup = self.round_price(item.price_opt * STK_PRICE_MARKUP_MULTIPLIER)

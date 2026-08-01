@@ -74,6 +74,8 @@ zapaska_config = BasePriceParseConfigurationParams(
 
 zapaska_config = ParseConfiguration(zapaska_config)
 
+MIN_RECOMMENDED_MARGIN_PERCENT = 0.08
+
 
 class ZapaskaDiskJSON(BaseParser):
     """
@@ -98,8 +100,8 @@ class ZapaskaDiskJSON(BaseParser):
 
     def raw_parse(self, _file: str) -> List[dict]:
         """raw parse"""
-        with Path(_file).open(encoding="utf-8") as file_:
-            data = file_.read()
+        with Path(_file).open(encoding="utf-8") as out_file:
+            data = out_file.read()
         data = json.loads(data)
         self.rename_fields(data)
         return data
@@ -167,19 +169,17 @@ class ZapaskaDiskJSON(BaseParser):
 
         default_percent_markup = base_percent
 
-        for price_range, _percent_markup in percent_map.items():
-            _min, _max = price_range
-            if _min <= price < _max:
-                return _percent_markup
+        for price_range, percent_markup in percent_map.items():
+            range_min, range_max = price_range
+            if range_min <= price < range_max:
+                return percent_markup
 
         return default_percent_markup
 
     @classmethod
     def _make_price_markup(cls, price_recommended, price_opt):
         """set markup"""
-
         price, _ = cls._make_price_recommended_markup(price_recommended, price_opt)
-
         if not price:
             price = cls.get_markup(price_opt, cls._get_price_percent_markup(price_opt))
 
@@ -206,7 +206,7 @@ class ZapaskaDiskJSON(BaseParser):
         percent = cls.calc_percent(price_recommended, price_opt)
 
         # Если наценка менее 8% запускаем алгоритм наценки
-        if not cls._is_small_recommended_price(price_recommended, price_opt, percent=0.08):
+        if not cls._is_small_recommended_price(price_recommended, price_opt, percent=MIN_RECOMMENDED_MARGIN_PERCENT):
             return price_recommended, percent
 
         percent = cls._get_price_percent_markup(price_opt)

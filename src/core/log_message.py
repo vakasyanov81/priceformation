@@ -67,11 +67,8 @@ def resolve_log_method(level=logging.INFO) -> Callable:
 def log_to_file(message: str, level=logging.INFO) -> bool:
     """make log to file"""
     init_log()
-
     logging.basicConfig(filename=resolve_log_path(level), level=level)
-
     resolve_log_method(level)(message)
-
     return True
 
 
@@ -102,10 +99,9 @@ def print_log(
 ):
     """print log-message"""
 
-    _msg = ""
     level_title = get_log_level_text(level)
-    if level != logging.INFO:
-        _msg = f"[{level_title}]: "
-    _msg += f"{msg}"
-    _msg = colored(_msg, _color or __level_color_map__.get(level_title))
-    print(_msg)
+    if level == logging.INFO:
+        formatted_msg = msg
+    else:
+        formatted_msg = f"[{level_title}]: {msg}"
+    print(colored(formatted_msg, _color or __level_color_map__.get(level_title)))

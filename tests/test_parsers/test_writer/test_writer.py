@@ -25,11 +25,11 @@ from .fixtures import FixtureTemplate, write_data
 def test_xls_write_call_counts(method, call_count):
     """test write price for drom.ru"""
 
-    with patch(method) as _mock_method:
+    with patch(method) as mock_method:
         fake_driver = FakeXlwtDriver()
         XlsWriter(fake_driver, write_data, template=FixtureTemplate)
 
-    assert _mock_method.call_count == call_count
+    assert mock_method.call_count == call_count
 
 
 class TestXlsWriterCreateFolder:
@@ -43,8 +43,8 @@ class TestXlsWriterCreateFolder:
 
         test_folder = tmp_path / "test_result"
 
-        with patch("parsers.writer.xls_writer.get_result_folder_name") as _patch:
-            _patch.return_value = str(test_folder)
+        with patch("parsers.writer.xls_writer.get_result_folder_name") as mock_get_result_folder:
+            mock_get_result_folder.return_value = str(test_folder)
             create_result_folder()
 
         assert test_folder.exists()
@@ -60,8 +60,8 @@ class TestXlsWriterCreateFolder:
         test_folder = tmp_path / "existing"
         test_folder.mkdir()
 
-        with patch("parsers.writer.xls_writer.get_result_folder_name") as _patch:
-            _patch.return_value = str(test_folder)
+        with patch("parsers.writer.xls_writer.get_result_folder_name") as mock_get_result_folder:
+            mock_get_result_folder.return_value = str(test_folder)
             create_result_folder()
 
         # Директория продолжает существовать

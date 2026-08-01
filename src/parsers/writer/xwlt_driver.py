@@ -11,6 +11,9 @@ from .ixls_driver import IXlsDriver
 
 config = init_cfg()
 
+EXCEL_ALPHABET_SIZE = 26
+EXCEL_COLUMN_A_ORD = 65
+
 
 class XlsxWriterDriver(IXlsDriver):
     """
@@ -47,8 +50,8 @@ class XlsxWriterDriver(IXlsDriver):
     def write_head(self, names):
         """write head"""
 
-        for j, name in enumerate(names):
-            self.write(0, j, name, style=Font(bold=True))
+        for col_idx, name in enumerate(names):
+            self.write(0, col_idx, name, style=Font(bold=True))
 
     def set_column_format(self, column_format: dict[int, str]):
         """
@@ -58,21 +61,21 @@ class XlsxWriterDriver(IXlsDriver):
         for index, c_format in column_format.items():
             self.work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
 
-    def write(self, i, j, _value, style=None, _color: str = None):
+    def write(self, row_idx, col_idx, _value, style=None, _color: str = None):
         """write"""
-        i += self.row_index_at
-        j += self.row_index_at
-        cell = self.work_sheet.cell(row=i, column=j, value=_value)
+        row_idx += self.row_index_at
+        col_idx += self.row_index_at
+        cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=_value)
         if style:
             cell.font = style
         if _color:
             cell.fill = PatternFill(fgColor=Color(rgb=_color.lstrip("#")), fill_type="solid")
 
-        self.current_col_index = j
-        self.current_row_index = i
-        _len = len(str(_value or ""))
-        if self.col_max_length.get(j) is None or self.col_max_length[j] < _len:
-            self.col_max_length[j] = _len
+        self.current_col_index = col_idx
+        self.current_row_index = row_idx
+        value_length = len(str(_value or ""))
+        if self.col_max_length.get(col_idx) is None or self.col_max_length[col_idx] < value_length:
+            self.col_max_length[col_idx] = value_length
 
     def save(self):
         """save file"""
@@ -88,8 +91,8 @@ class XlsxWriterDriver(IXlsDriver):
         """
         result = ""
         while number > 0:
-            number, remainder = divmod(number - 1, 26)
-            result = chr(65 + remainder) + result
+            number, remainder = divmod(number - 1, EXCEL_ALPHABET_SIZE)
+            result = chr(EXCEL_COLUMN_A_ORD + remainder) + result
         return result
 
     def set_auto_width(self):

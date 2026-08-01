@@ -129,7 +129,7 @@ class XlsReader(IXlsReader):
 
     @classmethod
     def row_values(cls, sheet: Sheet, cur_row: int, end_col: int) -> Row:
-        return sheet[cur_row][0:end_col]
+        return sheet[cur_row][:end_col]
 
     @classmethod
     def sheet_cols(cls, sheet: Sheet) -> int:

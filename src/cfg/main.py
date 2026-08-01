@@ -146,12 +146,14 @@ class MainConfig(MainCfg):
     @property
     def current_log_file_name(self):
         """current log file name"""
-        return f"log_{datetime.date.today()}.log"
+        today = datetime.date.today()
+        return f"log_{today}.log"
 
     @property
     def current_err_log_file_name(self):
         """current log-error file name"""
-        return f"error_{datetime.date.today()}.log"
+        today = datetime.date.today()
+        return f"error_{today}.log"
 
     @property
     def current_log_file_path(self):

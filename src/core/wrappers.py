@@ -2,7 +2,7 @@
 logging decorators
 """
 
-import logging as __logging
+import logging as _logging_module
 import time
 import traceback
 from typing import Callable, TypeVar
@@ -26,7 +26,7 @@ def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:
     def wrapped(*args, **kwargs) -> RT:  # type: ignore
         """wrapper for super method"""
         result = None
-        method_name: str = func.__module__ + "." + func.__name__
+        method_name: str = f"{func.__module__}.{func.__name__}"
         start_time = time.time()
         msg = CALL_BEGIN_MSG.format(method=method_name)
 
@@ -35,7 +35,7 @@ def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:
 
         msg += CALL_PARAMS_MSG.format(params=str(args))
         if kwargs:
-            msg += "\n" + str(kwargs)
+            msg = "".join((msg, f"\n{kwargs}"))
         log_msg(msg)
         try:
             result = func(*args, **kwargs)
@@ -43,7 +43,7 @@ def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:
         except Exception:
             log_msg(
                 CALL_TRACE_MSG.format(method=method_name, trace=traceback.format_exc()),
-                level=__logging.WARNING,
+                level=_logging_module.WARNING,
             )
             raise
         finally:

@@ -41,8 +41,8 @@ class IWriteTemplate:
         if self._columns_formated is None:
             self._columns_formated = {}
             for column in self.columns():
-                _c = ColumnHelper(column)
-                self._columns_formated[_c.name] = _c
+                column_helper = ColumnHelper(column)
+                self._columns_formated[column_helper.name] = column_helper
         return self._columns_formated
 
     def get_column_names(self) -> list[str]:

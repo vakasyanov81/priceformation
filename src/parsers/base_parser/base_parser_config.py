@@ -67,8 +67,8 @@ class ParseConfiguration:
     def get_markup_rules(self):
         """get markup rules and caching"""
         if not self._markup_rules:
-            _data = self.parse_config.markup_rules_provider.get_markup_data() or {}
-            self._markup_rules = self.extract_markup_rules(_data)
+            markup_data = self.parse_config.markup_rules_provider.get_markup_data() or {}
+            self._markup_rules = self.extract_markup_rules(markup_data)
         return self._markup_rules
 
     def get_price_markup_map(self) -> Tuple[data_provider.MarkUpParams]:
@@ -79,7 +79,7 @@ class ParseConfiguration:
             self._price_markup_map = tuple(mapped_rules)
         return self._price_markup_map
 
-    def get_default_markup_percents(self, def_value=0.0) -> float:
+    def get_default_markup_percents(self, def_value=0) -> float:
         """get default (minimal) markup percent"""
         return min({item.percent_markup for item in self.get_price_markup_map()} or (def_value,))
 
@@ -100,7 +100,7 @@ class ParseConfiguration:
         if self._all_vendor_config is None:
             vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
             config = {}
-            for vendor_name, _vendor_config in vendor_config.items():
-                config[vendor_name] = data_provider.VendorParams(**_vendor_config)
+            for vendor_name, raw_vendor_config in vendor_config.items():
+                config[vendor_name] = data_provider.VendorParams(**raw_vendor_config)
             self._all_vendor_config = config
         return self._all_vendor_config

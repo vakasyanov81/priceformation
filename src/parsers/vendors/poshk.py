@@ -13,9 +13,13 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 
+POSHK_START_ROW = 14
+RE_PART_SIZE_PATTERN = r"^\d+\.*\d*"
+RE_R_DIAMETER_PATTERN = r"R\d+."
+
 poshk_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="poshk", name="Пошк", code="1"),
-    start_row=14,
+    start_row=POSHK_START_ROW,
     sheet_info="",
     columns={
         0: RowItem.code.name,
@@ -82,16 +86,16 @@ class PoshkParser(BaseParser):
     def get_category_by_title(cls, title):
         """get category name by title"""
         title = title.lower()
-        _available_categories = ["ободная лента", "шина", "покрышка", "камера", "диск"]
+        available_categories = ["ободная лента", "шина", "покрышка", "камера", "диск"]
 
         categories_map = {
-            _available_categories[0]: "Ободная лента",
-            _available_categories[1]: "Автошина",
-            _available_categories[2]: "Автошина",
-            _available_categories[3]: "Автокамера",
-            _available_categories[4]: "Диск",
+            available_categories[0]: "Ободная лента",
+            available_categories[1]: "Автошина",
+            available_categories[2]: "Автошина",
+            available_categories[3]: "Автокамера",
+            available_categories[4]: "Диск",
         }
-        for av_category in _available_categories:
+        for av_category in available_categories:
             if av_category in title:
                 return categories_map[av_category]
 
@@ -116,11 +120,10 @@ class PoshkParser(BaseParser):
         :param chunks:
         :return:
         """
-        _re_part_size = r"^\d+\.*\d*"
         for index, chunk in enumerate(chunks):
             if "*" not in chunk:
                 continue
-            if re.match(_re_part_size, chunk):
+            if re.match(RE_PART_SIZE_PATTERN, chunk):
                 chunks[index] = chunk.replace("*", "x")
 
     @classmethod
@@ -130,7 +133,6 @@ class PoshkParser(BaseParser):
         :param chunks:
         :return:
         """
-        _re_part_size = r"R\d+."  # R22.5 or R20
-        if re.match(_re_part_size, chunks[1]):
+        if re.match(RE_R_DIAMETER_PATTERN, chunks[1]):
             chunk = chunks.pop(1)
             chunks[0] += chunk

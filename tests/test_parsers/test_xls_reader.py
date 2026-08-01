@@ -9,9 +9,10 @@ from parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
 
 config = init_cfg()
 
-_FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price.xlsx"
-_OLD_FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price_old.xls"
-_PIONER_FILE_PATH = str(config.main.project_root) + "/tests/test_parsers/fixtures/price_pioner.xlsx"
+_PROJECT_ROOT = str(config.main.project_root)
+_FILE_PATH = f"{_PROJECT_ROOT}/tests/test_parsers/fixtures/price.xlsx"
+_OLD_FILE_PATH = f"{_PROJECT_ROOT}/tests/test_parsers/fixtures/price_old.xls"
+_PIONER_FILE_PATH = f"{_PROJECT_ROOT}/tests/test_parsers/fixtures/price_pioner.xlsx"
 _PARSE_PARAMS = {"start_row": 1, "columns": {0: "col_0", 1: "col_1"}}
 
 _PIONER_PARSE_PARAMS = {

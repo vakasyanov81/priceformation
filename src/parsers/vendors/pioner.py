@@ -18,9 +18,11 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
 
+PIONER_START_ROW = 12
+
 pioner_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="pioner", name="Пионер", code="3"),
-    start_row=12,
+    start_row=PIONER_START_ROW,
     sheet_info="",
     columns={
         1: RowItem.title.name,
@@ -99,16 +101,14 @@ class PionerParser(BaseParser):
         """set manufacturer name to title for row item"""
         m_name = self.get_manufacturer_name()
 
-        def make_m_name(_m_name):
-            _m_map = {"рокбастер": "RockBuster"}
-
-            return _m_map.get(m_name) or m_name
+        def make_m_name(manufacturer_name):
+            manufacturer_map = {"рокбастер": "RockBuster"}
+            return manufacturer_map.get(m_name) or m_name
 
         if not m_name or not item.price_opt:
             return
 
         title = item.title
-
         title_chunks = title.split(" ")
 
         ttl = title.lower()
@@ -116,7 +116,6 @@ class PionerParser(BaseParser):
             return
 
         title_chunks[0] = f"{title_chunks[0]} {make_m_name(m_name)}"
-
         item.title = " ".join(title_chunks)
 
     def set_brand(self, item):
