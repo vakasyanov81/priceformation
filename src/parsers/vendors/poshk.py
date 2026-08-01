@@ -110,30 +110,11 @@ class PoshkParser(BaseParser):
     @classmethod
     def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:
         """get prepared title chunks"""
-        cls.replace_star_to_cross(chunks)
-        cls.delete_white_spaces(chunks)
-        return chunks
-
-    @classmethod
-    def replace_star_to_cross(cls, chunks: list[str]) -> None:
-        """
-        ... 6.00*17.5 ... -> ... 6.00x17.5 ...
-        :param chunks:
-        :return:
-        """
+        # 6.00*17.5 -> 6.00x17.5
         for index, chunk in enumerate(chunks):
-            if "*" not in chunk:
-                continue
-            if re.match(RE_PART_SIZE_PATTERN, chunk):
+            if "*" in chunk and re.match(RE_PART_SIZE_PATTERN, chunk):
                 chunks[index] = chunk.replace("*", "x")
-
-    @classmethod
-    def delete_white_spaces(cls, chunks: list[str]) -> None:
-        """
-        385/65  R22.5... -> 385/65R22.5...
-        :param chunks:
-        :return:
-        """
-        if re.match(RE_R_DIAMETER_PATTERN, chunks[1]):
-            chunk = chunks.pop(1)
-            chunks[0] += chunk
+        # 385/65  R22.5 -> 385/65R22.5
+        if len(chunks) > 1 and re.match(RE_R_DIAMETER_PATTERN, chunks[1]):
+            chunks[0] += chunks.pop(1)
+        return chunks

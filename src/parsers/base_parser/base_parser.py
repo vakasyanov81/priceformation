@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, List, Optional, Protocol, Type, TypeVar
 
 from cfg import init_cfg
-from core import err_msg
 from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
@@ -22,7 +21,7 @@ from parsers.xls_reader import IXlsReader, XlsReader
 
 from ..data_provider import VendorParams
 from .base_parser_config import ParseConfiguration, ParserParams
-from .manufacturer_finder import ManufacturerFinder
+from .base_parser_row import _keep_row_item, _try_prepare_row
 from .parse_statistic import ParseResultStatistic
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
@@ -33,60 +32,6 @@ class XlsReaderFactory(Protocol):
 
     @classmethod
     def get_instance(cls, file_path: str, *args: Any, **kwargs: Any) -> IXlsReader: ...
-
-
-def _set_title_or_log(parser: "BaseParser", row_id: int, row_item: RowItem) -> bool:
-    """Собрать title; при ValueError — лог и False."""
-    try:
-        parser.set_prepared_title(row_item)
-    except ValueError as err:
-        err_msg(
-            f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(parser)} // {err}",
-            need_print_log=True,
-        )
-        err_msg(f"строка: {repr(row_item)}")
-        return False
-    return True
-
-
-def _log_row_parse_errors(parser: "BaseParser", row_id: int, row_item: RowItem) -> None:
-    """Лог ошибок разбора полей строки."""
-    err_msg(
-        f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(parser)} // {row_item.parse_errors}",
-        need_print_log=True,
-    )
-    err_msg(f"строка: {repr(row_item.to_dict())}")
-
-
-def _enrich_row_item(parser: "BaseParser", row_item: RowItem) -> RowItem:
-    """Производитель, категория, служебные поля."""
-    ManufacturerFinder(parser.parse_config().manufacturer_aliases()).process(row_item)
-    parser.correction_category(row_item)
-    row_item.supplier_name = parser.parser_params().supplier.name
-    row_item.spike = parser.get_spike_title(row_item)
-    row_item.season = parser.replace_season(row_item)
-    return row_item
-
-
-def _try_prepare_row(parser: "BaseParser", row_id: int, row_item: RowItem) -> RowItem | None:
-    """Подготовить одну строку или вернуть None при ошибке/фильтре."""
-    if not _set_title_or_log(parser, row_id, row_item):
-        return None
-    if row_item.parse_errors:
-        _log_row_parse_errors(parser, row_id, row_item)
-        return None
-    if not parser.is_valid_title(row_item.title):
-        return None
-    return _enrich_row_item(parser, row_item)
-
-
-def _keep_row_item(parser: "BaseParser", row_item: RowItem) -> bool:
-    """Оставить строку с ценой закупки и валидным title."""
-    if row_item.rest_count and not row_item.price_opt:
-        return False
-    if row_item.title and not parser.is_valid_title(row_item.title):
-        return False
-    return True
 
 
 class Parser(Protocol):
@@ -188,12 +133,13 @@ class BaseParser:
 
     def get_markup_percent(self, price_value: float) -> float:
         parse_config = self.parse_config()
-        default_percent = parse_config.get_default_markup_percents()
+        markup_map = parse_config.get_price_markup_map()
+        default_percent = min({price_rule.percent_markup for price_rule in markup_map} or (0,))
 
         if not price_value:
             return default_percent
 
-        for price_rule in parse_config.get_price_markup_map():
+        for price_rule in markup_map:
             if price_rule.min < price_value <= price_rule.max:
                 return price_rule.percent_markup
 
@@ -284,7 +230,10 @@ class BaseParser:
         return title_is_prepared
 
     def is_valid_title(self, title: str) -> bool:
-        return bool(title) and not self.has_stop_word(title) and not self.check_title_in_black_list(title)
+        has_content = bool(title)
+        no_stop = not self.has_stop_word(title)
+        not_blacklisted = not self.check_title_in_black_list(title)
+        return has_content and no_stop and not_blacklisted
 
     def has_stop_word(self, title: str) -> bool:
         for s_word in self.get_stop_words():
@@ -373,9 +322,9 @@ class BaseParser:
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         """get vendor configuration"""
-        return self.parse_config().all_vendor_config().get(self.parser_params().supplier.folder_name) or VendorParams(
-            enabled=0
-        )
+        folder_name = self.parser_params().supplier.folder_name
+        vendor = self.parse_config().all_vendor_config().get(folder_name)
+        return vendor or VendorParams(enabled=0)
 
     @classmethod
     def prepare_title(cls, title: str) -> str:
@@ -420,13 +369,20 @@ class BaseParser:
         return ""
 
 
+def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:
+    """Собрать пути прайсов по glob-шаблонам."""
+    list_files: list[str] = []
+    for f_tmp in templates:
+        list_files.extend(str(path) for path in supplier_folder.glob(f_tmp))
+    return list_files
+
+
 def get_file_prices(parser: TBaseParser) -> list[str]:
     """get file prices"""
     cfg = init_cfg()
-    supplier_folder = (
-        Path(cfg.main.project_root) / cfg.main.folder_file_prices / parser.parser_params().supplier.folder_name
-    )
-    list_files = [str(path) for f_tmp in parser.parser_params().file_templates for path in supplier_folder.glob(f_tmp)]
+    prices_root = Path(cfg.main.project_root) / cfg.main.folder_file_prices
+    supplier_folder = prices_root / parser.parser_params().supplier.folder_name
+    list_files = _glob_price_files(supplier_folder, parser.parser_params().file_templates)
 
     if not list_files:
         supplier_name = parser.parser_params().supplier.name

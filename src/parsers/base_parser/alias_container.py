@@ -10,6 +10,29 @@ CorrectLoweredWord: TypeAlias = str
 IncorrectLoweredAlias: TypeAlias = str
 
 
+def to_lowercase(words: list[str]) -> list[str]:
+    """list-str to lowercase"""
+    return [word.lower() for word in words]
+
+
+def sort_by_length(_list: list[str]) -> list[str]:
+    """Sort by length. Longer words in first"""
+    _list.sort(key=len, reverse=True)
+    return _list
+
+
+def build_reversed_map(
+    map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias],
+) -> dict[IncorrectLoweredAlias, CorrectWord]:
+    """incorrect alias -> correct word"""
+    reversed_map: dict[IncorrectLoweredAlias, CorrectWord] = {}
+    for correct_name, incorrect_names in map_aliases.items():
+        if isinstance(incorrect_names, str):
+            incorrect_names = (incorrect_names,)
+        reversed_map.update({incorrect_name.lower(): correct_name for incorrect_name in incorrect_names})
+    return reversed_map
+
+
 class AliasContainer:
     """
     container for aliases
@@ -38,50 +61,24 @@ class AliasContainer:
             ...
         }
         """
-        reversed_map = {}
-        for correct_name, incorrect_names in self.map_aliases.items():
-            if isinstance(incorrect_names, str):
-                incorrect_names = (incorrect_names,)
-            reversed_map.update({incorrect_name.lower(): correct_name for incorrect_name in incorrect_names})
-        return reversed_map
+        return build_reversed_map(self.map_aliases)
 
     @cached_property
     def all_correct_words(self) -> list[CorrectWord]:
         """collected all correct words"""
-        return self.sort_by_length(list(self.map_aliases.keys()))
+        return sort_by_length(list(self.map_aliases.keys()))
 
     @cached_property
     def all_correct_words_lower(self) -> list[CorrectLoweredWord]:
         """collected all correct words in lowercase"""
-        return self.to_lowercase(self.all_correct_words)
-
-    @cached_property
-    def incorrect_words(self) -> list[str]:
-        """collected all incorrect words"""
-        return self.sort_by_length(list(self.reversed_map.keys()))
+        return to_lowercase(self.all_correct_words)
 
     @cached_property
     def incorrect_words_lower(self) -> list[IncorrectLoweredAlias]:
         """collected all incorrect words in lowercase"""
-        return self.to_lowercase(self.incorrect_words)
-
-    @cached_property
-    def correct_words(self) -> list[str]:
-        """collected all correct words"""
-        return self.sort_by_length(list(self.reversed_map.values()))
+        return to_lowercase(sort_by_length(list(self.reversed_map.keys())))
 
     @cached_property
     def correct_words_lower(self) -> list[str]:
         """collected all correct words in lowercase"""
-        return self.to_lowercase(self.correct_words)
-
-    @classmethod
-    def to_lowercase(cls, words: list[str]) -> list[str]:
-        """list-str to lowercase"""
-        return [word.lower() for word in words]
-
-    @classmethod
-    def sort_by_length(cls, _list: list[str]) -> list[str]:
-        """Sort by length. Longer words in first"""
-        _list.sort(key=len, reverse=True)
-        return _list
+        return to_lowercase(sort_by_length(list(self.reversed_map.values())))

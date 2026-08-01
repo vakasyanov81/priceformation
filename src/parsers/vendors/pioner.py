@@ -49,6 +49,13 @@ pioner_config = ParseConfiguration(
     )
 )
 
+_MANUFACTURER_MAP = {"рокбастер": "RockBuster"}
+
+
+def _display_manufacturer(manufacturer_name: str) -> str:
+    """Map known manufacturer aliases for title."""
+    return _MANUFACTURER_MAP.get(manufacturer_name, manufacturer_name)
+
 
 class PionerParser(BaseParser):
     """
@@ -63,11 +70,8 @@ class PionerParser(BaseParser):
         res = super().process()
         for row_item in self.parsed_items:
             self.skip_by_min_rest(row_item)
-            self._set_current_category(row_item)
-            self.set_current_category(row_item)
             self.add_price_markup(row_item)
             self.set_manufacturer_to_title(row_item)
-            self.set_brand(row_item)
             ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(row_item)
 
         return res
@@ -85,48 +89,36 @@ class PionerParser(BaseParser):
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """skip by min rest"""
-        self._set_current_category(row_item)
         self.set_current_category(row_item)
-        if self.is_skipped_item():
+        if "прочие" in (self.current_category or "").lower():
             row_item.rest_count = 0
         return super().skip_by_min_rest(row_item)
 
-    def _set_current_category(self, row_item: RowItem) -> None:
-        """set current category by title"""
+    def set_current_category(self, row_item: RowItem) -> None:
+        """set current category by title and type_production"""
         if self.is_category_row(row_item):
             self.current_category = (row_item.title or "").lower().strip()
-        self.current_category_first_chunk = ((self.current_category or "").split("/")[0]).split(" ")[0]
+        category = (self.current_category or "").split("/")[0]
+        self.current_category_first_chunk = category.split(" ")[0]
+        row_item.type_production = self.current_category_first_chunk
+        self.correction_category(row_item)
 
     def set_manufacturer_to_title(self, row_item: RowItem) -> None:
-        """set manufacturer name to title for row item"""
+        """set manufacturer name to title and brand for row item"""
         m_name = self.get_manufacturer_name()
-
-        def make_m_name(manufacturer_name: str) -> str:
-            manufacturer_map = {"рокбастер": "RockBuster"}
-            return manufacturer_map.get(manufacturer_name, manufacturer_name)
+        row_item.brand = m_name
 
         if not m_name or not row_item.price_opt:
             return
 
+        display_name = _display_manufacturer(m_name)
         title = row_item.title
-        title_chunks = title.split(" ")
-
-        ttl = title.lower()
-        if make_m_name(m_name).lower() in ttl:
+        if display_name.lower() in title.lower():
             return
 
-        title_chunks[0] = f"{title_chunks[0]} {make_m_name(m_name)}"
+        title_chunks = title.split(" ")
+        title_chunks[0] = f"{title_chunks[0]} {display_name}"
         row_item.title = " ".join(title_chunks)
-
-    def set_brand(self, row_item: RowItem) -> None:
-        """set brand name"""
-        m_name = self.get_manufacturer_name()
-        row_item.brand = m_name
-
-    def set_current_category(self, row_item: RowItem) -> None:
-        """set current category"""
-        row_item.type_production = self.current_category_first_chunk
-        self.correction_category(row_item)
 
     def get_manufacturer_name(self) -> str | None:
         """determine manufacturer name by current category"""
@@ -141,15 +133,7 @@ class PionerParser(BaseParser):
         if chunks[0] != "автошины":
             return None
 
-        cur_category_name = chunks[1]
-
-        return cur_category_name
-
-    def is_skipped_item(self) -> bool:
-        """skip row by category"""
-        if "прочие" in (self.current_category or "").lower():
-            return True
-        return False
+        return chunks[1]
 
     @classmethod
     def get_item_rest(cls, row_item: RowItem) -> int:

@@ -3,7 +3,7 @@
 import pytest
 
 from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_formatter import (
+from parsers.row_item.row_item_casts import (
     get_integer,
     get_try_to_int_or_float,
 )

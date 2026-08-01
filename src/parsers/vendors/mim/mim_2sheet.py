@@ -3,6 +3,7 @@ logic for mim vendor (sheet 2)
 """
 
 import dataclasses
+from typing import Any
 
 from parsers.row_item.row_item import RowItem
 
@@ -109,4 +110,14 @@ class MimParser2Sheet(MimParserBase):
             row_item.intimacy,
             row_item.axis,
         ]
-        return [str(chunk).strip() for chunk in raw if str(chunk or "").strip()]
+        return cls._nonempty_chunks(raw)
+
+    @classmethod
+    def _nonempty_chunks(cls, raw: list[Any]) -> list[str]:
+        """Оставить только непустые части title."""
+        cleaned = []
+        for chunk in raw:
+            text = str(chunk or "").strip()
+            if text:
+                cleaned.append(text)
+        return cleaned

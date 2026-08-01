@@ -7,7 +7,8 @@ from typing import Any
 import pytest
 
 from cfg import init_cfg
-from parsers.xls_reader import __SKIPPED_EMPTY_ROW__, XlsReader
+from parsers.xls_reader import XlsReader
+from parsers.xls_reader_row import __SKIPPED_EMPTY_ROW__
 
 config = init_cfg()
 
@@ -73,7 +74,7 @@ def test_xls_rows_count_and_result(sheets: Any, rows_count: Any, expected_rows: 
     parse_res = reader.parse(sheets)
 
     assert len(parse_res) == rows_count
-    assert reader.skipped_rows() == __SKIPPED_EMPTY_ROW__
+    assert reader.skipped_empty_rows == __SKIPPED_EMPTY_ROW__
     assert parse_res == expected_rows
 
 

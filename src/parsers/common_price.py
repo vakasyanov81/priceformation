@@ -49,7 +49,7 @@ class CommonPrice:
         grouper = CommonPriceGrouper(self._parsed_items)
         self._parsed_items = grouper.group_by_params().get_row_items()
 
-        log_msg(f"\nКоличество дублей: {grouper.get_double_count()}\n", need_print_log=True)
+        log_msg(f"\nКоличество дублей: {len(grouper.get_double_row_items())}\n", need_print_log=True)
 
         elapsed = time.monotonic() - start_time
         log_msg(f"\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n", need_print_log=True)

@@ -4,16 +4,24 @@ xls read logic
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, cast
 
 from python_calamine import CalamineWorkbook
 
 import core
 from cfg import init_cfg
+from parsers.xls_reader_row import (
+    is_empty_row,
+    is_end_row,
+    open_book,
+    row_to_dict,
+    row_values,
+    sheet_cols,
+    strip_cell_value,
+)
 
 _MAX_COLUMNS = 50
 _MAX_ROWS = 10000
-__SKIPPED_EMPTY_ROW__ = 10
 
 Row: TypeAlias = list[Any]
 DRow: TypeAlias = dict[str, Any]
@@ -64,54 +72,26 @@ class XlsReader(IXlsReader):
         """init"""
         self.cur_row_values: Row | None = None
         self.cur_row = 0
-        self._skipped_empty_rows = 0
-        self.book: CalamineWorkbook | None = None
+        self.skipped_empty_rows = 0
+        self.book: CalamineWorkbook | None = open_book(file_path)
         self.reader_params: ParamsHelper = ParamsHelper(**reader_params)
-        self.open_book(file_path)
-
-    def open_book(self, file_path: str) -> None:
-        """open book"""
-        self.book = self._open_book(file_path)
-
-    @classmethod
-    def _open_book(cls, file_path: str) -> CalamineWorkbook:
-        """open book"""
-        return CalamineWorkbook.from_path(file_path)
-
-    def skipped_rows(self) -> int:
-        """get skipped rows count value"""
-        return self._skipped_empty_rows
-
-    def get_sheet_names(self) -> list[str]:
-        """get sheet names"""
-        return self.book.sheet_names if self.book else []
-
-    def get_sheet_by_name(self, s_name: str) -> Sheet:
-        """get sheet by name"""
-        return self.book.get_sheet_by_name(s_name).to_python(skip_empty_area=False) if self.book else []
 
     def sheets(self) -> list[Sheet]:
         """get sheet list"""
-
-        if not self.get_sheet_names():
+        book = self.book
+        if book is None or not book.sheet_names:
             core.make_raise("В прайсе отсутствуют вкладки!")
+        workbook = cast(CalamineWorkbook, book)
 
-        return [self.get_sheet_by_name(s_name) for s_name in self.get_sheet_names()]
+        return [workbook.get_sheet_by_name(s_name).to_python(skip_empty_area=False) for s_name in workbook.sheet_names]
 
     def next_row_values(self, sheet: Sheet) -> Row | bool:
         """process for next xls row"""
-
-        def _strip_cell_value(cell_value: str | Any) -> str | Any:
-            return cell_value.strip() if isinstance(cell_value, str) else cell_value
-
-        if self.is_end_row():
+        if is_end_row(self.cur_row_values, self.skipped_empty_rows):
             return False
 
-        end_col = (
-            self.sheet_cols(sheet)
-            if self.sheet_cols(sheet) <= self.reader_params.max_columns
-            else self.reader_params.max_columns
-        )
+        cols = sheet_cols(sheet)
+        end_col = cols if cols <= self.reader_params.max_columns else self.reader_params.max_columns
         cur_row = self.cur_row
         self.cur_row += 1
 
@@ -119,74 +99,30 @@ class XlsReader(IXlsReader):
             raise MaxRowsReached(self.reader_params.max_rows)
 
         try:
-            self.cur_row_values = [_strip_cell_value(cell) for cell in self.row_values(sheet, cur_row, end_col)]
+            self.cur_row_values = [strip_cell_value(cell) for cell in row_values(sheet, cur_row, end_col)]
         except IndexError:
             self.cur_row_values = [None]
 
-        if self.is_empty_row():
-            self._skipped_empty_rows += 1
-            return not self.is_end_row()
+        if is_empty_row(self.cur_row_values):
+            self.skipped_empty_rows += 1
+            return not is_end_row(self.cur_row_values, self.skipped_empty_rows)
 
         return self.cur_row_values
 
-    @classmethod
-    def row_values(cls, sheet: Sheet, cur_row: int, end_col: int) -> Row:
-        return sheet[cur_row][:end_col]
-
-    @classmethod
-    def sheet_cols(cls, sheet: Sheet) -> int:
-        return len(sheet[0])
-
-    def _get_cur_row_values(self) -> Row:
-        return self.cur_row_values or []
-
-    def is_empty_row(self) -> bool:
-        """row is empty?"""
-        for cell_content in self._get_cur_row_values():
-            if cell_content:
-                return False
-        return True
-
-    def is_end_row(self) -> bool:
-        """is end row?"""
-        return self.is_empty_row() and self._skipped_empty_rows >= __SKIPPED_EMPTY_ROW__
-
     def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
         """parse given sheets or all if not specified"""
-        rows = []
-
-        all_num_sheets = len(self.sheets())
-
-        sheet_indexes = sheet_indexes or list(range(0, all_num_sheets))
-
+        all_sheets = self.sheets()
+        sheet_indexes = sheet_indexes or list(range(0, len(all_sheets)))
+        rows: DSheet = []
         for sheet_index in sheet_indexes:
-            self._skipped_empty_rows = 0
+            self.skipped_empty_rows = 0
             self.cur_row = self.reader_params.start_row
-            rows += self.parse_sheet(self.sheets()[sheet_index])
-
+            sheet = all_sheets[sheet_index]
+            while self.next_row_values(sheet):
+                if is_empty_row(self.cur_row_values):
+                    continue
+                rows.append(row_to_dict(self.cur_row_values or [], self.reader_params.columns))
         return rows
-
-    def parse_sheet(self, sheet: Sheet) -> DSheet:
-        """parse sheet"""
-        rows: list[dict[str, Any]] = []
-        while self.next_row_values(sheet):
-            if self.is_empty_row():
-                continue
-            rows.append(self.to_dict(self._get_cur_row_values()))
-
-        return rows
-
-    def to_dict(self, row: Row) -> DRow:
-        """row to dict"""
-
-        row_dict: dict[str, Any] = {}
-        col_numbers = list(self.reader_params.columns.keys())
-        for col_number in col_numbers:
-            row_value = row[col_number]
-            col_name = str(self.reader_params.columns.get(col_number))
-            row_dict[col_name] = row_value
-
-        return row_dict
 
 
 class MaxRowsReached(core.CoreExceptionError):
