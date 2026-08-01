@@ -1,7 +1,5 @@
 """tests for stop words and manufacturer aliases providers"""
 
-# pylint: disable=missing-function-docstring
-
 from unittest.mock import patch
 
 import pytest

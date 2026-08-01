@@ -1,7 +1,5 @@
 """tests for row item formatters"""
 
-# pylint: disable=missing-function-docstring
-
 import pytest
 
 from parsers.row_item.row_item import RowItem

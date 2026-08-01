@@ -145,7 +145,7 @@ class ZapaskaDiskJSON(BaseParser):
 
             self.price_sup_codes[code] = price_mrp.price_recommended
 
-    def get_prepared_title(self, item: RowItem):  # pylint: disable=arguments-differ
+    def get_prepared_title(self, item: RowItem):
         """Normalize title spaces and apply title aliases."""
         chunks = [chunk.strip() for chunk in item.title.split(" ") if chunk.strip()]
         title = " ".join(chunks)

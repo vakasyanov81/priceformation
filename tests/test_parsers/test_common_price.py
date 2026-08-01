@@ -16,7 +16,6 @@ fake_result = [RowItem({"title": 1})]
 class FakeParser:
     """fake parser"""
 
-    # pylint: disable=R0903
     _SUPPLIER_FOLDER_NAME = "fake_supplier"  # noqa: WPS115
 
     def __init__(self, file_prices: list | None = None, xls_reader=None, price_config=None):

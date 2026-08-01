@@ -19,7 +19,7 @@ class ParseParamsSupplier:
 
 
 @dataclass
-class ParserParams:  # pylint: disable=too-many-instance-attributes
+class ParserParams:
     """parser params"""
 
     supplier: ParseParamsSupplier
