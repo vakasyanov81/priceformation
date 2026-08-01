@@ -2,11 +2,12 @@
 tests common price parser
 """
 
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from parsers.base_parser.base_parser import BaseParser
 from parsers.common_price import CommonPrice
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
@@ -17,32 +18,24 @@ fake_result = [RowItem({"title": 1})]
 class FakeParser:
     """fake parser"""
 
-    _SUPPLIER_FOLDER_NAME = "fake_supplier"  # noqa: WPS115
-
-    def __init__(self, file_prices: list | None = None, xls_reader: Any = None, price_config: Any = None) -> None:
+    def __init__(
+        self,
+        parse_config: Any = None,
+        file_prices: list[str] | None = None,
+        xls_reader: Any = None,
+    ) -> None:
         """init"""
 
-    @classmethod
-    def supplier_folder_name(cls) -> None:
-        """supplier folder name"""
-        return cls._SUPPLIER_FOLDER_NAME
-
-    @classmethod
-    def get_parsed_items(cls) -> None:
-        """fake get parsed items"""
-        return fake_result
-
-    @classmethod
-    def parse(cls) -> None:
+    def parse(self) -> list[RowItem]:
         """fake parse"""
-        return fake_result
+        return list(fake_result)
 
 
 def test_parse_all_vendors() -> None:
     """парсинг списка вендоров и группировка результата"""
     common_price = CommonPrice()
     with patch("parsers.common_price.log_msg"):
-        common_price.parse_all_vendors([(FakeParser, None)])
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
     assert common_price.parsed_items == fake_result
 
 
