@@ -8,7 +8,7 @@ _SHEET = "Sheet1"
 _WIDTH = 100
 
 
-def test_fake_driver_init_and_sheet():
+def test_fake_driver_init_and_sheet() -> None:
     """init workbook и лист"""
     driver = FakeXlwtDriver()
     driver.init_workbook(_FOLDER, _FILE_NAME)
@@ -21,7 +21,7 @@ def test_fake_driver_init_and_sheet():
     assert driver.get_folder() == _FOLDER
 
 
-def test_fake_driver_write_body():
+def test_fake_driver_write_body() -> None:
     """запись шапки и тела"""
     driver = FakeXlwtDriver()
     driver.write_head(["a", "b"])
@@ -32,7 +32,7 @@ def test_fake_driver_write_body():
     assert driver.body["cell(1,0)"] == "val"
 
 
-def test_fake_driver_repr():
+def test_fake_driver_repr() -> None:
     """__repr__ отражает состояние драйвера"""
     driver = FakeXlwtDriver()
     driver.init_workbook("f/", "n.xls")

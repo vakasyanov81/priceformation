@@ -5,7 +5,7 @@ from cfg.color import Colors
 _ANSI_PREFIX = "\033["
 
 
-def test_header_and_ok_colors():
+def test_header_and_ok_colors() -> None:
     """HEADER и OK-* используют ANSI-префикс"""
     assert Colors.HEADER.startswith(_ANSI_PREFIX)
     assert Colors.OK_BLUE.startswith(_ANSI_PREFIX)
@@ -13,7 +13,7 @@ def test_header_and_ok_colors():
     assert Colors.OK_GREEN.startswith(_ANSI_PREFIX)
 
 
-def test_warning_fail_and_style_colors():
+def test_warning_fail_and_style_colors() -> None:
     """WARNING/FAIL и стиль форматирования"""
     assert Colors.WARNING.startswith(_ANSI_PREFIX)
     assert Colors.FAIL.startswith(_ANSI_PREFIX)

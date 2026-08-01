@@ -2,8 +2,10 @@
 fixtures for four_tochki sheet1 vendor
 """
 
+from typing import Any
 
-def four_tochki_many_item_result():
+
+def four_tochki_many_item_result() -> dict[str, Any]:
     """one file, many price row parse result"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [
@@ -56,7 +58,7 @@ def four_tochki_many_item_result():
     }
 
 
-def four_tochki_one_item_result(diameter: str = "R16"):
+def four_tochki_one_item_result(diameter: str = "R16") -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [

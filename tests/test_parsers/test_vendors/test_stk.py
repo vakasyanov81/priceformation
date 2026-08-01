@@ -11,7 +11,7 @@ _LOW_OPT = 500
 _LOW_MARKUP = 530
 
 
-def test_add_price_markup():
+def test_add_price_markup() -> None:
     """наценка 6% с округлением вверх до десятков"""
     parser = object.__new__(STKParser)
     row = RowItem({"price_opt": _PRICE_OPT})
@@ -19,7 +19,7 @@ def test_add_price_markup():
     assert row.price_markup == _MARKUP
 
 
-def test_add_price_markup_empty():
+def test_add_price_markup_empty() -> None:
     """без закупочной цены наценка не ставится"""
     parser = object.__new__(STKParser)
     row = RowItem({})
@@ -27,15 +27,15 @@ def test_add_price_markup_empty():
     assert row.price_markup == 0
 
 
-def test_process_markup_and_rest():
+def test_process_markup_and_rest() -> None:
     """process вызывает skip_by_min_rest и add_price_markup"""
     parser = object.__new__(STKParser)
     row_ok = RowItem({"price_opt": _PRICE_OPT, "rest_count": 10})
     row_low = RowItem({"price_opt": _LOW_OPT, "rest_count": 1})
     parser.parsed_items = [row_ok, row_low]
 
-    with patch("parsers.vendors.stk.BaseParser.process", return_value=parser.parsed_items):
-        assert parser.process() == parser.parsed_items
+    with patch("parsers.vendors.stk.BaseParser.process", return_value=2):
+        assert parser.process() == 2
 
     assert row_ok.price_markup == _MARKUP
     assert row_ok.rest_count == 10

@@ -3,7 +3,7 @@ base parser config logic
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, NamedTuple, Tuple, Type
+from typing import Any, Dict, List, NamedTuple, Type, cast
 
 from parsers import data_provider
 from parsers.row_item.row_item import RowItem
@@ -25,10 +25,10 @@ class ParserParams:
     supplier: ParseParamsSupplier
     start_row: int
     sheet_info: str
-    columns: dict
+    columns: dict[Any, str]
     stop_words: List[str]
     file_templates: List[str]
-    sheet_indexes: List
+    sheet_indexes: List[int]
     row_item_adaptor: Type[RowItem]
 
 
@@ -46,8 +46,8 @@ class BasePriceParseConfigurationParams(NamedTuple):
 class ParseConfiguration:
     """base price parser configuration"""
 
-    _markup_rules: data_provider.MarkupRules = None
-    _price_markup_map: Tuple[data_provider.MarkUpParams] = None
+    _markup_rules: data_provider.MarkupRules | None = None
+    _price_markup_map: tuple[data_provider.MarkUpParams, ...] | None = None
 
     def __init__(self, parse_config: BasePriceParseConfigurationParams):
         """init"""
@@ -55,23 +55,24 @@ class ParseConfiguration:
         self._all_vendor_config: Dict[str, data_provider.VendorParams] | None = None
 
     @classmethod
-    def extract_markup_rules(cls, markup_data: dict):
+    def extract_markup_rules(cls, markup_data: dict[str, Any]) -> data_provider.MarkupRules:
         """dict -> named tuple"""
+        raw_rules = markup_data.get("markup_rules") or {}
         return data_provider.MarkupRules(
-            markup_rules=markup_data.get("markup_rules"),
-            min_recommended_percent_markup=markup_data.get("min_recommended_percent_markup"),
-            max_recommended_percent_markup=markup_data.get("max_recommended_percent_markup"),
+            markup_rules=cast(dict[str, dict[str, Any]], raw_rules),
+            min_recommended_percent_markup=float(markup_data.get("min_recommended_percent_markup") or 0),
+            max_recommended_percent_markup=float(markup_data.get("max_recommended_percent_markup") or 0),
             absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**markup_data.get("absolute_markup_rules", {})),
         )
 
-    def get_markup_rules(self):
+    def get_markup_rules(self) -> data_provider.MarkupRules:
         """get markup rules and caching"""
         if not self._markup_rules:
             markup_data = self.parse_config.markup_rules_provider.get_markup_data() or {}
             self._markup_rules = self.extract_markup_rules(markup_data)
         return self._markup_rules
 
-    def get_price_markup_map(self) -> Tuple[data_provider.MarkUpParams]:
+    def get_price_markup_map(self) -> tuple[data_provider.MarkUpParams, ...]:
         """get tuple with markup params and caching"""
         if not self._price_markup_map:
             raw_rules = list(self.get_markup_rules().markup_rules.values())
@@ -79,7 +80,7 @@ class ParseConfiguration:
             self._price_markup_map = tuple(mapped_rules)
         return self._price_markup_map
 
-    def get_default_markup_percents(self, def_value=0) -> float:
+    def get_default_markup_percents(self, def_value: float = 0) -> float:
         """get default (minimal) markup percent"""
         return min({markup_rule.percent_markup for markup_rule in self.get_price_markup_map()} or (def_value,))
 
@@ -91,7 +92,7 @@ class ParseConfiguration:
         """stop words data"""
         return self.parse_config.stop_words_provider.get_stop_words_data()
 
-    def manufacturer_aliases(self) -> dict:
+    def manufacturer_aliases(self) -> dict[str, Any]:
         """manufacturer aliases data"""
         return self.parse_config.manufacturer_aliases.get_aliases()
 

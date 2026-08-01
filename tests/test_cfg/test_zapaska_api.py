@@ -1,5 +1,6 @@
 """tests for Zapaska API env configuration"""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,7 +17,7 @@ _TEST_SECRET = "secret"
 _TEST_HOST = "api.test:443"
 
 
-def test_config_from_dotenv_file(tmp_path, monkeypatch):
+def test_config_from_dotenv_file(tmp_path: Any, monkeypatch: Any) -> None:
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
     monkeypatch.delenv(_HOST, raising=False)
@@ -35,7 +36,7 @@ def test_config_from_dotenv_file(tmp_path, monkeypatch):
     assert config.host == "host.from.env"
 
 
-def test_config_from_env(monkeypatch):
+def test_config_from_env(monkeypatch: Any) -> None:
     monkeypatch.setenv(_LOGIN, _TEST_USER)
     monkeypatch.setenv(_PASSWORD_ENV, _TEST_SECRET)
     monkeypatch.delenv(_HOST, raising=False)
@@ -47,7 +48,7 @@ def test_config_from_env(monkeypatch):
     assert config.host == "ka2.sibzapaska.ru:16500"
 
 
-def test_config_custom_host(monkeypatch):
+def test_config_custom_host(monkeypatch: Any) -> None:
     monkeypatch.setenv(_LOGIN, _TEST_USER)
     monkeypatch.setenv(_PASSWORD_ENV, _TEST_SECRET)
     monkeypatch.setenv(_HOST, "api.example:443")
@@ -55,7 +56,7 @@ def test_config_custom_host(monkeypatch):
     assert get_zapaska_api_config().host == "api.example:443"
 
 
-def test_config_missing_credentials(monkeypatch):
+def test_config_missing_credentials(monkeypatch: Any) -> None:
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
     with (
@@ -66,7 +67,7 @@ def test_config_missing_credentials(monkeypatch):
         get_zapaska_api_config()
 
 
-def test_get_data_uses_env_config():
+def test_get_data_uses_env_config() -> None:
     api_config = ZapaskaApiConfig(host=_TEST_HOST, login="u", password=_TEST_SECRET)
     mock_response = MagicMock()
     mock_response.read.return_value = b'{"ok": 1}'

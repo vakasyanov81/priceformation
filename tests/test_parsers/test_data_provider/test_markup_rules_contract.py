@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -53,7 +54,7 @@ def _configuration_from_example(config_name: str) -> ParseConfiguration:
         ("poshk_markup_rules.json", _POSHK_FIRST),
     ],
 )
-def test_example_percent_key_loads(config_name, expected_first):
+def test_example_percent_key_loads(config_name: Any, expected_first: Any) -> None:
     markup_map = _configuration_from_example(config_name).get_price_markup_map()
     assert markup_map
     assert markup_map[0].percent_markup == pytest.approx(expected_first)

@@ -2,7 +2,7 @@
 tests for four_tochki vendor (sheet 1) after raw-parser process
 """
 
-from typing import List
+from typing import Any, List
 
 from test_parsers.fixtures.four_tochki_sheet1 import (
     four_tochki_many_item_result,
@@ -24,7 +24,7 @@ from parsers.vendors.four_tochki.four_tochki_sheet1 import (
 parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRulesProviderForTests())
 
 
-def get_fake_parser(parse_result):
+def get_fake_parser(parse_result: Any) -> FourTochkiParser1Sheet:
     """get fake parser"""
     FakeXlsReader.parse_result = list(parse_result.values())[0]
     return FourTochkiParser1Sheet(
@@ -34,7 +34,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     parsed_items: List[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
@@ -55,7 +55,7 @@ def test_parse():
     assert parsed_items[2].title == "235/75R17.5 BF Goodrich Route Control D 132/130M"
 
 
-def test_replace_diameter():
+def test_replace_diameter() -> None:
     """check replace RZ -> ZR"""
 
     parsed_items: List[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
@@ -68,7 +68,7 @@ def test_replace_diameter():
     assert parsed_items[0].percent_markup == 27.17
 
 
-def test_prepare_title_replace_999():
+def test_prepare_title_replace_999() -> None:
     """999 -> L"""
 
     row = RowItem(
@@ -83,7 +83,7 @@ def test_prepare_title_replace_999():
     assert prepared_title == "11L-20"
 
 
-def test_prepare_title_width_two_zero():
+def test_prepare_title_width_two_zero() -> None:
     """10.00-20 Armour TI300 16PR TTF"""
 
     row = RowItem(
@@ -101,7 +101,7 @@ def test_prepare_title_width_two_zero():
     assert prepared_title == "10.00-20 Armour TI300 16PR TTF"
 
 
-def test_prepare_title_width_one_zero():
+def test_prepare_title_width_one_zero() -> None:
     """10.0/75-15.3 Forerunner QH602 R-4 12PR TL"""
 
     row = RowItem(
@@ -121,7 +121,7 @@ def test_prepare_title_width_one_zero():
     assert prepared_title == "10.0/75-15.3 Forerunner QH602 R-4 12PR TL"
 
 
-def test_prepare_title_width_1():
+def test_prepare_title_width_1() -> None:
     """11L-15 Galaxy Rib Implement I-1 12PR TL"""
 
     row = RowItem(
@@ -141,7 +141,7 @@ def test_prepare_title_width_1():
     assert prepared_title == "11L-15 Galaxy Rib Implement I-1 12PR TL"
 
 
-def test_prepare_title_1():
+def test_prepare_title_1() -> None:
     """..."""
 
     row = RowItem(

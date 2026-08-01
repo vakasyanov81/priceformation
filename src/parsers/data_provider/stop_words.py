@@ -11,7 +11,7 @@ from .black_list import BlackListProviderFromUserConfig
 class StopWordsProviderBase:
     """Base stop words data provider"""
 
-    def get_stop_words_data(self):
+    def get_stop_words_data(self) -> list[str]:
         """Abstract method. Get stop words data."""
         raise NotImplementedError
 
@@ -19,6 +19,6 @@ class StopWordsProviderBase:
 class StopWordsProviderFromUserConfig(StopWordsProviderBase):
     """Stop words data provider from user config file."""
 
-    def get_stop_words_data(self):
+    def get_stop_words_data(self) -> list[str]:
         """Get stop words"""
         return BlackListProviderFromUserConfig.split_and_filtration(read_file(MainConfig().stop_words_file_path))

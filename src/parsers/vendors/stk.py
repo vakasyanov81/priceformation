@@ -3,11 +3,12 @@
 """
 
 from parsers import data_provider
-from parsers.base_parser.base_parser import BaseParser, ParserParams
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
+    ParserParams,
 )
 from parsers.row_item.row_item import RowItem
 
@@ -33,16 +34,16 @@ stk_params = ParserParams(
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(stk_params.supplier.folder_name)
 
-stk_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=stk_params,
+stk_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=stk_params,
+    )
 )
-
-stk_config = ParseConfiguration(stk_config)
 
 
 class STKParser(BaseParser):
@@ -50,7 +51,7 @@ class STKParser(BaseParser):
     parser for Greenstone vendor
     """
 
-    def process(self):
+    def process(self) -> int:
         """process price parse"""
         res = super().process()
         for row_item in self.parsed_items:
@@ -59,7 +60,7 @@ class STKParser(BaseParser):
 
         return res
 
-    def add_price_markup(self, row_item):
+    def add_price_markup(self, row_item: RowItem) -> None:
         """
         Добавить наценку
         """

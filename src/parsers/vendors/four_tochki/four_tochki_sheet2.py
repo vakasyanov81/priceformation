@@ -41,16 +41,16 @@ fourtochki_sheet_2_params.columns = {
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-fourtochki_sheet_2_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=fourtochki_sheet_2_params,
+fourtochki_sheet_2_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=fourtochki_sheet_2_params,
+    )
 )
-
-fourtochki_sheet_2_config = ParseConfiguration(fourtochki_sheet_2_config)
 
 
 class FourTochkiParser2Sheet(FourTochkiParserBase):
@@ -59,11 +59,11 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     """
 
     @classmethod
-    def get_current_category(cls, row_item):
+    def get_current_category(cls, row_item: RowItem) -> str:
         return "Диск"
 
     @classmethod
-    def get_prepared_title(cls, row_item: RowItem):
+    def get_prepared_title(cls, row_item: RowItem) -> str:
         mark = (row_item.manufacturer or "").lower().capitalize()
         diameter = (row_item.diameter or "").replace(".0", "")
         return _disk_title(row_item, mark, diameter)

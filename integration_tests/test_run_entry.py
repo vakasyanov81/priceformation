@@ -12,7 +12,7 @@ _RUN_EXIT = "run.sys.exit"
 _QUIT = "q"
 
 
-def test_main_exits_on_quit():
+def test_main_exits_on_quit() -> None:
     """main завершает процесс при выборе выхода из меню."""
     with (
         patch(_INPUT, return_value=_QUIT),
@@ -27,7 +27,7 @@ def test_main_exits_on_quit():
         mock_exit.assert_called_with(0)
 
 
-def test_main_make_price_then_exit():
+def test_main_make_price_then_exit() -> None:
     """выбор 1 вызывает полный путь формирования прайса, затем выход."""
     common = MagicMock()
     common.parsed_items = ["item"]
@@ -50,7 +50,7 @@ def test_main_make_price_then_exit():
         mock_out.return_value.write_all_prices.assert_called_once()
 
 
-def test_main_update_zapaska_then_exit():
+def test_main_update_zapaska_then_exit() -> None:
     """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
     with (
         patch(_INPUT, side_effect=["2", _QUIT]),
@@ -67,7 +67,7 @@ def test_main_update_zapaska_then_exit():
         mock_log.assert_called_once()
 
 
-def test_main_retries_invalid_menu_input():
+def test_main_retries_invalid_menu_input() -> None:
     """неверный ввод меню игнорируется, затем выполняется валидное действие."""
     with (
         patch(_INPUT, side_effect=["x", _QUIT]),
@@ -83,7 +83,7 @@ def test_main_retries_invalid_menu_input():
         mock_dialog_log.assert_called_once()
 
 
-def test_response_make_price_via_try_call():
+def test_response_make_price_via_try_call() -> None:
     """response_processing проходит через try_call до run_make_price_by_supplier."""
     common = MagicMock()
     common.parsed_items = []
@@ -102,7 +102,7 @@ def test_response_make_price_via_try_call():
         mock_out.return_value.write_all_prices.assert_called_once()
 
 
-def test_response_supplier_error_exits():
+def test_response_supplier_error_exits() -> None:
     """SupplierNotHavePricesError в try_call завершает процесс с кодом 1."""
     with (
         patch("run.ask_action", return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),

@@ -2,10 +2,12 @@
 stubs for tests for Zapaska vendor
 """
 
+from typing import Any
+
 from parsers.row_item.row_item import RowItem
 
 
-def zapaska_one_item_result():
+def zapaska_one_item_result() -> tuple[dict[str, Any], list[RowItem]]:
     """one file, one price row parse result"""
     return (
         {
@@ -37,7 +39,7 @@ def zapaska_one_item_result():
     )
 
 
-def zapaska_2file_result():
+def zapaska_2file_result() -> tuple[dict[str, Any], list[RowItem]]:
     """two files, two price row parse result"""
     return (
         {

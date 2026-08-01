@@ -2,6 +2,8 @@
 write template for internal use
 """
 
+from typing import Any
+
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 
@@ -77,4 +79,4 @@ class ForInner(IWriteTemplate):
 
     __FILE__ = "price_{now}.xlsx"
 
-    __EXCLUDE__ = {}
+    __EXCLUDE__: dict[str, Any] = {}

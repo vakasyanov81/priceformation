@@ -3,7 +3,7 @@ vendor list provider
 """
 
 import json
-from typing import NamedTuple
+from typing import Any, NamedTuple, cast
 
 from cfg.main import MainConfig
 from core.exceptions import CoreExceptionError
@@ -23,7 +23,7 @@ class VendorParams(NamedTuple):
 class VendorListProviderBase:
     """Base data provider with supplier config"""
 
-    def get_config_vendor_list(self):
+    def get_config_vendor_list(self) -> dict[str, Any]:
         """Abstract method. Get config for vendor list."""
         raise NotImplementedError
 
@@ -31,15 +31,15 @@ class VendorListProviderBase:
 class VendorListProviderFromUserConfig(VendorListProviderBase):
     """Base data provider with supplier config from user config file"""
 
-    def get_config_vendor_list(self) -> dict:
+    def get_config_vendor_list(self) -> dict[str, Any]:
         """get configuration for vendors"""
         return self.try_get_config_vendor_list()
 
     @classmethod
-    def try_get_config_vendor_list(cls) -> dict:
+    def try_get_config_vendor_list(cls) -> dict[str, Any]:
         """safety get configuration for vendors"""
         try:
-            return json.loads(read_file(MainConfig().vendor_list_file_path))
+            return cast(dict[str, Any], json.loads(read_file(MainConfig().vendor_list_file_path)))
         except FileNotFoundError as exc:
             raise VendorListConfigFileError(
                 f"Failed to read all vendor settings {MainConfig().vendor_list_file_name}"

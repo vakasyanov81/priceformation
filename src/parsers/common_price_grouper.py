@@ -139,7 +139,7 @@ class CommonPriceGrouper:
         return None
 
     @classmethod
-    def _is_float_diameter(cls, diameter) -> bool:
+    def _is_float_diameter(cls, diameter: Any) -> bool:
         """Диаметр не целое число (например 15.3)."""
         diameter_str = str(diameter or 0).replace(",", ".")
         try:

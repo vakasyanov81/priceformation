@@ -5,6 +5,6 @@ from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_inner import ForInner
 
 
-def test_all_writer_templates_order():
+def test_all_writer_templates_order() -> None:
     """активные шаблоны: внутренний и drom"""
     assert all_writer_templates() == [ForInner, ForDrom]

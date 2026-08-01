@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from typing import Any, Iterator
 
 from python_calamine import CalamineWorkbook
 
@@ -11,15 +12,18 @@ VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1
 
 
+class _NomenclatureCache:
+    """Module-level cache for corrected titles."""
+
+    titles: dict[str, str] | None = None
+
+
 def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
     """Return corrected title from cache or original title."""
-    if getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", None) is None:
-        get_nomenclature_corrected_title.corrected_nomenclatures_ = load_file()
+    if _NomenclatureCache.titles is None:
+        _NomenclatureCache.titles = load_file()
 
-    return (
-        getattr(get_nomenclature_corrected_title, "corrected_nomenclatures_", {}).get(nomenclature_title)
-        or nomenclature_title
-    )
+    return _NomenclatureCache.titles.get(nomenclature_title) or nomenclature_title
 
 
 def load_file() -> dict[str, str]:
@@ -36,7 +40,7 @@ def _read_corrections(file_path: str) -> dict[str, str]:
     return dict(_iter_correction_pairs(rows))
 
 
-def _iter_correction_pairs(rows):
+def _iter_correction_pairs(rows: list[list[Any]]) -> Iterator[tuple[str, str]]:
     """Пары из строк xlsx без заголовка."""
     for row_data in rows[1:]:
         vendor_title = str(row_data[VENDOR_TITLE_IDX])

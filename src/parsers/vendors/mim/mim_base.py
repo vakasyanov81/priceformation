@@ -28,16 +28,16 @@ supplier_folder_name = mim_params.supplier.folder_name
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-mim_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=mim_params,
+mim_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=mim_params,
+    )
 )
-
-mim_config = ParseConfiguration(mim_config)
 
 
 class MimParserBase(BaseParser):
@@ -46,16 +46,16 @@ class MimParserBase(BaseParser):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         """getting current category"""
         raise NotImplementedError()
 
     @classmethod
-    def set_category(cls, row_item):
+    def set_category(cls, row_item: RowItem) -> None:
         """set category to row price item"""
         row_item.type_production = cls.get_current_category()
 
-    def process(self):
+    def process(self) -> int:
         """parse process"""
         res = super().process()
         for row_item in self.parsed_items:

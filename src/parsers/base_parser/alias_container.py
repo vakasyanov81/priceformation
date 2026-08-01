@@ -3,8 +3,11 @@ container for aliases
 """
 
 from functools import cached_property
+from typing import TypeAlias
 
-CorrectWord, CorrectLoweredWord, IncorrectLoweredAlias = str, str, str
+CorrectWord: TypeAlias = str
+CorrectLoweredWord: TypeAlias = str
+IncorrectLoweredAlias: TypeAlias = str
 
 
 class AliasContainer:
@@ -12,7 +15,7 @@ class AliasContainer:
     container for aliases
     """
 
-    def __init__(self, map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias]]):
+    def __init__(self, map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias]):
         """
         :param map_aliases: {
             correct_word_1: (
@@ -53,7 +56,7 @@ class AliasContainer:
         return self.to_lowercase(self.all_correct_words)
 
     @cached_property
-    def incorrect_words(self) -> list:
+    def incorrect_words(self) -> list[str]:
         """collected all incorrect words"""
         return self.sort_by_length(list(self.reversed_map.keys()))
 
@@ -63,12 +66,12 @@ class AliasContainer:
         return self.to_lowercase(self.incorrect_words)
 
     @cached_property
-    def correct_words(self) -> list:
+    def correct_words(self) -> list[str]:
         """collected all correct words"""
         return self.sort_by_length(list(self.reversed_map.values()))
 
     @cached_property
-    def correct_words_lower(self) -> list:
+    def correct_words_lower(self) -> list[str]:
         """collected all correct words in lowercase"""
         return self.to_lowercase(self.correct_words)
 

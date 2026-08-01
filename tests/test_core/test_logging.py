@@ -2,18 +2,19 @@
 test init_log
 """
 
+from typing import Any
 from unittest.mock import patch
 
 from core.wrappers import logging
 
 
 @logging(label="test_logging")
-def logging_function(param1: int, param2: int, **_dict):
+def logging_function(param1: int, param2: int, **_dict: Any) -> int:
     """decorated function for logging wrapper test"""
     return param1 + param2
 
 
-def test_logging():
+def test_logging() -> None:
     """logging wrapper emits call/result messages"""
     param1, param2 = 10, 20
     expected_result = param1 + param2
@@ -27,7 +28,7 @@ def test_logging():
     assert f'logging_function": {expected_result}' in str(mock_log_msg.call_args_list[1].args[0])
 
 
-def test_logging_when_wrong_argument():
+def test_logging_when_wrong_argument() -> None:
     """test logging call function with wrong argument"""
 
     with patch("core.wrappers.log_msg") as mock_log_msg:

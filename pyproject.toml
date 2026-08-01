@@ -103,6 +103,8 @@ mutate_only_covered_lines=true
 
 [tool.mypy]
 # The mypy configurations: http://bit.ly/2zEl9WI
+mypy_path = "src"
+explicit_package_bases = true
 ignore_missing_imports = true
 strict = true
 local_partial_types = true

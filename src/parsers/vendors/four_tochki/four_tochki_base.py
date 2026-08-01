@@ -2,8 +2,8 @@
 base logic for four_tochki vendor
 """
 
-from parsers.base_parser.base_parser import BaseParser, ParserParams
-from parsers.base_parser.base_parser_config import ParseParamsSupplier
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams
 from parsers.row_item.row_item import RowItem
 
 fourtochki_params = ParserParams(
@@ -24,16 +24,16 @@ class FourTochkiParserBase(BaseParser):
     """
 
     @classmethod
-    def get_current_category(cls, row_item):
+    def get_current_category(cls, row_item: RowItem) -> str:
         """getting current category"""
         raise NotImplementedError()
 
     @classmethod
-    def set_category(cls, row_item):
+    def set_category(cls, row_item: RowItem) -> None:
         """set category to row price item"""
         row_item.type_production = cls.get_current_category(row_item)
 
-    def process(self):
+    def process(self) -> int:
         """parse process"""
         res = super().process()
         for row_item in self.parsed_items:

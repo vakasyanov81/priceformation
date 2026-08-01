@@ -2,10 +2,12 @@
 tests common price parser
 """
 
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from parsers.base_parser.base_parser import BaseParser
 from parsers.common_price import CommonPrice
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
@@ -18,34 +20,34 @@ class FakeParser:
 
     _SUPPLIER_FOLDER_NAME = "fake_supplier"  # noqa: WPS115
 
-    def __init__(self, file_prices: list | None = None, xls_reader=None, price_config=None):
+    def __init__(self, file_prices: list[str] | None = None, xls_reader: Any = None, price_config: Any = None) -> None:
         """init"""
 
     @classmethod
-    def supplier_folder_name(cls):
+    def supplier_folder_name(cls) -> str:
         """supplier folder name"""
         return cls._SUPPLIER_FOLDER_NAME
 
     @classmethod
-    def get_parsed_items(cls):
+    def get_parsed_items(cls) -> list[RowItem]:
         """fake get parsed items"""
         return fake_result
 
     @classmethod
-    def parse(cls):
+    def parse(cls) -> list[RowItem]:
         """fake parse"""
         return fake_result
 
 
-def test_parse_all_vendors():
+def test_parse_all_vendors() -> None:
     """парсинг списка вендоров и группировка результата"""
     common_price = CommonPrice()
     with patch("parsers.common_price.log_msg"):
-        common_price.parse_all_vendors([(FakeParser, None)])
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
     assert common_price.parsed_items == fake_result
 
 
-def test_parse_vendor_config_error():
+def test_parse_vendor_config_error() -> None:
     """VendorListConfigFileError не валит общий разбор"""
     parser = MagicMock()
     with patch.object(VendorListConfigFileError, "to_log"):
@@ -58,7 +60,7 @@ def test_parse_vendor_config_error():
         assert common_price.parsed_items == []
 
 
-def test_parse_vendor_reraises():
+def test_parse_vendor_reraises() -> None:
     """прочие ошибки логируются и пробрасываются"""
     parser = MagicMock()
     parser.parse.side_effect = RuntimeError("boom")
@@ -70,7 +72,7 @@ def test_parse_vendor_reraises():
         mock_err.assert_called_once()
 
 
-def test_suppliers_info():
+def test_suppliers_info() -> None:
     """supplier_info returns dict"""
     common_price = CommonPrice()
     assert isinstance(common_price.supplier_info(), dict)

@@ -1,5 +1,7 @@
 """Parse configuration"""
 
+from typing import Any
+
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
@@ -13,7 +15,10 @@ from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
 
 
-def make_parse_configuration(parser_params, markup_rules=None):
+def make_parse_configuration(
+    parser_params: Any,
+    markup_rules: Any = None,
+) -> BasePriceParseConfigurationParams:
     """make parse configuration"""
     return BasePriceParseConfigurationParams(
         black_list_provider=BlackListProviderForTests(),
@@ -28,7 +33,7 @@ def make_parse_configuration(parser_params, markup_rules=None):
 class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for mim supplier tests"""
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict[str, Any]:
         """get markup rules"""
         return {
             "markup_rules": {
@@ -50,7 +55,7 @@ class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
 class PionerMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for mim supplier tests"""
 
-    def get_markup_data(self):
+    def get_markup_data(self) -> dict[str, Any]:
         """get markup rules"""
         return {
             "markup_rules": {

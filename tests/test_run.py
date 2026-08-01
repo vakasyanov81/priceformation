@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from run_dialog import AnswerResult
 
 
-def test_response_make_price():
+def test_response_make_price() -> None:
     """действие формирования прайса вызывает try_call"""
     with (
         patch("run.ask_action", return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
@@ -18,7 +18,7 @@ def test_response_make_price():
         assert mock_try.call_args.args[0].__name__ == "run_make_price_by_supplier"
 
 
-def test_response_update_zapaska():
+def test_response_update_zapaska() -> None:
     """действие выгрузки запаски вызывает try_call"""
     with (
         patch("run.ask_action", return_value=AnswerResult.UPDATE_ZAPASKA_DATA),
@@ -31,7 +31,7 @@ def test_response_update_zapaska():
         assert mock_try.call_args.args[0].__name__ == "run_upload_zapaska_data"
 
 
-def test_response_exit():
+def test_response_exit() -> None:
     """выход завершает процесс"""
     with (
         patch("run.ask_action", return_value=AnswerResult.EXIT),
@@ -43,7 +43,7 @@ def test_response_exit():
         mock_exit.assert_called_once_with(0)
 
 
-def test_run_make_price():
+def test_run_make_price() -> None:
     """сборка общего прайса и запись"""
     common = MagicMock()
     common.parsed_items = [1]
@@ -62,7 +62,7 @@ def test_run_make_price():
         mock_out.return_value.write_all_prices.assert_called_once()
 
 
-def test_run_upload_zapaska():
+def test_run_upload_zapaska() -> None:
     """загрузка данных запаски и сообщение об успехе"""
     with (
         patch("run.load_data") as mock_load,

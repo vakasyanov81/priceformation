@@ -11,17 +11,17 @@ from parsers.data_provider.manufacturer_aliases import (
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
 
-def test_stop_words_base_raises():
+def test_stop_words_base_raises() -> None:
     with pytest.raises(NotImplementedError):
         StopWordsProviderBase().get_stop_words_data()
 
 
-def test_aliases_base_raises():
+def test_aliases_base_raises() -> None:
     with pytest.raises(NotImplementedError):
         ManufacturerAliasesProviderBase().get_aliases()
 
 
-def test_stop_words_from_config():
+def test_stop_words_from_config() -> None:
     with (
         patch("parsers.data_provider.stop_words.read_file", return_value="w1\nw2"),
         patch("parsers.data_provider.stop_words.MainConfig") as mock_cfg,
@@ -30,7 +30,7 @@ def test_stop_words_from_config():
         assert StopWordsProviderFromUserConfig().get_stop_words_data() == ["w1", "w2"]
 
 
-def test_aliases_from_config():
+def test_aliases_from_config() -> None:
     with (
         patch(
             "parsers.data_provider.manufacturer_aliases.read_file",

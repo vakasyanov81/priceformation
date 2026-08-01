@@ -2,8 +2,10 @@
 fixtures for four_tochki sheet2 vendor
 """
 
+from typing import Any
 
-def four_tochki_one_item_result():
+
+def four_tochki_one_item_result() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [
@@ -26,7 +28,7 @@ def four_tochki_one_item_result():
     }
 
 
-def four_tochki_one_item_result_1():
+def four_tochki_one_item_result_1() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [
@@ -49,7 +51,7 @@ def four_tochki_one_item_result_1():
     }
 
 
-def four_tochki_invalid_item_result():
+def four_tochki_invalid_item_result() -> dict[str, Any]:
     """one file, two price row parse result with invalid one invalid row"""
     return {
         "file_prices\\four_tochki\\price.xlsx": [

@@ -2,6 +2,8 @@
 write template interface
 """
 
+from typing import Any
+
 from parsers.writer.templates.column_helper import ColumnHelper
 
 
@@ -12,26 +14,26 @@ class IWriteTemplate:
 
     """ write template interface """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._columns_formated: dict[str, ColumnHelper] | None = None
         self._column_names: list[str] | None = None
 
-    def exclude(self) -> dict:
+    def exclude(self) -> dict[str, Any]:
         """get exclude"""
         ex_field = "__EXCLUDE__"
         return getattr(self, ex_field) if hasattr(self, ex_field) else {}
 
-    def get_file_name(self):
+    def get_file_name(self) -> str:
         """get exclude"""
         file_field = "__FILE__"
         return getattr(self, file_field) if hasattr(self, file_field) else "default_result.xls"
 
-    def columns(self) -> list[dict]:
+    def columns(self) -> list[dict[str, Any]]:
         """get columns"""
         col_field = "__COLUMNS__"
         return getattr(self, col_field) if hasattr(self, col_field) else []
 
-    def colors(self):
+    def colors(self) -> dict[str, Any]:
         """get colors"""
         col_field = "__COLOR__"
         return getattr(self, col_field) if hasattr(self, col_field) else {}

@@ -4,7 +4,7 @@ logic for zapaska (rest) vendor
 
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, cast
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
@@ -48,7 +48,7 @@ zapaska_params = ParserParams(
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_params.supplier.folder_name)
 
 
-def get_title_aliases(supplier_name: str) -> dict:
+def get_title_aliases(supplier_name: str) -> dict[str, Any]:
     """Load title aliases for supplier from user config."""
     try:
         return invert_map((json.loads(read_file(MainConfig().title_aliases_file_path)) or {}).get(supplier_name) or {})
@@ -56,7 +56,7 @@ def get_title_aliases(supplier_name: str) -> dict:
         return {}
 
 
-def invert_map(title_aliases: dict) -> dict:
+def invert_map(title_aliases: dict[str, Any]) -> dict[str, Any]:
     """Invert {correct: [incorrect, ...]} to {incorrect: correct}."""
     inverted = {}
     for correct_title, incorrect_titles in title_aliases.items():
@@ -65,16 +65,16 @@ def invert_map(title_aliases: dict) -> dict:
     return inverted
 
 
-zapaska_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=zapaska_params,
+zapaska_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=zapaska_params,
+    )
 )
-
-zapaska_config = ParseConfiguration(zapaska_config)
 
 MIN_RECOMMENDED_MARGIN_PERCENT = 0.08
 
@@ -86,12 +86,12 @@ class ZapaskaDiskJSON(BaseParser):
 
     _type_production = "Диск"
 
-    def __init__(self, parse_config, file_prices: list = None):
+    def __init__(self, parse_config: ParseConfiguration, file_prices: list[Any] | None = None) -> None:
         """init"""
-        self.price_sup_codes = {}
-        self.rest_titles = {}
-        self.price_mrp_result = []
-        self.not_matched_position = []
+        self.price_sup_codes: dict[str, float] = {}
+        self.rest_titles: dict[str, float] = {}
+        self.price_mrp_result: list[RowItem] = []
+        self.not_matched_position: list[str] = []
         self._current_category = None
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices)
@@ -100,23 +100,23 @@ class ZapaskaDiskJSON(BaseParser):
         """price mrp result"""
         return self.price_mrp_result
 
-    def raw_parse(self, text_json_file_full_path: str) -> List[dict]:
+    def raw_parse(self, text_json_file_full_path: str) -> List[dict[str, Any]]:
         """raw parse"""
         with Path(text_json_file_full_path).open(encoding="utf-8") as out_file:
             text_data = out_file.read()
-        dictable_data = json.loads(text_data)
+        dictable_data = cast(list[dict[str, Any]], json.loads(text_data))
         self.rename_fields(dictable_data)
         return dictable_data
 
-    def rename_fields(self, rows: list[dict]):
+    def rename_fields(self, rows: list[dict[str, Any]]) -> None:
         """rename fields"""
-        columns = self.parse_config().parse_config.parser_params.columns
+        columns = cast(dict[str, str], self.parse_config().parse_config.parser_params.columns)
         for row in rows:
             for column_json, column_price in columns.items():
                 if column_json in row:
                     row[column_price] = row.pop(column_json)
 
-    def process(self):
+    def process(self) -> int:
         """parse process"""
         count_processed = super().process()
         self.prepare_prices_mrp()
@@ -129,34 +129,34 @@ class ZapaskaDiskJSON(BaseParser):
                 row_item.rest_count = 0
         return count_processed
 
-    def get_type_production(self, row_item: RowItem):
+    def get_type_production(self, row_item: RowItem) -> str:
         """Return fixed type production for disk prices."""
         return self._type_production
 
-    def set_rest_and_price_opt(self, rest_result):
+    def set_rest_and_price_opt(self, rest_result: List[RowItem]) -> None:
         """get parse result for ZapaskaRest"""
         self.price_mrp_result = rest_result
 
     @classmethod
-    def get_item_rest(cls, row_item: RowItem):
+    def get_item_rest(cls, row_item: RowItem) -> int:
         """get rest count"""
         return row_item.rest_count
 
-    def prepare_prices_mrp(self):
+    def prepare_prices_mrp(self) -> None:
         """join result zapaska parser and zapaska rest parser via vendor position code"""
         for price_mrp in self.get_price_mrp_result():
             code = price_mrp.code or price_mrp.code_art
 
             self.price_sup_codes[code] = price_mrp.price_recommended
 
-    def get_prepared_title(self, row_item: RowItem):
+    def get_prepared_title(self, row_item: RowItem) -> str:  # type: ignore[override]
         """Normalize title spaces and apply title aliases."""
         chunks = [chunk.strip() for chunk in row_item.title.split(" ") if chunk.strip()]
         title = " ".join(chunks)
         return self.title_aliases.get(title) or title
 
     @classmethod
-    def _get_price_percent_markup(cls, price):
+    def _get_price_percent_markup(cls, price: float) -> float:
         """get price percent markup"""
         return next(
             (percent for bounds, percent in cls._percent_map().items() if bounds[0] <= price < bounds[1]),
@@ -164,7 +164,7 @@ class ZapaskaDiskJSON(BaseParser):
         )
 
     @classmethod
-    def _percent_map(cls):
+    def _percent_map(cls) -> dict[tuple[int, int], float]:
         """Карта наценок по диапазонам цены."""
         step = 0.02
         return {
@@ -176,7 +176,7 @@ class ZapaskaDiskJSON(BaseParser):
         }
 
     @classmethod
-    def _make_price_markup(cls, price_recommended, price_opt):
+    def _make_price_markup(cls, price_recommended: float, price_opt: float) -> float:
         """set markup"""
         price, _ = cls._make_price_recommended_markup(price_recommended, price_opt)
         if not price:
@@ -185,14 +185,16 @@ class ZapaskaDiskJSON(BaseParser):
         return cls.make_absolute_markup(price, price_opt)
 
     @classmethod
-    def make_absolute_markup(cls, price, price_opt, delta=150):
+    def make_absolute_markup(cls, price: float, price_opt: float, delta: int = 150) -> float:
         """check price margin greater than delta"""
         if price - price_opt <= delta:
             return price_opt + delta
         return price
 
     @classmethod
-    def _make_price_recommended_markup(cls, price_recommended, price_opt) -> Tuple[Optional[float], Optional[float]]:
+    def _make_price_recommended_markup(
+        cls, price_recommended: float, price_opt: float
+    ) -> Tuple[Optional[float], Optional[float]]:
         """
         make markup for recommended price
         :param price_recommended:
@@ -213,11 +215,11 @@ class ZapaskaDiskJSON(BaseParser):
         return cls.get_markup(price_opt, percent), percent
 
     @classmethod
-    def _is_small_recommended_price(cls, price_recommended, price_opt, percent) -> bool:
+    def _is_small_recommended_price(cls, price_recommended: float, price_opt: float, percent: float) -> bool:
         """check margin for recommended price"""
-        return price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent
+        return bool(price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent)
 
-    def make_price_markup(self, row_item):
+    def make_price_markup(self, row_item: RowItem) -> None:
         """set markup
         цена закупа от 0 до 5000 прибавляем наценку 17%
         цена закупа от 5000 до 10000 прибавляем наценку 15%
@@ -237,7 +239,7 @@ class ZapaskaDiskJSON(BaseParser):
         price_with_markup = self._make_price_markup(price_recommended, price_opt)
         row_item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
 
-    def find_rest_by_title(self, title):
+    def find_rest_by_title(self, title: str) -> Optional[float]:
         """find rest by title"""
         if not self.rest_titles:
             for row_item in self.get_price_mrp_result():

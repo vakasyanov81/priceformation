@@ -5,7 +5,7 @@ logging decorators
 import logging as _logging_module
 import time
 import traceback
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 from .log_message import log_msg
 
@@ -20,7 +20,12 @@ CALL_RESULT_MSG = 'Result "{method}": {res}'
 RT = TypeVar("RT")  # return type
 
 
-def _build_begin_msg(method_name: str, label: str, args, kwargs) -> str:
+def _build_begin_msg(
+    method_name: str,
+    label: str,
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
+) -> str:
     """Собрать сообщение о старте вызова."""
     msg = CALL_BEGIN_MSG.format(method=method_name)
     if label:
@@ -31,7 +36,7 @@ def _build_begin_msg(method_name: str, label: str, args, kwargs) -> str:
     return msg
 
 
-def _log_call_end(method_name: str, start_time: float, call_output) -> None:
+def _log_call_end(method_name: str, start_time: float, call_output: Any) -> None:
     """Лог результата и длительности вызова."""
     delta = int((time.time() - start_time) * 1000)
     log_msg(CALL_RESULT_MSG.format(method=method_name, res=repr(call_output)))

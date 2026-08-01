@@ -8,7 +8,7 @@ from parsers.row_item.row_item import RowItem
 _TITLE = "title"
 
 
-def test_nomenclature_title_correction():
+def test_nomenclature_title_correction() -> None:
     """корректирует title у каждой позиции"""
     row_old = RowItem({_TITLE: "old"})
     row_keep = RowItem({_TITLE: "keep"})
@@ -24,7 +24,7 @@ def test_nomenclature_title_correction():
     assert row_keep.title == "keep"
 
 
-def test_write_all_prices():
+def test_write_all_prices() -> None:
     """write_all_prices корректирует названия и пишет по шаблонам"""
     rows = [RowItem({_TITLE: "t1"})]
     writer_cls = MagicMock()

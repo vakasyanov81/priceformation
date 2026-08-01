@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cfg.main import MainConfig
-from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
+from parsers.base_parser import nomenclature_correction as noc
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
     fourtochki_sheet_1_config,
@@ -50,7 +50,7 @@ def _reset_four_tochki_config_cache() -> None:
         config._all_vendor_config = None  # noqa: WPS437
         config._markup_rules = None  # noqa: WPS437
         config._price_markup_map = None  # noqa: WPS437
-    get_nomenclature_corrected_title.corrected_nomenclatures_ = None
+    noc._NomenclatureCache.titles = None  # noqa: WPS437
 
 
 def _clear_result_dir() -> None:
@@ -61,7 +61,7 @@ def _clear_result_dir() -> None:
             path.unlink()
 
 
-def test_run_make_price_four_tochki_real():
+def test_run_make_price_four_tochki_real() -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
     _reset_four_tochki_config_cache()

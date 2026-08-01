@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_inner import ForInner
+from parsers.writer.xls_writer import XlsWriter
 
 from .fixtures import result_body_inner, write_data
-from .test_writer import XlsWriter
 
 
 @patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None))
-def test_xls_write_for_inner():
+def test_xls_write_for_inner() -> None:
     """test write price for internal use"""
 
     fake_driver = FakeXlwtDriver()

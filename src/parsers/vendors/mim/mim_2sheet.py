@@ -18,7 +18,7 @@ TRUCK_TIRE_MARKUP_LOW = 0.07
 TRUCK_TIRE_MARKUP_HIGH = 0.05
 
 
-def config_for_sheets2():
+def config_for_sheets2() -> dict[int, str]:
     """get config for sheets 2 parsers"""
     return dict(
         {
@@ -37,7 +37,7 @@ def config_for_sheets2():
             15: RowItem.index_velocity.name,
             20: RowItem.rest_count.name,
             22: RowItem.price_opt.name,
-            23: RowItem.price_recommended,
+            23: RowItem.price_recommended.name,
         }
     )
 
@@ -49,16 +49,16 @@ mim_sheet_2_params.columns = config_for_sheets2()
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-mim_sheet_2_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=mim_sheet_2_params,
+mim_sheet_2_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=mim_sheet_2_params,
+    )
 )
-
-mim_sheet_2_config = ParseConfiguration(mim_sheet_2_config)
 
 
 class MimParser2Sheet(MimParserBase):
@@ -67,24 +67,24 @@ class MimParser2Sheet(MimParserBase):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         """current category"""
         return "Грузовая шина"
 
-    def get_markup_percent(self, price_value: float):
+    def get_markup_percent(self, price_value: float) -> float:
         """Для грузовых позиций наценка"""
         # TODO: добавить настройку наценок для грузовой шины в настройки
         if price_value <= TRUCK_TIRE_PRICE_THRESHOLD:
             return TRUCK_TIRE_MARKUP_LOW
         return TRUCK_TIRE_MARKUP_HIGH
 
-    def add_price_markup(self, row_item: RowItem):
+    def add_price_markup(self, row_item: RowItem) -> None:
         price_opt = row_item.price_opt or 0
         price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
         row_item.price_markup = self.round_price(price)
 
     @classmethod
-    def get_prepared_title(cls, row_item: RowItem):
+    def get_prepared_title(cls, row_item: RowItem) -> str:
         """prepare title"""
         return " ".join(cls._title_chunks(row_item))
 

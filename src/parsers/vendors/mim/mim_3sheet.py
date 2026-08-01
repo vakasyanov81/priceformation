@@ -15,7 +15,7 @@ from ...row_item.row_item import RowItem
 from .mim_base import MimParserBase, supplier_folder_name
 
 
-def config_for_sheets3():
+def config_for_sheets3() -> dict[int, str]:
     """get config for sheets 3 parsers"""
     return dict(
         {
@@ -44,16 +44,16 @@ mim_sheet_3_params.columns = config_for_sheets3()
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 
-mim_sheet_3_config = BasePriceParseConfigurationParams(
-    markup_rules_provider=mark_up_provider,
-    black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-    stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-    vendor_list=data_provider.VendorListProviderFromUserConfig(),
-    manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-    parser_params=mim_sheet_3_params,
+mim_sheet_3_config = ParseConfiguration(
+    BasePriceParseConfigurationParams(
+        markup_rules_provider=mark_up_provider,
+        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
+        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
+        vendor_list=data_provider.VendorListProviderFromUserConfig(),
+        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+        parser_params=mim_sheet_3_params,
+    )
 )
-
-mim_sheet_3_config = ParseConfiguration(mim_sheet_3_config)
 
 
 class MimParser3Sheet(MimParserBase):
@@ -62,5 +62,5 @@ class MimParser3Sheet(MimParserBase):
     """
 
     @classmethod
-    def get_current_category(cls):
+    def get_current_category(cls) -> str:
         return "Диск"

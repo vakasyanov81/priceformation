@@ -2,7 +2,7 @@
 tests for four_tochki vendor (sheet 2) after raw-parser process
 """
 
-from typing import List
+from typing import Any, List
 from unittest.mock import patch
 
 from test_parsers.fixtures.four_tochki_sheet2 import (
@@ -26,7 +26,7 @@ from parsers.vendors.four_tochki.four_tochki_sheet2 import (
 parser_config = make_parse_configuration(fourtochki_sheet_2_params, MimMarkupRulesProviderForTests())
 
 
-def get_fake_parser(parse_result):
+def get_fake_parser(parse_result: Any) -> FourTochkiParser2Sheet:
     """get fake parser"""
     FakeXlsReader.parse_result = list(parse_result.values())[0]
     return FourTochkiParser2Sheet(
@@ -36,7 +36,7 @@ def get_fake_parser(parse_result):
     )
 
 
-def test_parse():
+def test_parse() -> None:
     """check all field for one price-row"""
 
     parsed_items: List[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
@@ -48,17 +48,17 @@ def test_parse():
     assert parsed_items[0].supplier_name == "Форточки"
     assert parsed_items[0].percent_markup == 14.7
 
-    parsed_items: List[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
+    parsed_items_alt: List[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
 
-    assert len(parsed_items) == 1
-    assert parsed_items[0].title == "5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)"
-    assert parsed_items[0].type_production == "Диск"
-    assert parsed_items[0].price_markup == 8270
-    assert parsed_items[0].supplier_name == "Форточки"
-    assert parsed_items[0].percent_markup == 14.7
+    assert len(parsed_items_alt) == 1
+    assert parsed_items_alt[0].title == "5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)"
+    assert parsed_items_alt[0].type_production == "Диск"
+    assert parsed_items_alt[0].price_markup == 8270
+    assert parsed_items_alt[0].supplier_name == "Форточки"
+    assert parsed_items_alt[0].percent_markup == 14.7
 
 
-def test_parse_with_invalid_item():
+def test_parse_with_invalid_item() -> None:
     """one invalid item is skipped"""
 
     with patch("core.log_message.log_msg") as mock_log_msg:
