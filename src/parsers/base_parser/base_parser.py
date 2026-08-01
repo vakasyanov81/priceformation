@@ -25,7 +25,7 @@ from .base_parser_config import ParseConfiguration, ParserParams
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
-TBaseParser = TypeVar("TBaseParser", bound="BaseParser")  # pylint: disable=invalid-name
+TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
 
 
 class Parser(Protocol):
@@ -42,8 +42,6 @@ class Parser(Protocol):
         """get result"""
 
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
-# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class BaseParser(Parser):
     _item_actions: List[Type[BaseItemAction]] = []
     _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]

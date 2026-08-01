@@ -82,7 +82,7 @@ class CommonPriceGrouper:
         ]
 
     @classmethod
-    def group_key(cls, item: RowItem) -> Tuple[str, ...]:  # pylint: disable=too-many-locals
+    def group_key(cls, item: RowItem) -> Tuple[str, ...]:
         """Ключ группировки."""
         width = item.width
         diameter = item.diameter

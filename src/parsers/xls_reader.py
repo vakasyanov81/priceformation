@@ -2,8 +2,6 @@
 xls read logic
 """
 
-# pylint: disable=missing-function-docstring
-
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypeAlias
@@ -31,8 +29,6 @@ init_cfg()
 
 class IXlsReader:
     """interface xls reader"""
-
-    # pylint: disable=R0903
 
     def parse(self, sheet_indexes: list | None = None):
         """do parse"""

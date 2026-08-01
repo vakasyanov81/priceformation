@@ -19,7 +19,6 @@ class FakeXlsReader:
 
     def parse(self, sheet_indexes: list = None):
         """do parse"""
-        # pylint: disable=E1102
 
         self.sheet_indexes = sheet_indexes
         return self.parse_result() if callable(self.parse_result) else self.parse_result

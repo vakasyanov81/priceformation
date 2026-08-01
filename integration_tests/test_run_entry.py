@@ -1,7 +1,5 @@
 """Integration tests for application entry point (src/run.py)."""
 
-# pylint: disable=import-outside-toplevel
-
 from unittest.mock import MagicMock, patch
 
 import pytest

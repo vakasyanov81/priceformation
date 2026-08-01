@@ -8,7 +8,7 @@ from core.file_reader import read_file
 from .black_list import BlackListProviderFromUserConfig
 
 
-class StopWordsProviderBase:  # pylint: disable=too-few-public-methods
+class StopWordsProviderBase:
     """Base stop words data provider"""
 
     def get_stop_words_data(self):
@@ -16,7 +16,7 @@ class StopWordsProviderBase:  # pylint: disable=too-few-public-methods
         raise NotImplementedError
 
 
-class StopWordsProviderFromUserConfig(StopWordsProviderBase):  # pylint: disable=too-few-public-methods
+class StopWordsProviderFromUserConfig(StopWordsProviderBase):
     """Stop words data provider from user config file."""
 
     def get_stop_words_data(self):
