@@ -53,12 +53,12 @@ class TestParseZapaskaTireJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        obj = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
-        result: List[RowItem] = obj.parse()
+        parser = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
+        parsed_items: List[RowItem] = parser.parse()
 
-        res = result[0]
+        res = parsed_items[0]
 
-        assert len(result) == 1
+        assert len(parsed_items) == 1
         # assert res.title == "315/80R22.5 Three-A T276+ 157/154M"
         assert res.title == "315/80R22.5 Three-A T276+ 20PR 157/154M TL"
         assert res.price_markup == 25830.0
@@ -83,12 +83,6 @@ class TestParseZapaskaTireJSON:
         """test calculation price-markup"""
         _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
-        obj = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
-        result: List[RowItem] = obj.parse()
-        assert result[0].price_markup == price_markup
-
-    @classmethod
-    def get_first_row_item(cls, parse_result) -> RowItem:
-        """get first item from parse result"""
-        file = list(parse_result.keys())[0]
-        return RowItem(parse_result[file][0])
+        parser = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
+        parsed_items: List[RowItem] = parser.parse()
+        assert parsed_items[0].price_markup == price_markup

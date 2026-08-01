@@ -65,27 +65,26 @@ class BaseFinder:
         :return (correct alias, founded incorrect alias)
         ex: Adidas, abibas
         """
-        result_name = None
-        founded_word = None
-        matched_index = None
-
-        for index, lower_alias in enumerate(_lowers_list):
-            found_position = self._find(lower_alias)
-            if found_position != -1:
-                result_name = _lowers_list[index]
-                matched_index = index
-                next_position = found_position + len(lower_alias)
-                founded_word = self._title[found_position:next_position]
-                break
-
-        if not result_name:
+        match = self._match_lower_alias(_lowers_list)
+        if match is None:
             return None, None
 
-        result = (
-            self.alias_container.all_correct_words[matched_index] if return_correct else self._aliases.get(result_name)
-        )
+        if return_correct:
+            return self.alias_container.all_correct_words[match[2]], match[1]
+        return self._aliases.get(match[0]), match[1]
 
-        return result, founded_word
+    def _match_lower_alias(self, _lowers_list: list) -> Optional[Tuple[AnyStr, AnyStr, int]]:
+        """Найти первое совпадение алиаса в title."""
+        for index, lower_alias in enumerate(_lowers_list):
+            found_position = self._find(lower_alias)
+            if found_position == -1:
+                continue
+            return (
+                _lowers_list[index],
+                self._title[found_position : found_position + len(lower_alias)],
+                index,
+            )
+        return None
 
     def _find(self, lower_alias) -> int:
         """find alias wrapped whitespace in title, and find in start title, and find in end title"""
@@ -111,9 +110,9 @@ class BaseFinder:
         return -1
 
     @classmethod
-    def replace_alias_in_title(cls, item: RowItem, old_man, new_man):
+    def replace_alias_in_title(cls, row_item: RowItem, old_man, new_man):
         """replace manufacturer in title chunks"""
-        item.title = item.title.replace(old_man, new_man)
+        row_item.title = row_item.title.replace(old_man, new_man)
 
     def correction_field(self, rec: RowItem, field_name, aliases):
         """replace property in rec if it has bad signature"""

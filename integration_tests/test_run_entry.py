@@ -30,7 +30,7 @@ def test_main_exits_on_quit():
 def test_main_make_price_then_exit():
     """выбор 1 вызывает полный путь формирования прайса, затем выход."""
     common = MagicMock()
-    common.result = ["item"]
+    common.parsed_items = ["item"]
 
     with (
         patch(_INPUT, side_effect=["1", _QUIT]),
@@ -86,7 +86,7 @@ def test_main_retries_invalid_menu_input():
 def test_response_make_price_via_try_call():
     """response_processing проходит через try_call до run_make_price_by_supplier."""
     common = MagicMock()
-    common.result = []
+    common.parsed_items = []
 
     with (
         patch("run.ask_action", return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),

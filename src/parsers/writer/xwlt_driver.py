@@ -61,11 +61,11 @@ class XlsxWriterDriver(IXlsDriver):
         for index, c_format in column_format.items():
             self.work_sheet.column_dimensions[self.number_to_excel_column(index)].number_format = c_format
 
-    def write(self, row_idx, col_idx, _value, style=None, _color: str = None):
+    def write(self, row_idx, col_idx, cell_content, style=None, _color: str = None):
         """write"""
         row_idx += self.row_index_at
         col_idx += self.row_index_at
-        cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=_value)
+        cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=cell_content)
         if style:
             cell.font = style
         if _color:
@@ -73,9 +73,9 @@ class XlsxWriterDriver(IXlsDriver):
 
         self.current_col_index = col_idx
         self.current_row_index = row_idx
-        value_length = len(str(_value or ""))
-        if self.col_max_length.get(col_idx) is None or self.col_max_length[col_idx] < value_length:
-            self.col_max_length[col_idx] = value_length
+        content_length = len(str(cell_content or ""))
+        if self.col_max_length.get(col_idx) is None or self.col_max_length[col_idx] < content_length:
+            self.col_max_length[col_idx] = content_length
 
     def save(self):
         """save file"""
@@ -89,11 +89,11 @@ class XlsxWriterDriver(IXlsDriver):
         Конвертирует номер колонки в символьное обозначение Excel
         1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, и т.д.
         """
-        result = ""
+        column_label = ""
         while number > 0:
             number, remainder = divmod(number - 1, EXCEL_ALPHABET_SIZE)
-            result = chr(EXCEL_COLUMN_A_ORD + remainder) + result
-        return result
+            column_label = chr(EXCEL_COLUMN_A_ORD + remainder) + column_label
+        return column_label
 
     def set_auto_width(self):
         """set auto width by content"""

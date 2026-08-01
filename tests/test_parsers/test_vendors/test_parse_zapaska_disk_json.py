@@ -33,11 +33,11 @@ class TestParseZapaskaDiskJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        result: List[RowItem] = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]).parse()
+        parsed_items: List[RowItem] = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_disk.json"]).parse()
 
-        res = result[0]
+        res = parsed_items[0]
 
-        assert len(result) == 1
+        assert len(parsed_items) == 1
         # assert res.title == "Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF"
         assert res.title == "20 Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF"
         # assert res.price_markup == 28750.0

@@ -46,7 +46,7 @@ def test_response_exit():
 def test_run_make_price():
     """сборка общего прайса и запись"""
     common = MagicMock()
-    common.result = [1]
+    common.parsed_items = [1]
 
     with (
         patch("run.CommonPrice", return_value=common) as mock_cp,

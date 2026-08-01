@@ -33,9 +33,9 @@ class FakeXlwtDriver(IXlsDriver):
         """write head"""
         self.head = names
 
-    def write(self, row_idx, col_idx, _value, style=None, _color=None):
+    def write(self, row_idx, col_idx, cell_content, style=None, _color=None):
         """write"""
-        self.body[f"cell({row_idx},{col_idx})"] = _value
+        self.body[f"cell({row_idx},{col_idx})"] = cell_content
 
     def init_workbook(self, _folder: str, _file_name: str):
         self.file_name = _file_name

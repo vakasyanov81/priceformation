@@ -8,9 +8,9 @@ from parsers.row_item.row_item import RowItem
 class BaseItemAction:
     """Abstract base price item action"""
 
-    def __init__(self, item: RowItem):
+    def __init__(self, row_item: RowItem):
         """init"""
-        self.item = item
+        self.row_item = row_item
 
     def action(self):
         """action logic"""

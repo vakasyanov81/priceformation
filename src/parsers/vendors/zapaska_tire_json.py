@@ -61,8 +61,8 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     _type_production = "Шины"
 
-    def get_type_production(self, item: RowItem):
-        return item.type_production
+    def get_type_production(self, row_item: RowItem):
+        return row_item.type_production
 
 
 def basic_auth(username, password):
@@ -82,14 +82,14 @@ def get_data(url: str, api_config: ZapaskaApiConfig | None = None) -> str:
     return res.read().decode("utf-8")
 
 
-def save_data(data: str, filename: str):
+def save_data(json_data: str, filename: str):
     """save data to file"""
     main_cfg = init_cfg().main
     file_path = (
         Path(main_cfg.project_root) / main_cfg.folder_file_prices / zapaska_tire_params.supplier.folder_name / filename
     )
     with file_path.open("w", encoding="utf-8") as out_file:
-        out_file.write(data)
+        out_file.write(json_data)
 
 
 def load_data():

@@ -7,14 +7,13 @@ class FakeXlsReader:
     parse_result = None
 
     @classmethod
-    def get_instance(cls, file_path, params):
+    def get_instance(cls, file_path, *_args):
         """get instance FakeXlsReader"""
-        return FakeXlsReader(file_path, params)
+        return FakeXlsReader(file_path)
 
-    def __init__(self, file_path, params):
+    def __init__(self, file_path):
         """init"""
         self.file_path = file_path
-        self.params = params
         self.sheet_indexes = None
 
     def parse(self, sheet_indexes: list = None):

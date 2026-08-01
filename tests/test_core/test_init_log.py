@@ -40,10 +40,10 @@ def test_folder_is_exists(mock_os_isdir, folder_is_exist):
     """test folder is exists"""
 
     mock_os_isdir.return_value = folder_is_exist
-    result = folder_is_exists(_FOLDER)
+    folder_exists = folder_is_exists(_FOLDER)
 
     assert mock_os_isdir.call_count == 1
-    assert result == folder_is_exist
+    assert folder_exists == folder_is_exist
 
 
 @patch("core.init_log.folder_is_exists")
@@ -54,7 +54,7 @@ def test_create_logs_folder_if_not_exists(mock_folder_is_exists, folder_is_exist
     mock_folder_is_exists.return_value = folder_is_exist
 
     with patch("core.init_log.create_logs_folder", return_value=True):
-        result = create_logs_folder_if_not_exists(_FOLDER)
+        folder_created_flag = create_logs_folder_if_not_exists(_FOLDER)
 
     assert mock_folder_is_exists.call_count == 1
-    assert result == folder_created
+    assert folder_created_flag == folder_created

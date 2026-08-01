@@ -2,11 +2,12 @@
 tests for Poshk vendor after raw-parser process
 """
 
-from typing import List, Tuple
+from typing import List
 
 import pytest
 from test_base_parser.test_manufacturer_finder import map_manufacturer
 from test_parsers.fixtures.poshk import poshk_one_item_result
+from test_parsers.test_vendors.parse_result_helpers import get_first_row_item
 
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import (
@@ -108,14 +109,14 @@ def get_fake_parser(parse_result):
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
+    parsed_items: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
 
-    assert len(result) == 1
-    assert result[0].title == "10-16.5 Nortec ER-218 10PR 135B TL спецшина"
-    assert result[0].type_production == "Автошина"
-    assert result[0].price_markup == 6070
-    assert result[0].supplier_name == "Пошк"
-    assert result[0].percent_markup == 25.0
+    assert len(parsed_items) == 1
+    assert parsed_items[0].title == "10-16.5 Nortec ER-218 10PR 135B TL спецшина"
+    assert parsed_items[0].type_production == "Автошина"
+    assert parsed_items[0].price_markup == 6070
+    assert parsed_items[0].supplier_name == "Пошк"
+    assert parsed_items[0].percent_markup == 25.0
 
 
 @pytest.mark.parametrize(
@@ -134,8 +135,8 @@ def test_parse():
 def test_prepare_title(title, prepared_title):
     """check prepare title"""
 
-    item = RowItem({"title": title})
-    title = PoshkParser.prepare_title(item.title)
+    row_item = RowItem({"title": title})
+    title = PoshkParser.prepare_title(row_item.title)
 
     assert title == prepared_title
 
@@ -158,16 +159,11 @@ class TestParsePoshk:
     )
     def test_set_category(self, title, category):
         """test define category name by title"""
-        parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
+        parse_result = poshk_one_item_result()
+        first_row = get_first_row_item(parse_result)
         first_row["title"] = title
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
-        assert result[0].type_production == category
-
-    @classmethod
-    def get_first_row_item(cls, _result) -> Tuple[dict, dict]:
-        """get first item from parse result"""
-        file = list(_result.keys())[0]
-        return _result, _result[file][0]
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
+        assert parsed_items[0].type_production == category
 
     @pytest.mark.parametrize(
         "price, price_with_markup",
@@ -204,14 +200,15 @@ class TestParsePoshk:
     )
     def test_markup(self, price, price_with_markup):
         """test calculation price-markup"""
-        parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
+        parse_result = poshk_one_item_result()
+        first_row = get_first_row_item(parse_result)
         first_row["price_opt"] = price
 
         parser = get_fake_parser(parse_result)
 
-        result: List[RowItem] = parser.parse()
+        parsed_items: List[RowItem] = parser.parse()
 
-        assert result[0].price_markup == price_with_markup
+        assert parsed_items[0].price_markup == price_with_markup
 
     @pytest.mark.parametrize(
         "title",
@@ -223,9 +220,10 @@ class TestParsePoshk:
     )
     def test_stop_words(self, title):
         """test exclude price position by stop word in title"""
-        parse_result, first_row = self.get_first_row_item(poshk_one_item_result())
+        parse_result = poshk_one_item_result()
+        first_row = get_first_row_item(parse_result)
         first_row["title"] = title
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
-        assert len(result) == 0
+        assert len(parsed_items) == 0

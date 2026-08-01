@@ -18,6 +18,8 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 
+_BASE_PERCENT = 0.12
+
 column_mapping = {
     "cae": RowItem.code_art.name,
     "rest": RowItem.rest_count.name,
@@ -56,11 +58,11 @@ def get_title_aliases(supplier_name: str) -> dict:
 
 def invert_map(title_aliases: dict) -> dict:
     """Invert {correct: [incorrect, ...]} to {incorrect: correct}."""
-    result = {}
+    inverted = {}
     for correct_title, incorrect_titles in title_aliases.items():
         for incorrect_title in incorrect_titles:
-            result[incorrect_title] = correct_title
-    return result
+            inverted[incorrect_title] = correct_title
+    return inverted
 
 
 zapaska_config = BasePriceParseConfigurationParams(
@@ -98,13 +100,13 @@ class ZapaskaDiskJSON(BaseParser):
         """price mrp result"""
         return self.price_mrp_result
 
-    def raw_parse(self, _file: str) -> List[dict]:
+    def raw_parse(self, text_json_file_full_path: str) -> List[dict]:
         """raw parse"""
-        with Path(_file).open(encoding="utf-8") as out_file:
-            data = out_file.read()
-        data = json.loads(data)
-        self.rename_fields(data)
-        return data
+        with Path(text_json_file_full_path).open(encoding="utf-8") as out_file:
+            text_data = out_file.read()
+        dictable_data = json.loads(text_data)
+        self.rename_fields(dictable_data)
+        return dictable_data
 
     def rename_fields(self, rows: list[dict]):
         """rename fields"""
@@ -119,15 +121,15 @@ class ZapaskaDiskJSON(BaseParser):
         count_processed = super().process()
         self.prepare_prices_mrp()
 
-        for item in self.result:
-            self.make_price_markup(item)
-            self.skip_by_min_rest(item)
-            item.type_production = self.get_type_production(item)
-            if not item.type_production:
-                item.rest_count = 0
+        for row_item in self.parsed_items:
+            self.make_price_markup(row_item)
+            self.skip_by_min_rest(row_item)
+            row_item.type_production = self.get_type_production(row_item)
+            if not row_item.type_production:
+                row_item.rest_count = 0
         return count_processed
 
-    def get_type_production(self, _item: RowItem):
+    def get_type_production(self, row_item: RowItem):
         """Return fixed type production for disk prices."""
         return self._type_production
 
@@ -136,9 +138,9 @@ class ZapaskaDiskJSON(BaseParser):
         self.price_mrp_result = rest_result
 
     @classmethod
-    def get_item_rest(cls, item: RowItem):
+    def get_item_rest(cls, row_item: RowItem):
         """get rest count"""
-        return item.rest_count
+        return row_item.rest_count
 
     def prepare_prices_mrp(self):
         """join result zapaska parser and zapaska rest parser via vendor position code"""
@@ -147,34 +149,31 @@ class ZapaskaDiskJSON(BaseParser):
 
             self.price_sup_codes[code] = price_mrp.price_recommended
 
-    def get_prepared_title(self, item: RowItem):
+    def get_prepared_title(self, row_item: RowItem):
         """Normalize title spaces and apply title aliases."""
-        chunks = [chunk.strip() for chunk in item.title.split(" ") if chunk.strip()]
+        chunks = [chunk.strip() for chunk in row_item.title.split(" ") if chunk.strip()]
         title = " ".join(chunks)
         return self.title_aliases.get(title) or title
 
     @classmethod
     def _get_price_percent_markup(cls, price):
         """get price percent markup"""
+        return next(
+            (percent for bounds, percent in cls._percent_map().items() if bounds[0] <= price < bounds[1]),
+            _BASE_PERCENT,
+        )
 
-        base_percent = 0.12
-        base_percent_step = 0.02
-        percent_map = {
-            (0, 5000): base_percent + (base_percent_step * 5),
-            (5000, 10000): base_percent + (base_percent_step * 4),
-            (10000, 15000): base_percent + (base_percent_step * 2),
-            (15000, 20000): base_percent + base_percent_step,
-            (20000, 25000): base_percent,
+    @classmethod
+    def _percent_map(cls):
+        """Карта наценок по диапазонам цены."""
+        step = 0.02
+        return {
+            (0, 5000): _BASE_PERCENT + step * 5,
+            (5000, 10000): _BASE_PERCENT + step * 4,
+            (10000, 15000): _BASE_PERCENT + step * 2,
+            (15000, 20000): _BASE_PERCENT + step,
+            (20000, 25000): _BASE_PERCENT,
         }
-
-        default_percent_markup = base_percent
-
-        for price_range, percent_markup in percent_map.items():
-            range_min, range_max = price_range
-            if range_min <= price < range_max:
-                return percent_markup
-
-        return default_percent_markup
 
     @classmethod
     def _make_price_markup(cls, price_recommended, price_opt):
@@ -218,7 +217,7 @@ class ZapaskaDiskJSON(BaseParser):
         """check margin for recommended price"""
         return price_recommended and cls.calc_percent(price_recommended, price_opt) <= percent
 
-    def make_price_markup(self, item):
+    def make_price_markup(self, row_item):
         """set markup
         цена закупа от 0 до 5000 прибавляем наценку 17%
         цена закупа от 5000 до 10000 прибавляем наценку 15%
@@ -226,23 +225,23 @@ class ZapaskaDiskJSON(BaseParser):
         цена закупа от 15000 до 20000 прибавляем наценку 10%
         """
 
-        price_recommended = item.price_recommended or 0
-        price_opt = item.price_opt
+        price_recommended = row_item.price_recommended or 0
+        price_opt = row_item.price_opt
 
         if not price_opt:
             return
 
         if not price_recommended:
-            self.not_matched_position.append(item.title)
+            self.not_matched_position.append(row_item.title)
 
         price_with_markup = self._make_price_markup(price_recommended, price_opt)
-        item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
+        row_item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
 
     def find_rest_by_title(self, title):
         """find rest by title"""
         if not self.rest_titles:
-            for item in self.get_price_mrp_result():
-                if not item.title:
+            for row_item in self.get_price_mrp_result():
+                if not row_item.title:
                     continue
-                self.rest_titles[item.title.lower().strip()] = item.price_recommended
+                self.rest_titles[row_item.title.lower().strip()] = row_item.price_recommended
         return self.rest_titles.get(title.lower().strip())

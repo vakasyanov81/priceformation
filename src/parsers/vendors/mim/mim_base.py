@@ -51,16 +51,16 @@ class MimParserBase(BaseParser):
         raise NotImplementedError()
 
     @classmethod
-    def set_category(cls, item):
+    def set_category(cls, row_item):
         """set category to row price item"""
-        item.type_production = cls.get_current_category()
+        row_item.type_production = cls.get_current_category()
 
     def process(self):
         """parse process"""
         res = super().process()
-        for item in self.result:
-            self.add_price_markup(item)
-            self.skip_by_min_rest(item)
-            self.set_category(item)
+        for row_item in self.parsed_items:
+            self.add_price_markup(row_item)
+            self.skip_by_min_rest(row_item)
+            self.set_category(row_item)
             # self.correction_category(item)
         return res

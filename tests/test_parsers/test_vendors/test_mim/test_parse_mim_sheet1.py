@@ -2,11 +2,12 @@
 tests for Mim vendor (sheet 1) after raw-parser process
 """
 
-from typing import List, Tuple
+from typing import List
 
 import pytest
 from test_parsers.fixtures.mim_sheet1 import mim_one_item_result
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests
+from test_parsers.test_vendors.parse_result_helpers import get_first_row_item
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
@@ -58,7 +59,7 @@ def get_fake_parser(parse_result):
 def test_prepare_title(row_elements, prepared_title):
     """check prepare title"""
 
-    item = RowItem(
+    row_item = RowItem(
         {
             "title": "",
             "width": row_elements[0],
@@ -66,21 +67,21 @@ def test_prepare_title(row_elements, prepared_title):
             "diameter": row_elements[2],
         }
     )
-    title = MimParser1Sheet.get_prepared_title(item).strip()
+    title = MimParser1Sheet.get_prepared_title(row_item).strip()
     assert title == prepared_title
 
 
 def test_parse():
     """check all field for one price-row"""
 
-    result: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
+    parsed_items: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
-    assert len(result) == 1
-    assert result[0].title == "31x10.5R15 Crossleader DSU02 92Y"
-    assert result[0].type_production == "Легковая шина"
-    assert result[0].price_markup == 4220
-    assert result[0].supplier_name == "Мим"
-    assert result[0].percent_markup == 22.07
+    assert len(parsed_items) == 1
+    assert parsed_items[0].title == "31x10.5R15 Crossleader DSU02 92Y"
+    assert parsed_items[0].type_production == "Легковая шина"
+    assert parsed_items[0].price_markup == 4220
+    assert parsed_items[0].supplier_name == "Мим"
+    assert parsed_items[0].percent_markup == 22.07
 
 
 class TestParseMimSheet1:
@@ -90,17 +91,12 @@ class TestParseMimSheet1:
 
     def test_small_rest(self):
         """test exclude price-position by small rest count"""
-        parse_result, first_row = self.get_first_row_item(mim_one_item_result())
+        parse_result = mim_one_item_result()
+        first_row = get_first_row_item(parse_result)
         first_row["rest_count"] = 3
 
-        result: List[RowItem] = get_fake_parser(parse_result).parse()
-        assert len(result) == 0
-
-    @classmethod
-    def get_first_row_item(cls, _result) -> Tuple[dict, dict]:
-        """get first item from parse result"""
-        file = list(_result.keys())[0]
-        return _result, _result[file][0]
+        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
+        assert len(parsed_items) == 0
 
     @pytest.mark.parametrize(
         "price, price_recommended, price_with_markup",
@@ -112,11 +108,12 @@ class TestParseMimSheet1:
     )
     def test_markup(self, price, price_recommended, price_with_markup):
         """test calculation price-markup"""
-        parse_result, first_row = self.get_first_row_item(mim_one_item_result())
+        parse_result = mim_one_item_result()
+        first_row = get_first_row_item(parse_result)
         first_row["price_opt"] = price
         first_row["price_recommended"] = price_recommended
 
         parser = get_fake_parser(parse_result)
 
-        result: List[RowItem] = parser.parse()
-        assert result[0].price_markup == price_with_markup
+        parsed_items: List[RowItem] = parser.parse()
+        assert parsed_items[0].price_markup == price_with_markup

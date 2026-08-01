@@ -28,7 +28,7 @@ from parsers.row_item.row_item import RowItem
 def test_find_category_from_title(title, category):
     """test find category"""
 
-    item = RowItem({"title": title})
+    row_item = RowItem({"title": title})
 
-    found_category, _ = CategoryFinder().find(item)
+    found_category, _ = CategoryFinder().find(row_item)
     assert found_category == category
