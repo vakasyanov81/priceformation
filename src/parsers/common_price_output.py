@@ -36,7 +36,6 @@ class CommonPriceOut:
         Make prices for all active templates
         :return:
         """
-        # TODO add test
         self.nomenclature_title_correction()
         for write_template in all_writer_templates():
             self.xls_writer(
