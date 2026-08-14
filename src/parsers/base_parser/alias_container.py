@@ -21,15 +21,22 @@ def sort_by_length(_list: list[str]) -> list[str]:
     return _list
 
 
+def _alias_entries(
+    correct_name: CorrectWord,
+    incorrect_names: tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias,
+) -> dict[IncorrectLoweredAlias, CorrectWord]:
+    if isinstance(incorrect_names, str):
+        incorrect_names = (incorrect_names,)
+    return {name.lower(): correct_name for name in incorrect_names if name.strip()}
+
+
 def build_reversed_map(
     map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias],
 ) -> dict[IncorrectLoweredAlias, CorrectWord]:
     """incorrect alias -> correct word"""
     reversed_map: dict[IncorrectLoweredAlias, CorrectWord] = {}
     for correct_name, incorrect_names in map_aliases.items():
-        if isinstance(incorrect_names, str):
-            incorrect_names = (incorrect_names,)
-        reversed_map.update({incorrect_name.lower(): correct_name for incorrect_name in incorrect_names})
+        reversed_map.update(_alias_entries(correct_name, incorrect_names))
     return reversed_map
 
 

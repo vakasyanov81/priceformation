@@ -1,5 +1,6 @@
 """tests for stop words and manufacturer aliases providers"""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from parsers.data_provider.manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
+    drop_blank_aliases,
 )
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
@@ -40,3 +42,29 @@ def test_aliases_from_config() -> None:
     ):
         mock_cfg.return_value.manufacturer_aliases_file_path = "/a"
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"A": "B"}
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ({"Brand": [""]}, {"Brand": []}),
+        ({"Brand": [" "]}, {"Brand": []}),
+        ({"Brand": ["", " ", "Bar"]}, {"Brand": ["Bar"]}),
+        ({"Brand": []}, {"Brand": []}),
+        ({"A": "B"}, {"A": "B"}),
+    ],
+)
+def test_drop_blank_aliases(raw: Any, expected: Any) -> None:
+    assert drop_blank_aliases(raw) == expected
+
+
+def test_aliases_from_config_drops_blanks() -> None:
+    with (
+        patch(
+            "parsers.data_provider.manufacturer_aliases.read_file",
+            return_value='{"Brand": ["", " ", "Bar"]}',
+        ),
+        patch("parsers.data_provider.manufacturer_aliases.MainConfig") as mock_cfg,
+    ):
+        mock_cfg.return_value.manufacturer_aliases_file_path = "/a"
+        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"Brand": ["Bar"]}

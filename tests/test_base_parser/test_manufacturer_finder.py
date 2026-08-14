@@ -44,6 +44,14 @@ def test_replace_title_and_add_manufacturer(title: Any, title_new: Any, manufact
     assert row_item.manufacturer == manufacturer
 
 
+def test_blank_aliases_do_not_match_title() -> None:
+    row_item = RowItem({"title": "11.00R20 some tyre 16PR"})
+    ManufacturerFinder({"GhostBrand": ("", " ")}).process(row_item)
+
+    assert row_item.title == "11.00R20 some tyre 16PR"
+    assert not row_item.manufacturer
+
+
 map_manufacturer = {
     "Rockbuster": (),
     "Sunrise": (),
