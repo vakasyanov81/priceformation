@@ -118,3 +118,16 @@ class TestParsePioner:
         assert len(parsed_items) == 1
         assert parsed_items[0].price_markup == markup_case.get("price_with_markup")
         assert 1 == parsed_items[0].title.count("Triangle")
+
+
+@pytest.mark.parametrize(
+    ("price_opt", "percent"),
+    [
+        (1000, 0.20),
+        (1001, 0.18),
+        (2000, 0.18),
+    ],
+)
+def test_markup_percent_includes_rule_min(price_opt: float, percent: float) -> None:
+    parser = get_fake_parser(pioner_one_item_result())
+    assert parser.get_markup_percent(price_opt) == percent

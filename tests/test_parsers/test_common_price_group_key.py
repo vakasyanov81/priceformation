@@ -85,3 +85,22 @@ def test_group_key_hides_matching_brand() -> None:
 
     assert group_key(same_brand) == group_key(blank_brand)
     assert group_key(same_brand) != group_key(other_brand)
+
+
+def test_group_key_empty_manufacturer_and_type() -> None:
+    key = group_key(_row(manufacturer_name="", type_production=""))
+    assert "xxxx" not in key
+
+
+def test_group_key_type_production_lower() -> None:
+    key = group_key(_row(type_production="Легковая"))
+    assert "легковая" in key
+    assert "ЛЕГКОВАЯ" not in key
+
+
+def test_group_key_uses_row_intimacy() -> None:
+    assert "TL" in group_key(_row(intimacy="TL"))
+
+
+def test_group_key_includes_cleared_model() -> None:
+    assert "NU701" in group_key(_row(model="КАМА-NU 701"))

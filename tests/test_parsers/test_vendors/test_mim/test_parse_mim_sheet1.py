@@ -71,6 +71,18 @@ def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
     assert title == prepared_title
 
 
+@pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        ({"width": "30", "diameter": "15"}, "30/R15"),
+        ({"height_percent": "9", "diameter": "15"}, "/9R15"),
+        ({"width": "30", "height_percent": "9"}, "30/9R"),
+    ],
+)
+def test_prepare_title_skips_empty_parts(fields: dict[str, str], expected: str) -> None:
+    assert MimParser1Sheet.get_prepared_title(RowItem(fields)).strip() == expected
+
+
 def test_parse() -> None:
     """check all field for one price-row"""
 
@@ -104,6 +116,7 @@ class TestParseMimSheet1:
             (1000, 2000, 2000),
             (1000, 1200, 1500),
             (1000, 1100, 1500),
+            (10000, 11000, 11000),
         ],
     )
     def test_markup(self, price: Any, price_recommended: Any, price_with_markup: Any) -> None:
@@ -117,3 +130,28 @@ class TestParseMimSheet1:
 
         parsed_items: List[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_with_markup
+
+
+def test_markup_without_prices_is_zero() -> None:
+    parser = get_fake_parser(mim_one_item_result())
+    row = RowItem({})
+    parser.add_price_markup(row)
+    assert row.price_markup == 0
+
+
+def test_small_absolute_markup_at_threshold() -> None:
+    parser = get_fake_parser(mim_one_item_result())
+    assert parser.is_small_absolute_markup(1300, 1000) is False
+    assert parser.is_small_absolute_markup(1299, 1000) is True
+
+
+def test_recommended_percent_boundaries() -> None:
+    parser = get_fake_parser(mim_one_item_result())
+    at_min = RowItem({"price_opt": 1000, "price_recommended": 1140})
+    below_min = RowItem({"price_opt": 1000, "price_recommended": 1139})
+    at_max = RowItem({"price_opt": 1000, "price_recommended": 1270})
+    above_max = RowItem({"price_opt": 1000, "price_recommended": 1271})
+    assert parser.is_small_recommended_percent(at_min) is False
+    assert parser.is_small_recommended_percent(below_min) is True
+    assert parser.is_big_recommended_percent(at_max) is False
+    assert parser.is_big_recommended_percent(above_max) is True

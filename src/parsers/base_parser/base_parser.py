@@ -140,7 +140,7 @@ class BaseParser:
             return default_percent
 
         for price_rule in markup_map:
-            if price_rule.min < price_value <= price_rule.max:
+            if price_rule.min <= price_value <= price_rule.max:
                 return price_rule.percent_markup
 
         return default_percent
