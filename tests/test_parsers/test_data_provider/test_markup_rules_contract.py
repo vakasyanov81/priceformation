@@ -17,17 +17,7 @@ from parsers.row_item.row_item import RowItem
 
 _MIM_FIRST = 0.2
 _POSHK_FIRST = 0.7
-
-
-def _parse_config_example_dir() -> Path:
-    for parent in Path(__file__).resolve().parents:
-        candidate = parent / "parse_config_example"
-        if candidate.is_dir():
-            return candidate
-    raise FileNotFoundError("parse_config_example")
-
-
-_PARSE_CONFIG_EXAMPLE = _parse_config_example_dir()
+_PARSE_CONFIG_EXAMPLE = Path(__file__).resolve().parents[2] / "parse_config_example"
 
 
 def _configuration_from_example(config_name: str) -> ParseConfiguration:

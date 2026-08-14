@@ -101,11 +101,11 @@ pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
 do_not_mutate = [
-    "src/core/log_message.py",
-    "src/core/log_resolve.py",
-    "src/core/init_log.py",
     "src/core/wrappers.py",
     "src/core/async_utils.py",
+]
+do_not_mutate_patterns = [
+    'logger\.\w+',
 ]
 
 [tool.mypy]
