@@ -43,12 +43,13 @@ target-version = [ 'py311' ]
 # Exclude intentionally bad files:
 extend-exclude = '''
 (
-  tests/.*/__snapshots__/.* | tests/fixtures/.*
+  tests/.*/__snapshots__/.* | tests/fixtures/.* | mutants/.*
 )
 '''
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["mutants"]
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "C90",
@@ -60,6 +61,7 @@ select = ["F", "E", "W", "C90",
 "tests/**/*.py" = ["S101"]
 "tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106"]
 "integration_tests/*.py" = ["S101"]
+"integration_tests/**/*.py" = ["S101"]
 "src/core/log_message.py" = ["T201"]
 "src/cfg/zapaska_api.py" = ["S105"]
 
@@ -86,7 +88,7 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
-    "--cov-fail-under=10",
+    "--cov-fail-under=93",
 ]
 norecursedirs = [
     ".git",
@@ -95,7 +97,7 @@ norecursedirs = [
 ]
 
 [tool.mutmut]
-paths_to_mutate = [ "src/" ]
+source_paths = [ "src/" ]
 backup="False"
 pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
 tests_dir= [ "tests/" ]
@@ -116,3 +118,4 @@ ignore_missing_imports = true
 strict = true
 local_partial_types = true
 warn_unreachable = true
+exclude = ["mutants/", "\\.venv/"]

@@ -4,6 +4,7 @@ tests for four_tochki vendor (sheet 1) after raw-parser process
 
 from typing import Any, List
 
+import pytest
 from test_parsers.fixtures.four_tochki_sheet1 import (
     four_tochki_many_item_result,
     four_tochki_one_item_result,
@@ -53,6 +54,7 @@ def test_parse() -> None:
 
     # грузовая шина
     assert parsed_items[2].title == "235/75R17.5 BF Goodrich Route Control D 132/130M"
+    assert parsed_items[2].type_production == "Грузовая шина"
 
 
 def test_replace_diameter() -> None:
@@ -159,3 +161,19 @@ def test_prepare_title_1() -> None:
 
     prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
     assert prepared_title == "12.5/80-18 Armour L-5B 16 TL"
+
+
+@pytest.mark.parametrize(
+    ("tire_type", "expected"),
+    [
+        ("грузовая", "Грузовая шина"),
+        ("  ГРУЗОВАЯ  ", "Грузовая шина"),
+        ("легковая", "Легковая шина"),
+        ("спецтехника", "Спецшина"),
+        ("мото", "Мотошина"),
+        ("unknown", "Автошина"),
+    ],
+)
+def test_current_category_by_tire_type(tire_type: str, expected: str) -> None:
+    row = RowItem({RowItem.tire_type.name: tire_type})
+    assert FourTochkiParser1Sheet.get_current_category(row) == expected

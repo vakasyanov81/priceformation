@@ -15,6 +15,7 @@ _INT_OR_FLOAT_CASES = [
     (None, None),
 ]
 _INT_OR_STR_CASES = [
+    ("0", 0),
     ("1", 1),
     ("1.0", 1),
     ("1.5", "1.5"),

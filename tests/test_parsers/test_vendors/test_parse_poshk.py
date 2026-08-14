@@ -124,6 +124,8 @@ def test_parse() -> None:
     [
         # remove whitespace
         ("385/65 R22.5 ...", "385/65R22.5 ..."),
+        ("385/65 R22.5", "385/65R22.5"),
+        ("R22.5", "R22.5"),
         ("385/65  R22.5 ...", "385/65R22.5 ..."),
         ("10.00 R20 ...", "10.00R20 ..."),
         # replace * -> x
@@ -227,3 +229,9 @@ class TestParsePoshk:
         parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 0
+
+
+def test_big_recommended_without_max_is_false() -> None:
+    parser = get_fake_parser(poshk_one_item_result())
+    row = RowItem({"price_opt": 1000, "price_recommended": 5000})
+    assert parser.is_big_recommended_percent(row) is False

@@ -77,3 +77,9 @@ def test_parse_with_invalid_item() -> None:
     assert "Alcasta" in mock_log_msg.mock_calls[1].args[0]
     assert "WHS198858" in mock_log_msg.mock_calls[1].args[0]
     assert mock_log_msg.mock_calls[1].kwargs == {"level": 40, "need_print_log": False}
+
+
+def test_prepared_title_skips_empty_parts() -> None:
+    title = FourTochkiParser2Sheet.get_prepared_title(RowItem({}))
+    assert "XXXX" not in title
+    assert "Xxxx" not in title

@@ -4,6 +4,7 @@ tests for Mim vendor (sheet 2) after raw-parser process
 
 from typing import Any, List
 
+import pytest
 from test_parsers.fixtures.mim_sheet2 import mim_one_item_result
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
@@ -19,7 +20,13 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.mim.mim_2sheet import MimParser2Sheet, mim_sheet_2_params
+from parsers.vendors.mim.mim_2sheet import (
+    TRUCK_TIRE_MARKUP_HIGH,
+    TRUCK_TIRE_MARKUP_LOW,
+    TRUCK_TIRE_PRICE_THRESHOLD,
+    MimParser2Sheet,
+    mim_sheet_2_params,
+)
 
 from ..parse_config import MimMarkupRulesProviderForTests
 
@@ -54,3 +61,36 @@ def test_parse() -> None:
     assert parsed_items[0].price_markup == 24360.0
     assert parsed_items[0].supplier_name == "Мим"
     assert parsed_items[0].percent_markup == 5
+
+
+def _sheet2_parser() -> MimParser2Sheet:
+    return object.__new__(MimParser2Sheet)
+
+
+@pytest.mark.parametrize(
+    ("price_opt", "percent"),
+    [
+        (TRUCK_TIRE_PRICE_THRESHOLD, TRUCK_TIRE_MARKUP_LOW),
+        (TRUCK_TIRE_PRICE_THRESHOLD + 1, TRUCK_TIRE_MARKUP_HIGH),
+    ],
+)
+def test_truck_markup_percent(price_opt: float, percent: float) -> None:
+    assert _sheet2_parser().get_markup_percent(price_opt) == percent
+
+
+def test_markup_without_price_opt_is_zero() -> None:
+    row = RowItem({})
+    _sheet2_parser().add_price_markup(row)
+    assert row.price_markup == 0
+
+
+@pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        ({"width": "295", "diameter": "22.5"}, "295R22.5"),
+        ({"width": "295", "height_percent": "75"}, "295/75"),
+        ({"height_percent": "75", "diameter": "22.5"}, "/75R22.5"),
+    ],
+)
+def test_prepared_title_skips_empty_parts(fields: dict[str, str], expected: str) -> None:
+    assert MimParser2Sheet.get_prepared_title(RowItem(fields)) == expected
