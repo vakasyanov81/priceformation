@@ -96,3 +96,9 @@ def test_xlsx_with_skipped_first_column() -> None:
         "c4": 16.0,
         "c5": "",
     }
+
+
+def test_xls_reader_stores_parse_params() -> None:
+    reader = make_reader()
+    assert reader.reader_params.columns == _PARSE_PARAMS["columns"]
+    assert reader.reader_params.start_row == _PARSE_PARAMS["start_row"]

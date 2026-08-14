@@ -18,35 +18,27 @@ TRUCK_TIRE_PRICE_THRESHOLD = 13000
 TRUCK_TIRE_MARKUP_LOW = 0.07
 TRUCK_TIRE_MARKUP_HIGH = 0.05
 
-
-def config_for_sheets2() -> dict[int, str]:
-    """get config for sheets 2 parsers"""
-    return dict(
-        {
-            0: RowItem.code.name,
-            1: RowItem.title.name,
-            3: RowItem.manufacturer.name,
-            4: RowItem.model.name,
-            6: RowItem.width.name,
-            7: RowItem.height_percent.name,
-            8: RowItem.construction_type.name,
-            9: RowItem.diameter.name,
-            11: RowItem.axis.name,
-            12: RowItem.intimacy.name,
-            13: RowItem.layering.name,
-            14: RowItem.index_load.name,
-            15: RowItem.index_velocity.name,
-            20: RowItem.rest_count.name,
-            22: RowItem.price_opt.name,
-            23: RowItem.price_recommended.name,
-        }
-    )
-
-
 mim_sheet_2_params = dataclasses.replace(mim_params)
 mim_sheet_2_params.sheet_info = "Вкладка #2"
 mim_sheet_2_params.sheet_indexes = [1]
-mim_sheet_2_params.columns = config_for_sheets2()
+mim_sheet_2_params.columns = {
+    0: RowItem.code.name,
+    1: RowItem.title.name,
+    3: RowItem.manufacturer.name,
+    4: RowItem.model.name,
+    6: RowItem.width.name,
+    7: RowItem.height_percent.name,
+    8: RowItem.construction_type.name,
+    9: RowItem.diameter.name,
+    11: RowItem.axis.name,
+    12: RowItem.intimacy.name,
+    13: RowItem.layering.name,
+    14: RowItem.index_load.name,
+    15: RowItem.index_velocity.name,
+    20: RowItem.rest_count.name,
+    22: RowItem.price_opt.name,
+    23: RowItem.price_recommended.name,
+}
 
 mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
 

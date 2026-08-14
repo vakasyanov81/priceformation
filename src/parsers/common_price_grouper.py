@@ -68,8 +68,4 @@ class CommonPriceGrouper:
         """Получить список дублей."""
         if not self._is_grouped:
             self.group_by_params()
-        return [
-            row_item
-            for row_item in self.row_items
-            if getattr(row_item, "is_double", False) or getattr(row_item, "double_candidate", False)
-        ]
+        return [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]

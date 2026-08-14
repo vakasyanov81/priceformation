@@ -3,6 +3,7 @@ tests find manufacturer in title
 """
 
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -50,6 +51,23 @@ def test_blank_aliases_do_not_match_title() -> None:
 
     assert row_item.title == "11.00R20 some tyre 16PR"
     assert not row_item.manufacturer
+
+
+def test_longer_alias_matches_before_shorter() -> None:
+    row_item = RowItem({"title": "BF Goodrich winter"})
+    ManufacturerFinder({"BF": (), "BF Goodrich": ()}).process(row_item)
+    assert row_item.manufacturer == "BF Goodrich"
+
+
+def test_empty_alias_skips_title_replace() -> None:
+    row_item = RowItem({"title": "keep title"})
+    with patch(
+        "parsers.base_parser.manufacturer_finder.BaseFinder.find_word_in_title",
+        return_value=("Brand", ""),
+    ):
+        ManufacturerFinder({"Brand": ()}).process(row_item)
+    assert row_item.title == "keep title"
+    assert row_item.manufacturer == "Brand"
 
 
 map_manufacturer = {

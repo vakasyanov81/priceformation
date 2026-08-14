@@ -1,5 +1,6 @@
 """tests for nomenclature title correction"""
 
+import os
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -36,12 +37,13 @@ def test_load_file_reads_xlsx(tmp_path: Any) -> None:
         patch(
             "parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path",
             return_value=fake_wb,
-        ),
+        ) as mock_from_path,
     ):
         mock_cfg.return_value.user_config_folder_path = str(tmp_path)
         mapping = noc.load_file()
         assert mapping == {"old title": "new title", "keep": "fixed"}
         fake_wb.get_sheet_by_name.assert_called_once_with("Sheet1")
+        mock_from_path.assert_called_once_with(f"{tmp_path}{os.sep}correct-nomenclature.xlsx")
 
 
 def test_corrected_title_cache() -> None:

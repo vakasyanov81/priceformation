@@ -28,16 +28,24 @@ def test_write_all_prices() -> None:
     """write_all_prices корректирует названия и пишет по шаблонам"""
     rows = [RowItem({_TITLE: "t1"})]
     writer_cls = MagicMock()
-    out = CommonPriceOut(rows, xls_writer=writer_cls, write_driver=MagicMock)
+    driver_cls = MagicMock()
+    driver_instance = MagicMock()
+    driver_cls.return_value = driver_instance
+    template = object()
+    out = CommonPriceOut(rows, xls_writer=writer_cls, write_driver=driver_cls)
+    raw_rows = [{_TITLE: "t1"}]
 
     with (
         patch.object(out, "nomenclature_title_correction") as mock_corr,
-        patch("parsers.common_price_output.all_writer_templates", return_value=[object()]),
+        patch("parsers.common_price_output.all_writer_templates", return_value=[template]),
         patch(
             "parsers.common_price_output.BaseParser.to_raw_dicts",
-            return_value=[{_TITLE: "t1"}],
-        ),
+            return_value=raw_rows,
+        ) as mock_raw,
     ):
         out.write_all_prices()
-        mock_corr.assert_called_once()
-        writer_cls.assert_called_once()
+
+    mock_corr.assert_called_once()
+    mock_raw.assert_called_once_with(rows)
+    driver_cls.assert_called_once_with()
+    writer_cls.assert_called_once_with(driver_instance, raw_rows, template)

@@ -1,6 +1,6 @@
 """tests for RowItem helper properties"""
 
-from parsers.row_item.row_item import RowItem
+from parsers.row_item.row_item import FieldDescriptor, RowItem
 
 _MD5_HEX_LEN = 32
 
@@ -28,3 +28,8 @@ def test_from_dict_roundtrip() -> None:
     row = RowItem.from_dict('{"title": "t1", "price_opt": 10}')
     assert row.title == "t1"
     assert row.to_dict()["title"] == "t1"
+
+
+def test_field_descriptor_stores_name() -> None:
+    descriptor = FieldDescriptor[str]("title")
+    assert descriptor.name == "title"
