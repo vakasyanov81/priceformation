@@ -16,10 +16,9 @@ from parsers.vendors.four_tochki.four_tochki_sheet2 import (
 from run import run_make_price_by_supplier
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
-_PROJECT_ROOT = _INTEGRATION_ROOT.parent
 _PRICES_REL = "integration_tests/file_prices_for_test"
 _RESULT_DIR = _INTEGRATION_ROOT / "result_for_test"
-_PARSE_CONFIG_DIR = _PROJECT_ROOT / "parse_config_example"
+_PARSE_CONFIG_DIR = _INTEGRATION_ROOT / "parse_config_example"
 _PARSE_CONFIG = f"{_PARSE_CONFIG_DIR.as_posix()}/"
 _RESULT_PATH = f"{_RESULT_DIR.as_posix()}/"
 

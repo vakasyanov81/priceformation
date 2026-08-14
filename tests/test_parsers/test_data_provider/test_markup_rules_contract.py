@@ -15,10 +15,9 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_PARSE_CONFIG_EXAMPLE = _PROJECT_ROOT / "parse_config_example"
 _MIM_FIRST = 0.2
 _POSHK_FIRST = 0.7
+_PARSE_CONFIG_EXAMPLE = Path(__file__).resolve().parents[2] / "parse_config_example"
 
 
 def _configuration_from_example(config_name: str) -> ParseConfiguration:
