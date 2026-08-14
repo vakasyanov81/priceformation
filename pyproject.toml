@@ -88,7 +88,7 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
-    "--cov-fail-under=10",
+    "--cov-fail-under=93",
 ]
 norecursedirs = [
     ".git",
