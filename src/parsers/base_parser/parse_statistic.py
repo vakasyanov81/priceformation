@@ -20,7 +20,7 @@ class ParseResultStatistic:
         """real min / max percent markup for parse result"""
         if not self._parse_result:
             return 0, 0
-        percents = [row_item.percent_markup for row_item in self._parse_result]
+        percents = [row_item.percent_markup or 0 for row_item in self._parse_result]
         return min(percents), max(percents)
 
     def real_absolute_markup(self) -> Tuple[float, float]:
