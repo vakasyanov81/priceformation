@@ -11,6 +11,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.autosnab_title import fill_from_title
 
 autosnab_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="autosnab54_ru", name="Автоснабжение", code="6"),
@@ -18,6 +19,7 @@ autosnab_params = ParserParams(
     sheet_info="",
     columns={
         0: RowItem.type_production.name,
+        1: RowItem.manufacturer.name,
         2: RowItem.title.name,
         3: RowItem.season.name,
         4: RowItem.spike.name,
@@ -54,6 +56,7 @@ class Autosnab54Parser(BaseParser):
         """parse process"""
         res = super().process()
         for row_item in self.parsed_items:
+            fill_from_title(row_item)
             row_item.price_markup = row_item.price_opt
 
         return res
