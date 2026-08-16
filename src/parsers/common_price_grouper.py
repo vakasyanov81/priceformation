@@ -1,10 +1,19 @@
 """Группировка строк прайса по параметрам наименования."""
 
+from functools import partial
 from itertools import groupby
-from typing import List
+from typing import Any, List
 
-from parsers.common_price_group_key import group_key
+from parsers.common_price_group_key import clear_model, group_key
+from parsers.common_price_size import size_fields
 from parsers.row_item.row_item import RowItem
+
+
+def _has_product_identity(row_item: RowItem) -> bool:
+    """Есть размер или модель — позицию можно искать среди дублей."""
+    if any(size_fields(row_item)):
+        return True
+    return bool(clear_model(row_item.model, row_item.manufacturer, row_item.brand))
 
 
 def _mark_double_items(row_items: List[RowItem]) -> None:
@@ -24,8 +33,9 @@ def _mark_double_items(row_items: List[RowItem]) -> None:
 class CommonPriceGrouper:
     """Группировка результата разбора прайсов поставщиков по параметрам наименований"""
 
-    def __init__(self, row_items: List[RowItem]):
+    def __init__(self, row_items: List[RowItem], aliases_map: dict[str, Any] | None = None):
         self.row_items = row_items
+        self._aliases_map = aliases_map
         self._is_grouped = False
 
     def group_by_params(self) -> "CommonPriceGrouper":
@@ -47,14 +57,16 @@ class CommonPriceGrouper:
     def _assign_groups(self) -> None:
         """Сгруппировать, разметить дубли и выставить group_by_params."""
         group_id = 0
-        sorted_items = sorted(self.row_items, key=group_key)
-        for _key, group_iter in groupby(sorted_items, key=group_key):
+        item_key = partial(group_key, aliases_map=self._aliases_map)
+        sorted_items = sorted(self.row_items, key=item_key)
+        for _key, group_iter in groupby(sorted_items, key=item_key):
             group_id += 1
             self._apply_group(group_id, list(group_iter))
 
     def _apply_group(self, group_id: int, group_items: List[RowItem]) -> None:
         """Обработать одну группу дублей."""
-        _mark_double_items(group_items)
+        if _has_product_identity(group_items[0]):
+            _mark_double_items(group_items)
         for row_item in group_items:
             row_item.group_by_params = group_id
 

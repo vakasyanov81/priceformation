@@ -2,6 +2,8 @@
 
 from parsers.row_item.row_item import RowItem
 
+_RUNFLAT_YES = frozenset(("да", "yes", "1", "true"))
+
 
 def _size_from_parts(parts: tuple[str, str, str, str]) -> str:
     """width + postfix + height + construct_diameter."""
@@ -16,30 +18,64 @@ def _load_velocity(row_item: RowItem) -> str:
     return "{0}{1}".format(load, velocity)
 
 
+def _join_nonempty(chunks: tuple[str, ...]) -> str:
+    """Склеить куски title без пустых."""
+    return " ".join(chunk for chunk in chunks if chunk)
+
+
+def _extra_labels(row_item: RowItem) -> tuple[str, str]:
+    """Боковина и RunFlat для title."""
+    sidewall = str(row_item.inscription_on_the_side or "").strip()
+    raw = str(row_item.run_flat or "").strip().lower()
+    runflat = "RunFlat" if raw in _RUNFLAT_YES else ""
+    return sidewall, runflat
+
+
 def truck_title(row_item: RowItem, parts: tuple[str, str, str, str], mark: str) -> str:
     """Title для грузовой шины."""
-    size = _size_from_parts(parts)
-    return " ".join((size, mark, row_item.model or "", _load_velocity(row_item)))
+    sidewall = _extra_labels(row_item)[0]
+    return _join_nonempty(
+        (
+            _size_from_parts(parts),
+            mark,
+            row_item.model or "",
+            row_item.layering or "",
+            row_item.camera_type or "",
+            sidewall,
+            _load_velocity(row_item),
+        ),
+    )
 
 
 def ext_diameter_title(row_item: RowItem, parts: tuple[str, str, str, str], mark: str) -> str:
     """Title с внешним диаметром."""
     size = "{0}x{1}{2}".format(row_item.ext_diameter, parts[0], parts[3])
-    model = row_item.model or ""
-    index_load = row_item.index_load or ""
-    designation = row_item.us_aff_designation or ""
-    return " ".join((size, mark, model, index_load, designation))
+    sidewall, runflat = _extra_labels(row_item)
+    return _join_nonempty(
+        (
+            size,
+            mark,
+            row_item.model or "",
+            row_item.index_load or "",
+            row_item.us_aff_designation or "",
+            sidewall,
+            runflat,
+        ),
+    )
 
 
 def default_tire_title(row_item: RowItem, parts: tuple[str, str, str, str], mark: str) -> str:
     """Обычный title легковой/спец."""
-    size = _size_from_parts(parts)
-    chunks = (
-        size,
-        mark,
-        row_item.model or "",
-        row_item.layering or "",
-        row_item.camera_type or "",
-        _load_velocity(row_item),
+    sidewall, runflat = _extra_labels(row_item)
+    return _join_nonempty(
+        (
+            _size_from_parts(parts),
+            mark,
+            row_item.model or "",
+            row_item.layering or "",
+            row_item.camera_type or "",
+            sidewall,
+            _load_velocity(row_item),
+            runflat,
+        ),
     )
-    return " ".join(chunks)

@@ -12,6 +12,13 @@ from ...base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
+from .four_tochki_disk_title import (
+    disk_diameter,
+    disk_name_suffix,
+    et_label,
+    fill_disk_thickness,
+    join_title_parts,
+)
 from .four_tochki_sheet1 import supplier_folder_name
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
@@ -19,6 +26,7 @@ fourtochki_sheet_2_params.sheet_info = "Вкладка (диски) #2"
 fourtochki_sheet_2_params.sheet_indexes = [1]
 fourtochki_sheet_2_params.columns = {
     0: RowItem.code.name,
+    1: RowItem.title.name,
     2: RowItem.manufacturer.name,
     3: RowItem.model.name,
     4: RowItem.color.name,
@@ -64,9 +72,13 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 
     @classmethod
     def get_prepared_title(cls, row_item: RowItem) -> str:
+        original_name = row_item.title or ""
+        fill_disk_thickness(row_item)
         mark = (row_item.manufacturer or "").lower().capitalize()
-        diameter = (row_item.diameter or "").replace(".0", "")
-        return _disk_title(row_item, mark, diameter)
+        return join_title_parts(
+            _disk_title(row_item, mark, disk_diameter(row_item.diameter)),
+            disk_name_suffix(original_name),
+        )
 
 
 def _disk_title(row_item: RowItem, mark: str, diameter: str) -> str:
@@ -75,14 +87,12 @@ def _disk_title(row_item: RowItem, mark: str, diameter: str) -> str:
     slot_count = str(row_item.slot_count or "")
     pcd1 = str(row_item.pcd1 or "")
     bolts = "x".join((slot_count, pcd1))
-    return " ".join(
-        (
-            size,
-            bolts,
-            "ET{0}".format(row_item.eet or ""),
-            str(row_item.central_diameter or ""),
-            str(row_item.color or ""),
-            mark,
-            str(row_item.model or ""),
-        ),
+    return join_title_parts(
+        size,
+        bolts,
+        et_label(row_item.eet),
+        str(row_item.central_diameter or ""),
+        str(row_item.color or ""),
+        mark,
+        str(row_item.model or ""),
     )

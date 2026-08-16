@@ -27,13 +27,43 @@ def test_sanitize_none() -> None:
     [
         (None, ""),
         ("", ""),
-        ("КАМА-NU 701", "NU701"),
-        ("NU701", "NU701"),
-        ("A-B-C", "B"),
+        ("КАМА-NU 701", "nu701"),
+        ("NU701", "nu701"),
+        ("NU 701", "nu701"),
+        ("A-B-C", "a-b-c"),
+        ("PW-1", "pw-1"),
+        ("PS-1", "ps-1"),
+        ("CW-2", "cw-2"),
+        ("CA-2", "ca-2"),
+        ("Кама-1260-1", "1260-1"),
+        ("Кама-1260-2", "1260-2"),
+        ("Кама", ""),
+        ("SNOW CROSS 2", "snowcross2"),
+        ("Snow Cross 2", "snowcross2"),
+        ("KAMAZ-X", "kamaz-x"),
     ],
 )
 def test_clear_model(model: str | None, expected: str) -> None:
     assert clear_model(model) == expected
+
+
+def test_clear_model_kama_nu_variants_match() -> None:
+    assert clear_model("КАМА-NU 701") == clear_model("NU701") == clear_model("NU 701")
+
+
+def test_clear_model_distinct_hyphen_suffixes() -> None:
+    assert clear_model("PW-1") != clear_model("PS-1")
+    assert clear_model("CW-2") != clear_model("CA-2")
+    assert clear_model("Кама-1260-1") != clear_model("Кама-1260-2")
+
+
+def test_clear_model_strips_manufacturer() -> None:
+    assert clear_model("НКШЗ-NU701", "НКШЗ") == "nu701"
+    assert clear_model("НКШЗ", "НКШЗ") == ""
+
+
+def test_clear_model_strips_brand() -> None:
+    assert clear_model("Brand PW-1", brand="Brand") == "pw-1"
 
 
 @pytest.mark.parametrize(
@@ -98,9 +128,109 @@ def test_group_key_type_production_lower() -> None:
     assert "ЛЕГКОВАЯ" not in key
 
 
-def test_group_key_uses_row_intimacy() -> None:
-    assert "TL" in group_key(_row(intimacy="TL"))
+def test_group_key_tl_matches_missing_intimacy() -> None:
+    assert group_key(_row(intimacy="TL")) == group_key(_row())
+    assert group_key(_row(title="tyre TL extra")) == group_key(_row())
+    assert group_key(_row(camera_type="TL")) == group_key(_row())
+
+
+def test_group_key_tt_differs_from_tl() -> None:
+    assert group_key(_row(intimacy="TT")) != group_key(_row(intimacy="TL"))
+    assert group_key(_row(title="tyre TT extra")) != group_key(_row(title="tyre TL extra"))
+
+
+def test_group_key_ttf_differs_from_tt() -> None:
+    assert group_key(_row(intimacy="TTF")) != group_key(_row(intimacy="TT"))
+
+
+def test_group_key_ignores_axis() -> None:
+    assert group_key(_row(axis="Рулевая")) == group_key(_row())
 
 
 def test_group_key_includes_cleared_model() -> None:
-    assert "NU701" in group_key(_row(model="КАМА-NU 701"))
+    assert "nu701" in group_key(_row(model="КАМА-NU 701"))
+
+
+_KAMA_ALIASES = {
+    "НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"],
+    "Aeolus": ["Аеолус"],
+    "Triangle": [],
+}
+
+
+def test_group_key_nkshz_matches_kama() -> None:
+    nkshz = _row(manufacturer_name="НКШЗ", model="NU701")
+    kama = _row(manufacturer_name="Кама", model="NU 701")
+    assert group_key(nkshz, _KAMA_ALIASES) == group_key(kama, _KAMA_ALIASES)
+
+
+def test_group_key_nkshz_not_triangle() -> None:
+    nkshz = _row(manufacturer_name="НКШЗ", model="NU701")
+    triangle = _row(manufacturer_name="Triangle", model="NU701")
+    assert group_key(nkshz, _KAMA_ALIASES) != group_key(triangle, _KAMA_ALIASES)
+
+
+def test_group_key_kama_brand_same_group() -> None:
+    with_brand = _row(manufacturer_name="НКШЗ", brand="Кама", model="NU701")
+    without = _row(manufacturer_name="НКШЗ", model="NU701")
+    assert group_key(with_brand, _KAMA_ALIASES) == group_key(without, _KAMA_ALIASES)
+
+
+def test_group_key_list_alias_uses_key() -> None:
+    assert "aeolus" in group_key(_row(manufacturer_name="Aeolus"), {"Aeolus": ["Аеолус"]})
+
+
+def test_group_key_keeps_non_numeric_diameter() -> None:
+    assert "R16" in group_key(_row(diameter="R16"))
+
+
+def test_group_key_comma_diameter_matches_dot() -> None:
+    assert group_key(_row(diameter="22,5")) == group_key(_row(diameter="22.5"))
+
+
+def test_group_key_inch_outer_diameter_from_title() -> None:
+    item_35 = _row(title="35X12.50R17 Maxxis Trepador", model="Trepador", width="12.50", diameter="17")
+    item_33 = _row(title="33X12.50R17 Maxxis Trepador", model="Trepador", width="12.50", diameter="17")
+    assert group_key(item_35) != group_key(item_33)
+
+
+def test_group_key_inch_lt_suffix_and_ext_field() -> None:
+    from_title = _row(title="35x12.50R17LT Maxxis", model="Trepador", width="", diameter="")
+    from_field = _row(title="Maxxis Trepador", model="Trepador", width="12.5", diameter="17", ext_diameter=35)
+    assert group_key(from_title) == group_key(from_field)
+
+
+def test_group_key_pcd1_splits() -> None:
+    pcd_114 = _row(type_production="диск", pcd1=114.3, model="Rebel")
+    pcd_108 = _row(type_production="диск", pcd1=108, model="Rebel")
+    assert group_key(pcd_114) != group_key(pcd_108)
+
+
+def test_group_key_disk_thickness_splits() -> None:
+    thin = _row(type_production="диск", disk_thickness="13.5", model="SRW")
+    thick = _row(type_production="диск", disk_thickness="15,5", model="SRW")
+    assert group_key(thin) != group_key(thick)
+
+
+def test_group_key_run_flat_splits() -> None:
+    plain = _row(model="Scorpion Verde All-Season")
+    runflat = _row(model="Scorpion Verde All-Season", run_flat="Да")
+    assert group_key(plain) != group_key(runflat)
+
+
+def test_group_key_sidewall_splits() -> None:
+    mud = _row(model="TRD06", inscription_on_the_side="M+S")
+    winter = _row(model="TRD06", inscription_on_the_side="3PMSF")
+    assert group_key(mud) != group_key(winter)
+
+
+def test_group_key_tt_only_tire_splits_from_tt() -> None:
+    tube = _row(camera_type="TT", title="no marker")
+    tire_only = _row(camera_type="TT (только шина)", title="no marker")
+    assert group_key(tube) != group_key(tire_only)
+
+
+def test_group_key_camera_ttf_splits_from_tt() -> None:
+    ttf = _row(camera_type="TTF", title="no marker")
+    tube = _row(camera_type="TT", title="no marker")
+    assert group_key(ttf) != group_key(tube)

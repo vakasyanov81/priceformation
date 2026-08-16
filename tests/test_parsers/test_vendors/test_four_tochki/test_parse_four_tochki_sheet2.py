@@ -83,3 +83,49 @@ def test_prepared_title_skips_empty_parts() -> None:
     title = FourTochkiParser2Sheet.get_prepared_title(RowItem({}))
     assert "XXXX" not in title
     assert "Xxxx" not in title
+
+
+def test_disk_title_keeps_thickness_and_et0() -> None:
+    row = RowItem(
+        {
+            "title": "11,75x22,5/10x335 ET0 D281 Silver (8221107) (15,5 мм) Китай, прицеп (б/к) 5 000 кг усил.",
+            "manufacturer_name": "SRW",
+            "model": "10/335/281/0",
+            "width": 11.75,
+            "diameter": 22.5,
+            "slot_count": 10,
+            "pcd1": 335,
+            "eet": 0,
+            "central_diameter": 281,
+            "color": "Silver",
+        }
+    )
+    title = FourTochkiParser2Sheet.get_prepared_title(row)
+    assert "ET0" in title
+    assert "(15.5 мм)" in title
+    assert "усил." in title
+    assert "б/к" in title
+    assert "22.5" in title
+    assert row.disk_thickness == "15.5"
+
+
+def test_disk_title_tube_keeps_thickness() -> None:
+    row = RowItem(
+        {
+            "title": "8,5x24/10x335 ET180 D281 Silver (16 мм) (под камеру)",
+            "manufacturer_name": "SRW",
+            "model": "10/335/281/180",
+            "width": 8.5,
+            "diameter": "24.0",
+            "disk_thickness": "16",
+            "slot_count": 10,
+            "pcd1": 335,
+            "eet": 180,
+            "central_diameter": 281,
+            "color": "Silver",
+        }
+    )
+    title = FourTochkiParser2Sheet.get_prepared_title(row)
+    assert "под камеру" in title
+    assert "x24 " in title or title.startswith("8.5x24")
+    assert row.disk_thickness == "16"

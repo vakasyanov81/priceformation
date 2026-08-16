@@ -67,3 +67,13 @@ class TestXlsWriterCreateFolder:
 
         # Директория продолжает существовать
         assert test_folder.exists()
+
+
+@patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None))
+def test_xls_writer_result_path(tmp_path: Any) -> None:
+    """полный путь к записанному файлу"""
+    fake_driver = FakeXlwtDriver()
+    with patch("parsers.writer.xls_writer.get_result_folder_name", return_value=str(tmp_path)):
+        writer = XlsWriter(fake_driver, write_data, template=FixtureTemplate)
+        expected = str((tmp_path / writer.get_file_name()).resolve())
+        assert writer.get_result_path() == expected

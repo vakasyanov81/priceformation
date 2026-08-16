@@ -6,6 +6,7 @@ from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.all_templates import all_writer_templates
+from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
@@ -43,3 +44,13 @@ class CommonPriceOut:
                 BaseParser.to_raw_dicts(self.row_items),
                 write_template,
             )
+
+    def write_doubles_report(self) -> str:
+        """Write only items marked as duplicates and return the file path."""
+        doubles = [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]
+        writer = self.xls_writer(
+            self.write_driver(),
+            BaseParser.to_raw_dicts(doubles),
+            ForDoubles,
+        )
+        return writer.get_result_path()

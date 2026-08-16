@@ -2,6 +2,7 @@
 Точка входа пользовательского интерфейса.
 1. разбор позиций всех активных поставщиков
 2. Формирование прайсов (для внутреннего использования, для дрома и т.д.)
+3. Отчёт о дублях
 """
 
 import sys
@@ -31,6 +32,8 @@ def response_processing() -> None:
             try_call(run_make_price_by_supplier)
         case AnswerResult.UPDATE_ZAPASKA_DATA:
             try_call(run_upload_zapaska_data)
+        case AnswerResult.REPORT_DOUBLES:
+            try_call(run_report_doubles)
         case AnswerResult.EXIT:
             sys.exit(0)
 
@@ -46,6 +49,14 @@ def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
     load_data()
     print_log("*** Данные успешно загружены. ***\n")
+
+
+def run_report_doubles() -> None:
+    """Parse supplier prices and write duplicates report."""
+    common_price = CommonPrice()
+    common_price.parse_all_vendors(all_vendors())
+    report_path = CommonPriceOut(common_price.parsed_items).write_doubles_report()
+    print_log(f"*** Отчёт о дублях сформирован. ***\n{report_path}\n")
 
 
 if __name__ == "__main__":

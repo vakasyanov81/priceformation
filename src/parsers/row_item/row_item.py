@@ -16,7 +16,7 @@ FIELD_FORMAT = {
     row_format.money: ("price_opt", "price_recommended", "price_markup"),
     row_format.floated: ("percent_markup",),
     row_format.integer: ("rest_count", "reserve_count", "delivery_period", "slot_count", "group_by_params"),
-    row_format.int_or_float: ("ext_diameter", "slot_diameter", "pcd1", "eet", "central_diameter"),
+    row_format.int_or_float: ("ext_diameter", "pcd1", "eet", "central_diameter"),
     row_format.boolean: ("double_candidate", "is_double"),
 }
 
@@ -73,7 +73,7 @@ class FieldDescriptor(Generic[_TValue]):
         if instance is None:
             return self
         stored = instance._key_value_store.get(self.name)
-        if not stored:
+        if stored is None:
             stored = default_values().get(self.name)
         return cast(_TValue, stored)
 
@@ -131,7 +131,6 @@ class RowItem:
     disk_thickness = FieldDescriptor[str]("disk_thickness")
     # кол-во отверстий
     slot_count = FieldDescriptor[int]("slot_count")
-    slot_diameter = FieldDescriptor[int | float]("slot_diameter")
     # американское обозначение принадлежности
     us_aff_designation = FieldDescriptor[str]("us_aff_designation")
     # сверловка отверстий в дисках, бывает под один размер бывает универсальный тип под два размера

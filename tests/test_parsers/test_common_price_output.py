@@ -4,8 +4,10 @@ from unittest.mock import MagicMock, patch
 
 from parsers.common_price_output import CommonPriceOut
 from parsers.row_item.row_item import RowItem
+from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 
 _TITLE = "title"
+_REPORT_PATH = "file_prices/result/doubles.xlsx"
 
 
 def test_nomenclature_title_correction() -> None:
@@ -49,3 +51,37 @@ def test_write_all_prices() -> None:
     mock_raw.assert_called_once_with(rows)
     driver_cls.assert_called_once_with()
     writer_cls.assert_called_once_with(driver_instance, raw_rows, template)
+
+
+def test_write_doubles_report() -> None:
+    """write_doubles_report пишет только размеченные дубли шаблоном ForDoubles"""
+    double_row = RowItem({_TITLE: "dup"})
+    double_row.is_double = True
+    candidate = RowItem({_TITLE: "cand"})
+    candidate.double_candidate = True
+    unique = RowItem({_TITLE: "uniq"})
+    rows = [double_row, candidate, unique]
+    writer_cls = MagicMock()
+    driver_cls = MagicMock()
+    driver_instance = MagicMock()
+    driver_cls.return_value = driver_instance
+    writer_instance = MagicMock()
+    writer_instance.get_result_path.return_value = _REPORT_PATH
+    writer_cls.return_value = writer_instance
+    out = CommonPriceOut(rows, xls_writer=writer_cls, write_driver=driver_cls)
+    raw_rows = [{_TITLE: "dup"}, {_TITLE: "cand"}]
+
+    with (
+        patch.object(out, "nomenclature_title_correction") as mock_corr,
+        patch(
+            "parsers.common_price_output.BaseParser.to_raw_dicts",
+            return_value=raw_rows,
+        ) as mock_raw,
+    ):
+        report_path = out.write_doubles_report()
+
+    mock_corr.assert_not_called()
+    mock_raw.assert_called_once_with([double_row, candidate])
+    driver_cls.assert_called_once_with()
+    writer_cls.assert_called_once_with(driver_instance, raw_rows, ForDoubles)
+    assert report_path == _REPORT_PATH

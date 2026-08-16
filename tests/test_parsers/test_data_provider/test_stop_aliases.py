@@ -8,7 +8,10 @@ import pytest
 from parsers.data_provider.manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
+    aliases_for_finder,
     drop_blank_aliases,
+    load_aliases_map,
+    manufacturer_group,
 )
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
@@ -52,10 +55,68 @@ def test_aliases_from_config() -> None:
         ({"Brand": ["", " ", "Bar"]}, {"Brand": ["Bar"]}),
         ({"Brand": []}, {"Brand": []}),
         ({"A": "B"}, {"A": "B"}),
+        (
+            {"НКШЗ": {"aliases": ["", " ", "НК.ШЗ"], "group": "кама"}},
+            {"НКШЗ": {"aliases": ["НК.ШЗ"], "group": "кама"}},
+        ),
+        (
+            {"Aeolus": ["Аеолус"]},
+            {"Aeolus": ["Аеолус"]},
+        ),
     ],
 )
 def test_drop_blank_aliases(raw: Any, expected: Any) -> None:
     assert drop_blank_aliases(raw) == expected
+
+
+def test_aliases_for_finder_object_and_list() -> None:
+    raw = {
+        "НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"],
+        "Aeolus": ["Аеолус"],
+        "Cordiant": {"aliases": ["КОРДИАНТ"], "group": "cordiant"},
+    }
+    assert aliases_for_finder(raw) == {
+        "НКШЗ": ("НК.ШЗ", "Нк.шз", "Кама", "Kama"),
+        "Aeolus": ("Аеолус",),
+        "Cordiant": ("КОРДИАНТ",),
+    }
+
+
+def test_aliases_for_finder_string_and_invalid() -> None:
+    assert aliases_for_finder({"A": "B"}) == {"A": ("B",)}
+    assert aliases_for_finder({"A": ""}) == {"A": ()}
+    assert aliases_for_finder({"A": None}) == {"A": ()}
+
+
+def test_manufacturer_group_uses_group_or_key() -> None:
+    aliases = {
+        "НКШЗ": ["НК.ШЗ", "Кама", "Kama"],
+        "Aeolus": ["Аеолус"],
+        "Cordiant": {"aliases": ["КОРДИАНТ"], "group": "cordiant"},
+    }
+    assert manufacturer_group("НКШЗ", aliases) == "нкшз"
+    assert manufacturer_group("Кама", aliases) == "нкшз"
+    assert manufacturer_group("Kama", aliases) == "нкшз"
+    assert manufacturer_group("Aeolus", aliases) == "aeolus"
+    assert manufacturer_group("Triangle", aliases) == "triangle"
+    assert manufacturer_group("", aliases) == ""
+    assert manufacturer_group("НКШЗ", {}) == "нкшз"
+    assert manufacturer_group("Cordiant", aliases) == "cordiant"
+    assert manufacturer_group("Aeolus", {"Aeolus": {"aliases": [], "group": ""}}) == "aeolus"
+
+
+def test_load_aliases_map_missing_file() -> None:
+    load_aliases_map.cache_clear()
+    with (
+        patch(
+            "parsers.data_provider.manufacturer_aliases.read_file",
+            side_effect=FileNotFoundError,
+        ),
+        patch("parsers.data_provider.manufacturer_aliases.MainConfig") as mock_cfg,
+    ):
+        mock_cfg.return_value.manufacturer_aliases_file_path = "/missing"
+        assert load_aliases_map() == {}
+    load_aliases_map.cache_clear()
 
 
 def test_aliases_from_config_drops_blanks() -> None:
