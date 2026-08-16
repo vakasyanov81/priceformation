@@ -9,10 +9,9 @@ import sys
 
 from core.async_utils import try_call
 from core.log_message import print_log
-from parsers.all_vendors import all_vendors
+from parsers.all_vendors import all_vendors, load_remote_vendor_data
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
-from parsers.vendors.zapaska_tire_json import load_data
 from run_dialog import AnswerResult, ask_action
 
 
@@ -47,7 +46,7 @@ def run_make_price_by_supplier() -> None:
 
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
-    load_data()
+    load_remote_vendor_data()
     print_log("*** Данные успешно загружены. ***\n")
 
 

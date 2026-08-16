@@ -3,9 +3,7 @@
 import logging
 from typing import Any, Callable
 
-from cfg import init_cfg
-
-cfg = init_cfg()
+from core.log_paths import get_log_paths
 
 __level_map__ = {
     logging.ERROR: "ERROR",
@@ -21,9 +19,10 @@ def get_log_level_text(log_level: int) -> str:
 
 def resolve_log_path(level: int = logging.INFO) -> str:
     """get directory path for logging by log-level"""
-    log_file_map = {logging.ERROR: cfg.main.current_err_log_file_path}
+    paths = get_log_paths()
+    log_file_map = {logging.ERROR: paths.err_file}
 
-    return log_file_map.get(level) or cfg.main.current_log_file_path
+    return log_file_map.get(level) or paths.log_file
 
 
 def resolve_log_method(level: int = logging.INFO) -> Callable[..., Any]:

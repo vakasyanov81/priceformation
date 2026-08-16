@@ -82,7 +82,7 @@ def test_run_make_price() -> None:
 def test_run_upload_zapaska() -> None:
     """загрузка данных запаски и сообщение об успехе"""
     with (
-        patch("run.load_data") as mock_load,
+        patch("run.load_remote_vendor_data") as mock_load,
         patch("run.print_log") as mock_log,
     ):
         from run import run_upload_zapaska_data

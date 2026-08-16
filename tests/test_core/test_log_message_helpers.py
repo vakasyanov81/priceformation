@@ -3,7 +3,9 @@
 import logging
 from unittest.mock import patch
 
+from cfg import init_cfg
 from core.log_message import err_msg, log_msg, warn_msg
+from core.log_paths import LogPaths, configure_log_paths, get_log_paths
 from core.log_resolve import (
     get_log_level_text,
     resolve_log_method,
@@ -27,11 +29,24 @@ def test_get_log_level_text_fallback() -> None:
 
 def test_resolve_log_path_by_level() -> None:
     """ERROR идёт в err-лог, остальное — в обычный"""
-    with patch("core.log_resolve.cfg") as mock_cfg:
-        mock_cfg.main.current_err_log_file_path = "/var/log/priceformation/err.log"
-        mock_cfg.main.current_log_file_path = "/var/log/priceformation/info.log"
-        assert resolve_log_path(logging.ERROR) == "/var/log/priceformation/err.log"
-        assert resolve_log_path(logging.INFO) == "/var/log/priceformation/info.log"
+    configure_log_paths(
+        LogPaths(
+            folder="/var/log/priceformation",
+            log_file="/var/log/priceformation/info.log",
+            err_file="/var/log/priceformation/err.log",
+        )
+    )
+    assert resolve_log_path(logging.ERROR) == "/var/log/priceformation/err.log"
+    assert resolve_log_path(logging.INFO) == "/var/log/priceformation/info.log"
+
+
+def test_init_cfg_configures_log_paths() -> None:
+    """init_cfg передаёт пути логов в core, без импорта cfg из core."""
+    compiler = init_cfg()
+    paths = get_log_paths()
+    assert paths.folder == compiler.main.log_folder_path
+    assert paths.log_file == compiler.main.current_log_file_path
+    assert paths.err_file == compiler.main.current_err_log_file_path
 
 
 def test_resolve_log_method_mapping() -> None:

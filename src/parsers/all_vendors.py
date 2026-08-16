@@ -22,7 +22,7 @@ from parsers.vendors.pioner import PionerParser, pioner_config
 from parsers.vendors.poshk import PoshkParser, poshk_config
 from parsers.vendors.stk import STKParser, stk_config
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_config
-from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_config
+from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, load_remote_data, zapaska_tire_config
 
 SupplierName = str
 SupplierCode = str
@@ -53,3 +53,8 @@ def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
     for _, config in all_vendors():
         supplier_info[config.parse_config.parser_params.supplier.code] = config.parse_config.parser_params.supplier.name
     return supplier_info
+
+
+def load_remote_vendor_data() -> None:
+    """Скачать прайсы с API тех поставщиков, у кого оно есть."""
+    load_remote_data()

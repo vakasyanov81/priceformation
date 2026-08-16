@@ -42,9 +42,9 @@ def test_supplier_error_type() -> None:
         assert isinstance(SupplierNotHavePricesError("empty"), CoreExceptionError)
 
 
-def test_to_log_calls_err_msg() -> None:
-    """to_log формирует stack-trace и вызывает err_msg"""
-    with patch("core.exceptions.err_msg") as mock_err:
+def test_to_log_calls_logging() -> None:
+    """to_log формирует stack-trace и пишет в logging.error"""
+    with patch("core.exceptions.logging.error") as mock_err:
         CoreExceptionError.to_log("trace-me")
         mock_err.assert_called_once()
         assert "trace-me" in mock_err.call_args.args[0]

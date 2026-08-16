@@ -2,9 +2,8 @@
 raise logic
 """
 
+import logging
 import traceback
-
-from .log_message import err_msg
 
 __STACK_TRACE_LIMIT__ = 10
 
@@ -24,7 +23,7 @@ class CoreExceptionError(Exception):
         """log message with trace"""
         trace_message = str(traceback.extract_stack(limit=__STACK_TRACE_LIMIT__))
         trace_message = f"{msg} \n {trace_message}"
-        err_msg(trace_message)
+        logging.error(trace_message)
 
 
 def make_raise(message: str) -> None:
