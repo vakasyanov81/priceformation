@@ -248,3 +248,64 @@ def test_group_key_camera_ttf_splits_from_tt() -> None:
     ttf = _row(camera_type="TTF", title="no marker")
     tube = _row(camera_type="TT", title="no marker")
     assert group_key(ttf) != group_key(tube)
+
+
+_ZEPP_TITLE = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
+
+
+def _zepp_disk(**fields: Any) -> RowItem:
+    payload: dict[str, Any] = {
+        "type_production": "диск",
+        "model": "10/335/281/175",
+        "width": "9.0",
+        "diameter": "22.5",
+        "manufacturer_name": "ZEPP",
+        "disk_thickness": "16",
+        "title": _ZEPP_TITLE,
+    }
+    payload.update(fields)
+    return _row(**payload)
+
+
+def test_group_key_disk_factory_splits() -> None:
+    yz = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
+    hap = _zepp_disk(title="{0} (HAP)".format(_ZEPP_TITLE))
+    assert group_key(yz) != group_key(hap)
+
+
+def test_group_key_disk_valve_splits() -> None:
+    outer = _zepp_disk(title="{0} (HAP) alive наруж. вентиль".format(_ZEPP_TITLE))
+    inner = _zepp_disk(title="{0} (HAP) внутр. вентиль".format(_ZEPP_TITLE))
+    assert group_key(outer) != group_key(inner)
+
+
+def test_group_key_same_disk_extras_match() -> None:
+    first = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
+    second = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
+    assert group_key(first) == group_key(second)
+
+
+def test_group_key_ignores_numeric_disk_code() -> None:
+    coded = _zepp_disk(title="{0} (HAP) (5221105)".format(_ZEPP_TITLE))
+    plain = _zepp_disk(title="{0} (HAP)".format(_ZEPP_TITLE))
+    assert group_key(coded) == group_key(plain)
+
+
+def test_group_key_passenger_disk_without_extras() -> None:
+    with_model_code = _row(
+        type_production="диск",
+        model="Ягуар (КЛ147)",
+        manufacturer_name="СКАД",
+        width="5.5",
+        diameter="14",
+        title="5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)",
+    )
+    same_model = _row(
+        type_production="диск",
+        model="Ягуар (КЛ147)",
+        manufacturer_name="СКАД",
+        width="5.5",
+        diameter="14",
+        title="5.5x14 Скад Ягуар (КЛ147)",
+    )
+    assert group_key(with_model_code) == group_key(same_model)

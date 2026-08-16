@@ -106,6 +106,10 @@ def test_disk_title_keeps_thickness_and_et0() -> None:
     assert "усил." in title
     assert "б/к" in title
     assert "22.5" in title
+    assert "Китай" not in title
+    assert "прицеп" not in title
+    assert "8221107" not in title
+    assert "5 000" not in title
     assert row.disk_thickness == "15.5"
 
 
@@ -129,3 +133,49 @@ def test_disk_title_tube_keeps_thickness() -> None:
     assert "под камеру" in title
     assert "x24 " in title or title.startswith("8.5x24")
     assert row.disk_thickness == "16"
+
+
+_ZEPP_FIELDS = {
+    "manufacturer_name": "ZEPP",
+    "model": "10/335/281/175",
+    "width": 9.0,
+    "diameter": 22.5,
+    "slot_count": 10,
+    "pcd1": 335,
+    "eet": 175,
+    "central_diameter": 281,
+    "color": "Sil",
+}
+_ZEPP_CANON = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
+
+
+def _zepp_row(name: str) -> RowItem:
+    return RowItem({"title": name, **_ZEPP_FIELDS})
+
+
+def test_zepp_factory_and_valve_titles_differ() -> None:
+    yz = FourTochkiParser2Sheet.get_prepared_title(
+        _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (YZ) (16 мм) (б/к)"),
+    )
+    hap_outer = FourTochkiParser2Sheet.get_prepared_title(
+        _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (HAP) alive (16 мм) (б/к) наруж. вентиль"),
+    )
+    hap_inner = FourTochkiParser2Sheet.get_prepared_title(
+        _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (HAP) (16 мм) (б/к) внутр. вентиль"),
+    )
+    assert yz == "{0} (YZ)".format(_ZEPP_CANON)
+    assert hap_outer == "{0} (HAP) alive наруж. вентиль".format(_ZEPP_CANON)
+    assert hap_inner == "{0} (HAP) внутр. вентиль".format(_ZEPP_CANON)
+    assert len({yz, hap_outer, hap_inner}) == 3
+
+
+def test_disk_title_keeps_other_truck_tails() -> None:
+    name = (
+        "9,0x22,5/10x335 ET175 D281 Sil (JNTS) (5221105) (16 мм) (б/к) "
+        "под футорку с вент. (кольцо) Китай, прицеп 4 500 кг"
+    )
+    title = FourTochkiParser2Sheet.get_prepared_title(_zepp_row(name))
+    assert title == "{0} (JNTS) под футорку с вент. (кольцо)".format(_ZEPP_CANON)
+    assert "5221105" not in title
+    assert "Китай" not in title
+    assert "4 500" not in title

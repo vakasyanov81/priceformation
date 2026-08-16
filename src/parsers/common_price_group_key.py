@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Tuple
 from parsers.common_price_group_fields import (
     brand_key_parts,
     camera_key,
+    disk_extras_key,
     sidewall,
     yes_flag,
 )
@@ -93,6 +94,7 @@ def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> List[Any
         canon_number(row_item.disk_thickness),
         yes_flag(row_item.run_flat),
         sidewall(row_item.inscription_on_the_side),
+        disk_extras_key(row_item),
     ]
 
 
