@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from core.parse_paths import ParsePaths
 from parsers.data_provider.manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
@@ -14,6 +15,8 @@ from parsers.data_provider.manufacturer_aliases import (
     manufacturer_group,
 )
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
+
+_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
 
 
 def test_stop_words_base_raises() -> None:
@@ -29,9 +32,8 @@ def test_aliases_base_raises() -> None:
 def test_stop_words_from_config() -> None:
     with (
         patch("parsers.data_provider.stop_words.read_file", return_value="w1\nw2"),
-        patch("parsers.data_provider.stop_words.MainConfig") as mock_cfg,
+        patch("parsers.data_provider.stop_words.get_parse_paths", return_value=_PATHS),
     ):
-        mock_cfg.return_value.stop_words_file_path = "/sw"
         assert StopWordsProviderFromUserConfig().get_stop_words_data() == ["w1", "w2"]
 
 
@@ -41,9 +43,8 @@ def test_aliases_from_config() -> None:
             "parsers.data_provider.manufacturer_aliases.read_file",
             return_value='{"A": "B"}',
         ),
-        patch("parsers.data_provider.manufacturer_aliases.MainConfig") as mock_cfg,
+        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
     ):
-        mock_cfg.return_value.manufacturer_aliases_file_path = "/a"
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"A": "B"}
 
 
@@ -112,9 +113,8 @@ def test_load_aliases_map_missing_file() -> None:
             "parsers.data_provider.manufacturer_aliases.read_file",
             side_effect=FileNotFoundError,
         ),
-        patch("parsers.data_provider.manufacturer_aliases.MainConfig") as mock_cfg,
+        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
     ):
-        mock_cfg.return_value.manufacturer_aliases_file_path = "/missing"
         assert load_aliases_map() == {}
     load_aliases_map.cache_clear()
 
@@ -125,7 +125,6 @@ def test_aliases_from_config_drops_blanks() -> None:
             "parsers.data_provider.manufacturer_aliases.read_file",
             return_value='{"Brand": ["", " ", "Bar"]}',
         ),
-        patch("parsers.data_provider.manufacturer_aliases.MainConfig") as mock_cfg,
+        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
     ):
-        mock_cfg.return_value.manufacturer_aliases_file_path = "/a"
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"Brand": ["Bar"]}

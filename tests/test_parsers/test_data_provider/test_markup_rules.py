@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from core.exceptions import CoreExceptionError
+from core.parse_paths import ParsePaths
 from parsers import data_provider
 from parsers.data_provider.markup_rules import (
     MarkupRulesProviderBase,
@@ -21,6 +22,8 @@ _RULE_MAX = 50
 _MISSING_FILE = "/no"
 _STK_RULES_PATH = "/cfg/stk_markup_rules.json"
 _MISSING_MSG = r"Filed to read vendor \(stk\) settings"
+_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
+_GET_PATHS = "parsers.data_provider.markup_rules.get_parse_paths"
 
 
 def test_markup_rules_base() -> None:
@@ -32,16 +35,13 @@ def test_markup_rules_base() -> None:
 
 def test_markup_path_with_supplier() -> None:
     provider = MarkupRulesProviderFromUserConfig("stk")
-    with patch("parsers.data_provider.markup_rules.MainConfig") as mock_cfg:
-        mock_cfg.return_value.markup_rules_file_path = "/cfg/markup_rules.json"
-        mock_cfg.return_value.markup_rules_file_name = "markup_rules.json"
+    with patch(_GET_PATHS, return_value=_PATHS):
         assert provider.get_file_path() == _STK_RULES_PATH
 
 
 def test_markup_path_default() -> None:
     provider = MarkupRulesProviderFromUserConfig()
-    with patch("parsers.data_provider.markup_rules.MainConfig") as mock_cfg:
-        mock_cfg.return_value.markup_rules_file_path = "/cfg/markup_rules.json"
+    with patch(_GET_PATHS, return_value=_PATHS):
         assert provider.get_file_path() == "/cfg/markup_rules.json"
 
 
@@ -63,11 +63,9 @@ def test_markup_missing_file() -> None:
 def test_load_markup_reads_file_path() -> None:
     provider = MarkupRulesProviderFromUserConfig("stk")
     with (
-        patch("parsers.data_provider.markup_rules.MainConfig") as mock_cfg,
+        patch(_GET_PATHS, return_value=_PATHS),
         patch("parsers.data_provider.markup_rules.read_file", return_value="{}") as mock_read,
     ):
-        mock_cfg.return_value.markup_rules_file_path = "/cfg/markup_rules.json"
-        mock_cfg.return_value.markup_rules_file_name = "markup_rules.json"
         assert provider.get_markup_data() == {}
         mock_read.assert_called_once_with(_STK_RULES_PATH)
 

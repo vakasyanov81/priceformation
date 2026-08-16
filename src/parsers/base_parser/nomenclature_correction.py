@@ -1,15 +1,15 @@
 """Correction map for vendor nomenclature titles."""
 
-import os
 from pathlib import Path
 from typing import Any, Iterator
 
 from python_calamine import CalamineWorkbook
 
-from cfg.main import MainConfig
+from core.parse_paths import get_parse_paths
 
 VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1
+_NOMENCLATURE_FILE = "correct-nomenclature.xlsx"
 
 
 class _NomenclatureCache:
@@ -28,7 +28,7 @@ def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
 
 def load_file() -> dict[str, str]:
     """Load title corrections from correct-nomenclature.xlsx."""
-    file_path = f"{MainConfig().user_config_folder_path}{os.sep}correct-nomenclature.xlsx"
+    file_path = get_parse_paths().config_file(_NOMENCLATURE_FILE)
     if not Path(file_path).exists():
         return {}
     return _read_corrections(file_path)

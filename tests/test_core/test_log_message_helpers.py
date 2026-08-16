@@ -11,6 +11,7 @@ from core.log_resolve import (
     resolve_log_method,
     resolve_log_path,
 )
+from core.parse_paths import get_parse_paths
 
 _UNKNOWN_LEVEL = 999
 _UNKNOWN_METHOD_LEVEL = 12345
@@ -41,12 +42,15 @@ def test_resolve_log_path_by_level() -> None:
 
 
 def test_init_cfg_configures_log_paths() -> None:
-    """init_cfg передаёт пути логов в core, без импорта cfg из core."""
+    """init_cfg передаёт пути логов и parse_config в core, без импорта cfg из core."""
     compiler = init_cfg()
     paths = get_log_paths()
     assert paths.folder == compiler.main.log_folder_path
     assert paths.log_file == compiler.main.current_log_file_path
     assert paths.err_file == compiler.main.current_err_log_file_path
+    parse_paths = get_parse_paths()
+    assert parse_paths.user_config_folder == compiler.main.user_config_folder_path
+    assert parse_paths.file_prices_folder.endswith(compiler.main.folder_file_prices)
 
 
 def test_resolve_log_method_mapping() -> None:

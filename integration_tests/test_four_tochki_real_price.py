@@ -1,9 +1,14 @@
 """Integration test: real four_tochki price parse via entry handlers."""
 
+from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+from cfg import init_cfg
 from cfg.main import MainConfig
+from core.parse_paths import ParsePaths, configure_parse_paths
 from parsers.base_parser import nomenclature_correction as noc
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
@@ -28,19 +33,9 @@ _FOUR_TOCHKI_VENDORS = (
 )
 
 
-def _prices_folder(_cfg: MainConfig) -> str:
-    """тестовая папка с прайсами"""
-    return _PRICES_REL
-
-
 def _result_folder(_cfg: MainConfig) -> str:
     """тестовая папка результатов"""
     return _RESULT_PATH
-
-
-def _user_config_folder(_cfg: MainConfig) -> str:
-    """конфиг из parse_config_example для CI"""
-    return _PARSE_CONFIG
 
 
 def _reset_four_tochki_config_cache() -> None:
@@ -60,15 +55,25 @@ def _clear_result_dir() -> None:
             path.unlink()
 
 
-def test_run_make_price_four_tochki_real() -> None:
+@pytest.fixture
+def _example_parse_paths() -> Iterator[None]:
+    configure_parse_paths(
+        ParsePaths(
+            file_prices_folder=str(Path(MainConfig().project_root) / _PRICES_REL),
+            user_config_folder=_PARSE_CONFIG,
+        ),
+    )
+    yield
+    init_cfg()
+
+
+def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
     _reset_four_tochki_config_cache()
 
     with (
-        patch.object(MainConfig, "folder_file_prices", property(_prices_folder)),
         patch.object(MainConfig, "result_folder_path", property(_result_folder)),
-        patch.object(MainConfig, "user_config_folder_path", property(_user_config_folder)),
         patch("run.all_vendors", return_value=_FOUR_TOCHKI_VENDORS),
     ):
         run_make_price_by_supplier()

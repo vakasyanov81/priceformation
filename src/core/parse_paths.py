@@ -1,0 +1,35 @@
+"""Price and parse_config folders; configured from cfg, never imported from it."""
+
+from dataclasses import dataclass
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class ParsePaths:
+    """Folders for supplier prices and user parse_config files."""
+
+    file_prices_folder: str
+    user_config_folder: str
+
+    def config_file(self, file_name: str) -> str:
+        """Absolute path to a file inside parse_config."""
+        return str(Path(self.user_config_folder) / file_name)
+
+
+class _CurrentParsePaths:
+    """Process-wide parse locations without a cfg import."""
+
+    configured: ParsePaths | None = None
+
+
+def configure_parse_paths(paths: ParsePaths) -> None:
+    """Set folders used by data_provider and base_parser."""
+    _CurrentParsePaths.configured = paths
+
+
+def get_parse_paths() -> ParsePaths:
+    """Return configured folders; raise if init_cfg has not run."""
+    paths = _CurrentParsePaths.configured
+    if paths is None:
+        raise RuntimeError("Parse paths are not configured")
+    return paths

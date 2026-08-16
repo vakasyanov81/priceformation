@@ -12,8 +12,6 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
-from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 SupplierName: TypeAlias = str
 SupplierCode: TypeAlias = str
@@ -27,13 +25,7 @@ class CommonPrice:
     выполняет группировку и дедупликацию, предоставляет итоговый результат.
     """
 
-    def __init__(
-        self,
-        xls_writer: type[XlsWriter] = XlsWriter,
-        write_driver: type[XlsxWriterDriver] = XlsxWriterDriver,
-    ) -> None:
-        self.xls_writer = xls_writer
-        self.write_driver = write_driver
+    def __init__(self) -> None:
         self._parsed_items: list[RowItem] = []
 
     def parse_all_vendors(self, vendors: VendorList) -> None:

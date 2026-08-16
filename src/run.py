@@ -7,6 +7,7 @@
 
 import sys
 
+from cfg import init_cfg
 from core.async_utils import try_call
 from core.log_message import print_log
 from parsers.all_vendors import all_vendors, load_remote_vendor_data
@@ -20,6 +21,7 @@ def main() -> None:
     entry point
     :return:
     """
+    init_cfg()
     while True:
         response_processing()
 

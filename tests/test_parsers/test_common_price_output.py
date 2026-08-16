@@ -41,7 +41,7 @@ def test_write_all_prices() -> None:
         patch.object(out, "nomenclature_title_correction") as mock_corr,
         patch("parsers.common_price_output.all_writer_templates", return_value=[template]),
         patch(
-            "parsers.common_price_output.BaseParser.to_raw_dicts",
+            "parsers.common_price_output._to_raw_dicts",
             return_value=raw_rows,
         ) as mock_raw,
     ):
@@ -74,7 +74,7 @@ def test_write_doubles_report() -> None:
     with (
         patch.object(out, "nomenclature_title_correction") as mock_corr,
         patch(
-            "parsers.common_price_output.BaseParser.to_raw_dicts",
+            "parsers.common_price_output._to_raw_dicts",
             return_value=raw_rows,
         ) as mock_raw,
     ):

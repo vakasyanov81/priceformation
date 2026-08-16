@@ -6,8 +6,10 @@ import json
 from functools import lru_cache
 from typing import Any, cast
 
-from cfg.main import MainConfig
 from core.file_reader import read_file
+from core.parse_paths import get_parse_paths
+
+_CONFIG_FILE = "manufacturer_aliases.json"
 
 
 def _filled_aliases(aliases: Any) -> Any:
@@ -96,5 +98,5 @@ class ManufacturerAliasesProviderFromUserConfig(ManufacturerAliasesProviderBase)
 
     def get_aliases(self) -> dict[str, Any]:
         """get manufacturer aliases"""
-        raw: str = read_file(MainConfig().manufacturer_aliases_file_path)
+        raw: str = read_file(get_parse_paths().config_file(_CONFIG_FILE))
         return drop_blank_aliases(cast(dict[str, Any], json.loads(raw)))

@@ -5,9 +5,11 @@ vendor list provider
 import json
 from typing import Any, NamedTuple, cast
 
-from cfg.main import MainConfig
 from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
+from core.parse_paths import get_parse_paths
+
+_CONFIG_FILE = "vendor_list.json"
 
 
 class VendorListConfigFileError(CoreExceptionError):
@@ -41,12 +43,10 @@ class VendorListProviderFromUserConfig(VendorListProviderBase):
         try:
             return cls._load_vendor_list_json()
         except FileNotFoundError as exc:
-            raise VendorListConfigFileError(
-                f"Failed to read all vendor settings {MainConfig().vendor_list_file_name}"
-            ) from exc
+            raise VendorListConfigFileError(f"Failed to read all vendor settings {_CONFIG_FILE}") from exc
 
     @classmethod
     def _load_vendor_list_json(cls) -> dict[str, Any]:
         """Read and parse vendor list JSON."""
-        raw: str = read_file(MainConfig().vendor_list_file_path)
+        raw: str = read_file(get_parse_paths().config_file(_CONFIG_FILE))
         return cast(dict[str, Any], json.loads(raw))
