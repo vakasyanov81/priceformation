@@ -24,7 +24,8 @@ dev = [
     "pytest-randomly==4.1.0",
     "pytest-xdist==3.8.0",
     "wemake-python-styleguide==1.7.1",
-    "mypy==2.3.0"
+    "mypy==2.3.0",
+    "vulture==2.16",
 ]
 
 [build-system]
@@ -119,3 +120,17 @@ strict = true
 local_partial_types = true
 warn_unreachable = true
 exclude = ["mutants/", "\\.venv/"]
+
+[tool.vulture]
+# Scan library and tests together so test-only usage is not reported as dead.
+paths = ["src", "tests", "integration_tests", "pipelines"]
+exclude = [
+    ".venv/",
+    "mutants/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    ".pytest_cache/",
+    "htmlcov/",
+]
+min_confidence = 80
+ignore_decorators = ["@pytest.fixture"]

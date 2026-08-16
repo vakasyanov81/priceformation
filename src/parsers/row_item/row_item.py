@@ -60,15 +60,15 @@ class FieldDescriptor(Generic[_TValue]):
         self._setter = self.formatter if self.formatter else default
 
     @overload
-    def __get__(self, instance: None, owner: type | None = None) -> Self: ...
+    def __get__(self, instance: None, _owner: type | None = None) -> Self: ...
 
     @overload
-    def __get__(self, instance: RowItem, owner: type | None = None) -> _TValue: ...
+    def __get__(self, instance: RowItem, _owner: type | None = None) -> _TValue: ...
 
     def __get__(
         self,
         instance: RowItem | None,
-        owner: type | None = None,
+        _owner: type | None = None,
     ) -> Self | _TValue:
         if instance is None:
             return self

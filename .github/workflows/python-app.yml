@@ -40,3 +40,6 @@ jobs:
       - name: Lint with ruff
         run: |
           uv run ruff check ${GITHUB_WORKSPACE}
+      - name: Find unused code with vulture
+        run: |
+          uv run vulture
