@@ -173,6 +173,7 @@ class RowItem:
     group_by_params = FieldDescriptor[int]("group_by_params")
     double_candidate = FieldDescriptor[bool]("double_candidate")
     is_double = FieldDescriptor[bool]("is_double")
+    disputed = FieldDescriptor[str]("disputed")
 
     def __init__(self, raw_row: dict[str, Any] | None = None):
         """init"""

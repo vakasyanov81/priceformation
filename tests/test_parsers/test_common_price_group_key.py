@@ -200,10 +200,24 @@ def test_group_key_inch_lt_suffix_and_ext_field() -> None:
     assert group_key(from_title) == group_key(from_field)
 
 
-def test_group_key_pcd1_splits() -> None:
-    pcd_114 = _row(type_production="диск", pcd1=114.3, model="Rebel")
-    pcd_108 = _row(type_production="диск", pcd1=108, model="Rebel")
-    assert group_key(pcd_114) != group_key(pcd_108)
+def test_group_key_ignores_season_and_spike() -> None:
+    filled = _row(season="Зимняя", spike="Да")
+    blank = _row()
+    assert group_key(filled) == group_key(blank)
+
+
+def test_group_key_ignores_optional_disk_fields() -> None:
+    blank = _row(type_production="диск", model="Rebel")
+    filled = _row(
+        type_production="диск",
+        model="Rebel",
+        slot_count=5,
+        pcd1=114.3,
+        eet=40,
+        central_diameter=66.6,
+        color="BKF",
+    )
+    assert group_key(blank) == group_key(filled)
 
 
 def test_group_key_disk_thickness_splits() -> None:
