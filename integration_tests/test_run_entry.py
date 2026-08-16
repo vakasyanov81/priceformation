@@ -80,7 +80,7 @@ def test_main_update_zapaska_then_exit() -> None:
     """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
     with (
         patch(_INPUT, side_effect=["2", _QUIT]),
-        patch("run.load_data") as mock_load,
+        patch("run.load_remote_vendor_data") as mock_load,
         patch("run.print_log") as mock_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):

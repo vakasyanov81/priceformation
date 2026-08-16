@@ -92,7 +92,7 @@ def save_data(json_data: str, filename: str) -> None:
         out_file.write(json_data)
 
 
-def load_data() -> None:
-    """load (tire / disk) data from file"""
+def load_remote_data() -> None:
+    """Скачать шины и диски Запаски в file_prices."""
     save_data(get_data("/API/hs/V2/GetTires"), filename="tire.json")
     save_data(get_data("/API/hs/V2/GetDisk"), filename="disk.json")

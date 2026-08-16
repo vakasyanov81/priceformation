@@ -10,6 +10,7 @@ from colorama import init
 from termcolor import colored
 
 from core.init_log import init_log
+from core.log_paths import get_log_paths
 from core.log_resolve import get_log_level_text, resolve_log_method, resolve_log_path
 
 init()
@@ -29,7 +30,7 @@ def warn_msg(message: str, need_print_log: bool = False) -> str:
 
 def log_to_file(message: str, level: int = logging.INFO) -> bool:
     """make log to file"""
-    init_log()
+    init_log(get_log_paths().folder)
     logging.basicConfig(filename=resolve_log_path(level), level=level)
     resolve_log_method(level)(message)
     return True

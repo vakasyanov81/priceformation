@@ -20,6 +20,7 @@ from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import IXlsReader, XlsReader
 
 from ..data_provider import VendorParams
+from . import price_markup
 from .base_parser_config import ParseConfiguration, ParserParams
 from .base_parser_row import _keep_row_item, _try_prepare_row
 from .parse_statistic import ParseResultStatistic
@@ -272,7 +273,7 @@ class BaseParser:
     @lru_cache()
     def calc_percent(cls, price_sale: float, price_purchase: float) -> float:
         """calc margin percentage"""
-        return (price_sale - price_purchase) / price_purchase
+        return price_markup.calc_percent(price_sale, price_purchase)
 
     def recommended_percent_markup(self, row_item: RowItem) -> float:
         """calculate recommended percent markup"""
@@ -318,7 +319,7 @@ class BaseParser:
     @lru_cache()
     def get_markup(cls, price: float, percent: float) -> float:
         """get price with absolute markup"""
-        return price * (1 + percent)
+        return price_markup.get_markup(price, percent)
 
     def get_current_vendor_config(self) -> data_provider.VendorParams:
         """get vendor configuration"""
