@@ -30,7 +30,7 @@ column_mapping = {
     "retail": RowItem.price_recommended.name,
     "diam_center": RowItem.central_diameter.name,
     "holes": RowItem.slot_count.name,
-    "diam_holes": RowItem.slot_diameter.name,
+    "diam_holes": RowItem.pcd1.name,
     "ET": RowItem.eet.name,
     "brand": RowItem.manufacturer.name,
     "name": RowItem.title.name,

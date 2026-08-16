@@ -44,5 +44,6 @@ class TestParseZapaskaDiskJSON:
         assert res.price_markup == 29500.0
         assert res.price_recommended == 29500.0
         assert res.supplier_name == "Запаска (диски)"
+        assert res.pcd1 == 114.3
         # assert res.percent_markup == 12.02
         assert res.percent_markup == 14.94

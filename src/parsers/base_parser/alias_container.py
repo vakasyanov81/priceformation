@@ -24,19 +24,29 @@ def sort_by_length(_list: list[str]) -> list[str]:
 def _alias_entries(
     correct_name: CorrectWord,
     incorrect_names: tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias,
+    reserved_keys: set[str],
 ) -> dict[IncorrectLoweredAlias, CorrectWord]:
     if isinstance(incorrect_names, str):
         incorrect_names = (incorrect_names,)
-    return {name.lower(): correct_name for name in incorrect_names if name.strip()}
+    blocked = reserved_keys - {correct_name.lower()}
+    entries: dict[IncorrectLoweredAlias, CorrectWord] = {}
+    for alias in incorrect_names:
+        if not alias.strip():
+            continue
+        if alias.lower() in blocked:
+            continue
+        entries[alias.lower()] = correct_name
+    return entries
 
 
 def build_reversed_map(
     map_aliases: dict[CorrectWord, tuple[IncorrectLoweredAlias, ...] | IncorrectLoweredAlias],
 ) -> dict[IncorrectLoweredAlias, CorrectWord]:
-    """incorrect alias -> correct word"""
+    """incorrect alias -> correct word; other brands' canonical names are not aliases."""
+    reserved_keys = {name.lower() for name in map_aliases}
     reversed_map: dict[IncorrectLoweredAlias, CorrectWord] = {}
     for correct_name, incorrect_names in map_aliases.items():
-        reversed_map.update(_alias_entries(correct_name, incorrect_names))
+        reversed_map.update(_alias_entries(correct_name, incorrect_names, reserved_keys))
     return reversed_map
 
 

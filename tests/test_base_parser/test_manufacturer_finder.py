@@ -59,6 +59,37 @@ def test_longer_alias_matches_before_shorter() -> None:
     assert row_item.manufacturer == "BF Goodrich"
 
 
+def test_object_aliases_keep_nkshz_not_kama() -> None:
+    aliases = {"НКШЗ": {"aliases": ["НК.ШЗ", "Нк.шз", "Кама"], "group": "кама"}}
+    row_item = RowItem({"title": "Нк.шз Кама-310"})
+    ManufacturerFinder(aliases).process(row_item)
+
+    assert row_item.manufacturer == "НКШЗ"
+    assert row_item.title == "НКШЗ Кама-310"
+
+
+def test_finder_rewrites_kama_to_nkshz() -> None:
+    aliases = {"НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"]}
+    row_item = RowItem({"title": "315/80R22.5 NU701", "manufacturer_name": "Кама"})
+    ManufacturerFinder(aliases).process(row_item)
+
+    assert row_item.manufacturer == "НКШЗ"
+
+    kama_title = RowItem({"title": "Кама NU701"})
+    ManufacturerFinder(aliases).process(kama_title)
+    assert kama_title.manufacturer == "НКШЗ"
+    assert kama_title.title == "НКШЗ NU701"
+
+
+def test_object_aliases_replace_like_list() -> None:
+    aliases = {"Aeolus": {"aliases": ["Аеолус"], "group": "aeolus"}}
+    row_item = RowItem({"title": "--> Аеолус <--"})
+    ManufacturerFinder(aliases).process(row_item)
+
+    assert row_item.manufacturer == "Aeolus"
+    assert row_item.title == "--> Aeolus <--"
+
+
 def test_empty_alias_skips_title_replace() -> None:
     row_item = RowItem({"title": "keep title"})
     with patch(
@@ -98,7 +129,7 @@ map_manufacturer = {
     "Firestone": ("Файрстоун",),
     "Formula": ("Формула",),
     "Hankook": ("Ханкук",),
-    "НКШЗ": ("НК.ШЗ",),
+    "НКШЗ": ("НК.ШЗ", "Кама", "Kama"),
     "ВолШЗ": ("Волж.ШЗ",),
     "ОШЗ": ("Омск.ШЗ",),
     "Crossleader": (),
@@ -110,7 +141,6 @@ map_manufacturer = {
         "Белшина",
         "БШК",
     ),
-    "Кама": (),
     "Kormoran": ("Корморан",),
     "Hifly": (),
     "Normaks": (),

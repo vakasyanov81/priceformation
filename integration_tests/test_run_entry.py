@@ -10,6 +10,8 @@ from run_dialog import AnswerResult
 _INPUT = "builtins.input"
 _RUN_EXIT = "run.sys.exit"
 _QUIT = "q"
+_PARSED_ROW = "item"
+_VENDOR = "vendor"
 
 
 def test_main_exits_on_quit() -> None:
@@ -30,12 +32,12 @@ def test_main_exits_on_quit() -> None:
 def test_main_make_price_then_exit() -> None:
     """выбор 1 вызывает полный путь формирования прайса, затем выход."""
     common = MagicMock()
-    common.parsed_items = ["item"]
+    common.parsed_items = [_PARSED_ROW]
 
     with (
         patch(_INPUT, side_effect=["1", _QUIT]),
         patch("run.CommonPrice", return_value=common) as mock_cp,
-        patch("run.all_vendors", return_value=[("vendor", None)]),
+        patch("run.all_vendors", return_value=[(_VENDOR, None)]),
         patch("run.CommonPriceOut") as mock_out,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
@@ -45,9 +47,33 @@ def test_main_make_price_then_exit() -> None:
             main()
 
         mock_cp.assert_called_once()
-        common.parse_all_vendors.assert_called_once_with([("vendor", None)])
-        mock_out.assert_called_once_with(["item"])
+        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
+        mock_out.assert_called_once_with([_PARSED_ROW])
         mock_out.return_value.write_all_prices.assert_called_once()
+
+
+def test_main_report_doubles_then_exit() -> None:
+    """выбор 3 вызывает отчёт о дублях, затем выход."""
+    common = MagicMock()
+    common.parsed_items = [_PARSED_ROW]
+
+    with (
+        patch(_INPUT, side_effect=["3", _QUIT]),
+        patch("run.CommonPrice", return_value=common) as mock_cp,
+        patch("run.all_vendors", return_value=[(_VENDOR, None)]),
+        patch("run.CommonPriceOut") as mock_out,
+        patch("run.print_log"),
+        patch(_RUN_EXIT, side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_cp.assert_called_once()
+        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
+        mock_out.assert_called_once_with([_PARSED_ROW])
+        mock_out.return_value.write_doubles_report.assert_called_once()
 
 
 def test_main_update_zapaska_then_exit() -> None:

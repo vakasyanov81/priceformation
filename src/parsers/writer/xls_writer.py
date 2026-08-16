@@ -96,6 +96,10 @@ class XlsWriter:
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
         return file_template.format(now=current_date)
 
+    def get_result_path(self) -> str:
+        """Absolute path of the written file."""
+        return str(Path(get_result_folder_name(), self.get_file_name()).resolve())
+
     def col_names(self) -> list[str]:
         """get column names"""
         names = []

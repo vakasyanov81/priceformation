@@ -9,6 +9,7 @@ def test_answer_map_keys() -> None:
     """пункты меню соответствуют ожидаемым действиям"""
     assert ANSWER_MAP["1"] == AnswerResult.MAKE_PRICE_BY_SUPPLIER
     assert ANSWER_MAP["2"] == AnswerResult.UPDATE_ZAPASKA_DATA
+    assert ANSWER_MAP["3"] == AnswerResult.REPORT_DOUBLES
     assert ANSWER_MAP["q"] == AnswerResult.EXIT
 
 
@@ -26,3 +27,9 @@ def test_ask_action_exit() -> None:
     """выбор выхода"""
     with patch("builtins.input", return_value="q"):
         assert ask_action() == AnswerResult.EXIT
+
+
+def test_ask_action_report_doubles() -> None:
+    """выбор отчёта о дублях"""
+    with patch("builtins.input", return_value="3"):
+        assert ask_action() == AnswerResult.REPORT_DOUBLES

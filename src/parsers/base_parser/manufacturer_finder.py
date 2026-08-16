@@ -6,6 +6,7 @@ from typing import Any
 
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder, replace_alias_in_title
+from parsers.data_provider.manufacturer_aliases import aliases_for_finder
 from parsers.row_item.row_item import RowItem
 
 
@@ -16,7 +17,7 @@ class ManufacturerFinder:
 
     def __init__(self, aliases: dict[str, Any] | None = None) -> None:
         """init"""
-        self.aliases = AliasContainer(aliases or {})
+        self.aliases = AliasContainer(aliases_for_finder(aliases or {}))
         self._finder = BaseFinder(self.aliases)
 
     def process(self, row_item: RowItem) -> None:

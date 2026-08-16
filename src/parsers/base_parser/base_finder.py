@@ -103,7 +103,7 @@ class BaseFinder:
     def correction_field(self, rec: RowItem, field_name: str, aliases: AliasContainer) -> None:
         """replace property in rec if it has bad signature"""
         l_man = str_lower(getattr(rec, field_name))
-        if l_man not in aliases.incorrect_words_lower:
+        correct = aliases.reversed_map.get(l_man)
+        if not correct:
             return
-        index = aliases.incorrect_words_lower.index(l_man)
-        setattr(rec, field_name, aliases.correct_words_lower[index])
+        setattr(rec, field_name, correct)
