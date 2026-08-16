@@ -361,6 +361,32 @@ def test_empty_pcd1_does_not_glue_distinct_values() -> None:
     assert len({pcd_108.group_by_params, pcd_114.group_by_params, blank.group_by_params}) == 3
 
 
+def test_zepp_factory_and_valve_are_not_doubles() -> None:
+    shared = {
+        "model": "10/335/281/175",
+        "width": "9.0",
+        "diameter": "22.5",
+        "manufacturer_name": "ZEPP",
+        "disk_thickness": "16",
+    }
+    canon = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
+    yz = _disk_row(**shared, title="{0} (YZ)".format(canon), price_markup=_PRICE_LOW)
+    hap_outer = _disk_row(
+        **shared,
+        title="{0} (HAP) alive наруж. вентиль".format(canon),
+        price_markup=_PRICE_MID,
+    )
+    hap_inner = _disk_row(
+        **shared,
+        title="{0} (HAP) внутр. вентиль".format(canon),
+        price_markup=_PRICE_HIGH,
+    )
+    grouper = CommonPriceGrouper([yz, hap_outer, hap_inner])
+
+    assert grouper.get_double_row_items() == []
+    assert len({yz.group_by_params, hap_outer.group_by_params, hap_inner.group_by_params}) == 3
+
+
 def test_spike_in_title_still_duplicates() -> None:
     with_word = _row(title="315/80R22.5 NU701 шип")
     plain = _row(price_markup=_PRICE_HIGH)

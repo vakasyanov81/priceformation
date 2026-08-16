@@ -3,6 +3,7 @@
 import re
 from typing import Any
 
+from parsers.common_price_group_fields import disk_name_extras
 from parsers.row_item.row_item import RowItem
 
 _THICKNESS_RE = re.compile(r"\((\d+(?:[.,]\d+)?)\s*мм\)", re.IGNORECASE)
@@ -31,13 +32,14 @@ def fill_disk_thickness(row_item: RowItem) -> None:
 
 
 def disk_name_suffix(name: str) -> str:
-    """Толщина, усиление и камерность из исходного наименования."""
+    """Толщина, усиление, камерность и различающие хвосты из наименования."""
     thickness = thickness_from_name(name)
     thick_label = "({0} мм)".format(thickness) if thickness else ""
     return join_title_parts(
         thick_label,
         "усил." if "усил" in name.lower() else "",
         _tube_label(name),
+        disk_name_extras(name),
     )
 
 
