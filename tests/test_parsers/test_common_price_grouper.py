@@ -289,6 +289,16 @@ def test_comma_diameter_still_duplicates() -> None:
     assert comma.group_by_params == dot.group_by_params
 
 
+def test_r_prefix_diameter_still_duplicates() -> None:
+    prefixed = _row(diameter="R22.5")
+    plain = _row(diameter="22.5", price_markup=_PRICE_HIGH)
+
+    doubles = CommonPriceGrouper([prefixed, plain]).get_double_row_items()
+
+    assert doubles == [prefixed, plain]
+    assert prefixed.group_by_params == plain.group_by_params
+
+
 def test_inch_outer_diameters_are_not_doubles() -> None:
     shared = {
         "model": "Trepador",

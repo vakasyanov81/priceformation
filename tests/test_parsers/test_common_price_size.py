@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from parsers.common_price_size import canon_number, size_fields
+from parsers.common_price_size import canon_diameter, canon_number, size_fields
 from parsers.row_item.row_item import RowItem
 
 
@@ -30,6 +30,29 @@ def _row(**fields: Any) -> RowItem:
 )
 def test_canon_number(raw: Any, expected: str) -> None:
     assert canon_number(raw) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        (None, ""),
+        ("", ""),
+        ("16", "16"),
+        ("R16", "16"),
+        ("r16", "16"),
+        ("ZR18", "18"),
+        ("RZ16", "16"),
+        ("R17.5", "17.5"),
+        ("R22,5", "22.5"),
+        ("R16C", "16C"),
+    ],
+)
+def test_canon_diameter(raw: Any, expected: str) -> None:
+    assert canon_diameter(raw) == expected
+
+
+def test_size_fields_r_prefix_matches_plain() -> None:
+    assert size_fields(_row(diameter="R16")) == size_fields(_row(diameter="16"))
 
 
 def test_size_fields_comma_diameter_matches_dot() -> None:
