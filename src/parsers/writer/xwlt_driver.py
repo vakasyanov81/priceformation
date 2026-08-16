@@ -7,11 +7,7 @@ from typing import Any
 import openpyxl
 from openpyxl.styles import Color, Font, PatternFill
 
-from cfg import init_cfg
-
 from .ixls_driver import IXlsDriver
-
-config = init_cfg()
 
 EXCEL_ALPHABET_SIZE = 26
 EXCEL_COLUMN_A_ORD = 65

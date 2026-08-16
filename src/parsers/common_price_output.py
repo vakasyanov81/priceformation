@@ -2,7 +2,8 @@
 Make parse all price and make inner and drom prices
 """
 
-from parsers.base_parser.base_parser import BaseParser
+from typing import Any
+
 from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.all_templates import all_writer_templates
@@ -41,7 +42,7 @@ class CommonPriceOut:
         for write_template in all_writer_templates():
             self.xls_writer(
                 self.write_driver(),
-                BaseParser.to_raw_dicts(self.row_items),
+                _to_raw_dicts(self.row_items),
                 write_template,
             )
 
@@ -50,7 +51,12 @@ class CommonPriceOut:
         doubles = [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]
         writer = self.xls_writer(
             self.write_driver(),
-            BaseParser.to_raw_dicts(doubles),
+            _to_raw_dicts(doubles),
             ForDoubles,
         )
         return writer.get_result_path()
+
+
+def _to_raw_dicts(row_items: list[RowItem]) -> list[dict[str, Any]]:
+    """RowItem → dict для шаблонов записи."""
+    return [row_item.to_dict() for row_item in row_items]

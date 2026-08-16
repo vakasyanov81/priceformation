@@ -2,10 +2,12 @@
 stop words provider
 """
 
-from cfg.main import MainConfig
 from core.file_reader import read_file
+from core.parse_paths import get_parse_paths
 
 from .black_list import BlackListProviderFromUserConfig
+
+_CONFIG_FILE = "stop_words"
 
 
 class StopWordsProviderBase:
@@ -21,4 +23,6 @@ class StopWordsProviderFromUserConfig(StopWordsProviderBase):
 
     def get_stop_words_data(self) -> list[str]:
         """Get stop words"""
-        return BlackListProviderFromUserConfig.split_and_filtration(read_file(MainConfig().stop_words_file_path))
+        return BlackListProviderFromUserConfig.split_and_filtration(
+            read_file(get_parse_paths().config_file(_CONFIG_FILE)),
+        )

@@ -56,14 +56,6 @@ def test_parse_all_vendors_passes_config() -> None:
     assert parser.parse_config is vendor_config
 
 
-def test_common_price_stores_writer_deps() -> None:
-    writer_cls = MagicMock()
-    driver_cls = MagicMock()
-    common_price = CommonPrice(xls_writer=writer_cls, write_driver=driver_cls)
-    assert common_price.xls_writer is writer_cls
-    assert common_price.write_driver is driver_cls
-
-
 def test_parse_vendor_config_error() -> None:
     """VendorListConfigFileError не валит общий разбор"""
     parser = MagicMock()

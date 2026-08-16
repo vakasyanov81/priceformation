@@ -9,7 +9,6 @@ from typing import Any, TypeAlias, cast
 from python_calamine import CalamineWorkbook
 
 import core
-from cfg import init_cfg
 from parsers.xls_reader_row import (
     is_empty_row,
     is_end_row,
@@ -31,8 +30,6 @@ DSheet: TypeAlias = list[DRow]
 
 IndexToHeader: TypeAlias = dict[int, str]
 ParseParams: TypeAlias = dict[str, int | IndexToHeader]
-
-init_cfg()
 
 
 class IXlsReader:

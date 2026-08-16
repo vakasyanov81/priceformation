@@ -19,6 +19,7 @@ def test_main_exits_on_quit() -> None:
     with (
         patch(_INPUT, return_value=_QUIT),
         patch(_RUN_EXIT, side_effect=SystemExit(0)) as mock_exit,
+        patch("run.init_cfg") as mock_init,
     ):
         from run import main
 
@@ -27,6 +28,7 @@ def test_main_exits_on_quit() -> None:
 
         assert exit_info.value.code == 0
         mock_exit.assert_called_with(0)
+        mock_init.assert_called_once()
 
 
 def test_main_make_price_then_exit() -> None:

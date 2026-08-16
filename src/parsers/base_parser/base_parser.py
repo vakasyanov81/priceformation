@@ -7,8 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, List, Optional, Protocol, Type, TypeVar
 
-from cfg import init_cfg
 from core.exceptions import SupplierNotHavePricesError
+from core.parse_paths import get_parse_paths
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
 from parsers.base_item_actions.calc_percent_markup_item_action import (
@@ -203,10 +203,6 @@ class BaseParser:
     def to_row_items(self, raw_rows: List[dict[str, Any]]) -> List[RowItem]:
         return [self.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
 
-    @classmethod
-    def to_raw_dicts(cls, parsed_items: List[RowItem]) -> List[dict[str, Any]]:
-        return [row_item.to_dict() for row_item in parsed_items]
-
     def raw_parse(self, full_file_xls_path: str) -> List[dict[str, Any]]:
         reader = self.get_xls_reader(full_file_xls_path)
         return reader.parse(self.parser_params().sheet_indexes)
@@ -380,8 +376,7 @@ def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:
 
 def get_file_prices(parser: TBaseParser) -> list[str]:
     """get file prices"""
-    cfg = init_cfg()
-    prices_root = Path(cfg.main.project_root) / cfg.main.folder_file_prices
+    prices_root = Path(get_parse_paths().file_prices_folder)
     supplier_folder = prices_root / parser.parser_params().supplier.folder_name
     list_files = _glob_price_files(supplier_folder, parser.parser_params().file_templates)
 

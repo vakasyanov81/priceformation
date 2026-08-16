@@ -5,9 +5,11 @@ markup rules provider
 import json
 from typing import Any, Dict, NamedTuple, cast
 
-from cfg.main import MainConfig
 from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
+from core.parse_paths import get_parse_paths
+
+_CONFIG_FILE = "markup_rules.json"
 
 
 class PriceRulesConfigFileError(CoreExceptionError):
@@ -88,9 +90,7 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
 
     def get_file_path(self) -> str:
         """Get user config file path by supplier name or by default"""
+        file_name = _CONFIG_FILE
         if self.supplier_name:
-            return MainConfig().markup_rules_file_path.replace(
-                MainConfig().markup_rules_file_name,
-                f"{self.supplier_name}_{MainConfig().markup_rules_file_name}",
-            )
-        return MainConfig().markup_rules_file_path
+            file_name = f"{self.supplier_name}_{_CONFIG_FILE}"
+        return get_parse_paths().config_file(file_name)

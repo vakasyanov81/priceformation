@@ -2,8 +2,10 @@
 black list provider
 """
 
-from cfg.main import MainConfig
 from core.file_reader import read_file
+from core.parse_paths import get_parse_paths
+
+_CONFIG_FILE = "black_list"
 
 
 class BlackListProviderBase:
@@ -19,7 +21,7 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
 
     def get_black_list_data(self) -> list[str]:
         """Get black list data"""
-        black_list: str = read_file(MainConfig().black_list_file_path)
+        black_list: str = read_file(get_parse_paths().config_file(_CONFIG_FILE))
         return self.split_and_filtration(black_list)
 
     @classmethod
