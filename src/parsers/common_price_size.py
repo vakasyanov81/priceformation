@@ -6,6 +6,7 @@ from typing import Any, Tuple
 from parsers.row_item.row_item import RowItem
 
 _INCH_SIZE_RE = re.compile(r"(?i)(?<!\d)(\d{2,3})[xх](\d+(?:[.,]\d+)?)r(\d+(?:[.,]\d+)?)")
+_DIAMETER_PREFIX_RE = re.compile(r"(?i)^(zr|rz|r)")
 
 
 def canon_number(raw: Any) -> str:
@@ -22,6 +23,14 @@ def canon_number(raw: Any) -> str:
     if number.is_integer():
         return str(int(number))
     return str(number)
+
+
+def canon_diameter(raw: Any) -> str:
+    """R16 / ZR16 / 16 — один диаметр для ключа."""
+    text = str(raw or "").strip()
+    if not text:
+        return ""
+    return canon_number(_DIAMETER_PREFIX_RE.sub("", text, count=1))
 
 
 def _inch_size_from_title(title: str | None) -> Tuple[str, str, str]:
@@ -45,6 +54,6 @@ def size_fields(row_item: RowItem) -> Tuple[str, str, str]:
     ext_diameter = canon_number(ext_raw) if ext_raw else parsed[2]
     return (
         canon_number(row_item.width) or parsed[0],
-        canon_number(row_item.diameter) or parsed[1],
+        canon_diameter(row_item.diameter) or parsed[1],
         ext_diameter,
     )

@@ -180,8 +180,10 @@ def test_group_key_list_alias_uses_key() -> None:
     assert "aeolus" in group_key(_row(manufacturer_name="Aeolus"), {"Aeolus": ["Аеолус"]})
 
 
-def test_group_key_keeps_non_numeric_diameter() -> None:
-    assert "R16" in group_key(_row(diameter="R16"))
+def test_group_key_r_diameter_matches_plain() -> None:
+    assert group_key(_row(diameter="R16")) == group_key(_row(diameter="16"))
+    assert group_key(_row(diameter="ZR18")) == group_key(_row(diameter="18"))
+    assert "R16" not in group_key(_row(diameter="R16"))
 
 
 def test_group_key_comma_diameter_matches_dot() -> None:
