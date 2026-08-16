@@ -4,8 +4,9 @@ from functools import partial
 from itertools import groupby
 from typing import Any, List
 
+from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
-from parsers.common_price_size import size_fields
+from parsers.common_price_size import canon_number, size_fields
 from parsers.row_item.row_item import RowItem
 
 
@@ -22,12 +23,66 @@ def _mark_double_items(row_items: List[RowItem]) -> None:
         return
 
     min_price_item = min(row_items, key=lambda row_item: row_item.price_markup)
+    dispute = dispute_note(row_items)
 
     for row_item in row_items:
         if row_item.order == min_price_item.order:
             row_item.double_candidate = True
         else:
             row_item.is_double = True
+        if dispute:
+            row_item.disputed = dispute
+
+
+def _optional_disk_parts(row_item: RowItem) -> tuple[str, ...]:
+    """ET/PCD/цвет: пустое — wildcard, заполненное сравниваем жёстко."""
+    return (
+        canon_number(row_item.slot_count),
+        canon_number(row_item.pcd1),
+        canon_number(row_item.eet),
+        canon_number(row_item.central_diameter),
+        (row_item.color or "").strip().lower(),
+    )
+
+
+def _split_group_by_index(group: List[RowItem], index: int) -> List[List[RowItem]]:
+    """Разные заполненные значения поля режут группу; пустые остаются вместе."""
+    filled: dict[str, List[RowItem]] = {}
+    empties: List[RowItem] = []
+    for row_item in group:
+        field_value = _optional_disk_parts(row_item)[index]
+        if field_value:
+            filled.setdefault(field_value, []).append(row_item)
+        else:
+            empties.append(row_item)
+    if len(filled) <= 1:
+        return [group]
+    parts = list(filled.values())
+    if empties:
+        parts.append(empties)
+    return parts
+
+
+def _split_optional_disk(row_items: List[RowItem]) -> List[List[RowItem]]:
+    """После ядра ключа разрезать по опциональным полям диска."""
+    groups = [row_items]
+    field_count = len(_optional_disk_parts(row_items[0]))
+    for index in range(field_count):
+        groups = [part for group in groups for part in _split_group_by_index(group, index)]
+    return groups
+
+
+def _apply_split_groups(
+    grouper: "CommonPriceGrouper",
+    start_id: int,
+    row_items: List[RowItem],
+) -> int:
+    """Выдать подгруппы ядра и вернуть следующий group_id."""
+    group_id = start_id
+    for subgroup in _split_optional_disk(row_items):
+        group_id += 1
+        grouper._apply_group(group_id, subgroup)
+    return group_id
 
 
 class CommonPriceGrouper:
@@ -60,8 +115,7 @@ class CommonPriceGrouper:
         item_key = partial(group_key, aliases_map=self._aliases_map)
         sorted_items = sorted(self.row_items, key=item_key)
         for _key, group_iter in groupby(sorted_items, key=item_key):
-            group_id += 1
-            self._apply_group(group_id, list(group_iter))
+            group_id = _apply_split_groups(self, group_id, list(group_iter))
 
     def _apply_group(self, group_id: int, group_items: List[RowItem]) -> None:
         """Обработать одну группу дублей."""

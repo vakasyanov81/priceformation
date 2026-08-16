@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import pytest
+
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.row_item.row_item import RowItem
 
@@ -39,6 +41,23 @@ def _empty_identity(**fields: Any) -> RowItem:
         "diameter": "",
         "model": "",
         "price_markup": _PRICE_LOW,
+    }
+    payload.update(fields)
+    return RowItem(payload)
+
+
+def _disk_row(**fields: Any) -> RowItem:
+    payload: dict[str, Any] = {
+        "width": "7.0",
+        "diameter": "17",
+        "model": "Rebel",
+        "title": "7.0x17 Rebel",
+        "type_production": "диск",
+        "manufacturer_name": "LS",
+        "price_markup": _PRICE_LOW,
+        "height_percent": "",
+        "index_load": "",
+        "index_velocity": "",
     }
     payload.update(fields)
     return RowItem(payload)
@@ -292,3 +311,91 @@ def test_inch_outer_diameters_are_not_doubles() -> None:
 
     assert grouper.get_double_row_items() == []
     assert item_35.group_by_params != item_33.group_by_params
+
+
+@pytest.mark.parametrize(
+    ("field", "left", "right"),
+    [
+        ("pcd1", 108, 114.3),
+        ("eet", 40, 50),
+        ("slot_count", 4, 5),
+        ("central_diameter", 66.6, 67.1),
+        ("color", "BKF", "S"),
+    ],
+)
+def test_filled_disk_fields_split_groups(field: str, left: Any, right: Any) -> None:
+    first = _disk_row(**{field: left})
+    second = _disk_row(**{field: right}, price_markup=_PRICE_HIGH)
+    grouper = CommonPriceGrouper([first, second])
+
+    assert grouper.get_double_row_items() == []
+    assert first.group_by_params != second.group_by_params
+
+
+@pytest.mark.parametrize(
+    ("field", "filled"),
+    [
+        ("pcd1", 108),
+        ("eet", 40),
+        ("slot_count", 5),
+        ("central_diameter", 66.6),
+        ("color", "BKF"),
+    ],
+)
+def test_empty_disk_field_matches_filled(field: str, filled: Any) -> None:
+    blank = _disk_row()
+    with_value = _disk_row(**{field: filled}, price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([blank, with_value]).get_double_row_items()
+
+    assert doubles == [blank, with_value]
+    assert blank.group_by_params == with_value.group_by_params
+
+
+def test_empty_pcd1_does_not_glue_distinct_values() -> None:
+    pcd_108 = _disk_row(pcd1=108)
+    pcd_114 = _disk_row(pcd1=114.3, price_markup=_PRICE_MID)
+    blank = _disk_row(price_markup=_PRICE_HIGH)
+    grouper = CommonPriceGrouper([pcd_108, pcd_114, blank])
+
+    assert grouper.get_double_row_items() == []
+    assert len({pcd_108.group_by_params, pcd_114.group_by_params, blank.group_by_params}) == 3
+
+
+def test_spike_in_title_still_duplicates() -> None:
+    with_word = _row(title="315/80R22.5 NU701 шип")
+    plain = _row(price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([with_word, plain]).get_double_row_items()
+
+    assert doubles == [with_word, plain]
+    assert not with_word.disputed
+    assert not plain.disputed
+
+
+def test_explicit_spike_yes_no_is_disputed() -> None:
+    yes_spike = _row(spike="Да")
+    no_spike = _row(spike="Нет", price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([yes_spike, no_spike]).get_double_row_items()
+
+    assert doubles == [yes_spike, no_spike]
+    assert yes_spike.disputed == "шип"
+    assert no_spike.disputed == "шип"
+
+
+def test_empty_spike_is_not_disputed() -> None:
+    yes_spike = _row(spike="Да")
+    blank = _row(price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([yes_spike, blank]).get_double_row_items()
+
+    assert doubles == [yes_spike, blank]
+    assert not yes_spike.disputed
+    assert not blank.disputed
+
+
+def test_explicit_season_conflict_is_disputed() -> None:
+    winter = _row(season="Зимняя")
+    summer = _row(season="Летняя", price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([winter, summer]).get_double_row_items()
+
+    assert doubles == [winter, summer]
+    assert winter.disputed == "сезон"
+    assert summer.disputed == "сезон"

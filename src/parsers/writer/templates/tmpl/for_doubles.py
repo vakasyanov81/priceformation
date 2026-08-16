@@ -14,6 +14,7 @@ class ForDoubles(ForInner):
         {"Группа по параметрам": {"field": RowItem.group_by_params.name}},
         {"Дубль": {"field": RowItem.is_double.name}},
         {"Главный дубль": {"field": RowItem.double_candidate.name}},
+        {"Спорная": {"field": RowItem.disputed.name}},
     ]
 
     __FILE__ = "doubles_{now}.xlsx"
