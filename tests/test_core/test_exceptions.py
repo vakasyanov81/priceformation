@@ -4,7 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from core.exceptions import CoreExceptionError, SupplierNotHavePricesError, make_raise
+from core.exceptions import (
+    CoreExceptionError,
+    SupplierNotHavePricesError,
+    make_raise,
+)
 
 _TO_LOG = "to_log"
 

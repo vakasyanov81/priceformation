@@ -2,6 +2,8 @@
 tests for zapaska (json) tire vendor after raw-parser process
 """
 
+import json
+from pathlib import Path
 from typing import Any, List
 from unittest import skip
 
@@ -14,6 +16,8 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
+
+_FIXTURE_TIRE = "tests/test_parsers/fixtures/zapaska_tire.json"
 
 parser_config = make_parse_configuration(zapaska_tire_params)
 
@@ -53,7 +57,7 @@ class TestParseZapaskaTireJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        parser = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
+        parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
         parsed_items: List[RowItem] = parser.parse()
 
         res = parsed_items[0]
@@ -66,6 +70,21 @@ class TestParseZapaskaTireJSON:
         assert res.supplier_name == "Запаска (шины)"
         assert res.percent_markup == 12.04
         assert res.season == "Летняя"
+        assert res.type_production == "Грузовая шина"
+
+    def test_unknown_category_is_skipped(self, tmp_path: Path) -> None:
+        """неизвестная категория поставщика не попадает в прайс"""
+        root = get_config()().project_root
+        rows = json.loads((Path(root) / _FIXTURE_TIRE).read_text(encoding="utf-8"))
+        rows[0]["category"] = "SUV"
+        price_file = tmp_path / "tire.json"
+        price_file.write_text(json.dumps(rows), encoding="utf-8")
+
+        parser = get_fake_parser([str(price_file)])
+        parsed_items: List[RowItem] = parser.parse()
+
+        assert parsed_items == []
+        assert parser.unknown_category_skips == ["SUV"]
 
     @pytest.mark.parametrize(
         "prices",
@@ -83,6 +102,6 @@ class TestParseZapaskaTireJSON:
         """test calculation price-markup"""
         _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
-        parser = get_fake_parser([f"{root}/tests/test_parsers/fixtures/zapaska_tire.json"])
+        parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
         parsed_items: List[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_markup

@@ -9,6 +9,7 @@ from core import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
@@ -17,6 +18,7 @@ SupplierName: TypeAlias = str
 SupplierCode: TypeAlias = str
 
 VendorList: TypeAlias = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
+UnknownCategorySkip: TypeAlias = tuple[str, str]
 
 
 class CommonPrice:
@@ -27,10 +29,12 @@ class CommonPrice:
 
     def __init__(self) -> None:
         self._parsed_items: list[RowItem] = []
+        self._unknown_category_skips: list[UnknownCategorySkip] = []
 
     def parse_all_vendors(self, vendors: VendorList) -> None:
         """Запускает парсинг по всем поставщикам и группирует результат."""
         self._parsed_items.clear()  # защищаемся от накопления при повторных вызовах
+        self._unknown_category_skips.clear()
 
         start_time = time.monotonic()
         log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
@@ -38,6 +42,7 @@ class CommonPrice:
         for vendor_cls, vendor_config in vendors:
             self.parse_vendor(vendor_cls(vendor_config))
 
+        self._log_unknown_category_skips()
         grouper = CommonPriceGrouper(self._parsed_items)
         self._parsed_items = grouper.group_by_params().get_row_items()
 
@@ -49,17 +54,30 @@ class CommonPrice:
     def parse_vendor(self, parser: BaseParser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к общему результату."""
         try:
-            self._parsed_items.extend(parser.parse())
-
+            parsed = parser.parse()
         except VendorListConfigFileError:
             warn_msg(
                 "Отсутствует файл конфигурации parse_config/vendor_list.json",
                 need_print_log=True,
             )
-
         except Exception as exc:
             err_msg(f"Ошибка разбора прайса поставщика {parser!r} // {exc}")
             raise
+        else:
+            self._parsed_items.extend(parsed)
+            self._remember_unknown_category_skips(parser)
+
+    def _remember_unknown_category_skips(self, parser: BaseParser) -> None:
+        skips = getattr(parser, "unknown_category_skips", ())
+        if not isinstance(skips, list) or not skips:
+            return
+        supplier = parser.parser_params().supplier.name
+        self._unknown_category_skips.extend((supplier, category) for category in skips)
+
+    def _log_unknown_category_skips(self) -> None:
+        message = skipped_unknown_categories_message(self._unknown_category_skips)
+        if message:
+            warn_msg(message, need_print_log=True)
 
     @property
     def parsed_items(self) -> list[RowItem]:
