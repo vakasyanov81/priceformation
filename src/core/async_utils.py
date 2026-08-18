@@ -4,7 +4,7 @@ import logging
 import sys
 from typing import Any, Callable
 
-from core.exceptions import SupplierNotHavePricesError
+from core.exceptions import CoreExceptionError, SupplierNotHavePricesError
 from core.log_message import print_log
 
 
@@ -15,5 +15,7 @@ def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
     except SupplierNotHavePricesError as exc:
         print_log(f"{exc}", level=logging.WARNING)
         sys.exit(1)
+    except CoreExceptionError as exc:
+        print_log(f"{exc}", level=logging.ERROR)
     except KeyboardInterrupt:
         sys.exit(0)

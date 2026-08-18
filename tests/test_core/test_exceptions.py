@@ -23,6 +23,14 @@ def test_core_exception_logs_message() -> None:
         mock_log.assert_called_once_with("ошибка")
 
 
+def test_core_exception_logs_detail() -> None:
+    """в лог уходит detail, в str — пользовательское сообщение"""
+    with patch.object(CoreExceptionError, _TO_LOG) as mock_log:
+        exc = CoreExceptionError("понятно", detail="stack and cause")
+        assert str(exc) == "понятно"
+        mock_log.assert_called_once_with("stack and cause")
+
+
 def test_core_exception_default_message() -> None:
     """без аргумента берётся __MESSAGE__"""
     with patch.object(CoreExceptionError, _TO_LOG):
@@ -42,9 +50,32 @@ def test_supplier_error_type() -> None:
         assert isinstance(SupplierNotHavePricesError("empty"), CoreExceptionError)
 
 
-def test_to_log_calls_logging() -> None:
-    """to_log формирует stack-trace и пишет в logging.error"""
-    with patch("core.exceptions.logging.error") as mock_err:
+def test_to_log_writes_error_log() -> None:
+    """to_log пишет stack-trace в лог-файл, не в консоль"""
+    with patch("core.exceptions.err_msg") as mock_err:
+        CoreExceptionError.to_log("trace-me")
+        mock_err.assert_called_once()
+        assert "trace-me" in mock_err.call_args.args[0]
+        assert mock_err.call_args.kwargs["need_print_log"] is False
+
+
+def test_to_log_fallback_without_log_paths() -> None:
+    """если лог-файл недоступен, пишем в logging.error"""
+    with (
+        patch("core.exceptions.err_msg", side_effect=RuntimeError("Log paths are not configured")),
+        patch("core.exceptions.logging.error") as mock_err,
+    ):
+        CoreExceptionError.to_log("trace-me")
+        mock_err.assert_called_once()
+        assert "trace-me" in mock_err.call_args.args[0]
+
+
+def test_to_log_fallback_on_os_error() -> None:
+    """ошибка записи лог-файла не должна пробрасываться"""
+    with (
+        patch("core.exceptions.err_msg", side_effect=PermissionError("denied")),
+        patch("core.exceptions.logging.error") as mock_err,
+    ):
         CoreExceptionError.to_log("trace-me")
         mock_err.assert_called_once()
         assert "trace-me" in mock_err.call_args.args[0]
