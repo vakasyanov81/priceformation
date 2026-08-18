@@ -2,12 +2,13 @@
 logic for zapaska (rest) vendor
 """
 
+import traceback
 from base64 import b64encode
-from http.client import HTTPSConnection
+from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 
 from cfg import init_cfg
-from cfg.zapaska_api import ZapaskaApiConfig, get_zapaska_api_config
+from cfg.zapaska_api import ZapaskaApiConfig, ZapaskaApiConnectionError, get_zapaska_api_config
 
 from .. import data_provider
 from ..base_parser.base_parser_config import (
@@ -74,12 +75,26 @@ def basic_auth(username: str, password: str) -> str:
 def get_data(url: str, api_config: ZapaskaApiConfig | None = None) -> str:
     """GET from Zapaska API."""
     api_config = api_config or get_zapaska_api_config()
+    try:
+        return _request_zapaska(url, api_config)
+    except (OSError, HTTPException) as exc:
+        raise _zapaska_connection_error(url, api_config.host, exc) from exc
 
+
+def _request_zapaska(url: str, api_config: ZapaskaApiConfig) -> str:
+    """Perform GET against Zapaska HTTPS API."""
     connection = HTTPSConnection(api_config.host)
     headers = {"Authorization": basic_auth(api_config.login, api_config.password)}
     connection.request("GET", url, headers=headers)
-    res = connection.getresponse()
-    return res.read().decode("utf-8")
+    payload = connection.getresponse().read().decode("utf-8")
+    connection.close()
+    return payload
+
+
+def _zapaska_connection_error(url: str, host: str, exc: Exception) -> ZapaskaApiConnectionError:
+    """Human-readable connection error; original exception goes to logs."""
+    detail = f"host={host} url={url}\n{exc!r}\n{traceback.format_exc()}"
+    return ZapaskaApiConnectionError(detail=detail)
 
 
 def save_data(json_data: str, filename: str) -> None:

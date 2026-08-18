@@ -7,7 +7,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cfg.zapaska_api import ZapaskaApiConfig, ZapaskaApiConfigError, get_zapaska_api_config, load_dotenv
+from cfg.zapaska_api import (
+    ZapaskaApiConfig,
+    ZapaskaApiConfigError,
+    ZapaskaApiConnectionError,
+    get_zapaska_api_config,
+    load_dotenv,
+)
 from core.exceptions import CoreExceptionError
 from parsers.vendors.zapaska_tire_json import basic_auth, get_data
 
@@ -61,36 +67,38 @@ def test_config_custom_host(monkeypatch: Any) -> None:
     assert get_zapaska_api_config().host == "api.example:443"
 
 
-def test_config_missing_credentials(monkeypatch: Any) -> None:
+def test_config_missing_env_file(tmp_path: Any, monkeypatch: Any) -> None:
+    monkeypatch.setattr("cfg.zapaska_api.__PROJECT_ROOT__", str(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
-    with (
-        patch("cfg.zapaska_api.load_dotenv"),
-        patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(ZapaskaApiConfigError),
-    ):
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match="Не найден файл .env"):
         get_zapaska_api_config()
 
 
-def test_config_login_without_password(monkeypatch: Any) -> None:
+def test_config_env_file_without_credentials(tmp_path: Any, monkeypatch: Any) -> None:
+    monkeypatch.setattr("cfg.zapaska_api.__PROJECT_ROOT__", str(tmp_path))
+    monkeypatch.delenv(_LOGIN, raising=False)
+    monkeypatch.delenv(_PASSWORD_ENV, raising=False)
+    (tmp_path / ".env").write_text("# no credentials\n", encoding="utf-8")
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match="не заданы данные"):
+        get_zapaska_api_config()
+
+
+def test_config_login_without_password(tmp_path: Any, monkeypatch: Any) -> None:
+    monkeypatch.setattr("cfg.zapaska_api.__PROJECT_ROOT__", str(tmp_path))
     monkeypatch.setenv(_LOGIN, _TEST_USER)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
-    with (
-        patch("cfg.zapaska_api.load_dotenv"),
-        patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(ZapaskaApiConfigError),
-    ):
+    (tmp_path / ".env").write_text(f"{_LOGIN}={_TEST_USER}\n", encoding="utf-8")
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match="не заданы данные"):
         get_zapaska_api_config()
 
 
-def test_config_password_without_login(monkeypatch: Any) -> None:
+def test_config_password_without_login(tmp_path: Any, monkeypatch: Any) -> None:
+    monkeypatch.setattr("cfg.zapaska_api.__PROJECT_ROOT__", str(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.setenv(_PASSWORD_ENV, _TEST_SECRET)
-    with (
-        patch("cfg.zapaska_api.load_dotenv"),
-        patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(ZapaskaApiConfigError),
-    ):
+    (tmp_path / ".env").write_text(f"{_PASSWORD_ENV}={_TEST_SECRET}\n", encoding="utf-8")
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match="не заданы данные"):
         get_zapaska_api_config()
 
 
@@ -164,4 +172,25 @@ def test_get_data_uses_env_config() -> None:
         _GET_TIRES_URL,
         headers={"Authorization": basic_auth("u", _TEST_SECRET)},
     )
+    mock_conn.return_value.close.assert_called_once()
     assert payload == '{"ok": 1}'
+
+
+def test_get_data_connection_error() -> None:
+    api_config = ZapaskaApiConfig(host=_TEST_HOST, login="u", password=_TEST_SECRET)
+    mock_conn = MagicMock()
+    mock_conn.return_value.request.side_effect = OSError("network down")
+
+    with (
+        patch("parsers.vendors.zapaska_tire_json.HTTPSConnection", mock_conn),
+        patch.object(CoreExceptionError, _TO_LOG) as mock_log,
+        pytest.raises(ZapaskaApiConnectionError, match="Не удалось подключиться") as raised,
+    ):
+        get_data(_GET_TIRES_URL, api_config=api_config)
+
+    mock_log.assert_called_once()
+    logged = mock_log.call_args.args[0]
+    assert "network down" in logged
+    assert _TEST_HOST in logged
+    assert _GET_TIRES_URL in logged
+    assert "network down" not in str(raised.value)
