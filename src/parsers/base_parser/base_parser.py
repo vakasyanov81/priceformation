@@ -68,6 +68,7 @@ class BaseParser:
         self._black_list: List[str] | None = None
         self._stop_words: List[str] | None = None
         self._category_finder: CategoryFinder | None = None
+        self.unknown_category_skips: list[str] = []
 
     def parse_config(self) -> ParseConfiguration:
         if self._parse_config is None:

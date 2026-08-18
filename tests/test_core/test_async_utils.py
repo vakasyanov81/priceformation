@@ -27,6 +27,7 @@ def test_try_call_supplier_error_exits() -> None:
     ):
         try_call(method)
         mock_log.assert_called_once()
+        assert mock_log.call_args.kwargs["level"] == logging.WARNING
         mock_exit.assert_called_once_with(1)
 
 

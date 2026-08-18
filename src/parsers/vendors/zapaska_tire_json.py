@@ -17,6 +17,7 @@ from ..base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from ..base_parser.category_finder import canonical_product_type, raw_category_label
 from ..row_item.row_item import RowItem
 from .zapaska_disk_json import ZapaskaDiskJSON, column_mapping
 
@@ -63,7 +64,12 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
     _type_production = "Шины"
 
     def get_type_production(self, row_item: RowItem) -> str:
-        return row_item.type_production
+        """Map supplier category onto the allowed product types."""
+        resolved = canonical_product_type(row_item.type_production, self._category_finder)
+        if resolved:
+            return resolved
+        self.unknown_category_skips.append(raw_category_label(row_item.type_production))
+        return ""
 
 
 def basic_auth(username: str, password: str) -> str:

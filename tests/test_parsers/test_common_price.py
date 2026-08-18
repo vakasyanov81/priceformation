@@ -32,6 +32,36 @@ class FakeParser:
         return list(fake_result)
 
 
+class _SkipSupplier:
+    name = "Запаска (шины)"
+
+
+class _SkipParserParams:
+    supplier = _SkipSupplier()
+
+
+class FakeParserWithSkips:
+    """parser that skipped unknown categories"""
+
+    def __init__(
+        self,
+        parse_config: Any = None,
+        file_prices: list[str] | None = None,
+        xls_reader: Any = None,
+    ) -> None:
+        """init"""
+        self.parse_config = parse_config
+        self.unknown_category_skips = ["SUV", "Foo"]
+
+    def parse(self) -> list[RowItem]:
+        """fake parse"""
+        return []
+
+    def parser_params(self) -> _SkipParserParams:
+        """supplier params for skip report"""
+        return _SkipParserParams()
+
+
 def test_parse_all_vendors() -> None:
     """парсинг списка вендоров и группировка результата"""
     common_price = CommonPrice()
@@ -79,6 +109,22 @@ def test_parse_vendor_reraises() -> None:
         with pytest.raises(RuntimeError, match="boom"):
             common_price.parse_vendor(parser)
         mock_err.assert_called_once()
+
+
+def test_skipped_categories_logged() -> None:
+    """пропуски неизвестных категорий печатаются в консоль"""
+    common_price = CommonPrice()
+    with (
+        patch("parsers.common_price.log_msg"),
+        patch("parsers.common_price.warn_msg") as mock_warn,
+    ):
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParserWithSkips), None)])
+    mock_warn.assert_called_once()
+    message = mock_warn.call_args.args[0]
+    assert "Пропущено 2 позиций" in message
+    assert "Запаска (шины)" in message
+    assert "Foo, SUV" in message
+    assert mock_warn.call_args.kwargs["need_print_log"] is True
 
 
 def test_suppliers_info() -> None:
