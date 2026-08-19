@@ -1,6 +1,7 @@
 # 01. Вынести MarkupPolicy
 
-Подробно: [01-markup-policy-detail.md](details/01-markup-policy-detail.md)
+Подробно: [01-markup-policy-detail.md](details/01-markup-policy-detail.md)  
+Задачи: [01-markup-policy-tasks.md](details/01-markup-policy-tasks.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
 Статус: не начата  
