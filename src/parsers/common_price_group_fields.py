@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from parsers.data_provider.manufacturer_aliases import manufacturer_group
+from parsers.data_provider.manufacturer_group import manufacturer_group
 from parsers.row_item.disk_name_extras import disk_name_extras
 from parsers.row_item.row_item import RowItem
 

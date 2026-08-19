@@ -15,7 +15,6 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
 
 PIONER_START_ROW = 12
@@ -68,11 +67,12 @@ class PionerParser(BaseParser):
     def process(self) -> int:
         """process parse"""
         res = super().process()
+        finder = self.manufacturer_finder()
         for row_item in self.parsed_items:
             self.skip_by_min_rest(row_item)
             self.add_price_markup(row_item)
             self.set_manufacturer_to_title(row_item)
-            ManufacturerFinder(self.parse_config().manufacturer_aliases()).process(row_item)
+            finder.process(row_item)
 
         return res
 

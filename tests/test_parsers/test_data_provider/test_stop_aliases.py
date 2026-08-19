@@ -12,8 +12,8 @@ from parsers.data_provider.manufacturer_aliases import (
     aliases_for_finder,
     drop_blank_aliases,
     load_aliases_map,
-    manufacturer_group,
 )
+from parsers.data_provider.manufacturer_group import manufacturer_group
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
 _PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
@@ -104,6 +104,17 @@ def test_manufacturer_group_uses_group_or_key() -> None:
     assert manufacturer_group("НКШЗ", {}) == "нкшз"
     assert manufacturer_group("Cordiant", aliases) == "cordiant"
     assert manufacturer_group("Aeolus", {"Aeolus": {"aliases": [], "group": ""}}) == "aeolus"
+
+
+def test_manufacturer_group_lookup_once_per_map() -> None:
+    aliases = {"НКШЗ": ["Кама"]}
+    with patch(
+        "parsers.data_provider.manufacturer_group.aliases_for_finder",
+        wraps=aliases_for_finder,
+    ) as finder:
+        assert manufacturer_group("Кама", aliases) == "нкшз"
+        assert manufacturer_group("НКШЗ", aliases) == "нкшз"
+        assert finder.call_count == 1
 
 
 def test_load_aliases_map_missing_file() -> None:

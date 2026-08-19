@@ -19,10 +19,10 @@ from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.row_item.row_item import RowItem
 from parsers.xls_reader import IXlsReader, XlsReader
 
-from ..data_provider import VendorParams
 from . import price_markup
 from .base_parser_config import ParseConfiguration, ParserParams
 from .base_parser_row import _keep_row_item, _try_prepare_row
+from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
 TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
@@ -68,6 +68,7 @@ class BaseParser:
         self._black_list: List[str] | None = None
         self._stop_words: List[str] | None = None
         self._category_finder: CategoryFinder | None = None
+        self._manufacturer_finder: ManufacturerFinder | None = None
         self.unknown_category_skips: list[str] = []
 
     def parse_config(self) -> ParseConfiguration:
@@ -95,6 +96,13 @@ class BaseParser:
         self._parse_config = parse_config
         self._black_list = None
         self._stop_words = None
+        self._manufacturer_finder = None
+
+    def manufacturer_finder(self) -> ManufacturerFinder:
+        if self._manufacturer_finder is None:
+            aliases = self.parse_config().manufacturer_aliases()
+            self._manufacturer_finder = ManufacturerFinder(aliases)
+        return self._manufacturer_finder
 
     def parse(self) -> List[RowItem]:
         if not self.is_active:
@@ -322,7 +330,7 @@ class BaseParser:
         """get vendor configuration"""
         folder_name = self.parser_params().supplier.folder_name
         vendor = self.parse_config().all_vendor_config().get(folder_name)
-        return vendor or VendorParams(enabled=0)
+        return vendor or data_provider.VendorParams(enabled=0)
 
     @classmethod
     def prepare_title(cls, title: str) -> str:

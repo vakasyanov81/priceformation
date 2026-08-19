@@ -58,24 +58,6 @@ def aliases_for_finder(
     return finder_map
 
 
-def manufacturer_group(
-    manufacturer: str | None,
-    aliases_map: dict[str, Any] | None = None,
-) -> str:
-    """Canon for grouping: JSON group, alias owner, or the brand key in lowercase."""
-    name = (manufacturer or "").strip()
-    if not name or not aliases_map:
-        return name.lower()
-    lookup: dict[str, str] = {}
-    for brand, entry in aliases_map.items():
-        lookup[brand.lower()] = brand.lower()
-        if isinstance(entry, dict) and entry.get("group"):
-            lookup[brand.lower()] = str(entry["group"]).lower()
-        for alias in aliases_for_finder({brand: entry})[brand]:
-            lookup[str(alias).lower()] = lookup[brand.lower()]
-    return lookup.get(name.lower(), name.lower())
-
-
 @lru_cache(maxsize=1)
 def load_aliases_map() -> dict[str, Any]:
     """Load manufacturer aliases from user config; empty if the file is missing."""
