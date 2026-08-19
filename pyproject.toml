@@ -63,6 +63,9 @@ select = ["F", "E", "W", "C90",
 "tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106"]
 "integration_tests/*.py" = ["S101"]
 "integration_tests/**/*.py" = ["S101"]
+"load_tests/*.py" = ["S101"]
+"load_tests/**/*.py" = ["S101"]
+"load_tests/test_make_price_by_supplier.py" = ["S101", "S603"]
 "src/core/log_message.py" = ["T201"]
 "src/cfg/zapaska_api.py" = ["S105"]
 
@@ -123,7 +126,7 @@ exclude = ["mutants/", "\\.venv/"]
 
 [tool.vulture]
 # Scan library and tests together so test-only usage is not reported as dead.
-paths = ["src", "tests", "integration_tests", "pipelines"]
+paths = ["src", "tests", "integration_tests", "load_tests", "pipelines"]
 exclude = [
     ".venv/",
     "mutants/",
