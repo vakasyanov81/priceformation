@@ -52,7 +52,7 @@ def _as_parse_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _fake_parser(parse_result: Any) -> Autosnab54Parser:
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return Autosnab54Parser(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),

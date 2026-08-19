@@ -1,6 +1,6 @@
 """Ключ группировки позиций прайса."""
 
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from parsers.common_price_group_fields import (
     brand_key_parts,
@@ -17,15 +17,15 @@ _KNOWN_MODEL_PREFIXES = ("кама", "kama")
 _PREFIX_SEPARATORS = "- "
 
 
-def sanitize_value(price_list_values: List[Any]) -> Tuple[str, ...]:
+def sanitize_value(price_list_values: list[Any]) -> tuple[str, ...]:
     """Преобразует значения в строки, корректно обрабатывая None."""
     return tuple("" if price_list_val is None else str(price_list_val) for price_list_val in price_list_values)
 
 
 def clear_model(
-    model: Optional[str],
-    manufacturer: Optional[str] = None,
-    brand: Optional[str] = None,
+    model: str | None,
+    manufacturer: str | None = None,
+    brand: str | None = None,
 ) -> str:
     """Очистка модели: нижний регистр, без пробелов, без префикса бренда."""
     if not model:
@@ -48,14 +48,14 @@ def _lstrip_brand_prefix(model: str, prefix: str) -> str:
     return model
 
 
-def _model_prefixes(manufacturer: Optional[str], brand: Optional[str]) -> List[str]:
+def _model_prefixes(manufacturer: str | None, brand: str | None) -> list[str]:
     """Префиксы бренда: известные и имена manufacturer/brand, длинные раньше."""
     names = (manufacturer, brand, *_KNOWN_MODEL_PREFIXES)
     unique = {name.lower().strip() for name in names if name}
     return sorted(unique, key=len, reverse=True)
 
 
-def define_intimacy(row_item: RowItem) -> Optional[str]:
+def define_intimacy(row_item: RowItem) -> str | None:
     """Определить камерность (TL/TT/TTF) из title."""
 
     def is_float_diameter(diameter: Any) -> bool:
@@ -76,7 +76,7 @@ def define_intimacy(row_item: RowItem) -> Optional[str]:
     return None
 
 
-def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> List[Any]:
+def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any]:
     """Значения полей для ключа группировки."""
     mark, brand, mark_group, key_brand = brand_key_parts(row_item, aliases_map)
     intimacy = (row_item.intimacy or define_intimacy(row_item) or "").upper()
@@ -101,7 +101,7 @@ def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> List[Any
 def group_key(
     row_item: RowItem,
     aliases_map: dict[str, Any] | None = None,
-) -> Tuple[str, ...]:
+) -> tuple[str, ...]:
     """Ключ группировки."""
     mapping = load_aliases_map() if aliases_map is None else aliases_map
     return sanitize_value(_group_key_parts(row_item, mapping))

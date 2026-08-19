@@ -74,7 +74,7 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
 def basic_auth(username: str, password: str) -> str:
     """auth"""
-    token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    token = b64encode(f"{username}:{password}".encode()).decode("ascii")
     return f"Basic {token}"
 
 

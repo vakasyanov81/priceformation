@@ -1,12 +1,12 @@
 """Numeric / code cast helpers for row item fields."""
 
 from functools import lru_cache
-from typing import Any, Union
+from typing import Any
 
 from parsers.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
 
 
-@lru_cache()
+@lru_cache
 def get_float(field_raw: Any) -> float:
     """get float value"""
     return float(prepare_str_to_float(strip_into_str(get_stripped(field_raw, null_value="0"))))
@@ -45,7 +45,7 @@ def get_try_to_int_or_str(code_value: str) -> int | str:
         return code_value
 
 
-def get_try_to_int_or_float(field_raw: Union[str, float, None]) -> int | float | None:
+def get_try_to_int_or_float(field_raw: str | float | None) -> int | float | None:
     """
     Try Make correct str to int or float
     """

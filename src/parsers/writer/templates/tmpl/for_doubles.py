@@ -2,14 +2,17 @@
 write template for duplicates report
 """
 
+from typing import ClassVar
+
 from parsers.row_item.row_item import RowItem
+from parsers.writer.templates.iwrite_template import WriteColumns
 from parsers.writer.templates.tmpl.for_inner import ForInner
 
 
 class ForDoubles(ForInner):
     """write template for duplicates report"""
 
-    __COLUMNS__ = [
+    __COLUMNS__: ClassVar[WriteColumns] = [
         *ForInner.__COLUMNS__,
         {"Группа по параметрам": {"field": RowItem.group_by_params.name}},
         {"Дубль": {"field": RowItem.is_double.name}},

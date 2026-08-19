@@ -7,7 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 from functools import cache
-from typing import Any, Generic, Self, TypeVar, cast, overload
+from typing import Any, Self, cast, overload
 
 from parsers.row_item import row_item_formatter as row_format
 
@@ -21,8 +21,6 @@ FIELD_FORMAT = {
 }
 
 DEFAULT_VALUES = {("price_opt", "price_recommended", "price_markup"): 0}
-
-_TValue = TypeVar("_TValue")
 
 
 def _format_field(attr_value: Any, formatter: Any) -> Any:
@@ -48,7 +46,7 @@ def default_values() -> dict[str, Any]:
     return fields
 
 
-class FieldDescriptor(Generic[_TValue]):
+class FieldDescriptor[TValue]:
     """Дескриптор для полей с форматированием."""
 
     name: str
@@ -63,19 +61,19 @@ class FieldDescriptor(Generic[_TValue]):
     def __get__(self, instance: None, _owner: type | None = None) -> Self: ...
 
     @overload
-    def __get__(self, instance: RowItem, _owner: type | None = None) -> _TValue: ...
+    def __get__(self, instance: RowItem, _owner: type | None = None) -> TValue: ...
 
     def __get__(
         self,
         instance: RowItem | None,
         _owner: type | None = None,
-    ) -> Self | _TValue:
+    ) -> Self | TValue:
         if instance is None:
             return self
         stored = instance._key_value_store.get(self.name)
         if stored is None:
             stored = default_values().get(self.name)
-        return cast(_TValue, stored)
+        return cast(TValue, stored)
 
     def __set__(self, instance: RowItem, attr_value: Any) -> None:
         try:
@@ -208,7 +206,7 @@ class RowItem:
         return hashlib.md5(self.title.encode("utf-8"), usedforsecurity=False).hexdigest()
 
     @classmethod
-    def from_dict(cls, serialized_data: str | dict[str, Any]) -> "RowItem":
+    def from_dict(cls, serialized_data: str | dict[str, Any]) -> RowItem:
         """from dict"""
         parsed_data = json.loads(serialized_data) if isinstance(serialized_data, str) else serialized_data
         return cls(parsed_data)

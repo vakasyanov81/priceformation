@@ -8,7 +8,7 @@ from typing import Any
 class IXlsDriver:
     """interface for write logic"""
 
-    def add_sheet(self, sheet_name: str) -> "IXlsDriver":
+    def add_sheet(self, sheet_name: str) -> IXlsDriver:
         """add sheet with sheet name"""
         raise NotImplementedError
 

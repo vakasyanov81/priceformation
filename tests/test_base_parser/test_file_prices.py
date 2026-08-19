@@ -1,6 +1,7 @@
 """tests for get_file_prices via ParsePaths"""
 
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest

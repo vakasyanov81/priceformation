@@ -13,6 +13,20 @@ EXCEL_ALPHABET_SIZE = 26
 EXCEL_COLUMN_A_ORD = 65
 
 
+class WorkbookNotInitializedError(RuntimeError):
+    """Raised when the xlsx driver is used before init_workbook."""
+
+    def __init__(self) -> None:
+        super().__init__("workbook is not initialized")
+
+
+class WorksheetNotInitializedError(RuntimeError):
+    """Raised when the xlsx driver is used before add_sheet."""
+
+    def __init__(self) -> None:
+        super().__init__("worksheet is not initialized")
+
+
 def number_to_excel_column(number: int) -> str:
     """
     Конвертирует номер колонки в символьное обозначение Excel
@@ -53,9 +67,9 @@ class XlsxWriterDriver(IXlsDriver):
 
         return self.work_book
 
-    def add_sheet(self, sheet_name: str) -> "XlsxWriterDriver":
+    def add_sheet(self, sheet_name: str) -> XlsxWriterDriver:
         if self.work_book is None:
-            raise RuntimeError("workbook is not initialized")
+            raise WorkbookNotInitializedError()
         sheet = self.work_book.active
         sheet.title = sheet_name
         self.work_sheet = sheet
@@ -73,7 +87,7 @@ class XlsxWriterDriver(IXlsDriver):
         :param column_format: dict[column_index, '@']
         """
         if self.work_sheet is None:
-            raise RuntimeError("worksheet is not initialized")
+            raise WorksheetNotInitializedError()
         for index, c_format in column_format.items():
             self.work_sheet.column_dimensions[number_to_excel_column(index)].number_format = c_format
 
@@ -87,7 +101,7 @@ class XlsxWriterDriver(IXlsDriver):
     ) -> None:
         """write"""
         if self.work_sheet is None:
-            raise RuntimeError("worksheet is not initialized")
+            raise WorksheetNotInitializedError()
         row_idx += self.row_index_at
         col_idx += self.row_index_at
         cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=cell_content)
@@ -106,7 +120,7 @@ class XlsxWriterDriver(IXlsDriver):
     def save(self) -> None:
         """save file"""
         if self.work_sheet is None or self.work_book is None:
-            raise RuntimeError("workbook is not initialized")
+            raise WorkbookNotInitializedError()
         for col_index, max_len in self.col_max_length.items():
             self.work_sheet.column_dimensions[number_to_excel_column(col_index)].width = max_len + 4
         self.work_book.save(self._file_name)

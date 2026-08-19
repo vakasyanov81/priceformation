@@ -3,7 +3,7 @@
 """
 
 import time
-from typing import Sequence, TypeAlias
+from collections.abc import Sequence
 
 from core import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendor_supplier_info
@@ -14,11 +14,11 @@ from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
 
-SupplierName: TypeAlias = str
-SupplierCode: TypeAlias = str
+type SupplierName = str
+type SupplierCode = str
 
-VendorList: TypeAlias = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
-UnknownCategorySkip: TypeAlias = tuple[str, str]
+type VendorList = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
+type UnknownCategorySkip = tuple[str, str]
 
 
 class CommonPrice:

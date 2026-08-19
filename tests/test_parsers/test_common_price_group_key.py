@@ -270,26 +270,26 @@ def _zepp_disk(**fields: Any) -> RowItem:
 
 
 def test_group_key_disk_factory_splits() -> None:
-    yz = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
-    hap = _zepp_disk(title="{0} (HAP)".format(_ZEPP_TITLE))
+    yz = _zepp_disk(title=f"{_ZEPP_TITLE} (YZ)")
+    hap = _zepp_disk(title=f"{_ZEPP_TITLE} (HAP)")
     assert group_key(yz) != group_key(hap)
 
 
 def test_group_key_disk_valve_splits() -> None:
-    outer = _zepp_disk(title="{0} (HAP) alive наруж. вентиль".format(_ZEPP_TITLE))
-    inner = _zepp_disk(title="{0} (HAP) внутр. вентиль".format(_ZEPP_TITLE))
+    outer = _zepp_disk(title=f"{_ZEPP_TITLE} (HAP) alive наруж. вентиль")
+    inner = _zepp_disk(title=f"{_ZEPP_TITLE} (HAP) внутр. вентиль")
     assert group_key(outer) != group_key(inner)
 
 
 def test_group_key_same_disk_extras_match() -> None:
-    first = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
-    second = _zepp_disk(title="{0} (YZ)".format(_ZEPP_TITLE))
+    first = _zepp_disk(title=f"{_ZEPP_TITLE} (YZ)")
+    second = _zepp_disk(title=f"{_ZEPP_TITLE} (YZ)")
     assert group_key(first) == group_key(second)
 
 
 def test_group_key_ignores_numeric_disk_code() -> None:
-    coded = _zepp_disk(title="{0} (HAP) (5221105)".format(_ZEPP_TITLE))
-    plain = _zepp_disk(title="{0} (HAP)".format(_ZEPP_TITLE))
+    coded = _zepp_disk(title=f"{_ZEPP_TITLE} (HAP) (5221105)")
+    plain = _zepp_disk(title=f"{_ZEPP_TITLE} (HAP)")
     assert group_key(coded) == group_key(plain)
 
 

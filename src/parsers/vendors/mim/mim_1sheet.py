@@ -77,12 +77,12 @@ def _mim1_title(row_item: RowItem, profile: str, delimiter: str, mark: str) -> s
     """Собрать title легковой шины MIM sheet1."""
     width = row_item.width or ""
     diameter = row_item.diameter or ""
-    size = "{0}{1}{2}R{3}".format(width, delimiter, profile, diameter)
+    size = f"{width}{delimiter}{profile}R{diameter}"
     return " ".join(
         (
             size,
             mark,
             row_item.model or "",
-            "{0}{1}".format(row_item.index_load or "", row_item.index_velocity or ""),
+            "{}{}".format(row_item.index_load or "", row_item.index_velocity or ""),
         ),
     )

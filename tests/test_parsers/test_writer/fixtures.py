@@ -2,8 +2,10 @@
 fixtures for writer
 """
 
+from typing import ClassVar
+
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.iwrite_template import IWriteTemplate
+from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns
 
 write_data = [
     {
@@ -40,7 +42,6 @@ result_body_inner = {
     "cell(1,10)": "Мим",
     "cell(1,11)": "В наличии",
     "cell(1,13)": "Новое",
-    # "cell(1,14)": "1",
     "cell(1,2)": "225/40R18 Crossleader 92Y",
     "cell(1,5)": 3457.0,
     "cell(1,6)": 3980.0,
@@ -52,7 +53,7 @@ result_body_inner = {
 class FixtureTemplate(IWriteTemplate):
     """fixture template"""
 
-    __COLUMNS__ = [
+    __COLUMNS__: ClassVar[WriteColumns] = [
         {"Номенклатура": {"field": RowItem.title.name}},
         {"Цена": {"field": RowItem.price_markup.name}},
         {"Остаток": {"field": RowItem.rest_count.name}},

@@ -2,6 +2,7 @@
 test init_log
 """
 
+from contextlib import suppress
 from typing import Any
 from unittest.mock import patch
 
@@ -33,11 +34,8 @@ def test_logging() -> None:
 def test_logging_when_wrong_argument() -> None:
     """test logging call function with wrong argument"""
 
-    with patch("core.wrappers.log_msg") as mock_log_msg:
-        try:
-            logging_function()
-        except TypeError:
-            pass
+    with patch("core.wrappers.log_msg") as mock_log_msg, suppress(TypeError):
+        logging_function()
 
     assert mock_log_msg.call_count == 4
     assert "Calling method" in str(mock_log_msg.call_args_list[0].args[0])

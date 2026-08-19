@@ -17,10 +17,10 @@ def _set_title_or_log(parser: BaseParser, row_id: int, row_item: RowItem) -> boo
         parser.set_prepared_title(row_item)
     except ValueError as err:
         err_msg(
-            f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(parser)} // {err}",
+            f"Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {err}",
             need_print_log=True,
         )
-        err_msg(f"строка: {repr(row_item)}")
+        err_msg(f"строка: {row_item!r}")
         return False
     return True
 
@@ -28,10 +28,10 @@ def _set_title_or_log(parser: BaseParser, row_id: int, row_item: RowItem) -> boo
 def _log_row_parse_errors(parser: BaseParser, row_id: int, row_item: RowItem) -> None:
     """Лог ошибок разбора полей строки."""
     err_msg(
-        f"Не удалось разобрать строку (№ {row_id}) у поставщика: {repr(parser)} // {row_item.parse_errors}",
+        f"Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {row_item.parse_errors}",
         need_print_log=True,
     )
-    err_msg(f"строка: {repr(row_item.to_dict())}")
+    err_msg(f"строка: {row_item.to_dict()!r}")
 
 
 def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
@@ -60,6 +60,4 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
     """Оставить строку с ценой закупки и валидным title."""
     if row_item.rest_count and not row_item.price_opt:
         return False
-    if row_item.title and not parser.is_valid_title(row_item.title):
-        return False
-    return True
+    return not row_item.title or parser.is_valid_title(row_item.title)

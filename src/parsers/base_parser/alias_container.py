@@ -3,11 +3,10 @@ container for aliases
 """
 
 from functools import cached_property
-from typing import TypeAlias
 
-CorrectWord: TypeAlias = str
-CorrectLoweredWord: TypeAlias = str
-IncorrectLoweredAlias: TypeAlias = str
+type CorrectWord = str
+type CorrectLoweredWord = str
+type IncorrectLoweredAlias = str
 
 
 def to_lowercase(words: list[str]) -> list[str]:

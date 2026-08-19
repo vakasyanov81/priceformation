@@ -2,8 +2,6 @@
 statistic for price formation result
 """
 
-from typing import List, Tuple
-
 from parsers.row_item.row_item import RowItem
 
 
@@ -12,18 +10,18 @@ class ParseResultStatistic:
     statistic for price formation result
     """
 
-    def __init__(self, parse_result: List[RowItem]) -> None:
+    def __init__(self, parse_result: list[RowItem]) -> None:
         """init"""
         self._parse_result = [row_item for row_item in parse_result if row_item.price_opt]
 
-    def real_percents_markup(self) -> Tuple[float, float]:
+    def real_percents_markup(self) -> tuple[float, float]:
         """real min / max percent markup for parse result"""
         if not self._parse_result:
             return 0, 0
         percents = [row_item.percent_markup or 0 for row_item in self._parse_result]
         return min(percents), max(percents)
 
-    def real_absolute_markup(self) -> Tuple[float, float]:
+    def real_absolute_markup(self) -> tuple[float, float]:
         """real absolute min / max markup for parse result"""
         if not self._parse_result:
             return 0, 0

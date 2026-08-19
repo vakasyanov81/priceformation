@@ -34,7 +34,7 @@ def fill_disk_thickness(row_item: RowItem) -> None:
 def disk_name_suffix(name: str) -> str:
     """Толщина, усиление, камерность и различающие хвосты из наименования."""
     thickness = thickness_from_name(name)
-    thick_label = "({0} мм)".format(thickness) if thickness else ""
+    thick_label = f"({thickness} мм)" if thickness else ""
     return join_title_parts(
         thick_label,
         "усил." if "усил" in name.lower() else "",
@@ -47,7 +47,7 @@ def et_label(eet: Any) -> str:
     """ET с нулём: 0 не должен пропадать как falsy."""
     if eet is None or eet == "":
         return "ET"
-    return "ET{0}".format(eet)
+    return f"ET{eet}"
 
 
 def disk_diameter(raw: Any) -> str:

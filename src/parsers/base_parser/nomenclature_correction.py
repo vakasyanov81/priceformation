@@ -1,7 +1,8 @@
 """Correction map for vendor nomenclature titles."""
 
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from python_calamine import CalamineWorkbook
 

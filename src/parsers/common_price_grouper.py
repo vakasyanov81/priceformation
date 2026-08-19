@@ -2,12 +2,14 @@
 
 from functools import partial
 from itertools import groupby
-from typing import Any, List
+from typing import Any
 
 from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
 from parsers.common_price_size import canon_number, size_fields
 from parsers.row_item.row_item import RowItem
+
+_MIN_ITEMS_FOR_DOUBLES = 2
 
 
 def _has_product_identity(row_item: RowItem) -> bool:
@@ -17,9 +19,9 @@ def _has_product_identity(row_item: RowItem) -> bool:
     return bool(clear_model(row_item.model, row_item.manufacturer, row_item.brand))
 
 
-def _mark_double_items(row_items: List[RowItem]) -> None:
+def _mark_double_items(row_items: list[RowItem]) -> None:
     """Проставить признаки дублей внутри одной группы."""
-    if len(row_items) < 2:
+    if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
     min_price_item = min(row_items, key=lambda row_item: row_item.price_markup)
@@ -45,10 +47,10 @@ def _optional_disk_parts(row_item: RowItem) -> tuple[str, ...]:
     )
 
 
-def _split_group_by_index(group: List[RowItem], index: int) -> List[List[RowItem]]:
+def _split_group_by_index(group: list[RowItem], index: int) -> list[list[RowItem]]:
     """Разные заполненные значения поля режут группу; пустые остаются вместе."""
-    filled: dict[str, List[RowItem]] = {}
-    empties: List[RowItem] = []
+    filled: dict[str, list[RowItem]] = {}
+    empties: list[RowItem] = []
     for row_item in group:
         field_value = _optional_disk_parts(row_item)[index]
         if field_value:
@@ -63,7 +65,7 @@ def _split_group_by_index(group: List[RowItem], index: int) -> List[List[RowItem
     return parts
 
 
-def _split_optional_disk(row_items: List[RowItem]) -> List[List[RowItem]]:
+def _split_optional_disk(row_items: list[RowItem]) -> list[list[RowItem]]:
     """После ядра ключа разрезать по опциональным полям диска."""
     groups = [row_items]
     field_count = len(_optional_disk_parts(row_items[0]))
@@ -73,9 +75,9 @@ def _split_optional_disk(row_items: List[RowItem]) -> List[List[RowItem]]:
 
 
 def _apply_split_groups(
-    grouper: "CommonPriceGrouper",
+    grouper: CommonPriceGrouper,
     start_id: int,
-    row_items: List[RowItem],
+    row_items: list[RowItem],
 ) -> int:
     """Выдать подгруппы ядра и вернуть следующий group_id."""
     group_id = start_id
@@ -88,12 +90,12 @@ def _apply_split_groups(
 class CommonPriceGrouper:
     """Группировка результата разбора прайсов поставщиков по параметрам наименований"""
 
-    def __init__(self, row_items: List[RowItem], aliases_map: dict[str, Any] | None = None):
+    def __init__(self, row_items: list[RowItem], aliases_map: dict[str, Any] | None = None):
         self.row_items = row_items
         self._aliases_map = aliases_map
         self._is_grouped = False
 
-    def group_by_params(self) -> "CommonPriceGrouper":
+    def group_by_params(self) -> CommonPriceGrouper:
         """Группировка списка по параметрам и разметка дублей."""
         if self._is_grouped:
             return self
@@ -117,20 +119,20 @@ class CommonPriceGrouper:
         for _key, group_iter in groupby(sorted_items, key=item_key):
             group_id = _apply_split_groups(self, group_id, list(group_iter))
 
-    def _apply_group(self, group_id: int, group_items: List[RowItem]) -> None:
+    def _apply_group(self, group_id: int, group_items: list[RowItem]) -> None:
         """Обработать одну группу дублей."""
         if _has_product_identity(group_items[0]):
             _mark_double_items(group_items)
         for row_item in group_items:
             row_item.group_by_params = group_id
 
-    def get_row_items(self) -> List[RowItem]:
+    def get_row_items(self) -> list[RowItem]:
         """Получить сгруппированные позиции."""
         if not self._is_grouped:
             self.group_by_params()
         return self.row_items
 
-    def get_double_row_items(self) -> List[RowItem]:
+    def get_double_row_items(self) -> list[RowItem]:
         """Получить список дублей."""
         if not self._is_grouped:
             self.group_by_params()

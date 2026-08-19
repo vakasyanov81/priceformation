@@ -39,10 +39,7 @@ def row_to_dict(row: Row, columns: IndexToHeader) -> DRow:
 
 def is_empty_row(cur_row_values: Row | None) -> bool:
     """row is empty?"""
-    for cell_content in cur_row_values or []:
-        if cell_content:
-            return False
-    return True
+    return not any(cur_row_values or [])
 
 
 def is_end_row(cur_row_values: Row | None, skipped_empty_rows: int) -> bool:

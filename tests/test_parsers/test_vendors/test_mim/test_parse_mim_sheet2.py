@@ -2,7 +2,7 @@
 tests for Mim vendor (sheet 2) after raw-parser process
 """
 
-from typing import Any, List
+from typing import Any
 
 import pytest
 from test_parsers.fixtures.mim_sheet2 import mim_one_item_result
@@ -42,7 +42,7 @@ parser_config = BasePriceParseConfigurationParams(
 
 def get_fake_parser(parse_result: Any) -> MimParser2Sheet:
     """get fake parser"""
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return MimParser2Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
@@ -53,7 +53,7 @@ def get_fake_parser(parse_result: Any) -> MimParser2Sheet:
 def test_parse() -> None:
     """check all field for one price-row"""
 
-    parsed_items: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
     assert parsed_items[0].title == "295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S"

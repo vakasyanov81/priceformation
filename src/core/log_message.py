@@ -64,8 +64,5 @@ def print_log(
     """print log-message"""
 
     level_title = get_log_level_text(level)
-    if level == logging.INFO:
-        formatted_msg = msg
-    else:
-        formatted_msg = f"[{level_title}]: {msg}"
+    formatted_msg = msg if level == logging.INFO else f"[{level_title}]: {msg}"
     print(colored(formatted_msg, _color or __level_color_map__.get(level_title)))

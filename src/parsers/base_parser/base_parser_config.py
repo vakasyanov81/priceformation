@@ -3,7 +3,7 @@ base parser config logic
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, NamedTuple, Type, cast
+from typing import Any, NamedTuple, cast
 
 from parsers import data_provider
 from parsers.row_item.row_item import RowItem
@@ -26,10 +26,10 @@ class ParserParams:
     start_row: int
     sheet_info: str
     columns: dict[Any, str]
-    stop_words: List[str]
-    file_templates: List[str]
-    sheet_indexes: List[int]
-    row_item_adaptor: Type[RowItem]
+    stop_words: list[str]
+    file_templates: list[str]
+    sheet_indexes: list[int]
+    row_item_adaptor: type[RowItem]
 
 
 class BasePriceParseConfigurationParams(NamedTuple):
@@ -63,7 +63,7 @@ class ParseConfiguration:
     def __init__(self, parse_config: BasePriceParseConfigurationParams):
         """init"""
         self.parse_config: BasePriceParseConfigurationParams = parse_config
-        self._all_vendor_config: Dict[str, data_provider.VendorParams] | None = None
+        self._all_vendor_config: dict[str, data_provider.VendorParams] | None = None
         self._manufacturer_aliases: dict[str, Any] | None = None
 
     def get_markup_rules(self) -> data_provider.MarkupRules:
@@ -81,11 +81,11 @@ class ParseConfiguration:
             self._price_markup_map = tuple(mapped_rules)
         return self._price_markup_map
 
-    def black_list(self) -> List[str]:
+    def black_list(self) -> list[str]:
         """black list data"""
         return self.parse_config.black_list_provider.get_black_list_data()
 
-    def stop_words(self) -> List[str]:
+    def stop_words(self) -> list[str]:
         """stop words data"""
         return self.parse_config.stop_words_provider.get_stop_words_data()
 
@@ -95,7 +95,7 @@ class ParseConfiguration:
             self._manufacturer_aliases = self.parse_config.manufacturer_aliases.get_aliases()
         return self._manufacturer_aliases
 
-    def all_vendor_config(self) -> Dict[str, data_provider.VendorParams]:
+    def all_vendor_config(self) -> dict[str, data_provider.VendorParams]:
         """config for all vendors"""
         if self._all_vendor_config is None:
             vendor_config = self.parse_config.vendor_list.get_config_vendor_list()

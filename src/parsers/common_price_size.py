@@ -1,7 +1,7 @@
 """Канон размера для ключа группировки."""
 
 import re
-from typing import Any, Tuple
+from typing import Any
 
 from parsers.row_item.row_item import RowItem
 
@@ -33,7 +33,7 @@ def canon_diameter(raw: Any) -> str:
     return canon_number(_DIAMETER_PREFIX_RE.sub("", text, count=1))
 
 
-def _inch_size_from_title(title: str | None) -> Tuple[str, str, str]:
+def _inch_size_from_title(title: str | None) -> tuple[str, str, str]:
     if not title:
         return "", "", ""
     match = _INCH_SIZE_RE.search(title)
@@ -47,7 +47,7 @@ def _inch_size_from_title(title: str | None) -> Tuple[str, str, str]:
     )
 
 
-def size_fields(row_item: RowItem) -> Tuple[str, str, str]:
+def size_fields(row_item: RowItem) -> tuple[str, str, str]:
     """width, diameter, внешний дюймовый диаметр — канон для ключа."""
     parsed = _inch_size_from_title(row_item.title)
     ext_raw = row_item.ext_diameter

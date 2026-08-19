@@ -11,7 +11,7 @@ class FakeXlsReader(IXlsReader):
     parse_result = None
 
     @classmethod
-    def get_instance(cls, file_path: str, *_args: Any) -> "FakeXlsReader":
+    def get_instance(cls, file_path: str, *_args: Any) -> FakeXlsReader:
         """get instance FakeXlsReader"""
         return FakeXlsReader(file_path)
 

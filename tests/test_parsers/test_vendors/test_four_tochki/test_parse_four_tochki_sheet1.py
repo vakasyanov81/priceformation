@@ -2,7 +2,7 @@
 tests for four_tochki vendor (sheet 1) after raw-parser process
 """
 
-from typing import Any, List
+from typing import Any
 
 import pytest
 from test_parsers.fixtures.four_tochki_sheet1 import (
@@ -27,7 +27,7 @@ parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRul
 
 def get_fake_parser(parse_result: Any) -> FourTochkiParser1Sheet:
     """get fake parser"""
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return FourTochkiParser1Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
@@ -38,7 +38,7 @@ def get_fake_parser(parse_result: Any) -> FourTochkiParser1Sheet:
 def test_parse() -> None:
     """check all field for one price-row"""
 
-    parsed_items: List[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
 
     assert len(parsed_items) == 3
     assert parsed_items[0].title == "205/55R16 BF Goodrich Advantage 94W"
@@ -60,7 +60,7 @@ def test_parse() -> None:
 def test_replace_diameter() -> None:
     """check replace RZ -> ZR"""
 
-    parsed_items: List[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
+    parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
 
     assert len(parsed_items) == 1
     assert parsed_items[0].title == "205/55ZR16 BF Goodrich Advantage 94W"

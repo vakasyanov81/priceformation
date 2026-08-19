@@ -5,7 +5,8 @@ logging decorators
 import logging as _logging_module
 import time
 import traceback
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any
 
 from .log_message import log_msg
 
@@ -15,9 +16,6 @@ CALL_LABEL_MSG = "\n\rLabel {label}"
 CALL_PARAMS_MSG = "\n\rParams: {params}"
 CALL_TRACE_MSG = 'Runtime error "{method}":\n\r{trace}'
 CALL_RESULT_MSG = 'Result "{method}": {res}'
-
-
-RT = TypeVar("RT")  # return type
 
 
 def _build_begin_msg(
@@ -51,7 +49,10 @@ def _log_trace(method_name: str) -> None:
     )
 
 
-def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:
+def _decorator[RT](
+    func: Callable[..., RT],
+    label: str = "",
+) -> Callable[..., RT]:
     """log decorator"""
 
     def wrapped(*args, **kwargs) -> RT:  # type: ignore
@@ -72,7 +73,7 @@ def _decorator(func: Callable[..., RT], label: str = "") -> Callable[..., RT]:
     return wrapped
 
 
-def logging(label: str = "") -> Callable[..., Callable[..., RT]]:
+def logging[RT](label: str = "") -> Callable[..., Callable[..., RT]]:
     """
     Wrapper for logging function
     """

@@ -4,7 +4,7 @@ tests for zapaska (json) tire vendor after raw-parser process
 
 import json
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 from unittest import skip
 
 import pytest
@@ -58,12 +58,11 @@ class TestParseZapaskaTireJSON:
 
         root = get_config()().project_root
         parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
-        parsed_items: List[RowItem] = parser.parse()
+        parsed_items: list[RowItem] = parser.parse()
 
         res = parsed_items[0]
 
         assert len(parsed_items) == 1
-        # assert res.title == "315/80R22.5 Three-A T276+ 157/154M"
         assert res.title == "315/80R22.5 Three-A T276+ 20PR 157/154M TL"
         assert res.price_markup == 25830.0
         assert res.price_recommended == 24670.0
@@ -81,7 +80,7 @@ class TestParseZapaskaTireJSON:
         price_file.write_text(json.dumps(rows), encoding="utf-8")
 
         parser = get_fake_parser([str(price_file)])
-        parsed_items: List[RowItem] = parser.parse()
+        parsed_items: list[RowItem] = parser.parse()
 
         assert parsed_items == []
         assert parser.unknown_category_skips == ["SUV"]
@@ -103,5 +102,5 @@ class TestParseZapaskaTireJSON:
         _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
         parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
-        parsed_items: List[RowItem] = parser.parse()
+        parsed_items: list[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_markup
