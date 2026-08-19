@@ -1,7 +1,8 @@
 # 01. Вынести MarkupPolicy — подробно
 
 Краткая задача: [01-markup-policy.md](../01-markup-policy.md)  
-План: [этап 1](../../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)
+План: [этап 1](../../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
+Задачи: [01-markup-policy-tasks.md](01-markup-policy-tasks.md)
 
 ## Суть проблемы
 

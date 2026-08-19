@@ -1,17 +1,12 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# Mirrors local quality gates from .cursor/rules/post-change-checks.mdc.
+# Tool settings come from pyproject.toml / setup.cfg — do not override flags here.
 
 name: Lint and check types and tests
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 permissions:
   contents: read
-
-env:
-  MIN_COVERAGE_SCORE: 75
-  FLAKE8_MAX_COMPLEXITY: 7
-  MAX_LINE_LENGTH: 120
 
 jobs:
   build:
@@ -27,19 +22,16 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install project dependency
-        run: |
-          uv sync --locked --all-extras --dev
+        run: uv sync --locked --all-extras --dev
       - name: Test coverage
-        run: |
-          export PYTHONPATH=${GITHUB_WORKSPACE}
-          uv run pytest --cov ./ ./tests ./integration_tests --cov-fail-under=${MIN_COVERAGE_SCORE} --cov-config=./.coveragerc --cov-report term-missing:skip-covered
+        run: uv run pytest
       - name: Check code by black
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          uv run black ${GITHUB_WORKSPACE} --check --line-length 120 --skip-string-normalization --target-version py311
+        run: uv run black --check --diff .
       - name: Lint with ruff
-        run: |
-          uv run ruff check ${GITHUB_WORKSPACE}
+        run: uv run ruff check .
+      - name: Lint with flake8
+        run: uv run flake8 .
+      - name: Check types with mypy
+        run: uv run mypy .
       - name: Find unused code with vulture
-        run: |
-          uv run vulture
+        run: uv run vulture
