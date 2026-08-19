@@ -64,6 +64,7 @@ class ParseConfiguration:
         """init"""
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self._all_vendor_config: Dict[str, data_provider.VendorParams] | None = None
+        self._manufacturer_aliases: dict[str, Any] | None = None
 
     def get_markup_rules(self) -> data_provider.MarkupRules:
         """get markup rules and caching"""
@@ -90,7 +91,9 @@ class ParseConfiguration:
 
     def manufacturer_aliases(self) -> dict[str, Any]:
         """manufacturer aliases data"""
-        return self.parse_config.manufacturer_aliases.get_aliases()
+        if self._manufacturer_aliases is None:
+            self._manufacturer_aliases = self.parse_config.manufacturer_aliases.get_aliases()
+        return self._manufacturer_aliases
 
     def all_vendor_config(self) -> Dict[str, data_provider.VendorParams]:
         """config for all vendors"""
