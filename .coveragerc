@@ -1,6 +1,7 @@
 [run]
 omit = ./tests/*
        ./integration_tests/*
+       ./load_tests/*
        ./run_mut.py
        ./run.py
        ./core/wrappers.py
