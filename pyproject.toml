@@ -50,22 +50,33 @@ extend-exclude = '''
 
 [tool.ruff]
 line-length = 120
-extend-exclude = ["mutants"]
+extend-exclude = ["mutants", "pipelines"]
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "C90",
           "I", "N", "S", "B", "A",
-          "ISC", "T20", "Q", "PTH"]
+          "ISC", "T20", "Q", "PTH", "UP",
+          "SIM", "RET", "PIE", "RUF",
+          "PERF", "PL", "ERA"]
+# RUF001–003: кириллица в строках/комментариях похожа на латиницу — ложные срабатывания.
+# WPS*: коды flake8-wemake в `# noqa` (иначе RUF102).
+ignore = ["RUF001", "RUF002", "RUF003"]
+external = ["WPS"]
+
+[tool.ruff.lint.pylint]
+# Как max-arguments в setup.cfg (WPS).
+max-args = 6
+max-positional-args = 6
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["S101"]
-"tests/**/*.py" = ["S101"]
-"tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106"]
-"integration_tests/*.py" = ["S101"]
-"integration_tests/**/*.py" = ["S101"]
-"load_tests/*.py" = ["S101"]
-"load_tests/**/*.py" = ["S101"]
-"load_tests/test_make_price_by_supplier.py" = ["S101", "S603"]
+"tests/*.py" = ["S101", "PLR2004", "PLC0415"]
+"tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
+"tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
+"integration_tests/*.py" = ["S101", "PLR2004", "PLC0415"]
+"integration_tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
+"load_tests/*.py" = ["S101", "PLR2004"]
+"load_tests/**/*.py" = ["S101", "PLR2004"]
+"load_tests/test_make_price_by_supplier.py" = ["S101", "S603", "PLR2004"]
 "src/core/log_message.py" = ["T201"]
 "src/cfg/zapaska_api.py" = ["S105"]
 

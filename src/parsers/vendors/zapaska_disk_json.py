@@ -4,7 +4,7 @@ logic for zapaska (rest) vendor
 
 import json
 from pathlib import Path
-from typing import Any, List, TypeAlias, cast
+from typing import Any, cast
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
@@ -19,9 +19,9 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_markup import make_price_markup_value
 
-JsonRow: TypeAlias = dict[str, Any]
-JsonRows: TypeAlias = list[JsonRow]
-ColumnMap: TypeAlias = dict[str, str]
+type JsonRow = dict[str, Any]
+type JsonRows = list[JsonRow]
+type ColumnMap = dict[str, str]
 
 column_mapping = {
     "cae": RowItem.code_art.name,
@@ -111,7 +111,7 @@ class ZapaskaDiskJSON(BaseParser):
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices)
 
-    def raw_parse(self, text_json_file_full_path: str) -> List[dict[str, Any]]:
+    def raw_parse(self, text_json_file_full_path: str) -> list[dict[str, Any]]:
         """raw parse"""
         with Path(text_json_file_full_path).open(encoding="utf-8") as out_file:
             text_data = out_file.read()

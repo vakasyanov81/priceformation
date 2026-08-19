@@ -6,6 +6,10 @@ from typing import Any
 
 from parsers.writer.templates.column_helper import ColumnHelper
 
+type WriteColumns = list[dict[str, Any]]
+type WriteColors = dict[str, Any]
+type WriteExclude = dict[str, Any]
+
 
 class IWriteTemplate:
     """interface for writing template"""

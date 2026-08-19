@@ -4,7 +4,7 @@ write price list logic
 
 import datetime
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any
 
 from cfg import init_cfg
 from parsers.writer.ixls_driver import IXlsDriver
@@ -13,8 +13,8 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 config = init_cfg()
 
-RowColor: TypeAlias = tuple[str | None, int | None]
-PriceRow: TypeAlias = dict[str, Any]
+type RowColor = tuple[str | None, int | None]
+type PriceRow = dict[str, Any]
 
 
 def get_value(column: dict[str, Any], row_item: PriceRow) -> str | None:
@@ -43,11 +43,9 @@ def make_exclude(products: list[PriceRow], exclude: dict[str, Any]) -> list[Pric
     if not exclude:
         return products
 
-    included = []
+    included: list[PriceRow] = []
     for field, ex_values in exclude.items():
-        for product in products:
-            if product.get(field) not in ex_values:
-                included.append(product)
+        included.extend(product for product in products if product.get(field) not in ex_values)
     return included
 
 
@@ -102,10 +100,7 @@ class XlsWriter:
 
     def col_names(self) -> list[str]:
         """get column names"""
-        names = []
-        for col in self.template.columns():
-            names.append(ColumnHelper(col).name)
-        return names
+        return [ColumnHelper(col).name for col in self.template.columns()]
 
     def _get_color(self, product: PriceRow) -> RowColor:
         """get color"""

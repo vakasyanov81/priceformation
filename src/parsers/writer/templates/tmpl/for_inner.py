@@ -2,16 +2,16 @@
 write template for internal use
 """
 
-from typing import Any
+from typing import ClassVar
 
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.iwrite_template import IWriteTemplate
+from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColors, WriteColumns, WriteExclude
 
 
 class ForInner(IWriteTemplate):
     """write template for internal use"""
 
-    __COLUMNS__ = [
+    __COLUMNS__: ClassVar[WriteColumns] = [
         {
             "Тип товара": {
                 "style": {"width": 256 * 10},
@@ -53,20 +53,9 @@ class ForInner(IWriteTemplate):
         {"Наличие": {"field": RowItem.available.name, "default_value": "В наличии"}},
         {"Срок доставки": {"field": RowItem.delivery_period.name}},
         {"Состояние": {"field": RowItem.condition.name, "default_value": "Новое"}},
-        # {"Группа по параметрам": {"field": RowItem.__GROUP_BY_PARAMS__, "default_value": "1"}},
-        # {
-        #     "Дубль": {
-        #         "field": RowItem.__IS_DOUBLE__,
-        #     }
-        # },
-        # {
-        #     "Главный дубль": {
-        #         "field": RowItem.__DOUBLE_CANDIDATE__,
-        #     }
-        # },
     ]
 
-    __COLOR__ = {
+    __COLOR__: ClassVar[WriteColors] = {
         "by_column": RowItem.supplier_name.name,
         "with_map": {
             "Пошк": "blue",
@@ -79,4 +68,4 @@ class ForInner(IWriteTemplate):
 
     __FILE__ = "price_{now}.xlsx"
 
-    __EXCLUDE__: dict[str, Any] = {}
+    __EXCLUDE__: ClassVar[WriteExclude] = {}

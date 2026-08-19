@@ -22,7 +22,7 @@ class FakeXlwtDriver(IXlsDriver):
         self.file_name: str | None = None
         self.folder: str | None = None
 
-    def add_sheet(self, sheet_name: str) -> "FakeXlwtDriver":
+    def add_sheet(self, sheet_name: str) -> FakeXlwtDriver:
         self.sheet_name = sheet_name
         return self
 

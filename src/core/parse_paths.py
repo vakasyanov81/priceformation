@@ -4,6 +4,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+class ParsePathsNotConfiguredError(RuntimeError):
+    """Raised when get_parse_paths runs before configure_parse_paths."""
+
+    def __init__(self) -> None:
+        super().__init__("Parse paths are not configured")
+
+
 @dataclass(frozen=True)
 class ParsePaths:
     """Folders for supplier prices and user parse_config files."""
@@ -31,5 +38,5 @@ def get_parse_paths() -> ParsePaths:
     """Return configured folders; raise if init_cfg has not run."""
     paths = _CurrentParsePaths.configured
     if paths is None:
-        raise RuntimeError("Parse paths are not configured")
+        raise ParsePathsNotConfiguredError()
     return paths

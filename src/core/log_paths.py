@@ -3,6 +3,13 @@
 from dataclasses import dataclass
 
 
+class LogPathsNotConfiguredError(RuntimeError):
+    """Raised when get_log_paths runs before configure_log_paths."""
+
+    def __init__(self) -> None:
+        super().__init__("Log paths are not configured")
+
+
 @dataclass(frozen=True)
 class LogPaths:
     """Folder and dated log / error file paths."""
@@ -27,5 +34,5 @@ def get_log_paths() -> LogPaths:
     """Return configured paths; raise if init_cfg has not run."""
     paths = _CurrentLogPaths.configured
     if paths is None:
-        raise RuntimeError("Log paths are not configured")
+        raise LogPathsNotConfiguredError()
     return paths

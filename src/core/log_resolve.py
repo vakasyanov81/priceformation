@@ -1,7 +1,8 @@
 """Resolve log level labels, paths and logging callables."""
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from core.log_paths import get_log_paths
 

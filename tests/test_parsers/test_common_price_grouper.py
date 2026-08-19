@@ -380,15 +380,15 @@ def test_zepp_factory_and_valve_are_not_doubles() -> None:
         "disk_thickness": "16",
     }
     canon = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
-    yz = _disk_row(**shared, title="{0} (YZ)".format(canon), price_markup=_PRICE_LOW)
+    yz = _disk_row(**shared, title=f"{canon} (YZ)", price_markup=_PRICE_LOW)
     hap_outer = _disk_row(
         **shared,
-        title="{0} (HAP) alive наруж. вентиль".format(canon),
+        title=f"{canon} (HAP) alive наруж. вентиль",
         price_markup=_PRICE_MID,
     )
     hap_inner = _disk_row(
         **shared,
-        title="{0} (HAP) внутр. вентиль".format(canon),
+        title=f"{canon} (HAP) внутр. вентиль",
         price_markup=_PRICE_HIGH,
     )
     grouper = CommonPriceGrouper([yz, hap_outer, hap_inner])

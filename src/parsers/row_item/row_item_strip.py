@@ -20,9 +20,7 @@ def prepare_str_to_float(field_raw: str) -> str:
     field_raw = field_raw.lower()
     for drop_item in to_drop:
         field_raw = field_raw.replace(drop_item, "")
-    field_raw = field_raw.replace(",", ".")
-    field_raw = field_raw.replace("руб.", "")
-    return field_raw
+    return field_raw.replace(",", ".").replace("руб.", "")
 
 
 def get_stripped(field_raw: Any, null_value: str = "") -> str:
@@ -30,7 +28,7 @@ def get_stripped(field_raw: Any, null_value: str = "") -> str:
     return strip_into(str(field_raw or "")) or null_value
 
 
-@lru_cache()
+@lru_cache
 def strip_into(field_raw: str) -> str:
     """ "abc    abc " -> "abc abc" """
     parts = field_raw.split(" ")

@@ -71,7 +71,7 @@ def test_config_missing_env_file(tmp_path: Any, monkeypatch: Any) -> None:
     monkeypatch.setattr("cfg.zapaska_api.__PROJECT_ROOT__", str(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
-    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match="Не найден файл .env"):
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match=r"Не найден файл \.env"):
         get_zapaska_api_config()
 
 

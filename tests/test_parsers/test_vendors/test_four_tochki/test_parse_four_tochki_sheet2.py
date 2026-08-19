@@ -2,7 +2,7 @@
 tests for four_tochki vendor (sheet 2) after raw-parser process
 """
 
-from typing import Any, List
+from typing import Any
 from unittest.mock import patch
 
 from test_parsers.fixtures.four_tochki_sheet2 import (
@@ -28,7 +28,7 @@ parser_config = make_parse_configuration(fourtochki_sheet_2_params, MimMarkupRul
 
 def get_fake_parser(parse_result: Any) -> FourTochkiParser2Sheet:
     """get fake parser"""
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return FourTochkiParser2Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
@@ -39,7 +39,7 @@ def get_fake_parser(parse_result: Any) -> FourTochkiParser2Sheet:
 def test_parse() -> None:
     """check all field for one price-row"""
 
-    parsed_items: List[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
 
     assert len(parsed_items) == 1
     assert parsed_items[0].title == "6.5x16 5x114.3 ET45 60.1 MBMF Alcasta M35"
@@ -48,7 +48,7 @@ def test_parse() -> None:
     assert parsed_items[0].supplier_name == "Форточки"
     assert parsed_items[0].percent_markup == 14.7
 
-    parsed_items_alt: List[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
+    parsed_items_alt: list[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
 
     assert len(parsed_items_alt) == 1
     assert parsed_items_alt[0].title == "5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)"
@@ -62,7 +62,7 @@ def test_parse_with_invalid_item() -> None:
     """one invalid item is skipped"""
 
     with patch("core.log_message.log_msg") as mock_log_msg:
-        parsed_items: List[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
+        parsed_items: list[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
     assert len(parsed_items) == 1
     assert mock_log_msg.call_count == 2
 
@@ -163,9 +163,9 @@ def test_zepp_factory_and_valve_titles_differ() -> None:
     hap_inner = FourTochkiParser2Sheet.get_prepared_title(
         _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (HAP) (16 мм) (б/к) внутр. вентиль"),
     )
-    assert yz == "{0} (YZ)".format(_ZEPP_CANON)
-    assert hap_outer == "{0} (HAP) alive наруж. вентиль".format(_ZEPP_CANON)
-    assert hap_inner == "{0} (HAP) внутр. вентиль".format(_ZEPP_CANON)
+    assert yz == f"{_ZEPP_CANON} (YZ)"
+    assert hap_outer == f"{_ZEPP_CANON} (HAP) alive наруж. вентиль"
+    assert hap_inner == f"{_ZEPP_CANON} (HAP) внутр. вентиль"
     assert len({yz, hap_outer, hap_inner}) == 3
 
 
@@ -175,7 +175,7 @@ def test_disk_title_keeps_other_truck_tails() -> None:
         "под футорку с вент. (кольцо) Китай, прицеп 4 500 кг"
     )
     title = FourTochkiParser2Sheet.get_prepared_title(_zepp_row(name))
-    assert title == "{0} (JNTS) под футорку с вент. (кольцо)".format(_ZEPP_CANON)
+    assert title == f"{_ZEPP_CANON} (JNTS) под футорку с вент. (кольцо)"
     assert "5221105" not in title
     assert "Китай" not in title
     assert "4 500" not in title

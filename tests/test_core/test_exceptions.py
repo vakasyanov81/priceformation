@@ -43,9 +43,8 @@ def test_core_exception_default_message() -> None:
 
 def test_make_raise() -> None:
     """make_raise поднимает CoreExceptionError"""
-    with patch.object(CoreExceptionError, _TO_LOG):
-        with pytest.raises(CoreExceptionError, match="fail"):
-            make_raise("fail")
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(CoreExceptionError, match="fail"):
+        make_raise("fail")
 
 
 def test_supplier_error_type() -> None:

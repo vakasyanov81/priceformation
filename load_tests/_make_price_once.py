@@ -13,7 +13,7 @@ from run import run_make_price_by_supplier
 def main() -> None:
     init_cfg()
     result_dir = Path(sys.argv[1]).resolve()
-    result_folder = "{0}/".format(result_dir)
+    result_folder = f"{result_dir}/"
     elapsed_path = Path(sys.argv[2])
 
     def _result_folder(_cfg: MainConfig) -> str:
@@ -23,7 +23,7 @@ def main() -> None:
     with patch.object(MainConfig, "result_folder_path", property(_result_folder)):
         run_make_price_by_supplier()
     elapsed = time.perf_counter() - start
-    elapsed_path.write_text("{0:.6f}".format(elapsed), encoding="utf-8")
+    elapsed_path.write_text(f"{elapsed:.6f}", encoding="utf-8")
 
 
 if __name__ == "__main__":

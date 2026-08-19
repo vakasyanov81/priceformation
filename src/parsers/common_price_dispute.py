@@ -1,6 +1,7 @@
 """Явный конфликт шипа и сезона в группе дублей."""
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from parsers.row_item.row_item import RowItem
 

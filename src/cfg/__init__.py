@@ -1,14 +1,13 @@
 """configuration logic"""
 
 from pathlib import Path
-from typing import TypeAlias
 
 from core.log_paths import LogPaths, configure_log_paths
 from core.parse_paths import ParsePaths, configure_parse_paths
 
 from . import main
 
-ConfigType: TypeAlias = dict[str, type[main.MainConfig]]
+type ConfigType = dict[str, type[main.MainConfig]]
 
 __config__: ConfigType = {
     "main": main.get_config(),

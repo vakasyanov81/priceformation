@@ -2,8 +2,6 @@
 collection all active vendors
 """
 
-from typing import TypeAlias
-
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_config
@@ -27,7 +25,7 @@ from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, load_remote_data,
 SupplierName = str
 SupplierCode = str
 
-VendorEntry: TypeAlias = tuple[type[BaseParser], ParseConfiguration]
+type VendorEntry = tuple[type[BaseParser], ParseConfiguration]
 
 
 def all_vendors() -> list[VendorEntry]:

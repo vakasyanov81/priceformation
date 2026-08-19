@@ -15,7 +15,7 @@ def _load_velocity(row_item: RowItem) -> str:
     """Индекс нагрузки + скорости."""
     load = row_item.index_load or ""
     velocity = row_item.index_velocity or ""
-    return "{0}{1}".format(load, velocity)
+    return f"{load}{velocity}"
 
 
 def _join_nonempty(chunks: tuple[str, ...]) -> str:
@@ -49,7 +49,7 @@ def truck_title(row_item: RowItem, parts: tuple[str, str, str, str], mark: str) 
 
 def ext_diameter_title(row_item: RowItem, parts: tuple[str, str, str, str], mark: str) -> str:
     """Title с внешним диаметром."""
-    size = "{0}x{1}{2}".format(row_item.ext_diameter, parts[0], parts[3])
+    size = f"{row_item.ext_diameter}x{parts[0]}{parts[3]}"
     sidewall, runflat = _extra_labels(row_item)
     return _join_nonempty(
         (

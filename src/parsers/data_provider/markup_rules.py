@@ -3,7 +3,7 @@ markup rules provider
 """
 
 import json
-from typing import Any, Dict, NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
@@ -44,7 +44,7 @@ class AbsoluteMarkUpRules(NamedTuple):
 class MarkupRules(NamedTuple):
     """container for vendor markup rules"""
 
-    markup_rules: Dict[str, dict[str, Any]]
+    markup_rules: dict[str, dict[str, Any]]
     min_recommended_percent_markup: float = 0
     max_recommended_percent_markup: float = 0
     absolute_markup_rules: AbsoluteMarkUpRules = AbsoluteMarkUpRules(0, 0)

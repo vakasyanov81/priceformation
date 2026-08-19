@@ -3,14 +3,13 @@ find word in title
 """
 
 from functools import lru_cache
-from typing import Optional, Tuple
 
 from parsers.row_item.row_item import RowItem
 
 from .alias_container import AliasContainer
 
 
-@lru_cache()
+@lru_cache
 def str_lower(_str: str) -> str:
     """cached lowered string"""
     return _str.lower()
@@ -35,11 +34,11 @@ class BaseFinder:
         self._aliases: dict[str, str] = self.alias_container.reversed_map
 
     @property
-    def title_lower(self) -> Optional[str]:
+    def title_lower(self) -> str | None:
         """lowercase title"""
         return self._title.lower() if self._title else self._title
 
-    def find_word_in_title(self, title: str) -> Tuple[Optional[str], Optional[str]]:
+    def find_word_in_title(self, title: str) -> tuple[str | None, str | None]:
         """find substring in title"""
         self._title = title
         correct_alias, incorrect_alias = self._find_from_lower_list(self._correct_lowers, return_correct=True)
@@ -51,7 +50,7 @@ class BaseFinder:
         self,
         _lowers_list: list[str],
         return_correct: bool = False,
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """
         find by incorrect aliases in title
         :return (correct alias, founded incorrect alias)
@@ -65,7 +64,7 @@ class BaseFinder:
             return self.alias_container.all_correct_words[match[2]], match[1]
         return self._aliases.get(match[0]), match[1]
 
-    def _match_lower_alias(self, _lowers_list: list[str]) -> Optional[Tuple[str, str, int]]:
+    def _match_lower_alias(self, _lowers_list: list[str]) -> tuple[str, str, int] | None:
         """Найти первое совпадение алиаса в title."""
         title = self._title
         if title is None:
@@ -75,7 +74,7 @@ class BaseFinder:
             if found_position == -1:
                 continue
             return (
-                _lowers_list[index],
+                lower_alias,
                 title[found_position : found_position + len(lower_alias)],
                 index,
             )

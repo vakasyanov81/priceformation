@@ -2,8 +2,6 @@
 logging parse process
 """
 
-from typing import Optional
-
 from core.log_message import log_msg, warn_msg
 
 from .parse_statistic import ParseResultStatistic
@@ -27,7 +25,7 @@ class LoggerParseProcess:
 
         _log_msg(f"{self.parser_repr} // старт")
 
-    def log_finish(self, result_statistic: Optional[ParseResultStatistic] = None) -> None:
+    def log_finish(self, result_statistic: ParseResultStatistic | None = None) -> None:
         """logging finish parse process"""
         if result_statistic:
             min_percent, max_percent = result_statistic.real_percents_markup()

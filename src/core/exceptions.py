@@ -28,7 +28,7 @@ class CoreExceptionError(Exception):
         try:
             err_msg(trace_message, need_print_log=False)
         except (RuntimeError, OSError):
-            logging.error(trace_message)
+            logging.exception(trace_message)
 
 
 def make_raise(message: str) -> None:

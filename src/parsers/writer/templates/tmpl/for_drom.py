@@ -2,14 +2,16 @@
 write template for drom.ru
 """
 
+from typing import ClassVar
+
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.iwrite_template import IWriteTemplate
+from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns, WriteExclude
 
 
 class ForDrom(IWriteTemplate):
     """write template for drom.ru"""
 
-    __COLUMNS__ = [
+    __COLUMNS__: ClassVar[WriteColumns] = [
         {"Тип товара": {"style": {"width": 40}, "field": RowItem.type_production.name}},
         {"Бренд": {"style": {"width": 30}, "field": RowItem.manufacturer.name}},
         {"Номенклатура": {"style": {"width": 30}, "field": RowItem.title.name}},
@@ -24,4 +26,4 @@ class ForDrom(IWriteTemplate):
 
     __FILE__ = "price_drom_{now}.xlsx"
 
-    __EXCLUDE__ = {RowItem.rest_count.name: [None, ""]}
+    __EXCLUDE__: ClassVar[WriteExclude] = {RowItem.rest_count.name: [None, ""]}

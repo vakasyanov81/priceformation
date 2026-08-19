@@ -1,7 +1,5 @@
 """Markup helpers for zapaska disk parser."""
 
-from typing import Optional, Tuple
-
 from parsers.base_parser.price_markup import calc_percent, get_markup
 
 _BASE_PERCENT = 0.12
@@ -44,7 +42,7 @@ def _is_small_recommended_price(price_recommended: float, price_opt: float, perc
 def _make_price_recommended_markup(
     price_recommended: float,
     price_opt: float,
-) -> Tuple[Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None]:
     """make markup for recommended price"""
     if not price_recommended:
         return None, None

@@ -2,7 +2,8 @@
 
 import logging
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from core.exceptions import CoreExceptionError, SupplierNotHavePricesError
 from core.log_message import print_log

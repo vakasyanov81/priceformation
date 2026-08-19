@@ -4,7 +4,7 @@ xls read logic
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypeAlias, cast
+from typing import Any, cast
 
 from python_calamine import CalamineWorkbook
 
@@ -22,14 +22,14 @@ from parsers.xls_reader_row import (
 _MAX_COLUMNS = 50
 _MAX_ROWS = 10000
 
-Row: TypeAlias = list[Any]
-DRow: TypeAlias = dict[str, Any]
+type Row = list[Any]
+type DRow = dict[str, Any]
 
-Sheet: TypeAlias = list[Row]
-DSheet: TypeAlias = list[DRow]
+type Sheet = list[Row]
+type DSheet = list[DRow]
 
-IndexToHeader: TypeAlias = dict[int, str]
-ParseParams: TypeAlias = dict[str, int | IndexToHeader]
+type IndexToHeader = dict[int, str]
+type ParseParams = dict[str, int | IndexToHeader]
 
 
 class IXlsReader:
@@ -59,7 +59,7 @@ class XlsReader(IXlsReader):
     """xls reader"""
 
     @classmethod
-    def get_instance(cls, file_path: str, reader_params: dict[str, Any]) -> "XlsReader":
+    def get_instance(cls, file_path: str, reader_params: dict[str, Any]) -> XlsReader:
         """get instance XlsReader / XlsxReader"""
         if not Path(file_path).exists():
             raise FileNotFoundError
@@ -109,7 +109,7 @@ class XlsReader(IXlsReader):
     def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
         """parse given sheets or all if not specified"""
         all_sheets = self.sheets()
-        sheet_indexes = sheet_indexes or list(range(0, len(all_sheets)))
+        sheet_indexes = sheet_indexes or list(range(len(all_sheets)))
         rows: DSheet = []
         for sheet_index in sheet_indexes:
             self.skipped_empty_rows = 0

@@ -2,7 +2,7 @@
 ind category, and set
 """
 
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
@@ -24,11 +24,11 @@ class CategoryFinder:
         self.aliases = AliasContainer(map_categories)
         self._finder = BaseFinder(self.aliases)
 
-    def find(self, row_item: RowItem) -> Tuple[Optional[str], Optional[str]]:
+    def find(self, row_item: RowItem) -> tuple[str | None, str | None]:
         """find"""
         return self.find_in_str(row_item.title)
 
-    def find_in_str(self, _str: str) -> Tuple[Optional[str], Optional[str]]:
+    def find_in_str(self, _str: str) -> tuple[str | None, str | None]:
         """find in str"""
         category, bad_category = self._finder.find_word_in_title(_str)
         return category, bad_category

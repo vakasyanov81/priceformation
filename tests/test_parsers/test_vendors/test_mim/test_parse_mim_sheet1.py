@@ -2,7 +2,7 @@
 tests for Mim vendor (sheet 1) after raw-parser process
 """
 
-from typing import Any, List
+from typing import Any
 
 import pytest
 from test_parsers.fixtures.mim_sheet1 import mim_one_item_result
@@ -39,7 +39,7 @@ parser_config = BasePriceParseConfigurationParams(
 
 def get_fake_parser(parse_result: Any) -> MimParser1Sheet:
     """get fake parser"""
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return MimParser1Sheet(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
@@ -86,7 +86,7 @@ def test_prepare_title_skips_empty_parts(fields: dict[str, str], expected: str) 
 def test_parse() -> None:
     """check all field for one price-row"""
 
-    parsed_items: List[RowItem] = get_fake_parser(mim_one_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
     assert parsed_items[0].title == "31x10.5R15 Crossleader DSU02 92Y"
@@ -107,7 +107,7 @@ class TestParseMimSheet1:
         first_row = get_first_row_item(parse_result)
         first_row["rest_count"] = 3
 
-        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
         assert len(parsed_items) == 0
 
     @pytest.mark.parametrize(
@@ -128,7 +128,7 @@ class TestParseMimSheet1:
 
         parser = get_fake_parser(parse_result)
 
-        parsed_items: List[RowItem] = parser.parse()
+        parsed_items: list[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_with_markup
 
 

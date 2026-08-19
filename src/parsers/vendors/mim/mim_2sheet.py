@@ -84,15 +84,15 @@ class MimParser2Sheet(MimParserBase):
     @classmethod
     def _size_chunk(cls, row_item: RowItem) -> str:
         """Кусок размера width/profileRdiameter."""
-        profile = "/{0}".format(row_item.height_percent) if row_item.height_percent else ""
-        diameter = "R{0}".format(row_item.diameter) if row_item.diameter else ""
+        profile = f"/{row_item.height_percent}" if row_item.height_percent else ""
+        diameter = f"R{row_item.diameter}" if row_item.diameter else ""
         return "".join((str(row_item.width or ""), profile, diameter))
 
     @classmethod
     def _title_chunks(cls, row_item: RowItem) -> list[str]:
         """Ненулевые части title."""
         mark = (row_item.manufacturer or "").lower().capitalize()
-        load_vel = "{0}{1}".format(row_item.index_load or "", row_item.index_velocity or "")
+        load_vel = "{}{}".format(row_item.index_load or "", row_item.index_velocity or "")
         raw = [
             cls._size_chunk(row_item),
             mark,

@@ -2,7 +2,7 @@
 tests for Poshk vendor after raw-parser process
 """
 
-from typing import Any, List, cast
+from typing import Any, cast
 
 import pytest
 from test_base_parser.test_manufacturer_finder import map_manufacturer
@@ -98,7 +98,7 @@ parser_config = BasePriceParseConfigurationParams(
 
 def get_fake_parser(parse_result: Any) -> PoshkParser:
     """get fake parser"""
-    FakeXlsReader.parse_result = list(parse_result.values())[0]
+    FakeXlsReader.parse_result = next(iter(parse_result.values()))
     return PoshkParser(
         xls_reader=FakeXlsReader,
         file_prices=list(parse_result.keys()),
@@ -109,7 +109,7 @@ def get_fake_parser(parse_result: Any) -> PoshkParser:
 def test_parse() -> None:
     """check all field for one price-row"""
 
-    parsed_items: List[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
 
     assert len(parsed_items) == 1
     assert parsed_items[0].title == "10-16.5 Nortec ER-218 10PR 135B TL спецшина"
@@ -164,7 +164,7 @@ class TestParsePoshk:
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
         first_row["title"] = title
-        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
         assert parsed_items[0].type_production == category
 
     @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ class TestParsePoshk:
 
         parser = get_fake_parser(parse_result)
 
-        parsed_items: List[RowItem] = parser.parse()
+        parsed_items: list[RowItem] = parser.parse()
 
         assert parsed_items[0].price_markup == price_with_markup
 
@@ -226,7 +226,7 @@ class TestParsePoshk:
         first_row = get_first_row_item(parse_result)
         first_row["title"] = title
 
-        parsed_items: List[RowItem] = get_fake_parser(parse_result).parse()
+        parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 0
 

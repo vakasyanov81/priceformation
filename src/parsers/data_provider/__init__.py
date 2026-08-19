@@ -23,19 +23,19 @@ from .vendor_list import (
 )
 
 __all__ = [
-    "ManufacturerAliasesProviderBase",
-    "ManufacturerAliasesProviderFromUserConfig",
-    "MarkupRulesProviderBase",
-    "MarkupRules",
     "AbsoluteMarkUpRules",
-    "MarkUpParams",
-    "markup_params_from_rule",
-    "MarkupRulesProviderFromUserConfig",
     "BlackListProviderBase",
     "BlackListProviderFromUserConfig",
+    "ManufacturerAliasesProviderBase",
+    "ManufacturerAliasesProviderFromUserConfig",
+    "MarkUpParams",
+    "MarkupRules",
+    "MarkupRulesProviderBase",
+    "MarkupRulesProviderFromUserConfig",
     "StopWordsProviderBase",
     "StopWordsProviderFromUserConfig",
     "VendorListProviderBase",
     "VendorListProviderFromUserConfig",
     "VendorParams",
+    "markup_params_from_rule",
 ]

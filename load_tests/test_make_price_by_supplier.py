@@ -44,7 +44,7 @@ def _child_env() -> dict[str, str]:
 
 
 def _run_make_price(result_dir: Path, elapsed_file: Path) -> None:
-    subprocess.run(  # noqa: S603
+    subprocess.run(
         [sys.executable, str(_RUNNER), str(result_dir), str(elapsed_file)],
         check=True,
         cwd=_PROJECT_ROOT,
@@ -66,4 +66,4 @@ def test_make_price_within_budget(tmp_path: Path) -> None:
     written = list(result_dir.glob("*.xlsx"))
     assert written, "ожидались xlsx в временной папке результата"
     budget = MAX_MAKE_PRICE_SECONDS
-    assert elapsed <= budget, "пункт 1 занял {0:.2f} с при бюджете {1:.1f} с".format(elapsed, budget)
+    assert elapsed <= budget, f"пункт 1 занял {elapsed:.2f} с при бюджете {budget:.1f} с"

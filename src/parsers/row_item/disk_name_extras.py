@@ -25,6 +25,6 @@ def disk_name_extras(title: str) -> str:
     if not title:
         return ""
     lowered = title.lower()
-    factories = ("({0})".format(code) for code in _FACTORY_RE.findall(title))
+    factories = (f"({code})" for code in _FACTORY_RE.findall(title))
     extras = (label for needle, label in _DISK_MARKERS if needle in lowered)
     return " ".join((*factories, *extras))

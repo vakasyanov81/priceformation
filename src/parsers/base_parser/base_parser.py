@@ -5,7 +5,7 @@ base parser logic
 import math
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, List, Optional, Protocol, Type, TypeVar
+from typing import Any, ClassVar, Protocol
 
 from core.exceptions import SupplierNotHavePricesError
 from core.parse_paths import get_parse_paths
@@ -25,7 +25,14 @@ from .base_parser_row import _keep_row_item, _try_prepare_row
 from .manufacturer_finder import ManufacturerFinder
 from .parse_statistic import ParseResultStatistic
 
-TBaseParser = TypeVar("TBaseParser", bound="BaseParser")
+type ItemActionClasses = list[type[BaseItemAction]]
+
+
+class ParseConfigNotSetError(RuntimeError):
+    """Raised when BaseParser.parse_config() is used before config is assigned."""
+
+    def __init__(self) -> None:
+        super().__init__("parse_config is not set")
 
 
 class XlsReaderFactory(Protocol):
@@ -42,52 +49,52 @@ class Parser(Protocol):
     def supplier_folder_name(cls) -> str:
         """supplier folder name"""
 
-    def get_parsed_items(self) -> List[RowItem]:
+    def get_parsed_items(self) -> list[RowItem]:
         """get parsed items"""
 
-    def parse(self) -> List[RowItem]:
+    def parse(self) -> list[RowItem]:
         """parse price files"""
 
 
 class BaseParser:
-    _item_actions: List[Type[BaseItemAction]] = []
-    _item_actions_after_process: List[Type[BaseItemAction]] = [SetPercentMarkupItemAction]
+    _item_actions: ClassVar[ItemActionClasses] = []
+    _item_actions_after_process: ClassVar[ItemActionClasses] = [SetPercentMarkupItemAction]
 
     def __init__(
         self,
-        parse_config: Optional[ParseConfiguration] = None,
+        parse_config: ParseConfiguration | None = None,
         file_prices: list[str] | None = None,
         xls_reader: type[XlsReaderFactory] = XlsReader,
     ) -> None:
-        self.parsed_items: List[RowItem] = []
+        self.parsed_items: list[RowItem] = []
         self._parse_config: ParseConfiguration | None = parse_config
         self.type_production: str | None = None
         self.xls_reader = xls_reader
         self.files: list[str] | None = file_prices
         self.logger = LoggerParseProcess(repr(self))
-        self._black_list: List[str] | None = None
-        self._stop_words: List[str] | None = None
+        self._black_list: list[str] | None = None
+        self._stop_words: list[str] | None = None
         self._category_finder: CategoryFinder | None = None
         self._manufacturer_finder: ManufacturerFinder | None = None
         self.unknown_category_skips: list[str] = []
 
     def parse_config(self) -> ParseConfiguration:
         if self._parse_config is None:
-            raise RuntimeError("parse_config is not set")
+            raise ParseConfigNotSetError()
         return self._parse_config
 
     def markup_rules(self) -> data_provider.MarkupRules:
         return self.parse_config().get_markup_rules()
 
-    def get_black_list(self) -> List[str]:
+    def get_black_list(self) -> list[str]:
         if self._black_list is None:
             self._black_list = self.prepare_black_list(self.parse_config().black_list())
         return self._black_list
 
-    def prepare_black_list(self, black_list: List[str]) -> List[str]:
+    def prepare_black_list(self, black_list: list[str]) -> list[str]:
         return [self.strip_words_in_title(black_title) for black_title in black_list]
 
-    def get_stop_words(self) -> List[str]:
+    def get_stop_words(self) -> list[str]:
         if self._stop_words is None:
             self._stop_words = self.parse_config().stop_words()
         return self._stop_words
@@ -104,7 +111,7 @@ class BaseParser:
             self._manufacturer_finder = ManufacturerFinder(aliases)
         return self._manufacturer_finder
 
-    def parse(self) -> List[RowItem]:
+    def parse(self) -> list[RowItem]:
         if not self.is_active:
             self.logger.log_disable_status()
             return []
@@ -181,7 +188,7 @@ class BaseParser:
             sup_name = f"{sup_name} ({sheet_info})"
         return sup_name
 
-    def get_parsed_items(self) -> List[RowItem]:
+    def get_parsed_items(self) -> list[RowItem]:
         return self.parsed_items
 
     @property
@@ -209,10 +216,10 @@ class BaseParser:
         """...."""
         self.parsed_items = [row_item for row_item in self.get_parsed_items() if _keep_row_item(self, row_item)]
 
-    def to_row_items(self, raw_rows: List[dict[str, Any]]) -> List[RowItem]:
+    def to_row_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
         return [self.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
 
-    def raw_parse(self, full_file_xls_path: str) -> List[dict[str, Any]]:
+    def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
         reader = self.get_xls_reader(full_file_xls_path)
         return reader.parse(self.parser_params().sheet_indexes)
 
@@ -242,10 +249,8 @@ class BaseParser:
         return has_content and no_stop and not_blacklisted
 
     def has_stop_word(self, title: str) -> bool:
-        for s_word in self.get_stop_words():
-            if s_word.lower() in title.lower():
-                return True
-        return False
+        title_lower = title.lower()
+        return any(s_word.lower() in title_lower for s_word in self.get_stop_words())
 
     def check_title_in_black_list(self, title: str) -> bool:
         return title in self.get_black_list()
@@ -270,12 +275,10 @@ class BaseParser:
     @classmethod
     def is_category_row(cls, row_item: RowItem) -> bool:
         """is category row?"""
-        if row_item.title and not row_item.price_opt:
-            return True
-        return False
+        return bool(row_item.title and not row_item.price_opt)
 
     @classmethod
-    @lru_cache()
+    @lru_cache
     def calc_percent(cls, price_sale: float, price_purchase: float) -> float:
         """calc margin percentage"""
         return price_markup.calc_percent(price_sale, price_purchase)
@@ -321,7 +324,7 @@ class BaseParser:
         row_item.price_markup = self.round_price(price)
 
     @classmethod
-    @lru_cache()
+    @lru_cache
     def get_markup(cls, price: float, percent: float) -> float:
         """get price with absolute markup"""
         return price_markup.get_markup(price, percent)
@@ -340,7 +343,7 @@ class BaseParser:
         return " ".join(chunks)
 
     @classmethod
-    def _prepare_title_chunks(cls, chunks: List[str]) -> List[str]:
+    def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:
         return chunks
 
     @classmethod
@@ -354,16 +357,7 @@ class BaseParser:
         stripped_title = (title or "").strip()
         if not stripped_title:
             return title
-
-        chunks = title.split()
-        new_chunks = []
-
-        for chunk in chunks:
-            chunk = chunk.strip()
-            if not chunk:
-                continue
-            new_chunks.append(chunk)
-        return " ".join(new_chunks)
+        return " ".join(cls.strip_chunks_title(title.split()))
 
     @classmethod
     def get_spike_title(cls, row_item: RowItem) -> str:
@@ -383,7 +377,7 @@ def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:
     return list_files
 
 
-def get_file_prices(parser: TBaseParser) -> list[str]:
+def get_file_prices[TBaseParser: BaseParser](parser: TBaseParser) -> list[str]:
     """get file prices"""
     prices_root = Path(get_parse_paths().file_prices_folder)
     supplier_folder = prices_root / parser.parser_params().supplier.folder_name
