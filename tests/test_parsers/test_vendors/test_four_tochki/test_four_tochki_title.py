@@ -1,7 +1,15 @@
 """tests for four_tochki title helpers."""
 
+from typing import Any
+
+import pytest
+
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_title import is_special_tire, is_truck_tire
+from parsers.vendors.four_tochki.four_tochki_title import (
+    get_prepared_title,
+    is_special_tire,
+    is_truck_tire,
+)
 from parsers.vendors.four_tochki.four_tochki_title_parts import (
     default_tire_title,
     ext_diameter_title,
@@ -10,6 +18,7 @@ from parsers.vendors.four_tochki.four_tochki_title_parts import (
 
 _PARTS = ("205", "/55", "", "R16")
 _WRAP = "XXXX"
+_TRUCK = "грузовая"
 
 
 def test_truck_tire_by_type() -> None:
@@ -60,3 +69,18 @@ def test_default_title_includes_runflat() -> None:
 def test_ext_diameter_title_skips_empty_optional() -> None:
     row = RowItem({"ext_diameter": 31})
     assert _WRAP not in ext_diameter_title(row, _PARTS, "Kama")
+
+
+@pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        ({"width": "205", "diameter": "R18"}, "205R18"),
+        ({"width": "11", "diameter": "R20"}, "11R20"),
+        ({"width": "10", "diameter": "R18"}, "10R18"),
+        ({"width": "11", "diameter": "R20", "tire_type": _TRUCK}, "11.00R20"),
+        ({"width": "315", "diameter": "R22.5", "tire_type": _TRUCK}, "315R22.5"),
+        ({"width": "11", "diameter": "R16", "tire_type": _TRUCK}, "11R16"),
+    ],
+)
+def test_prepared_title_width_postfix(fields: dict[str, Any], expected: str) -> None:
+    assert get_prepared_title(RowItem(fields)) == expected

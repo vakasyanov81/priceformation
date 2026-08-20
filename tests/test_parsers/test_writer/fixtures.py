@@ -5,7 +5,7 @@ fixtures for writer
 from typing import ClassVar
 
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns
+from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColors, WriteColumns
 
 write_data = [
     {
@@ -58,3 +58,13 @@ class FixtureTemplate(IWriteTemplate):
         {"Цена": {"field": RowItem.price_markup.name}},
         {"Остаток": {"field": RowItem.rest_count.name}},
     ]
+
+
+class ColorsWithoutMapTemplate(IWriteTemplate):
+    """цвет задан по колонке, но карта значений пустая"""
+
+    __COLUMNS__: ClassVar[WriteColumns] = FixtureTemplate.__COLUMNS__
+    __COLOR__: ClassVar[WriteColors] = {
+        "by_column": RowItem.supplier_name.name,
+        "set_to_column_index": 0,
+    }

@@ -435,3 +435,62 @@ def test_explicit_season_conflict_is_disputed() -> None:
     assert doubles == [winter, summer]
     assert winter.disputed == "сезон"
     assert summer.disputed == "сезон"
+
+
+@pytest.mark.parametrize(
+    ("left", "right"),
+    [
+        ("зима", "зимняя"),
+        ("ЗИМА", "Зимняя"),
+        ("лето", "летняя"),
+        ("ЛЕТО", "Летняя"),
+    ],
+)
+def test_season_aliases_are_not_disputed(left: str, right: str) -> None:
+    first = _row(season=left)
+    second = _row(season=right, price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([first, second]).get_double_row_items()
+
+    assert doubles == [first, second]
+    assert not first.disputed
+    assert not second.disputed
+
+
+def test_short_season_aliases_still_conflict() -> None:
+    winter = _row(season="зима")
+    summer = _row(season="лето", price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([winter, summer]).get_double_row_items()
+
+    assert doubles == [winter, summer]
+    assert winter.disputed == "сезон"
+    assert summer.disputed == "сезон"
+
+
+@pytest.mark.parametrize(
+    ("left", "right"),
+    [
+        ("да", "yes"),
+        ("Да", "YES"),
+        ("да", "ш."),
+        ("нет", "no"),
+        ("Нет", "NO"),
+    ],
+)
+def test_spike_aliases_are_not_disputed(left: str, right: str) -> None:
+    first = _row(spike=left)
+    second = _row(spike=right, price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([first, second]).get_double_row_items()
+
+    assert doubles == [first, second]
+    assert not first.disputed
+    assert not second.disputed
+
+
+def test_spike_yes_and_no_aliases_are_disputed() -> None:
+    yes_spike = _row(spike="yes")
+    no_spike = _row(spike="no", price_markup=_PRICE_HIGH)
+    doubles = CommonPriceGrouper([yes_spike, no_spike]).get_double_row_items()
+
+    assert doubles == [yes_spike, no_spike]
+    assert yes_spike.disputed == "шип"
+    assert no_spike.disputed == "шип"

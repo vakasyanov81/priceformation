@@ -111,9 +111,9 @@ class ZapaskaDiskJSON(BaseParser):
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices)
 
-    def raw_parse(self, text_json_file_full_path: str) -> list[dict[str, Any]]:
+    def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
         """raw parse"""
-        with Path(text_json_file_full_path).open(encoding="utf-8") as out_file:
+        with Path(full_file_xls_path).open(encoding="utf-8") as out_file:
             text_data = out_file.read()
         loaded = json.loads(text_data)
         dictable_data = cast(list[dict[str, Any]], loaded)

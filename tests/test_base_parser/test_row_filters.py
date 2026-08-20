@@ -1,0 +1,62 @@
+"""tests for category correction, title strip and purchase-price filter."""
+
+from test_parsers.test_vendors.parse_config import make_parse_configuration
+
+from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.category_finder import CategoryFinder
+from parsers.row_item.row_item import RowItem
+from parsers.vendors.pioner import pioner_params
+
+_TITLE = "ok title"
+_REST = 5
+_PRICE = 100
+
+
+def _parser() -> BaseParser:
+    return BaseParser(parse_config=ParseConfiguration(make_parse_configuration(pioner_params)))
+
+
+def _parser_with_finder() -> BaseParser:
+    parser = _parser()
+    parser._category_finder = CategoryFinder()  # noqa: WPS437
+    return parser
+
+
+def test_correction_category_skips_without_finder() -> None:
+    parser = _parser()
+    row = RowItem({"type_production": "грузовая"})
+    parser.correction_category(row)
+    assert row.type_production == "грузовая"
+
+
+def test_correction_category_skips_empty_type() -> None:
+    parser = _parser_with_finder()
+    row = RowItem({})
+    parser.correction_category(row)
+    assert not row.type_production
+
+
+def test_correction_category_maps_alias() -> None:
+    parser = _parser_with_finder()
+    row = RowItem({"type_production": "грузовая"})
+    parser.correction_category(row)
+    assert row.type_production == "Грузовая шина"
+
+
+def test_strip_words_collapses_spaces() -> None:
+    assert BaseParser.strip_words_in_title("  385/65   R22.5  ") == "385/65 R22.5"
+
+
+def test_strip_words_keeps_empty_and_whitespace() -> None:
+    assert BaseParser.strip_words_in_title("") == ""
+    assert BaseParser.strip_words_in_title("   ") == "   "
+
+
+def test_drop_row_with_rest_and_no_purchase_price() -> None:
+    parser = _parser()
+    dropped = RowItem({"title": _TITLE, "rest_count": _REST})
+    kept = RowItem({"title": _TITLE, "rest_count": _REST, "price_opt": _PRICE})
+    parser.parsed_items = [dropped, kept]
+    parser.remove_wo_price_purchase_and_check_title()
+    assert parser.parsed_items == [kept]

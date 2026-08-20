@@ -48,12 +48,15 @@ class Parser(Protocol):
     @classmethod
     def supplier_folder_name(cls) -> str:
         """supplier folder name"""
+        ...
 
     def get_parsed_items(self) -> list[RowItem]:
         """get parsed items"""
+        ...
 
     def parse(self) -> list[RowItem]:
         """parse price files"""
+        ...
 
 
 class BaseParser:
@@ -377,7 +380,7 @@ def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:
     return list_files
 
 
-def get_file_prices[TBaseParser: BaseParser](parser: TBaseParser) -> list[str]:
+def get_file_prices(parser: BaseParser) -> list[str]:
     """get file prices"""
     prices_root = Path(get_parse_paths().file_prices_folder)
     supplier_folder = prices_root / parser.parser_params().supplier.folder_name

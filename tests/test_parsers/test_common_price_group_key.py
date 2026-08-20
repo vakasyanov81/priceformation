@@ -97,6 +97,11 @@ def test_intimacy_truck_integer_diameter() -> None:
     assert define_intimacy(row) is None
 
 
+def test_intimacy_truck_blank_diameter() -> None:
+    assert define_intimacy(_row(type_production="грузовая", diameter="")) is None
+    assert define_intimacy(_row(type_production="грузовая", diameter=None)) is None
+
+
 def test_intimacy_not_truck_float_diameter() -> None:
     row = _row(type_production="легковая", diameter="22.5")
     assert define_intimacy(row) is None
@@ -234,6 +239,12 @@ def test_group_key_run_flat_splits() -> None:
     assert group_key(plain) != group_key(runflat)
 
 
+def test_group_key_run_flat_aliases_match() -> None:
+    yes_flag_row = _row(model="Scorpion Verde All-Season", run_flat="YES")
+    da_flag_row = _row(model="Scorpion Verde All-Season", run_flat="да")
+    assert group_key(yes_flag_row) == group_key(da_flag_row)
+
+
 def test_group_key_sidewall_splits() -> None:
     mud = _row(model="TRD06", inscription_on_the_side="M+S")
     winter = _row(model="TRD06", inscription_on_the_side="3PMSF")
@@ -250,6 +261,12 @@ def test_group_key_camera_ttf_splits_from_tt() -> None:
     ttf = _row(camera_type="TTF", title="no marker")
     tube = _row(camera_type="TT", title="no marker")
     assert group_key(ttf) != group_key(tube)
+
+
+def test_group_key_camera_tt_case_matches() -> None:
+    lower = _row(camera_type="tt", title="no marker")
+    upper = _row(camera_type="TT", title="no marker")
+    assert group_key(lower) == group_key(upper)
 
 
 _ZEPP_TITLE = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"

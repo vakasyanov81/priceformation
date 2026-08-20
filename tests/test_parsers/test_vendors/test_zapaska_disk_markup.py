@@ -43,6 +43,10 @@ def test_absolute_markup_small_margin() -> None:
     assert make_absolute_markup(_SMALL_MARGIN_PRICE, _OPT) == _ABSOLUTE_FLOOR
 
 
+def test_absolute_markup_at_delta() -> None:
+    assert make_absolute_markup(_ABSOLUTE_FLOOR, _OPT) == _ABSOLUTE_FLOOR
+
+
 def test_absolute_markup_keeps_price() -> None:
     assert make_absolute_markup(_LARGE_MARGIN_PRICE, _OPT) == _LARGE_MARGIN_PRICE
 

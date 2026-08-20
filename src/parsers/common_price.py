@@ -56,10 +56,7 @@ class CommonPrice:
         try:
             parsed = parser.parse()
         except VendorListConfigFileError:
-            warn_msg(
-                "Отсутствует файл конфигурации parse_config/vendor_list.json",
-                need_print_log=True,
-            )
+            warn_msg("Отсутствует файл конфигурации parse_config/vendor_list.json", need_print_log=True)
         except Exception as exc:
             err_msg(f"Ошибка разбора прайса поставщика {parser!r} // {exc}")
             raise

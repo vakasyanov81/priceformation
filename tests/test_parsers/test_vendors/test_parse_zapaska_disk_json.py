@@ -10,6 +10,7 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
+from parsers.vendors.zapaska_disk_markup import make_price_markup_value
 
 parser_config = make_parse_configuration(zapaska_params)
 
@@ -42,3 +43,11 @@ class TestParseZapaskaDiskJSON:
         assert res.supplier_name == "Запаска (диски)"
         assert res.pcd1 == 114.3
         assert res.percent_markup == 14.94
+
+
+def test_markup_without_recommended() -> None:
+    parser = get_fake_parser([])
+    row = RowItem({"price_opt": 10000, "title": "No retail"})
+    parser.make_price_markup(row)
+    assert parser.not_matched_position == ["No retail"]
+    assert row.price_markup == parser.round_price(make_price_markup_value(0, 10000))
