@@ -71,6 +71,8 @@ class XlsxWriterDriver(IXlsDriver):
         if self.work_book is None:
             raise WorkbookNotInitializedError()
         sheet = self.work_book.active
+        if sheet is None:
+            raise WorksheetNotInitializedError()
         sheet.title = sheet_name
         self.work_sheet = sheet
         return self
@@ -119,7 +121,7 @@ class XlsxWriterDriver(IXlsDriver):
 
     def save(self) -> None:
         """save file"""
-        if self.work_sheet is None or self.work_book is None:
+        if self.work_sheet is None or self.work_book is None or self._file_name is None:
             raise WorkbookNotInitializedError()
         for col_index, max_len in self.col_max_length.items():
             self.work_sheet.column_dimensions[number_to_excel_column(col_index)].width = max_len + 4

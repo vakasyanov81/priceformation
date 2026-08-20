@@ -1,10 +1,13 @@
 """tests for CommonPriceOut"""
 
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 from parsers.common_price_output import CommonPriceOut
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
+from parsers.writer.xls_writer import XlsWriter
+from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 _TITLE = "title"
 _REPORT_PATH = "file_prices/result/doubles.xlsx"
@@ -14,7 +17,11 @@ def test_nomenclature_title_correction() -> None:
     """корректирует title у каждой позиции"""
     row_old = RowItem({_TITLE: "old"})
     row_keep = RowItem({_TITLE: "keep"})
-    out = CommonPriceOut([row_old, row_keep], xls_writer=MagicMock, write_driver=MagicMock)
+    out = CommonPriceOut(
+        [row_old, row_keep],
+        xls_writer=cast(type[XlsWriter], MagicMock),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+    )
 
     with patch(
         "parsers.common_price_output.get_nomenclature_corrected_title",
@@ -34,7 +41,11 @@ def test_write_all_prices() -> None:
     driver_instance = MagicMock()
     driver_cls.return_value = driver_instance
     template = object()
-    out = CommonPriceOut(rows, xls_writer=writer_cls, write_driver=driver_cls)
+    out = CommonPriceOut(
+        rows,
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+    )
     raw_rows = [{_TITLE: "t1"}]
 
     with (
@@ -68,7 +79,11 @@ def test_write_doubles_report() -> None:
     writer_instance = MagicMock()
     writer_instance.get_result_path.return_value = _REPORT_PATH
     writer_cls.return_value = writer_instance
-    out = CommonPriceOut(rows, xls_writer=writer_cls, write_driver=driver_cls)
+    out = CommonPriceOut(
+        rows,
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+    )
     raw_rows = [{_TITLE: "dup"}, {_TITLE: "cand"}]
 
     with (

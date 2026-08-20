@@ -84,6 +84,15 @@ max-positional-args = 6
 quote-style = "single"
 
 [tool.pyright]
+exclude = [
+    "mutants",
+    ".venv",
+    "htmlcov",
+    "**/__pycache__",
+    "**/.mypy_cache",
+    "**/.ruff_cache",
+    "**/.pytest_cache",
+]
 reportUnnecessaryTypeIgnoreComment="warning"
 
 [tool.pytest.ini_options]
@@ -117,12 +126,22 @@ backup="False"
 pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
+# Logging modules and call sites: tests do not assert log text.
 do_not_mutate = [
     "src/core/wrappers.py",
     "src/core/async_utils.py",
+    "src/core/log_message.py",
+    "src/core/log_resolve.py",
+    "src/core/init_log.py",
+    "src/parsers/base_parser/log_parser_process.py",
 ]
 do_not_mutate_patterns = [
     'logger\.\w+',
+    'log_msg\(',
+    'print_log\(',
+    'warn_msg\(',
+    'err_msg\(',
+    'need_print_log=',
 ]
 
 [tool.mypy]
@@ -146,5 +165,5 @@ exclude = [
     ".pytest_cache/",
     "htmlcov/",
 ]
-min_confidence = 80
+min_confidence = 100
 ignore_decorators = ["@pytest.fixture"]

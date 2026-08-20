@@ -6,7 +6,7 @@ import logging as _logging_module
 import time
 import traceback
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Protocol
 
 from .log_message import log_msg
 
@@ -55,9 +55,9 @@ def _decorator[RT](
 ) -> Callable[..., RT]:
     """log decorator"""
 
-    def wrapped(*args, **kwargs) -> RT:  # type: ignore
+    def wrapped(*args: Any, **kwargs: Any) -> RT:
         """wrapper for super method"""
-        call_output = None
+        call_output: RT | None = None
         method_name = f"{func.__module__}.{func.__name__}"
         start_time = time.time()
         log_msg(_build_begin_msg(method_name, label, args, kwargs))
@@ -68,17 +68,29 @@ def _decorator[RT](
             raise
         finally:
             _log_call_end(method_name, start_time, call_output)
-        return call_output
+        return call_output  # pyright: ignore[reportReturnType]
 
     return wrapped
 
 
-def logging[RT](label: str = "") -> Callable[..., Callable[..., RT]]:
+class LogDecorator(Protocol):
+    """Декоратор, который сохраняет тип обёрнутой функции."""
+
+    def __call__[RT](
+        self,
+        func: Callable[..., RT],
+    ) -> Callable[..., RT]: ...
+
+
+def logging(label: str = "") -> LogDecorator:
     """
     Wrapper for logging function
     """
 
-    def decorate(func: Callable[..., RT], _label: str = label) -> Callable[..., RT]:
+    def decorate[RT](
+        func: Callable[..., RT],
+        _label: str = label,
+    ) -> Callable[..., RT]:
         """wrapper for supper method"""
         return _decorator(func, label=_label)
 

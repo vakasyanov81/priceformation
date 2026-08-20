@@ -229,6 +229,29 @@ def test_unknown_brand_stays_in_model() -> None:
 def test_fill_from_title_inch_sets_ext_diameter() -> None:
     row_item = _fill("31x10.5R15 Crossleader DSU02 92Y", "Crossleader")
     assert row_item.ext_diameter == 31
+    assert not row_item.height_percent
+
+
+@pytest.mark.parametrize(
+    ("title", "width", "height", "diameter", "ext"),
+    [
+        ("205,5/55,5R16,5 Brand M", "205.5", "55.5", "16.5", None),
+        ("12,00R24 Brand M", "12.00", None, "24", None),
+        ("31x10,5R15,5 Brand M", "10.5", None, "15.5", 31),
+    ],
+)
+def test_fill_from_title_comma_decimals(
+    title: str,
+    width: str,
+    height: str | None,
+    diameter: str,
+    ext: int | None,
+) -> None:
+    row_item = _fill(title, "Brand")
+    assert row_item.width == width
+    assert row_item.height_percent == height
+    assert row_item.diameter == diameter
+    assert row_item.ext_diameter == ext
 
 
 def test_partial_brand_not_stripped() -> None:
@@ -262,6 +285,18 @@ def test_fill_from_title_keeps_existing_fields() -> None:
     assert row_item.height_percent == "1"
     assert row_item.diameter == "10"
     assert row_item.model == "KEEP"
+
+
+def test_keeps_existing_ext_diameter() -> None:
+    row_item = RowItem(
+        {
+            "title": "31x10.5R15 Crossleader DSU02 92Y",
+            "manufacturer_name": "Crossleader",
+            "ext_diameter": 99,
+        },
+    )
+    fill_from_title(row_item)
+    assert row_item.ext_diameter == 99
 
 
 def test_parse_greenstone_and_passenger() -> None:

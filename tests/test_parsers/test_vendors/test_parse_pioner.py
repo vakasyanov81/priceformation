@@ -18,6 +18,7 @@ from test_parsers.test_vendors.parse_result_helpers import get_first_row_item, g
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser, pioner_params
@@ -127,3 +128,52 @@ class TestParsePioner:
 def test_markup_percent_includes_rule_min(price_opt: float, percent: float) -> None:
     parser = get_fake_parser(pioner_one_item_result())
     assert parser.get_markup_percent(price_opt) == percent
+
+
+class _EmptyMarkupRules(MarkupRulesProviderBase):
+    def get_markup_data(self) -> dict[str, Any]:
+        return {"markup_rules": {}}
+
+
+def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
+    FakeXlsReader.parse_result = next(iter(pioner_one_item_result().values()))
+    return PionerParser(
+        xls_reader=FakeXlsReader,
+        file_prices=list(pioner_one_item_result().keys()),
+        parse_config=ParseConfiguration(make_parse_configuration(pioner_params, markup_rules=markup)),
+    )
+
+
+def test_prochie_category_zeroes_rest() -> None:
+    parse_result = {
+        "file_prices\\pioner\\price.xls": [
+            {"title": "Прочие"},
+            {
+                "title": "Автокамера 14.00-24",
+                "price_opt": "2200,0 Руб.",
+                "rest_count": 20.0,
+                "reserve_count": "",
+            },
+        ]
+    }
+    assert get_fake_parser(parse_result).parse() == []
+
+
+def test_item_rest_missing_is_zero() -> None:
+    assert PionerParser.get_item_rest(RowItem({})) == 0
+    assert PionerParser.get_item_rest(RowItem({"rest_count": 10, "reserve_count": 3})) == 7
+
+
+def test_add_price_markup_without_opt_stays_zero() -> None:
+    parser = get_fake_parser(pioner_one_item_result())
+    row = RowItem({})
+    parser.add_price_markup(row)
+    assert row.price_markup == 0
+
+
+def test_add_price_markup_empty_rules_keeps_opt() -> None:
+    parser = _parser_with_markup(_EmptyMarkupRules())
+    row = RowItem({"price_opt": 1000})
+    parser.add_price_markup(row)
+    assert row.price_markup == 1000
+    assert row.percent_markup == 0
