@@ -10,6 +10,7 @@ from test_parsers.fixtures.poshk import poshk_one_item_result
 from test_parsers.test_vendors.parse_result_helpers import get_first_row_item
 
 from parsers import data_provider
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -99,10 +100,11 @@ parser_config = BasePriceParseConfigurationParams(
 def get_fake_parser(parse_result: Any) -> PoshkParser:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
-    return PoshkParser(
-        xls_reader=FakeXlsReader,
+    return make_parser(
+        PoshkParser,
+        ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        parse_config=ParseConfiguration(parser_config),
+        xls_reader=FakeXlsReader,
     )
 
 
@@ -229,9 +231,3 @@ class TestParsePoshk:
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 0
-
-
-def test_big_recommended_without_max_is_false() -> None:
-    parser = get_fake_parser(poshk_one_item_result())
-    row = RowItem({"price_opt": 1000, "price_recommended": 5000})
-    assert parser.is_big_recommended_percent(row) is False

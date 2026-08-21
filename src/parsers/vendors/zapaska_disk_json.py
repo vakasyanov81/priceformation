@@ -9,15 +9,17 @@ from typing import Any, cast
 from cfg.main import MainConfig
 from core.file_reader import read_file
 from parsers import data_provider
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import BaseParser, XlsReaderFactory
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_markup import make_price_markup_value
+from parsers.xls_reader import XlsReader
 
 type JsonRow = dict[str, Any]
 type JsonRows = list[JsonRow]
@@ -101,15 +103,18 @@ class ZapaskaDiskJSON(BaseParser):
 
     _type_production = "Диск"
 
-    def __init__(self, parse_config: ParseConfiguration, file_prices: list[Any] | None = None) -> None:
+    def __init__(
+        self,
+        parse_config: ParseConfiguration,
+        file_prices: list[Any] | None = None,
+        xls_reader: type[XlsReaderFactory] = XlsReader,
+        *,
+        markup_policy: MarkupPolicy | None = None,
+    ) -> None:
         """init"""
-        self.price_sup_codes: dict[str, float] = {}
-        self.rest_titles: dict[str, float] = {}
-        self.price_mrp_result: list[RowItem] = []
         self.not_matched_position: list[str] = []
-        self._current_category = None
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
-        super().__init__(parse_config, file_prices)
+        super().__init__(parse_config, file_prices, xls_reader, markup_policy=markup_policy)
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
         """raw parse"""
@@ -121,20 +126,12 @@ class ZapaskaDiskJSON(BaseParser):
         rename_fields(dictable_data, cast(dict[str, str], parser_params.columns))
         return dictable_data
 
-    def process(self) -> int:
-        """parse process"""
-        count_processed = super().process()
-        for price_mrp in self.price_mrp_result:
-            code = price_mrp.code or price_mrp.code_art
-            self.price_sup_codes[code] = price_mrp.price_recommended
-
-        for row_item in self.parsed_items:
-            self.make_price_markup(row_item)
-            self.skip_by_min_rest(row_item)
-            row_item.type_production = self.get_type_production(row_item)
-            if not row_item.type_production:
-                row_item.rest_count = 0
-        return count_processed
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        self.make_price_markup(row_item)
+        self.skip_by_min_rest(row_item)
+        row_item.type_production = self.get_type_production(row_item)
+        if not row_item.type_production:
+            row_item.rest_count = 0
 
     def get_type_production(self, row_item: RowItem) -> str:
         """Return fixed type production for disk prices."""

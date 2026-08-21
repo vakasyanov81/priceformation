@@ -5,6 +5,7 @@ tests for zapaska vendor after raw-parser process
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from cfg.main import get_config
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
@@ -17,9 +18,10 @@ parser_config = make_parse_configuration(zapaska_params)
 
 def get_fake_parser(file_prices: list[str]) -> ZapaskaDiskJSON:
     """get fake parser"""
-    return ZapaskaDiskJSON(
+    return make_parser(
+        ZapaskaDiskJSON,
+        ParseConfiguration(parser_config),
         file_prices=file_prices,
-        parse_config=ParseConfiguration(parser_config),
     )
 
 

@@ -12,6 +12,7 @@ from test_parsers.test_vendors.test_parse_poshk import (
 )
 
 from parsers import data_provider
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -53,10 +54,11 @@ def _as_parse_result(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _fake_parser(parse_result: Any) -> Autosnab54Parser:
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
-    return Autosnab54Parser(
-        xls_reader=FakeXlsReader,
+    return make_parser(
+        Autosnab54Parser,
+        ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        parse_config=ParseConfiguration(parser_config),
+        xls_reader=FakeXlsReader,
     )
 
 

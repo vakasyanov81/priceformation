@@ -16,7 +16,7 @@
 
 1. Модуль рядом с `price_markup.py`: класс/функции `MarkupPolicy` (не методы `BaseParser`).
 2. Базовый алгоритм (`min/max` percent, recommended, absolute) — единственная реализация из `markup_rules.json`.
-3. `BaseParser.add_price_markup` пока делегирует в политику (удаление — [06](06-markup-cleanup.md)).
+3. `BaseParser` получает готовый `MarkupPolicy` снаружи (не собирает его из конфига). `add_price_markup` делегирует в политику + `round_price` (удаление формул с парсера — [06](06-markup-cleanup.md)).
 4. Существующие тесты `test_price_markup.py` перевести на политику.
 
 ## Файлы

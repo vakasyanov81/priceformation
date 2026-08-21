@@ -2,10 +2,11 @@
 
 from typing import Any
 
+import pytest
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
 from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
 
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import BaseParser, MarkupPolicyNotSetError, make_parser
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.data_provider.vendor_list import VendorParams
@@ -22,7 +23,7 @@ class _EmptyMarkupRules(MarkupRulesProviderBase):
 
 
 def _parser(config: BasePriceParseConfigurationParams) -> BaseParser:
-    return BaseParser(parse_config=ParseConfiguration(config))
+    return make_parser(BaseParser, ParseConfiguration(config))
 
 
 def test_markup_percent_empty_map_is_zero() -> None:
@@ -43,3 +44,9 @@ def test_markup_without_prices_is_zero() -> None:
     row = RowItem({})
     parser.add_price_markup(row)
     assert row.price_markup == _ZERO
+
+
+def test_markup_without_policy_raises() -> None:
+    parser = BaseParser(parse_config=ParseConfiguration(make_parse_configuration(pioner_params)))
+    with pytest.raises(MarkupPolicyNotSetError):
+        parser.get_markup_percent(_SOME_PRICE)

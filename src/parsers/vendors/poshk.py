@@ -54,16 +54,11 @@ class PoshkParser(BaseParser):
     logic for posh vendor
     """
 
-    def process(self) -> int:
-        """process price parse"""
-        res = super().process()
-        for row_item in self.parsed_items:
-            self.add_price_markup(row_item)
-            self.clear_and_set_title(row_item)
-            row_item.title = self.prepare_title(row_item.title)
-            self.set_type_production(row_item)
-
-        return res
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        self.add_price_markup(row_item)
+        self.clear_and_set_title(row_item)
+        row_item.title = self.prepare_title(row_item.title)
+        self.set_type_production(row_item)
 
     def add_price_markup(self, row_item: RowItem) -> None:
         """

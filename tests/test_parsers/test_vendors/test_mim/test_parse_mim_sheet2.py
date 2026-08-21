@@ -14,6 +14,7 @@ from test_parsers.test_vendors.test_parse_poshk import (
     vendor_list_config,
 )
 
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -43,10 +44,11 @@ parser_config = BasePriceParseConfigurationParams(
 def get_fake_parser(parse_result: Any) -> MimParser2Sheet:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
-    return MimParser2Sheet(
-        xls_reader=FakeXlsReader,
+    return make_parser(
+        MimParser2Sheet,
+        ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        parse_config=ParseConfiguration(parser_config),
+        xls_reader=FakeXlsReader,
     )
 
 

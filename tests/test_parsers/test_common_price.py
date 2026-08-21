@@ -23,6 +23,8 @@ class FakeParser:
         parse_config: Any = None,
         file_prices: list[str] | None = None,
         xls_reader: Any = None,
+        *,
+        markup_policy: Any = None,
     ) -> None:
         """init"""
         self.parse_config = parse_config
@@ -48,6 +50,8 @@ class FakeParserWithSkips:
         parse_config: Any = None,
         file_prices: list[str] | None = None,
         xls_reader: Any = None,
+        *,
+        markup_policy: Any = None,
     ) -> None:
         """init"""
         self.parse_config = parse_config
