@@ -19,6 +19,7 @@ from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
@@ -30,11 +31,13 @@ parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarku
 def get_fake_parser(parse_result: Any) -> PionerParser:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
+    parse_config = ParseConfiguration(parser_config)
     return make_parser(
         PionerParser,
-        ParseConfiguration(parser_config),
+        parse_config,
         file_prices=list(parse_result.keys()),
         xls_reader=FakeXlsReader,
+        markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
 
@@ -139,11 +142,13 @@ class _EmptyMarkupRules(MarkupRulesProviderBase):
 
 def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
     FakeXlsReader.parse_result = next(iter(pioner_one_item_result().values()))
+    parse_config = ParseConfiguration(make_parse_configuration(pioner_params, markup_rules=markup))
     return make_parser(
         PionerParser,
-        ParseConfiguration(make_parse_configuration(pioner_params, markup_rules=markup)),
+        parse_config,
         file_prices=list(pioner_one_item_result().keys()),
         xls_reader=FakeXlsReader,
+        markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
 

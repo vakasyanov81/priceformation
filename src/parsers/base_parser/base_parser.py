@@ -23,7 +23,7 @@ from . import price_markup
 from .base_parser_config import ParseConfiguration, ParserParams
 from .base_parser_row import _keep_row_item, _try_prepare_row
 from .manufacturer_finder import ManufacturerFinder
-from .markup_policy import MarkupPolicy, make_markup_policy
+from .markup_policy import IdentityMarkupPolicy, MarkupPolicy, make_markup_policy, percent_to_store
 from .parse_statistic import ParseResultStatistic
 
 type ItemActionClasses = list[type[BaseItemAction]]
@@ -297,8 +297,15 @@ class BaseParser:
     def add_price_markup(self, row_item: RowItem) -> None:
         """calculate and fill price_markup field"""
         policy = self._require_markup_policy()
-        price = policy.apply(row_item.price_opt or 0, row_item.price_recommended)
-        row_item.price_markup = self.round_price(price)
+        opt = row_item.price_opt or 0
+        price = policy.apply(opt, row_item.price_recommended)
+        if isinstance(policy, IdentityMarkupPolicy):
+            row_item.price_markup = price
+        else:
+            row_item.price_markup = self.round_price(price)
+        percent = percent_to_store(policy, opt)
+        if percent is not None:
+            row_item.percent_markup = percent
 
     def _require_markup_policy(self) -> MarkupPolicy:
         if self._markup_policy is None:

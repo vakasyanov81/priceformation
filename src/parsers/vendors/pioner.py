@@ -70,17 +70,6 @@ class PionerParser(BaseParser):
         self.set_manufacturer_to_title(row_item)
         self.manufacturer_finder().process(row_item)
 
-    def add_price_markup(self, row_item: RowItem) -> None:
-        """
-        Добавить наценку
-        """
-
-        price = row_item.price_opt or 0
-        markup_percent = self.get_markup_percent(price) or 0
-        price = (markup_percent + 1) * price
-        row_item.price_markup = self.round_price(price)
-        row_item.percent_markup = markup_percent * 100
-
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """skip by min rest"""
         self.set_current_category(row_item)

@@ -15,6 +15,7 @@ from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.poshk import (
@@ -28,6 +29,8 @@ vendor_list_config = {
     "mim": {"enabled": 1},
     "pioner": {"enabled": 1},
     "four_tochki": {"enabled": 1},
+    "autosnab54_ru": {"enabled": 1},
+    "stk": {"enabled": 1},
 }
 
 
@@ -100,11 +103,13 @@ parser_config = BasePriceParseConfigurationParams(
 def get_fake_parser(parse_result: Any) -> PoshkParser:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
+    parse_config = ParseConfiguration(parser_config)
     return make_parser(
         PoshkParser,
-        ParseConfiguration(parser_config),
+        parse_config,
         file_prices=list(parse_result.keys()),
         xls_reader=FakeXlsReader,
+        markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
 

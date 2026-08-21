@@ -9,7 +9,7 @@
 
 ## Зачем
 
-`Autosnab54Parser.process` пишет `price_markup = price_opt` прямо в цикле. Это политика, спрятанная в оркестрации.
+`Autosnab54Parser.process` пишет `price_markup = price_opt` прямо в цикле. Это внутренний склад: цена уже с наценкой, правил в JSON нет.
 
 ## Сделать
 

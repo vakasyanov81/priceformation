@@ -13,7 +13,6 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 
 STK_START_ROW = 14
-STK_PRICE_MARKUP_MULTIPLIER = 1.06
 
 stk_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name="stk", name="STK", code="7"),
@@ -50,12 +49,3 @@ class STKParser(MarkupSkipCategoryParser):
     """
     parser for Greenstone vendor
     """
-
-    def add_price_markup(self, row_item: RowItem) -> None:
-        """
-        Добавить наценку
-        """
-
-        if not row_item.price_opt:
-            return
-        row_item.price_markup = self.round_price(row_item.price_opt * STK_PRICE_MARKUP_MULTIPLIER)
