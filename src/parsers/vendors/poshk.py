@@ -60,17 +60,6 @@ class PoshkParser(BaseParser):
         row_item.title = self.prepare_title(row_item.title)
         self.set_type_production(row_item)
 
-    def add_price_markup(self, row_item: RowItem) -> None:
-        """
-        Добавить наценку
-        """
-
-        price = row_item.price_opt
-        markup_percent = self.get_markup_percent(price)
-        price = (markup_percent + 1) * price
-        row_item.price_markup = self.round_price(price)
-        row_item.percent_markup = markup_percent * 100
-
     def set_type_production(self, row_item: RowItem) -> None:
         """
         Задать категорию

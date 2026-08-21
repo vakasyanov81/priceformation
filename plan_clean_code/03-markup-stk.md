@@ -1,10 +1,11 @@
 # 03. STK: наценка в JSON
 
-Подробно: [03-markup-stk-detail.md](details/03-markup-stk-detail.md)
+Подробно: [03-markup-stk-detail.md](details/03-markup-stk-detail.md)  
+Задачи: [03-markup-stk-tasks.md](details/03-markup-stk-tasks.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
-Статус: не начата  
-Зависит от: [01. MarkupPolicy](01-markup-policy.md)  
+Статус: сделана  
+Зависит от: [01. MarkupPolicy](01-markup-policy.md), [02. Poshk / Pioner](02-markup-poshk-pioner.md) (`MapOnOptMarkupPolicy`)  
 Дальше: [04. Zapaska](04-markup-zapaska.md)
 
 ## Зачем

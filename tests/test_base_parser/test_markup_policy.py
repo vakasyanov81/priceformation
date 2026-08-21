@@ -1,7 +1,14 @@
 """tests for MarkupPolicy numbers and BaseParser.round_price."""
 
+from typing import cast
+
 from parsers.base_parser.base_parser import BaseParser
-from parsers.base_parser.markup_policy import MarkupPolicy, recommended_percent
+from parsers.base_parser.markup_policy import (
+    MapOnOptMarkupPolicy,
+    MarkupPolicy,
+    percent_to_store,
+    recommended_percent,
+)
 from parsers.base_parser.price_markup import get_markup
 from parsers.data_provider.markup_rules import AbsoluteMarkUpRules, MarkUpParams, MarkupRules
 
@@ -35,6 +42,12 @@ _ROUND_EXACT_PRICE = 1120
 _FIRST_RULE = MarkUpParams(min=0, max=5001, percent_markup=_PERCENT)
 _SECOND_RULE = MarkUpParams(min=5000, max=10001, percent_markup=_SECOND_PERCENT)
 _OVERLAP_MAP = (_FIRST_RULE, _SECOND_RULE)
+_MAP_OPT = 100
+_MAP_PERCENT = 0.7
+_MAP_PRICE = 170
+_MAP_RULE = MarkUpParams(min=0, max=201, percent_markup=_MAP_PERCENT)
+_IGNORED_RRC = 9999
+_MAP_STORED_PERCENT = 70
 
 
 def _policy(
@@ -44,6 +57,7 @@ def _policy(
     max_recommended: float = 0,
     min_absolute: float = 0,
     absolute_percent: float = 0,
+    policy_cls: type[MarkupPolicy] = MarkupPolicy,
 ) -> MarkupPolicy:
     rules = MarkupRules(
         markup_rules={},
@@ -54,7 +68,20 @@ def _policy(
             markup_percent=absolute_percent,
         ),
     )
-    return MarkupPolicy(rules, price_map)
+    return policy_cls(rules, price_map)
+
+
+def _map_on_opt_policy() -> MapOnOptMarkupPolicy:
+    return cast(
+        MapOnOptMarkupPolicy,
+        _policy(
+            (_MAP_RULE,),
+            min_recommended=_APPLY_MIN_RECOMMENDED,
+            min_absolute=_MIN_ABSOLUTE,
+            absolute_percent=_APPLY_ABSOLUTE_PERCENT,
+            policy_cls=MapOnOptMarkupPolicy,
+        ),
+    )
 
 
 def _mim_policy() -> MarkupPolicy:
@@ -181,6 +208,51 @@ def test_apply_max_off_uses_map() -> None:
 def test_apply_max_on_no_rrc_uses_map() -> None:
     policy = _apply_policy(max_recommended=_APPLY_MAX_ON)
     assert policy.apply(_OPT, None) == get_markup(_OPT, _PERCENT)
+
+
+def test_map_on_opt_apply_in_range() -> None:
+    assert _map_on_opt_policy().apply(_MAP_OPT, None) == _MAP_PRICE
+
+
+def test_map_on_opt_apply_ignores_recommended() -> None:
+    assert _map_on_opt_policy().apply(_MAP_OPT, _IGNORED_RRC) == _MAP_PRICE
+
+
+def test_map_on_opt_apply_ignores_absolute() -> None:
+    mim = _policy(
+        (_MAP_RULE,),
+        min_recommended=_APPLY_MIN_RECOMMENDED,
+        min_absolute=_MIN_ABSOLUTE,
+        absolute_percent=_APPLY_ABSOLUTE_PERCENT,
+    )
+    assert mim.apply(_MAP_OPT, None) == _MAP_OPT * _APPLY_ABSOLUTE_PERCENT
+    assert _map_on_opt_policy().apply(_MAP_OPT, None) == _MAP_PRICE
+
+
+def test_map_on_opt_apply_zero_opt() -> None:
+    assert _map_on_opt_policy().apply(_ZERO, None) == _ZERO
+
+
+def test_map_on_opt_apply_empty_map() -> None:
+    policy = _policy((), policy_cls=MapOnOptMarkupPolicy)
+    assert policy.apply(_MAP_OPT, None) == _MAP_OPT
+
+
+def test_percent_to_store_mim_is_none() -> None:
+    assert percent_to_store(_apply_policy(), _OPT) is None
+
+
+def test_percent_to_store_map_on_opt() -> None:
+    assert percent_to_store(_map_on_opt_policy(), _MAP_OPT) == _MAP_STORED_PERCENT
+
+
+def test_map_on_opt_stored_percent_markup() -> None:
+    assert _map_on_opt_policy().stored_percent_markup(_MAP_OPT) == _MAP_STORED_PERCENT
+
+
+def test_map_on_opt_stored_percent_empty_map() -> None:
+    policy = _policy((), policy_cls=MapOnOptMarkupPolicy)
+    assert percent_to_store(policy, _MAP_OPT) == _ZERO
 
 
 def test_round_price_up() -> None:

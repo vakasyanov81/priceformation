@@ -1,9 +1,10 @@
 # 02. Poshk / Pioner на общую политику
 
-Подробно: [02-markup-poshk-pioner-detail.md](details/02-markup-poshk-pioner-detail.md)
+Подробно: [02-markup-poshk-pioner-detail.md](details/02-markup-poshk-pioner-detail.md)  
+Задачи: [02-markup-poshk-pioner-tasks.md](details/02-markup-poshk-pioner-tasks.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [01. MarkupPolicy](01-markup-policy.md)  
 Дальше: [03. STK](03-markup-stk.md)
 

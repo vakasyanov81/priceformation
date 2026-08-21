@@ -4,7 +4,7 @@
 Задачи: [01-markup-policy-tasks.md](details/01-markup-policy-tasks.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: —  
 Дальше: [02. Poshk / Pioner](02-markup-poshk-pioner.md)
 

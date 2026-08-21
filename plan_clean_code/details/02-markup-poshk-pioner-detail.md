@@ -1,7 +1,9 @@
 # 02. Poshk / Pioner на общую политику — подробно
 
 Краткая задача: [02-markup-poshk-pioner.md](../02-markup-poshk-pioner.md)  
-Зависит от: [01-detail](01-markup-policy-detail.md)
+Задачи: [02-markup-poshk-pioner-tasks.md](02-markup-poshk-pioner-tasks.md)  
+Зависит от: [01-detail](01-markup-policy-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 

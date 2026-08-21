@@ -10,9 +10,13 @@ from parsers.all_vendors import all_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
+from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.pioner import PionerParser
+from parsers.vendors.poshk import PoshkParser
+from parsers.vendors.stk import STKParser
 
 type SupplierName = str
 type SupplierCode = str
@@ -86,10 +90,14 @@ class CommonPrice:
         return all_vendor_supplier_info()
 
 
+_MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
+
+
 def _parser_for_vendor(
     vendor_cls: type[BaseParser],
     vendor_config: ParseConfiguration | None,
 ) -> BaseParser:
     if vendor_config is None:
         return vendor_cls(vendor_config)
-    return make_parser(vendor_cls, vendor_config)
+    markup_policy = make_map_on_opt_markup_policy(vendor_config) if vendor_cls in _MAP_ON_OPT_VENDORS else None
+    return make_parser(vendor_cls, vendor_config, markup_policy=markup_policy)

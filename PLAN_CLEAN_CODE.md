@@ -24,26 +24,26 @@
 
 ## Индекс задач
 
-| ID | Задача | Этап |
-| --- | --- | --- |
-| [01](plan_clean_code/01-markup-policy.md) | Вынести `MarkupPolicy` | 1 |
-| [02](plan_clean_code/02-markup-poshk-pioner.md) | Poshk / Pioner на общую политику | 1 |
-| [03](plan_clean_code/03-markup-stk.md) | STK: наценка в JSON | 1 |
-| [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 |
-| [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 |
-| [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 |
-| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 |
-| [08](plan_clean_code/08-config-cache.md) | Кэш наценки на экземпляре | 2 |
-| [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 |
-| [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 |
-| [11](plan_clean_code/11-parser-price-source.md) | `PriceSource` вместо glob | 3 |
-| [12](plan_clean_code/12-parser-json-reader.md) | JSON reader для Zapaska | 3 |
-| [13](plan_clean_code/13-parser-dead-code.md) | Мёртвый Command, title, Пионер | 3 |
-| [14](plan_clean_code/14-writer-layers.md) | Writer без cfg и I/O в конструкторе | 4 |
-| [15](plan_clean_code/15-zapaska-http.md) | HTTP-клиент Zapaska вне парсера | 4 |
-| [16](plan_clean_code/16-parse-paths-aliases.md) | Title aliases через `parse_paths` | 4 |
-| [17](plan_clean_code/17-process-caches.md) | Предсказуемые кэши процесса | 4 |
-| [18](plan_clean_code/18-demeter.md) | Law of Demeter для `ParseConfiguration` | 4 |
+| ID | Задача | Этап | Статус |
+| --- | --- | --- | --- |
+| [01](plan_clean_code/01-markup-policy.md) | Вынести `MarkupPolicy` | 1 | сделана |
+| [02](plan_clean_code/02-markup-poshk-pioner.md) | Poshk / Pioner на общую политику | 1 | сделана |
+| [03](plan_clean_code/03-markup-stk.md) | STK: наценка в JSON | 1 | сделана |
+| [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 | не начата |
+| [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 | не начата |
+| [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | не начата |
+| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | не начата |
+| [08](plan_clean_code/08-config-cache.md) | Кэш наценки на экземпляре | 2 | не начата |
+| [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | не начата |
+| [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 | не начата |
+| [11](plan_clean_code/11-parser-price-source.md) | `PriceSource` вместо glob | 3 | не начата |
+| [12](plan_clean_code/12-parser-json-reader.md) | JSON reader для Zapaska | 3 | не начата |
+| [13](plan_clean_code/13-parser-dead-code.md) | Мёртвый Command, title, Пионер | 3 | не начата |
+| [14](plan_clean_code/14-writer-layers.md) | Writer без cfg и I/O в конструкторе | 4 | не начата |
+| [15](plan_clean_code/15-zapaska-http.md) | HTTP-клиент Zapaska вне парсера | 4 | не начата |
+| [16](plan_clean_code/16-parse-paths-aliases.md) | Title aliases через `parse_paths` | 4 | не начата |
+| [17](plan_clean_code/17-process-caches.md) | Предсказуемые кэши процесса | 4 | не начата |
+| [18](plan_clean_code/18-demeter.md) | Law of Demeter для `ParseConfiguration` | 4 | не начата |
 
 ---
 
@@ -53,9 +53,9 @@
 
 **Задачи**
 
-1. [01. Вынести MarkupPolicy](plan_clean_code/01-markup-policy.md)
-2. [02. Poshk / Pioner](plan_clean_code/02-markup-poshk-pioner.md) — после 01
-3. [03. STK в JSON](plan_clean_code/03-markup-stk.md) — после 01
+1. [01. Вынести MarkupPolicy](plan_clean_code/01-markup-policy.md) — **сделана**
+2. [02. Poshk / Pioner](plan_clean_code/02-markup-poshk-pioner.md) — после 01 — **сделана**
+3. [03. STK в JSON](plan_clean_code/03-markup-stk.md) — после 01 — **сделана**
 4. [04. Zapaska в JSON](plan_clean_code/04-markup-zapaska.md) — после 01
 5. [05. Autosnab без наценки](plan_clean_code/05-markup-autosnab.md) — после 01
 6. [06. Очистка и контракт](plan_clean_code/06-markup-cleanup.md) — после 02–05

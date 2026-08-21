@@ -1,7 +1,9 @@
 # 03. STK: наценка в JSON — подробно
 
 Краткая задача: [03-markup-stk.md](../03-markup-stk.md)  
-Зависит от: [01-detail](01-markup-policy-detail.md)
+Задачи: [03-markup-stk-tasks.md](03-markup-stk-tasks.md)  
+Зависит от: [01-detail](01-markup-policy-detail.md), [02-detail](02-markup-poshk-pioner-detail.md) (нужен `MapOnOptMarkupPolicy`)  
+Статус: сделана
 
 ## Суть проблемы
 

@@ -1,0 +1,9 @@
+{
+  "markup_rules": {
+    "rule_6": {
+      "min": 0,
+      "max": 999999999,
+      "percent": 0.06
+    }
+  }
+}

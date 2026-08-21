@@ -6,11 +6,17 @@ from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
+from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.markup_policy import MapOnOptMarkupPolicy, MarkupPolicy, percent_to_store
 from parsers.common_price import CommonPrice
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.pioner import PionerParser, pioner_params
+from parsers.vendors.poshk import PoshkParser, poshk_params
+from parsers.vendors.stk import STKParser, stk_params
 
 fake_result = [RowItem({"title": 1})]
 
@@ -136,3 +142,33 @@ def test_suppliers_info() -> None:
     vendors_by_code = CommonPrice().supplier_info()
     assert vendors_by_code["22"] == "Запаска (шины)"
     assert None not in vendors_by_code.values()
+
+
+def _markup_policy_from_parse_all(parser_cls: type[BaseParser], vendor_params: Any) -> MarkupPolicy:
+    config = ParseConfiguration(make_parse_configuration(vendor_params))
+    common_price = CommonPrice()
+    with (
+        patch("parsers.common_price.log_msg"),
+        patch.object(common_price, "parse_vendor") as mock_parse,
+    ):
+        common_price.parse_all_vendors([(parser_cls, config)])
+    assert mock_parse.call_args is not None
+    parser = mock_parse.call_args.args[0]
+    return cast(MarkupPolicy, parser._markup_policy)  # noqa: WPS437
+
+
+@pytest.mark.parametrize(
+    ("parser_cls", "vendor_params"),
+    [
+        (PoshkParser, poshk_params),
+        (PionerParser, pioner_params),
+        (STKParser, stk_params),
+    ],
+)
+def test_map_on_opt_vendors_get_map_policy(parser_cls: type[BaseParser], vendor_params: Any) -> None:
+    assert isinstance(_markup_policy_from_parse_all(parser_cls, vendor_params), MapOnOptMarkupPolicy)
+
+
+def test_other_vendor_keeps_default_markup_policy() -> None:
+    policy = _markup_policy_from_parse_all(BaseParser, pioner_params)
+    assert percent_to_store(policy, 1000) is None

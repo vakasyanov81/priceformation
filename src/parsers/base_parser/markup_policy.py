@@ -60,6 +60,24 @@ class MarkupPolicy:
         return price_opt * self._rules.absolute_markup_rules.markup_percent
 
 
+class MapOnOptMarkupPolicy(MarkupPolicy):
+    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+        """Отпускная до округления: только карта % на закуп. РРЦ и absolute игнорируются."""
+        opt = price_opt or 0
+        return get_markup(opt, self.markup_percent_for_opt(opt))
+
+    def stored_percent_markup(self, price_opt: float) -> float:
+        """map% * 100 до округления цены — как сейчас пишут Poshk/Pioner."""
+        return self.markup_percent_for_opt(price_opt or 0) * 100
+
+
+def percent_to_store(policy: MarkupPolicy, price_opt: float) -> float | None:
+    """Процент для записи в строку. None — пусть посчитает SetPercentMarkupItemAction."""
+    if isinstance(policy, MapOnOptMarkupPolicy):
+        return policy.stored_percent_markup(price_opt)
+    return None
+
+
 def recommended_percent(
     price_opt: float,
     price_recommended: float | None,
@@ -72,6 +90,14 @@ def recommended_percent(
 def make_markup_policy(parse_config: ParseConfiguration) -> MarkupPolicy:
     """Собрать политику из правил и карты % конфига. Не метод парсера."""
     return MarkupPolicy(
+        rules=parse_config.get_markup_rules(),
+        price_map=parse_config.get_price_markup_map(),
+    )
+
+
+def make_map_on_opt_markup_policy(parse_config: ParseConfiguration) -> MapOnOptMarkupPolicy:
+    """Собрать политику «карта % на закуп» из конфига. Не метод парсера."""
+    return MapOnOptMarkupPolicy(
         rules=parse_config.get_markup_rules(),
         price_map=parse_config.get_price_markup_map(),
     )
