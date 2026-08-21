@@ -29,6 +29,8 @@ vendor_list_config = {
     "mim": {"enabled": 1},
     "pioner": {"enabled": 1},
     "four_tochki": {"enabled": 1},
+    "autosnab54_ru": {"enabled": 1},
+    "stk": {"enabled": 1},
 }
 
 

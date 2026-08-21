@@ -54,7 +54,7 @@ class Autosnab54Parser(BaseParser):
 
     def process_parsed_row(self, row_item: RowItem) -> None:
         fill_from_title(row_item)
-        row_item.price_markup = row_item.price_opt
+        self.add_price_markup(row_item)
 
     @classmethod
     def get_min_rest_count(cls) -> int:

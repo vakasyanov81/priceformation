@@ -17,6 +17,7 @@ from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
+from parsers.base_parser.markup_policy import IdentityMarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
@@ -59,6 +60,7 @@ def _fake_parser(parse_result: Any) -> Autosnab54Parser:
         ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
         xls_reader=FakeXlsReader,
+        markup_policy=IdentityMarkupPolicy.create(),
     )
 
 

@@ -60,6 +60,17 @@ class MarkupPolicy:
         return price_opt * self._rules.absolute_markup_rules.markup_percent
 
 
+class IdentityMarkupPolicy(MarkupPolicy):
+    @classmethod
+    def create(cls) -> IdentityMarkupPolicy:
+        """Политика «без наценки». JSON не читает."""
+        return cls(MarkupRules(markup_rules={}), ())
+
+    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+        """Отпускная = закуп. Внутренний склад: цена уже с наценкой, JSON не нужен."""
+        return price_opt or 0
+
+
 class MapOnOptMarkupPolicy(MarkupPolicy):
     def apply(self, price_opt: float, price_recommended: float | None) -> float:
         """Отпускная до округления: только карта % на закуп. РРЦ и absolute игнорируются."""

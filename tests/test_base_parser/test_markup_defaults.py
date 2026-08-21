@@ -8,7 +8,12 @@ from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTest
 
 from parsers.base_parser.base_parser import BaseParser, MarkupPolicyNotSetError, make_parser
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
-from parsers.base_parser.markup_policy import MapOnOptMarkupPolicy, MarkupPolicy, make_map_on_opt_markup_policy
+from parsers.base_parser.markup_policy import (
+    IdentityMarkupPolicy,
+    MapOnOptMarkupPolicy,
+    MarkupPolicy,
+    make_map_on_opt_markup_policy,
+)
 from parsers.data_provider.markup_rules import AbsoluteMarkUpRules, MarkUpParams, MarkupRules, MarkupRulesProviderBase
 from parsers.data_provider.vendor_list import VendorParams
 from parsers.row_item.row_item import RowItem
@@ -20,6 +25,7 @@ _MAP_OPT = 100
 _MAP_PERCENT = 0.7
 _MAP_PRICE = 170
 _MAP_STORED_PERCENT = 70
+_IDENTITY_OPT = 1234.56
 
 
 class _EmptyMarkupRules(MarkupRulesProviderBase):
@@ -89,3 +95,11 @@ def test_map_on_opt_stores_percent() -> None:
 def test_make_map_on_opt_markup_policy() -> None:
     policy = make_map_on_opt_markup_policy(ParseConfiguration(make_parse_configuration(pioner_params)))
     assert isinstance(policy, MapOnOptMarkupPolicy)
+
+
+def test_identity_add_price_markup_keeps_opt() -> None:
+    parser = _parser(make_parse_configuration(pioner_params), markup_policy=IdentityMarkupPolicy.create())
+    row = RowItem({"price_opt": _IDENTITY_OPT})
+    parser.add_price_markup(row)
+    assert row.price_markup == _IDENTITY_OPT
+    assert row.percent_markup is None

@@ -4,6 +4,7 @@ from typing import cast
 
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.markup_policy import (
+    IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
     MarkupPolicy,
     percent_to_store,
@@ -48,6 +49,8 @@ _MAP_PRICE = 170
 _MAP_RULE = MarkUpParams(min=0, max=201, percent_markup=_MAP_PERCENT)
 _IGNORED_RRC = 9999
 _MAP_STORED_PERCENT = 70
+_IDENTITY_OPT = 1234.56
+_IDENTITY_RRC = 2000
 
 
 def _policy(
@@ -261,3 +264,15 @@ def test_round_price_up() -> None:
 
 def test_round_price_exact() -> None:
     assert BaseParser.round_price(_ROUND_EXACT_PRICE) == _ROUND_EXACT_PRICE
+
+
+def test_identity_apply_keeps_opt() -> None:
+    assert IdentityMarkupPolicy.create().apply(_IDENTITY_OPT, _IDENTITY_RRC) == _IDENTITY_OPT
+
+
+def test_identity_apply_zero_opt() -> None:
+    assert IdentityMarkupPolicy.create().apply(_ZERO, _IDENTITY_RRC) == _ZERO
+
+
+def test_percent_to_store_identity_is_none() -> None:
+    assert percent_to_store(IdentityMarkupPolicy.create(), _IDENTITY_OPT) is None

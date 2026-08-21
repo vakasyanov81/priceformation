@@ -10,10 +10,11 @@ from parsers.all_vendors import all_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
-from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
+from parsers.base_parser.markup_policy import IdentityMarkupPolicy, MarkupPolicy, make_map_on_opt_markup_policy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
+from parsers.vendors.autosnab54_ru import Autosnab54Parser
 from parsers.vendors.pioner import PionerParser
 from parsers.vendors.poshk import PoshkParser
 from parsers.vendors.stk import STKParser
@@ -91,6 +92,24 @@ class CommonPrice:
 
 
 _MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
+_IDENTITY_VENDORS: tuple[type[BaseParser], ...] = (Autosnab54Parser,)
+
+
+def _vendor_is_enabled(vendor_config: ParseConfiguration) -> bool:
+    folder_name = vendor_config.parse_config.parser_params.supplier.folder_name
+    vendor = vendor_config.all_vendor_config().get(folder_name)
+    return bool(vendor and vendor.enabled)
+
+
+def _markup_policy_for_vendor(
+    vendor_cls: type[BaseParser],
+    vendor_config: ParseConfiguration,
+) -> MarkupPolicy | None:
+    if vendor_cls in _MAP_ON_OPT_VENDORS:
+        return make_map_on_opt_markup_policy(vendor_config)
+    if vendor_cls in _IDENTITY_VENDORS:
+        return IdentityMarkupPolicy.create()
+    return None
 
 
 def _parser_for_vendor(
@@ -99,5 +118,14 @@ def _parser_for_vendor(
 ) -> BaseParser:
     if vendor_config is None:
         return vendor_cls(vendor_config)
-    markup_policy = make_map_on_opt_markup_policy(vendor_config) if vendor_cls in _MAP_ON_OPT_VENDORS else None
-    return make_parser(vendor_cls, vendor_config, markup_policy=markup_policy)
+    try:
+        enabled = _vendor_is_enabled(vendor_config)
+    except VendorListConfigFileError:
+        enabled = False
+    if not enabled:
+        return vendor_cls(parse_config=vendor_config)
+    return make_parser(
+        vendor_cls,
+        vendor_config,
+        markup_policy=_markup_policy_for_vendor(vendor_cls, vendor_config),
+    )
