@@ -3,7 +3,7 @@
 """
 
 from parsers import data_provider
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import MarkupSkipCategoryParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -46,19 +46,10 @@ stk_config = ParseConfiguration(
 )
 
 
-class STKParser(BaseParser):
+class STKParser(MarkupSkipCategoryParser):
     """
     parser for Greenstone vendor
     """
-
-    def process(self) -> int:
-        """process price parse"""
-        res = super().process()
-        for row_item in self.parsed_items:
-            self.skip_by_min_rest(row_item)
-            self.add_price_markup(row_item)
-
-        return res
 
     def add_price_markup(self, row_item: RowItem) -> None:
         """

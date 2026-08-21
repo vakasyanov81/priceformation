@@ -37,12 +37,13 @@ JSON Пошка (пример тестов) — только `markup_rules` с `
 
    Альтернатива без нового метода: параметр политики `use_recommended: bool = True`; для этих vendors `False`. Предпочтительнее **явный метод/класс** `MapOnOptMarkupPolicy`, чтобы не плодить флаги.
 
-2. `add_price_markup` у Poshk и Pioner удалить. В цикле `process()` вызывать тот же вход, что будет у всех (пока: `self.add_price_markup(row_item)` на базе, если база научится выбирать политику по типу **или** parser переопределяет только `markup_policy()`).
+2. `add_price_markup` у Poshk и Pioner удалить. В цикле `process()` вызывать тот же вход, что будет у всех (пока: `self.add_price_markup(row_item)` на базе). Политику map-on-opt передаёт тот, кто создаёт парсер, не subclass.
 
    Минимальный путь без выбора стратегии в BaseParser:
 
-   - `PoshkParser.markup_policy()` / `PionerParser.markup_policy()` возвращает `MapOnOptMarkupPolicy`;
-   - общий `BaseParser.add_price_markup` уже делегирует в `self.markup_policy()` (задача 01).
+   - в конструктор Poshk/Pioner передавать `MapOnOptMarkupPolicy` (тот же `make_parser(..., markup_policy=...)`, что в задаче 01.4);
+   - общий `BaseParser.add_price_markup` уже делегирует в `self._markup_policy` (задача 01).
+   - **не** заводить `PoshkParser.markup_policy()` — парсер снова станет фабрикой.
 
 3. `percent_markup`: либо оставить запись в политике/делегате (`percent * 100`), либо положиться на `SetPercentMarkupItemAction`. Сверить фикстуры: Пошок пишет `percent * 100` **до** округления цены; action считает `(price_markup / price_opt - 1) * 100` **после** округления — цифры могут разъехаться на сотые. **Сохранить текущие значения фикстур.** Если тесты ждут `percent_markup` как `map% * 100`, писать его явно в политике map-on-opt, не через action.
 

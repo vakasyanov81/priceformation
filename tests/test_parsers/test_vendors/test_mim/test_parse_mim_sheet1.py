@@ -16,6 +16,7 @@ from test_parsers.test_vendors.test_parse_poshk import (
     vendor_list_config,
 )
 
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -40,10 +41,11 @@ parser_config = BasePriceParseConfigurationParams(
 def get_fake_parser(parse_result: Any) -> MimParser1Sheet:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
-    return MimParser1Sheet(
-        xls_reader=FakeXlsReader,
+    return make_parser(
+        MimParser1Sheet,
+        ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        parse_config=ParseConfiguration(parser_config),
+        xls_reader=FakeXlsReader,
     )
 
 
@@ -137,21 +139,3 @@ def test_markup_without_prices_is_zero() -> None:
     row = RowItem({})
     parser.add_price_markup(row)
     assert row.price_markup == 0
-
-
-def test_small_absolute_markup_at_threshold() -> None:
-    parser = get_fake_parser(mim_one_item_result())
-    assert parser.is_small_absolute_markup(1300, 1000) is False
-    assert parser.is_small_absolute_markup(1299, 1000) is True
-
-
-def test_recommended_percent_boundaries() -> None:
-    parser = get_fake_parser(mim_one_item_result())
-    at_min = RowItem({"price_opt": 1000, "price_recommended": 1140})
-    below_min = RowItem({"price_opt": 1000, "price_recommended": 1139})
-    at_max = RowItem({"price_opt": 1000, "price_recommended": 1270})
-    above_max = RowItem({"price_opt": 1000, "price_recommended": 1271})
-    assert parser.is_small_recommended_percent(at_min) is False
-    assert parser.is_small_recommended_percent(below_min) is True
-    assert parser.is_big_recommended_percent(at_max) is False
-    assert parser.is_big_recommended_percent(above_max) is True

@@ -1,0 +1,77 @@
+from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.price_markup import calc_percent, get_markup
+from parsers.data_provider import MarkUpParams, MarkupRules
+
+
+class MarkupPolicy:
+    def __init__(
+        self,
+        rules: MarkupRules,
+        price_map: tuple[MarkUpParams, ...],
+    ) -> None:
+        self._rules = rules
+        self._price_map = price_map
+
+    def markup_percent_for_opt(self, price_opt: float) -> float:
+        """Рассчитать процент наценки по оптовой цене"""
+        default_percent = min({price_rule.percent_markup for price_rule in self._price_map} or (0,))
+
+        if not price_opt:
+            return default_percent
+
+        for price_rule in self._price_map:
+            if price_rule.min <= price_opt <= price_rule.max:
+                return price_rule.percent_markup
+
+        return default_percent
+
+    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+        """Отпускная цена до округления (шаги 1–4 базового алгоритма)."""
+        price = price_recommended or 0
+        opt = price_opt or 0
+
+        if self._is_small_recommended_percent(opt, price_recommended) and not price_recommended:
+            price = get_markup(opt, self.markup_percent_for_opt(opt))
+
+        if self._is_big_recommended_percent(opt, price_recommended) and not price_recommended:
+            price = get_markup(opt, self._rules.max_recommended_percent_markup)
+
+        if self._is_small_absolute_markup(price, opt):
+            price = self._price_with_absolute_rule(opt)
+
+        return price
+
+    def _is_small_recommended_percent(self, price_opt: float, price_recommended: float | None) -> bool:
+        """Проверка, что процент наценки по МРЦ укладывается в минимальный процент наценки из настроек"""
+        return recommended_percent(price_opt, price_recommended) < self._rules.min_recommended_percent_markup
+
+    def _is_big_recommended_percent(self, price_opt: float, price_recommended: float | None) -> bool:
+        """Процент РРЦ больше max; выключено, если max_recommended_percent_markup == 0."""
+        if not self._rules.max_recommended_percent_markup:
+            return False
+        return recommended_percent(price_opt, price_recommended) > self._rules.max_recommended_percent_markup
+
+    def _is_small_absolute_markup(self, selling_price: float, purchase_price: float) -> bool:
+        """Отпускная минус закуп меньше абсолютного пола."""
+        return selling_price - purchase_price < self._rules.absolute_markup_rules.min_absolute_markup
+
+    def _price_with_absolute_rule(self, price_opt: float) -> float:
+        """Цена по абсолютному правилу: opt * markup_percent."""
+        return price_opt * self._rules.absolute_markup_rules.markup_percent
+
+
+def recommended_percent(
+    price_opt: float,
+    price_recommended: float | None,
+) -> float:
+    recommended = price_recommended or 0
+    opt = price_opt or 0
+    return calc_percent(recommended, opt) if recommended else 0
+
+
+def make_markup_policy(parse_config: ParseConfiguration) -> MarkupPolicy:
+    """Собрать политику из правил и карты % конфига. Не метод парсера."""
+    return MarkupPolicy(
+        rules=parse_config.get_markup_rules(),
+        price_map=parse_config.get_price_markup_map(),
+    )

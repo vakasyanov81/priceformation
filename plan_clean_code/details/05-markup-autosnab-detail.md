@@ -24,9 +24,9 @@ for row_item in self.parsed_items:
 
 1. Политика `IdentityMarkupPolicy`: `apply(opt, recommended) -> opt` (или `price_markup = price_opt` без округления). Не вызывать `round_price`, пока тесты не ждут десятки.
 
-2. `Autosnab54Parser.markup_policy()` возвращает identity. Цикл в `process()` оставляет только `fill_from_title`; наценку делает общий путь (`add_price_markup` после map/filter **или** шаг pipeline в задаче 09). Пока pipeline нет — вызвать `self.add_price_markup(row_item)` в том же цикле **после** `fill_from_title`, если цена не должна зависеть от title (не зависит). Ещё лучше: наценка в базовом `process`/after, а Autosnab только title-хук — но полный вынос цикла это задача 10. Здесь минимум: убрать присвоение `price_markup = price_opt` в пользу политики.
+2. В конструктор Autosnab передавать `IdentityMarkupPolicy` (как в 01.4: `make_parser(..., markup_policy=...)`, не метод на парсере). Цикл в `process()` оставляет только `fill_from_title`; наценку делает общий путь (`add_price_markup` после map/filter **или** шаг pipeline в задаче 09). Пока pipeline нет — вызвать `self.add_price_markup(row_item)` в том же цикле **после** `fill_from_title`, если цена не должна зависеть от title (не зависит). Ещё лучше: наценка в базовом `process`/after, а Autosnab только title-хук — но полный вынос цикла это задача 10. Здесь минимум: убрать присвоение `price_markup = price_opt` в пользу политики.
 
-3. Не включать карту % и РРЦ. Если `add_price_markup` на базе всегда Mim-apply, Autosnab **обязан** переопределять `markup_policy()`, иначе все позиции получат +20% и т.д.
+3. Не включать карту % и РРЦ. Если в конструктор уйдёт обычный Mim-`MarkupPolicy`, все позиции получат +20% и т.д. Identity нужно передать **сверху**.
 
 4. Тест `test_parse_autosnab54_ru.py`: `price_markup == price_opt` по фикстурам. Узкий тест политики: opt=1234.56, recommended=2000 → markup 1234.56 (РРЦ игнорируется).
 

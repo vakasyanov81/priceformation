@@ -11,6 +11,7 @@ import pytest
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from cfg.main import get_config
+from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
@@ -24,9 +25,10 @@ parser_config = make_parse_configuration(zapaska_tire_params)
 
 def get_fake_parser(file_prices: list[str]) -> ZapaskaTireJSON:
     """get fake parser"""
-    return ZapaskaTireJSON(
+    return make_parser(
+        ZapaskaTireJSON,
+        ParseConfiguration(parser_config),
         file_prices=file_prices,
-        parse_config=ParseConfiguration(parser_config),
     )
 
 

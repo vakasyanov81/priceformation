@@ -23,6 +23,7 @@ from . import price_markup
 from .base_parser_config import ParseConfiguration, ParserParams
 from .base_parser_row import _keep_row_item, _try_prepare_row
 from .manufacturer_finder import ManufacturerFinder
+from .markup_policy import MarkupPolicy, make_markup_policy
 from .parse_statistic import ParseResultStatistic
 
 type ItemActionClasses = list[type[BaseItemAction]]
@@ -33,6 +34,13 @@ class ParseConfigNotSetError(RuntimeError):
 
     def __init__(self) -> None:
         super().__init__("parse_config is not set")
+
+
+class MarkupPolicyNotSetError(RuntimeError):
+    """Raised when markup is used before MarkupPolicy is injected."""
+
+    def __init__(self) -> None:
+        super().__init__("markup_policy is not set")
 
 
 class XlsReaderFactory(Protocol):
@@ -68,6 +76,8 @@ class BaseParser:
         parse_config: ParseConfiguration | None = None,
         file_prices: list[str] | None = None,
         xls_reader: type[XlsReaderFactory] = XlsReader,
+        *,
+        markup_policy: MarkupPolicy | None = None,
     ) -> None:
         self.parsed_items: list[RowItem] = []
         self._parse_config: ParseConfiguration | None = parse_config
@@ -80,6 +90,7 @@ class BaseParser:
         self._category_finder: CategoryFinder | None = None
         self._manufacturer_finder: ManufacturerFinder | None = None
         self.unknown_category_skips: list[str] = []
+        self._markup_policy = markup_policy
 
     def parse_config(self) -> ParseConfiguration:
         if self._parse_config is None:
@@ -145,25 +156,22 @@ class BaseParser:
             self.parsed_items += res
         self.remove_wo_price_purchase_and_check_title()
         self.parsed_items = self.prepare(self.parsed_items)
+        self._process_parsed_items()
         return result_statistic
+
+    def _process_parsed_items(self) -> None:
+        for row_item in self.parsed_items:
+            self.process_parsed_row(row_item)
+
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        """Хук после prepare: наценка, rest, категория. По умолчанию ничего."""
 
     def after_process(self) -> None:
         self.remove_null_rest()
         self.do_items_actions_after_process()
 
     def get_markup_percent(self, price_value: float) -> float:
-        parse_config = self.parse_config()
-        markup_map = parse_config.get_price_markup_map()
-        default_percent = min({price_rule.percent_markup for price_rule in markup_map} or (0,))
-
-        if not price_value:
-            return default_percent
-
-        for price_rule in markup_map:
-            if price_rule.min <= price_value <= price_rule.max:
-                return price_rule.percent_markup
-
-        return default_percent
+        return self._require_markup_policy().markup_percent_for_opt(price_value)
 
     def parser_params(self) -> ParserParams:
         return self.parse_config().parse_config.parser_params
@@ -286,45 +294,16 @@ class BaseParser:
         """calc margin percentage"""
         return price_markup.calc_percent(price_sale, price_purchase)
 
-    def recommended_percent_markup(self, row_item: RowItem) -> float:
-        """calculate recommended percent markup"""
-        price_recommended = row_item.price_recommended or 0
-        price_opt = row_item.price_opt or 0
-        return self.calc_percent(price_recommended, price_opt) if price_recommended else 0
-
-    def is_small_recommended_percent(self, row_item: RowItem) -> bool:
-        """absolute percent markup is small?"""
-        return self.recommended_percent_markup(row_item) < self.markup_rules().min_recommended_percent_markup
-
-    def is_big_recommended_percent(self, row_item: RowItem) -> bool:
-        """recommended supplier markup percent is big?"""
-        if not self.markup_rules().max_recommended_percent_markup:
-            return False
-        return self.recommended_percent_markup(row_item) > self.markup_rules().max_recommended_percent_markup
-
-    def is_small_absolute_markup(self, selling_price: float, purchase_price: float) -> bool:
-        """absolute markup is small?"""
-        return selling_price - purchase_price < self.markup_rules().absolute_markup_rules.min_absolute_markup
-
-    def get_price_with_absolute_rule_markup(self, price_opt: float) -> float:
-        """absolute markup value"""
-        return price_opt * self.markup_rules().absolute_markup_rules.markup_percent
-
     def add_price_markup(self, row_item: RowItem) -> None:
         """calculate and fill price_markup field"""
-        price = row_item.price_recommended or 0
-        price_opt = row_item.price_opt or 0
-
-        if self.is_small_recommended_percent(row_item) and not row_item.price_recommended:
-            price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
-
-        if self.is_big_recommended_percent(row_item) and not row_item.price_recommended:
-            price = self.get_markup(price_opt, self.markup_rules().max_recommended_percent_markup)
-
-        if self.is_small_absolute_markup(price, price_opt):
-            price = self.get_price_with_absolute_rule_markup(price_opt)
-
+        policy = self._require_markup_policy()
+        price = policy.apply(row_item.price_opt or 0, row_item.price_recommended)
         row_item.price_markup = self.round_price(price)
+
+    def _require_markup_policy(self) -> MarkupPolicy:
+        if self._markup_policy is None:
+            raise MarkupPolicyNotSetError()
+        return self._markup_policy
 
     @classmethod
     @lru_cache
@@ -370,6 +349,36 @@ class BaseParser:
         if row_item.spike.strip().lower() in ["ш.", "да"]:
             return "Да"
         return ""
+
+
+class MarkupSkipCategoryParser(BaseParser):
+    """Mim / FourTochki: наценка, min rest и категория после prepare."""
+
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        self.add_price_markup(row_item)
+        self.skip_by_min_rest(row_item)
+        self.set_category(row_item)
+
+    def set_category(self, row_item: RowItem) -> None:
+        """Задать type_production. Override у листа поставщика."""
+
+
+def make_parser[TParser: BaseParser](
+    parser_cls: type[TParser],
+    parse_config: ParseConfiguration,
+    *,
+    markup_policy: MarkupPolicy | None = None,
+    file_prices: list[str] | None = None,
+    xls_reader: type[XlsReaderFactory] = XlsReader,
+) -> TParser:
+    """Собрать парсер с политикой наценки. Не метод BaseParser."""
+    policy = make_markup_policy(parse_config) if markup_policy is None else markup_policy
+    return parser_cls(
+        parse_config=parse_config,
+        file_prices=file_prices,
+        xls_reader=xls_reader,
+        markup_policy=policy,
+    )
 
 
 def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:

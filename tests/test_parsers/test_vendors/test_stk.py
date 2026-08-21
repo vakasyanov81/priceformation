@@ -1,7 +1,5 @@
 """tests for STK vendor markup logic"""
 
-from unittest.mock import patch
-
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.stk import STKParser
 
@@ -28,14 +26,13 @@ def test_add_price_markup_empty() -> None:
 
 
 def test_process_markup_and_rest() -> None:
-    """process вызывает skip_by_min_rest и add_price_markup"""
+    """process_parsed_row вызывает skip_by_min_rest и add_price_markup"""
     parser = object.__new__(STKParser)
     row_ok = RowItem({"price_opt": _PRICE_OPT, "rest_count": 10})
     row_low = RowItem({"price_opt": _LOW_OPT, "rest_count": 1})
-    parser.parsed_items = [row_ok, row_low]
 
-    with patch("parsers.vendors.stk.BaseParser.process", return_value=2):
-        assert parser.process() == 2
+    parser.process_parsed_row(row_ok)
+    parser.process_parsed_row(row_low)
 
     assert row_ok.price_markup == _MARKUP
     assert row_ok.rest_count == 10

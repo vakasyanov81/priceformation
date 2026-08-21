@@ -3,7 +3,7 @@ base logic for mim vendor
 """
 
 from parsers import data_provider
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import MarkupSkipCategoryParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -40,7 +40,7 @@ mim_config = ParseConfiguration(
 )
 
 
-class MimParserBase(BaseParser):
+class MimParserBase(MarkupSkipCategoryParser):
     """
     base logic for mim vendor
     """
@@ -50,16 +50,6 @@ class MimParserBase(BaseParser):
         """getting current category"""
         raise NotImplementedError()
 
-    @classmethod
-    def set_category(cls, row_item: RowItem) -> None:
+    def set_category(self, row_item: RowItem) -> None:
         """set category to row price item"""
-        row_item.type_production = cls.get_current_category()
-
-    def process(self) -> int:
-        """parse process"""
-        res = super().process()
-        for row_item in self.parsed_items:
-            self.add_price_markup(row_item)
-            self.skip_by_min_rest(row_item)
-            self.set_category(row_item)
-        return res
+        row_item.type_production = self.get_current_category()

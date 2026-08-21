@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from core import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendor_supplier_info
-from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.common_price_grouper import CommonPriceGrouper
@@ -40,7 +40,7 @@ class CommonPrice:
         log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
 
         for vendor_cls, vendor_config in vendors:
-            self.parse_vendor(vendor_cls(vendor_config))
+            self.parse_vendor(_parser_for_vendor(vendor_cls, vendor_config))
 
         self._log_unknown_category_skips()
         grouper = CommonPriceGrouper(self._parsed_items)
@@ -84,3 +84,12 @@ class CommonPrice:
     def supplier_info(self) -> dict[SupplierCode, SupplierName]:
         """Возвращает отображение код поставщика → название."""
         return all_vendor_supplier_info()
+
+
+def _parser_for_vendor(
+    vendor_cls: type[BaseParser],
+    vendor_config: ParseConfiguration | None,
+) -> BaseParser:
+    if vendor_config is None:
+        return vendor_cls(vendor_config)
+    return make_parser(vendor_cls, vendor_config)

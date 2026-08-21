@@ -60,16 +60,27 @@ class MarkupPolicy:
 
 2. Методы-предикаты (`is_small_recommended_percent` и т.д.) перенести в политику как приватные функции от `(opt, recommended, rules)`, без `RowItem`, чтобы политику тестировать числами.
 
-3. `BaseParser.add_price_markup` становится:
+3. `BaseParser` **не** собирает политику. Готовый `MarkupPolicy` приходит в конструктор (composition root: `CommonPrice.parse_all_vendors`, хелперы тестов). `add_price_markup` становится:
 
 ```python
 def add_price_markup(self, row_item: RowItem) -> None:
-    policy = self.markup_policy()  # из parse_config
-    price = policy.apply(row_item.price_opt or 0, row_item.price_recommended)
+    price = self._markup_policy.apply(row_item.price_opt or 0, row_item.price_recommended)
     row_item.price_markup = self.round_price(price)
 ```
 
-`markup_policy()` собирать из `parse_config().get_markup_rules()` и `get_price_markup_map()`. Кэшировать на экземпляре парсера необязательно (это задача 08 про кэш конфига).
+Сборка политики — **модульная** фабрика, не метод парсера:
+
+```python
+def make_markup_policy(parse_config: ParseConfiguration) -> MarkupPolicy:
+    return MarkupPolicy(
+        rules=parse_config.get_markup_rules(),
+        price_map=parse_config.get_price_markup_map(),
+    )
+```
+
+Кэш правил остаётся на `ParseConfiguration` (задача 08). Политика — collaborator парсера, снимок rules+map на момент создания парсера.
+
+**Не делать** `BaseParser.markup_policy()`: это скрытая фабрика внутри God-object, парсер снова знает, как достать rules/map. Другой алгоритм (Poshk map-on-opt, Autosnab identity) потом подставляется **тем же** конструктором, а не override метода.
 
 4. Удалить с `BaseParser` публичные методы политики, если больше никто в `src/` и тестах их не зовёт. Если тесты парсера дергают `is_small_recommended_percent` — перевести на политику, не оставлять два API.
 
@@ -87,7 +98,8 @@ def add_price_markup(self, row_item: RowItem) -> None:
 
 ## Ожидаемый результат
 
-- В `BaseParser` нет формул `(sale-opt)/opt`, сравнения с min/max recommended и абсолютного пола — только делегат и округление (если округление не внутри политики).
+- В `BaseParser` нет формул `(sale-opt)/opt`, сравнения с min/max recommended и абсолютного пола — только делегат в **уже переданный** `_markup_policy` и округление.
+- Парсер не читает `get_markup_rules` / `get_price_markup_map`, чтобы собрать политику.
 - `MarkupPolicy.apply` воспроизводит текущий базовый алгоритм, включая ловушку с `not price_recommended`.
 - Vendors **не** переведены: Poshk/Pioner/STK/Zapaska/Autosnab/FourTochki sheet1 по-прежнему со своими `add_price_markup`.
 - `uv run pytest` зелёный; поведение Mim на тех же прайсах то же.
@@ -96,4 +108,5 @@ def add_price_markup(self, row_item: RowItem) -> None:
 
 - Соблазн «починить» ветки recommended в том же PR — это смена цен Mim. Не делать.
 - Не тащить `RowItem` в политику: иначе снова связь с парсером.
+- Не делать `BaseParser.markup_policy()` «на потом»: это та же сборка внутри парсера.
 - Не объединять FourTochki/Zapaska в этот PR.

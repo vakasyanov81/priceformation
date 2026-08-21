@@ -64,17 +64,11 @@ class PionerParser(BaseParser):
     current_category = None
     current_category_first_chunk = None
 
-    def process(self) -> int:
-        """process parse"""
-        res = super().process()
-        finder = self.manufacturer_finder()
-        for row_item in self.parsed_items:
-            self.skip_by_min_rest(row_item)
-            self.add_price_markup(row_item)
-            self.set_manufacturer_to_title(row_item)
-            finder.process(row_item)
-
-        return res
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        self.skip_by_min_rest(row_item)
+        self.add_price_markup(row_item)
+        self.set_manufacturer_to_title(row_item)
+        self.manufacturer_finder().process(row_item)
 
     def add_price_markup(self, row_item: RowItem) -> None:
         """

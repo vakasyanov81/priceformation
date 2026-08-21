@@ -212,51 +212,68 @@ def apply(self, price_opt: float, price_recommended: float | None) -> float:
 
 ---
 
-## 01.4 Делегат в `BaseParser`
+## 01.4 Делегат в `BaseParser`: политика приходит снаружи
 
 **Зависит от:** 01.3
 
-**Зачем.** Базовый путь Mim / FourTochki base начинает считать цену через политику, не копируя формулы.
+**Зачем.** Базовый путь Mim / FourTochki base считает цену через политику, не копируя формулы. Парсер — потребитель политики, не её фабрика: rules/map достаёт тот, кто собирает парсер.
 
 **Файлы**
 
-- `src/parsers/base_parser/base_parser.py`
+- `src/parsers/base_parser/markup_policy.py` — `make_markup_policy`
+- `src/parsers/base_parser/base_parser.py` — конструктор + делегаты
+- `src/parsers/common_price.py` — composition root (`vendor_cls(config)` → передать политику)
+- хелперы тестов, которые создают парсер и зовут `add_price_markup` / `get_markup_percent`
 
 **Сделать**
 
-1. Фабрика политики (без кэша на экземпляре — это задача 08):
+1. Модульная фабрика (не метод `BaseParser`):
 
 ```python
-from parsers.base_parser.markup_policy import MarkupPolicy
-
-
-def markup_policy(self) -> MarkupPolicy:
-    config = self.parse_config()
+def make_markup_policy(parse_config: ParseConfiguration) -> MarkupPolicy:
     return MarkupPolicy(
-        rules=config.get_markup_rules(),
-        price_map=config.get_price_markup_map(),
+        rules=parse_config.get_markup_rules(),
+        price_map=parse_config.get_price_markup_map(),
     )
 ```
 
-2. Заменить тело `add_price_markup`:
+2. `BaseParser.__init__` принимает готовый объект, только сохраняет. Keyword-only, чтобы не сдвинуть `file_prices` / `xls_reader`:
+
+```python
+def __init__(
+    self,
+    parse_config: ParseConfiguration | None = None,
+    file_prices: list[str] | None = None,
+    xls_reader: type[XlsReaderFactory] = XlsReader,
+    *,
+    markup_policy: MarkupPolicy | None = None,
+) -> None:
+    ...
+    self._markup_policy = markup_policy
+```
+
+`None` — только для тестов, которые наценку не зовут. В `add_price_markup` / `get_markup_percent` при `None` — явная ошибка (по аналогии с `ParseConfigNotSetError`), **не** молчаливый `make_markup_policy(self.parse_config())`.
+
+3. Composition root. Сейчас `CommonPrice.parse_all_vendors` делает `vendor_cls(vendor_config)`. Заменить на передачу политики, либо тонкий `make_parser(cls, config, *, markup_policy=None, **kwargs)` **рядом с парсером/common_price, не метод класса**: если `markup_policy` не передали — вызвать `make_markup_policy(config)`. Так тесты `get_fake_parser` и прод собирают одинаково.
+
+4. Заменить тело `add_price_markup`:
 
 ```python
 def add_price_markup(self, row_item: RowItem) -> None:
-    policy = self.markup_policy()
-    price = policy.apply(row_item.price_opt or 0, row_item.price_recommended)
+    price = self._markup_policy.apply(row_item.price_opt or 0, row_item.price_recommended)
     row_item.price_markup = self.round_price(price)
 ```
 
-3. `get_markup_percent` оставить на `BaseParser`: его всё ещё зовут Poshk, Pioner, FourTochki sheet1 и тесты Pioner. Сделать тонким делегатом:
+5. `get_markup_percent` оставить на `BaseParser`: его всё ещё зовут Poshk, Pioner, FourTochki sheet1 и тесты Pioner. Тонкий делегат в **поле**, не в фабрику:
 
 ```python
 def get_markup_percent(self, price_value: float) -> float:
-    return self.markup_policy().markup_percent_for_opt(price_value)
+    return self._markup_policy.markup_percent_for_opt(price_value)
 ```
 
-Mim sheet2 **переопределяет** `get_markup_percent` и `add_price_markup` — не ломать override.
+Mim sheet2 **переопределяет** `get_markup_percent` и `add_price_markup` — не ломать override. Политику всё равно передать: базовый конструктор её ждёт, sheet2 может не использовать.
 
-4. `round_price`, `calc_percent`, `get_markup` на `BaseParser` **не удалять**: ими пользуются overrides vendors.
+6. `round_price`, `calc_percent`, `get_markup` на `BaseParser` **не удалять**: ими пользуются overrides vendors.
 
 ```python
 @classmethod
@@ -266,11 +283,13 @@ def round_price(cls, price_value: float) -> float:
 
 **Готово, когда**
 
-- `grep` по `BaseParser.add_price_markup` показывает только делегат + `round_price`;
+- в `BaseParser` нет метода `markup_policy()` и нет `MarkupPolicy(rules=..., price_map=...)`;
+- `grep` по `BaseParser.add_price_markup` показывает только делегат в `_markup_policy` + `round_price`;
+- `CommonPrice` / хелперы тестов с наценкой передают политику сверху;
 - Mim sheet1 / FourTochki sheet2 (базовый метод) зелёные, цифры фикстур те же;
-- Poshk / Pioner / STK / Zapaska / Autosnab / FourTochki sheet1 / Mim sheet2 без правок логики.
+- Poshk / Pioner / STK / Zapaska / Autosnab / FourTochki sheet1 / Mim sheet2 без правок логики наценки.
 
-**Не делать:** удаление предикатов с `BaseParser` (это 01.6, после перевода тестов).
+**Не делать:** удаление предикатов с `BaseParser` (это 01.6); override `markup_policy()` у vendors (точки расширения 02/05 — другой объект в конструктор).
 
 ---
 
@@ -379,9 +398,8 @@ assert BaseParser.round_price(1120) == 1120
 **Что оставить на `BaseParser`**
 
 ```python
-def markup_policy(self) -> MarkupPolicy: ...
-def add_price_markup(self, row_item: RowItem) -> None: ...  # делегат + round_price
-def get_markup_percent(self, price_value: float) -> float: ...  # делегат, vendors ещё зовут
+def add_price_markup(self, row_item: RowItem) -> None: ...  # делегат в _markup_policy + round_price
+def get_markup_percent(self, price_value: float) -> float: ...  # делегат в _markup_policy, vendors ещё зовут
 def markup_rules(self) -> MarkupRules: ...  # конфиг, не формула
 @classmethod
 def round_price(cls, price_value: float) -> float: ...
@@ -390,6 +408,8 @@ def calc_percent(cls, price_sale: float, price_purchase: float) -> float: ...
 @classmethod
 def get_markup(cls, price: float, percent: float) -> float: ...
 ```
+
+Политика — поле `_markup_policy`, не метод-фабрика. `make_markup_policy` живёт снаружи класса.
 
 `calc_percent` / `get_markup` на классе — прокси в `price_markup.py` с `@lru_cache`. Вычищать в задаче 06, не здесь.
 

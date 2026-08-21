@@ -52,14 +52,9 @@ class Autosnab54Parser(BaseParser):
     logic for autosnab54_ru vendor
     """
 
-    def process(self) -> int:
-        """parse process"""
-        res = super().process()
-        for row_item in self.parsed_items:
-            fill_from_title(row_item)
-            row_item.price_markup = row_item.price_opt
-
-        return res
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        fill_from_title(row_item)
+        row_item.price_markup = row_item.price_opt
 
     @classmethod
     def get_min_rest_count(cls) -> int:
