@@ -11,6 +11,9 @@ from core.parse_paths import get_parse_paths
 
 _CONFIG_FILE = "markup_rules.json"
 
+ABSOLUTE_MODE_MULTIPLIER = "multiplier"
+ABSOLUTE_MODE_DELTA = "delta"
+
 
 class PriceRulesConfigFileError(CoreExceptionError):
     """Exception for case when user config price rules is failed to read"""
@@ -39,6 +42,7 @@ class AbsoluteMarkUpRules(NamedTuple):
 
     min_absolute_markup: float = 0
     markup_percent: float = 0
+    mode: str = ABSOLUTE_MODE_MULTIPLIER
 
 
 class MarkupRules(NamedTuple):
@@ -48,6 +52,17 @@ class MarkupRules(NamedTuple):
     min_recommended_percent_markup: float = 0
     max_recommended_percent_markup: float = 0
     absolute_markup_rules: AbsoluteMarkUpRules = AbsoluteMarkUpRules(0, 0)
+    replace_small_recommended: bool = False
+
+    def should_replace_with_map(
+        self,
+        price_recommended: float | None,
+        recommended_is_small: bool,
+    ) -> bool:
+        """Mim keeps RRC when present; Zapaska still applies the min-% check."""
+        if price_recommended and not self.replace_small_recommended:
+            return False
+        return recommended_is_small
 
 
 class MarkupRulesProviderBase:

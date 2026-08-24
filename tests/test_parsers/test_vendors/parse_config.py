@@ -1,6 +1,8 @@
 """Parse configuration"""
 
-from typing import Any
+import json
+from pathlib import Path
+from typing import Any, cast
 
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
@@ -13,6 +15,8 @@ from test_parsers.test_vendors.test_parse_poshk import (
 
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+
+_ZAPASKA_RULES_PATH = Path(__file__).with_name("zapaska_markup_rules.json")
 
 
 def make_parse_configuration(
@@ -28,6 +32,15 @@ def make_parse_configuration(
         manufacturer_aliases=ManufacturerAliasesProviderForTests(),
         parser_params=parser_params,
     )
+
+
+class ZapaskaMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
+    """markup rules from the Zapaska test fixture JSON."""
+
+    def get_markup_data(self) -> dict[str, Any]:
+        """get markup rules"""
+        raw = json.loads(_ZAPASKA_RULES_PATH.read_text(encoding="utf-8"))
+        return cast(dict[str, Any], raw)
 
 
 class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):

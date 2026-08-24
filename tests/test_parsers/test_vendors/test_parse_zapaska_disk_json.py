@@ -2,7 +2,7 @@
 tests for zapaska vendor after raw-parser process
 """
 
-from test_parsers.test_vendors.parse_config import make_parse_configuration
+from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
 from cfg.main import get_config
 from parsers.base_parser.base_parser import make_parser
@@ -11,9 +11,11 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
-from parsers.vendors.zapaska_disk_markup import make_price_markup_value
 
-parser_config = make_parse_configuration(zapaska_params)
+_NO_RRC_OPT = 10000
+_NO_RRC_MARKUP = 11600
+
+parser_config = make_parse_configuration(zapaska_params, markup_rules=ZapaskaMarkupRulesProviderForTests())
 
 
 def get_fake_parser(file_prices: list[str]) -> ZapaskaDiskJSON:
@@ -49,7 +51,7 @@ class TestParseZapaskaDiskJSON:
 
 def test_markup_without_recommended() -> None:
     parser = get_fake_parser([])
-    row = RowItem({"price_opt": 10000, "title": "No retail"})
+    row = RowItem({"price_opt": _NO_RRC_OPT, "title": "No retail"})
     parser.make_price_markup(row)
     assert parser.not_matched_position == ["No retail"]
-    assert row.price_markup == parser.round_price(make_price_markup_value(0, 10000))
+    assert row.price_markup == _NO_RRC_MARKUP

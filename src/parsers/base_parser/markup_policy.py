@@ -1,6 +1,10 @@
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.price_markup import calc_percent, get_markup
-from parsers.data_provider import MarkUpParams, MarkupRules
+from parsers.data_provider.markup_rules import (
+    ABSOLUTE_MODE_DELTA,
+    MarkUpParams,
+    MarkupRules,
+)
 
 
 class MarkupPolicy:
@@ -30,7 +34,10 @@ class MarkupPolicy:
         price = price_recommended or 0
         opt = price_opt or 0
 
-        if self._is_small_recommended_percent(opt, price_recommended) and not price_recommended:
+        if self._rules.should_replace_with_map(
+            price_recommended,
+            self._is_small_recommended_percent(opt, price_recommended),
+        ):
             price = get_markup(opt, self.markup_percent_for_opt(opt))
 
         if self._is_big_recommended_percent(opt, price_recommended) and not price_recommended:
@@ -53,11 +60,18 @@ class MarkupPolicy:
 
     def _is_small_absolute_markup(self, selling_price: float, purchase_price: float) -> bool:
         """Отпускная минус закуп меньше абсолютного пола."""
-        return selling_price - purchase_price < self._rules.absolute_markup_rules.min_absolute_markup
+        margin = selling_price - purchase_price
+        floor = self._rules.absolute_markup_rules.min_absolute_markup
+        if self._rules.absolute_markup_rules.mode == ABSOLUTE_MODE_DELTA:
+            return margin <= floor
+        return margin < floor
 
     def _price_with_absolute_rule(self, price_opt: float) -> float:
-        """Цена по абсолютному правилу: opt * markup_percent."""
-        return price_opt * self._rules.absolute_markup_rules.markup_percent
+        """Цена по абсолютному правилу: множитель или дельта к закупу."""
+        absolute = self._rules.absolute_markup_rules
+        if absolute.mode == ABSOLUTE_MODE_DELTA:
+            return price_opt + absolute.min_absolute_markup
+        return price_opt * absolute.markup_percent
 
 
 class IdentityMarkupPolicy(MarkupPolicy):

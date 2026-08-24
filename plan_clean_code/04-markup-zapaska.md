@@ -3,7 +3,7 @@
 Подробно: [04-markup-zapaska-detail.md](details/04-markup-zapaska-detail.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [01. MarkupPolicy](01-markup-policy.md)  
 Дальше: [05. Autosnab](05-markup-autosnab.md)
 

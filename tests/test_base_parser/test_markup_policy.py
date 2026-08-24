@@ -11,7 +11,12 @@ from parsers.base_parser.markup_policy import (
     recommended_percent,
 )
 from parsers.base_parser.price_markup import get_markup
-from parsers.data_provider.markup_rules import AbsoluteMarkUpRules, MarkUpParams, MarkupRules
+from parsers.data_provider.markup_rules import (
+    ABSOLUTE_MODE_DELTA,
+    AbsoluteMarkUpRules,
+    MarkUpParams,
+    MarkupRules,
+)
 
 _OPT = 1000
 _OVERLAP_OPT = 5000
@@ -51,6 +56,14 @@ _IGNORED_RRC = 9999
 _MAP_STORED_PERCENT = 70
 _IDENTITY_OPT = 1234.56
 _IDENTITY_RRC = 2000
+_ZAPASKA_SHELF_PERCENT = 0.22
+_ZAPASKA_MIN_RECOMMENDED = 0.08
+_BELOW_EIGHT_PERCENT = 1079
+_MAP_AT_OPT = 1220
+_DELTA_FLOOR = 150
+_RRC_HITS_DELTA = 1100
+_DELTA_PRICE = 1150
+_ZAPASKA_SHELF = MarkUpParams(min=0, max=5000, percent_markup=_ZAPASKA_SHELF_PERCENT)
 
 
 def _policy(
@@ -276,3 +289,35 @@ def test_identity_apply_zero_opt() -> None:
 
 def test_percent_to_store_identity_is_none() -> None:
     assert percent_to_store(IdentityMarkupPolicy.create(), _IDENTITY_OPT) is None
+
+
+def _zapaska_like_policy(
+    *,
+    min_absolute: float = 0,
+    absolute_mode: str = "multiplier",
+    replace_small: bool = True,
+) -> MarkupPolicy:
+    rules = MarkupRules(
+        markup_rules={},
+        min_recommended_percent_markup=_ZAPASKA_MIN_RECOMMENDED,
+        absolute_markup_rules=AbsoluteMarkUpRules(
+            min_absolute_markup=min_absolute,
+            mode=absolute_mode,
+        ),
+        replace_small_recommended=replace_small,
+    )
+    return MarkupPolicy(rules, (_ZAPASKA_SHELF,))
+
+
+def test_apply_replaces_small_recommended_rrc() -> None:
+    assert _zapaska_like_policy().apply(_OPT, _BELOW_EIGHT_PERCENT) == _MAP_AT_OPT
+
+
+def test_apply_keeps_small_rrc_without_replace() -> None:
+    policy = _zapaska_like_policy(replace_small=False)
+    assert policy.apply(_OPT, _BELOW_EIGHT_PERCENT) == _BELOW_EIGHT_PERCENT
+
+
+def test_apply_delta_absolute_floor() -> None:
+    policy = _zapaska_like_policy(min_absolute=_DELTA_FLOOR, absolute_mode=ABSOLUTE_MODE_DELTA)
+    assert policy.apply(_OPT, _RRC_HITS_DELTA) == _DELTA_PRICE

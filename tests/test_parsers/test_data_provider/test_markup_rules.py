@@ -7,6 +7,7 @@ import pytest
 from core.exceptions import CoreExceptionError
 from core.parse_paths import ParsePaths
 from parsers import data_provider
+from parsers.base_parser.base_parser_config import extract_markup_rules
 from parsers.data_provider.markup_rules import (
     MarkupRulesProviderBase,
     MarkupRulesProviderFromUserConfig,
@@ -90,3 +91,34 @@ def test_rule_prefers_percent_markup() -> None:
         {"min": 0, "max": 1, "percent": 0.5, "percent_markup": _PREFERRED},
     )
     assert markup.percent_markup == pytest.approx(_PREFERRED)
+
+
+_ZAPASKA_MIN_RECOMMENDED = 0.08
+_ZAPASKA_DELTA = 150
+_ZAPASKA_FIRST_MAX = 4999
+_MODE_MULTIPLIER = "multiplier"
+_MODE_DELTA = "delta"
+
+
+def test_extract_optional_keys_default() -> None:
+    rules = extract_markup_rules({"markup_rules": {}})
+    assert rules.replace_small_recommended is False
+    assert rules.absolute_markup_rules.mode == _MODE_MULTIPLIER
+
+
+def test_extract_zapaska_policy_fields() -> None:
+    rules = extract_markup_rules(
+        {
+            "markup_rules": {"r22": {"min": 0, "max": _ZAPASKA_FIRST_MAX, "percent": _PERCENT}},
+            "replace_small_recommended": True,
+            "min_recommended_percent_markup": _ZAPASKA_MIN_RECOMMENDED,
+            "absolute_markup_rules": {
+                "min_absolute_markup": _ZAPASKA_DELTA,
+                "mode": _MODE_DELTA,
+            },
+        },
+    )
+    assert rules.replace_small_recommended is True
+    assert rules.min_recommended_percent_markup == pytest.approx(_ZAPASKA_MIN_RECOMMENDED)
+    assert rules.absolute_markup_rules.min_absolute_markup == _ZAPASKA_DELTA
+    assert rules.absolute_markup_rules.mode == _MODE_DELTA
