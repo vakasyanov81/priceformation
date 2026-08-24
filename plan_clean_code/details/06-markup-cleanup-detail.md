@@ -1,7 +1,8 @@
 # 06. Очистка BaseParser и контракт JSON — подробно
 
 Краткая задача: [06-markup-cleanup.md](../06-markup-cleanup.md)  
-Зависит от: [02](02-markup-poshk-pioner-detail.md), [03](03-markup-stk-detail.md), [04](04-markup-zapaska-detail.md), [05](05-markup-autosnab-detail.md)
+Зависит от: [02](02-markup-poshk-pioner-detail.md), [03](03-markup-stk-detail.md), [04](04-markup-zapaska-detail.md), [05](05-markup-autosnab-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 
