@@ -10,12 +10,10 @@ from pathlib import Path
 from cfg import init_cfg
 from cfg.zapaska_api import ZapaskaApiConfig, ZapaskaApiConnectionError, get_zapaska_api_config
 
-from .. import data_provider
 from ..base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
+    make_parse_config,
 )
 from ..base_parser.category_finder import canonical_product_type, raw_category_label
 from ..row_item.row_item import RowItem
@@ -42,18 +40,7 @@ zapaska_tire_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_tire_params.supplier.folder_name)
-
-zapaska_tire_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=zapaska_tire_params,
-    )
-)
+zapaska_tire_config = make_parse_config(zapaska_tire_params)
 
 
 class ZapaskaTireJSON(ZapaskaDiskJSON):

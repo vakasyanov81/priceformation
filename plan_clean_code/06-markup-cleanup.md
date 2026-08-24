@@ -3,7 +3,7 @@
 Подробно: [06-markup-cleanup-detail.md](details/06-markup-cleanup-detail.md)
 
 Этап: [1. Единая политика наценки](../PLAN_CLEAN_CODE.md#этап-1-единая-политика-наценки)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [02](02-markup-poshk-pioner.md), [03](03-markup-stk.md), [04](04-markup-zapaska.md), [05](05-markup-autosnab.md)  
 Дальше: [09. Pipeline](09-parser-pipeline.md) (этап 3) или [07. Фабрика](07-config-factory.md)
 

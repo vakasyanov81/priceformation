@@ -26,7 +26,12 @@ from parsers.vendors.autosnab_title import fill_from_title
 
 _PRICE_AUTOSNAB = 21200
 _PRICE_OTHER = 22000
+_PRICE_PASSENGER = 3600
+_UNROUNDED_OPT = 1001.5
+_IDENTITY_OPT = 1234.56
+_IGNORED_RECOMMENDED = 2000
 _REST_COUNT = 10
+_ZERO_PERCENT = 0
 
 _VENDOR_LIST = {"autosnab54_ru": {"enabled": 1}}
 
@@ -311,7 +316,7 @@ def test_parse_greenstone_and_passenger() -> None:
             manufacturer_name="Viatti",
             title="175/65R14 Viatti Brina V-521 82T",
             season="Зимняя",
-            price_opt=3600,
+            price_opt=_PRICE_PASSENGER,
             rest_count=16,
         ),
     ]
@@ -333,6 +338,23 @@ def test_parse_greenstone_and_passenger() -> None:
     assert passenger.height_percent == "65"
     assert passenger.diameter == "14"
     assert passenger.model == "Brina V-521"
+    assert passenger.price_markup == _PRICE_PASSENGER
+
+
+def test_parse_keeps_opt_without_rounding() -> None:
+    parsed = _fake_parser(_as_parse_result([_raw_row(price_opt=_UNROUNDED_OPT)])).parse()
+    row_item = parsed[0]
+    assert row_item.price_markup == _UNROUNDED_OPT
+    assert row_item.percent_markup == _ZERO_PERCENT
+
+
+def test_parse_ignores_recommended_price() -> None:
+    parsed = _fake_parser(
+        _as_parse_result(
+            [_raw_row(price_opt=_IDENTITY_OPT, price_recommended=_IGNORED_RECOMMENDED)],
+        ),
+    ).parse()
+    assert parsed[0].price_markup == _IDENTITY_OPT
 
 
 def test_greenstone_different_sizes_not_grouped() -> None:

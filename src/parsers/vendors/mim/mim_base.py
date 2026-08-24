@@ -2,14 +2,8 @@
 base logic for mim vendor
 """
 
-from parsers import data_provider
 from parsers.base_parser.base_parser import MarkupSkipCategoryParser
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-    ParseParamsSupplier,
-    ParserParams,
-)
+from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams
 from parsers.row_item.row_item import RowItem
 
 mim_params = ParserParams(
@@ -21,22 +15,6 @@ mim_params = ParserParams(
     file_templates=["price*.xls", "price*.xlsx"],
     sheet_indexes=[],
     row_item_adaptor=RowItem,
-)
-
-supplier_folder_name = mim_params.supplier.folder_name
-
-
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
-
-mim_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=mim_params,
-    )
 )
 
 

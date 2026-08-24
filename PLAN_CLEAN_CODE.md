@@ -18,7 +18,7 @@
 - **SRP** — `BaseParser` (~387 строк) совмещает FS, фильтры, title, rest и наценку; vendors снова переопределяют `process()`.
 - **OCP / DRY** — новый поставщик = правка `all_vendors.py` + копипаста `ParseConfiguration` в 12 файлах.
 - **DIP** — `xls_writer` и Zapaska импортируют `cfg`; HTTP живёт внутри парсера JSON.
-- Наценка в четырёх местах: `BaseParser.add_price_markup`, poshk/pioner, константа STK, hardcoded диапазоны Zapaska.
+- Наценка: политики в `markup_policy.py` (Mim, map-on-opt, identity, recommended-or-map, Zapaska через флаги JSON). Vendors задают mapping; Mim sheet2 ещё со своим override грузовых % (вне этапа 1).
 
 Критерий готовности плана: vendors задают только mapping колонок и хуки title/category; наценка и I/O — за отдельными портами. Закрывается задачей [18](plan_clean_code/18-demeter.md).
 
@@ -30,9 +30,9 @@
 | [02](plan_clean_code/02-markup-poshk-pioner.md) | Poshk / Pioner на общую политику | 1 | сделана |
 | [03](plan_clean_code/03-markup-stk.md) | STK: наценка в JSON | 1 | сделана |
 | [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 | сделана |
-| [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 | не начата |
-| [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | не начата |
-| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | не начата |
+| [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 | сделана |
+| [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | сделана |
+| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | сделана |
 | [08](plan_clean_code/08-config-cache.md) | Кэш наценки на экземпляре | 2 | не начата |
 | [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | не начата |
 | [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 | не начата |
@@ -57,8 +57,8 @@
 2. [02. Poshk / Pioner](plan_clean_code/02-markup-poshk-pioner.md) — после 01 — **сделана**
 3. [03. STK в JSON](plan_clean_code/03-markup-stk.md) — после 01 — **сделана**
 4. [04. Zapaska в JSON](plan_clean_code/04-markup-zapaska.md) — после 01 — **сделана**
-5. [05. Autosnab без наценки](plan_clean_code/05-markup-autosnab.md) — после 01
-6. [06. Очистка и контракт](plan_clean_code/06-markup-cleanup.md) — после 02–05
+5. [05. Autosnab без наценки](plan_clean_code/05-markup-autosnab.md) — после 01 — **сделана**
+6. [06. Очистка и контракт](plan_clean_code/06-markup-cleanup.md) — после 02–05 — **сделана**
 
 02–05 можно вести параллельно после 01.
 
@@ -74,7 +74,7 @@
 
 **Задачи**
 
-1. [07. Фабрика `make_parse_config`](plan_clean_code/07-config-factory.md)
+1. [07. Фабрика `make_parse_config`](plan_clean_code/07-config-factory.md) — **сделана**
 2. [08. Кэш на экземпляре](plan_clean_code/08-config-cache.md) — после 07
 
 **Готово, когда** блок провайдеров один; новый поставщик не копирует 7 строк; кэш не шарится между vendors.

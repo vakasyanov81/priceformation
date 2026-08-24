@@ -6,11 +6,7 @@ import dataclasses
 
 from parsers.row_item.row_item import RowItem
 
-from ... import data_provider
-from ...base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-)
+from ...base_parser.base_parser_config import make_parse_config
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from .four_tochki_disk_title import (
     disk_diameter,
@@ -19,7 +15,6 @@ from .four_tochki_disk_title import (
     fill_disk_thickness,
     join_title_parts,
 )
-from .four_tochki_sheet1 import supplier_folder_name
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
 fourtochki_sheet_2_params.sheet_info = "Вкладка (диски) #2"
@@ -46,19 +41,7 @@ fourtochki_sheet_2_params.columns = {
     20: RowItem.price_opt.name,
 }
 
-
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
-
-fourtochki_sheet_2_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=fourtochki_sheet_2_params,
-    )
-)
+fourtochki_sheet_2_config = make_parse_config(fourtochki_sheet_2_params)
 
 
 class FourTochkiParser2Sheet(FourTochkiParserBase):

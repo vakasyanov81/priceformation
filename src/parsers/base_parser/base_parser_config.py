@@ -106,3 +106,48 @@ class ParseConfiguration:
                 config[vendor_name] = data_provider.VendorParams(**raw_vendor_config)
             self._all_vendor_config = config
         return self._all_vendor_config
+
+
+def _provider_or_default[ProviderT](provider: ProviderT | None, default: ProviderT) -> ProviderT:
+    """Keep an explicit provider, otherwise use the factory default."""
+    if provider is None:
+        return default
+    return provider
+
+
+def make_parse_config(
+    parser_params: ParserParams,
+    *,
+    markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
+    black_list_provider: data_provider.BlackListProviderBase | None = None,
+    stop_words_provider: data_provider.StopWordsProviderBase | None = None,
+    vendor_list: data_provider.VendorListProviderBase | None = None,
+    manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
+) -> ParseConfiguration:
+    """ParseConfiguration with default FromUserConfig providers."""
+    folder_name = parser_params.supplier.folder_name
+    return ParseConfiguration(
+        BasePriceParseConfigurationParams(
+            markup_rules_provider=_provider_or_default(
+                markup_rules_provider,
+                data_provider.MarkupRulesProviderFromUserConfig(folder_name),
+            ),
+            black_list_provider=_provider_or_default(
+                black_list_provider,
+                data_provider.BlackListProviderFromUserConfig(),
+            ),
+            stop_words_provider=_provider_or_default(
+                stop_words_provider,
+                data_provider.StopWordsProviderFromUserConfig(),
+            ),
+            vendor_list=_provider_or_default(
+                vendor_list,
+                data_provider.VendorListProviderFromUserConfig(),
+            ),
+            manufacturer_aliases=_provider_or_default(
+                manufacturer_aliases,
+                data_provider.ManufacturerAliasesProviderFromUserConfig(),
+            ),
+            parser_params=parser_params,
+        )
+    )

@@ -7,10 +7,10 @@ from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
     MarkupPolicy,
+    RecommendedOrMapMarkupPolicy,
     percent_to_store,
-    recommended_percent,
 )
-from parsers.base_parser.price_markup import get_markup
+from parsers.base_parser.price_markup import get_markup, recommended_percent
 from parsers.data_provider.markup_rules import (
     ABSOLUTE_MODE_DELTA,
     AbsoluteMarkUpRules,
@@ -289,6 +289,45 @@ def test_identity_apply_zero_opt() -> None:
 
 def test_percent_to_store_identity_is_none() -> None:
     assert percent_to_store(IdentityMarkupPolicy.create(), _IDENTITY_OPT) is None
+
+
+def _recommended_or_map_policy() -> RecommendedOrMapMarkupPolicy:
+    return cast(
+        RecommendedOrMapMarkupPolicy,
+        _policy(
+            (_FIRST_RULE,),
+            min_recommended=_APPLY_MIN_RECOMMENDED,
+            min_absolute=_MIN_ABSOLUTE,
+            absolute_percent=_APPLY_ABSOLUTE_PERCENT,
+            policy_cls=RecommendedOrMapMarkupPolicy,
+        ),
+    )
+
+
+def test_recommended_or_map_keeps_rrc() -> None:
+    assert _recommended_or_map_policy().apply(_OPT, _RRC_LOW_MARGIN) == _RRC_LOW_MARGIN
+
+
+def test_recommended_or_map_uses_map_without_rrc() -> None:
+    assert _recommended_or_map_policy().apply(_OPT, None) == get_markup(_OPT, _PERCENT)
+
+
+def test_recommended_or_map_skips_absolute_floor() -> None:
+    mim = _policy(
+        (_FIRST_RULE,),
+        min_recommended=_APPLY_MIN_RECOMMENDED,
+        min_absolute=_MIN_ABSOLUTE,
+        absolute_percent=_APPLY_ABSOLUTE_PERCENT,
+    )
+    recommended_or_map = _recommended_or_map_policy()
+    assert mim.apply(_OPT, _RRC_LOW_MARGIN) == _OPT * _APPLY_ABSOLUTE_PERCENT
+    assert recommended_or_map.apply(_OPT, _RRC_LOW_MARGIN) == _RRC_LOW_MARGIN
+    assert mim.apply(_OPT, None) == _OPT * _APPLY_ABSOLUTE_PERCENT
+    assert recommended_or_map.apply(_OPT, None) == get_markup(_OPT, _PERCENT)
+
+
+def test_rom_policy_percent_to_store_is_none() -> None:
+    assert percent_to_store(_recommended_or_map_policy(), _OPT) is None
 
 
 def _zapaska_like_policy(

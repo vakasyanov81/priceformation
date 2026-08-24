@@ -6,13 +6,9 @@ import dataclasses
 
 from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
 
-from ... import data_provider
-from ...base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-)
+from ...base_parser.base_parser_config import make_parse_config
 from ...row_item.row_item import RowItem
-from .mim_base import MimParserBase, supplier_folder_name
+from .mim_base import MimParserBase
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
 mim_sheet_3_params.sheet_info = "Вкладка #3"
@@ -34,18 +30,7 @@ mim_sheet_3_params.columns = {
     23: RowItem.price_recommended.name,
 }
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
-
-mim_sheet_3_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=mim_sheet_3_params,
-    )
-)
+mim_sheet_3_config = make_parse_config(mim_sheet_3_params)
 
 
 class MimParser3Sheet(MimParserBase):

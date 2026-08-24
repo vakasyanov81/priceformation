@@ -4,11 +4,7 @@ logic for four_tochki vendor (sheet 1)
 
 import dataclasses
 
-from parsers import data_provider
-from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-)
+from parsers.base_parser.base_parser_config import make_parse_config
 from parsers.row_item.row_item import RowItem
 
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
@@ -42,20 +38,7 @@ fourtochki_sheet_1_params.columns = {
     22: RowItem.price_opt.name,
 }
 
-supplier_folder_name = fourtochki_params.supplier.folder_name
-
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
-
-fourtochki_sheet_1_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=fourtochki_sheet_1_params,
-    )
-)
+fourtochki_sheet_1_config = make_parse_config(fourtochki_sheet_1_params)
 
 
 class FourTochkiParser1Sheet(FourTochkiParserBase):
@@ -72,14 +55,6 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
             "мото": "Мотошина",
         }
         return tyre_type_dict.get(row_item.tire_type.lower().strip()) or "Автошина"
-
-    def add_price_markup(self, row_item: RowItem) -> None:
-        if row_item.price_recommended:
-            price = row_item.price_recommended
-        else:
-            price_opt = row_item.price_opt or 0
-            price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
-        row_item.price_markup = self.round_price(price)
 
     @classmethod
     def get_prepared_title(cls, row_item: RowItem) -> str:

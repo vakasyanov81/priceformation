@@ -13,6 +13,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.data_provider.markup_rules import MarkUpParams, markup_params_from_rule
 from parsers.row_item.row_item import RowItem
 
 _MIM_FIRST = 0.2
@@ -59,3 +60,32 @@ def test_example_percent_key_loads(config_name: Any, expected_first: Any) -> Non
     markup_map = _configuration_from_example(config_name).get_price_markup_map()
     assert markup_map
     assert markup_map[0].percent_markup == pytest.approx(expected_first)
+
+
+_RULE_MIN = 0
+_RULE_MAX = 100
+_RULE_PERCENT = 0.2
+_BOTH_KEYS_PREFERRED = 0.1
+
+
+def test_percent_keys_yield_same_params() -> None:
+    from_percent = markup_params_from_rule(
+        {"min": _RULE_MIN, "max": _RULE_MAX, "percent": _RULE_PERCENT},
+    )
+    from_alias = markup_params_from_rule(
+        {"min": _RULE_MIN, "max": _RULE_MAX, "percent_markup": _RULE_PERCENT},
+    )
+    expected = MarkUpParams(min=_RULE_MIN, max=_RULE_MAX, percent_markup=_RULE_PERCENT)
+    assert from_percent == from_alias == expected
+
+
+def test_both_keys_prefer_percent_markup() -> None:
+    markup = markup_params_from_rule(
+        {
+            "min": _RULE_MIN,
+            "max": _RULE_MAX,
+            "percent": _RULE_PERCENT,
+            "percent_markup": _BOTH_KEYS_PREFERRED,
+        },
+    )
+    assert markup.percent_markup == pytest.approx(_BOTH_KEYS_PREFERRED)

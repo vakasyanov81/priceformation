@@ -15,6 +15,7 @@ from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
     MarkupPolicy,
+    RecommendedOrMapMarkupPolicy,
     percent_to_store,
 )
 from parsers.common_price import CommonPrice
@@ -22,6 +23,10 @@ from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.data_provider.vendor_list import VendorListConfigFileError, VendorListProviderBase
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_params
+from parsers.vendors.four_tochki.four_tochki_sheet1 import (
+    FourTochkiParser1Sheet,
+    fourtochki_sheet_1_params,
+)
 from parsers.vendors.pioner import PionerParser, pioner_params
 from parsers.vendors.poshk import PoshkParser, poshk_params
 from parsers.vendors.stk import STKParser, stk_params
@@ -179,6 +184,13 @@ def test_map_on_opt_vendors_get_map_policy(parser_cls: type[BaseParser], vendor_
 
 def test_autosnab_gets_identity_policy() -> None:
     assert isinstance(_markup_policy_from_parse_all(Autosnab54Parser, autosnab_params), IdentityMarkupPolicy)
+
+
+def test_four_tochki_sheet1_rom_policy() -> None:
+    assert isinstance(
+        _markup_policy_from_parse_all(FourTochkiParser1Sheet, fourtochki_sheet_1_params),
+        RecommendedOrMapMarkupPolicy,
+    )
 
 
 class _BoomMarkupRules(MarkupRulesProviderBase):

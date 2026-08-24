@@ -1,5 +1,5 @@
 from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.base_parser.price_markup import calc_percent, get_markup
+from parsers.base_parser.price_markup import get_markup, recommended_percent
 from parsers.data_provider.markup_rules import (
     ABSOLUTE_MODE_DELTA,
     MarkUpParams,
@@ -96,20 +96,28 @@ class MapOnOptMarkupPolicy(MarkupPolicy):
         return self.markup_percent_for_opt(price_opt or 0) * 100
 
 
+class RecommendedOrMapMarkupPolicy(MarkupPolicy):
+    @classmethod
+    def from_config(cls, parse_config: ParseConfiguration) -> RecommendedOrMapMarkupPolicy:
+        """Собрать политику «РРЦ или карта %» из конфига. Не метод парсера."""
+        return cls(
+            rules=parse_config.get_markup_rules(),
+            price_map=parse_config.get_price_markup_map(),
+        )
+
+    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+        """РРЦ если есть, иначе карта % на закуп. Без absolute и min/max Mim."""
+        if price_recommended:
+            return price_recommended
+        opt = price_opt or 0
+        return get_markup(opt, self.markup_percent_for_opt(opt))
+
+
 def percent_to_store(policy: MarkupPolicy, price_opt: float) -> float | None:
     """Процент для записи в строку. None — пусть посчитает SetPercentMarkupItemAction."""
     if isinstance(policy, MapOnOptMarkupPolicy):
         return policy.stored_percent_markup(price_opt)
     return None
-
-
-def recommended_percent(
-    price_opt: float,
-    price_recommended: float | None,
-) -> float:
-    recommended = price_recommended or 0
-    opt = price_opt or 0
-    return calc_percent(recommended, opt) if recommended else 0
 
 
 def make_markup_policy(parse_config: ParseConfiguration) -> MarkupPolicy:

@@ -4,13 +4,11 @@ logic for posh vendor
 
 import re
 
-from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
+    make_parse_config,
 )
 from parsers.row_item.row_item import RowItem
 
@@ -34,19 +32,7 @@ poshk_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(poshk_params.supplier.folder_name)
-
-poshk_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=poshk_params,
-    )
-)
+poshk_config = make_parse_config(poshk_params)
 
 
 class PoshkParser(BaseParser):

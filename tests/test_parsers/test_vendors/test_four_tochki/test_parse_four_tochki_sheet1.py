@@ -16,6 +16,7 @@ from test_parsers.test_vendors.parse_config import (
 
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.markup_policy import RecommendedOrMapMarkupPolicy
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
@@ -29,11 +30,13 @@ parser_config = make_parse_configuration(fourtochki_sheet_1_params, MimMarkupRul
 def get_fake_parser(parse_result: Any) -> FourTochkiParser1Sheet:
     """get fake parser"""
     FakeXlsReader.parse_result = next(iter(parse_result.values()))
+    parse_config = ParseConfiguration(parser_config)
     return make_parser(
         FourTochkiParser1Sheet,
-        ParseConfiguration(parser_config),
+        parse_config,
         file_prices=list(parse_result.keys()),
         xls_reader=FakeXlsReader,
+        markup_policy=RecommendedOrMapMarkupPolicy.from_config(parse_config),
     )
 
 
