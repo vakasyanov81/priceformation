@@ -17,6 +17,7 @@ from parsers.row_item.row_item import RowItem
 
 _MIM_FIRST = 0.2
 _POSHK_FIRST = 0.7
+_ZAPASKA_FIRST = 0.22
 _PARSE_CONFIG_EXAMPLE = Path(__file__).resolve().parents[2] / "parse_config_example"
 
 
@@ -51,6 +52,7 @@ def _configuration_from_example(config_name: str) -> ParseConfiguration:
         ("mim_markup_rules.json", _MIM_FIRST),
         ("four_tochki_markup_rules.json", _MIM_FIRST),
         ("poshk_markup_rules.json", _POSHK_FIRST),
+        ("zapaska_markup_rules.json", _ZAPASKA_FIRST),
     ],
 )
 def test_example_percent_key_loads(config_name: Any, expected_first: Any) -> None:

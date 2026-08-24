@@ -18,7 +18,6 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.zapaska_disk_markup import make_price_markup_value
 from parsers.xls_reader import XlsReader
 
 type JsonRow = dict[str, Any]
@@ -153,13 +152,7 @@ class ZapaskaDiskJSON(BaseParser):
         return self.title_aliases.get(title) or title
 
     def make_price_markup(self, row_item: RowItem) -> None:
-        """set markup
-        цена закупа от 0 до 5000 прибавляем наценку 17%
-        цена закупа от 5000 до 10000 прибавляем наценку 15%
-        цена закупа от 10000 до 15000 прибавляем наценку 13%
-        цена закупа от 15000 до 20000 прибавляем наценку 10%
-        """
-
+        """Отпускная по MarkupPolicy; пустой закуп не трогает строку."""
         price_recommended = row_item.price_recommended or 0
         price_opt = row_item.price_opt
 
@@ -169,5 +162,5 @@ class ZapaskaDiskJSON(BaseParser):
         if not price_recommended:
             self.not_matched_position.append(row_item.title)
 
-        price_with_markup = make_price_markup_value(price_recommended, price_opt)
+        price_with_markup = self._require_markup_policy().apply(price_opt, row_item.price_recommended)
         row_item.price_markup = self.round_price(price_with_markup) if price_with_markup else None

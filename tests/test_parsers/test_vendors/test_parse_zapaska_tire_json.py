@@ -8,7 +8,7 @@ from typing import Any
 from unittest import skip
 
 import pytest
-from test_parsers.test_vendors.parse_config import make_parse_configuration
+from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
 from cfg.main import get_config
 from parsers.base_parser.base_parser import make_parser
@@ -20,7 +20,10 @@ from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_para
 
 _FIXTURE_TIRE = "tests/test_parsers/fixtures/zapaska_tire.json"
 
-parser_config = make_parse_configuration(zapaska_tire_params)
+parser_config = make_parse_configuration(
+    zapaska_tire_params,
+    markup_rules=ZapaskaMarkupRulesProviderForTests(),
+)
 
 
 def get_fake_parser(file_prices: list[str]) -> ZapaskaTireJSON:

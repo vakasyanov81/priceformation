@@ -46,11 +46,13 @@ class BasePriceParseConfigurationParams(NamedTuple):
 def extract_markup_rules(markup_data: dict[str, Any]) -> data_provider.MarkupRules:
     """dict -> named tuple"""
     raw_rules = markup_data.get("markup_rules") or {}
+    raw_absolute = markup_data.get("absolute_markup_rules") or {}
     return data_provider.MarkupRules(
         markup_rules=cast(dict[str, dict[str, Any]], raw_rules),
         min_recommended_percent_markup=float(markup_data.get("min_recommended_percent_markup") or 0),
         max_recommended_percent_markup=float(markup_data.get("max_recommended_percent_markup") or 0),
-        absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**markup_data.get("absolute_markup_rules", {})),
+        absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**raw_absolute),
+        replace_small_recommended=bool(markup_data.get("replace_small_recommended")),
     )
 
 

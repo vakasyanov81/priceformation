@@ -29,7 +29,7 @@
 | [01](plan_clean_code/01-markup-policy.md) | Вынести `MarkupPolicy` | 1 | сделана |
 | [02](plan_clean_code/02-markup-poshk-pioner.md) | Poshk / Pioner на общую политику | 1 | сделана |
 | [03](plan_clean_code/03-markup-stk.md) | STK: наценка в JSON | 1 | сделана |
-| [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 | не начата |
+| [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 | сделана |
 | [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 | не начата |
 | [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | не начата |
 | [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | не начата |
@@ -56,7 +56,7 @@
 1. [01. Вынести MarkupPolicy](plan_clean_code/01-markup-policy.md) — **сделана**
 2. [02. Poshk / Pioner](plan_clean_code/02-markup-poshk-pioner.md) — после 01 — **сделана**
 3. [03. STK в JSON](plan_clean_code/03-markup-stk.md) — после 01 — **сделана**
-4. [04. Zapaska в JSON](plan_clean_code/04-markup-zapaska.md) — после 01
+4. [04. Zapaska в JSON](plan_clean_code/04-markup-zapaska.md) — после 01 — **сделана**
 5. [05. Autosnab без наценки](plan_clean_code/05-markup-autosnab.md) — после 01
 6. [06. Очистка и контракт](plan_clean_code/06-markup-cleanup.md) — после 02–05
 

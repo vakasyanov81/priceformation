@@ -1,0 +1,15 @@
+{
+  "markup_rules": {
+    "r22": {"min": 0, "max": 4999, "percent": 0.22},
+    "r20": {"min": 5000, "max": 9999, "percent": 0.20},
+    "r16": {"min": 10000, "max": 14999, "percent": 0.16},
+    "r14": {"min": 15000, "max": 19999, "percent": 0.14},
+    "r12": {"min": 20000, "max": 24999, "percent": 0.12}
+  },
+  "replace_small_recommended": true,
+  "min_recommended_percent_markup": 0.08,
+  "absolute_markup_rules": {
+    "min_absolute_markup": 150,
+    "mode": "delta"
+  }
+}

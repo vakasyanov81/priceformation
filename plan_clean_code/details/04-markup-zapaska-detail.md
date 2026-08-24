@@ -1,7 +1,8 @@
 # 04. Zapaska: наценка в JSON — подробно
 
 Краткая задача: [04-markup-zapaska.md](../04-markup-zapaska.md)  
-Зависит от: [01-detail](01-markup-policy-detail.md)
+Зависит от: [01-detail](01-markup-policy-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 
