@@ -6,12 +6,8 @@ import dataclasses
 
 from parsers.row_item.row_item import RowItem
 
-from ... import data_provider
-from ...base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
-)
-from .mim_base import MimParserBase, mim_params, supplier_folder_name
+from ...base_parser.base_parser_config import make_parse_config
+from .mim_base import MimParserBase, mim_params
 
 mim_sheet_1_params = dataclasses.replace(mim_params)
 mim_sheet_1_params.sheet_info = "Вкладка #1"
@@ -33,18 +29,7 @@ mim_sheet_1_params.columns = {
     20: RowItem.price_recommended.name,
 }
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(supplier_folder_name)
-
-mim_sheet_1_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=mim_sheet_1_params,
-    )
-)
+mim_sheet_1_config = make_parse_config(mim_sheet_1_params)
 
 
 def is_number(candidate: str | int | float) -> bool:

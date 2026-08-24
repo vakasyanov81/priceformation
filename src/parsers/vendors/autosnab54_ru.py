@@ -2,13 +2,11 @@
 logic for autosnab54_ru vendor
 """
 
-from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
-    ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
+    make_parse_config,
 )
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab_title import fill_from_title
@@ -32,19 +30,7 @@ autosnab_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(autosnab_params.supplier.folder_name)
-
-autosnab_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=autosnab_params,
-    )
-)
+autosnab_config = make_parse_config(autosnab_params)
 
 
 class Autosnab54Parser(BaseParser):

@@ -32,7 +32,7 @@
 | [04](plan_clean_code/04-markup-zapaska.md) | Zapaska: наценка в JSON | 1 | сделана |
 | [05](plan_clean_code/05-markup-autosnab.md) | Autosnab: политика «без наценки» | 1 | сделана |
 | [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | сделана |
-| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | не начата |
+| [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | сделана |
 | [08](plan_clean_code/08-config-cache.md) | Кэш наценки на экземпляре | 2 | не начата |
 | [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | не начата |
 | [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 | не начата |
@@ -74,7 +74,7 @@
 
 **Задачи**
 
-1. [07. Фабрика `make_parse_config`](plan_clean_code/07-config-factory.md)
+1. [07. Фабрика `make_parse_config`](plan_clean_code/07-config-factory.md) — **сделана**
 2. [08. Кэш на экземпляре](plan_clean_code/08-config-cache.md) — после 07
 
 **Готово, когда** блок провайдеров один; новый поставщик не копирует 7 строк; кэш не шарится между vendors.

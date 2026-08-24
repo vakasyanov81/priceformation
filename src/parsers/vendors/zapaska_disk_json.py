@@ -8,13 +8,12 @@ from typing import Any, cast
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
-from parsers import data_provider
 from parsers.base_parser.base_parser import BaseParser, XlsReaderFactory
 from parsers.base_parser.base_parser_config import (
-    BasePriceParseConfigurationParams,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
+    make_parse_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.row_item.row_item import RowItem
@@ -49,8 +48,6 @@ zapaska_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-mark_up_provider = data_provider.MarkupRulesProviderFromUserConfig(zapaska_params.supplier.folder_name)
-
 
 def get_title_aliases(supplier_name: str) -> dict[str, Any]:
     """Load title aliases for supplier from user config."""
@@ -83,16 +80,7 @@ def rename_fields(rows: JsonRows, columns: ColumnMap) -> None:
                 row[target_key] = row.pop(source_key)
 
 
-zapaska_config = ParseConfiguration(
-    BasePriceParseConfigurationParams(
-        markup_rules_provider=mark_up_provider,
-        black_list_provider=data_provider.BlackListProviderFromUserConfig(),
-        stop_words_provider=data_provider.StopWordsProviderFromUserConfig(),
-        vendor_list=data_provider.VendorListProviderFromUserConfig(),
-        manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
-        parser_params=zapaska_params,
-    )
-)
+zapaska_config = make_parse_config(zapaska_params)
 
 
 class ZapaskaDiskJSON(BaseParser):
