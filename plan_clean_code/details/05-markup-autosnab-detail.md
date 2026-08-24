@@ -1,7 +1,8 @@
 # 05. Autosnab: политика «без наценки» — подробно
 
 Краткая задача: [05-markup-autosnab.md](../05-markup-autosnab.md)  
-Зависит от: [01-detail](01-markup-policy-detail.md)
+Зависит от: [01-detail](01-markup-policy-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 
