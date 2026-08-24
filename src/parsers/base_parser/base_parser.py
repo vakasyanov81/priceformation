@@ -3,7 +3,6 @@ base parser logic
 """
 
 import math
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, ClassVar, Protocol
 
@@ -288,12 +287,6 @@ class BaseParser:
         """is category row?"""
         return bool(row_item.title and not row_item.price_opt)
 
-    @classmethod
-    @lru_cache
-    def calc_percent(cls, price_sale: float, price_purchase: float) -> float:
-        """calc margin percentage"""
-        return price_markup.calc_percent(price_sale, price_purchase)
-
     def add_price_markup(self, row_item: RowItem) -> None:
         """calculate and fill price_markup field"""
         policy = self._require_markup_policy()
@@ -313,7 +306,6 @@ class BaseParser:
         return self._markup_policy
 
     @classmethod
-    @lru_cache
     def get_markup(cls, price: float, percent: float) -> float:
         """get price with absolute markup"""
         return price_markup.get_markup(price, percent)

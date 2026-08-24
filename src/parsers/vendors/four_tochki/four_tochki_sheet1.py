@@ -73,14 +73,6 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         }
         return tyre_type_dict.get(row_item.tire_type.lower().strip()) or "Автошина"
 
-    def add_price_markup(self, row_item: RowItem) -> None:
-        if row_item.price_recommended:
-            price = row_item.price_recommended
-        else:
-            price_opt = row_item.price_opt or 0
-            price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
-        row_item.price_markup = self.round_price(price)
-
     @classmethod
     def get_prepared_title(cls, row_item: RowItem) -> str:
         return get_prepared_title(row_item)
