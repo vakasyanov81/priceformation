@@ -1,7 +1,8 @@
 # 15. HTTP-клиент Zapaska вне парсера — подробно
 
 Краткая задача: [15-zapaska-http.md](../15-zapaska-http.md)  
-Зависит от: [12-detail](12-parser-json-reader-detail.md)
+Зависит от: [12-detail](12-parser-json-reader-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 
@@ -50,5 +51,5 @@ def download_catalogs(*, dest_dir: Path, api: ZapaskaApiConfig | None = None) ->
 ## Риски
 
 - Кодировка ответа и бинарность — сохранить `decode("utf-8")`.
-- Папка zapaska может не существовать — `save_data` сейчас откроет файл и упадёт; клиент может `mkdir(parents=True)`. Это улучшение; если прод всегда создаёт папку вручную — задокументировать mkdir.
+- Папка zapaska может не существовать — `save_data` сейчас откроет файл и упадёт; клиент делает `mkdir(parents=True, exist_ok=True)`.
 - Не логировать password.

@@ -3,7 +3,7 @@
 Подробно: [15-zapaska-http-detail.md](details/15-zapaska-http-detail.md)
 
 Этап: [4. Слои и побочные эффекты](../PLAN_CLEAN_CODE.md#этап-4-слои-и-побочные-эффекты)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [12. JSON reader](12-parser-json-reader.md)  
 Дальше: [16. Title aliases](16-parse-paths-aliases.md)
 

@@ -10,9 +10,10 @@ import sys
 from cfg import init_cfg
 from core.async_utils import try_call
 from core.log_message import print_log
-from parsers.all_vendors import all_vendors, load_remote_vendor_data
+from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
+from parsers.remote.zapaska_client import load_remote_vendor_data
 from run_dialog import AnswerResult, ask_action
 
 

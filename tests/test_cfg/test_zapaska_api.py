@@ -1,21 +1,17 @@
 """tests for Zapaska API env configuration"""
 
 import os
-from base64 import b64encode
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from cfg.zapaska_api import (
-    ZapaskaApiConfig,
     ZapaskaApiConfigError,
-    ZapaskaApiConnectionError,
     get_zapaska_api_config,
     load_dotenv,
 )
 from core.exceptions import CoreExceptionError
-from parsers.vendors.zapaska_tire_json import basic_auth, get_data
 
 _LOGIN = "ZAPASKA_API_LOGIN"
 _PASSWORD_ENV = "ZAPASKA_API_PASSWORD"
@@ -23,9 +19,7 @@ _HOST = "ZAPASKA_API_HOST"
 _TO_LOG = "to_log"
 _TEST_USER = "user"
 _TEST_SECRET = "secret"
-_TEST_HOST = "api.test:443"
 _DOTENV_KEY = "ZAPASKA_DOTENV_TEST"
-_GET_TIRES_URL = "/API/hs/V2/GetTires"
 
 
 def test_config_from_dotenv_file(tmp_path: Any, monkeypatch: Any) -> None:
@@ -149,48 +143,3 @@ def test_load_dotenv_default_filename(tmp_path: Any, monkeypatch: Any) -> None:
     load_dotenv()
 
     assert os.environ[_DOTENV_KEY] == "from-lower"
-
-
-def test_basic_auth_header() -> None:
-    token = b64encode(f"{_TEST_USER}:{_TEST_SECRET}".encode()).decode()
-    assert basic_auth(_TEST_USER, _TEST_SECRET) == f"Basic {token}"
-
-
-def test_get_data_uses_env_config() -> None:
-    api_config = ZapaskaApiConfig(host=_TEST_HOST, login="u", password=_TEST_SECRET)
-    mock_response = MagicMock()
-    mock_response.read.return_value = b'{"ok": 1}'
-    mock_conn = MagicMock()
-    mock_conn.return_value.getresponse.return_value = mock_response
-
-    with patch("parsers.vendors.zapaska_tire_json.HTTPSConnection", mock_conn):
-        payload = get_data(_GET_TIRES_URL, api_config=api_config)
-
-    mock_conn.assert_called_once_with(_TEST_HOST)
-    mock_conn.return_value.request.assert_called_once_with(
-        "GET",
-        _GET_TIRES_URL,
-        headers={"Authorization": basic_auth("u", _TEST_SECRET)},
-    )
-    mock_conn.return_value.close.assert_called_once()
-    assert payload == '{"ok": 1}'
-
-
-def test_get_data_connection_error() -> None:
-    api_config = ZapaskaApiConfig(host=_TEST_HOST, login="u", password=_TEST_SECRET)
-    mock_conn = MagicMock()
-    mock_conn.return_value.request.side_effect = OSError("network down")
-
-    with (
-        patch("parsers.vendors.zapaska_tire_json.HTTPSConnection", mock_conn),
-        patch.object(CoreExceptionError, _TO_LOG) as mock_log,
-        pytest.raises(ZapaskaApiConnectionError, match="Не удалось подключиться") as raised,
-    ):
-        get_data(_GET_TIRES_URL, api_config=api_config)
-
-    mock_log.assert_called_once()
-    logged = mock_log.call_args.args[0]
-    assert "network down" in logged
-    assert _TEST_HOST in logged
-    assert _GET_TIRES_URL in logged
-    assert "network down" not in str(raised.value)
