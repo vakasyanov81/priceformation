@@ -3,7 +3,7 @@
 Подробно: [16-parse-paths-aliases-detail.md](details/16-parse-paths-aliases-detail.md)
 
 Этап: [4. Слои и побочные эффекты](../PLAN_CLEAN_CODE.md#этап-4-слои-и-побочные-эффекты)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [14. Writer](14-writer-layers.md) (тот же запрет импорта cfg из parsers)  
 Дальше: [17. Кэши процесса](17-process-caches.md)
 

@@ -91,3 +91,21 @@ def test_markup_without_recommended() -> None:
     parser.add_price_markup(row)
     assert parser.not_matched_position == ["No retail"]
     assert row.price_markup == _NO_RRC_MARKUP
+
+
+def test_prepared_title_collapses_spaces(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "parsers.vendors.zapaska_disk_json.load_title_aliases",
+        lambda _name: {},
+    )
+    parser = get_fake_parser([])
+    assert parser.get_prepared_title(RowItem({"title": "Replay   HND"})) == "Replay HND"
+
+
+def test_prepared_title_applies_alias(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "parsers.vendors.zapaska_disk_json.load_title_aliases",
+        lambda _name: {"Replay HND": "Replay Honda"},
+    )
+    parser = get_fake_parser([])
+    assert parser.get_prepared_title(RowItem({"title": "Replay  HND"})) == "Replay Honda"

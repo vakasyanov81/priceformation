@@ -1,7 +1,8 @@
 # 16. Title aliases через parse_paths — подробно
 
 Краткая задача: [16-parse-paths-aliases.md](../16-parse-paths-aliases.md)  
-Зависит от: [14-detail](14-writer-layers-detail.md)
+Зависит от: [14-detail](14-writer-layers-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 

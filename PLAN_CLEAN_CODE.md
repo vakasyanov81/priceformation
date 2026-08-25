@@ -17,7 +17,7 @@
 
 - **SRP** — `BaseParser` оркестрирует именованные шаги pipeline; vendors задают хуки title/category/rest; прайсы через `PriceSource` ([11](plan_clean_code/11-parser-price-source.md)); JSON Zapaska — `JsonPriceReader` ([12](plan_clean_code/12-parser-json-reader.md)). Percent markup — шаг `after_process`, без Command. HTTP Zapaska — `parsers/remote` ([15](plan_clean_code/15-zapaska-http.md)).
 - **OCP / DRY** — новый поставщик = правка `all_vendors.py` + копипаста `ParseConfiguration` в 12 файлах.
-- **DIP** — HTTP Zapaska в `parsers/remote`; credentials в env. Writer берёт `result_folder` из `ParsePaths`. Title aliases дисков ещё через `MainConfig` ([16](plan_clean_code/16-parse-paths-aliases.md)).
+- **DIP** — HTTP Zapaska в `parsers/remote`; credentials в env. Writer и title aliases через `ParsePaths`.
 - Наценка: политики в `markup_policy.py` (Mim, map-on-opt, identity, recommended-or-map, Zapaska через флаги JSON). Vendors задают mapping; Mim sheet2 ещё со своим override грузовых % (вне этапа 1).
 
 Критерий готовности плана: vendors задают только mapping колонок и хуки title/category; наценка и I/O — за отдельными портами. Закрывается задачей [18](plan_clean_code/18-demeter.md).
@@ -41,7 +41,7 @@
 | [13](plan_clean_code/13-parser-dead-code.md) | Мёртвый Command, title, Пионер | 3 | сделана |
 | [14](plan_clean_code/14-writer-layers.md) | Writer без cfg и I/O в конструкторе | 4 | сделана |
 | [15](plan_clean_code/15-zapaska-http.md) | HTTP-клиент Zapaska вне парсера | 4 | сделана |
-| [16](plan_clean_code/16-parse-paths-aliases.md) | Title aliases через `parse_paths` | 4 | не начата |
+| [16](plan_clean_code/16-parse-paths-aliases.md) | Title aliases через `parse_paths` | 4 | сделана |
 | [17](plan_clean_code/17-process-caches.md) | Предсказуемые кэши процесса | 4 | не начата |
 | [18](plan_clean_code/18-demeter.md) | Law of Demeter для `ParseConfiguration` | 4 | не начата |
 
@@ -111,7 +111,7 @@
 
 1. [14. Writer](plan_clean_code/14-writer-layers.md) — после [11](plan_clean_code/11-parser-price-source.md) — **сделана**
 2. [15. HTTP Zapaska](plan_clean_code/15-zapaska-http.md) — после [12](plan_clean_code/12-parser-json-reader.md) — **сделана**
-3. [16. Title aliases](plan_clean_code/16-parse-paths-aliases.md) — после 14
+3. [16. Title aliases](plan_clean_code/16-parse-paths-aliases.md) — после 14 — **сделана**
 4. [17. Кэши процесса](plan_clean_code/17-process-caches.md) — после [08](plan_clean_code/08-config-cache.md)
 5. [18. Law of Demeter](plan_clean_code/18-demeter.md) — после [07](plan_clean_code/07-config-factory.md)
 

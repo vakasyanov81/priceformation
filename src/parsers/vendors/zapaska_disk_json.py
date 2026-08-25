@@ -2,11 +2,8 @@
 logic for zapaska (rest) vendor
 """
 
-import json
 from typing import Any
 
-from cfg.main import MainConfig
-from core.file_reader import read_file
 from parsers.base_parser.base_parser import BaseParser, ReaderFactory
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -15,6 +12,7 @@ from parsers.base_parser.base_parser_config import (
     make_parse_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
+from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.json_reader import JsonPriceReader
 from parsers.row_item.row_item import RowItem
 
@@ -43,30 +41,6 @@ zapaska_params = ParserParams(
     row_item_adaptor=RowItem,
 )
 
-
-def get_title_aliases(supplier_name: str) -> dict[str, Any]:
-    """Load title aliases for supplier from user config."""
-    try:
-        return _load_title_aliases(supplier_name)
-    except FileNotFoundError:
-        return {}
-
-
-def _load_title_aliases(supplier_name: str) -> dict[str, Any]:
-    """Read title aliases JSON and invert map for supplier."""
-    raw = json.loads(read_file(MainConfig().title_aliases_file_path)) or {}
-    return invert_map(raw.get(supplier_name) or {})
-
-
-def invert_map(title_aliases: dict[str, Any]) -> dict[str, Any]:
-    """Invert {correct: [incorrect, ...]} to {incorrect: correct}."""
-    inverted = {}
-    for correct_title, incorrect_titles in title_aliases.items():
-        for incorrect_title in incorrect_titles:
-            inverted[incorrect_title] = correct_title
-    return inverted
-
-
 zapaska_config = make_parse_config(zapaska_params)
 
 
@@ -87,7 +61,7 @@ class ZapaskaDiskJSON(BaseParser):
     ) -> None:
         """init"""
         self.not_matched_position: list[str] = []
-        self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
+        self.title_aliases = load_title_aliases(parse_config.parse_config.parser_params.supplier.name)
         super().__init__(parse_config, file_prices, data_reader, markup_policy=markup_policy)
 
     def category_for(self, row_item: RowItem) -> str | None:
