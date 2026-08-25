@@ -40,18 +40,15 @@ class PoshkParser(BaseParser):
     logic for posh vendor
     """
 
-    def process_parsed_row(self, row_item: RowItem) -> None:
-        self.add_price_markup(row_item)
+    def after_row_mapped(self, row_item: RowItem) -> None:
         self.clear_and_set_title(row_item)
         row_item.title = self.prepare_title(row_item.title)
-        self.set_type_production(row_item)
 
-    def set_type_production(self, row_item: RowItem) -> None:
-        """
-        Задать категорию
-        """
+    def category_for(self, row_item: RowItem) -> str | None:
+        return self.get_category_by_title(row_item.title)
 
-        row_item.type_production = self.get_category_by_title(row_item.title)
+    def skip_by_min_rest(self, row_item: RowItem) -> None:
+        """Пошк не отсекает позиции по минимальному остатку."""
 
     @classmethod
     def get_category_by_title(cls, title: str) -> str:

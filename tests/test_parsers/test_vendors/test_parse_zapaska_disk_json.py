@@ -52,6 +52,6 @@ class TestParseZapaskaDiskJSON:
 def test_markup_without_recommended() -> None:
     parser = get_fake_parser([])
     row = RowItem({"price_opt": _NO_RRC_OPT, "title": "No retail"})
-    parser.make_price_markup(row)
+    parser.add_price_markup(row)
     assert parser.not_matched_position == ["No retail"]
     assert row.price_markup == _NO_RRC_MARKUP

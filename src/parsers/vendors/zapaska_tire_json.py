@@ -50,7 +50,7 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     _type_production = "Шины"
 
-    def get_type_production(self, row_item: RowItem) -> str:
+    def category_for(self, row_item: RowItem) -> str | None:
         """Map supplier category onto the allowed product types."""
         resolved = canonical_product_type(row_item.type_production, self._category_finder)
         if resolved:

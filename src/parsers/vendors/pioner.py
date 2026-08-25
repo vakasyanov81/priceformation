@@ -52,8 +52,12 @@ class PionerParser(BaseParser):
     current_category_first_chunk = None
 
     def process_parsed_row(self, row_item: RowItem) -> None:
+        """Категория из заголовочных строк — до title с производителем."""
         self.skip_by_min_rest(row_item)
         self.add_price_markup(row_item)
+        self.after_row_mapped(row_item)
+
+    def after_row_mapped(self, row_item: RowItem) -> None:
         self.set_manufacturer_to_title(row_item)
         self.manufacturer_finder().process(row_item)
 

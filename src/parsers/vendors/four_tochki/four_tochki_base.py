@@ -2,7 +2,7 @@
 base logic for four_tochki vendor
 """
 
-from parsers.base_parser.base_parser import MarkupSkipCategoryParser
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams
 from parsers.row_item.row_item import RowItem
 
@@ -18,7 +18,7 @@ fourtochki_params = ParserParams(
 )
 
 
-class FourTochkiParserBase(MarkupSkipCategoryParser):
+class FourTochkiParserBase(BaseParser):
     """
     base logic for four_tochki vendor
     """
@@ -28,6 +28,5 @@ class FourTochkiParserBase(MarkupSkipCategoryParser):
         """getting current category"""
         raise NotImplementedError()
 
-    def set_category(self, row_item: RowItem) -> None:
-        """set category to row price item"""
-        row_item.type_production = self.get_current_category(row_item)
+    def category_for(self, row_item: RowItem) -> str | None:
+        return self.get_current_category(row_item)

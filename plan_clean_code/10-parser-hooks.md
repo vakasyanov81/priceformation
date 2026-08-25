@@ -3,7 +3,7 @@
 Подробно: [10-parser-hooks-detail.md](details/10-parser-hooks-detail.md)
 
 Этап: [3. Разрезать BaseParser](../PLAN_CLEAN_CODE.md#этап-3-разрезать-baseparser)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [09. Pipeline](09-parser-pipeline.md)  
 Дальше: [11. PriceSource](11-parser-price-source.md)
 

@@ -113,16 +113,13 @@ class ZapaskaDiskJSON(BaseParser):
         rename_fields(dictable_data, cast(dict[str, str], parser_params.columns))
         return dictable_data
 
-    def process_parsed_row(self, row_item: RowItem) -> None:
-        self.make_price_markup(row_item)
-        self.skip_by_min_rest(row_item)
-        row_item.type_production = self.get_type_production(row_item)
+    def category_for(self, row_item: RowItem) -> str | None:
+        return self._type_production
+
+    def apply_category(self, row_item: RowItem) -> None:
+        super().apply_category(row_item)
         if not row_item.type_production:
             row_item.rest_count = 0
-
-    def get_type_production(self, row_item: RowItem) -> str:
-        """Return fixed type production for disk prices."""
-        return self._type_production
 
     @classmethod
     def get_item_rest(cls, row_item: RowItem) -> int:
@@ -139,7 +136,7 @@ class ZapaskaDiskJSON(BaseParser):
         title = " ".join(chunks)
         return self.title_aliases.get(title) or title
 
-    def make_price_markup(self, row_item: RowItem) -> None:
+    def add_price_markup(self, row_item: RowItem) -> None:
         """Отпускная по MarkupPolicy; пустой закуп не трогает строку."""
         price_recommended = row_item.price_recommended or 0
         price_opt = row_item.price_opt

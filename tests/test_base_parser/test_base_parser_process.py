@@ -35,6 +35,9 @@ class _ProcessParser(BaseParser):
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return row_items
 
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        """File-loop stub: no markup policy."""
+
 
 def test_process_without_files_returns_zero() -> None:
     parser = _ProcessParser({})

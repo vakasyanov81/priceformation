@@ -63,7 +63,7 @@ def test_add_price_markup_empty() -> None:
 
 
 def test_process_markup_and_rest() -> None:
-    """process_parsed_row вызывает skip_by_min_rest и add_price_markup"""
+    """pipeline вызывает skip_by_min_rest и add_price_markup"""
     parser = _parser()
     row_ok = RowItem({"price_opt": _PRICE_OPT, "rest_count": 10})
     row_low = RowItem({"price_opt": _LOW_OPT, "rest_count": 1})

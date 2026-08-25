@@ -38,9 +38,8 @@ class Autosnab54Parser(BaseParser):
     logic for autosnab54_ru vendor
     """
 
-    def process_parsed_row(self, row_item: RowItem) -> None:
+    def after_row_mapped(self, row_item: RowItem) -> None:
         fill_from_title(row_item)
-        self.add_price_markup(row_item)
 
     @classmethod
     def get_min_rest_count(cls) -> int:
