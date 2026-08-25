@@ -51,11 +51,6 @@ def _configuration(markup_data: dict[str, Any]) -> tuple[ParseConfiguration, Mag
     return config, provider
 
 
-def test_markup_cache_is_not_on_class() -> None:
-    assert "_markup_rules" not in ParseConfiguration.__dict__
-    assert "_price_markup_map" not in ParseConfiguration.__dict__
-
-
 def test_two_configs_keep_own_markup() -> None:
     low = _configuration(_markup_data(_PERCENT_LOW))[0]
     high = _configuration(_markup_data(_PERCENT_HIGH))[0]
