@@ -6,12 +6,9 @@ import datetime
 from pathlib import Path
 from typing import Any
 
-from cfg import init_cfg
 from parsers.writer.ixls_driver import IXlsDriver
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-
-config = init_cfg()
 
 type RowColor = tuple[str | None, int | None]
 type PriceRow = dict[str, Any]
@@ -49,43 +46,35 @@ def make_exclude(products: list[PriceRow], exclude: dict[str, Any]) -> list[Pric
     return included
 
 
-def get_result_folder_name() -> str:
-    """Result folder path from config."""
-    return config.main.result_folder_path
-
-
-def create_result_folder() -> None:
-    """create result folder"""
-    if not Path(get_result_folder_name()).exists():
-        Path(get_result_folder_name()).mkdir(parents=True)
-
-
 class XlsWriter:
     """price writer"""
 
-    def __init__(self, driver: IXlsDriver, parse_result: list[PriceRow], template: type[IWriteTemplate]) -> None:
+    def __init__(
+        self,
+        driver: IXlsDriver,
+        parse_result: list[PriceRow],
+        template: type[IWriteTemplate],
+        *,
+        result_folder: str,
+    ) -> None:
         """init"""
         self.driver: IXlsDriver = driver
         self.template: IWriteTemplate = template()
         self.exclude = self.template.exclude()
-        create_result_folder()
-        self.driver.init_workbook(config.main.result_folder_path, self.get_file_name())
-        self.driver.add_sheet("price")
         self.parse_result = parse_result
-        self.driver.set_column_format(self.template.get_columns_format())
-        self.write()
+        self._result_folder = result_folder
 
     def write(self) -> None:
-        """make write"""
-        # write header
+        """Create result folder, fill workbook, save."""
+        folder = Path(self._result_folder)
+        folder.mkdir(parents=True, exist_ok=True)
+        self.driver.init_workbook(str(folder), self.get_file_name())
+        self.driver.add_sheet("price")
+        self.driver.set_column_format(self.template.get_columns_format())
         self.driver.write_head(self.col_names())
-
-        # write body
         filtered_data = make_exclude(self.parse_result, self.exclude)
         for row_index, product in enumerate(filtered_data):
             self._write_row(product, row_index, self._get_color(product))
-
-        # save workbook
         self.driver.save()
 
     def get_file_name(self) -> str:
@@ -96,7 +85,7 @@ class XlsWriter:
 
     def get_result_path(self) -> str:
         """Absolute path of the written file."""
-        return str(Path(get_result_folder_name(), self.get_file_name()).resolve())
+        return str(Path(self._result_folder, self.get_file_name()).resolve())
 
     def col_names(self) -> list[str]:
         """get column names"""

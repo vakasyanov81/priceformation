@@ -8,11 +8,13 @@
 import sys
 
 from cfg import init_cfg
+from cfg.zapaska_api import get_zapaska_api_config
 from core.async_utils import try_call
 from core.log_message import print_log
-from parsers.all_vendors import all_vendors, load_remote_vendor_data
+from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
+from parsers.remote.zapaska_client import load_remote_vendor_data
 from run_dialog import AnswerResult, ask_action
 
 
@@ -48,7 +50,7 @@ def run_make_price_by_supplier() -> None:
 
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
-    load_remote_vendor_data()
+    load_remote_vendor_data(api=get_zapaska_api_config())
     print_log("*** Данные успешно загружены. ***\n")
 
 

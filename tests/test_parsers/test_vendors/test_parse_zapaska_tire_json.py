@@ -35,6 +35,18 @@ def get_fake_parser(file_prices: list[str]) -> ZapaskaTireJSON:
     )
 
 
+def test_tire_aliases_use_supplier_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[str] = []
+
+    def capture(name: str) -> dict[str, str]:
+        seen.append(name)
+        return {}
+
+    monkeypatch.setattr("parsers.vendors.zapaska_disk_json.load_title_aliases", capture)
+    get_fake_parser([])
+    assert seen == [zapaska_tire_params.supplier.name]
+
+
 class TestParseZapaskaTireJSON:
     """
     tests for zapaska (json) tire vendor after raw-parser process

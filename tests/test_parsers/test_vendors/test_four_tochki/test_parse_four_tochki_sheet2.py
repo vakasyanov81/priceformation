@@ -34,8 +34,12 @@ def get_fake_parser(parse_result: Any) -> FourTochkiParser2Sheet:
         FourTochkiParser2Sheet,
         ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
     )
+
+
+def _title_parser() -> FourTochkiParser2Sheet:
+    return FourTochkiParser2Sheet(parse_config=ParseConfiguration(parser_config))
 
 
 def test_parse() -> None:
@@ -82,7 +86,7 @@ def test_parse_with_invalid_item() -> None:
 
 
 def test_prepared_title_skips_empty_parts() -> None:
-    title = FourTochkiParser2Sheet.get_prepared_title(RowItem({}))
+    title = _title_parser().get_prepared_title(RowItem({}))
     assert "XXXX" not in title
     assert "Xxxx" not in title
 
@@ -102,7 +106,7 @@ def test_disk_title_keeps_thickness_and_et0() -> None:
             "color": "Silver",
         }
     )
-    title = FourTochkiParser2Sheet.get_prepared_title(row)
+    title = _title_parser().get_prepared_title(row)
     assert "ET0" in title
     assert "(15.5 мм)" in title
     assert "усил." in title
@@ -131,7 +135,7 @@ def test_disk_title_tube_keeps_thickness() -> None:
             "color": "Silver",
         }
     )
-    title = FourTochkiParser2Sheet.get_prepared_title(row)
+    title = _title_parser().get_prepared_title(row)
     assert "под камеру" in title
     assert "x24 " in title or title.startswith("8.5x24")
     assert row.disk_thickness == "16"
@@ -156,13 +160,13 @@ def _zepp_row(name: str) -> RowItem:
 
 
 def test_zepp_factory_and_valve_titles_differ() -> None:
-    yz = FourTochkiParser2Sheet.get_prepared_title(
+    yz = _title_parser().get_prepared_title(
         _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (YZ) (16 мм) (б/к)"),
     )
-    hap_outer = FourTochkiParser2Sheet.get_prepared_title(
+    hap_outer = _title_parser().get_prepared_title(
         _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (HAP) alive (16 мм) (б/к) наруж. вентиль"),
     )
-    hap_inner = FourTochkiParser2Sheet.get_prepared_title(
+    hap_inner = _title_parser().get_prepared_title(
         _zepp_row("9,0x22,5/10x335 ET175 D281 Sil (HAP) (16 мм) (б/к) внутр. вентиль"),
     )
     assert yz == f"{_ZEPP_CANON} (YZ)"
@@ -176,7 +180,7 @@ def test_disk_title_keeps_other_truck_tails() -> None:
         "9,0x22,5/10x335 ET175 D281 Sil (JNTS) (5221105) (16 мм) (б/к) "
         "под футорку с вент. (кольцо) Китай, прицеп 4 500 кг"
     )
-    title = FourTochkiParser2Sheet.get_prepared_title(_zepp_row(name))
+    title = _title_parser().get_prepared_title(_zepp_row(name))
     assert title == f"{_ZEPP_CANON} (JNTS) под футорку с вент. (кольцо)"
     assert "5221105" not in title
     assert "Китай" not in title

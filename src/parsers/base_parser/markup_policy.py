@@ -114,7 +114,7 @@ class RecommendedOrMapMarkupPolicy(MarkupPolicy):
 
 
 def percent_to_store(policy: MarkupPolicy, price_opt: float) -> float | None:
-    """Процент для записи в строку. None — пусть посчитает SetPercentMarkupItemAction."""
+    """Процент для записи в строку. None — пусть посчитает fill_percent_markup."""
     if isinstance(policy, MapOnOptMarkupPolicy):
         return policy.stored_percent_markup(price_opt)
     return None

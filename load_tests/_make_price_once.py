@@ -3,25 +3,27 @@
 import sys
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 from cfg import init_cfg
-from cfg.main import MainConfig
+from core.parse_paths import ParsePaths, configure_parse_paths, get_parse_paths
 from run import run_make_price_by_supplier
 
 
 def main() -> None:
     init_cfg()
     result_dir = Path(sys.argv[1]).resolve()
-    result_folder = f"{result_dir}/"
     elapsed_path = Path(sys.argv[2])
-
-    def _result_folder(_cfg: MainConfig) -> str:
-        return result_folder
+    paths = get_parse_paths()
+    configure_parse_paths(
+        ParsePaths(
+            file_prices_folder=paths.file_prices_folder,
+            user_config_folder=paths.user_config_folder,
+            result_folder=f"{result_dir}/",
+        ),
+    )
 
     start = time.perf_counter()
-    with patch.object(MainConfig, "result_folder_path", property(_result_folder)):
-        run_make_price_by_supplier()
+    run_make_price_by_supplier()
     elapsed = time.perf_counter() - start
     elapsed_path.write_text(f"{elapsed:.6f}", encoding="utf-8")
 

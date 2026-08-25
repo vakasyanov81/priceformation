@@ -52,7 +52,7 @@ def test_xlsx_driver_starts_empty() -> None:
 def test_xlsx_writer_full_cycle(tmp_path: Any) -> None:
     """создание книги, запись шапки/ячеек, формат и сохранение"""
     driver = XlsxWriterDriver()
-    folder = f"{tmp_path}/"
+    folder = str(tmp_path)
     workbook = driver.init_workbook(folder, _FILE_NAME)
 
     assert workbook is driver.work_book

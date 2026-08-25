@@ -67,6 +67,11 @@ def load_aliases_map() -> dict[str, Any]:
         return {}
 
 
+def clear_manufacturer_aliases_cache() -> None:
+    """Drop the process-level manufacturer aliases cache."""
+    load_aliases_map.cache_clear()
+
+
 class ManufacturerAliasesProviderBase:
     """Base data provider with manufacturer aliases"""
 

@@ -16,6 +16,7 @@ from .markup_rules import (
     markup_params_from_rule,
 )
 from .stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
+from .title_aliases import TitleAliasesProviderBase, TitleAliasesProviderFromUserConfig
 from .vendor_list import (
     VendorListProviderBase,
     VendorListProviderFromUserConfig,
@@ -34,6 +35,8 @@ __all__ = [
     "MarkupRulesProviderFromUserConfig",
     "StopWordsProviderBase",
     "StopWordsProviderFromUserConfig",
+    "TitleAliasesProviderBase",
+    "TitleAliasesProviderFromUserConfig",
     "VendorListProviderBase",
     "VendorListProviderFromUserConfig",
     "VendorParams",

@@ -9,14 +9,14 @@ import pytest
 from cfg import init_cfg
 from cfg.main import MainConfig
 from core.parse_paths import ParsePaths, configure_parse_paths
-from parsers.base_parser import nomenclature_correction as noc
+from parsers.base_parser.base_parser_config import make_parse_config
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
-    fourtochki_sheet_1_config,
+    fourtochki_sheet_1_params,
 )
 from parsers.vendors.four_tochki.four_tochki_sheet2 import (
     FourTochkiParser2Sheet,
-    fourtochki_sheet_2_config,
+    fourtochki_sheet_2_params,
 )
 from run import run_make_price_by_supplier
 
@@ -27,24 +27,13 @@ _PARSE_CONFIG_DIR = _INTEGRATION_ROOT / "parse_config_example"
 _PARSE_CONFIG = f"{_PARSE_CONFIG_DIR.as_posix()}/"
 _RESULT_PATH = f"{_RESULT_DIR.as_posix()}/"
 
-_FOUR_TOCHKI_VENDORS = (
-    (FourTochkiParser1Sheet, fourtochki_sheet_1_config),
-    (FourTochkiParser2Sheet, fourtochki_sheet_2_config),
-)
 
-
-def _result_folder(_cfg: MainConfig) -> str:
-    """тестовая папка результатов"""
-    return _RESULT_PATH
-
-
-def _reset_four_tochki_config_cache() -> None:
-    """сбрасывает кэш конфигов four_tochki между прогонами"""
-    for config in (fourtochki_sheet_1_config, fourtochki_sheet_2_config):
-        config._all_vendor_config = None  # noqa: WPS437
-        config._markup_rules = None  # noqa: WPS437
-        config._price_markup_map = None  # noqa: WPS437
-    noc._NomenclatureCache.titles = None  # noqa: WPS437
+def _four_tochki_vendors() -> list[tuple[type, object]]:
+    """fresh ParseConfiguration per run — instance cache stays empty"""
+    return [
+        (FourTochkiParser1Sheet, make_parse_config(fourtochki_sheet_1_params)),
+        (FourTochkiParser2Sheet, make_parse_config(fourtochki_sheet_2_params)),
+    ]
 
 
 def _clear_result_dir() -> None:
@@ -61,6 +50,7 @@ def _example_parse_paths() -> Iterator[None]:
         ParsePaths(
             file_prices_folder=str(Path(MainConfig().project_root) / _PRICES_REL),
             user_config_folder=_PARSE_CONFIG,
+            result_folder=_RESULT_PATH,
         ),
     )
     yield
@@ -70,12 +60,8 @@ def _example_parse_paths() -> Iterator[None]:
 def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
-    _reset_four_tochki_config_cache()
 
-    with (
-        patch.object(MainConfig, "result_folder_path", property(_result_folder)),
-        patch("run.all_vendors", return_value=_FOUR_TOCHKI_VENDORS),
-    ):
+    with patch("run.all_vendors", return_value=_four_tochki_vendors()):
         run_make_price_by_supplier()
 
     result_files = sorted(_RESULT_DIR.glob("*.xlsx"))

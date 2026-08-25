@@ -13,6 +13,7 @@ from core.parse_paths import (
 
 _FOLDER = "/var/parse_config"
 _PRICES = "/var/file_prices"
+_RESULT_FOLDER = "/var/file_prices/result"
 
 
 @pytest.fixture
@@ -24,10 +25,13 @@ def _restore_parse_paths() -> Iterator[None]:
 
 def test_configure_and_get_parse_paths(_restore_parse_paths: None) -> None:
     """configure_parse_paths сохраняет папки для get_parse_paths."""
-    configure_parse_paths(ParsePaths(file_prices_folder=_PRICES, user_config_folder=_FOLDER))
+    configure_parse_paths(
+        ParsePaths(file_prices_folder=_PRICES, user_config_folder=_FOLDER, result_folder=_RESULT_FOLDER),
+    )
     paths = get_parse_paths()
     assert paths.file_prices_folder == _PRICES
     assert paths.user_config_folder == _FOLDER
+    assert paths.result_folder == _RESULT_FOLDER
     assert paths.config_file("black_list") == f"{_FOLDER}/black_list"
 
 

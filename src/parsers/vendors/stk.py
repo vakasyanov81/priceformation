@@ -2,7 +2,7 @@
 # stk
 """
 
-from parsers.base_parser.base_parser import MarkupSkipCategoryParser
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
@@ -31,7 +31,7 @@ stk_params = ParserParams(
 stk_config = make_parse_config(stk_params)
 
 
-class STKParser(MarkupSkipCategoryParser):
+class STKParser(BaseParser):
     """
     parser for Greenstone vendor
     """

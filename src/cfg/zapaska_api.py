@@ -18,17 +18,10 @@ _MSG_MISSING_ENV_FILE = (
 _MSG_MISSING_CREDENTIALS = (
     f"В файле .env не заданы данные для подключения к API Запаски. Укажите {_ENV_LOGIN} и {_ENV_PASSWORD}."
 )
-_MSG_CONNECTION_FAILED = "Не удалось подключиться к API Запаски. Проверьте интернет-соединение и параметры подключения."
 
 
 class ZapaskaApiConfigError(CoreExceptionError):
     """Missing Zapaska API env credentials."""
-
-
-class ZapaskaApiConnectionError(CoreExceptionError):
-    """Zapaska API host is unreachable."""
-
-    __MESSAGE__ = _MSG_CONNECTION_FAILED
 
 
 @dataclass(frozen=True)

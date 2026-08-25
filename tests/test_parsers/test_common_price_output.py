@@ -3,6 +3,7 @@
 from typing import cast
 from unittest.mock import MagicMock, patch
 
+from core.parse_paths import get_parse_paths
 from parsers.common_price_output import CommonPriceOut
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
@@ -11,6 +12,10 @@ from parsers.writer.xwlt_driver import XlsxWriterDriver
 
 _TITLE = "title"
 _REPORT_PATH = "file_prices/result/doubles.xlsx"
+
+
+def _result_folder() -> str:
+    return get_parse_paths().result_folder
 
 
 def test_nomenclature_title_correction() -> None:
@@ -61,7 +66,36 @@ def test_write_all_prices() -> None:
     mock_corr.assert_called_once()
     mock_raw.assert_called_once_with(rows)
     driver_cls.assert_called_once_with()
-    writer_cls.assert_called_once_with(driver_instance, raw_rows, template)
+    writer_cls.assert_called_once_with(
+        driver_instance,
+        raw_rows,
+        template,
+        result_folder=_result_folder(),
+    )
+    writer_cls.return_value.write.assert_called_once()
+
+
+def test_write_all_prices_reloads_nomenclature() -> None:
+    """второй write_all_prices в том же процессе видит новую карту номенклатуры"""
+    row = RowItem({_TITLE: "old"})
+    out = CommonPriceOut(
+        [row],
+        xls_writer=cast(type[XlsWriter], MagicMock),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+    )
+
+    with (
+        patch(
+            "parsers.base_parser.nomenclature_correction.load_file",
+            side_effect=[{"old": "A"}, {"old": "B"}],
+        ),
+        patch("parsers.common_price_output.all_writer_templates", return_value=[]),
+    ):
+        out.write_all_prices()
+        assert row.title == "A"
+        row.title = "old"
+        out.write_all_prices()
+        assert row.title == "B"
 
 
 def test_write_doubles_report() -> None:
@@ -98,5 +132,11 @@ def test_write_doubles_report() -> None:
     mock_corr.assert_not_called()
     mock_raw.assert_called_once_with([double_row, candidate])
     driver_cls.assert_called_once_with()
-    writer_cls.assert_called_once_with(driver_instance, raw_rows, ForDoubles)
+    writer_cls.assert_called_once_with(
+        driver_instance,
+        raw_rows,
+        ForDoubles,
+        result_folder=_result_folder(),
+    )
+    writer_instance.write.assert_called_once()
     assert report_path == _REPORT_PATH

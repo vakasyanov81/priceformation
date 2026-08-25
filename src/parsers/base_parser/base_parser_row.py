@@ -36,7 +36,7 @@ def _log_row_parse_errors(parser: BaseParser, row_id: int, row_item: RowItem) ->
 
 def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
     """Производитель, категория, служебные поля."""
-    parser.manufacturer_finder().process(row_item)
+    parser.apply_manufacturer(row_item)
     parser.correction_category(row_item)
     row_item.supplier_name = parser.parser_params().supplier.name
     row_item.spike = parser.get_spike_title(row_item)
@@ -61,3 +61,22 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
     if row_item.rest_count and not row_item.price_opt:
         return False
     return not row_item.title or parser.is_valid_title(row_item.title)
+
+
+def enrich_items(parser: BaseParser, row_items: list[RowItem]) -> list[RowItem]:
+    """Title, отсев по ошибкам/stop/black и служебные поля."""
+    parsed_items: list[RowItem] = []
+    start_row = parser.parser_params().start_row
+    for row_id, row_item in enumerate(row_items, start=start_row):
+        prepared = _try_prepare_row(parser, row_id, row_item)
+        if prepared is not None:
+            parsed_items.append(prepared)
+    return parsed_items
+
+
+def drop_empty_rest(row_items: list[RowItem]) -> list[RowItem]:
+    """Оставить позиции с ценой закупки и остатком.
+
+    rest_count может быть ``>40`` и не приводится к float — только истинность.
+    """
+    return [row_item for row_item in row_items if row_item.price_opt and row_item.rest_count]

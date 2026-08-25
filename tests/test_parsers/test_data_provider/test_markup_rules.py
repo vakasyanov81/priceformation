@@ -23,7 +23,7 @@ _RULE_MAX = 50
 _MISSING_FILE = "/no"
 _STK_RULES_PATH = "/cfg/stk_markup_rules.json"
 _MISSING_MSG = r"Filed to read vendor \(stk\) settings"
-_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
+_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg", result_folder="/prices/result")
 _GET_PATHS = "parsers.data_provider.markup_rules.get_parse_paths"
 
 

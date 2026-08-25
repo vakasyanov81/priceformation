@@ -53,8 +53,7 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     def get_current_category(cls, row_item: RowItem) -> str:
         return "Диск"
 
-    @classmethod
-    def get_prepared_title(cls, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str:
         original_name = row_item.title or ""
         fill_disk_thickness(row_item)
         mark = (row_item.manufacturer or "").lower().capitalize()

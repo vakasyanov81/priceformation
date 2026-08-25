@@ -61,10 +61,9 @@ class MimParser2Sheet(MimParserBase):
         price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
         row_item.price_markup = self.round_price(price)
 
-    @classmethod
-    def get_prepared_title(cls, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str:
         """prepare title"""
-        return " ".join(cls._title_chunks(row_item))
+        return " ".join(self._title_chunks(row_item))
 
     @classmethod
     def _size_chunk(cls, row_item: RowItem) -> str:

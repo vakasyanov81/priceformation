@@ -51,6 +51,7 @@ def test_init_cfg_configures_log_paths() -> None:
     parse_paths = get_parse_paths()
     assert parse_paths.user_config_folder == compiler.main.user_config_folder_path
     assert parse_paths.file_prices_folder.endswith(compiler.main.folder_file_prices)
+    assert parse_paths.result_folder == compiler.main.result_folder_path
 
 
 def test_resolve_log_method_mapping() -> None:

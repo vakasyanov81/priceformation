@@ -14,7 +14,7 @@ from parsers.data_provider.vendor_list import (
 )
 
 _TO_LOG = "to_log"
-_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
+_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg", result_folder="/prices/result")
 _GET_PATHS = "parsers.data_provider.black_list.get_parse_paths"
 
 

@@ -7,6 +7,7 @@ from typing import Any
 from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
 from parsers.common_price_size import canon_number, size_fields
+from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.row_item.row_item import RowItem
 
 _MIN_ITEMS_FOR_DOUBLES = 2
@@ -92,7 +93,7 @@ class CommonPriceGrouper:
 
     def __init__(self, row_items: list[RowItem], aliases_map: dict[str, Any] | None = None):
         self.row_items = row_items
-        self._aliases_map = aliases_map
+        self._aliases_map = load_aliases_map() if aliases_map is None else aliases_map
         self._is_grouped = False
 
     def group_by_params(self) -> CommonPriceGrouper:

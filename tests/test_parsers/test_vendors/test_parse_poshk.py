@@ -108,7 +108,7 @@ def get_fake_parser(parse_result: Any) -> PoshkParser:
         PoshkParser,
         parse_config,
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 

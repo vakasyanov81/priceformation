@@ -19,6 +19,7 @@ from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.fake_xls_reader import FakeXlsReader
@@ -36,7 +37,7 @@ def get_fake_parser(parse_result: Any) -> PionerParser:
         PionerParser,
         parse_config,
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
@@ -147,7 +148,7 @@ def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
         PionerParser,
         parse_config,
         file_prices=list(pioner_one_item_result().keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
@@ -185,3 +186,22 @@ def test_add_price_markup_empty_rules_keeps_opt() -> None:
     parser.add_price_markup(row)
     assert row.price_markup == 1000
     assert row.percent_markup == 0
+
+
+def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
+    """Enrich пропускает finder; один проход после вставки бренда в title."""
+    assert PionerParser.find_manufacturer_on_enrich is False
+    process_count = 0
+    original_process = ManufacturerFinder.process
+
+    def counting_process(self: ManufacturerFinder, row_item: RowItem) -> None:
+        nonlocal process_count
+        process_count += 1
+        original_process(self, row_item)
+
+    monkeypatch.setattr(ManufacturerFinder, "process", counting_process)
+    parsed = get_fake_parser(pioner_one_item_result_with_categories()).parse()
+    assert len(parsed) == 1
+    assert parsed[0].title.count("Triangle") == 1
+    category_and_item_rows = 3
+    assert process_count == category_and_item_rows

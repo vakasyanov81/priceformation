@@ -1,4 +1,4 @@
-"""tests for BaseParser.get_xls_reader arguments."""
+"""tests for BaseParser.get_data_reader arguments."""
 
 from unittest.mock import MagicMock
 
@@ -39,14 +39,14 @@ def _parse_config() -> ParseConfiguration:
     )
 
 
-def test_get_xls_reader_passes_path_and_params() -> None:
-    xls_reader = MagicMock()
+def test_get_data_reader_passes_path_and_params() -> None:
+    data_reader = MagicMock()
     instance = MagicMock()
-    xls_reader.get_instance.return_value = instance
-    parser = BaseParser(parse_config=_parse_config(), xls_reader=xls_reader)
+    data_reader.get_instance.return_value = instance
+    parser = BaseParser(parse_config=_parse_config(), data_reader=data_reader)
 
-    assert parser.get_xls_reader(_XLS_PATH) is instance
-    xls_reader.get_instance.assert_called_once_with(
+    assert parser.get_data_reader(_XLS_PATH) is instance
+    data_reader.get_instance.assert_called_once_with(
         _XLS_PATH,
         {
             "start_row": _START_ROW - 1,

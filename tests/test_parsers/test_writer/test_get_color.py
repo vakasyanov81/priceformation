@@ -1,7 +1,6 @@
 """tests for XlsWriter row color lookup."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -18,8 +17,7 @@ _COLOR_COLUMN = 0
 
 
 def _make_writer(template: type[IWriteTemplate]) -> XlsWriter:
-    with patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None)):
-        return XlsWriter(FakeXlwtDriver(), write_data, template=template)
+    return XlsWriter(FakeXlwtDriver(), write_data, template=template, result_folder=".")
 
 
 @pytest.mark.parametrize(

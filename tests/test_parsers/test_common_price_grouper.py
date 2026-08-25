@@ -1,6 +1,7 @@
 """tests for CommonPriceGrouper."""
 
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -91,6 +92,13 @@ def test_grouper() -> None:
     assert not item_zapaska.is_double
     assert item_mim.is_double
     assert not item_mim.double_candidate
+
+
+def test_grouper_loads_aliases_once_when_omitted() -> None:
+    """без aliases_map grouper читает карту один раз, не на каждую строку"""
+    with patch("parsers.common_price_grouper.load_aliases_map", return_value={}) as mock_load:
+        CommonPriceGrouper([_row(), _row(price_markup=_PRICE_HIGH)]).group_by_params()
+    mock_load.assert_called_once()
 
 
 def test_single_item_is_not_double() -> None:

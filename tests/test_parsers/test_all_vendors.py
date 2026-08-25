@@ -1,12 +1,9 @@
-"""tests for vendor registry"""
+"""tests for the active vendors collection"""
 
-from unittest.mock import patch
-
-from parsers.all_vendors import load_remote_vendor_data
+from parsers.all_vendors import all_vendor_supplier_info
 
 
-def test_load_remote_vendor_data_uses_zapaska() -> None:
-    """реестр вызывает загрузку API Запаски, а не run."""
-    with patch("parsers.all_vendors.load_remote_data") as mock_load:
-        load_remote_vendor_data()
-        mock_load.assert_called_once_with()
+def test_supplier_info_maps_code_to_name() -> None:
+    supplier_info = all_vendor_supplier_info()
+    assert supplier_info["2"] == "Запаска (диски)"
+    assert supplier_info["22"] == "Запаска (шины)"

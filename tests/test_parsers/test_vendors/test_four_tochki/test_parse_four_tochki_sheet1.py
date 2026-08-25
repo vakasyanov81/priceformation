@@ -35,9 +35,13 @@ def get_fake_parser(parse_result: Any) -> FourTochkiParser1Sheet:
         FourTochkiParser1Sheet,
         parse_config,
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=RecommendedOrMapMarkupPolicy.from_config(parse_config),
     )
+
+
+def _title_parser() -> FourTochkiParser1Sheet:
+    return FourTochkiParser1Sheet(parse_config=ParseConfiguration(parser_config))
 
 
 def test_parse() -> None:
@@ -86,7 +90,7 @@ def test_prepare_title_replace_999() -> None:
         }
     )
 
-    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    prepared_title = _title_parser().get_prepared_title(row)
     assert prepared_title == "11L-20"
 
 
@@ -104,7 +108,7 @@ def test_prepare_title_width_two_zero() -> None:
         }
     )
 
-    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    prepared_title = _title_parser().get_prepared_title(row)
     assert prepared_title == "10.00-20 Armour TI300 16PR TTF"
 
 
@@ -124,7 +128,7 @@ def test_prepare_title_width_one_zero() -> None:
         }
     )
 
-    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    prepared_title = _title_parser().get_prepared_title(row)
     assert prepared_title == "10.0/75-15.3 Forerunner QH602 R-4 12PR TL"
 
 
@@ -144,7 +148,7 @@ def test_prepare_title_width_1() -> None:
         }
     )
 
-    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    prepared_title = _title_parser().get_prepared_title(row)
     assert prepared_title == "11L-15 Galaxy Rib Implement I-1 12PR TL"
 
 
@@ -164,7 +168,7 @@ def test_prepare_title_1() -> None:
         }
     )
 
-    prepared_title = FourTochkiParser1Sheet.get_prepared_title(row)
+    prepared_title = _title_parser().get_prepared_title(row)
     assert prepared_title == "12.5/80-18 Armour L-5B 16 TL"
 
 
