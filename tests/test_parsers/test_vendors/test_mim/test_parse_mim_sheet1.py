@@ -49,6 +49,10 @@ def get_fake_parser(parse_result: Any) -> MimParser1Sheet:
     )
 
 
+def _title_parser() -> MimParser1Sheet:
+    return MimParser1Sheet(parse_config=ParseConfiguration(parser_config))
+
+
 @pytest.mark.parametrize(
     "row_elements, prepared_title",
     [
@@ -69,7 +73,7 @@ def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
             "diameter": row_elements[2],
         }
     )
-    title = MimParser1Sheet.get_prepared_title(row_item).strip()
+    title = _title_parser().get_prepared_title(row_item).strip()
     assert title == prepared_title
 
 
@@ -82,7 +86,7 @@ def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
     ],
 )
 def test_prepare_title_skips_empty_parts(fields: dict[str, str], expected: str) -> None:
-    assert MimParser1Sheet.get_prepared_title(RowItem(fields)).strip() == expected
+    assert _title_parser().get_prepared_title(RowItem(fields)).strip() == expected
 
 
 def test_parse() -> None:

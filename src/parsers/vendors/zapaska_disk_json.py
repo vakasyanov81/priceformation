@@ -103,7 +103,7 @@ class ZapaskaDiskJSON(BaseParser):
         """get rest count"""
         return row_item.rest_count
 
-    def get_prepared_title(self, row_item: RowItem) -> str:  # type: ignore[override]
+    def get_prepared_title(self, row_item: RowItem) -> str:
         """Normalize title spaces and apply title aliases."""
         chunks = []
         for chunk in row_item.title.split(" "):

@@ -2,6 +2,7 @@
 
 Краткая задача: [13-parser-dead-code.md](../13-parser-dead-code.md)  
 Зависит от: [10-detail](10-parser-hooks-detail.md)
+Статус: сделана
 
 ## Суть проблемы
 

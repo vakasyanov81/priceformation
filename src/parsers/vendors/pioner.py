@@ -50,6 +50,7 @@ class PionerParser(BaseParser):
 
     current_category = None
     current_category_first_chunk = None
+    find_manufacturer_on_enrich = False
 
     def process_parsed_row(self, row_item: RowItem) -> None:
         """Категория из заголовочных строк — до title с производителем."""

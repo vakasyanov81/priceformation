@@ -3,7 +3,7 @@
 Подробно: [13-parser-dead-code-detail.md](details/13-parser-dead-code-detail.md)
 
 Этап: [3. Разрезать BaseParser](../PLAN_CLEAN_CODE.md#этап-3-разрезать-baseparser)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [10. Хуки](10-parser-hooks.md)  
 Дальше: [14. Writer](14-writer-layers.md) (этап 4)
 

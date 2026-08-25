@@ -49,8 +49,7 @@ class MimParser1Sheet(MimParserBase):
     def get_current_category(cls) -> str:
         return "Легковая шина"
 
-    @classmethod
-    def get_prepared_title(cls, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str:
         """get prepared title"""
         profile = row_item.height_percent or ""
         delimiter = "x" if is_number(profile) else "/"

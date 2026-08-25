@@ -56,6 +56,5 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
         }
         return tyre_type_dict.get(row_item.tire_type.lower().strip()) or "Автошина"
 
-    @classmethod
-    def get_prepared_title(cls, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str:
         return get_prepared_title(row_item)

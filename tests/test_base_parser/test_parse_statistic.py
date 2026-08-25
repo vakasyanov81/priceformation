@@ -1,6 +1,6 @@
 """ParseResultStatistic: min/max наценки после разбора."""
 
-from parsers.base_item_actions.calc_percent_markup_item_action import SetPercentMarkupItemAction
+from parsers.base_parser.base_parser import fill_percent_markup
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.row_item.row_item import RowItem
 
@@ -10,7 +10,7 @@ _PRICE = 100
 def _row_with_zero_markup() -> RowItem:
     """Позиция как у Autosnab54: закупочная цена равна цене с наценкой."""
     row = RowItem({"price_opt": _PRICE, "price_markup": _PRICE})
-    SetPercentMarkupItemAction(row).action()
+    fill_percent_markup([row])
     return row
 
 
@@ -53,3 +53,21 @@ def test_absolute_markup_min_max() -> None:
 def test_count_items_with_purchase_price() -> None:
     rows = [RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})]
     assert ParseResultStatistic(rows).count_items() == 1
+
+
+def test_fill_percent_keeps_stored_value() -> None:
+    row = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW, "percent_markup": _PERCENT})
+    fill_percent_markup([row])
+    assert row.percent_markup == _PERCENT
+
+
+def test_fill_percent_from_prices() -> None:
+    row = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})
+    fill_percent_markup([row])
+    assert row.percent_markup == _PERCENT
+
+
+def test_fill_percent_skips_empty_markup() -> None:
+    row = RowItem({"price_opt": _OPT})
+    fill_percent_markup([row])
+    assert not row.percent_markup

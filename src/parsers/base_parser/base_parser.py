@@ -7,10 +7,6 @@ from typing import Any, ClassVar, Protocol
 
 from core.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
-from parsers.base_item_actions.base_item_action import BaseItemAction
-from parsers.base_item_actions.calc_percent_markup_item_action import (
-    SetPercentMarkupItemAction,
-)
 from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.row_item.row_item import RowItem
@@ -23,8 +19,6 @@ from .manufacturer_finder import ManufacturerFinder
 from .markup_policy import IdentityMarkupPolicy, MarkupPolicy, make_markup_policy, percent_to_store
 from .parse_statistic import ParseResultStatistic
 from .price_source import FilePricesSource, PriceSource
-
-type ItemActionClasses = list[type[BaseItemAction]]
 
 
 class ParseConfigNotSetError(RuntimeError):
@@ -66,8 +60,7 @@ class Parser(Protocol):
 
 
 class BaseParser:
-    _item_actions: ClassVar[ItemActionClasses] = []
-    _item_actions_after_process: ClassVar[ItemActionClasses] = [SetPercentMarkupItemAction]
+    find_manufacturer_on_enrich: ClassVar[bool] = True
 
     def __init__(
         self,
@@ -153,7 +146,7 @@ class BaseParser:
     def after_process(self) -> None:
         """drop empty rest → fill percent markup."""
         self.parsed_items = drop_empty_rest(self.parsed_items)
-        self.fill_percent_markup(self.parsed_items)
+        fill_percent_markup(self.parsed_items)
 
     def read_rows(self, paths: list[str]) -> list[dict[str, Any]]:
         raw_rows: list[dict[str, Any]] = []
@@ -175,6 +168,10 @@ class BaseParser:
         for row_item in row_items:
             self.process_parsed_row(row_item)
 
+    def apply_manufacturer(self, row_item: RowItem) -> None:
+        if self.find_manufacturer_on_enrich:
+            self.manufacturer_finder().process(row_item)
+
     def after_row_mapped(self, row_item: RowItem) -> None:
         """Редкое уникальное после enrich (title, fill_from_title). По умолчанию ничего."""
 
@@ -192,11 +189,6 @@ class BaseParser:
         self.skip_by_min_rest(row_item)
         self.apply_category(row_item)
         self.add_price_markup(row_item)
-
-    def fill_percent_markup(self, row_items: list[RowItem]) -> None:
-        for row_item in row_items:
-            for item_action in self._item_actions_after_process:
-                item_action(row_item).action()
 
     def correction_category(self, row_item: RowItem) -> None:
         if not row_item.type_production or self._category_finder is None:
@@ -247,8 +239,7 @@ class BaseParser:
             },
         )
 
-    @classmethod
-    def get_prepared_title(cls, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str:
         return row_item.title
 
     def set_prepared_title(self, row_item: RowItem) -> bool:
@@ -367,6 +358,15 @@ class BaseParser:
         if row_item.spike.strip().lower() in ["ш.", "да"]:
             return "Да"
         return ""
+
+
+def fill_percent_markup(row_items: list[RowItem]) -> None:
+    """Записать percent_markup из цен, если его ещё нет (Poshk/Pioner уже пишут сами)."""
+    for row_item in row_items:
+        if row_item.percent_markup or not row_item.price_markup:
+            continue
+        fraction = price_markup.calc_percent(row_item.price_markup, row_item.price_opt)
+        row_item.percent_markup = round(fraction * 100, 2)
 
 
 def make_parser[TParser: BaseParser](
