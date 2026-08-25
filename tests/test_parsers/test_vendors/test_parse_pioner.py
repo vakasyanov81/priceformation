@@ -36,7 +36,7 @@ def get_fake_parser(parse_result: Any) -> PionerParser:
         PionerParser,
         parse_config,
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 
@@ -147,7 +147,7 @@ def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
         PionerParser,
         parse_config,
         file_prices=list(pioner_one_item_result().keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=make_map_on_opt_markup_policy(parse_config),
     )
 

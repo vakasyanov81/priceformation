@@ -1,7 +1,8 @@
 # 12. JSON reader для Zapaska — подробно
 
 Краткая задача: [12-parser-json-reader.md](../12-parser-json-reader.md)  
-Зависит от: [09-detail](09-parser-pipeline-detail.md)
+Зависит от: [09-detail](09-parser-pipeline-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 

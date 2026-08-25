@@ -3,12 +3,11 @@ logic for zapaska (rest) vendor
 """
 
 import json
-from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from cfg.main import MainConfig
 from core.file_reader import read_file
-from parsers.base_parser.base_parser import BaseParser, XlsReaderFactory
+from parsers.base_parser.base_parser import BaseParser, ReaderFactory
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
     ParseParamsSupplier,
@@ -16,12 +15,8 @@ from parsers.base_parser.base_parser_config import (
     make_parse_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
+from parsers.json_reader import JsonPriceReader
 from parsers.row_item.row_item import RowItem
-from parsers.xls_reader import XlsReader
-
-type JsonRow = dict[str, Any]
-type JsonRows = list[JsonRow]
-type ColumnMap = dict[str, str]
 
 column_mapping = {
     "cae": RowItem.code_art.name,
@@ -72,14 +67,6 @@ def invert_map(title_aliases: dict[str, Any]) -> dict[str, Any]:
     return inverted
 
 
-def rename_fields(rows: JsonRows, columns: ColumnMap) -> None:
-    """Rename JSON keys to RowItem field names."""
-    for row in rows:
-        for source_key, target_key in columns.items():
-            if source_key in row:
-                row[target_key] = row.pop(source_key)
-
-
 zapaska_config = make_parse_config(zapaska_params)
 
 
@@ -94,24 +81,14 @@ class ZapaskaDiskJSON(BaseParser):
         self,
         parse_config: ParseConfiguration,
         file_prices: list[Any] | None = None,
-        xls_reader: type[XlsReaderFactory] = XlsReader,
+        data_reader: type[ReaderFactory] = JsonPriceReader,
         *,
         markup_policy: MarkupPolicy | None = None,
     ) -> None:
         """init"""
         self.not_matched_position: list[str] = []
         self.title_aliases = get_title_aliases(parse_config.parse_config.parser_params.supplier.name)
-        super().__init__(parse_config, file_prices, xls_reader, markup_policy=markup_policy)
-
-    def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
-        """raw parse"""
-        with Path(full_file_xls_path).open(encoding="utf-8") as out_file:
-            text_data = out_file.read()
-        loaded = json.loads(text_data)
-        dictable_data = cast(list[dict[str, Any]], loaded)
-        parser_params = self.parse_config().parse_config.parser_params
-        rename_fields(dictable_data, cast(dict[str, str], parser_params.columns))
-        return dictable_data
+        super().__init__(parse_config, file_prices, data_reader, markup_policy=markup_policy)
 
     def category_for(self, row_item: RowItem) -> str | None:
         return self._type_production

@@ -2,6 +2,7 @@
 tests for zapaska vendor after raw-parser process
 """
 
+import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
 from cfg.main import get_config
@@ -9,6 +10,8 @@ from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
+from parsers.fake_json_reader import FakeJsonPriceReader
+from parsers.json_reader import JsonPriceReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
 
@@ -47,6 +50,39 @@ class TestParseZapaskaDiskJSON:
         assert res.supplier_name == "Запаска (диски)"
         assert res.pcd1 == 114.3
         assert res.percent_markup == 14.94
+
+
+def test_make_parser_uses_json_price_reader() -> None:
+    parser = get_fake_parser([])
+    assert parser.data_reader is JsonPriceReader
+
+
+def test_parse_with_fake_json_reader_without_disk(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        FakeJsonPriceReader,
+        "raw_rows",
+        [
+            {
+                "cae": "1",
+                "price": 10000,
+                "retail": 12000,
+                "rest": 10,
+                "name": "Replay HND",
+                "brand": "Replay",
+            },
+        ],
+    )
+    parser = make_parser(
+        ZapaskaDiskJSON,
+        ParseConfiguration(parser_config),
+        file_prices=["memory.json"],
+        data_reader=FakeJsonPriceReader,
+    )
+    parsed_items = parser.parse()
+    assert len(parsed_items) == 1
+    assert parsed_items[0].code_art == "1"
+    assert parsed_items[0].price_opt == 10000
+    assert parsed_items[0].title == "Replay HND"
 
 
 def test_markup_without_recommended() -> None:

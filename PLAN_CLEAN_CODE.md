@@ -15,7 +15,7 @@
 
 Ломает Clean Code:
 
-- **SRP** — `BaseParser` оркестрирует именованные шаги pipeline; vendors задают хуки title/category/rest; прайсы через `PriceSource` ([11](plan_clean_code/11-parser-price-source.md)). JSON/HTTP Zapaska — [12](plan_clean_code/12-parser-json-reader.md)/[15](plan_clean_code/15-zapaska-http.md).
+- **SRP** — `BaseParser` оркестрирует именованные шаги pipeline; vendors задают хуки title/category/rest; прайсы через `PriceSource` ([11](plan_clean_code/11-parser-price-source.md)); JSON Zapaska — `JsonPriceReader` ([12](plan_clean_code/12-parser-json-reader.md)). HTTP Zapaska — [15](plan_clean_code/15-zapaska-http.md).
 - **OCP / DRY** — новый поставщик = правка `all_vendors.py` + копипаста `ParseConfiguration` в 12 файлах.
 - **DIP** — `xls_writer` и Zapaska импортируют `cfg`; HTTP живёт внутри парсера JSON.
 - Наценка: политики в `markup_policy.py` (Mim, map-on-opt, identity, recommended-or-map, Zapaska через флаги JSON). Vendors задают mapping; Mim sheet2 ещё со своим override грузовых % (вне этапа 1).
@@ -37,7 +37,7 @@
 | [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | сделана |
 | [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 | сделана |
 | [11](plan_clean_code/11-parser-price-source.md) | `PriceSource` вместо glob | 3 | сделана |
-| [12](plan_clean_code/12-parser-json-reader.md) | JSON reader для Zapaska | 3 | не начата |
+| [12](plan_clean_code/12-parser-json-reader.md) | JSON reader для Zapaska | 3 | сделана |
 | [13](plan_clean_code/13-parser-dead-code.md) | Мёртвый Command, title, Пионер | 3 | не начата |
 | [14](plan_clean_code/14-writer-layers.md) | Writer без cfg и I/O в конструкторе | 4 | не начата |
 | [15](plan_clean_code/15-zapaska-http.md) | HTTP-клиент Zapaska вне парсера | 4 | не начата |
@@ -85,14 +85,14 @@
 
 ## Этап 3. Разрезать `BaseParser`
 
-**Зачем.** `parse`/`process` — именованные шаги; vendors задают `after_row_mapped` / `category_for`, наценка из pipeline. JSON-чтение ещё живёт в парсере.
+**Зачем.** `parse`/`process` — именованные шаги; vendors задают `after_row_mapped` / `category_for`, наценка из pipeline. JSON читает `JsonPriceReader`.
 
 **Задачи**
 
 1. [09. Pipeline](plan_clean_code/09-parser-pipeline.md) — после [06](plan_clean_code/06-markup-cleanup.md) — **сделана**
 2. [10. Хуки vendors](plan_clean_code/10-parser-hooks.md) — после 09 — **сделана**
 3. [11. PriceSource](plan_clean_code/11-parser-price-source.md) — после 09 — **сделана**
-4. [12. JSON reader](plan_clean_code/12-parser-json-reader.md) — после 09
+4. [12. JSON reader](plan_clean_code/12-parser-json-reader.md) — после 09 — **сделана**
 5. [13. Мёртвый код / title / Пионер](plan_clean_code/13-parser-dead-code.md) — после 10
 
 11 и 12 можно параллельно после 09.

@@ -48,7 +48,7 @@ def get_fake_parser(parse_result: Any) -> MimParser2Sheet:
         MimParser2Sheet,
         ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
     )
 
 

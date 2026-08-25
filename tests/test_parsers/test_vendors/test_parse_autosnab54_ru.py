@@ -64,7 +64,7 @@ def _fake_parser(parse_result: Any) -> Autosnab54Parser:
         Autosnab54Parser,
         ParseConfiguration(parser_config),
         file_prices=list(parse_result.keys()),
-        xls_reader=FakeXlsReader,
+        data_reader=FakeXlsReader,
         markup_policy=IdentityMarkupPolicy.create(),
     )
 

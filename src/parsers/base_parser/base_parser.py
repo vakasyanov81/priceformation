@@ -41,8 +41,8 @@ class MarkupPolicyNotSetError(RuntimeError):
         super().__init__("markup_policy is not set")
 
 
-class XlsReaderFactory(Protocol):
-    """Класс-ридер с фабричным get_instance (XlsReader / FakeXlsReader)."""
+class ReaderFactory(Protocol):
+    """Класс-ридер с фабричным get_instance (XlsReader / JsonPriceReader / Fake*)."""
 
     @classmethod
     def get_instance(cls, file_path: str, *args: Any, **kwargs: Any) -> IXlsReader: ...
@@ -73,7 +73,7 @@ class BaseParser:
         self,
         parse_config: ParseConfiguration | None = None,
         file_prices: list[str] | None = None,
-        xls_reader: type[XlsReaderFactory] = XlsReader,
+        data_reader: type[ReaderFactory] = XlsReader,
         *,
         markup_policy: MarkupPolicy | None = None,
         price_source: PriceSource | None = None,
@@ -81,7 +81,7 @@ class BaseParser:
         self.parsed_items: list[RowItem] = []
         self._parse_config: ParseConfiguration | None = parse_config
         self.type_production: str | None = None
-        self.xls_reader = xls_reader
+        self.data_reader = data_reader
         self.files: list[str] | None = file_prices
         self.logger = LoggerParseProcess(repr(self))
         self._black_list: list[str] | None = None
@@ -235,11 +235,11 @@ class BaseParser:
         return replaced_seasons.get(row_item.season.lower()) or row_item.season
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
-        reader = self.get_xls_reader(full_file_xls_path)
+        reader = self.get_data_reader(full_file_xls_path)
         return reader.parse(self.parser_params().sheet_indexes)
 
-    def get_xls_reader(self, full_file_xls_path: str) -> IXlsReader:
-        return self.xls_reader.get_instance(
+    def get_data_reader(self, full_file_xls_path: str) -> IXlsReader:
+        return self.data_reader.get_instance(
             full_file_xls_path,
             {
                 "start_row": self.parser_params().start_row - 1,
@@ -375,14 +375,20 @@ def make_parser[TParser: BaseParser](
     *,
     markup_policy: MarkupPolicy | None = None,
     file_prices: list[str] | None = None,
-    xls_reader: type[XlsReaderFactory] = XlsReader,
+    data_reader: type[ReaderFactory] | None = None,
 ) -> TParser:
     """Собрать парсер с политикой наценки. Не метод BaseParser."""
     policy = make_markup_policy(parse_config) if markup_policy is None else markup_policy
+    if data_reader is None:
+        return parser_cls(
+            parse_config=parse_config,
+            file_prices=file_prices,
+            markup_policy=policy,
+        )
     return parser_cls(
         parse_config=parse_config,
         file_prices=file_prices,
-        xls_reader=xls_reader,
+        data_reader=data_reader,
         markup_policy=policy,
     )
 

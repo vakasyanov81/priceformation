@@ -41,7 +41,7 @@ class FakeParser:
         self,
         parse_config: Any = None,
         file_prices: list[str] | None = None,
-        xls_reader: Any = None,
+        data_reader: Any = None,
         *,
         markup_policy: Any = None,
     ) -> None:
@@ -68,7 +68,7 @@ class FakeParserWithSkips:
         self,
         parse_config: Any = None,
         file_prices: list[str] | None = None,
-        xls_reader: Any = None,
+        data_reader: Any = None,
         *,
         markup_policy: Any = None,
     ) -> None:
