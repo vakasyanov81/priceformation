@@ -3,7 +3,7 @@
 Подробно: [14-writer-layers-detail.md](details/14-writer-layers-detail.md)
 
 Этап: [4. Слои и побочные эффекты](../PLAN_CLEAN_CODE.md#этап-4-слои-и-побочные-эффекты)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [11. PriceSource](11-parser-price-source.md) (пути уже через порты)  
 Дальше: [15. HTTP Zapaska](15-zapaska-http.md)
 

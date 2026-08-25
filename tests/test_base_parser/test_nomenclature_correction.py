@@ -15,7 +15,7 @@ def _clear_cache() -> None:
 
 
 def _paths(tmp_path: Any) -> ParsePaths:
-    return ParsePaths(file_prices_folder=".", user_config_folder=str(tmp_path))
+    return ParsePaths(file_prices_folder=".", user_config_folder=str(tmp_path), result_folder=".")
 
 
 def test_load_file_missing(tmp_path: Any) -> None:

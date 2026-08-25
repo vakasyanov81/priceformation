@@ -37,11 +37,6 @@ def _four_tochki_vendors() -> list[tuple[type, object]]:
     ]
 
 
-def _result_folder(_cfg: MainConfig) -> str:
-    """тестовая папка результатов"""
-    return _RESULT_PATH
-
-
 def _reset_nomenclature_cache() -> None:
     """сбрасывает кэш номенклатуры между прогонами"""
     noc._NomenclatureCache.titles = None  # noqa: WPS437
@@ -61,6 +56,7 @@ def _example_parse_paths() -> Iterator[None]:
         ParsePaths(
             file_prices_folder=str(Path(MainConfig().project_root) / _PRICES_REL),
             user_config_folder=_PARSE_CONFIG,
+            result_folder=_RESULT_PATH,
         ),
     )
     yield
@@ -72,10 +68,7 @@ def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
     _clear_result_dir()
     _reset_nomenclature_cache()
 
-    with (
-        patch.object(MainConfig, "result_folder_path", property(_result_folder)),
-        patch("run.all_vendors", return_value=_four_tochki_vendors()),
-    ):
+    with patch("run.all_vendors", return_value=_four_tochki_vendors()):
         run_make_price_by_supplier()
 
     result_files = sorted(_RESULT_DIR.glob("*.xlsx"))

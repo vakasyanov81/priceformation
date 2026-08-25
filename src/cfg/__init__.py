@@ -51,11 +51,12 @@ def _configure_core_log_paths(main_cfg: main.MainConfig) -> None:
 
 
 def _configure_core_parse_paths(main_cfg: main.MainConfig) -> None:
-    """Push price and parse_config folders into core so parsers do not import cfg."""
+    """Push price, parse_config, and result folders into core so parsers do not import cfg."""
     configure_parse_paths(
         ParsePaths(
             file_prices_folder=str(Path(main_cfg.project_root) / main_cfg.folder_file_prices),
             user_config_folder=main_cfg.user_config_folder_path,
+            result_folder=main_cfg.result_folder_path,
         )
     )
 

@@ -16,7 +16,7 @@ from parsers.data_provider.manufacturer_aliases import (
 from parsers.data_provider.manufacturer_group import manufacturer_group
 from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
-_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg")
+_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg", result_folder="/prices/result")
 
 
 def test_stop_words_base_raises() -> None:

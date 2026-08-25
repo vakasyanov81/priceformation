@@ -75,7 +75,11 @@ class _SilentParser(BaseParser):
 
 def _configure_prices(tmp_path: Any, prices_root: Any) -> None:
     configure_parse_paths(
-        ParsePaths(file_prices_folder=str(prices_root), user_config_folder=str(tmp_path)),
+        ParsePaths(
+            file_prices_folder=str(prices_root),
+            user_config_folder=str(tmp_path),
+            result_folder=str(tmp_path / "result"),
+        ),
     )
 
 

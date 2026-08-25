@@ -2,6 +2,7 @@
 write price list logic via xlsxwriter module
 """
 
+from pathlib import Path
 from typing import Any
 
 import openpyxl
@@ -62,7 +63,7 @@ class XlsxWriterDriver(IXlsDriver):
 
     def init_workbook(self, _folder: str, _file_name: str) -> Any:
         if not self.work_book:
-            self._file_name = _folder + _file_name
+            self._file_name = str(Path(_folder) / _file_name)
             self.work_book = openpyxl.Workbook()
 
         return self.work_book

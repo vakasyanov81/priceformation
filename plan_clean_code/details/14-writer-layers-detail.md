@@ -2,6 +2,7 @@
 
 Краткая задача: [14-writer-layers.md](../14-writer-layers.md)  
 Зависит от: [11-detail](11-parser-price-source-detail.md)
+Статус: сделана
 
 ## Суть проблемы
 

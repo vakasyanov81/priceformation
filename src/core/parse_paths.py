@@ -1,4 +1,4 @@
-"""Price and parse_config folders; configured from cfg, never imported from it."""
+"""Price, parse_config, and result folders; configured from cfg, never imported from it."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,10 +13,11 @@ class ParsePathsNotConfiguredError(RuntimeError):
 
 @dataclass(frozen=True)
 class ParsePaths:
-    """Folders for supplier prices and user parse_config files."""
+    """Folders for supplier prices, parse_config, and written result xlsx."""
 
     file_prices_folder: str
     user_config_folder: str
+    result_folder: str
 
     def config_file(self, file_name: str) -> str:
         """Absolute path to a file inside parse_config."""
@@ -30,7 +31,7 @@ class _CurrentParsePaths:
 
 
 def configure_parse_paths(paths: ParsePaths) -> None:
-    """Set folders used by data_provider and FilePricesSource."""
+    """Set folders used by data_provider, FilePricesSource, and writer."""
     _CurrentParsePaths.configured = paths
 
 

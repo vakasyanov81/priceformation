@@ -3,8 +3,7 @@ tests write duplicates report
 """
 
 import datetime
-import os
-from unittest.mock import MagicMock, patch
+from typing import Any
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
@@ -19,8 +18,7 @@ _DISPUTED_COL = 17
 _DOUBLE_HEAD = ["Группа по параметрам", "Дубль", "Главный дубль", "Спорная"]
 
 
-@patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None))
-def test_xls_write_for_doubles() -> None:
+def test_xls_write_for_doubles(tmp_path: Any) -> None:
     """отчёт о дублях: колонки внутреннего прайса плюс признаки дубля"""
     row = {
         **write_data[0],
@@ -29,11 +27,17 @@ def test_xls_write_for_doubles() -> None:
         "double_candidate": False,
     }
     fake_driver = FakeXlwtDriver()
-    XlsWriter(fake_driver, [row], template=ForDoubles)
+    result_folder = str(tmp_path)
+    XlsWriter(
+        fake_driver,
+        [row],
+        template=ForDoubles,
+        result_folder=result_folder,
+    ).write()
     now = datetime.datetime.now().strftime("%Y-%m-%d")
 
     assert fake_driver.file_name == f"doubles_{now}.xlsx"
-    assert f"file_prices{os.sep}result" in (fake_driver.folder or "")
+    assert fake_driver.folder == result_folder
     assert fake_driver.head[-4:] == _DOUBLE_HEAD
     assert fake_driver.body == {
         **result_body_inner,
@@ -44,8 +48,7 @@ def test_xls_write_for_doubles() -> None:
     assert f"cell(1,{_DISPUTED_COL})" not in fake_driver.body
 
 
-@patch("parsers.writer.xls_writer.create_result_folder", MagicMock(return_value=None))
-def test_xls_write_for_doubles_disputed() -> None:
+def test_xls_write_for_doubles_disputed(tmp_path: Any) -> None:
     """спорная группа дублей — колонка Спорная заполнена"""
     row = {
         **write_data[0],
@@ -54,7 +57,12 @@ def test_xls_write_for_doubles_disputed() -> None:
         "disputed": "шип",
     }
     fake_driver = FakeXlwtDriver()
-    XlsWriter(fake_driver, [row], template=ForDoubles)
+    XlsWriter(
+        fake_driver,
+        [row],
+        template=ForDoubles,
+        result_folder=str(tmp_path),
+    ).write()
 
     assert fake_driver.head[-4:] == _DOUBLE_HEAD
     assert fake_driver.body[f"cell(1,{_DISPUTED_COL})"] == "шип"
