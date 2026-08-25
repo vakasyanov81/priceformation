@@ -3,7 +3,7 @@
 Подробно: [11-parser-price-source-detail.md](details/11-parser-price-source-detail.md)
 
 Этап: [3. Разрезать BaseParser](../PLAN_CLEAN_CODE.md#этап-3-разрезать-baseparser)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [09. Pipeline](09-parser-pipeline.md)  
 Дальше: [12. JSON reader](12-parser-json-reader.md)
 

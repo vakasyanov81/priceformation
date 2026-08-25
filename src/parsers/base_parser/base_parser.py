@@ -3,11 +3,9 @@ base parser logic
 """
 
 import math
-from pathlib import Path
 from typing import Any, ClassVar, Protocol
 
 from core.exceptions import SupplierNotHavePricesError
-from core.parse_paths import get_parse_paths
 from parsers import data_provider
 from parsers.base_item_actions.base_item_action import BaseItemAction
 from parsers.base_item_actions.calc_percent_markup_item_action import (
@@ -24,6 +22,7 @@ from .base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
 from .manufacturer_finder import ManufacturerFinder
 from .markup_policy import IdentityMarkupPolicy, MarkupPolicy, make_markup_policy, percent_to_store
 from .parse_statistic import ParseResultStatistic
+from .price_source import FilePricesSource, PriceSource
 
 type ItemActionClasses = list[type[BaseItemAction]]
 
@@ -77,6 +76,7 @@ class BaseParser:
         xls_reader: type[XlsReaderFactory] = XlsReader,
         *,
         markup_policy: MarkupPolicy | None = None,
+        price_source: PriceSource | None = None,
     ) -> None:
         self.parsed_items: list[RowItem] = []
         self._parse_config: ParseConfiguration | None = parse_config
@@ -90,6 +90,7 @@ class BaseParser:
         self._manufacturer_finder: ManufacturerFinder | None = None
         self.unknown_category_skips: list[str] = []
         self._markup_policy = markup_policy
+        self._price_source = price_source or FilePricesSource()
 
     def parse_config(self) -> ParseConfiguration:
         if self._parse_config is None:
@@ -129,7 +130,7 @@ class BaseParser:
             self.logger.log_disable_status()
             return []
         self._category_finder = CategoryFinder()
-        self.files = self.files or get_file_prices(self)
+        self.files = self._price_files()
         self.logger.log_start()
         self.process()
         self.after_process()
@@ -310,6 +311,19 @@ class BaseParser:
             raise MarkupPolicyNotSetError()
         return self._markup_policy
 
+    def _price_files(self) -> list[str]:
+        if self.files:
+            return self.files
+        parse_params = self.parser_params()
+        files = self._price_source.list_files(
+            parse_params.supplier.folder_name,
+            parse_params.file_templates,
+        )
+        if not files:
+            supplier_name = parse_params.supplier.name
+            raise SupplierNotHavePricesError(f"Прайсов у поставщика ({supplier_name}) не обнаружено!")
+        return files
+
     @classmethod
     def get_markup(cls, price: float, percent: float) -> float:
         """get price with absolute markup"""
@@ -376,23 +390,3 @@ def make_parser[TParser: BaseParser](
 def _type_production_from_filename(price_file: str) -> str:
     """Последний суффикс имени файла после `_` (например disks.xls)."""
     return price_file.rsplit("_", maxsplit=1)[-1]
-
-
-def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:
-    """Собрать пути прайсов по glob-шаблонам."""
-    list_files: list[str] = []
-    for f_tmp in templates:
-        list_files.extend(str(path) for path in supplier_folder.glob(f_tmp))
-    return list_files
-
-
-def get_file_prices(parser: BaseParser) -> list[str]:
-    """get file prices"""
-    prices_root = Path(get_parse_paths().file_prices_folder)
-    supplier_folder = prices_root / parser.parser_params().supplier.folder_name
-    list_files = _glob_price_files(supplier_folder, parser.parser_params().file_templates)
-
-    if not list_files:
-        supplier_name = parser.parser_params().supplier.name
-        raise SupplierNotHavePricesError(f"Прайсов у поставщика ({supplier_name}) не обнаружено!")
-    return list_files

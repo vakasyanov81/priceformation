@@ -30,7 +30,7 @@ class _CurrentParsePaths:
 
 
 def configure_parse_paths(paths: ParsePaths) -> None:
-    """Set folders used by data_provider and base_parser."""
+    """Set folders used by data_provider and FilePricesSource."""
     _CurrentParsePaths.configured = paths
 
 

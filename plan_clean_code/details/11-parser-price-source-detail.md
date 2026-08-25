@@ -2,6 +2,7 @@
 
 Краткая задача: [11-parser-price-source.md](../11-parser-price-source.md)  
 Зависит от: [09-detail](09-parser-pipeline-detail.md)
+Статус: сделана
 
 ## Суть проблемы
 
