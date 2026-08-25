@@ -15,7 +15,7 @@
 
 Ломает Clean Code:
 
-- **SRP** — `BaseParser` (~387 строк) совмещает FS, фильтры, title, rest и наценку; vendors снова переопределяют `process()`.
+- **SRP** — `BaseParser` оркестрирует именованные шаги pipeline; glob ещё в `get_file_prices` ([11](plan_clean_code/11-parser-price-source.md)), JSON/HTTP Zapaska — [12](plan_clean_code/12-parser-json-reader.md)/[15](plan_clean_code/15-zapaska-http.md).
 - **OCP / DRY** — новый поставщик = правка `all_vendors.py` + копипаста `ParseConfiguration` в 12 файлах.
 - **DIP** — `xls_writer` и Zapaska импортируют `cfg`; HTTP живёт внутри парсера JSON.
 - Наценка: политики в `markup_policy.py` (Mim, map-on-opt, identity, recommended-or-map, Zapaska через флаги JSON). Vendors задают mapping; Mim sheet2 ещё со своим override грузовых % (вне этапа 1).
@@ -34,7 +34,7 @@
 | [06](plan_clean_code/06-markup-cleanup.md) | Очистка `BaseParser` и контракт JSON | 1 | сделана |
 | [07](plan_clean_code/07-config-factory.md) | Фабрика `make_parse_config` | 2 | сделана |
 | [08](plan_clean_code/08-config-cache.md) | Кэш наценки на экземпляре | 2 | сделана |
-| [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | не начата |
+| [09](plan_clean_code/09-parser-pipeline.md) | Явный pipeline парсера | 3 | сделана |
 | [10](plan_clean_code/10-parser-hooks.md) | Хуки vendors вместо циклов `process()` | 3 | не начата |
 | [11](plan_clean_code/11-parser-price-source.md) | `PriceSource` вместо glob | 3 | не начата |
 | [12](plan_clean_code/12-parser-json-reader.md) | JSON reader для Zapaska | 3 | не начата |
@@ -85,7 +85,7 @@
 
 ## Этап 3. Разрезать `BaseParser`
 
-**Зачем.** Template Method раздут: Mim и FourTochki копируют цикл `process()`; остальные vendors — каждый свой, с одними шагами.
+**Зачем.** `parse`/`process` — два комка без имён шагов. Хук `process_parsed_row` уже есть (наценка, skip rest, category), но Mim/FourTochki/остальные vendors всё ещё дублируют тело хука; glob и JSON-чтение живут в парсере.
 
 **Задачи**
 

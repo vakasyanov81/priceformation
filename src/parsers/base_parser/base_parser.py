@@ -20,7 +20,7 @@ from parsers.xls_reader import IXlsReader, XlsReader
 
 from . import price_markup
 from .base_parser_config import ParseConfiguration, ParserParams
-from .base_parser_row import _keep_row_item, _try_prepare_row
+from .base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
 from .manufacturer_finder import ManufacturerFinder
 from .markup_policy import IdentityMarkupPolicy, MarkupPolicy, make_markup_policy, percent_to_store
 from .parse_statistic import ParseResultStatistic
@@ -133,8 +133,54 @@ class BaseParser:
         self.logger.log_start()
         self.process()
         self.after_process()
-        self.logger.log_finish(ParseResultStatistic(self.parsed_items))
-        return self.parsed_items
+        parsed = self.get_parsed_items()
+        self.logger.log_finish(ParseResultStatistic(parsed))
+        return parsed
+
+    def process(self) -> int:
+        """read → map → filter → enrich → vendor hook. Count before filters."""
+        files = self.files or []
+        self.logger.log_list_files(files)
+        mapped = self.map_items(self.read_rows(files))
+        raw_count = len(mapped)
+        self.parsed_items += mapped
+        self.parsed_items = self.filter_keep(self.parsed_items)
+        self.parsed_items = self.enrich(self.parsed_items)
+        self.apply_vendor_hooks(self.parsed_items)
+        return raw_count
+
+    def after_process(self) -> None:
+        """drop empty rest → fill percent markup."""
+        self.parsed_items = drop_empty_rest(self.parsed_items)
+        self.fill_percent_markup(self.parsed_items)
+
+    def read_rows(self, paths: list[str]) -> list[dict[str, Any]]:
+        raw_rows: list[dict[str, Any]] = []
+        for price_file in paths:
+            self.type_production = _type_production_from_filename(price_file)
+            raw_rows.extend(self.raw_parse(price_file))
+        return raw_rows
+
+    def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
+        return [self.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
+
+    def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
+        return enrich_items(self, row_items)
+
+    def filter_keep(self, row_items: list[RowItem]) -> list[RowItem]:
+        return [row_item for row_item in row_items if _keep_row_item(self, row_item)]
+
+    def apply_vendor_hooks(self, row_items: list[RowItem]) -> None:
+        for row_item in row_items:
+            self.process_parsed_row(row_item)
+
+    def process_parsed_row(self, row_item: RowItem) -> None:
+        """Хук после enrich: наценка, rest, категория. По умолчанию ничего."""
+
+    def fill_percent_markup(self, row_items: list[RowItem]) -> None:
+        for row_item in row_items:
+            for item_action in self._item_actions_after_process:
+                item_action(row_item).action()
 
     def correction_category(self, row_item: RowItem) -> None:
         if not row_item.type_production or self._category_finder is None:
@@ -143,51 +189,11 @@ class BaseParser:
         if bad_category:
             row_item.type_production = category
 
-    def process(self) -> int:
-        result_statistic = 0
-        files = self.files or []
-        self.logger.log_list_files(files)
-
-        for price_file in files:
-            self.type_production = price_file.split("_")[-1]
-            res = self.to_row_items(self.raw_parse(price_file))
-            result_statistic += len(res or [])
-            self.parsed_items += res
-        self.remove_wo_price_purchase_and_check_title()
-        self.parsed_items = self.prepare(self.parsed_items)
-        self._process_parsed_items()
-        return result_statistic
-
-    def _process_parsed_items(self) -> None:
-        for row_item in self.parsed_items:
-            self.process_parsed_row(row_item)
-
-    def process_parsed_row(self, row_item: RowItem) -> None:
-        """Хук после prepare: наценка, rest, категория. По умолчанию ничего."""
-
-    def after_process(self) -> None:
-        self.remove_null_rest()
-        self.do_items_actions_after_process()
-
     def get_markup_percent(self, price_value: float) -> float:
         return self._require_markup_policy().markup_percent_for_opt(price_value)
 
     def parser_params(self) -> ParserParams:
         return self.parse_config().parse_config.parser_params
-
-    def prepare(self, row_items: list[RowItem]) -> list[RowItem]:
-        parsed_items = []
-        start_row = self.parse_config().parse_config.parser_params.start_row
-        for row_id, row_item in enumerate(row_items, start=start_row):
-            prepared = _try_prepare_row(self, row_id, row_item)
-            if prepared is not None:
-                parsed_items.append(prepared)
-        return parsed_items
-
-    def do_items_actions_after_process(self) -> None:
-        for row_item in self.parsed_items:
-            for item_action in self._item_actions_after_process:
-                item_action(row_item).action()
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
@@ -205,29 +211,12 @@ class BaseParser:
     def is_active(self) -> bool:
         return bool(self.get_current_vendor_config().enabled)
 
-    def remove_null_rest(self) -> None:
-        filtered_items = []
-        for row_item in self.get_parsed_items():
-            # rest_count may be ">40", its not convertible to float
-            if not row_item.price_opt or not row_item.rest_count:
-                continue
-            filtered_items.append(row_item)
-
-        self.parsed_items = filtered_items
-
     @classmethod
     def replace_season(cls, row_item: RowItem) -> str | None:
         if not row_item.season:
             return None
         replaced_seasons = {"зима": "Зимняя", "лето": "Летняя"}
         return replaced_seasons.get(row_item.season.lower()) or row_item.season
-
-    def remove_wo_price_purchase_and_check_title(self) -> None:
-        """...."""
-        self.parsed_items = [row_item for row_item in self.get_parsed_items() if _keep_row_item(self, row_item)]
-
-    def to_row_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
-        return [self.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
         reader = self.get_xls_reader(full_file_xls_path)
@@ -378,6 +367,11 @@ def make_parser[TParser: BaseParser](
         xls_reader=xls_reader,
         markup_policy=policy,
     )
+
+
+def _type_production_from_filename(price_file: str) -> str:
+    """Последний суффикс имени файла после `_` (например disks.xls)."""
+    return price_file.rsplit("_", maxsplit=1)[-1]
 
 
 def _glob_price_files(supplier_folder: Path, templates: list[str]) -> list[str]:

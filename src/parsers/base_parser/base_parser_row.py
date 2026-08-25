@@ -61,3 +61,22 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
     if row_item.rest_count and not row_item.price_opt:
         return False
     return not row_item.title or parser.is_valid_title(row_item.title)
+
+
+def enrich_items(parser: BaseParser, row_items: list[RowItem]) -> list[RowItem]:
+    """Title, отсев по ошибкам/stop/black и служебные поля."""
+    parsed_items: list[RowItem] = []
+    start_row = parser.parse_config().parse_config.parser_params.start_row
+    for row_id, row_item in enumerate(row_items, start=start_row):
+        prepared = _try_prepare_row(parser, row_id, row_item)
+        if prepared is not None:
+            parsed_items.append(prepared)
+    return parsed_items
+
+
+def drop_empty_rest(row_items: list[RowItem]) -> list[RowItem]:
+    """Оставить позиции с ценой закупки и остатком.
+
+    rest_count может быть ``>40`` и не приводится к float — только истинность.
+    """
+    return [row_item for row_item in row_items if row_item.price_opt and row_item.rest_count]

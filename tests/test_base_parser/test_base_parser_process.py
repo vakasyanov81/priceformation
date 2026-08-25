@@ -26,13 +26,13 @@ class _ProcessParser(BaseParser):
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
         return [{"file": full_file_xls_path}]
 
-    def to_row_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
-        return self._rows_by_file[str(raw_rows[0]["file"])]
+    def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
+        mapped_rows: list[RowItem] = []
+        for raw in raw_rows:
+            mapped_rows.extend(self._rows_by_file[str(raw["file"])])
+        return mapped_rows
 
-    def remove_wo_price_purchase_and_check_title(self) -> None:
-        pass
-
-    def prepare(self, row_items: list[RowItem]) -> list[RowItem]:
+    def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return row_items
 
 

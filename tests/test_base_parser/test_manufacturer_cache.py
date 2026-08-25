@@ -73,7 +73,7 @@ def test_set_parse_config_drops_cached_finder() -> None:
     assert first is not second
 
 
-def test_prepare_builds_finder_once(monkeypatch: Any) -> None:
+def test_enrich_builds_finder_once(monkeypatch: Any) -> None:
     created: list[int] = []
     original_init = ManufacturerFinder.__init__
 
@@ -83,7 +83,7 @@ def test_prepare_builds_finder_once(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(ManufacturerFinder, "__init__", counting_init)
     parser = BaseParser(parse_config=_configuration()[0])
-    parser.prepare(
+    parser.enrich(
         [
             RowItem({"title": "Aeolus winter"}),
             RowItem({"title": "Aeolus summer"}),

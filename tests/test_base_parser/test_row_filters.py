@@ -4,6 +4,7 @@ from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.base_parser_row import drop_empty_rest
 from parsers.base_parser.category_finder import CategoryFinder
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import pioner_params
@@ -57,6 +58,12 @@ def test_drop_row_with_rest_and_no_purchase_price() -> None:
     parser = _parser()
     dropped = RowItem({"title": _TITLE, "rest_count": _REST})
     kept = RowItem({"title": _TITLE, "rest_count": _REST, "price_opt": _PRICE})
-    parser.parsed_items = [dropped, kept]
-    parser.remove_wo_price_purchase_and_check_title()
-    assert parser.parsed_items == [kept]
+    assert parser.filter_keep([dropped, kept]) == [kept]
+
+
+def test_drop_empty_rest_requires_opt_and_rest() -> None:
+    kept = RowItem({"title": _TITLE, "rest_count": _REST, "price_opt": _PRICE})
+    no_rest = RowItem({"title": _TITLE, "price_opt": _PRICE})
+    no_opt = RowItem({"title": _TITLE, "rest_count": _REST})
+    zero_rest = RowItem({"title": _TITLE, "rest_count": 0, "price_opt": _PRICE})
+    assert drop_empty_rest([kept, no_rest, no_opt, zero_rest]) == [kept]
