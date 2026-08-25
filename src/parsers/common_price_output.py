@@ -5,7 +5,10 @@ Make parse all price and make inner and drom prices
 from typing import Any
 
 from core.parse_paths import get_parse_paths
-from parsers.base_parser.nomenclature_correction import get_nomenclature_corrected_title
+from parsers.base_parser.nomenclature_correction import (
+    clear_nomenclature_cache,
+    get_nomenclature_corrected_title,
+)
 from parsers.row_item.row_item import RowItem
 from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.templates.iwrite_template import IWriteTemplate
@@ -40,6 +43,7 @@ class CommonPriceOut:
         Make prices for all active templates
         :return:
         """
+        clear_nomenclature_cache()
         self.nomenclature_title_correction()
         for write_template in all_writer_templates():
             self._write_with_template(self.row_items, write_template)

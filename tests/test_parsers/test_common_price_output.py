@@ -75,6 +75,29 @@ def test_write_all_prices() -> None:
     writer_cls.return_value.write.assert_called_once()
 
 
+def test_write_all_prices_reloads_nomenclature() -> None:
+    """второй write_all_prices в том же процессе видит новую карту номенклатуры"""
+    row = RowItem({_TITLE: "old"})
+    out = CommonPriceOut(
+        [row],
+        xls_writer=cast(type[XlsWriter], MagicMock),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+    )
+
+    with (
+        patch(
+            "parsers.base_parser.nomenclature_correction.load_file",
+            side_effect=[{"old": "A"}, {"old": "B"}],
+        ),
+        patch("parsers.common_price_output.all_writer_templates", return_value=[]),
+    ):
+        out.write_all_prices()
+        assert row.title == "A"
+        row.title = "old"
+        out.write_all_prices()
+        assert row.title == "B"
+
+
 def test_write_doubles_report() -> None:
     """write_doubles_report пишет только размеченные дубли шаблоном ForDoubles"""
     double_row = RowItem({_TITLE: "dup"})

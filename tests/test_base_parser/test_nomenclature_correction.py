@@ -9,11 +9,6 @@ from parsers.base_parser import nomenclature_correction as noc
 _NOMENCLATURE_FILE = "correct-nomenclature.xlsx"
 
 
-def _clear_cache() -> None:
-    """сброс кэша исправлений между тестами"""
-    noc._NomenclatureCache.titles = None  # noqa: WPS437
-
-
 def _paths(tmp_path: Any) -> ParsePaths:
     return ParsePaths(file_prices_folder=".", user_config_folder=str(tmp_path), result_folder=".")
 
@@ -53,10 +48,23 @@ def test_load_file_reads_xlsx(tmp_path: Any) -> None:
 
 def test_corrected_title_cache() -> None:
     """подмена из кэша и fallback на исходный title"""
-    _clear_cache()
+    noc.clear_nomenclature_cache()
     with patch.object(noc, "load_file", return_value={"A": "B"}) as mock_load:
         assert noc.get_nomenclature_corrected_title("A") == "B"
         assert noc.get_nomenclature_corrected_title("A") == "B"
         assert noc.get_nomenclature_corrected_title("C") == "C"
         mock_load.assert_called_once()
-    _clear_cache()
+    noc.clear_nomenclature_cache()
+
+
+def test_corrected_title_reloads_after_clear() -> None:
+    """после сброса кэша повторный вызов читает новую карту"""
+    noc.clear_nomenclature_cache()
+    maps = [{"A": "B"}, {"A": "C"}]
+    with patch.object(noc, "load_file", side_effect=maps) as mock_load:
+        assert noc.get_nomenclature_corrected_title("A") == "B"
+        assert noc.get_nomenclature_corrected_title("A") == "B"
+        noc.clear_nomenclature_cache()
+        assert noc.get_nomenclature_corrected_title("A") == "C"
+        assert mock_load.call_count == 2
+    noc.clear_nomenclature_cache()

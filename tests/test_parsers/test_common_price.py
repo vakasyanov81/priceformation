@@ -93,6 +93,20 @@ def test_parse_all_vendors() -> None:
     assert common_price.parsed_items == fake_result
 
 
+def test_parse_all_vendors_clears_aliases_cache() -> None:
+    """каждый прогон сбрасывает кэш aliases и читает карту заново"""
+    common_price = CommonPrice()
+    with (
+        patch("parsers.common_price.log_msg"),
+        patch("parsers.common_price.clear_manufacturer_aliases_cache") as mock_clear,
+        patch("parsers.common_price_grouper.load_aliases_map", return_value={}) as mock_load,
+    ):
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
+    assert mock_clear.call_count == 2
+    assert mock_load.call_count == 2
+
+
 def test_parse_all_vendors_passes_config() -> None:
     """vendor_cls получает переданный vendor_config, не None."""
     vendor_config = MagicMock()

@@ -9,7 +9,6 @@ import pytest
 from cfg import init_cfg
 from cfg.main import MainConfig
 from core.parse_paths import ParsePaths, configure_parse_paths
-from parsers.base_parser import nomenclature_correction as noc
 from parsers.base_parser.base_parser_config import make_parse_config
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
@@ -37,11 +36,6 @@ def _four_tochki_vendors() -> list[tuple[type, object]]:
     ]
 
 
-def _reset_nomenclature_cache() -> None:
-    """сбрасывает кэш номенклатуры между прогонами"""
-    noc._NomenclatureCache.titles = None  # noqa: WPS437
-
-
 def _clear_result_dir() -> None:
     """очищает каталог результатов перед тестом"""
     _RESULT_DIR.mkdir(parents=True, exist_ok=True)
@@ -66,7 +60,6 @@ def _example_parse_paths() -> Iterator[None]:
 def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
-    _reset_nomenclature_cache()
 
     with patch("run.all_vendors", return_value=_four_tochki_vendors()):
         run_make_price_by_supplier()

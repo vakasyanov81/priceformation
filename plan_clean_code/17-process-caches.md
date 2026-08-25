@@ -3,7 +3,7 @@
 Подробно: [17-process-caches-detail.md](details/17-process-caches-detail.md)
 
 Этап: [4. Слои и побочные эффекты](../PLAN_CLEAN_CODE.md#этап-4-слои-и-побочные-эффекты)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [08. Кэш конфига](08-config-cache.md)  
 Дальше: [18. Law of Demeter](18-demeter.md)
 

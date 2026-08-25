@@ -1,7 +1,8 @@
 # 17. Предсказуемые кэши процесса — подробно
 
 Краткая задача: [17-process-caches.md](../17-process-caches.md)  
-Зависит от: [08-detail](08-config-cache-detail.md)
+Зависит от: [08-detail](08-config-cache-detail.md)  
+Статус: сделана
 
 ## Суть проблемы
 

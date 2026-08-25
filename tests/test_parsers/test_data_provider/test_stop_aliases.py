@@ -10,6 +10,7 @@ from parsers.data_provider.manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
     aliases_for_finder,
+    clear_manufacturer_aliases_cache,
     drop_blank_aliases,
     load_aliases_map,
 )
@@ -118,7 +119,7 @@ def test_manufacturer_group_lookup_once_per_map() -> None:
 
 
 def test_load_aliases_map_missing_file() -> None:
-    load_aliases_map.cache_clear()
+    clear_manufacturer_aliases_cache()
     with (
         patch(
             "parsers.data_provider.manufacturer_aliases.read_file",
@@ -127,7 +128,24 @@ def test_load_aliases_map_missing_file() -> None:
         patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
     ):
         assert load_aliases_map() == {}
-    load_aliases_map.cache_clear()
+    clear_manufacturer_aliases_cache()
+
+
+def test_load_aliases_map_reloads_after_clear() -> None:
+    """FileNotFound кэширует {}; после сброса появляется файл."""
+    clear_manufacturer_aliases_cache()
+    with (
+        patch(
+            "parsers.data_provider.manufacturer_aliases.read_file",
+            side_effect=[FileNotFoundError, '{"A": "B"}'],
+        ),
+        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
+    ):
+        assert load_aliases_map() == {}
+        assert load_aliases_map() == {}
+        clear_manufacturer_aliases_cache()
+        assert load_aliases_map() == {"A": "B"}
+    clear_manufacturer_aliases_cache()
 
 
 def test_aliases_from_config_drops_blanks() -> None:

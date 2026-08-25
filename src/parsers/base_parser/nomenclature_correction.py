@@ -19,6 +19,11 @@ class _NomenclatureCache:
     titles: dict[str, str] | None = None
 
 
+def clear_nomenclature_cache() -> None:
+    """Drop the process-level title correction cache."""
+    _NomenclatureCache.titles = None
+
+
 def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
     """Return corrected title from cache or original title."""
     if _NomenclatureCache.titles is None:

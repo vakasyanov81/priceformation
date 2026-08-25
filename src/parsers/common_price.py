@@ -17,6 +17,7 @@ from parsers.base_parser.markup_policy import (
     make_map_on_opt_markup_policy,
 )
 from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab54_ru import Autosnab54Parser
@@ -54,7 +55,7 @@ class CommonPrice:
             self.parse_vendor(_parser_for_vendor(vendor_cls, vendor_config))
 
         self._log_unknown_category_skips()
-        grouper = CommonPriceGrouper(self._parsed_items)
+        grouper = _price_run_grouper(self._parsed_items)
         self._parsed_items = grouper.group_by_params().get_row_items()
 
         log_msg(f"\nКоличество дублей: {len(grouper.get_double_row_items())}\n", need_print_log=True)
@@ -100,6 +101,12 @@ class CommonPrice:
 _MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
 _IDENTITY_VENDORS: tuple[type[BaseParser], ...] = (Autosnab54Parser,)
 _RECOMMENDED_OR_MAP_VENDORS: tuple[type[BaseParser], ...] = (FourTochkiParser1Sheet,)
+
+
+def _price_run_grouper(row_items: list[RowItem]) -> CommonPriceGrouper:
+    """Сброс aliases-кэша на прогон, затем группировка со свежей картой."""
+    clear_manufacturer_aliases_cache()
+    return CommonPriceGrouper(row_items)
 
 
 def _vendor_is_enabled(vendor_config: ParseConfiguration) -> bool:

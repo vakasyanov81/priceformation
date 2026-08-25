@@ -42,7 +42,7 @@
 | [14](plan_clean_code/14-writer-layers.md) | Writer без cfg и I/O в конструкторе | 4 | сделана |
 | [15](plan_clean_code/15-zapaska-http.md) | HTTP-клиент Zapaska вне парсера | 4 | сделана |
 | [16](plan_clean_code/16-parse-paths-aliases.md) | Title aliases через `parse_paths` | 4 | сделана |
-| [17](plan_clean_code/17-process-caches.md) | Предсказуемые кэши процесса | 4 | не начата |
+| [17](plan_clean_code/17-process-caches.md) | Предсказуемые кэши процесса | 4 | сделана |
 | [18](plan_clean_code/18-demeter.md) | Law of Demeter для `ParseConfiguration` | 4 | не начата |
 
 ---
@@ -112,7 +112,7 @@
 1. [14. Writer](plan_clean_code/14-writer-layers.md) — после [11](plan_clean_code/11-parser-price-source.md) — **сделана**
 2. [15. HTTP Zapaska](plan_clean_code/15-zapaska-http.md) — после [12](plan_clean_code/12-parser-json-reader.md) — **сделана**
 3. [16. Title aliases](plan_clean_code/16-parse-paths-aliases.md) — после 14 — **сделана**
-4. [17. Кэши процесса](plan_clean_code/17-process-caches.md) — после [08](plan_clean_code/08-config-cache.md)
+4. [17. Кэши процесса](plan_clean_code/17-process-caches.md) — после [08](plan_clean_code/08-config-cache.md) — **сделана**
 5. [18. Law of Demeter](plan_clean_code/18-demeter.md) — после [07](plan_clean_code/07-config-factory.md)
 
 **Готово, когда** в `src/parsers` нет импорта `cfg` (кроме, при необходимости, `run.py`); импорт writer не вызывает `init_cfg()`; API Zapaska тестируется без парсера прайса.
