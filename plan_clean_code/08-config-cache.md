@@ -3,7 +3,7 @@
 Подробно: [08-config-cache-detail.md](details/08-config-cache-detail.md)
 
 Этап: [2. Фабрика конфига поставщика](../PLAN_CLEAN_CODE.md#этап-2-фабрика-конфига-поставщика)  
-Статус: не начата  
+Статус: сделана  
 Зависит от: [07. Фабрика](07-config-factory.md)  
 Дальше: этап 3 — [09. Pipeline](09-parser-pipeline.md)
 
