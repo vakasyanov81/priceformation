@@ -66,7 +66,7 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
 def enrich_items(parser: BaseParser, row_items: list[RowItem]) -> list[RowItem]:
     """Title, отсев по ошибкам/stop/black и служебные поля."""
     parsed_items: list[RowItem] = []
-    start_row = parser.parse_config().parse_config.parser_params.start_row
+    start_row = parser.parser_params().start_row
     for row_id, row_item in enumerate(row_items, start=start_row):
         prepared = _try_prepare_row(parser, row_id, row_item)
         if prepared is not None:

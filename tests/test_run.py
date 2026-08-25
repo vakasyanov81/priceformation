@@ -81,14 +81,16 @@ def test_run_make_price() -> None:
 
 def test_run_upload_zapaska() -> None:
     """загрузка данных запаски и сообщение об успехе"""
+    api = MagicMock()
     with (
+        patch("run.get_zapaska_api_config", return_value=api),
         patch("run.load_remote_vendor_data") as mock_load,
         patch("run.print_log") as mock_log,
     ):
         from run import run_upload_zapaska_data
 
         run_upload_zapaska_data()
-        mock_load.assert_called_once()
+        mock_load.assert_called_once_with(api=api)
         mock_log.assert_called_once()
 
 

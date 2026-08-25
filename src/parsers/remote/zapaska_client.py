@@ -5,8 +5,9 @@ from base64 import b64encode
 from contextlib import closing
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
+from typing import Protocol
 
-from cfg.zapaska_api import ZapaskaApiConfig, ZapaskaApiConnectionError, get_zapaska_api_config
+from core.exceptions import CoreExceptionError
 from core.parse_paths import get_parse_paths
 
 _VENDOR_FOLDER = "zapaska"
@@ -14,6 +15,26 @@ _GET_TIRES_URL = "/API/hs/V2/GetTires"
 _GET_DISK_URL = "/API/hs/V2/GetDisk"
 _TIRE_FILENAME = "tire.json"
 _DISK_FILENAME = "disk.json"
+_MSG_CONNECTION_FAILED = "Не удалось подключиться к API Запаски. Проверьте интернет-соединение и параметры подключения."
+
+
+class ZapaskaApiAuth(Protocol):
+    """Host and Basic-auth credentials for Zapaska HTTPS."""
+
+    @property
+    def host(self) -> str: ...
+
+    @property
+    def login(self) -> str: ...
+
+    @property
+    def password(self) -> str: ...
+
+
+class ZapaskaApiConnectionError(CoreExceptionError):
+    """Zapaska API host is unreachable."""
+
+    __MESSAGE__ = _MSG_CONNECTION_FAILED
 
 
 def basic_auth(username: str, password: str) -> str:
@@ -22,42 +43,31 @@ def basic_auth(username: str, password: str) -> str:
     return f"Basic {token}"
 
 
-def get_data(url: str, api_config: ZapaskaApiConfig | None = None) -> str:
+def get_data(url: str, api_config: ZapaskaApiAuth) -> str:
     """GET from Zapaska API."""
-    resolved = api_config or get_zapaska_api_config()
     try:
-        return _request_zapaska(url, resolved)
+        return _request_zapaska(url, api_config)
     except (OSError, HTTPException) as exc:
-        raise _zapaska_connection_error(url, resolved.host, exc) from exc
+        detail = f"host={api_config.host} url={url}\n{exc!r}\n{traceback.format_exc()}"
+        raise ZapaskaApiConnectionError(detail=detail) from exc
 
 
-def download_catalogs(*, dest_dir: Path, api: ZapaskaApiConfig | None = None) -> None:
+def download_catalogs(*, dest_dir: Path, api: ZapaskaApiAuth) -> None:
     """GET GetTires / GetDisk → dest_dir/tire.json, disk.json."""
-    api_config = api or get_zapaska_api_config()
     dest_dir.mkdir(parents=True, exist_ok=True)
-    _write_catalog(dest_dir / _TIRE_FILENAME, get_data(_GET_TIRES_URL, api_config=api_config))
-    _write_catalog(dest_dir / _DISK_FILENAME, get_data(_GET_DISK_URL, api_config=api_config))
+    (dest_dir / _TIRE_FILENAME).write_text(get_data(_GET_TIRES_URL, api_config=api), encoding="utf-8")
+    (dest_dir / _DISK_FILENAME).write_text(get_data(_GET_DISK_URL, api_config=api), encoding="utf-8")
 
 
-def load_remote_vendor_data() -> None:
+def load_remote_vendor_data(*, api: ZapaskaApiAuth) -> None:
     """Скачать каталоги Запаски в file_prices/zapaska."""
     dest_dir = Path(get_parse_paths().file_prices_folder) / _VENDOR_FOLDER
-    download_catalogs(dest_dir=dest_dir)
+    download_catalogs(dest_dir=dest_dir, api=api)
 
 
-def _write_catalog(path: Path, payload: str) -> None:
-    path.write_text(payload, encoding="utf-8")
-
-
-def _request_zapaska(url: str, api_config: ZapaskaApiConfig) -> str:
+def _request_zapaska(url: str, api_config: ZapaskaApiAuth) -> str:
     """Perform GET against Zapaska HTTPS API."""
     with closing(HTTPSConnection(api_config.host)) as connection:
         headers = {"Authorization": basic_auth(api_config.login, api_config.password)}
         connection.request("GET", url, headers=headers)
         return connection.getresponse().read().decode("utf-8")
-
-
-def _zapaska_connection_error(url: str, host: str, exc: Exception) -> ZapaskaApiConnectionError:
-    """Human-readable connection error; original exception goes to logs."""
-    detail = f"host={host} url={url}\n{exc!r}\n{traceback.format_exc()}"
-    return ZapaskaApiConnectionError(detail=detail)

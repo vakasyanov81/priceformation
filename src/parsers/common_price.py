@@ -110,7 +110,7 @@ def _price_run_grouper(row_items: list[RowItem]) -> CommonPriceGrouper:
 
 
 def _vendor_is_enabled(vendor_config: ParseConfiguration) -> bool:
-    folder_name = vendor_config.parse_config.parser_params.supplier.folder_name
+    folder_name = vendor_config.supplier.folder_name
     vendor = vendor_config.all_vendor_config().get(folder_name)
     return bool(vendor and vendor.enabled)
 

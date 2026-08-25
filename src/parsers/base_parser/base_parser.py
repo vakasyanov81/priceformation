@@ -201,7 +201,7 @@ class BaseParser:
         return self._require_markup_policy().markup_percent_for_opt(price_value)
 
     def parser_params(self) -> ParserParams:
-        return self.parse_config().parse_config.parser_params
+        return self.parse_config().parser_params
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__

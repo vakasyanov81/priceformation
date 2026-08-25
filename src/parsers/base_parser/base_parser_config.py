@@ -62,6 +62,8 @@ class ParseConfiguration:
     def __init__(self, parse_config: BasePriceParseConfigurationParams):
         """init"""
         self.parse_config: BasePriceParseConfigurationParams = parse_config
+        self.parser_params = parse_config.parser_params
+        self.supplier = self.parser_params.supplier
         self._markup_rules: data_provider.MarkupRules | None = None
         self._price_markup_map: tuple[data_provider.MarkUpParams, ...] | None = None
         self._all_vendor_config: dict[str, data_provider.VendorParams] | None = None

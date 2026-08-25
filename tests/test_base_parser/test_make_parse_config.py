@@ -29,7 +29,9 @@ def _parser_params() -> ParserParams:
 
 def test_make_parse_config_keeps_parser_params() -> None:
     parser_params = _parser_params()
-    assert make_parse_config(parser_params).parse_config.parser_params is parser_params
+    config = make_parse_config(parser_params)
+    assert config.parser_params is parser_params
+    assert config.supplier is parser_params.supplier
 
 
 def test_markup_provider_uses_folder_name() -> None:

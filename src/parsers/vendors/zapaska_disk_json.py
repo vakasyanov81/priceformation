@@ -61,7 +61,7 @@ class ZapaskaDiskJSON(BaseParser):
     ) -> None:
         """init"""
         self.not_matched_position: list[str] = []
-        self.title_aliases = load_title_aliases(parse_config.parse_config.parser_params.supplier.name)
+        self.title_aliases = load_title_aliases(parse_config.supplier.name)
         super().__init__(parse_config, file_prices, data_reader, markup_policy=markup_policy)
 
     def category_for(self, row_item: RowItem) -> str | None:

@@ -49,5 +49,5 @@ def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
     """Supplier info"""
     supplier_info: dict[SupplierCode, SupplierName] = {}
     for _, config in all_vendors():
-        supplier_info[config.parse_config.parser_params.supplier.code] = config.parse_config.parser_params.supplier.name
+        supplier_info[config.supplier.code] = config.supplier.name
     return supplier_info
