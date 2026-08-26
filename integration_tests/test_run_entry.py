@@ -125,7 +125,7 @@ def test_response_make_price_via_try_call() -> None:
     ):
         from run import response_processing
 
-        response_processing()
+        assert response_processing() is True
 
         common.parse_all_vendors.assert_called_once_with([])
         mock_out.return_value.write_all_prices.assert_called_once()

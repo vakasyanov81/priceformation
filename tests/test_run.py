@@ -17,7 +17,7 @@ def test_response_make_price() -> None:
     ):
         from run import response_processing
 
-        response_processing()
+        assert response_processing() is True
         mock_try.assert_called_once()
         assert mock_try.call_args.args[0].__name__ == "run_make_price_by_supplier"
 
@@ -30,7 +30,7 @@ def test_response_update_zapaska() -> None:
     ):
         from run import response_processing
 
-        response_processing()
+        assert response_processing() is True
         mock_try.assert_called_once()
         assert mock_try.call_args.args[0].__name__ == "run_upload_zapaska_data"
 
@@ -43,21 +43,17 @@ def test_response_report_doubles() -> None:
     ):
         from run import response_processing
 
-        response_processing()
+        assert response_processing() is True
         mock_try.assert_called_once()
         assert mock_try.call_args.args[0].__name__ == "run_report_doubles"
 
 
 def test_response_exit() -> None:
-    """выход завершает процесс"""
-    with (
-        patch(_ASK_ACTION, return_value=AnswerResult.EXIT),
-        patch("run.sys.exit") as mock_exit,
-    ):
+    """выход останавливает цикл; sys.exit вызывает main."""
+    with patch(_ASK_ACTION, return_value=AnswerResult.EXIT):
         from run import response_processing
 
-        response_processing()
-        mock_exit.assert_called_once_with(0)
+        assert response_processing() is False
 
 
 def test_run_make_price() -> None:
