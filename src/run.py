@@ -25,11 +25,14 @@ def main() -> None:
     """
     init_cfg()
     while True:
-        response_processing()
+        if not response_processing():
+            break
+    sys.exit(0)
 
 
-def response_processing() -> None:
+def response_processing() -> bool:
     """Ask questions"""
+    continuation_of_execution = True
     match ask_action():
         case AnswerResult.MAKE_PRICE_BY_SUPPLIER:
             try_call(run_make_price_by_supplier)
@@ -38,7 +41,8 @@ def response_processing() -> None:
         case AnswerResult.REPORT_DOUBLES:
             try_call(run_report_doubles)
         case AnswerResult.EXIT:
-            sys.exit(0)
+            continuation_of_execution = False
+    return continuation_of_execution
 
 
 def run_make_price_by_supplier() -> None:

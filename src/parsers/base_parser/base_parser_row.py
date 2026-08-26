@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from core import err_msg
+from parsers.base_parser.base_parser_title import replace_season
 from parsers.row_item.row_item import RowItem
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
     parser.correction_category(row_item)
     row_item.supplier_name = parser.parser_params().supplier.name
     row_item.spike = parser.get_spike_title(row_item)
-    row_item.season = parser.replace_season(row_item)
+    row_item.season = replace_season(row_item)
     return row_item
 
 

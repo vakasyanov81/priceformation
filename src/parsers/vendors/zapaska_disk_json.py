@@ -4,13 +4,14 @@ logic for zapaska (rest) vendor
 
 from typing import Any
 
-from parsers.base_parser.base_parser import BaseParser, ReaderFactory
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
     make_parse_config,
 )
+from parsers.base_parser.base_parser_reader import ReaderFactory
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.json_reader import JsonPriceReader

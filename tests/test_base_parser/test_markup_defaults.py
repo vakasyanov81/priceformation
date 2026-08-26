@@ -6,8 +6,9 @@ import pytest
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
 from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
 
-from parsers.base_parser.base_parser import BaseParser, MarkupPolicyNotSetError, make_parser
+from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
+from parsers.base_parser.base_parser_hooks import MarkupPolicyNotSetError
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
