@@ -80,6 +80,38 @@ def test_ext_diameter_title_skips_empty_optional() -> None:
         ({"width": "11", "diameter": "R20", "tire_type": _TRUCK}, "11.00R20"),
         ({"width": "315", "diameter": "R22.5", "tire_type": _TRUCK}, "315R22.5"),
         ({"width": "11", "diameter": "R16", "tire_type": _TRUCK}, "11R16"),
+        (
+            {"width": 30.5, "height_percent": 999.0, "diameter": "--32"},
+            "30.5L-32",
+        ),
+        (
+            {
+                "width": 11.0,
+                "height_percent": 999.0,
+                "diameter": "--15",
+                "tire_type": "спецтехника",
+            },
+            "11L-15",
+        ),
+        (
+            {
+                "width": 12.4,
+                "height_percent": 999.0,
+                "diameter": "--16",
+                "tire_type": "спецтехника",
+            },
+            "12.4L-16",
+        ),
+        ({"width": "11", "height_percent": "L.0", "diameter": "--15"}, "11L-15"),
+        (
+            {
+                "width": 140.0,
+                "height_percent": 55.0,
+                "diameter": "--9",
+                "tire_type": "спецтехника",
+            },
+            "140/55-9",
+        ),
     ],
 )
 def test_prepared_title_width_postfix(fields: dict[str, Any], expected: str) -> None:

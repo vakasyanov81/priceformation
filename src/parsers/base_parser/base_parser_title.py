@@ -1,8 +1,12 @@
 """Title preparation and stop/black-list checks."""
 
+import re
+
 from parsers.base_parser.base_parser_access import ParserConfigAccess
 from parsers.data_provider.black_list import title_matches_mask
 from parsers.row_item.row_item import RowItem
+
+_COMMA_IN_NUMBER = re.compile(r"(\d),(\d)")
 
 _SPIKE_YES = {"ш.", "да"}
 _SEASON_TITLES = {"зима": "Зимняя", "лето": "Летняя"}
@@ -30,7 +34,7 @@ class ParserTitleOps:
         """prepare title"""
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
-        return " ".join(chunks)
+        return _COMMA_IN_NUMBER.sub(r"\1.\2", " ".join(chunks))
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:

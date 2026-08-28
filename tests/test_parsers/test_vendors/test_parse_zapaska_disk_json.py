@@ -109,3 +109,13 @@ def test_prepared_title_applies_alias(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     parser = get_fake_parser([])
     assert parser.get_prepared_title(RowItem({"title": "Replay  HND"})) == "Replay Honda"
+
+
+def test_prepared_title_replaces_comma_in_size(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "parsers.vendors.zapaska_disk_json.load_title_aliases",
+        lambda _name: {},
+    )
+    parser = get_fake_parser([])
+    row = RowItem({"title": "31x10,50R15 Mazzini Giantsaver 109S"})
+    assert parser.get_prepared_title(row) == "31x10.50R15 Mazzini Giantsaver 109S"

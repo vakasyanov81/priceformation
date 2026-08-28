@@ -173,6 +173,72 @@ def test_prepare_title_1() -> None:
 
 
 @pytest.mark.parametrize(
+    ("fields", "expected"),
+    [
+        (
+            {
+                RowItem.width.name: 30.5,
+                RowItem.height_percent.name: 999.0,
+                RowItem.diameter.name: "--32",
+                RowItem.manufacturer.name: "Белшина",
+                RowItem.model.name: "ФБел-179М",
+                RowItem.layering.name: "18",
+                RowItem.camera_type.name: "TT",
+                RowItem.index_load.name: "170",
+                RowItem.index_velocity.name: "A6",
+            },
+            "30.5L-32 Белшина ФБел-179М 18 TT 170A6",
+        ),
+        (
+            {
+                RowItem.width.name: 11.0,
+                RowItem.height_percent.name: 999.0,
+                RowItem.diameter.name: "--15",
+                RowItem.manufacturer.name: "Advance",
+                RowItem.model.name: "I1",
+                RowItem.layering.name: "12",
+                RowItem.camera_type.name: "TL",
+                RowItem.index_load.name: "123",
+                RowItem.index_velocity.name: "J",
+                RowItem.tire_type.name: "Спецтехника",
+            },
+            "11L-15 Advance I1 12 TL 123J",
+        ),
+        (
+            {
+                RowItem.width.name: 12.4,
+                RowItem.height_percent.name: 999.0,
+                RowItem.diameter.name: "--16",
+                RowItem.manufacturer.name: "Белшина",
+                RowItem.model.name: "ФБел-160М",
+                RowItem.camera_type.name: "TT",
+                RowItem.index_load.name: "111",
+                RowItem.index_velocity.name: "A6",
+                RowItem.tire_type.name: "Спецтехника",
+            },
+            "12.4L-16 Белшина ФБел-160М TT 111A6",
+        ),
+        (
+            {
+                RowItem.width.name: 140.0,
+                RowItem.height_percent.name: 55.0,
+                RowItem.diameter.name: "--9",
+                RowItem.manufacturer.name: "Advance",
+                RowItem.model.name: "Kargo K3",
+                RowItem.inscription_on_the_side.name: "Цельнолитая с бортом",
+                RowItem.index_load.name: "104",
+                RowItem.index_velocity.name: "A5",
+                RowItem.tire_type.name: "Спецтехника",
+            },
+            "140/55-9 Advance Kargo K3 Цельнолитая с бортом 104A5",
+        ),
+    ],
+)
+def test_prepare_title_size_canon(fields: dict[str, Any], expected: str) -> None:
+    assert _title_parser().get_prepared_title(RowItem(fields)) == expected
+
+
+@pytest.mark.parametrize(
     ("tire_type", "expected"),
     [
         ("грузовая", "Грузовая шина"),
