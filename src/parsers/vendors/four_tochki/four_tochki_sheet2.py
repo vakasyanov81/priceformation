@@ -4,6 +4,7 @@ logic for four_tochki vendor (sheet 2)
 
 import dataclasses
 
+from parsers.nomenclature_title import brand_label, join_size_parts, join_title_parts
 from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -13,7 +14,6 @@ from .four_tochki_disk_title import (
     disk_name_suffix,
     et_label,
     fill_disk_thickness,
-    join_title_parts,
 )
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
@@ -56,25 +56,20 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
     def get_prepared_title(self, row_item: RowItem) -> str:
         original_name = row_item.title or ""
         fill_disk_thickness(row_item)
-        mark = (row_item.manufacturer or "").lower().capitalize()
         return join_title_parts(
-            _disk_title(row_item, mark, disk_diameter(row_item.diameter)),
+            _disk_title(row_item, disk_diameter(row_item.diameter)),
             disk_name_suffix(original_name),
         )
 
 
-def _disk_title(row_item: RowItem, mark: str, diameter: str) -> str:
+def _disk_title(row_item: RowItem, diameter: str) -> str:
     """Title диска: size bolts ET dia color mark model."""
-    size = "x".join((str(row_item.width or ""), diameter))
-    slot_count = str(row_item.slot_count or "")
-    pcd1 = str(row_item.pcd1 or "")
-    bolts = "x".join((slot_count, pcd1))
     return join_title_parts(
-        size,
-        bolts,
+        join_size_parts(row_item.width, "x", diameter),
+        join_size_parts(row_item.slot_count, "x", row_item.pcd1),
         et_label(row_item.eet),
-        str(row_item.central_diameter or ""),
-        str(row_item.color or ""),
-        mark,
-        str(row_item.model or ""),
+        row_item.central_diameter,
+        row_item.color,
+        brand_label(row_item),
+        row_item.model,
     )

@@ -4,6 +4,7 @@ logic for mim vendor (sheet 1)
 
 import dataclasses
 
+from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
 from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -53,20 +54,5 @@ class MimParser1Sheet(MimParserBase):
         """get prepared title"""
         profile = row_item.height_percent or ""
         delimiter = "x" if is_number(profile) else "/"
-        mark = (row_item.manufacturer or "").lower().capitalize()
-        return _mim1_title(row_item, profile, delimiter, mark)
-
-
-def _mim1_title(row_item: RowItem, profile: str, delimiter: str, mark: str) -> str:
-    """Собрать title легковой шины MIM sheet1."""
-    width = row_item.width or ""
-    diameter = row_item.diameter or ""
-    size = f"{width}{delimiter}{profile}R{diameter}"
-    return " ".join(
-        (
-            size,
-            mark,
-            row_item.model or "",
-            "{}{}".format(row_item.index_load or "", row_item.index_velocity or ""),
-        ),
-    )
+        size = join_size_parts(row_item.width, delimiter, profile, "R", row_item.diameter)
+        return compose_tire_title(row_item, size, load_velocity(row_item))

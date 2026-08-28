@@ -16,7 +16,7 @@ from parsers.vendors.four_tochki.four_tochki_title_parts import (
     truck_title,
 )
 
-_PARTS = ("205", "/55", "", "R16")
+_SIZE = "205/55R16"
 _WRAP = "XXXX"
 _TRUCK = "грузовая"
 
@@ -34,12 +34,13 @@ def test_special_tire_empty_is_false() -> None:
 
 
 def test_truck_title_skips_empty_model() -> None:
-    assert _WRAP not in truck_title(RowItem({}), _PARTS, "Kama")
+    assert _WRAP not in truck_title(RowItem({}), _SIZE)
 
 
 def test_truck_title_keeps_camera_and_sidewall() -> None:
     row = RowItem(
         {
+            "manufacturer_name": "Triangle",
             "model": "TRD06",
             "layering": "20",
             "camera_type": "TL",
@@ -48,13 +49,14 @@ def test_truck_title_keeps_camera_and_sidewall() -> None:
             "index_velocity": "K",
         }
     )
-    title = truck_title(row, ("315", "/80", "", "R22.5"), "Triangle")
+    title = truck_title(row, "315/80R22.5")
     assert title == "315/80R22.5 Triangle TRD06 20 TL 3PMSF 157/154K"
 
 
 def test_default_title_includes_runflat() -> None:
     row = RowItem(
         {
+            "manufacturer_name": "Pirelli",
             "model": "Scorpion Verde All-Season",
             "camera_type": "TL",
             "index_load": "103",
@@ -62,13 +64,13 @@ def test_default_title_includes_runflat() -> None:
             "run_flat": "Да",
         }
     )
-    title = default_tire_title(row, ("235", "/60", "", "R18"), "Pirelli")
+    title = default_tire_title(row, "235/60R18")
     assert title == "235/60R18 Pirelli Scorpion Verde All-Season TL 103H RunFlat"
 
 
 def test_ext_diameter_title_skips_empty_optional() -> None:
     row = RowItem({"ext_diameter": 31})
-    assert _WRAP not in ext_diameter_title(row, _PARTS, "Kama")
+    assert _WRAP not in ext_diameter_title(row, _SIZE)
 
 
 @pytest.mark.parametrize(

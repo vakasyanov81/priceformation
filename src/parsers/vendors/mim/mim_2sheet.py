@@ -3,8 +3,8 @@ logic for mim vendor (sheet 2)
 """
 
 import dataclasses
-from typing import Any
 
+from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
 from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -63,37 +63,14 @@ class MimParser2Sheet(MimParserBase):
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         """prepare title"""
-        return " ".join(self._title_chunks(row_item))
-
-    @classmethod
-    def _size_chunk(cls, row_item: RowItem) -> str:
-        """Кусок размера width/profileRdiameter."""
         profile = f"/{row_item.height_percent}" if row_item.height_percent else ""
         diameter = f"R{row_item.diameter}" if row_item.diameter else ""
-        return "".join((str(row_item.width or ""), profile, diameter))
-
-    @classmethod
-    def _title_chunks(cls, row_item: RowItem) -> list[str]:
-        """Ненулевые части title."""
-        mark = (row_item.manufacturer or "").lower().capitalize()
-        load_vel = "{}{}".format(row_item.index_load or "", row_item.index_velocity or "")
-        raw = [
-            cls._size_chunk(row_item),
-            mark,
-            row_item.model,
+        size = join_size_parts(row_item.width, profile, diameter)
+        return compose_tire_title(
+            row_item,
+            size,
             row_item.layering,
-            load_vel,
+            load_velocity(row_item),
             row_item.intimacy,
             row_item.axis,
-        ]
-        return cls._nonempty_chunks(raw)
-
-    @classmethod
-    def _nonempty_chunks(cls, raw: list[Any]) -> list[str]:
-        """Оставить только непустые части title."""
-        cleaned = []
-        for chunk in raw:
-            text = str(chunk or "").strip()
-            if text:
-                cleaned.append(text)
-        return cleaned
+        )
