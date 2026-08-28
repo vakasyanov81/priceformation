@@ -15,7 +15,6 @@ __MARKUP_RULES_FILE_NAME__ = "markup_rules.json"
 __MANUFACTURER_ALIASES_FILE_NAME__ = "manufacturer_aliases.json"
 __TITLE_ALIASES_FILE_NAME__ = "title_aliases.json"
 __BLACK_LIST_FILE_NAME__ = "black_list"
-__STOP_WORDS_FILE_NAME__ = "stop_words"
 
 __PROJECT_ROOT__ = str(pathlib.Path(__file__).parent.parent.parent.absolute())
 __PROJECT_SRC__ = str(pathlib.Path(__file__).parent.parent.absolute())
@@ -35,7 +34,6 @@ class MainCfg:
     vendor_list_file_name = __VENDOR_LIST_FILE_NAME__
     markup_rules_file_name = __MARKUP_RULES_FILE_NAME__
     black_list_file_name = __BLACK_LIST_FILE_NAME__
-    stop_words_file_name = __STOP_WORDS_FILE_NAME__
     user_config_folder_name = __USER_PARSE_CONFIG__
     manufacturer_aliases_file_name = __MANUFACTURER_ALIASES_FILE_NAME__
     title_aliases_file_name = __TITLE_ALIASES_FILE_NAME__
@@ -44,7 +42,6 @@ class MainCfg:
     title_aliases_file_path = _USER_CONFIG_FOLDER_PATH + __TITLE_ALIASES_FILE_NAME__
     markup_rules_file_path = _USER_CONFIG_FOLDER_PATH + __MARKUP_RULES_FILE_NAME__
     black_list_file_path = _USER_CONFIG_FOLDER_PATH + __BLACK_LIST_FILE_NAME__
-    stop_words_file_path = _USER_CONFIG_FOLDER_PATH + __STOP_WORDS_FILE_NAME__
     vendor_list_file_path = _USER_CONFIG_FOLDER_PATH + __VENDOR_LIST_FILE_NAME__
 
 

@@ -1,4 +1,4 @@
-"""tests for stop words and manufacturer aliases providers"""
+"""tests for manufacturer aliases providers"""
 
 from typing import Any
 from unittest.mock import patch
@@ -15,27 +15,13 @@ from parsers.data_provider.manufacturer_aliases import (
     load_aliases_map,
 )
 from parsers.data_provider.manufacturer_group import manufacturer_group
-from parsers.data_provider.stop_words import StopWordsProviderBase, StopWordsProviderFromUserConfig
 
 _PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg", result_folder="/prices/result")
-
-
-def test_stop_words_base_raises() -> None:
-    with pytest.raises(NotImplementedError):
-        StopWordsProviderBase().get_stop_words_data()
 
 
 def test_aliases_base_raises() -> None:
     with pytest.raises(NotImplementedError):
         ManufacturerAliasesProviderBase().get_aliases()
-
-
-def test_stop_words_from_config() -> None:
-    with (
-        patch("parsers.data_provider.stop_words.read_file", return_value="w1\nw2"),
-        patch("parsers.data_provider.stop_words.get_parse_paths", return_value=_PATHS),
-    ):
-        assert StopWordsProviderFromUserConfig().get_stop_words_data() == ["w1", "w2"]
 
 
 def test_aliases_from_config() -> None:

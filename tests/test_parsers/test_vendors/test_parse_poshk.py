@@ -69,13 +69,9 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
         """get black list"""
         return ["wrong title", "wrong title 2"]
 
-
-class StopWordsProviderForTests(data_provider.StopWordsProviderBase):
-    """stop words data provider for tests"""
-
     def get_stop_words_data(self) -> list[str]:
-        """get stop word list"""
-        return ["некондиция", "2 сорт", "восстановленная"]
+        """get glob masks (same as *lines* in black_list)"""
+        return ["*некондиция*", "*2 сорт*", "*восстановленная*", "брак*"]
 
 
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
@@ -93,7 +89,6 @@ class VendorListProviderForTests(data_provider.VendorListProviderBase):
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
     parser_params=poshk_params,
@@ -220,19 +215,23 @@ class TestParsePoshk:
         assert parsed_items[0].price_markup == price_with_markup
 
     @pytest.mark.parametrize(
-        "title",
+        ("title", "expected_count"),
         [
-            "some некондиция product",
-            "some 2 сорт product",
-            "185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт",
+            ("some некондиция product", 0),
+            ("some 2 сорт product", 0),
+            ("185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт", 0),
+            ("брак покрышка 185/75", 0),
+            ("какой-то брак покрышка 185/75", 1),
         ],
     )
-    def test_stop_words(self, title: Any) -> None:
+    def test_stop_words(self, title: Any, expected_count: Any) -> None:
         """test exclude price position by stop word in title"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
         first_row["title"] = title
 
-        parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
+        parser = get_fake_parser(parse_result)
+        parsed_items: list[RowItem] = parser.parse()
 
-        assert len(parsed_items) == 0
+        assert len(parsed_items) == expected_count
+        assert parser.black_list_skips == int(expected_count == 0)

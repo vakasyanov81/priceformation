@@ -85,6 +85,26 @@ class FakeParserWithSkips:
         return _SkipParserParams()
 
 
+class FakeParserWithBlackListSkips:
+    """parser that dropped rows by black_list"""
+
+    def __init__(
+        self,
+        parse_config: Any = None,
+        file_prices: list[str] | None = None,
+        data_reader: Any = None,
+        *,
+        markup_policy: Any = None,
+    ) -> None:
+        """init"""
+        self.parse_config = parse_config
+        self.black_list_skips = 3
+
+    def parse(self) -> list[RowItem]:
+        """fake parse"""
+        return []
+
+
 def test_parse_all_vendors() -> None:
     """парсинг списка вендоров и группировка результата"""
     common_price = CommonPrice()
@@ -148,6 +168,17 @@ def test_parse_vendor_reraises() -> None:
         mock_err.assert_called_once()
 
 
+def test_parse_vendor_skips_bad_counter() -> None:
+    """заглушки без int-счётчика не ломают сбор отброшенных по black_list"""
+    parser = MagicMock()
+    parser.parse.return_value = []
+    parser.unknown_category_skips = []
+    common_price = CommonPrice()
+    with patch("parsers.common_price.log_msg"):
+        common_price.parse_vendor(parser)
+    assert common_price.parsed_items == []
+
+
 def test_skipped_categories_logged() -> None:
     """пропуски неизвестных категорий печатаются в консоль"""
     common_price = CommonPrice()
@@ -162,6 +193,19 @@ def test_skipped_categories_logged() -> None:
     assert "Запаска (шины)" in message
     assert "Foo, SUV" in message
     assert mock_warn.call_args.kwargs["need_print_log"] is True
+
+
+_BLACK_LIST_SKIP_LOG = "\nОтброшено 3 позиций по правилам black_list."
+
+
+def test_black_list_skips_logged() -> None:
+    """отброшенные по black_list позиции печатаются в консоль"""
+    common_price = CommonPrice()
+    with patch("parsers.common_price.log_msg") as mock_log:
+        common_price.parse_all_vendors([(cast(type[BaseParser], FakeParserWithBlackListSkips), None)])
+    messages = [call.args[0] for call in mock_log.call_args_list]
+    skip_index = messages.index(_BLACK_LIST_SKIP_LOG)
+    assert mock_log.call_args_list[skip_index].kwargs["need_print_log"] is True
 
 
 def test_suppliers_info() -> None:

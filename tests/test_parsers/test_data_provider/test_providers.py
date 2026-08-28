@@ -23,12 +23,30 @@ def test_black_list_base_raises() -> None:
         BlackListProviderBase().get_black_list_data()
 
 
+def test_black_list_masks_base_raises() -> None:
+    with pytest.raises(NotImplementedError):
+        BlackListProviderBase().get_stop_words_data()
+
+
 def test_black_list_from_config() -> None:
     with (
         patch("parsers.data_provider.black_list.read_file", return_value="a\nb\n"),
         patch(_GET_PATHS, return_value=_PATHS),
     ):
-        assert BlackListProviderFromUserConfig().get_black_list_data() == ["a", "b"]
+        provider = BlackListProviderFromUserConfig()
+        assert provider.get_black_list_data() == ["a", "b"]
+        assert provider.get_stop_words_data() == []
+
+
+def test_black_list_from_config_splits_masks() -> None:
+    raw = "exact title\n*некондиция*\n*2 сорт*\n"
+    with (
+        patch("parsers.data_provider.black_list.read_file", return_value=raw),
+        patch(_GET_PATHS, return_value=_PATHS),
+    ):
+        provider = BlackListProviderFromUserConfig()
+        assert provider.get_black_list_data() == ["exact title"]
+        assert provider.get_stop_words_data() == ["*некондиция*", "*2 сорт*"]
 
 
 def test_vendor_list_base_raises() -> None:

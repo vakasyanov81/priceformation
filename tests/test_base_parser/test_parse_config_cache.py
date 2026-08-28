@@ -42,7 +42,6 @@ def _configuration(markup_data: dict[str, Any]) -> tuple[ParseConfiguration, Mag
         BasePriceParseConfigurationParams(
             markup_rules_provider=provider,
             black_list_provider=stub,
-            stop_words_provider=stub,
             vendor_list=stub,
             manufacturer_aliases=stub,
             parser_params=_parser_params(),

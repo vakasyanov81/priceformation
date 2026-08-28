@@ -53,6 +53,8 @@ def _try_prepare_row(parser: BaseParser, row_id: int, row_item: RowItem) -> RowI
         _log_row_parse_errors(parser, row_id, row_item)
         return None
     if not parser.is_valid_title(row_item.title):
+        if row_item.title:
+            parser.black_list_skips += 1
         return None
     return _enrich_row_item(parser, row_item)
 
@@ -61,7 +63,10 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
     """Оставить строку с ценой закупки и валидным title."""
     if row_item.rest_count and not row_item.price_opt:
         return False
-    return not row_item.title or parser.is_valid_title(row_item.title)
+    if not row_item.title or parser.is_valid_title(row_item.title):
+        return True
+    parser.black_list_skips += 1
+    return False
 
 
 def enrich_items(parser: BaseParser, row_items: list[RowItem]) -> list[RowItem]:

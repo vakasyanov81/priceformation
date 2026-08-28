@@ -11,7 +11,6 @@ from test_parsers.test_vendors.parse_result_helpers import get_first_row_item
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
-    StopWordsProviderForTests,
     VendorListProviderForTests,
     vendor_list_config,
 )
@@ -31,7 +30,6 @@ from parsers.vendors.mim.mim_1sheet import (
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MimMarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
     parser_params=mim_sheet_1_params,

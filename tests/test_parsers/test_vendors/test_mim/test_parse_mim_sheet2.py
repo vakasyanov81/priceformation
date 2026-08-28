@@ -9,7 +9,6 @@ from test_parsers.fixtures.mim_sheet2 import mim_one_item_result
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
-    StopWordsProviderForTests,
     VendorListProviderForTests,
     vendor_list_config,
 )
@@ -34,7 +33,6 @@ from ..parse_config import MimMarkupRulesProviderForTests
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MimMarkupRulesProviderForTests(),
-    stop_words_provider=StopWordsProviderForTests(),
     vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
     parser_params=mim_sheet_2_params,

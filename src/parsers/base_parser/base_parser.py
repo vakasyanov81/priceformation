@@ -55,6 +55,7 @@ class BaseParser(ParserFileReader):
         self._category_finder: CategoryFinder | None = None
         self._manufacturer_finder = None
         self.unknown_category_skips: list[str] = []
+        self.black_list_skips = 0
         self._markup_policy = markup_policy
         self._price_source = price_source or FilePricesSource()
 
