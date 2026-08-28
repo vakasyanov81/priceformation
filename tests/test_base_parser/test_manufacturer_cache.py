@@ -42,7 +42,6 @@ def _configuration(aliases: dict[str, Any] | None = None) -> tuple[ParseConfigur
         BasePriceParseConfigurationParams(
             markup_rules_provider=stub,
             black_list_provider=stub,
-            stop_words_provider=stub,
             vendor_list=stub,
             manufacturer_aliases=aliases_provider,
             parser_params=_parser_params(),

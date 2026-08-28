@@ -37,7 +37,6 @@ class BasePriceParseConfigurationParams(NamedTuple):
 
     markup_rules_provider: data_provider.MarkupRulesProviderBase
     black_list_provider: data_provider.BlackListProviderBase
-    stop_words_provider: data_provider.StopWordsProviderBase
     vendor_list: data_provider.VendorListProviderBase
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase
     parser_params: ParserParams
@@ -89,8 +88,8 @@ class ParseConfiguration:
         return self.parse_config.black_list_provider.get_black_list_data()
 
     def stop_words(self) -> list[str]:
-        """stop words data"""
-        return self.parse_config.stop_words_provider.get_stop_words_data()
+        """Glob masks from the black_list file (lines containing *)."""
+        return self.parse_config.black_list_provider.get_stop_words_data()
 
     def manufacturer_aliases(self) -> dict[str, Any]:
         """manufacturer aliases data"""
@@ -121,7 +120,6 @@ def make_parse_config(
     *,
     markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    stop_words_provider: data_provider.StopWordsProviderBase | None = None,
     vendor_list: data_provider.VendorListProviderBase | None = None,
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
 ) -> ParseConfiguration:
@@ -136,10 +134,6 @@ def make_parse_config(
             black_list_provider=_provider_or_default(
                 black_list_provider,
                 data_provider.BlackListProviderFromUserConfig(),
-            ),
-            stop_words_provider=_provider_or_default(
-                stop_words_provider,
-                data_provider.StopWordsProviderFromUserConfig(),
             ),
             vendor_list=_provider_or_default(
                 vendor_list,

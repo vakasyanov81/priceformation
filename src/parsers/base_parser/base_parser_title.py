@@ -1,6 +1,7 @@
 """Title preparation and stop/black-list checks."""
 
 from parsers.base_parser.base_parser_access import ParserConfigAccess
+from parsers.data_provider.black_list import title_matches_mask
 from parsers.row_item.row_item import RowItem
 
 _SPIKE_YES = {"ш.", "да"}
@@ -79,8 +80,7 @@ class ParserTitleFilters(ParserTitleOps, ParserConfigAccess):
         return has_content and no_stop and not_blacklisted
 
     def has_stop_word(self, title: str) -> bool:
-        title_lower = title.lower()
-        return any(s_word.lower() in title_lower for s_word in self.get_stop_words())
+        return any(title_matches_mask(title, mask) for mask in self.get_stop_words())
 
     def check_title_in_black_list(self, title: str) -> bool:
         return title in self.get_black_list()

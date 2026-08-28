@@ -17,6 +17,7 @@ from parsers.base_parser.markup_policy import (
     make_map_on_opt_markup_policy,
 )
 from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.row_item.row_item import RowItem
@@ -42,11 +43,13 @@ class CommonPrice:
     def __init__(self) -> None:
         self._parsed_items: list[RowItem] = []
         self._unknown_category_skips: list[UnknownCategorySkip] = []
+        self._black_list_skips = 0
 
     def parse_all_vendors(self, vendors: VendorList) -> None:
         """Запускает парсинг по всем поставщикам и группирует результат."""
         self._parsed_items.clear()  # защищаемся от накопления при повторных вызовах
         self._unknown_category_skips.clear()
+        self._black_list_skips = 0
 
         start_time = time.monotonic()
         log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
@@ -75,6 +78,7 @@ class CommonPrice:
         else:
             self._parsed_items.extend(parsed)
             self._remember_unknown_category_skips(parser)
+            self._black_list_skips += _black_list_skip_count(parser)
 
     def _remember_unknown_category_skips(self, parser: BaseParser) -> None:
         skips = getattr(parser, "unknown_category_skips", ())
@@ -87,6 +91,9 @@ class CommonPrice:
         message = skipped_unknown_categories_message(self._unknown_category_skips)
         if message:
             warn_msg(message, need_print_log=True)
+        black_list_message = skipped_black_list_message(self._black_list_skips)
+        if black_list_message:
+            log_msg(black_list_message, need_print_log=True)
 
     @property
     def parsed_items(self) -> list[RowItem]:
@@ -101,6 +108,14 @@ class CommonPrice:
 _MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
 _IDENTITY_VENDORS: tuple[type[BaseParser], ...] = (Autosnab54Parser,)
 _RECOMMENDED_OR_MAP_VENDORS: tuple[type[BaseParser], ...] = (FourTochkiParser1Sheet,)
+
+
+def _black_list_skip_count(parser: BaseParser) -> int:
+    """Rows a vendor parser dropped by black_list; ignore non-int stubs."""
+    count = getattr(parser, "black_list_skips", 0)
+    if isinstance(count, int):
+        return count
+    return 0
 
 
 def _price_run_grouper(row_items: list[RowItem]) -> CommonPriceGrouper:
