@@ -104,6 +104,20 @@ def test_extract_optional_keys_default() -> None:
     rules = extract_markup_rules({"markup_rules": {}})
     assert rules.replace_small_recommended is False
     assert rules.absolute_markup_rules.mode == _MODE_MULTIPLIER
+    assert rules.min_recommended_percent_markup == 0
+    assert rules.max_recommended_percent_markup == 0
+
+
+def test_extract_zero_cap_stays_zero() -> None:
+    """Явный 0 в JSON — кап выключен, не fallback 1."""
+    rules = extract_markup_rules(
+        {
+            "min_recommended_percent_markup": 0,
+            "max_recommended_percent_markup": 0,
+        },
+    )
+    assert rules.min_recommended_percent_markup == 0
+    assert rules.max_recommended_percent_markup == 0
 
 
 def test_extract_zapaska_policy_fields() -> None:

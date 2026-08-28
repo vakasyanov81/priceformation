@@ -238,6 +238,21 @@ def test_blank_identity_not_doubles(type_production: str) -> None:
     assert not any(row.is_double or row.double_candidate for row in (first, second))
 
 
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"model": "GreenStone"},
+        {"manufacturer_name": "НКШЗ", "brand": "GreenStone", "model": "GreenStone"},
+    ],
+)
+def test_stripped_model_not_double(fields: dict[str, str]) -> None:
+    """Модель совпадает с manufacturer или brand — без размера не дубль."""
+    first = _empty_identity(**fields)
+    second = _empty_identity(**fields, price_markup=_PRICE_HIGH)
+    assert _doubles(first, second) == []
+    assert not any(row.is_double or row.double_candidate for row in (first, second))
+
+
 def test_filled_identity_still_duplicates() -> None:
     cheap, expensive = _row(), _high()
     _assert_grouped(cheap, expensive)

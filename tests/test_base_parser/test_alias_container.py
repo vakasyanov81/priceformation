@@ -12,9 +12,10 @@ def test_sort_by_length_not_lexicographic() -> None:
 
 
 def test_reversed_map_skips_other_keys() -> None:
+    """Чужой канон и пустая строка в середине кортежа не отбрасывают следующий алиас."""
     container = AliasContainer(
         {
-            "Alpha": ("al", "Beta", ""),
+            "Alpha": ("Beta", "", "al"),
             "Beta": ("bee",),
         }
     )
