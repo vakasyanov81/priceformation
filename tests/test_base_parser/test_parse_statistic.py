@@ -67,6 +67,15 @@ def test_fill_percent_from_prices() -> None:
     assert row.percent_markup == _PERCENT
 
 
+def test_fill_percent_after_stored_row() -> None:
+    """Первая строка уже с percent не должна оборвать расчёт остальных."""
+    stored = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW, "percent_markup": _PERCENT})
+    needs_fill = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})
+    fill_percent_markup([stored, needs_fill])
+    assert stored.percent_markup == _PERCENT
+    assert needs_fill.percent_markup == _PERCENT
+
+
 def test_fill_percent_skips_empty_markup() -> None:
     row = RowItem({"price_opt": _OPT})
     fill_percent_markup([row])
