@@ -1,5 +1,6 @@
 """Title builders for four_tochki sheet 1 tires."""
 
+from parsers.nomenclature_title import join_size_parts
 from parsers.row_item.row_item import RowItem
 from parsers.row_item.row_item_casts import get_try_to_int_or_str
 
@@ -75,13 +76,13 @@ def _compose_title(row_item: RowItem, dims: tuple[str, str, str, str]) -> str:
         height = ""
     postfix = _resolve_width_postfix(row_item, dims[0], dims[1], dims[2])
     construct_diameter = f"{dims[3]}{dims[2]}".replace("RZ", "ZR")
-    parts = (dims[0], height, postfix, construct_diameter)
-    mark = (row_item.manufacturer or "").lower().capitalize()
+    size = join_size_parts(dims[0], postfix, height, construct_diameter)
     if is_truck_tire(row_item):
-        return truck_title(row_item, parts, mark)
+        return truck_title(row_item, size)
     if row_item.ext_diameter:
-        return ext_diameter_title(row_item, parts, mark)
-    return default_tire_title(row_item, parts, mark)
+        size = join_size_parts(row_item.ext_diameter, "x", dims[0], construct_diameter)
+        return ext_diameter_title(row_item, size)
+    return default_tire_title(row_item, size)
 
 
 def _special_inch_dot(row_item: RowItem, width: str, height_percent: str) -> bool:

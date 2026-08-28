@@ -3,15 +3,11 @@
 import re
 from typing import Any
 
+from parsers.nomenclature_title import join_title_parts
 from parsers.row_item.disk_name_extras import disk_name_extras
 from parsers.row_item.row_item import RowItem
 
 _THICKNESS_RE = re.compile(r"\((\d+(?:[.,]\d+)?)\s*мм\)", re.IGNORECASE)
-
-
-def join_title_parts(*parts: str) -> str:
-    """Склеить куски title без пустых."""
-    return " ".join(part for part in parts if part)
 
 
 def thickness_from_name(name: str) -> str:
