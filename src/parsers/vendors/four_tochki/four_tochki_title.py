@@ -96,19 +96,13 @@ def _special_inch_dot(row_item: RowItem, width: str, height_percent: str) -> boo
 
 def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, diameter: str) -> str:
     """подбирает суффикс ширины для title"""
-    # 205/55R16 BFGoodrich Advantage 94W
-    # 30x9,5R15 BFGoodrich All Terrain T/A KO2 104S LT
-    width_postfix = ""
-    if is_truck_tire(row_item):
-        width_postfix = ".00"
-    if diameter == "22.5" or height_percent:
-        width_postfix = ""
-    if is_truck_tire(row_item) and diameter == "16":
-        width_postfix = ""
-    if width == "10" and diameter == "20":
-        width_postfix = ".00"
-    if _special_inch_dot(row_item, width, height_percent):
-        width_postfix = ".0"
     if height_percent == _PROFILE_L:
-        width_postfix = height_percent
-    return width_postfix
+        return height_percent
+    if _special_inch_dot(row_item, width, height_percent):
+        return ".0"
+    if width == "10" and diameter == "20":
+        return ".00"
+    skip_truck_dot = diameter in {"22.5", "16"} or height_percent
+    if not is_truck_tire(row_item) or skip_truck_dot:
+        return ""
+    return ".00"

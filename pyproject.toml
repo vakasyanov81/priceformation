@@ -63,6 +63,9 @@ select = ["F", "E", "W", "C90",
 ignore = ["RUF001", "RUF002", "RUF003"]
 external = ["WPS"]
 
+[tool.ruff.lint.mccabe]
+max-complexity = 6
+
 [tool.ruff.lint.pylint]
 # Как max-arguments в setup.cfg (WPS).
 max-args = 6
