@@ -15,3 +15,7 @@ def test_spike_title_yes() -> None:
 
 def test_spike_title_other() -> None:
     assert BaseParser.get_spike_title(RowItem({"spike": "нет"})) == ""
+
+
+def test_prepare_title_replaces_comma_in_size() -> None:
+    assert BaseParser.prepare_title("31x10,50R15 Mazzini Giantsaver 109S") == "31x10.50R15 Mazzini Giantsaver 109S"

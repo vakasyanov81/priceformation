@@ -80,12 +80,7 @@ class ZapaskaDiskJSON(BaseParser):
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         """Normalize title spaces and apply title aliases."""
-        chunks = []
-        for chunk in row_item.title.split(" "):
-            stripped = chunk.strip()
-            if stripped:
-                chunks.append(stripped)
-        title = " ".join(chunks)
+        title = self.prepare_title(row_item.title)
         return self.title_aliases.get(title) or title
 
     def add_price_markup(self, row_item: RowItem) -> None:

@@ -7,6 +7,8 @@ from .four_tochki_title_parts import default_tire_title, ext_diameter_title, tru
 
 _PROFILE_L = "L"
 _DASH = "-"
+_METRIC_WIDTH_MIN = 100
+_L_FROM_EXCEL = f"{_PROFILE_L}.0"
 
 
 def is_truck_tire(row_item: RowItem) -> bool:
@@ -49,28 +51,28 @@ def get_prepared_title(row_item: RowItem) -> str:
 
 def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
     """Ширина, профиль, диаметр и тип конструкции."""
-    width = str(get_try_to_int_or_str(row_item.width or ""))
-    percent = str(row_item.height_percent or "")
-    height = get_try_to_int_or_str(percent.replace("999", _PROFILE_L))
+
+    def canon(raw: object) -> str:
+        text = str(raw or "").replace(",", ".")
+        return str(get_try_to_int_or_str(text))
+
+    width = canon(row_item.width)
+    height = canon(row_item.height_percent).replace("999", _PROFILE_L)
+    height = height.replace(_L_FROM_EXCEL, _PROFILE_L)
     diameter = str(row_item.diameter or "").replace("—", _DASH)
-    diameter = diameter.replace("R", "")
+    diameter = diameter.replace(",", ".").replace("R", "")
     construct = "R"
     if _DASH in diameter:
         construct = _DASH
         diameter = diameter.replace(_DASH, "")
-    return width, str(height), diameter, construct
-
-
-def _profile_slash(height_value: str) -> str:
-    """Префикс профиля для title, пусто для L-профиля."""
-    if not height_value or height_value == _PROFILE_L:
-        return ""
-    return f"/{height_value}"
+    return width, height, diameter, construct
 
 
 def _compose_title(row_item: RowItem, dims: tuple[str, str, str, str]) -> str:
     """Собрать title по типу шины. dims: width, height_raw, diameter, construct."""
-    height = _profile_slash(dims[1])
+    height = f"/{dims[1]}"
+    if not dims[1] or dims[1] == _PROFILE_L:
+        height = ""
     postfix = _resolve_width_postfix(row_item, dims[0], dims[1], dims[2])
     construct_diameter = f"{dims[3]}{dims[2]}".replace("RZ", "ZR")
     parts = (dims[0], height, postfix, construct_diameter)
@@ -80,6 +82,15 @@ def _compose_title(row_item: RowItem, dims: tuple[str, str, str, str]) -> str:
     if row_item.ext_diameter:
         return ext_diameter_title(row_item, parts, mark)
     return default_tire_title(row_item, parts, mark)
+
+
+def _special_inch_dot(row_item: RowItem, width: str, height_percent: str) -> bool:
+    """Нужен суффикс .0 для дюймовой спецшины, не для метрики 140/55."""
+    if not is_special_tire(row_item) or not height_percent:
+        return False
+    if height_percent == _PROFILE_L or not width.isdigit():
+        return False
+    return int(width) < _METRIC_WIDTH_MIN
 
 
 def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, diameter: str) -> str:
@@ -95,11 +106,8 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
         width_postfix = ""
     if width == "10" and diameter == "20":
         width_postfix = ".00"
-
-    if is_special_tire(row_item) and height_percent and height_percent != _PROFILE_L and "." not in width:
+    if _special_inch_dot(row_item, width, height_percent):
         width_postfix = ".0"
-
     if height_percent == _PROFILE_L:
         width_postfix = height_percent
-
     return width_postfix
