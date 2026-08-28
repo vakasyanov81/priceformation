@@ -64,28 +64,19 @@ def _parse_size(title: str) -> _ParsedSize | None:
             title[end:],
         )
 
-    def from_profile() -> _ParsedSize | None:
-        matched = _SIZE_PROFILE.match(title)
-        if matched is None:
-            return None
+    matched = _SIZE_PROFILE.match(title)
+    if matched is not None:
         width, height, diameter = matched.groups()
         return as_size(width, height, diameter, "", matched.end())
-
-    def from_flat() -> _ParsedSize | None:
-        matched = _SIZE_FLAT.match(title)
-        if matched is None:
-            return None
+    matched = _SIZE_FLAT.match(title)
+    if matched is not None:
         width, diameter = matched.groups()
         return as_size(width, "", diameter, "", matched.end())
-
-    def from_inch() -> _ParsedSize | None:
-        matched = _SIZE_INCH.match(title)
-        if matched is None:
-            return None
-        ext_diameter, width, diameter = matched.groups()
-        return as_size(width, "", diameter, ext_diameter, matched.end())
-
-    return from_profile() or from_flat() or from_inch()
+    matched = _SIZE_INCH.match(title)
+    if matched is None:
+        return None
+    ext_diameter, width, diameter = matched.groups()
+    return as_size(width, "", diameter, ext_diameter, matched.end())
 
 
 def _apply_size(row_item: RowItem, parsed: _ParsedSize) -> None:

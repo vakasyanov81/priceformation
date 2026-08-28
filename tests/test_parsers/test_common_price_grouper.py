@@ -12,9 +12,26 @@ _PRICE_LOW = 10
 _PRICE_MID = 15
 _PRICE_HIGH = 20
 _FIRST_ORDER = 1
-_SECOND_ORDER = 2
-_THIRD_ORDER = 3
 _FROZEN_ORDER = "99"
+_KAMA_ALIASES = {
+    "НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"],
+    "Triangle": [],
+}
+_ZEPP_CANON = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
+_DISK_SPLIT = (
+    ("pcd1", 108, 114.3),
+    ("eet", 40, 50),
+    ("slot_count", 4, 5),
+    ("central_diameter", 66.6, 67.1),
+    ("color", "BKF", "S"),
+)
+_DISK_FILLED = (
+    ("pcd1", 108),
+    ("eet", 40),
+    ("slot_count", 5),
+    ("central_diameter", 66.6),
+    ("color", "BKF"),
+)
 
 
 def _row(**fields: Any) -> RowItem:
@@ -64,92 +81,111 @@ def _disk_row(**fields: Any) -> RowItem:
     return RowItem(payload)
 
 
+def _high(**fields: Any) -> RowItem:
+    return _row(price_markup=_PRICE_HIGH, **fields)
+
+
+def _disk_high(**fields: Any) -> RowItem:
+    return _disk_row(price_markup=_PRICE_HIGH, **fields)
+
+
+def _zepp(title: str, **fields: Any) -> RowItem:
+    return _disk_row(
+        model="10/335/281/175",
+        width="9.0",
+        diameter="22.5",
+        manufacturer_name="ZEPP",
+        disk_thickness="16",
+        title=title,
+        **fields,
+    )
+
+
+def _doubles(*rows: RowItem, aliases: dict[str, Any] | None = None) -> list[RowItem]:
+    return CommonPriceGrouper(list(rows), aliases).get_double_row_items()
+
+
+def _assert_grouped(
+    *rows: RowItem,
+    aliases: dict[str, Any] | None = None,
+    disputed: str = "",
+) -> None:
+    assert _doubles(*rows, aliases=aliases) == list(rows)
+    assert len({row.group_by_params for row in rows}) == 1
+    assert all((row.disputed or "") == disputed for row in rows)
+
+
+def _assert_split(*rows: RowItem, aliases: dict[str, Any] | None = None) -> None:
+    assert _doubles(*rows, aliases=aliases) == []
+    assert len({row.group_by_params for row in rows}) == len(rows)
+
+
+def _assert_flags(candidate: RowItem, *others: RowItem) -> None:
+    assert candidate.double_candidate and not candidate.is_double
+    assert all(other.is_double and not other.double_candidate for other in others)
+
+
+def _assert_orders(*rows: RowItem) -> None:
+    for expected, row in enumerate(rows, start=_FIRST_ORDER):
+        assert int(row.order) == expected
+
+
 def test_grouper() -> None:
     """Дубли разных поставщиков: TL в title / КАМА-NU 701 и NU701 / brand == manufacturer."""
     item_zapaska = _row(
         brand="НКШЗ",
-        model="NU701",
         title="315/80R22.5 КАМА NU701 156/150K TL НКШЗ",
         supplier_name="Запаска (шины)",
-        price_markup=_PRICE_LOW,
     )
-    item_mim = _row(
+    item_mim = _high(
         model="КАМА-NU 701",
         title="315/80R22.5 НКШЗ КАМА-NU 701 Универсальная 156/150K",
         intimacy="",
         supplier_name="Мим",
-        price_markup=_PRICE_HIGH,
     )
-
-    doubles = CommonPriceGrouper([item_zapaska, item_mim]).get_double_row_items()
-
-    assert doubles == [item_zapaska, item_mim]
-    assert item_zapaska.group_by_params == 1
-    assert item_mim.group_by_params == 1
-    assert int(item_zapaska.order) == _FIRST_ORDER
-    assert int(item_mim.order) == _SECOND_ORDER
-    assert item_zapaska.double_candidate
-    assert not item_zapaska.is_double
-    assert item_mim.is_double
-    assert not item_mim.double_candidate
+    _assert_grouped(item_zapaska, item_mim)
+    _assert_flags(item_zapaska, item_mim)
+    _assert_orders(item_zapaska, item_mim)
 
 
 def test_grouper_loads_aliases_once_when_omitted() -> None:
     """без aliases_map grouper читает карту один раз, не на каждую строку"""
     with patch("parsers.common_price_grouper.load_aliases_map", return_value={}) as mock_load:
-        CommonPriceGrouper([_row(), _row(price_markup=_PRICE_HIGH)]).group_by_params()
+        CommonPriceGrouper([_row(), _high()]).group_by_params()
     mock_load.assert_called_once()
 
 
 def test_single_item_is_not_double() -> None:
     price_row = _row()
-    grouper = CommonPriceGrouper([price_row])
-
-    assert grouper.get_double_row_items() == []
-    assert not price_row.is_double
-    assert not price_row.double_candidate
-    assert int(price_row.order) == _FIRST_ORDER
+    assert _doubles(price_row) == []
+    assert not (price_row.is_double or price_row.double_candidate)
+    _assert_orders(price_row)
     assert price_row.group_by_params == 1
 
 
 def test_cheapest_of_three_is_double_candidate() -> None:
-    expensive = _row(price_markup=_PRICE_HIGH)
-    cheap = _row(price_markup=_PRICE_LOW)
+    expensive = _high()
+    cheap = _row()
     mid = _row(price_markup=_PRICE_MID)
-
-    doubles = CommonPriceGrouper([expensive, cheap, mid]).get_double_row_items()
-
-    assert doubles == [expensive, cheap, mid]
-    assert cheap.double_candidate
-    assert not cheap.is_double
-    assert expensive.is_double
-    assert mid.is_double
-    assert int(expensive.order) == _FIRST_ORDER
-    assert int(cheap.order) == _SECOND_ORDER
-    assert int(mid.order) == _THIRD_ORDER
+    _assert_grouped(expensive, cheap, mid)
+    _assert_flags(cheap, expensive, mid)
+    _assert_orders(expensive, cheap, mid)
 
 
 def test_distinct_keys_get_separate_groups() -> None:
-    wide = _row(width="315")
+    wide = _row()
     narrow = _row(width="205")
-
     grouper = CommonPriceGrouper([wide, narrow])
-    grouped_rows = grouper.get_row_items()
-
-    assert grouped_rows == [narrow, wide]
-    assert narrow.group_by_params == 1
-    assert wide.group_by_params == 2
-    assert not wide.is_double
-    assert not narrow.is_double
+    assert grouper.get_row_items() == [narrow, wide]
+    assert (narrow.group_by_params, wide.group_by_params) == (1, 2)
     assert grouper.get_double_row_items() == []
 
 
 def test_group_by_params_does_not_regroup() -> None:
-    grouper = CommonPriceGrouper([_row(), _row(price_markup=_PRICE_HIGH)])
+    grouper = CommonPriceGrouper([_row(), _high()])
     grouped = grouper.group_by_params()
     price_row = grouper.row_items[0]
     price_row.order = _FROZEN_ORDER
-
     assert grouper.group_by_params() is grouped
     assert grouper.get_row_items() is grouper.row_items
     assert str(price_row.order) == _FROZEN_ORDER
@@ -157,154 +193,70 @@ def test_group_by_params_does_not_regroup() -> None:
 
 def test_get_row_items_triggers_grouping() -> None:
     price_row = _row()
-    grouped_rows = CommonPriceGrouper([price_row]).get_row_items()
-
-    assert grouped_rows == [price_row]
+    assert CommonPriceGrouper([price_row]).get_row_items() == [price_row]
     assert price_row.group_by_params == 1
-    assert int(price_row.order) == _FIRST_ORDER
+    _assert_orders(price_row)
 
 
 def test_passenger_tl_in_title_matches_without_tl() -> None:
     """Форточки с TL в title и позиция без TL — одна группа."""
+    shared = {"type_production": "легковая", "diameter": "16", "width": "205"}
     with_tl = _row(
-        type_production="легковая",
-        diameter="16",
-        width="205",
+        **shared,
         model="Snow Cross 2",
         title="205/55R16 Snow Cross 2 TL",
         supplier_name="Форточки",
-        price_markup=_PRICE_LOW,
     )
-    without_tl = _row(
-        type_production="легковая",
-        diameter="16",
-        width="205",
+    without_tl = _high(
+        **shared,
         model="SNOW CROSS 2",
         title="205/55R16 SNOW CROSS 2",
         intimacy="",
         supplier_name="Мим",
-        price_markup=_PRICE_HIGH,
     )
-
-    doubles = CommonPriceGrouper([with_tl, without_tl]).get_double_row_items()
-
-    assert doubles == [with_tl, without_tl]
-    assert with_tl.group_by_params == without_tl.group_by_params
+    _assert_grouped(with_tl, without_tl)
 
 
 def test_axis_does_not_split_group() -> None:
     """Мим с осью склеивается с позицией без оси."""
-    with_axis = _row(axis="Рулевая", supplier_name="Мим", price_markup=_PRICE_HIGH)
-    without_axis = _row(supplier_name="Запаска", price_markup=_PRICE_LOW)
-
-    doubles = CommonPriceGrouper([with_axis, without_axis]).get_double_row_items()
-
-    assert doubles == [with_axis, without_axis]
-    assert with_axis.group_by_params == without_axis.group_by_params
+    _assert_grouped(_high(axis="Рулевая", supplier_name="Мим"), _row(supplier_name="Запаска"))
 
 
 def test_explicit_tt_does_not_match_tl() -> None:
-    tube_type = _row(title="315/80R22.5 NU701 TT", intimacy="", price_markup=_PRICE_LOW)
-    tubeless = _row(title="315/80R22.5 NU701 TL", price_markup=_PRICE_HIGH)
-
-    grouper = CommonPriceGrouper([tube_type, tubeless])
-
-    assert grouper.get_double_row_items() == []
-    assert tube_type.group_by_params != tubeless.group_by_params
+    _assert_split(_row(title="315/80R22.5 NU701 TT", intimacy=""), _high(title="315/80R22.5 NU701 TL"))
 
 
 def test_pw1_does_not_match_ps1() -> None:
-    pw_item = _row(model="PW-1")
-    ps_item = _row(model="PS-1")
-
-    assert CommonPriceGrouper([pw_item, ps_item]).get_double_row_items() == []
+    _assert_split(_row(model="PW-1"), _row(model="PS-1"))
 
 
-def test_blank_tubes_not_doubles() -> None:
-    first = _empty_identity(type_production="камера", price_markup=_PRICE_LOW)
-    second = _empty_identity(type_production="камера", price_markup=_PRICE_HIGH)
-
-    assert CommonPriceGrouper([first, second]).get_double_row_items() == []
-    assert not first.is_double
-    assert not first.double_candidate
-    assert not second.is_double
-    assert not second.double_candidate
-
-
-def test_blank_tires_not_doubles() -> None:
-    first = _empty_identity(price_markup=_PRICE_LOW)
-    second = _empty_identity(price_markup=_PRICE_HIGH)
-
-    assert CommonPriceGrouper([first, second]).get_double_row_items() == []
+@pytest.mark.parametrize("type_production", ["камера", "легковая"])
+def test_blank_identity_not_doubles(type_production: str) -> None:
+    first = _empty_identity(type_production=type_production)
+    second = _empty_identity(type_production=type_production, price_markup=_PRICE_HIGH)
+    assert _doubles(first, second) == []
+    assert not any(row.is_double or row.double_candidate for row in (first, second))
 
 
 def test_filled_identity_still_duplicates() -> None:
-    cheap = _row(price_markup=_PRICE_LOW)
-    expensive = _row(price_markup=_PRICE_HIGH)
-
-    doubles = CommonPriceGrouper([cheap, expensive]).get_double_row_items()
-
-    assert doubles == [cheap, expensive]
-    assert cheap.double_candidate
-    assert expensive.is_double
-
-
-_KAMA_ALIASES = {
-    "НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"],
-    "Triangle": [],
-}
+    cheap, expensive = _row(), _high()
+    _assert_grouped(cheap, expensive)
+    _assert_flags(cheap, expensive)
 
 
 def test_nkshz_and_kama_same_size_are_doubles() -> None:
-    zapaska = _row(
-        manufacturer_name="НКШЗ",
-        model="NU701",
-        title="315/80R22.5 Кама NU701 156/150K TL НкШЗ",
-        supplier_name="Запаска (шины)",
-        price_markup=_PRICE_LOW,
-    )
-    mim = _row(
-        manufacturer_name="Кама",
-        model="NU 701",
-        title="315/80R22.5 Кама NU 701",
-        supplier_name="Мим",
-        price_markup=_PRICE_HIGH,
-    )
-
-    doubles = CommonPriceGrouper([zapaska, mim], _KAMA_ALIASES).get_double_row_items()
-
-    assert doubles == [zapaska, mim]
-    assert zapaska.group_by_params == mim.group_by_params
+    zapaska = _row(title="315/80R22.5 Кама NU701 156/150K TL НкШЗ", supplier_name="Запаска (шины)")
+    mim = _high(manufacturer_name="Кама", model="NU 701", title="315/80R22.5 Кама NU 701", supplier_name="Мим")
+    _assert_grouped(zapaska, mim, aliases=_KAMA_ALIASES)
 
 
 def test_nkshz_and_triangle_are_not_doubles() -> None:
-    nkshz = _row(manufacturer_name="НКШЗ")
-    triangle = _row(manufacturer_name="Triangle")
-
-    grouper = CommonPriceGrouper([nkshz, triangle], _KAMA_ALIASES)
-
-    assert grouper.get_double_row_items() == []
-    assert nkshz.group_by_params != triangle.group_by_params
+    _assert_split(_row(), _row(manufacturer_name="Triangle"), aliases=_KAMA_ALIASES)
 
 
-def test_comma_diameter_still_duplicates() -> None:
-    comma = _row(diameter="22,5")
-    dot = _row(diameter="22.5", price_markup=_PRICE_HIGH)
-
-    doubles = CommonPriceGrouper([comma, dot]).get_double_row_items()
-
-    assert doubles == [comma, dot]
-    assert comma.group_by_params == dot.group_by_params
-
-
-def test_r_prefix_diameter_still_duplicates() -> None:
-    prefixed = _row(diameter="R22.5")
-    plain = _row(diameter="22.5", price_markup=_PRICE_HIGH)
-
-    doubles = CommonPriceGrouper([prefixed, plain]).get_double_row_items()
-
-    assert doubles == [prefixed, plain]
-    assert prefixed.group_by_params == plain.group_by_params
+@pytest.mark.parametrize("diameter", ["22,5", "R22.5"])
+def test_normalized_diameter_still_duplicates(diameter: str) -> None:
+    _assert_grouped(_row(diameter=diameter), _high())
 
 
 def test_inch_outer_diameters_are_not_doubles() -> None:
@@ -318,187 +270,72 @@ def test_inch_outer_diameters_are_not_doubles() -> None:
         "index_velocity": "",
         "type_production": "легковая",
     }
-    item_35 = _row(title="35X12.50R17 Maxxis Trepador", **shared)
-    item_33 = _row(
-        title="33X12.50R17 Maxxis Trepador",
-        price_markup=_PRICE_HIGH,
-        **shared,
+    _assert_split(
+        _row(title="35X12.50R17 Maxxis Trepador", **shared),
+        _high(title="33X12.50R17 Maxxis Trepador", **shared),
     )
 
-    grouper = CommonPriceGrouper([item_35, item_33])
 
-    assert grouper.get_double_row_items() == []
-    assert item_35.group_by_params != item_33.group_by_params
-
-
-@pytest.mark.parametrize(
-    ("field", "left", "right"),
-    [
-        ("pcd1", 108, 114.3),
-        ("eet", 40, 50),
-        ("slot_count", 4, 5),
-        ("central_diameter", 66.6, 67.1),
-        ("color", "BKF", "S"),
-    ],
-)
+@pytest.mark.parametrize(("field", "left", "right"), _DISK_SPLIT)
 def test_filled_disk_fields_split_groups(field: str, left: Any, right: Any) -> None:
     first = _disk_row(**{field: left})
-    second = _disk_row(**{field: right}, price_markup=_PRICE_HIGH)
-    grouper = CommonPriceGrouper([first, second])
-
-    assert grouper.get_double_row_items() == []
-    assert first.group_by_params != second.group_by_params
+    second = _disk_high(**{field: right})
+    _assert_split(first, second)
 
 
-@pytest.mark.parametrize(
-    ("field", "filled"),
-    [
-        ("pcd1", 108),
-        ("eet", 40),
-        ("slot_count", 5),
-        ("central_diameter", 66.6),
-        ("color", "BKF"),
-    ],
-)
+@pytest.mark.parametrize(("field", "filled"), _DISK_FILLED)
 def test_empty_disk_field_matches_filled(field: str, filled: Any) -> None:
-    blank = _disk_row()
-    with_value = _disk_row(**{field: filled}, price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([blank, with_value]).get_double_row_items()
-
-    assert doubles == [blank, with_value]
-    assert blank.group_by_params == with_value.group_by_params
+    _assert_grouped(_disk_row(), _disk_high(**{field: filled}))
 
 
 def test_empty_pcd1_does_not_glue_distinct_values() -> None:
-    pcd_108 = _disk_row(pcd1=108)
-    pcd_114 = _disk_row(pcd1=114.3, price_markup=_PRICE_MID)
-    blank = _disk_row(price_markup=_PRICE_HIGH)
-    grouper = CommonPriceGrouper([pcd_108, pcd_114, blank])
-
-    assert grouper.get_double_row_items() == []
-    assert len({pcd_108.group_by_params, pcd_114.group_by_params, blank.group_by_params}) == 3
+    _assert_split(
+        _disk_row(pcd1=108),
+        _disk_row(pcd1=114.3, price_markup=_PRICE_MID),
+        _disk_high(),
+    )
 
 
 def test_zepp_factory_and_valve_are_not_doubles() -> None:
-    shared = {
-        "model": "10/335/281/175",
-        "width": "9.0",
-        "diameter": "22.5",
-        "manufacturer_name": "ZEPP",
-        "disk_thickness": "16",
-    }
-    canon = "9.0x22.5 10x335 ET175 281 Sil Zepp 10/335/281/175 (16 мм) б/к"
-    yz = _disk_row(**shared, title=f"{canon} (YZ)", price_markup=_PRICE_LOW)
-    hap_outer = _disk_row(
-        **shared,
-        title=f"{canon} (HAP) alive наруж. вентиль",
-        price_markup=_PRICE_MID,
+    _assert_split(
+        _zepp(f"{_ZEPP_CANON} (YZ)"),
+        _zepp(f"{_ZEPP_CANON} (HAP) alive наруж. вентиль", price_markup=_PRICE_MID),
+        _zepp(f"{_ZEPP_CANON} (HAP) внутр. вентиль", price_markup=_PRICE_HIGH),
     )
-    hap_inner = _disk_row(
-        **shared,
-        title=f"{canon} (HAP) внутр. вентиль",
-        price_markup=_PRICE_HIGH,
-    )
-    grouper = CommonPriceGrouper([yz, hap_outer, hap_inner])
-
-    assert grouper.get_double_row_items() == []
-    assert len({yz.group_by_params, hap_outer.group_by_params, hap_inner.group_by_params}) == 3
-
-
-def test_spike_in_title_still_duplicates() -> None:
-    with_word = _row(title="315/80R22.5 NU701 шип")
-    plain = _row(price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([with_word, plain]).get_double_row_items()
-
-    assert doubles == [with_word, plain]
-    assert not with_word.disputed
-    assert not plain.disputed
-
-
-def test_explicit_spike_yes_no_is_disputed() -> None:
-    yes_spike = _row(spike="Да")
-    no_spike = _row(spike="Нет", price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([yes_spike, no_spike]).get_double_row_items()
-
-    assert doubles == [yes_spike, no_spike]
-    assert yes_spike.disputed == "шип"
-    assert no_spike.disputed == "шип"
-
-
-def test_empty_spike_is_not_disputed() -> None:
-    yes_spike = _row(spike="Да")
-    blank = _row(price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([yes_spike, blank]).get_double_row_items()
-
-    assert doubles == [yes_spike, blank]
-    assert not yes_spike.disputed
-    assert not blank.disputed
-
-
-def test_explicit_season_conflict_is_disputed() -> None:
-    winter = _row(season="Зимняя")
-    summer = _row(season="Летняя", price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([winter, summer]).get_double_row_items()
-
-    assert doubles == [winter, summer]
-    assert winter.disputed == "сезон"
-    assert summer.disputed == "сезон"
 
 
 @pytest.mark.parametrize(
-    ("left", "right"),
+    ("left_fields", "right_fields", "note"),
     [
-        ("зима", "зимняя"),
-        ("ЗИМА", "Зимняя"),
-        ("лето", "летняя"),
-        ("ЛЕТО", "Летняя"),
+        ({"spike": "Да"}, {"spike": "Нет"}, "шип"),
+        ({"spike": "yes"}, {"spike": "no"}, "шип"),
+        ({"season": "Зимняя"}, {"season": "Летняя"}, "сезон"),
+        ({"season": "зима"}, {"season": "лето"}, "сезон"),
     ],
 )
-def test_season_aliases_are_not_disputed(left: str, right: str) -> None:
-    first = _row(season=left)
-    second = _row(season=right, price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([first, second]).get_double_row_items()
-
-    assert doubles == [first, second]
-    assert not first.disputed
-    assert not second.disputed
-
-
-def test_short_season_aliases_still_conflict() -> None:
-    winter = _row(season="зима")
-    summer = _row(season="лето", price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([winter, summer]).get_double_row_items()
-
-    assert doubles == [winter, summer]
-    assert winter.disputed == "сезон"
-    assert summer.disputed == "сезон"
+def test_explicit_conflict_is_disputed(
+    left_fields: dict[str, str],
+    right_fields: dict[str, str],
+    note: str,
+) -> None:
+    _assert_grouped(_row(**left_fields), _high(**right_fields), disputed=note)
 
 
 @pytest.mark.parametrize(
-    ("left", "right"),
+    ("left_fields", "right_fields"),
     [
-        ("да", "yes"),
-        ("Да", "YES"),
-        ("да", "ш."),
-        ("нет", "no"),
-        ("Нет", "NO"),
+        ({"season": "зима"}, {"season": "зимняя"}),
+        ({"season": "ЗИМА"}, {"season": "Зимняя"}),
+        ({"season": "лето"}, {"season": "летняя"}),
+        ({"season": "ЛЕТО"}, {"season": "Летняя"}),
+        ({"spike": "да"}, {"spike": "yes"}),
+        ({"spike": "Да"}, {"spike": "YES"}),
+        ({"spike": "да"}, {"spike": "ш."}),
+        ({"spike": "нет"}, {"spike": "no"}),
+        ({"spike": "Нет"}, {"spike": "NO"}),
+        ({"title": "315/80R22.5 NU701 шип"}, {}),
+        ({"spike": "Да"}, {}),
     ],
 )
-def test_spike_aliases_are_not_disputed(left: str, right: str) -> None:
-    first = _row(spike=left)
-    second = _row(spike=right, price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([first, second]).get_double_row_items()
-
-    assert doubles == [first, second]
-    assert not first.disputed
-    assert not second.disputed
-
-
-def test_spike_yes_and_no_aliases_are_disputed() -> None:
-    yes_spike = _row(spike="yes")
-    no_spike = _row(spike="no", price_markup=_PRICE_HIGH)
-    doubles = CommonPriceGrouper([yes_spike, no_spike]).get_double_row_items()
-
-    assert doubles == [yes_spike, no_spike]
-    assert yes_spike.disputed == "шип"
-    assert no_spike.disputed == "шип"
+def test_same_group_not_disputed(left_fields: dict[str, str], right_fields: dict[str, str]) -> None:
+    _assert_grouped(_row(**left_fields), _high(**right_fields))
