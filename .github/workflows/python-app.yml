@@ -4,7 +4,7 @@
 name: Lint and check types and tests
 
 'on': 
-  push:
+  pull_request:
     branches:
       - master
 
