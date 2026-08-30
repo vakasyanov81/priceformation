@@ -3,6 +3,8 @@
 import argparse
 from collections.abc import Sequence
 
+from parsers.writer.templates.all_templates import writer_templates_by_name
+
 PARSE = "parse"
 DOUBLES = "doubles"
 ZAPASKA = "zapaska"
@@ -31,7 +33,22 @@ def parse_machine_args(argv: Sequence[str]) -> argparse.Namespace:
         description="Неинтерактивный запуск разбора прайсов для сторонних скриптов.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser(PARSE, parents=[json_flag], help="Разобрать прайсы поставщиков и записать файлы.")
+    parse_cmd = subparsers.add_parser(
+        PARSE,
+        parents=[json_flag],
+        help="Разобрать прайсы поставщиков и записать файлы.",
+    )
+    parse_cmd.add_argument(
+        "--result-template",
+        default=None,
+        metavar="NAME",
+        help=_result_template_help(),
+    )
     subparsers.add_parser(DOUBLES, parents=[json_flag], help="Разобрать прайсы и записать отчёт о дублях.")
     subparsers.add_parser(ZAPASKA, parents=[json_flag], help="Выгрузить прайсы запаски по API.")
     return parser.parse_args(list(argv))
+
+
+def _result_template_help() -> str:
+    names = ", ".join(writer_templates_by_name())
+    return f"Шаблон записи результата ({names}). Без флага — все шаблоны."

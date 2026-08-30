@@ -3,10 +3,14 @@
 from typing import cast
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from core.parse_paths import get_parse_paths
 from parsers.common_price_output import CommonPriceOut
 from parsers.row_item.row_item import RowItem
+from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
+from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
@@ -194,3 +198,49 @@ def test_write_doubles_report_jsonl() -> None:
 
     mock_jsonl.assert_called_once_with(raw_rows, ForDoubles, _result_folder())
     assert report_path == jsonl_path
+
+
+def test_write_all_prices_single_template() -> None:
+    """result_template пишет только выбранный шаблон."""
+    writer_cls = MagicMock()
+    driver_cls = MagicMock()
+    writer_instance = MagicMock()
+    writer_instance.get_result_path.return_value = "file_prices/result/drom.xlsx"
+    writer_cls.return_value = writer_instance
+    driver_instance = MagicMock()
+    driver_cls.return_value = driver_instance
+    out = CommonPriceOut(
+        [RowItem({_TITLE: "t1"})],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+    )
+    raw_rows = [{_TITLE: "t1"}]
+
+    with (
+        patch.object(out, "nomenclature_title_correction"),
+        patch("parsers.common_price_output._to_raw_dicts", return_value=raw_rows),
+    ):
+        written = out.write_all_prices(result_template="for_drom")
+
+    writer_cls.assert_called_once_with(
+        driver_instance,
+        raw_rows,
+        ForDrom,
+        result_folder=_result_folder(),
+    )
+    assert written == ["file_prices/result/drom.xlsx"]
+
+
+def test_write_all_prices_unknown_template() -> None:
+    """неизвестный шаблон — ошибка до записи."""
+    writer_cls = MagicMock()
+    out = CommonPriceOut(
+        [],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+    )
+
+    with pytest.raises(UnknownWriterTemplateError, match="nope"):
+        out.write_all_prices(result_template="nope")
+
+    writer_cls.assert_not_called()

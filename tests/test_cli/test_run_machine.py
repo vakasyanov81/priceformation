@@ -8,7 +8,7 @@ import pytest
 from core.log_message import print_log
 from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, PARSE, ZAPASKA
-from run_machine import machine_json
+from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
 _PATH = "file_prices/result/price.jsonl"
@@ -54,7 +54,26 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["positions"] == []
     assert payload["stats"]["items"] == 1
     assert payload["files"] == [_PATH]
-    mock_out.return_value.write_all_prices.assert_called_once_with(as_jsonl=True)
+    mock_out.return_value.write_all_prices.assert_called_once_with(as_jsonl=True, result_template=None)
+
+
+def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
+    """parse --result-template передаёт имя в write_all_prices."""
+    common = _common_with_row()
+    with (
+        patch(_COMMON_PRICE, return_value=common),
+        patch(_ALL_VENDORS, return_value=[]),
+        patch(_PRICE_OUT) as mock_out,
+    ):
+        mock_out.return_value.write_all_prices.return_value = [_PATH]
+        code = machine_json(PARSE, result_template="for_drom")
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["ok"] is True
+    mock_out.return_value.write_all_prices.assert_called_once_with(
+        as_jsonl=True,
+        result_template="for_drom",
+    )
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
@@ -176,3 +195,30 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         assert payload["action"] == ZAPASKA
         assert payload["positions"] == []
         mock_load.assert_called_once()
+
+
+def test_fail_unknown_skips_empty_name() -> None:
+    """без имени шаблона проверки нет."""
+    assert fail_unknown_result_template(PARSE, None, json_mode=True) is None
+
+
+def test_fail_unknown_skips_known_name() -> None:
+    """известное имя не считается ошибкой."""
+    assert fail_unknown_result_template(PARSE, "for_drom", json_mode=True) is None
+
+
+def test_fail_unknown_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """неизвестный шаблон в JSON — ok=false."""
+    code = fail_unknown_result_template(PARSE, "nope", json_mode=True)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["error"]["kind"] == "UnknownWriterTemplateError"
+    assert "nope" in payload["error"]["message"]
+
+
+def test_fail_unknown_human(capsys: pytest.CaptureFixture[str]) -> None:
+    """неизвестный шаблон без JSON — текст ошибки."""
+    code = fail_unknown_result_template(PARSE, "nope", json_mode=False)
+    assert code == 1
+    assert "nope" in capsys.readouterr().out

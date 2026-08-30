@@ -48,6 +48,26 @@ def test_parse_without_json() -> None:
     assert args.clear_previous_result is False
 
 
+def test_parse_result_template_flag() -> None:
+    """--result-template сохраняет имя шаблона."""
+    args = parse_machine_args([PARSE, "--result-template", "for_drom"])
+    assert args.command == PARSE
+    assert args.result_template == "for_drom"
+
+
+def test_parse_result_template_default() -> None:
+    """без --result-template имя пустое."""
+    args = parse_machine_args([PARSE])
+    assert args.result_template is None
+
+
+def test_result_template_rejected_on_doubles() -> None:
+    """--result-template есть только у parse."""
+    with pytest.raises(SystemExit) as exit_info:
+        parse_machine_args([DOUBLES, "--result-template", "for_drom"])
+    assert exit_info.value.code == 2
+
+
 def test_parse_doubles() -> None:
     """команда doubles."""
     args = parse_machine_args([DOUBLES, "--json"])

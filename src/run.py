@@ -10,6 +10,7 @@
     python src/run.py parse --json
     python src/run.py parse --json --all-result
     python src/run.py parse --json --clear-previous-result
+    python src/run.py parse --json --result-template for_drom
     python src/run.py doubles --json
     python src/run.py zapaska --json
 
@@ -30,7 +31,7 @@ from parsers.common_price_output import CommonPriceOut
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from run_argv import DOUBLES, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
-from run_machine import machine_json
+from run_machine import fail_unknown_result_template, machine_json
 
 
 def main() -> None:
@@ -54,21 +55,33 @@ def _run_machine(argv: list[str]) -> int:
     command = args.command
     if not isinstance(command, str):
         return 1
+    result_template = getattr(args, "result_template", None)
+    json_mode = bool(args.json or args.all_result)
+    rejected = fail_unknown_result_template(command, result_template, json_mode=json_mode)
+    if rejected is not None:
+        return rejected
     if args.clear_previous_result:
         clear_result_folder()
-    if args.json or args.all_result:
-        return machine_json(command, all_result=bool(args.all_result))
-    return _machine_human(command)
+    if json_mode:
+        return machine_json(
+            command,
+            all_result=bool(args.all_result),
+            result_template=result_template,
+        )
+    return _machine_human(command, result_template)
 
 
-def _machine_human(command: str) -> int:
+def _machine_human(command: str, result_template: str | None) -> int:
     """Те же действия, что в меню, без JSON."""
     handlers = {
         PARSE: run_make_price_by_supplier,
         DOUBLES: run_report_doubles,
         ZAPASKA: run_upload_zapaska_data,
     }
-    try_call(handlers[command])
+    extra: dict[str, str | None] = {}
+    if command == PARSE:
+        extra["result_template"] = result_template
+    try_call(handlers[command], **extra)
     return 0
 
 
@@ -87,11 +100,11 @@ def response_processing() -> bool:
     return continuation_of_execution
 
 
-def run_make_price_by_supplier() -> None:
+def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
     """Make common price list by price list supplier's"""
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
-    CommonPriceOut(common_price.parsed_items).write_all_prices()
+    CommonPriceOut(common_price.parsed_items).write_all_prices(result_template=result_template)
 
 
 def run_upload_zapaska_data() -> None:

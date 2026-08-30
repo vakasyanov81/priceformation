@@ -11,7 +11,7 @@ from parsers.base_parser.nomenclature_correction import (
 )
 from parsers.row_item.row_item import RowItem
 from parsers.writer.jsonl_writer import write_template_jsonl
-from parsers.writer.templates.all_templates import all_writer_templates
+from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
@@ -39,16 +39,21 @@ class CommonPriceOut:
         for row_item in self.row_items:
             row_item.title = get_nomenclature_corrected_title(row_item.title)
 
-    def write_all_prices(self, *, as_jsonl: bool = False) -> list[str]:
+    def write_all_prices(
+        self,
+        *,
+        as_jsonl: bool = False,
+        result_template: str | None = None,
+    ) -> list[str]:
         """
         Make prices for all active templates.
         :return: пути записанных файлов
         """
+        templates = _templates_to_write(result_template)
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
         return [
-            self._write_with_template(self.row_items, write_template, as_jsonl=as_jsonl)
-            for write_template in all_writer_templates()
+            self._write_with_template(self.row_items, write_template, as_jsonl=as_jsonl) for write_template in templates
         ]
 
     def write_doubles_report(self, *, as_jsonl: bool = False) -> str:
@@ -76,6 +81,13 @@ class CommonPriceOut:
         )
         writer.write()
         return writer.get_result_path()
+
+
+def _templates_to_write(result_template: str | None) -> list[type[IWriteTemplate]]:
+    """Все активные шаблоны или один выбранный по имени CLI."""
+    if result_template is None:
+        return all_writer_templates()
+    return [get_writer_template(result_template)]
 
 
 def _to_raw_dicts(row_items: list[RowItem]) -> list[dict[str, Any]]:

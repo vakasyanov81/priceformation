@@ -72,7 +72,9 @@ def test_run_make_price() -> None:
         mock_cp.assert_called_once()
         common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
         mock_out.assert_called_once_with([1])
-        mock_out.return_value.write_all_prices.assert_called_once()
+        mock_out.return_value.write_all_prices.assert_called_once_with(result_template=None)
+        run_make_price_by_supplier(result_template="for_drom")
+        mock_out.return_value.write_all_prices.assert_called_with(result_template="for_drom")
 
 
 def test_run_upload_zapaska() -> None:

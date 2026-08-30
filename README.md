@@ -53,6 +53,7 @@ uv run --no-dev --locked python src/run.py parse --json
 - `--json` — одна JSON-строка в stdout, логи не печатаются; прайсы пишутся в `.jsonl` (те же шаблоны, что xlsx), рядом — `result_meta.json`
 - `--all-result` — в JSON включить позиции разбора (без флага — только статистика). Сам по себе тоже включает JSON-режим
 - `--clear-previous-result` — удалить всё из `file_prices/result` перед записью
+- `--result-template NAME` — для `parse`: записать только этот шаблон (`for_inner`, `for_drom`). Без флага — все шаблоны. Неизвестное имя — ошибка (код 1; в JSON-режиме `ok: false`)
 
 Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
 
@@ -64,6 +65,7 @@ uv run --no-dev --locked python src/run.py parse --json
 ```
 uv run --no-dev --locked python src/run.py parse --json --clear-previous-result
 uv run --no-dev --locked python src/run.py parse --json --all-result
+uv run --no-dev --locked python src/run.py parse --json --result-template for_drom
 uv run --no-dev --locked python src/run.py doubles --json
 uv run --no-dev --locked python src/run.py zapaska --json
 ```
