@@ -6,7 +6,7 @@ import time
 from collections.abc import Sequence
 
 from core import err_msg, log_msg, warn_msg
-from parsers.all_vendors import all_vendor_supplier_info
+from parsers.all_vendors import vendor_config_is_enabled
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
@@ -26,9 +26,6 @@ from parsers.vendors.four_tochki.four_tochki_sheet1 import FourTochkiParser1Shee
 from parsers.vendors.pioner import PionerParser
 from parsers.vendors.poshk import PoshkParser
 from parsers.vendors.stk import STKParser
-
-type SupplierName = str
-type SupplierCode = str
 
 type VendorList = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
 type UnknownCategorySkip = tuple[str, str]
@@ -100,10 +97,6 @@ class CommonPrice:
         """Итоговый список записей."""
         return self._parsed_items
 
-    def supplier_info(self) -> dict[SupplierCode, SupplierName]:
-        """Возвращает отображение код поставщика → название."""
-        return all_vendor_supplier_info()
-
 
 _MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
 _IDENTITY_VENDORS: tuple[type[BaseParser], ...] = (Autosnab54Parser,)
@@ -122,12 +115,6 @@ def _price_run_grouper(row_items: list[RowItem]) -> CommonPriceGrouper:
     """Сброс aliases-кэша на прогон, затем группировка со свежей картой."""
     clear_manufacturer_aliases_cache()
     return CommonPriceGrouper(row_items)
-
-
-def _vendor_is_enabled(vendor_config: ParseConfiguration) -> bool:
-    folder_name = vendor_config.supplier.folder_name
-    vendor = vendor_config.all_vendor_config().get(folder_name)
-    return bool(vendor and vendor.enabled)
 
 
 def _markup_policy_for_vendor(
@@ -149,11 +136,7 @@ def _parser_for_vendor(
 ) -> BaseParser:
     if vendor_config is None:
         return vendor_cls(vendor_config)
-    try:
-        enabled = _vendor_is_enabled(vendor_config)
-    except VendorListConfigFileError:
-        enabled = False
-    if not enabled:
+    if not vendor_config_is_enabled(vendor_config):
         return vendor_cls(parse_config=vendor_config)
     return make_parser(
         vendor_cls,

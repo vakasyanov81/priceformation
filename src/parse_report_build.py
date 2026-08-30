@@ -3,6 +3,7 @@
 from typing import Any
 
 from parse_report import JsonReport, ok_payload
+from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.common_price import CommonPrice
@@ -57,15 +58,16 @@ def report_from_common(
     """
     selected = common.parsed_items if rows is None else rows
     positions = row_items_to_json(selected) if all_result else []
+    enabled, disabled = split_vendor_supplier_info()
     payload = ok_payload(
         action=action,
         positions=positions,
         stats=stats_from_common(common, elapsed),
         warnings=warnings_from_common(common),
         files=files,
-        suppliers=common.supplier_info(),
+        suppliers=enabled,
     )
-    payload["took"] = f"{round(elapsed)} seconds"
+    payload["disabled_suppliers"] = disabled
     return payload
 
 

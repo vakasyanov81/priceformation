@@ -47,20 +47,30 @@ uv run --no-dev --locked python src/run.py parse --json
 - `parse` — разобрать прайсы поставщиков и записать файлы
 - `doubles` — разобрать прайсы и записать отчёт о дублях
 - `zapaska` — выгрузить прайсы запаски по API
+- `get_supliers` — названия поставщиков: `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`
 
 Флаги:
 
-- `--json` — одна JSON-строка в stdout, логи не печатаются
+- `--json` — одна JSON-строка в stdout, логи не печатаются; прайсы пишутся в `.jsonl` (те же шаблоны, что xlsx), рядом — `result_meta.json`
 - `--all-result` — в JSON включить позиции разбора (без флага — только статистика). Сам по себе тоже включает JSON-режим
+- `--clear-previous-result` — удалить всё из `file_prices/result` перед записью
+- `--result-template NAME` — для `parse`: записать только этот шаблон (`for_inner`, `for_drom`). Без флага — все шаблоны. Неизвестное имя — ошибка (код 1; в JSON-режиме `ok: false`)
 
 Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
 
-Код выхода: `0` при успехе, `1` при ошибке. В JSON всегда одни и те же ключи: `ok`, `action`, `took` (например `"12 seconds"`), `stats`, `files`, `warnings`, `suppliers`, `positions`, `error`.
+Код выхода: `0` при успехе, `1` при ошибке. Для `parse` / `doubles` / `zapaska` в JSON всегда одни и те же ключи: `ok`, `action`, `stats`, `files` (пути к jsonl и `result_meta.json`), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`.
+`get_supliers` печатает каталог поставщиков: ключ — код, значение — `sup_code` (папка) и `sup_title` (название). `--json` для этой команды не обязателен.
+Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
+Расшифровка — в `result_meta.json` в той же папке: `{"1": "Тип товара", "2": "Бренд", …}`. Ключ у колонки общий для всех jsonl запуска.
+Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа (цены, остатки) не кодируются.
 
 ```
+uv run --no-dev --locked python src/run.py parse --json --clear-previous-result
 uv run --no-dev --locked python src/run.py parse --json --all-result
+uv run --no-dev --locked python src/run.py parse --json --result-template for_drom
 uv run --no-dev --locked python src/run.py doubles --json
 uv run --no-dev --locked python src/run.py zapaska --json
+uv run --no-dev --locked python src/run.py get_supliers
 ```
 
 ## Technical details:

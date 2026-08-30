@@ -2,6 +2,7 @@
 Make parse all price and make inner and drom prices
 """
 
+from pathlib import Path
 from typing import Any
 
 from core.parse_paths import get_parse_paths
@@ -10,7 +11,8 @@ from parsers.base_parser.nomenclature_correction import (
     get_nomenclature_corrected_title,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.all_templates import all_writer_templates
+from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
+from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
@@ -38,35 +40,68 @@ class CommonPriceOut:
         for row_item in self.row_items:
             row_item.title = get_nomenclature_corrected_title(row_item.title)
 
-    def write_all_prices(self) -> list[str]:
+    def write_all_prices(
+        self,
+        *,
+        as_jsonl: bool = False,
+        result_template: str | None = None,
+    ) -> list[str]:
         """
         Make prices for all active templates.
         :return: пути записанных файлов
         """
+        templates = _templates_to_write(result_template)
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
-        paths: list[str] = []
-        for write_template in all_writer_templates():
-            writer = self._write_with_template(self.row_items, write_template)
-            paths.append(writer.get_result_path())
-        return paths
+        written = [
+            self._write_with_template(self.row_items, write_template, as_jsonl=as_jsonl) for write_template in templates
+        ]
+        if as_jsonl:
+            return jsonl_output_files(written)
+        return written
 
-    def write_doubles_report(self) -> str:
+    def write_doubles_report(self, *, as_jsonl: bool = False) -> str:
         """Write only items marked as duplicates and return the file path."""
         doubles = [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]
-        writer = self._write_with_template(doubles, ForDoubles)
-        return writer.get_result_path()
+        return self._write_with_template(doubles, ForDoubles, as_jsonl=as_jsonl)
 
-    def _write_with_template(self, rows: list[RowItem], template: type[IWriteTemplate]) -> XlsWriter:
-        """Собрать writer, записать файл, вернуть экземпляр."""
+    def _write_with_template(
+        self,
+        rows: list[RowItem],
+        template: type[IWriteTemplate],
+        *,
+        as_jsonl: bool = False,
+    ) -> str:
+        """Записать файл шаблона (xlsx или jsonl) и вернуть путь."""
+        raw_rows = _to_raw_dicts(rows)
+        folder = get_parse_paths().result_folder
+        if as_jsonl:
+            return write_template_jsonl(raw_rows, template, folder)
         writer = self.xls_writer(
             self.write_driver(),
-            _to_raw_dicts(rows),
+            raw_rows,
             template,
-            result_folder=get_parse_paths().result_folder,
+            result_folder=folder,
         )
         writer.write()
-        return writer
+        return writer.get_result_path()
+
+
+def jsonl_output_files(written: list[str]) -> list[str]:
+    """Пути jsonl и файл метаинформации колонок в той же папке."""
+    if not written:
+        return written
+    meta = str(Path(written[0]).parent / RESULT_META_FILE)
+    if meta in written:
+        return written
+    return [*written, meta]
+
+
+def _templates_to_write(result_template: str | None) -> list[type[IWriteTemplate]]:
+    """Все активные шаблоны или один выбранный по имени CLI."""
+    if result_template is None:
+        return all_writer_templates()
+    return [get_writer_template(result_template)]
 
 
 def _to_raw_dicts(row_items: list[RowItem]) -> list[dict[str, Any]]:

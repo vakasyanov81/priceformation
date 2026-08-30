@@ -6,13 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from core.log_message import print_log
+from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
-from run_argv import DOUBLES, PARSE, ZAPASKA
-from run_machine import machine_json
+from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA
+from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
-_PATH = "file_prices/result/price.xlsx"
-_DOUBLE_PATH = "file_prices/result/doubles.xlsx"
+_PATH = "file_prices/result/price.jsonl"
+_DOUBLE_PATH = "file_prices/result/doubles.jsonl"
 _PRICE_FIELDS = {"title": _TITLE, "price_opt": 10, "price_markup": 12}
 _COMMON_PRICE = "run_machine.CommonPrice"
 _ALL_VENDORS = "run_machine.all_vendors"
@@ -26,7 +27,6 @@ def _common_with_row() -> MagicMock:
     common.parsed_items = [row]
     common.unknown_category_skips = []
     common.black_list_skips = 0
-    common.supplier_info.return_value = {"22": "Запаска"}
     return common
 
 
@@ -35,7 +35,6 @@ def _mark_common(rows: list[RowItem]) -> MagicMock:
     common.parsed_items = rows
     common.unknown_category_skips = []
     common.black_list_skips = 0
-    common.supplier_info.return_value = {}
     return common
 
 
@@ -55,8 +54,27 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["action"] == PARSE
     assert payload["positions"] == []
     assert payload["stats"]["items"] == 1
-    assert payload["took"].endswith(" seconds")
     assert payload["files"] == [_PATH]
+    mock_out.return_value.write_all_prices.assert_called_once_with(as_jsonl=True, result_template=None)
+
+
+def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
+    """parse --result-template передаёт имя в write_all_prices."""
+    common = _common_with_row()
+    with (
+        patch(_COMMON_PRICE, return_value=common),
+        patch(_ALL_VENDORS, return_value=[]),
+        patch(_PRICE_OUT) as mock_out,
+    ):
+        mock_out.return_value.write_all_prices.return_value = [_PATH]
+        code = machine_json(PARSE, result_template="for_drom")
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["ok"] is True
+    mock_out.return_value.write_all_prices.assert_called_once_with(
+        as_jsonl=True,
+        result_template="for_drom",
+    )
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
@@ -99,7 +117,6 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload["ok"] is False
-    assert payload["took"].endswith(" seconds")
     assert payload["error"]["kind"] == "RuntimeError"
     assert payload["error"]["message"] == "boom"
 
@@ -131,7 +148,8 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["action"] == DOUBLES
     assert payload["positions"] == []
     assert payload["stats"]["doubles"] == 1
-    assert payload["files"] == [_DOUBLE_PATH]
+    assert payload["files"] == jsonl_output_files([_DOUBLE_PATH])
+    mock_out.return_value.write_doubles_report.assert_called_once_with(as_jsonl=True)
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
@@ -153,7 +171,7 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     titles = {position["title"] for position in payload["positions"]}
     assert code == 0
     assert titles == {"dup", "cand"}
-    assert payload["files"] == [_DOUBLE_PATH]
+    assert payload["files"] == jsonl_output_files([_DOUBLE_PATH])
 
 
 def test_json_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
@@ -177,5 +195,41 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         assert payload["ok"] is True
         assert payload["action"] == ZAPASKA
         assert payload["positions"] == []
-        assert payload["took"].endswith(" seconds")
         mock_load.assert_called_once()
+
+
+def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
+    """get_supliers: каталог код → folder и название."""
+    catalog = {"1": {"sup_code": "poshk", "sup_title": "Пошк"}}
+    with patch("run_machine.all_vendor_supplier_catalog", return_value=catalog):
+        code = machine_json(GET_SUPLIERS)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == catalog
+
+
+def test_fail_unknown_skips_empty_name() -> None:
+    """без имени шаблона проверки нет."""
+    assert fail_unknown_result_template(PARSE, None, json_mode=True) is None
+
+
+def test_fail_unknown_skips_known_name() -> None:
+    """известное имя не считается ошибкой."""
+    assert fail_unknown_result_template(PARSE, "for_drom", json_mode=True) is None
+
+
+def test_fail_unknown_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """неизвестный шаблон в JSON — ok=false."""
+    code = fail_unknown_result_template(PARSE, "nope", json_mode=True)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["error"]["kind"] == "UnknownWriterTemplateError"
+    assert "nope" in payload["error"]["message"]
+
+
+def test_fail_unknown_human(capsys: pytest.CaptureFixture[str]) -> None:
+    """неизвестный шаблон без JSON — текст ошибки."""
+    code = fail_unknown_result_template(PARSE, "nope", json_mode=False)
+    assert code == 1
+    assert "nope" in capsys.readouterr().out

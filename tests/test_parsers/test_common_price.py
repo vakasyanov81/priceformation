@@ -9,6 +9,7 @@ import pytest
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
 
+from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import (
@@ -214,10 +215,12 @@ def test_black_list_skips_logged() -> None:
 
 
 def test_suppliers_info() -> None:
-    """supplier_info maps vendor code to supplier name"""
-    vendors_by_code = CommonPrice().supplier_info()
-    assert vendors_by_code["22"] == "Запаска (шины)"
-    assert None not in vendors_by_code.values()
+    """supplier maps cover vendor codes and do not overlap."""
+    enabled, disabled = split_vendor_supplier_info()
+    combined = {**enabled, **disabled}
+    assert combined["22"] == "Запаска (шины)"
+    assert None not in combined.values()
+    assert not set(enabled) & set(disabled)
 
 
 def _markup_policy_from_parse_all(parser_cls: type[BaseParser], vendor_params: Any) -> MarkupPolicy:

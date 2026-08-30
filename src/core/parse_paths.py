@@ -1,5 +1,6 @@
 """Price, parse_config, and result folders; configured from cfg, never imported from it."""
 
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -41,3 +42,15 @@ def get_parse_paths() -> ParsePaths:
     if paths is None:
         raise ParsePathsNotConfiguredError()
     return paths
+
+
+def clear_result_folder() -> None:
+    """Удалить содержимое result_folder, саму папку оставить."""
+    folder = Path(get_parse_paths().result_folder)
+    if not folder.is_dir():
+        return
+    for entry in folder.iterdir():
+        if entry.is_dir() and not entry.is_symlink():
+            shutil.rmtree(entry)
+            continue
+        entry.unlink(missing_ok=True)
