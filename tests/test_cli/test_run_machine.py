@@ -11,8 +11,8 @@ from run_argv import DOUBLES, PARSE, ZAPASKA
 from run_machine import machine_json
 
 _TITLE = "шина"
-_PATH = "file_prices/result/price.xlsx"
-_DOUBLE_PATH = "file_prices/result/doubles.xlsx"
+_PATH = "file_prices/result/price.jsonl"
+_DOUBLE_PATH = "file_prices/result/doubles.jsonl"
 _PRICE_FIELDS = {"title": _TITLE, "price_opt": 10, "price_markup": 12}
 _COMMON_PRICE = "run_machine.CommonPrice"
 _ALL_VENDORS = "run_machine.all_vendors"
@@ -26,7 +26,6 @@ def _common_with_row() -> MagicMock:
     common.parsed_items = [row]
     common.unknown_category_skips = []
     common.black_list_skips = 0
-    common.supplier_info.return_value = {"22": "Запаска"}
     return common
 
 
@@ -35,7 +34,6 @@ def _mark_common(rows: list[RowItem]) -> MagicMock:
     common.parsed_items = rows
     common.unknown_category_skips = []
     common.black_list_skips = 0
-    common.supplier_info.return_value = {}
     return common
 
 
@@ -55,8 +53,8 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["action"] == PARSE
     assert payload["positions"] == []
     assert payload["stats"]["items"] == 1
-    assert payload["took"].endswith(" seconds")
     assert payload["files"] == [_PATH]
+    mock_out.return_value.write_all_prices.assert_called_once_with(as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
@@ -99,7 +97,6 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload["ok"] is False
-    assert payload["took"].endswith(" seconds")
     assert payload["error"]["kind"] == "RuntimeError"
     assert payload["error"]["message"] == "boom"
 
@@ -132,6 +129,7 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["positions"] == []
     assert payload["stats"]["doubles"] == 1
     assert payload["files"] == [_DOUBLE_PATH]
+    mock_out.return_value.write_doubles_report.assert_called_once_with(as_jsonl=True)
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
@@ -177,5 +175,4 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         assert payload["ok"] is True
         assert payload["action"] == ZAPASKA
         assert payload["positions"] == []
-        assert payload["took"].endswith(" seconds")
         mock_load.assert_called_once()

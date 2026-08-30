@@ -9,10 +9,12 @@
 
     python src/run.py parse --json
     python src/run.py parse --json --all-result
+    python src/run.py parse --json --clear-previous-result
     python src/run.py doubles --json
     python src/run.py zapaska --json
 
-JSON печатается в stdout, логи в этом режиме не выводятся. Код выхода 0 при успехе, 1 при ошибке.
+JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
+Код выхода 0 при успехе, 1 при ошибке.
 """
 
 import sys
@@ -21,6 +23,7 @@ from cfg import init_cfg
 from cfg.zapaska_api import get_zapaska_api_config
 from core.async_utils import try_call
 from core.log_message import print_log
+from core.parse_paths import clear_result_folder
 from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
@@ -51,6 +54,8 @@ def _run_machine(argv: list[str]) -> int:
     command = args.command
     if not isinstance(command, str):
         return 1
+    if args.clear_previous_result:
+        clear_result_folder()
     if args.json or args.all_result:
         return machine_json(command, all_result=bool(args.all_result))
     return _machine_human(command)

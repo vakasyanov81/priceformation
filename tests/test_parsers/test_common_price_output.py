@@ -79,6 +79,34 @@ def test_write_all_prices() -> None:
     assert written == ["file_prices/result/inner.xlsx"]
 
 
+def test_write_all_prices_jsonl() -> None:
+    """as_jsonl пишет jsonl и не трогает xlsx writer."""
+    rows = [RowItem({_TITLE: "t1"})]
+    writer_cls = MagicMock()
+    driver_cls = MagicMock()
+    template = object()
+    out = CommonPriceOut(
+        rows,
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+    )
+    raw_rows = [{_TITLE: "t1"}]
+    jsonl_path = "file_prices/result/price.jsonl"
+
+    with (
+        patch.object(out, "nomenclature_title_correction") as mock_corr,
+        patch("parsers.common_price_output.all_writer_templates", return_value=[template]),
+        patch("parsers.common_price_output._to_raw_dicts", return_value=raw_rows),
+        patch("parsers.common_price_output.write_template_jsonl", return_value=jsonl_path) as mock_jsonl,
+    ):
+        written = out.write_all_prices(as_jsonl=True)
+
+    mock_corr.assert_called_once()
+    writer_cls.assert_not_called()
+    mock_jsonl.assert_called_once_with(raw_rows, template, _result_folder())
+    assert written == [jsonl_path]
+
+
 def test_write_all_prices_reloads_nomenclature() -> None:
     """второй write_all_prices в том же процессе видит новую карту номенклатуры"""
     row = RowItem({_TITLE: "old"})
@@ -144,3 +172,25 @@ def test_write_doubles_report() -> None:
     )
     writer_instance.write.assert_called_once()
     assert report_path == _REPORT_PATH
+
+
+def test_write_doubles_report_jsonl() -> None:
+    """as_jsonl для дублей идёт в jsonl."""
+    double_row = RowItem({_TITLE: "dup"})
+    double_row.is_double = True
+    out = CommonPriceOut(
+        [double_row],
+        xls_writer=cast(type[XlsWriter], MagicMock),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+    )
+    jsonl_path = "file_prices/result/doubles.jsonl"
+    raw_rows = [{_TITLE: "dup"}]
+
+    with (
+        patch("parsers.common_price_output._to_raw_dicts", return_value=raw_rows),
+        patch("parsers.common_price_output.write_template_jsonl", return_value=jsonl_path) as mock_jsonl,
+    ):
+        report_path = out.write_doubles_report(as_jsonl=True)
+
+    mock_jsonl.assert_called_once_with(raw_rows, ForDoubles, _result_folder())
+    assert report_path == jsonl_path

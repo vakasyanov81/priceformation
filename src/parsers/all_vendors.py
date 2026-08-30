@@ -4,6 +4,7 @@ collection all active vendors
 
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_config
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
@@ -46,8 +47,27 @@ def all_vendors() -> list[VendorEntry]:
 
 
 def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
-    """Supplier info"""
+    """Все поставщики: код → название, без учёта enabled."""
     supplier_info: dict[SupplierCode, SupplierName] = {}
     for _, config in all_vendors():
         supplier_info[config.supplier.code] = config.supplier.name
     return supplier_info
+
+
+def split_vendor_supplier_info() -> tuple[dict[SupplierCode, SupplierName], dict[SupplierCode, SupplierName]]:
+    """Активные и отключённые поставщики: код → название."""
+    enabled: dict[SupplierCode, SupplierName] = {}
+    disabled: dict[SupplierCode, SupplierName] = {}
+    for _, config in all_vendors():
+        target = enabled if vendor_config_is_enabled(config) else disabled
+        target[config.supplier.code] = config.supplier.name
+    return enabled, disabled
+
+
+def vendor_config_is_enabled(config: ParseConfiguration) -> bool:
+    """Поставщик включён в vendor_list.json."""
+    try:
+        vendor = config.all_vendor_config().get(config.supplier.folder_name)
+    except VendorListConfigFileError:
+        return False
+    return bool(vendor and vendor.enabled)

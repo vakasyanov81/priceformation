@@ -1,6 +1,7 @@
 """JSON-отчёт разбора прайса."""
 
 from io import StringIO
+from unittest.mock import patch
 
 from parse_report import (
     REPORT_VERSION,
@@ -46,7 +47,6 @@ def test_dump_json_roundtrip() -> None:
     text = dump_json(payload)
     assert '"ok": true' in text
     assert payload["version"] == REPORT_VERSION
-    assert payload["took"] == "0 seconds"
     assert payload["error"] is None
 
 
@@ -55,7 +55,7 @@ def test_error_payload_stable_keys() -> None:
     payload = error_payload("parse", "RuntimeError", "boom")
     assert payload["ok"] is False
     assert payload["positions"] == []
-    assert payload["took"] == "0 seconds"
+    assert payload["disabled_suppliers"] == {}
     assert payload["error"] == {"kind": "RuntimeError", "message": "boom"}
 
 
@@ -65,13 +65,6 @@ def test_emit_json_writes_stream() -> None:
     emit_json(error_payload("zapaska", "OSError", "no net"), stream)
     assert stream.getvalue().endswith("\n")
     assert "no net" in stream.getvalue()
-
-
-def test_emit_json_stamps_took() -> None:
-    """took — целые секунды в виде строки."""
-    stream = StringIO()
-    emit_json(error_payload("zapaska", "OSError", "no net"), stream, elapsed=12.4)
-    assert '"took": "12 seconds"' in stream.getvalue()
 
 
 def test_row_items_include_parse_errors() -> None:
@@ -146,12 +139,11 @@ def test_report_from_common_subset_rows() -> None:
     keep.is_double = True
     skip = RowItem({"title": "other", "price_opt": _OPT, "price_markup": _MARKUP})
     common.parsed_items.extend([keep, skip])
-    report = report_from_common("doubles", common, [_RESULT_D], 12.4, rows=[keep], all_result=True)
+    report = report_from_common("doubles", common, [_RESULT_D], 0.5, rows=[keep], all_result=True)
     assert report["ok"] is True
     assert report["action"] == "doubles"
     assert len(report["positions"]) == 1
     assert report["stats"]["items"] == 2
-    assert report["took"] == "12 seconds"
     assert report["files"] == [_RESULT_D]
 
 
@@ -159,9 +151,20 @@ def test_report_stats_only() -> None:
     """без all_result в JSON только статистика процесса."""
     common = CommonPrice()
     common.parsed_items.append(_priced_row())
-    report = report_from_common("parse", common, [_RESULT_A], 12.4)
+    report = report_from_common("parse", common, [_RESULT_A], 0.4)
     assert report["positions"] == []
     assert report["stats"]["items"] == 1
-    assert report["stats"]["elapsed_seconds"] == 12.4
-    assert report["took"] == "12 seconds"
+    assert report["stats"]["elapsed_seconds"] == 0.4
     assert report["files"] == [_RESULT_A]
+
+
+def test_report_splits_disabled_suppliers() -> None:
+    """активные и отключённые поставщики — разные поля JSON."""
+    common = CommonPrice()
+    with patch(
+        "parse_report_build.split_vendor_supplier_info",
+        return_value=({"3": "Пионер"}, {"7": "STK"}),
+    ):
+        report = report_from_common("parse", common, [_RESULT_A], 0)
+    assert report["suppliers"] == {"3": "Пионер"}
+    assert report["disabled_suppliers"] == {"7": "STK"}

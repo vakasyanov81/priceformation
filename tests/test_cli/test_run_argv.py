@@ -45,6 +45,7 @@ def test_parse_without_json() -> None:
     assert args.command == ZAPASKA
     assert args.json is False
     assert args.all_result is False
+    assert args.clear_previous_result is False
 
 
 def test_parse_doubles() -> None:
@@ -53,6 +54,13 @@ def test_parse_doubles() -> None:
     assert args.command == DOUBLES
     assert args.json is True
     assert args.all_result is False
+
+
+def test_parse_clear_previous_result_flag() -> None:
+    """--clear-previous-result распознаётся."""
+    args = parse_machine_args([PARSE, "--json", "--clear-previous-result"])
+    assert args.clear_previous_result is True
+    assert args.json is True
 
 
 def test_parse_help_exits() -> None:

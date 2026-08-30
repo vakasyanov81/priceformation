@@ -22,12 +22,12 @@ class JsonReport(TypedDict):
     ok: bool
     version: int
     action: str
-    took: str
     positions: list[dict[str, Any]]
     stats: dict[str, Any]
     warnings: list[str]
     files: list[str]
     suppliers: dict[str, str]
+    disabled_suppliers: dict[str, str]
     error: JsonError | None
 
 
@@ -36,15 +36,8 @@ def dump_json(payload: JsonReport) -> str:
     return json.dumps(payload, ensure_ascii=False, default=str)
 
 
-def emit_json(
-    payload: JsonReport,
-    stream: TextIO | None = None,
-    *,
-    elapsed: float | None = None,
-) -> None:
+def emit_json(payload: JsonReport, stream: TextIO | None = None) -> None:
     """Печать JSON в stdout (или переданный поток)."""
-    if elapsed is not None:
-        payload["took"] = f"{round(elapsed)} seconds"
     print(dump_json(payload), file=stream or sys.stdout, flush=True)
 
 
@@ -76,12 +69,12 @@ def ok_payload(
         "ok": True,
         "version": REPORT_VERSION,
         "action": action,
-        "took": "0 seconds",
         "positions": positions,
         "stats": stats,
         "warnings": warnings,
         "files": files,
         "suppliers": suppliers,
+        "disabled_suppliers": {},
         "error": None,
     }
 
@@ -92,11 +85,11 @@ def error_payload(action: str, kind: str, message: str) -> JsonReport:
         "ok": False,
         "version": REPORT_VERSION,
         "action": action,
-        "took": "0 seconds",
         "positions": [],
         "stats": empty_stats(0),
         "warnings": [],
         "files": [],
         "suppliers": {},
+        "disabled_suppliers": {},
         "error": {"kind": kind, "message": message},
     }

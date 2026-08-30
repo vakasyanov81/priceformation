@@ -9,8 +9,9 @@ ZAPASKA = "zapaska"
 MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA)
 
 _HELP_FLAGS = ("-h", "--help")
-_JSON_HELP = "JSON в stdout; логи не печатаются (для Django и других скриптов)."
+_JSON_HELP = "JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов)."
 _ALL_RESULT_HELP = "Включить позиции разбора в JSON; без флага — только статистика процесса."
+_CLEAR_RESULT_HELP = "Удалить всё из папки result перед записью новых файлов."
 
 
 def is_machine_argv(argv: Sequence[str]) -> bool:
@@ -25,6 +26,7 @@ def parse_machine_args(argv: Sequence[str]) -> argparse.Namespace:
     json_flag = argparse.ArgumentParser(add_help=False)
     json_flag.add_argument("--json", action="store_true", help=_JSON_HELP)
     json_flag.add_argument("--all-result", action="store_true", help=_ALL_RESULT_HELP)
+    json_flag.add_argument("--clear-previous-result", action="store_true", help=_CLEAR_RESULT_HELP)
     parser = argparse.ArgumentParser(
         description="Неинтерактивный запуск разбора прайсов для сторонних скриптов.",
     )

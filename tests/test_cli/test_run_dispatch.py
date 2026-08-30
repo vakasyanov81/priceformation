@@ -119,3 +119,38 @@ def test_run_machine_all_result_implies_json() -> None:
             main()
 
         mock_json.assert_called_once_with("parse", all_result=True)
+
+
+def test_run_machine_clears_result_folder() -> None:
+    """--clear-previous-result очищает result до команды."""
+    with (
+        patch("run.sys.argv", ["run.py", "parse", "--json", "--clear-previous-result"]),
+        patch("run.init_cfg"),
+        patch("run.clear_result_folder") as mock_clear,
+        patch("run.machine_json", return_value=0) as mock_json,
+        patch("run.sys.exit", side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_clear.assert_called_once()
+        mock_json.assert_called_once_with("parse", all_result=False)
+
+
+def test_run_machine_skips_clear_without_flag() -> None:
+    """без флага папка result не чистится."""
+    with (
+        patch("run.sys.argv", ["run.py", "parse", "--json"]),
+        patch("run.init_cfg"),
+        patch("run.clear_result_folder") as mock_clear,
+        patch("run.machine_json", return_value=0),
+        patch("run.sys.exit", side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_clear.assert_not_called()

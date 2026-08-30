@@ -25,18 +25,16 @@ def machine_json(command: str, *, all_result: bool = False) -> int:
 
 
 def _emit_command(command: str, all_result: bool) -> int:
-    started = time.monotonic()
-    code = 0
     try:
         payload = _handlers()[command](all_result)
     except KeyboardInterrupt:
-        payload = error_payload(command, "KeyboardInterrupt", _INTERRUPT)
-        code = 1
+        emit_json(error_payload(command, "KeyboardInterrupt", _INTERRUPT))
+        return 1
     except Exception as exc:
-        payload = error_payload(command, type(exc).__name__, str(exc))
-        code = 1
-    emit_json(payload, elapsed=time.monotonic() - started)
-    return code
+        emit_json(error_payload(command, type(exc).__name__, str(exc)))
+        return 1
+    emit_json(payload)
+    return 0
 
 
 def _handlers() -> dict[str, Callable[[bool], JsonReport]]:
@@ -56,14 +54,14 @@ def _parse_common() -> CommonPrice:
 def _json_parse(all_result: bool) -> JsonReport:
     started = time.monotonic()
     common = _parse_common()
-    files = CommonPriceOut(common.parsed_items).write_all_prices()
+    files = CommonPriceOut(common.parsed_items).write_all_prices(as_jsonl=True)
     return report_from_common(PARSE, common, files, time.monotonic() - started, all_result=all_result)
 
 
 def _json_doubles(all_result: bool) -> JsonReport:
     started = time.monotonic()
     common = _parse_common()
-    report_path = CommonPriceOut(common.parsed_items).write_doubles_report()
+    report_path = CommonPriceOut(common.parsed_items).write_doubles_report(as_jsonl=True)
     return report_from_common(
         DOUBLES,
         common,
