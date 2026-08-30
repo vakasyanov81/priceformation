@@ -89,6 +89,22 @@ def test_run_machine_human_zapaska() -> None:
         assert mock_try.call_args.args[0].__name__ == "run_upload_zapaska_data"
 
 
+def test_run_machine_json_get_supliers() -> None:
+    """get_supliers без --json всё равно уходит в JSON-режим."""
+    with (
+        patch("run.sys.argv", ["run.py", "get_supliers"]),
+        patch("run.init_cfg"),
+        patch("run.machine_json", return_value=0) as mock_json,
+        patch("run.sys.exit", side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_json.assert_called_once_with("get_supliers", all_result=False, result_template=None)
+
+
 def test_run_machine_rejects_non_str_command() -> None:
     """если argparse не выставил command — код 1."""
     args = MagicMock(command=None, json=False, all_result=False)

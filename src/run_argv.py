@@ -8,7 +8,8 @@ from parsers.writer.templates.all_templates import writer_templates_by_name
 PARSE = "parse"
 DOUBLES = "doubles"
 ZAPASKA = "zapaska"
-MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA)
+GET_SUPLIERS = "get_supliers"
+MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA, GET_SUPLIERS)
 
 _HELP_FLAGS = ("-h", "--help")
 _JSON_HELP = "JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов)."
@@ -24,7 +25,7 @@ def is_machine_argv(argv: Sequence[str]) -> bool:
 
 
 def parse_machine_args(argv: Sequence[str]) -> argparse.Namespace:
-    """parse / doubles / zapaska и флаг --json после команды."""
+    """parse / doubles / zapaska / get_supliers и флаг --json после команды."""
     json_flag = argparse.ArgumentParser(add_help=False)
     json_flag.add_argument("--json", action="store_true", help=_JSON_HELP)
     json_flag.add_argument("--all-result", action="store_true", help=_ALL_RESULT_HELP)
@@ -46,6 +47,7 @@ def parse_machine_args(argv: Sequence[str]) -> argparse.Namespace:
     )
     subparsers.add_parser(DOUBLES, parents=[json_flag], help="Разобрать прайсы и записать отчёт о дублях.")
     subparsers.add_parser(ZAPASKA, parents=[json_flag], help="Выгрузить прайсы запаски по API.")
+    subparsers.add_parser(GET_SUPLIERS, parents=[json_flag], help="Получить названия поставщиков.")
     return parser.parse_args(list(argv))
 
 

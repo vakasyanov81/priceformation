@@ -8,7 +8,7 @@ import pytest
 from core.log_message import print_log
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
-from run_argv import DOUBLES, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA
 from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
@@ -196,6 +196,16 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         assert payload["action"] == ZAPASKA
         assert payload["positions"] == []
         mock_load.assert_called_once()
+
+
+def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
+    """get_supliers: каталог код → folder и название."""
+    catalog = {"1": {"sup_code": "poshk", "sup_title": "Пошк"}}
+    with patch("run_machine.all_vendor_supplier_catalog", return_value=catalog):
+        code = machine_json(GET_SUPLIERS)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == catalog
 
 
 def test_fail_unknown_skips_empty_name() -> None:

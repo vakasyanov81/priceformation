@@ -8,12 +8,12 @@ from cfg.zapaska_api import get_zapaska_api_config
 from core.log_message import print_log, set_print_quiet
 from parse_report import JsonReport, emit_json, empty_stats, error_payload, ok_payload
 from parse_report_build import report_from_common
-from parsers.all_vendors import all_vendors
+from parsers.all_vendors import all_vendor_supplier_catalog, all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
-from run_argv import DOUBLES, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA
 
 _INTERRUPT = "interrupted"
 
@@ -58,14 +58,16 @@ def _emit_command(command: str, all_result: bool, result_template: str | None) -
         ZAPASKA: _json_zapaska,
     }
     try:
-        payload = handlers[command](all_result, result_template)
+        if command == GET_SUPLIERS:
+            emit_json(all_vendor_supplier_catalog())
+        else:
+            emit_json(handlers[command](all_result, result_template))
     except KeyboardInterrupt:
         emit_json(error_payload(command, "KeyboardInterrupt", _INTERRUPT))
         return 1
     except Exception as exc:
         emit_json(error_payload(command, type(exc).__name__, str(exc)))
         return 1
-    emit_json(payload)
     return 0
 
 

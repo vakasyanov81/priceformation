@@ -2,7 +2,7 @@
 
 import pytest
 
-from run_argv import DOUBLES, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
+from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
 
 
 def test_is_machine_argv_empty() -> None:
@@ -20,6 +20,7 @@ def test_is_machine_argv_commands() -> None:
     """подкоманды и --help включают машинный режим."""
     assert is_machine_argv([PARSE]) is True
     assert is_machine_argv([DOUBLES, "--json"]) is True
+    assert is_machine_argv([GET_SUPLIERS]) is True
     assert is_machine_argv(["--help"]) is True
     assert is_machine_argv(["-h"]) is True
 
@@ -74,6 +75,13 @@ def test_parse_doubles() -> None:
     assert args.command == DOUBLES
     assert args.json is True
     assert args.all_result is False
+
+
+def test_parse_get_supliers() -> None:
+    """команда get_supliers."""
+    args = parse_machine_args([GET_SUPLIERS, "--json"])
+    assert args.command == GET_SUPLIERS
+    assert args.json is True
 
 
 def test_parse_clear_previous_result_flag() -> None:

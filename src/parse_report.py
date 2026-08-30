@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Mapping
 from typing import Any, TextIO, TypedDict
 
 REPORT_VERSION = 1
@@ -31,12 +32,12 @@ class JsonReport(TypedDict):
     error: JsonError | None
 
 
-def dump_json(payload: JsonReport) -> str:
+def dump_json(payload: Mapping[str, Any]) -> str:
     """Сериализовать отчёт в одну JSON-строку."""
     return json.dumps(payload, ensure_ascii=False, default=str)
 
 
-def emit_json(payload: JsonReport, stream: TextIO | None = None) -> None:
+def emit_json(payload: Mapping[str, Any], stream: TextIO | None = None) -> None:
     """Печать JSON в stdout (или переданный поток)."""
     print(dump_json(payload), file=stream or sys.stdout, flush=True)
 

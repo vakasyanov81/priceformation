@@ -2,13 +2,22 @@
 
 from unittest.mock import MagicMock, patch
 
-from parsers.all_vendors import all_vendor_supplier_info, split_vendor_supplier_info
+from parsers.all_vendors import all_vendor_supplier_catalog, all_vendor_supplier_info, split_vendor_supplier_info
 
 
 def test_supplier_info_maps_code_to_name() -> None:
     supplier_info = all_vendor_supplier_info()
     assert supplier_info["2"] == "Запаска (диски)"
     assert supplier_info["22"] == "Запаска (шины)"
+
+
+def test_catalog_maps_code_to_folder() -> None:
+    """каталог: код → folder_name и название."""
+    catalog = all_vendor_supplier_catalog()
+    assert catalog["1"] == {"sup_code": "poshk", "sup_title": "Пошк"}
+    assert catalog["4"] == {"sup_code": "mim", "sup_title": "Мим"}
+    assert catalog["2"] == {"sup_code": "zapaska", "sup_title": "Запаска (диски)"}
+    assert catalog["22"] == {"sup_code": "zapaska", "sup_title": "Запаска (шины)"}
 
 
 def test_split_separates_disabled() -> None:

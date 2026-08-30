@@ -54,6 +54,18 @@ def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
     return supplier_info
 
 
+def all_vendor_supplier_catalog() -> dict[SupplierCode, dict[str, str]]:
+    """Все поставщики: код → folder (`sup_code`) и название (`sup_title`)."""
+    catalog: dict[SupplierCode, dict[str, str]] = {}
+    for _, config in all_vendors():
+        supplier = config.supplier
+        catalog[supplier.code] = {
+            "sup_code": supplier.folder_name,
+            "sup_title": supplier.name,
+        }
+    return catalog
+
+
 def split_vendor_supplier_info() -> tuple[dict[SupplierCode, SupplierName], dict[SupplierCode, SupplierName]]:
     """Активные и отключённые поставщики: код → название."""
     enabled: dict[SupplierCode, SupplierName] = {}
