@@ -34,6 +34,35 @@ file_prices
         file_drom_[current date].xls ( прайс лист для drom.ru )
 ```
 
+## CLI
+
+Без аргументов открывается интерактивное меню. Для Django и других скриптов — подкоманда:
+
+```
+uv run --no-dev --locked python src/run.py parse --json
+```
+
+Команды:
+
+- `parse` — разобрать прайсы поставщиков и записать файлы
+- `doubles` — разобрать прайсы и записать отчёт о дублях
+- `zapaska` — выгрузить прайсы запаски по API
+
+Флаги:
+
+- `--json` — одна JSON-строка в stdout, логи не печатаются
+- `--all-result` — в JSON включить позиции разбора (без флага — только статистика). Сам по себе тоже включает JSON-режим
+
+Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
+
+Код выхода: `0` при успехе, `1` при ошибке. В JSON всегда одни и те же ключи: `ok`, `action`, `took` (например `"12 seconds"`), `stats`, `files`, `warnings`, `suppliers`, `positions`, `error`.
+
+```
+uv run --no-dev --locked python src/run.py parse --json --all-result
+uv run --no-dev --locked python src/run.py doubles --json
+uv run --no-dev --locked python src/run.py zapaska --json
+```
+
 ## Technical details:
 - The library https://github.com/python-excel/xlrd is used to work with excel.
 - The library https://github.com/python-excel/xlwt is used for writing to excel
