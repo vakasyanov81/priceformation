@@ -42,14 +42,14 @@ class CommonPrice:
 
     def __init__(self) -> None:
         self._parsed_items: list[RowItem] = []
-        self._unknown_category_skips: list[UnknownCategorySkip] = []
-        self._black_list_skips = 0
+        self.unknown_category_skips: list[UnknownCategorySkip] = []
+        self.black_list_skips = 0
 
     def parse_all_vendors(self, vendors: VendorList) -> None:
         """Запускает парсинг по всем поставщикам и группирует результат."""
         self._parsed_items.clear()  # защищаемся от накопления при повторных вызовах
-        self._unknown_category_skips.clear()
-        self._black_list_skips = 0
+        self.unknown_category_skips.clear()
+        self.black_list_skips = 0
 
         start_time = time.monotonic()
         log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
@@ -78,20 +78,20 @@ class CommonPrice:
         else:
             self._parsed_items.extend(parsed)
             self._remember_unknown_category_skips(parser)
-            self._black_list_skips += _black_list_skip_count(parser)
+            self.black_list_skips += _black_list_skip_count(parser)
 
     def _remember_unknown_category_skips(self, parser: BaseParser) -> None:
         skips = getattr(parser, "unknown_category_skips", ())
         if not isinstance(skips, list) or not skips:
             return
         supplier = parser.parser_params().supplier.name
-        self._unknown_category_skips.extend((supplier, category) for category in skips)
+        self.unknown_category_skips.extend((supplier, category) for category in skips)
 
     def _log_unknown_category_skips(self) -> None:
-        message = skipped_unknown_categories_message(self._unknown_category_skips)
+        message = skipped_unknown_categories_message(self.unknown_category_skips)
         if message:
             warn_msg(message, need_print_log=True)
-        black_list_message = skipped_black_list_message(self._black_list_skips)
+        black_list_message = skipped_black_list_message(self.black_list_skips)
         if black_list_message:
             log_msg(black_list_message, need_print_log=True)
 

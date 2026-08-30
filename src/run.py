@@ -4,6 +4,15 @@
 2. Формирование прайсов (для внутреннего использования, для дрома и т.д.)
 3. Отчёт о дублях
 4...
+
+Неинтерактивно (для Django и других скриптов)::
+
+    python src/run.py parse --json
+    python src/run.py parse --json --all-result
+    python src/run.py doubles --json
+    python src/run.py zapaska --json
+
+JSON печатается в stdout, логи в этом режиме не выводятся. Код выхода 0 при успехе, 1 при ошибке.
 """
 
 import sys
@@ -16,7 +25,9 @@ from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
 from parsers.remote.zapaska_client import load_remote_vendor_data
+from run_argv import DOUBLES, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
+from run_machine import machine_json
 
 
 def main() -> None:
@@ -25,10 +36,35 @@ def main() -> None:
     :return:
     """
     init_cfg()
+    argv = sys.argv[1:]
+    if is_machine_argv(argv):
+        sys.exit(_run_machine(argv))
     while True:
         if not response_processing():
             break
     sys.exit(0)
+
+
+def _run_machine(argv: list[str]) -> int:
+    """Неинтерактивная команда: JSON или человекочитаемый вывод."""
+    args = parse_machine_args(argv)
+    command = args.command
+    if not isinstance(command, str):
+        return 1
+    if args.json or args.all_result:
+        return machine_json(command, all_result=bool(args.all_result))
+    return _machine_human(command)
+
+
+def _machine_human(command: str) -> int:
+    """Те же действия, что в меню, без JSON."""
+    handlers = {
+        PARSE: run_make_price_by_supplier,
+        DOUBLES: run_report_doubles,
+        ZAPASKA: run_upload_zapaska_data,
+    }
+    try_call(handlers[command])
+    return 0
 
 
 def response_processing() -> bool:

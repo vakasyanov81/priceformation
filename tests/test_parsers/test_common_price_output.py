@@ -43,6 +43,9 @@ def test_write_all_prices() -> None:
     rows = [RowItem({_TITLE: "t1"})]
     writer_cls = MagicMock()
     driver_cls = MagicMock()
+    writer_instance = MagicMock()
+    writer_instance.get_result_path.return_value = "file_prices/result/inner.xlsx"
+    writer_cls.return_value = writer_instance
     driver_instance = MagicMock()
     driver_cls.return_value = driver_instance
     template = object()
@@ -61,7 +64,7 @@ def test_write_all_prices() -> None:
             return_value=raw_rows,
         ) as mock_raw,
     ):
-        out.write_all_prices()
+        written = out.write_all_prices()
 
     mock_corr.assert_called_once()
     mock_raw.assert_called_once_with(rows)
@@ -72,7 +75,8 @@ def test_write_all_prices() -> None:
         template,
         result_folder=_result_folder(),
     )
-    writer_cls.return_value.write.assert_called_once()
+    writer_instance.write.assert_called_once()
+    assert written == ["file_prices/result/inner.xlsx"]
 
 
 def test_write_all_prices_reloads_nomenclature() -> None:

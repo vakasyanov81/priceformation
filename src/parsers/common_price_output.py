@@ -38,15 +38,18 @@ class CommonPriceOut:
         for row_item in self.row_items:
             row_item.title = get_nomenclature_corrected_title(row_item.title)
 
-    def write_all_prices(self) -> None:
+    def write_all_prices(self) -> list[str]:
         """
-        Make prices for all active templates
-        :return:
+        Make prices for all active templates.
+        :return: пути записанных файлов
         """
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
+        paths: list[str] = []
         for write_template in all_writer_templates():
-            self._write_with_template(self.row_items, write_template)
+            writer = self._write_with_template(self.row_items, write_template)
+            paths.append(writer.get_result_path())
+        return paths
 
     def write_doubles_report(self) -> str:
         """Write only items marked as duplicates and return the file path."""

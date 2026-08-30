@@ -4,7 +4,8 @@ logic logging process
 
 import datetime
 import logging
-from typing import Literal
+import sys
+from typing import Literal, TextIO
 
 from colorama import init
 from termcolor import colored
@@ -16,6 +17,18 @@ from core.log_resolve import get_log_level_text, resolve_log_method, resolve_log
 init()
 
 __level_color_map__ = {"ERROR": "red", "WARNING": "yellow", "Info": None}
+_print_target: dict[str, TextIO | None] = {"stream": None}
+_print_quiet: dict[str, bool] = {"on": False}
+
+
+def set_print_stream(stream: TextIO | None) -> None:
+    """Redirect print_log. None — текущий sys.stdout (удобно для тестов)."""
+    _print_target["stream"] = stream
+
+
+def set_print_quiet(quiet: bool) -> None:
+    """В JSON-режиме не печатать логи: stdout только для JSON."""
+    _print_quiet["on"] = quiet
 
 
 def err_msg(message: str, need_print_log: bool = False) -> str:
@@ -63,6 +76,11 @@ def print_log(
 ) -> None:
     """print log-message"""
 
+    if _print_quiet["on"]:
+        return
     level_title = get_log_level_text(level)
     formatted_msg = msg if level == logging.INFO else f"[{level_title}]: {msg}"
-    print(colored(formatted_msg, _color or __level_color_map__.get(level_title)))
+    print(
+        colored(formatted_msg, _color or __level_color_map__.get(level_title)),
+        file=_print_target["stream"] or sys.stdout,
+    )

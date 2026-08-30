@@ -193,6 +193,10 @@ def test_skipped_categories_logged() -> None:
     assert "Запаска (шины)" in message
     assert "Foo, SUV" in message
     assert mock_warn.call_args.kwargs["need_print_log"] is True
+    assert common_price.unknown_category_skips == [
+        ("Запаска (шины)", "SUV"),
+        ("Запаска (шины)", "Foo"),
+    ]
 
 
 _BLACK_LIST_SKIP_LOG = "\nОтброшено 3 позиций по правилам black_list."
@@ -206,6 +210,7 @@ def test_black_list_skips_logged() -> None:
     messages = [call.args[0] for call in mock_log.call_args_list]
     skip_index = messages.index(_BLACK_LIST_SKIP_LOG)
     assert mock_log.call_args_list[skip_index].kwargs["need_print_log"] is True
+    assert common_price.black_list_skips == 3
 
 
 def test_suppliers_info() -> None:
