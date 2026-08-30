@@ -14,6 +14,7 @@
     python src/run.py doubles --json
     python src/run.py zapaska --json
     python src/run.py get_supliers --json
+    python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
 
 JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
 Код выхода 0 при успехе, 1 при ошибке.
@@ -30,7 +31,7 @@ from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
 from parsers.remote.zapaska_client import load_remote_vendor_data
-from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
+from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
 
@@ -57,7 +58,7 @@ def _run_machine(argv: list[str]) -> int:
     if not isinstance(command, str):
         return 1
     result_template = getattr(args, "result_template", None)
-    json_mode = bool(args.json or args.all_result or command == GET_SUPLIERS)
+    json_mode = bool(args.json or args.all_result or command in JSON_ONLY_COMMANDS)
     rejected = fail_unknown_result_template(command, result_template, json_mode=json_mode)
     if rejected is not None:
         return rejected
@@ -68,6 +69,7 @@ def _run_machine(argv: list[str]) -> int:
             command,
             all_result=bool(args.all_result),
             result_template=result_template,
+            supplier_prices=getattr(args, "prices", None),
         )
     return _machine_human(command, result_template)
 

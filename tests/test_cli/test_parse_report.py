@@ -59,6 +59,16 @@ def test_error_payload_stable_keys() -> None:
     assert payload["error"] == {"kind": "RuntimeError", "message": "boom"}
 
 
+def test_error_payload_compact() -> None:
+    """compact — только ok/action/error."""
+    payload = error_payload("load_supplier_prices", "OSError", "boom", compact=True)
+    assert payload == {
+        "ok": False,
+        "action": "load_supplier_prices",
+        "error": {"kind": "OSError", "message": "boom"},
+    }
+
+
 def test_emit_json_writes_stream() -> None:
     """emit_json печатает одну строку в поток."""
     stream = StringIO()
