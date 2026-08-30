@@ -10,7 +10,7 @@ from parse_report import JsonReport, emit_json, empty_stats, error_payload, ok_p
 from parse_report_build import report_from_common
 from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
-from parsers.common_price_output import CommonPriceOut
+from parsers.common_price_output import CommonPriceOut, jsonl_output_files
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from run_argv import DOUBLES, PARSE, ZAPASKA
@@ -92,7 +92,7 @@ def _json_doubles(all_result: bool, _result_template: str | None) -> JsonReport:
     return report_from_common(
         DOUBLES,
         common,
-        [report_path],
+        jsonl_output_files([report_path]),
         time.monotonic() - started,
         rows=[row for row in common.parsed_items if row.is_double or row.double_candidate],
         all_result=all_result,

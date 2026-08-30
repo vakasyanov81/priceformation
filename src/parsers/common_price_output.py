@@ -2,6 +2,7 @@
 Make parse all price and make inner and drom prices
 """
 
+from pathlib import Path
 from typing import Any
 
 from core.parse_paths import get_parse_paths
@@ -10,7 +11,7 @@ from parsers.base_parser.nomenclature_correction import (
     get_nomenclature_corrected_title,
 )
 from parsers.row_item.row_item import RowItem
-from parsers.writer.jsonl_writer import write_template_jsonl
+from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
 from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
@@ -52,9 +53,12 @@ class CommonPriceOut:
         templates = _templates_to_write(result_template)
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
-        return [
+        written = [
             self._write_with_template(self.row_items, write_template, as_jsonl=as_jsonl) for write_template in templates
         ]
+        if as_jsonl:
+            return jsonl_output_files(written)
+        return written
 
     def write_doubles_report(self, *, as_jsonl: bool = False) -> str:
         """Write only items marked as duplicates and return the file path."""
@@ -81,6 +85,16 @@ class CommonPriceOut:
         )
         writer.write()
         return writer.get_result_path()
+
+
+def jsonl_output_files(written: list[str]) -> list[str]:
+    """Пути jsonl и файл метаинформации колонок в той же папке."""
+    if not written:
+        return written
+    meta = str(Path(written[0]).parent / RESULT_META_FILE)
+    if meta in written:
+        return written
+    return [*written, meta]
 
 
 def _templates_to_write(result_template: str | None) -> list[type[IWriteTemplate]]:

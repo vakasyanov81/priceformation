@@ -1,13 +1,15 @@
 """tests for CommonPriceOut"""
 
+from pathlib import Path
 from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from core.parse_paths import get_parse_paths
-from parsers.common_price_output import CommonPriceOut
+from parsers.common_price_output import CommonPriceOut, jsonl_output_files
 from parsers.row_item.row_item import RowItem
+from parsers.writer.jsonl_writer import RESULT_META_FILE
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
@@ -108,7 +110,7 @@ def test_write_all_prices_jsonl() -> None:
     mock_corr.assert_called_once()
     writer_cls.assert_not_called()
     mock_jsonl.assert_called_once_with(raw_rows, template, _result_folder())
-    assert written == [jsonl_path]
+    assert written == jsonl_output_files([jsonl_path])
 
 
 def test_write_all_prices_reloads_nomenclature() -> None:
@@ -244,3 +246,24 @@ def test_write_all_prices_unknown_template() -> None:
         out.write_all_prices(result_template="nope")
 
     writer_cls.assert_not_called()
+
+
+def test_jsonl_output_files_appends_meta() -> None:
+    """к jsonl добавляется result_meta.json из той же папки."""
+    jsonl_path = "file_prices/result/price.jsonl"
+    assert jsonl_output_files([jsonl_path]) == [
+        jsonl_path,
+        str(Path(jsonl_path).parent / RESULT_META_FILE),
+    ]
+
+
+def test_jsonl_output_files_empty() -> None:
+    """без jsonl мета не добавляется."""
+    assert not jsonl_output_files([])
+
+
+def test_jsonl_output_files_skips_duplicate_meta() -> None:
+    """повторно мета не дописывается."""
+    jsonl_path = "file_prices/result/price.jsonl"
+    once = jsonl_output_files([jsonl_path])
+    assert jsonl_output_files(once) == once

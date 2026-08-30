@@ -57,7 +57,7 @@ uv run --no-dev --locked python src/run.py parse --json
 
 Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
 
-Код выхода: `0` при успехе, `1` при ошибке. В JSON всегда одни и те же ключи: `ok`, `action`, `stats`, `files` (пути к jsonl), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`.
+Код выхода: `0` при успехе, `1` при ошибке. В JSON всегда одни и те же ключи: `ok`, `action`, `stats`, `files` (пути к jsonl и `result_meta.json`), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`.
 Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
 Расшифровка — в `result_meta.json` в той же папке: `{"1": "Тип товара", "2": "Бренд", …}`. Ключ у колонки общий для всех jsonl запуска.
 Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа (цены, остатки) не кодируются.

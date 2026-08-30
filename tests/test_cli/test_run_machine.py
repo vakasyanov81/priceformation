@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from core.log_message import print_log
+from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, PARSE, ZAPASKA
 from run_machine import fail_unknown_result_template, machine_json
@@ -147,7 +148,7 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["action"] == DOUBLES
     assert payload["positions"] == []
     assert payload["stats"]["doubles"] == 1
-    assert payload["files"] == [_DOUBLE_PATH]
+    assert payload["files"] == jsonl_output_files([_DOUBLE_PATH])
     mock_out.return_value.write_doubles_report.assert_called_once_with(as_jsonl=True)
 
 
@@ -170,7 +171,7 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     titles = {position["title"] for position in payload["positions"]}
     assert code == 0
     assert titles == {"dup", "cand"}
-    assert payload["files"] == [_DOUBLE_PATH]
+    assert payload["files"] == jsonl_output_files([_DOUBLE_PATH])
 
 
 def test_json_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
