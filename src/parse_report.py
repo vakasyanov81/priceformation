@@ -80,8 +80,17 @@ def ok_payload(
     }
 
 
-def error_payload(action: str, kind: str, message: str) -> JsonReport:
-    """Собрать ответ об ошибке (та же схема ключей)."""
+def error_payload(
+    action: str,
+    kind: str,
+    message: str,
+    *,
+    compact: bool = False,
+) -> Mapping[str, Any]:
+    """Собрать ответ об ошибке. compact — только ok/action/error (не разбор)."""
+    error: JsonError = {"kind": kind, "message": message}
+    if compact:
+        return {"ok": False, "action": action, "error": error}
     return {
         "ok": False,
         "version": REPORT_VERSION,
@@ -92,5 +101,5 @@ def error_payload(action: str, kind: str, message: str) -> JsonReport:
         "files": [],
         "suppliers": {},
         "disabled_suppliers": {},
-        "error": {"kind": kind, "message": message},
+        "error": error,
     }

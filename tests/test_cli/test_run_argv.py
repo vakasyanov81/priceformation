@@ -2,7 +2,16 @@
 
 import pytest
 
-from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
+from run_argv import (
+    DOUBLES,
+    GET_SUPLIERS,
+    JSON_ONLY_COMMANDS,
+    LOAD_SUPPLIER_PRICES,
+    PARSE,
+    ZAPASKA,
+    is_machine_argv,
+    parse_machine_args,
+)
 
 
 def test_is_machine_argv_empty() -> None:
@@ -21,8 +30,15 @@ def test_is_machine_argv_commands() -> None:
     assert is_machine_argv([PARSE]) is True
     assert is_machine_argv([DOUBLES, "--json"]) is True
     assert is_machine_argv([GET_SUPLIERS]) is True
+    assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
+    assert is_machine_argv([f'{LOAD_SUPPLIER_PRICES}={{"1": "a.xls"}}']) is True
     assert is_machine_argv(["--help"]) is True
     assert is_machine_argv(["-h"]) is True
+
+
+def test_load_is_json_only() -> None:
+    """load_supplier_prices всегда в JSON-режиме."""
+    assert LOAD_SUPPLIER_PRICES in JSON_ONLY_COMMANDS
 
 
 def test_parse_all_result_flag() -> None:
@@ -82,6 +98,29 @@ def test_parse_get_supliers() -> None:
     args = parse_machine_args([GET_SUPLIERS, "--json"])
     assert args.command == GET_SUPLIERS
     assert args.json is True
+
+
+def test_parse_load_supplier_prices() -> None:
+    """команда load_supplier_prices с JSON-аргументом."""
+    raw = '{"1": "/incoming/any_price_name.xls"}'
+    args = parse_machine_args([LOAD_SUPPLIER_PRICES, raw])
+    assert args.command == LOAD_SUPPLIER_PRICES
+    assert args.prices == raw
+
+
+def test_parse_load_supplier_prices_inline() -> None:
+    """load_supplier_prices={...} разбирается как команда и JSON."""
+    raw = '{"1": "/incoming/any_price_name.xlsx"}'
+    args = parse_machine_args([f"{LOAD_SUPPLIER_PRICES}={raw}"])
+    assert args.command == LOAD_SUPPLIER_PRICES
+    assert args.prices == raw
+
+
+def test_parse_load_supplier_prices_requires_json() -> None:
+    """без JSON-карты — ошибка argparse."""
+    with pytest.raises(SystemExit) as exit_info:
+        parse_machine_args([LOAD_SUPPLIER_PRICES])
+    assert exit_info.value.code == 2
 
 
 def test_parse_clear_previous_result_flag() -> None:

@@ -8,7 +8,7 @@ import pytest
 from core.log_message import print_log
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
-from run_argv import DOUBLES, GET_SUPLIERS, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
 from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
@@ -206,6 +206,41 @@ def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     assert payload == catalog
+
+
+def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_supplier_prices: ok, files и suppliers."""
+    files = ["file_prices/poshk/price.xls"]
+    catalog = {"1": {"sup_code": "poshk", "sup_title": "Пошк"}}
+    raw = '{"1": "/incoming/any.xls"}'
+    with (
+        patch("run_machine.parse_prices_json", return_value={"1": "/incoming/any.xls"}) as mock_parse,
+        patch("run_machine.load_supplier_prices", return_value=files) as mock_load,
+        patch("run_machine.all_vendor_supplier_catalog", return_value=catalog),
+    ):
+        code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == {
+        "ok": True,
+        "action": LOAD_SUPPLIER_PRICES,
+        "files": files,
+        "suppliers": {"1": "Пошк"},
+    }
+    mock_parse.assert_called_once_with(raw)
+    mock_load.assert_called_once_with({"1": "/incoming/any.xls"})
+
+
+def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """битый JSON загрузки → ok=false."""
+    code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices="not-json")
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["action"] == LOAD_SUPPLIER_PRICES
+    assert payload["error"]["kind"] == "SupplierPricesMappingError"
+    assert "positions" not in payload
+    assert "stats" not in payload
 
 
 def test_fail_unknown_skips_empty_name() -> None:
