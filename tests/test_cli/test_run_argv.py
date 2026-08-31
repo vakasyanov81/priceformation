@@ -8,7 +8,7 @@ from run_argv import (
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
     PARSE,
-    ZAPASKA,
+    ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
     parse_machine_args,
 )
@@ -67,8 +67,8 @@ def test_parse_all_result_without_json() -> None:
 
 def test_parse_without_json() -> None:
     """команда без --json."""
-    args = parse_machine_args([ZAPASKA])
-    assert args.command == ZAPASKA
+    args = parse_machine_args([ZAPASKA_LOAD_API_DATA])
+    assert args.command == ZAPASKA_LOAD_API_DATA
     assert args.json is False
     assert args.all_result is False
     assert args.clear_previous_result is False

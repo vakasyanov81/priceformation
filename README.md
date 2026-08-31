@@ -46,7 +46,7 @@ uv run --no-dev --locked python src/run.py parse --json
 
 - `parse` — разобрать прайсы поставщиков и записать файлы
 - `doubles` — разобрать прайсы и записать отчёт о дублях
-- `zapaska` — выгрузить прайсы запаски по API
+- `zapaska_load_api_data` — выгрузить прайсы запаски по API
 - `get_supliers` — названия поставщиков: `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`
 - `load_supplier_prices` — загрузить прайсы в папки поставщиков: `{"1": "/full/path/any_price_name.xls"}` или `{"poshk": "/full/path/any_price_name.xls"}`. Ключ — ИД поставщика или `sup_code`. Файл перемещается в `file_prices/<sup_code>/price.xls` (или `.xlsx`). Допустимы только `xls` и `xlsx`
 - `load_config` — загрузить файл или папку настроек: полный путь к `*.json`, `*.xlsx`, `black_list` или к папке с такими файлами. Файлы перемещаются в `parse_config` с теми же именами (существующие заменяются). Для `*.json` содержимое проверяется как JSON. Если в папке есть файлы другого формата — ошибка, ничего не переносится
