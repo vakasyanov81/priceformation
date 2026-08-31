@@ -4,7 +4,11 @@ import argparse
 from collections.abc import Sequence
 from typing import Any, cast
 
-from parsers.writer.templates.all_templates import writer_templates_by_name
+from parsers.writer.templates.all_templates import (
+    all_writer_templates,
+    writer_template_name,
+    writer_templates_by_name,
+)
 
 PARSE = "parse"
 DOUBLES = "doubles"
@@ -104,5 +108,6 @@ def _expand_inline_prices(argv: Sequence[str]) -> list[str]:
 
 
 def _result_template_help() -> str:
-    names = ", ".join(writer_templates_by_name())
-    return f"Шаблон записи результата ({names}). Без флага — все шаблоны."
+    available = ", ".join(writer_templates_by_name())
+    defaults = ", ".join(writer_template_name(template) for template in all_writer_templates())
+    return f"Шаблон записи результата ({available}). Без флага — {defaults}."
