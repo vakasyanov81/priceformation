@@ -8,7 +8,7 @@ import pytest
 from core.log_message import print_log
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
-from run_argv import DOUBLES, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
 from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
@@ -231,6 +231,28 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     mock_load.assert_called_once_with({"1": "/incoming/any.xls"})
 
 
+def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_supplier_prices: ключ sup_code в suppliers."""
+    files = ["file_prices/poshk/price.xls"]
+    catalog = {"1": {"sup_code": "poshk", "sup_title": "Пошк"}}
+    raw = '{"poshk": "/incoming/any.xls"}'
+    mapping = {"poshk": "/incoming/any.xls"}
+    with (
+        patch("run_machine.parse_prices_json", return_value=mapping),
+        patch("run_machine.load_supplier_prices", return_value=files),
+        patch("run_machine.all_vendor_supplier_catalog", return_value=catalog),
+    ):
+        code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == {
+        "ok": True,
+        "action": LOAD_SUPPLIER_PRICES,
+        "files": files,
+        "suppliers": {"poshk": "Пошк"},
+    }
+
+
 def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) -> None:
     """битый JSON загрузки → ok=false."""
     code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices="not-json")
@@ -241,6 +263,69 @@ def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) 
     assert payload["error"]["kind"] == "SupplierPricesMappingError"
     assert "positions" not in payload
     assert "stats" not in payload
+
+
+def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_config: ok и files."""
+    dests = ["parse_config/vendor_list.json"]
+    raw = "/incoming/vendor_list.json"
+    with patch("run_machine.load_config", return_value=dests) as mock_load:
+        code = machine_json(LOAD_CONFIG, config_path=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == {
+        "ok": True,
+        "action": LOAD_CONFIG,
+        "files": dests,
+    }
+    mock_load.assert_called_once_with(raw)
+
+
+def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_config папки: несколько путей в files."""
+    dests = ["parse_config/black_list", "parse_config/vendor_list.json"]
+    raw = "/incoming/settings"
+    with patch("run_machine.load_config", return_value=dests) as mock_load:
+        code = machine_json(LOAD_CONFIG, config_path=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["files"] == dests
+    mock_load.assert_called_once_with(raw)
+
+
+def test_json_load_config_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """ошибка load_config → compact JSON."""
+    code = machine_json(LOAD_CONFIG, config_path="")
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload["ok"] is False
+    assert payload["action"] == LOAD_CONFIG
+    assert payload["error"]["kind"] == "ConfigFileNotFoundError"
+    assert "positions" not in payload
+    assert "stats" not in payload
+
+
+def test_run_machine_json_load_config() -> None:
+    """load_config без --json уходит в JSON-режим с путём."""
+    raw = "/incoming/vendor_list.json"
+    with (
+        patch("run.sys.argv", ["run.py", f"load_config={raw}"]),
+        patch("run.init_cfg"),
+        patch("run.machine_json", return_value=0) as mock_json,
+        patch("run.sys.exit", side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_json.assert_called_once_with(
+            "load_config",
+            all_result=False,
+            result_template=None,
+            supplier_prices=None,
+            config_path=raw,
+        )
 
 
 def test_fail_unknown_skips_empty_name() -> None:

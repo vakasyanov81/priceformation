@@ -19,7 +19,9 @@ def test_run_machine_json_dispatch() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with("parse", all_result=False, result_template=None, supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "parse", all_result=False, result_template=None, supplier_prices=None, config_path=None
+        )
         mock_exit.assert_called_with(0)
 
 
@@ -36,7 +38,9 @@ def test_run_machine_json_all_result_dispatch() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with("parse", all_result=True, result_template=None, supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "parse", all_result=True, result_template=None, supplier_prices=None, config_path=None
+        )
 
 
 def test_run_machine_human_parse() -> None:
@@ -102,7 +106,9 @@ def test_run_machine_json_get_supliers() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with("get_supliers", all_result=False, result_template=None, supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "get_supliers", all_result=False, result_template=None, supplier_prices=None, config_path=None
+        )
 
 
 def test_run_machine_rejects_non_str_command() -> None:
@@ -136,7 +142,9 @@ def test_run_machine_all_result_implies_json() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with("parse", all_result=True, result_template=None, supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "parse", all_result=True, result_template=None, supplier_prices=None, config_path=None
+        )
 
 
 def test_run_machine_clears_result_folder() -> None:
@@ -154,7 +162,9 @@ def test_run_machine_clears_result_folder() -> None:
             main()
 
         mock_clear.assert_called_once()
-        mock_json.assert_called_once_with("parse", all_result=False, result_template=None, supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "parse", all_result=False, result_template=None, supplier_prices=None, config_path=None
+        )
 
 
 def test_run_machine_skips_clear_without_flag() -> None:
@@ -187,7 +197,9 @@ def test_json_passes_result_template() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with("parse", all_result=False, result_template="for_drom", supplier_prices=None)
+        mock_json.assert_called_once_with(
+            "parse", all_result=False, result_template="for_drom", supplier_prices=None, config_path=None
+        )
 
 
 def test_run_machine_human_result_template() -> None:

@@ -4,7 +4,7 @@ from core.exceptions import CoreExceptionError
 
 
 class SupplierPricesMappingError(CoreExceptionError):
-    """JSON-карта ИД → путь к прайсу некорректна."""
+    """JSON-карта ИД или sup_code → путь к прайсу некорректна."""
 
 
 class InvalidPriceExtensionError(CoreExceptionError):
@@ -12,7 +12,7 @@ class InvalidPriceExtensionError(CoreExceptionError):
 
 
 class UnknownSupplierCodeError(CoreExceptionError):
-    """ИД поставщика нет в каталоге."""
+    """ИД или sup_code поставщика нет в каталоге."""
 
 
 class SupplierPriceFileNotFoundError(CoreExceptionError):

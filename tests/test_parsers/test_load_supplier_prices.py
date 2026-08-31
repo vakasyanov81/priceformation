@@ -188,6 +188,37 @@ def test_load_unknown_supplier(tmp_path: Path, prices_root: Path) -> None:
     assert source.exists()
 
 
+def test_load_by_sup_code(tmp_path: Path, prices_root: Path) -> None:
+    """ключ — sup_code, не ИД."""
+    source = _write_source(tmp_path, "any.xls", _XLS_BYTES)
+    with patch(_CATALOG_PATCH, return_value=_CATALOG):
+        dests = load_supplier_prices({"poshk": str(source)})
+    dest = prices_root / "poshk" / "price.xls"
+    assert dests == [str(dest)]
+    assert dest.read_bytes() == _XLS_BYTES
+    assert not source.exists()
+
+
+def test_load_mixed_id_and_sup_code(tmp_path: Path, prices_root: Path) -> None:
+    """ИД и sup_code в одной карте."""
+    first = _write_source(tmp_path, "a.xls", _XLS_BYTES)
+    second = _write_source(tmp_path, "b.xlsx", _XLSX_BYTES)
+    with patch(_CATALOG_PATCH, return_value=_CATALOG):
+        dests = load_supplier_prices({"1": str(first), "pioner": str(second)})
+    assert dests == [
+        str(prices_root / "poshk" / "price.xls"),
+        str(prices_root / "pioner" / "price.xlsx"),
+    ]
+
+
+def test_load_unknown_sup_code(tmp_path: Path, prices_root: Path) -> None:
+    """неизвестный sup_code — до проверки файла."""
+    source = _write_source(tmp_path, "a.xls", _XLS_BYTES)
+    with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(UnknownSupplierCodeError, match="nope"):
+        load_supplier_prices({"nope": str(source)})
+    assert source.exists()
+
+
 def test_load_validates_all_before_move(tmp_path: Path, prices_root: Path) -> None:
     """ошибка второго файла — первый не перемещается."""
     good = _write_source(tmp_path, "a.xls", _XLS_BYTES)
