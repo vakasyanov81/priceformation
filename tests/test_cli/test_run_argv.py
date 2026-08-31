@@ -13,6 +13,8 @@ from run_argv import (
     parse_machine_args,
 )
 
+_CONFIG_CMD = "load_config"
+
 
 def test_is_machine_argv_empty() -> None:
     """без аргументов — интерактивное меню."""
@@ -32,6 +34,8 @@ def test_is_machine_argv_commands() -> None:
     assert is_machine_argv([GET_SUPLIERS]) is True
     assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
     assert is_machine_argv([f'{LOAD_SUPPLIER_PRICES}={{"1": "a.xls"}}']) is True
+    assert is_machine_argv([_CONFIG_CMD]) is True
+    assert is_machine_argv([f"{_CONFIG_CMD}=/full/path/vendor_list.json"]) is True
     assert is_machine_argv(["--help"]) is True
     assert is_machine_argv(["-h"]) is True
 
@@ -39,6 +43,11 @@ def test_is_machine_argv_commands() -> None:
 def test_load_is_json_only() -> None:
     """load_supplier_prices всегда в JSON-режиме."""
     assert LOAD_SUPPLIER_PRICES in JSON_ONLY_COMMANDS
+
+
+def test_load_config_is_json_only() -> None:
+    """load_config всегда в JSON-режиме."""
+    assert _CONFIG_CMD in JSON_ONLY_COMMANDS
 
 
 def test_parse_all_result_flag() -> None:
@@ -120,6 +129,29 @@ def test_parse_load_supplier_prices_requires_json() -> None:
     """без JSON-карты — ошибка argparse."""
     with pytest.raises(SystemExit) as exit_info:
         parse_machine_args([LOAD_SUPPLIER_PRICES])
+    assert exit_info.value.code == 2
+
+
+def test_parse_load_config() -> None:
+    """команда load_config с путём."""
+    raw = "/incoming/vendor_list.json"
+    args = parse_machine_args([_CONFIG_CMD, raw])
+    assert args.command == _CONFIG_CMD
+    assert args.config == raw
+
+
+def test_parse_load_config_inline() -> None:
+    """load_config=path разбирается как команда и путь."""
+    raw = "/incoming/black_list"
+    args = parse_machine_args([f"{_CONFIG_CMD}={raw}"])
+    assert args.command == _CONFIG_CMD
+    assert args.config == raw
+
+
+def test_parse_load_config_requires_path() -> None:
+    """без пути — ошибка argparse."""
+    with pytest.raises(SystemExit) as exit_info:
+        parse_machine_args([_CONFIG_CMD])
     assert exit_info.value.code == 2
 
 

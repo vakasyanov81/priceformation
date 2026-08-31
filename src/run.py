@@ -16,6 +16,7 @@
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_supplier_prices={"poshk": "/full/path/any_price_name.xls"}
+    python src/run.py load_config=/full/path/vendor_list.json
 
 JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
 Код выхода 0 при успехе, 1 при ошибке.
@@ -71,6 +72,7 @@ def _run_machine(argv: list[str]) -> int:
             all_result=bool(args.all_result),
             result_template=result_template,
             supplier_prices=getattr(args, "prices", None),
+            config_path=getattr(args, "config", None),
         )
     return _machine_human(command, result_template)
 

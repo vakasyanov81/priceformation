@@ -11,10 +11,13 @@ DOUBLES = "doubles"
 ZAPASKA = "zapaska"
 GET_SUPLIERS = "get_supliers"
 LOAD_SUPPLIER_PRICES = "load_supplier_prices"
-MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA, GET_SUPLIERS, LOAD_SUPPLIER_PRICES)
-JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES))
+LOAD_CONFIG = "load_config"
+MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG)
+JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
 _LOAD_INLINE_PREFIX = f"{LOAD_SUPPLIER_PRICES}="
+_CONFIG_INLINE_PREFIX = f"{LOAD_CONFIG}="
 _PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь к xls или xlsx"}.'
+_CONFIG_HELP = "Полный путь к файлу настроек (*.json, *.xlsx или black_list)."
 
 _HELP_FLAGS = ("-h", "--help")
 _JSON_HELP = "JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов)."
@@ -32,7 +35,7 @@ def is_machine_argv(argv: Sequence[str]) -> bool:
 
 
 def parse_machine_args(argv: Sequence[str]) -> argparse.Namespace:
-    """parse / doubles / zapaska / get_supliers / load_supplier_prices и флаг --json."""
+    """parse / doubles / zapaska / get_supliers / load_supplier_prices / load_config и флаг --json."""
     json_flag = _json_flags()
     parser = argparse.ArgumentParser(
         description="Неинтерактивный запуск разбора прайсов для сторонних скриптов.",
@@ -68,6 +71,13 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
         "Загрузить прайсы поставщиков в file_prices.",
     )
     load_cmd.add_argument("prices", help=_PRICES_HELP)
+    config_cmd = _json_parser(
+        subparsers,
+        json_flag,
+        LOAD_CONFIG,
+        "Загрузить файл настроек в parse_config.",
+    )
+    config_cmd.add_argument("config", help=_CONFIG_HELP)
 
 
 def _json_parser(
@@ -80,13 +90,17 @@ def _json_parser(
 
 
 def _expand_inline_prices(argv: Sequence[str]) -> list[str]:
-    """load_supplier_prices={...} → команда и JSON-аргумент."""
+    """load_supplier_prices={...} / load_config=path → команда и аргумент."""
     if not argv:
         return []
     first = argv[0]
-    if not first.startswith(_LOAD_INLINE_PREFIX):
-        return list(argv)
-    return [LOAD_SUPPLIER_PRICES, first.removeprefix(_LOAD_INLINE_PREFIX), *argv[1:]]
+    for command, marker in (
+        (LOAD_SUPPLIER_PRICES, _LOAD_INLINE_PREFIX),
+        (LOAD_CONFIG, _CONFIG_INLINE_PREFIX),
+    ):
+        if first.startswith(marker):
+            return [command, first.removeprefix(marker), *argv[1:]]
+    return list(argv)
 
 
 def _result_template_help() -> str:

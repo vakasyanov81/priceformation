@@ -49,6 +49,7 @@ uv run --no-dev --locked python src/run.py parse --json
 - `zapaska` — выгрузить прайсы запаски по API
 - `get_supliers` — названия поставщиков: `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`
 - `load_supplier_prices` — загрузить прайсы в папки поставщиков: `{"1": "/full/path/any_price_name.xls"}` или `{"poshk": "/full/path/any_price_name.xls"}`. Ключ — ИД поставщика или `sup_code`. Файл перемещается в `file_prices/<sup_code>/price.xls` (или `.xlsx`). Допустимы только `xls` и `xlsx`
+- `load_config` — загрузить файл настроек: полный путь к `*.json`, `*.xlsx` или `black_list`. Файл перемещается в `parse_config` с тем же именем (существующий заменяется). Для `*.json` содержимое проверяется как JSON
 
 Флаги:
 
@@ -62,6 +63,7 @@ uv run --no-dev --locked python src/run.py parse --json
 Код выхода: `0` при успехе, `1` при ошибке. Для `parse` / `doubles` / `zapaska` в JSON всегда одни и те же ключи: `ok`, `action`, `stats`, `files` (пути к jsonl и `result_meta.json`), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`.
 `get_supliers` печатает каталог поставщиков: ключ — код, значение — `sup_code` (папка) и `sup_title` (название). `--json` для этой команды не обязателен.
 `load_supplier_prices` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути к `price.xls` / `price.xlsx`), `suppliers` (загруженные). Ошибка: `ok`, `action`, `error`. Полей разбора (`positions`, `stats`, …) нет. Файл с диска перемещается, исходное имя не сохраняется.
+`load_config` тоже всегда в JSON. Успех: `ok`, `action`, `files` (путь в `parse_config`). Ошибка: `ok`, `action`, `error`. Полей разбора нет. Исходный файл перемещается, имя сохраняется.
 Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
 Расшифровка — в `result_meta.json` в той же папке: `{"1": "Тип товара", "2": "Бренд", …}`. Ключ у колонки общий для всех jsonl запуска.
 Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа (цены, остатки) не кодируются.
@@ -75,6 +77,9 @@ uv run --no-dev --locked python src/run.py zapaska --json
 uv run --no-dev --locked python src/run.py get_supliers
 uv run --no-dev --locked python src/run.py load_supplier_prices='{"1": "/full/path/any_price_name.xls"}'
 uv run --no-dev --locked python src/run.py load_supplier_prices='{"poshk": "/full/path/any_price_name.xls"}'
+uv run --no-dev --locked python src/run.py load_config=/full/path/vendor_list.json
+uv run --no-dev --locked python src/run.py load_config=/full/path/correct-nomenclature.xlsx
+uv run --no-dev --locked python src/run.py load_config=/full/path/black_list
 ```
 
 ## Technical details:
