@@ -107,7 +107,7 @@ def _command_payload(
         return {
             "ok": True,
             "action": LOAD_CONFIG,
-            "files": [load_config(payload_arg or "")],
+            "files": load_config(payload_arg or ""),
         }
     if command == ZAPASKA:
         started = time.monotonic()

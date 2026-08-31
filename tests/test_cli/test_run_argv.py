@@ -155,6 +155,14 @@ def test_parse_load_config_requires_path() -> None:
     assert exit_info.value.code == 2
 
 
+def test_parse_load_config_folder() -> None:
+    """команда load_config с путём к папке."""
+    raw = "/incoming/settings"
+    args = parse_machine_args([_CONFIG_CMD, raw])
+    assert args.command == _CONFIG_CMD
+    assert args.config == raw
+
+
 def test_parse_clear_previous_result_flag() -> None:
     """--clear-previous-result распознаётся."""
     args = parse_machine_args([PARSE, "--json", "--clear-previous-result"])

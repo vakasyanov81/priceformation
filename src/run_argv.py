@@ -17,7 +17,7 @@ JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG)
 _LOAD_INLINE_PREFIX = f"{LOAD_SUPPLIER_PRICES}="
 _CONFIG_INLINE_PREFIX = f"{LOAD_CONFIG}="
 _PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь к xls или xlsx"}.'
-_CONFIG_HELP = "Полный путь к файлу настроек (*.json, *.xlsx или black_list)."
+_CONFIG_HELP = "Полный путь к файлу или папке настроек (*.json, *.xlsx или black_list)."
 
 _HELP_FLAGS = ("-h", "--help")
 _JSON_HELP = "JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов)."
@@ -75,7 +75,7 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
         subparsers,
         json_flag,
         LOAD_CONFIG,
-        "Загрузить файл настроек в parse_config.",
+        "Загрузить файл или папку настроек в parse_config.",
     )
     config_cmd.add_argument("config", help=_CONFIG_HELP)
 

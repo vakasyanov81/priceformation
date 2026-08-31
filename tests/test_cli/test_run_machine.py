@@ -267,17 +267,29 @@ def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) 
 
 def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
     """load_config: ok и files."""
-    dest = "parse_config/vendor_list.json"
+    dests = ["parse_config/vendor_list.json"]
     raw = "/incoming/vendor_list.json"
-    with patch("run_machine.load_config", return_value=dest) as mock_load:
+    with patch("run_machine.load_config", return_value=dests) as mock_load:
         code = machine_json(LOAD_CONFIG, config_path=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     assert payload == {
         "ok": True,
         "action": LOAD_CONFIG,
-        "files": [dest],
+        "files": dests,
     }
+    mock_load.assert_called_once_with(raw)
+
+
+def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_config папки: несколько путей в files."""
+    dests = ["parse_config/black_list", "parse_config/vendor_list.json"]
+    raw = "/incoming/settings"
+    with patch("run_machine.load_config", return_value=dests) as mock_load:
+        code = machine_json(LOAD_CONFIG, config_path=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["files"] == dests
     mock_load.assert_called_once_with(raw)
 
 

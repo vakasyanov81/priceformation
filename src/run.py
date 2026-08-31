@@ -17,6 +17,7 @@
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_supplier_prices={"poshk": "/full/path/any_price_name.xls"}
     python src/run.py load_config=/full/path/vendor_list.json
+    python src/run.py load_config=/full/path/settings_dir
 
 JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
 Код выхода 0 при успехе, 1 при ошибке.
