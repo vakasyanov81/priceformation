@@ -34,7 +34,7 @@ from parsers.all_vendors import all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut
 from parsers.remote.zapaska_client import load_remote_vendor_data
-from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA, is_machine_argv, parse_machine_args
+from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
 
@@ -83,7 +83,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
     handlers = {
         PARSE: run_make_price_by_supplier,
         DOUBLES: run_report_doubles,
-        ZAPASKA: run_upload_zapaska_data,
+        ZAPASKA_LOAD_API_DATA: run_upload_zapaska_data,
     }
     extra: dict[str, str | None] = {}
     if command == PARSE:

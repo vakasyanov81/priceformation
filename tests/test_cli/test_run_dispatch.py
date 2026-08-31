@@ -80,7 +80,7 @@ def test_run_machine_human_doubles() -> None:
 def test_run_machine_human_zapaska() -> None:
     """zapaska без --json вызывает выгрузку API."""
     with (
-        patch("run.sys.argv", ["run.py", "zapaska"]),
+        patch("run.sys.argv", ["run.py", "zapaska_load_api_data"]),
         patch("run.init_cfg"),
         patch("run.try_call") as mock_try,
         patch("run.sys.exit", side_effect=SystemExit(0)),

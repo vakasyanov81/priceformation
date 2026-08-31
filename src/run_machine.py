@@ -16,7 +16,7 @@ from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
-from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 
 _INTERRUPT = "interrupted"
 _COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
@@ -109,11 +109,11 @@ def _command_payload(
             "action": LOAD_CONFIG,
             "files": load_config(payload_arg or ""),
         }
-    if command == ZAPASKA:
+    if command == ZAPASKA_LOAD_API_DATA:
         started = time.monotonic()
         load_remote_vendor_data(api=get_zapaska_api_config())
         return ok_payload(
-            action=ZAPASKA,
+            action=ZAPASKA_LOAD_API_DATA,
             positions=[],
             stats=empty_stats(time.monotonic() - started),
             warnings=[],

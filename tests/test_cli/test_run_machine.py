@@ -8,7 +8,7 @@ import pytest
 from core.log_message import print_log
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
-from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
+from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 from run_machine import fail_unknown_result_template, machine_json
 
 _TITLE = "шина"
@@ -189,11 +189,11 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         patch("run_machine.get_zapaska_api_config", return_value=MagicMock()),
         patch("run_machine.load_remote_vendor_data") as mock_load,
     ):
-        code = machine_json(ZAPASKA)
+        code = machine_json(ZAPASKA_LOAD_API_DATA)
         payload = json.loads(capsys.readouterr().out)
         assert code == 0
         assert payload["ok"] is True
-        assert payload["action"] == ZAPASKA
+        assert payload["action"] == ZAPASKA_LOAD_API_DATA
         assert payload["positions"] == []
         mock_load.assert_called_once()
 

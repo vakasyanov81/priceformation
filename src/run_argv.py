@@ -8,11 +8,11 @@ from parsers.writer.templates.all_templates import writer_templates_by_name
 
 PARSE = "parse"
 DOUBLES = "doubles"
-ZAPASKA = "zapaska"
+ZAPASKA_LOAD_API_DATA = "zapaska_load_api_data"
 GET_SUPLIERS = "get_supliers"
 LOAD_SUPPLIER_PRICES = "load_supplier_prices"
 LOAD_CONFIG = "load_config"
-MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG)
+MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA_LOAD_API_DATA, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG)
 JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
 _LOAD_INLINE_PREFIX = f"{LOAD_SUPPLIER_PRICES}="
 _CONFIG_INLINE_PREFIX = f"{LOAD_CONFIG}="
@@ -62,7 +62,7 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
         help=_result_template_help(),
     )
     _json_parser(subparsers, json_flag, DOUBLES, "Разобрать прайсы и записать отчёт о дублях.")
-    _json_parser(subparsers, json_flag, ZAPASKA, "Выгрузить прайсы запаски по API.")
+    _json_parser(subparsers, json_flag, ZAPASKA_LOAD_API_DATA, "Выгрузить прайсы запаски по API.")
     _json_parser(subparsers, json_flag, GET_SUPLIERS, "Получить названия поставщиков.")
     load_cmd = _json_parser(
         subparsers,
