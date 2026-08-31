@@ -73,7 +73,7 @@ uv run --no-dev --locked python src/run.py parse --json --clear-previous-result
 uv run --no-dev --locked python src/run.py parse --json --all-result
 uv run --no-dev --locked python src/run.py parse --json --result-template for_drom
 uv run --no-dev --locked python src/run.py doubles --json
-uv run --no-dev --locked python src/run.py zapaska --json
+uv run --no-dev --locked python src/run.py zapaska_load_api_data --json
 uv run --no-dev --locked python src/run.py get_supliers
 uv run --no-dev --locked python src/run.py load_supplier_prices='{"1": "/full/path/any_price_name.xls"}'
 uv run --no-dev --locked python src/run.py load_supplier_prices='{"poshk": "/full/path/any_price_name.xls"}'
