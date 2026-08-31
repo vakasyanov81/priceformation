@@ -7,7 +7,7 @@ from typing import Any
 
 from cfg.zapaska_api import get_zapaska_api_config
 from core.log_message import print_log, set_print_quiet
-from parse_report import JsonReport, emit_json, empty_stats, error_payload, ok_payload
+from parse_report import JsonReport, emit_json, error_payload
 from parse_report_build import report_from_common
 from parsers.all_vendors import all_vendor_supplier_catalog, all_vendors
 from parsers.common_price import CommonPrice
@@ -19,7 +19,7 @@ from parsers.writer.templates.all_templates import UnknownWriterTemplateError, g
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 
 _INTERRUPT = "interrupted"
-_COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
+_COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA))
 
 
 def fail_unknown_result_template(
@@ -31,11 +31,15 @@ def fail_unknown_result_template(
     """Если имя шаблона задано и неизвестно — ответ с ошибкой и код 1."""
     if name is None:
         return None
+    started = time.monotonic()
     try:
         get_writer_template(name)
     except UnknownWriterTemplateError as exc:
         if json_mode:
-            emit_json(error_payload(command, type(exc).__name__, str(exc)))
+            emit_json(
+                error_payload(command, type(exc).__name__, str(exc)),
+                started=started,
+            )
         else:
             print_log(str(exc), level=logging.ERROR)
         return 1
@@ -68,8 +72,9 @@ def _emit_command(
     result_template: str | None,
     payload_arg: str | None,
 ) -> int:
+    started = time.monotonic()
     try:
-        emit_json(_command_payload(command, all_result, result_template, payload_arg))
+        emit_json(_command_payload(command, all_result, result_template, payload_arg), started=started)
     except KeyboardInterrupt:
         emit_json(
             error_payload(
@@ -78,6 +83,7 @@ def _emit_command(
                 _INTERRUPT,
                 compact=command in _COMPACT_ERROR_COMMANDS,
             ),
+            started=started,
         )
         return 1
     except Exception as exc:
@@ -88,6 +94,7 @@ def _emit_command(
                 str(exc),
                 compact=command in _COMPACT_ERROR_COMMANDS,
             ),
+            started=started,
         )
         return 1
     return 0
@@ -110,16 +117,11 @@ def _command_payload(
             "files": load_config(payload_arg or ""),
         }
     if command == ZAPASKA_LOAD_API_DATA:
-        started = time.monotonic()
         load_remote_vendor_data(api=get_zapaska_api_config())
-        return ok_payload(
-            action=ZAPASKA_LOAD_API_DATA,
-            positions=[],
-            stats=empty_stats(time.monotonic() - started),
-            warnings=[],
-            files=[],
-            suppliers={},
-        )
+        return {
+            "ok": True,
+            "action": ZAPASKA_LOAD_API_DATA,
+        }
     return {
         PARSE: _json_parse,
         DOUBLES: _json_doubles,

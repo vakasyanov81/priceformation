@@ -21,6 +21,12 @@ _PRICE_OUT = "run_machine.CommonPriceOut"
 _LOG_NOISE = "NOISE-ON-STDOUT"
 
 
+def _assert_elapsed(payload: dict[str, object]) -> None:
+    elapsed = payload.pop("elapsed_seconds")
+    assert isinstance(elapsed, int | float)
+    assert elapsed >= 0
+
+
 def _common_with_row() -> MagicMock:
     row = RowItem(_PRICE_FIELDS)
     common = MagicMock()
@@ -50,6 +56,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload["ok"] is True
     assert payload["action"] == PARSE
     assert payload["positions"] == []
@@ -70,7 +77,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(PARSE, result_template="for_drom")
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert payload["ok"] is True
+    _assert_elapsed(payload)
     mock_out.return_value.write_all_prices.assert_called_once_with(
         as_jsonl=True,
         result_template="for_drom",
@@ -106,6 +113,7 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(PARSE, all_result=True)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload["positions"][0]["title"] == _TITLE
     assert payload["stats"]["items"] == 1
 
@@ -116,6 +124,7 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["ok"] is False
     assert payload["error"]["kind"] == "RuntimeError"
     assert payload["error"]["message"] == "boom"
@@ -127,6 +136,7 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["error"]["kind"] == "KeyboardInterrupt"
 
 
@@ -145,6 +155,7 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(DOUBLES)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload["action"] == DOUBLES
     assert payload["positions"] == []
     assert payload["stats"]["doubles"] == 1
@@ -170,6 +181,7 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     titles = {position["title"] for position in payload["positions"]}
     assert code == 0
+    _assert_elapsed(payload)
     assert titles == {"dup", "cand"}
     assert payload["files"] == jsonl_output_files([_DOUBLE_PATH])
 
@@ -179,23 +191,43 @@ def test_json_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
     code = machine_json("nope")
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["ok"] is False
     assert payload["error"]["kind"] == "KeyError"
 
 
 def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
-    """zapaska --json без позиций, код 0."""
+    """zapaska_load_api_data: compact ok, без полей разбора."""
     with (
         patch("run_machine.get_zapaska_api_config", return_value=MagicMock()),
         patch("run_machine.load_remote_vendor_data") as mock_load,
     ):
         code = machine_json(ZAPASKA_LOAD_API_DATA)
-        payload = json.loads(capsys.readouterr().out)
-        assert code == 0
-        assert payload["ok"] is True
-        assert payload["action"] == ZAPASKA_LOAD_API_DATA
-        assert payload["positions"] == []
-        mock_load.assert_called_once()
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        "ok": True,
+        "action": ZAPASKA_LOAD_API_DATA,
+    }
+    mock_load.assert_called_once()
+
+
+def test_json_zapaska_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """ошибка zapaska_load_api_data → compact JSON."""
+    with (
+        patch("run_machine.get_zapaska_api_config", return_value=MagicMock()),
+        patch("run_machine.load_remote_vendor_data", side_effect=RuntimeError("no net")),
+    ):
+        code = machine_json(ZAPASKA_LOAD_API_DATA)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    _assert_elapsed(payload)
+    assert payload["ok"] is False
+    assert payload["action"] == ZAPASKA_LOAD_API_DATA
+    assert payload["error"]["kind"] == "RuntimeError"
+    assert "positions" not in payload
+    assert "stats" not in payload
 
 
 def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
@@ -205,6 +237,7 @@ def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(GET_SUPLIERS)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    assert "elapsed_seconds" not in payload
     assert payload == catalog
 
 
@@ -221,6 +254,7 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload == {
         "ok": True,
         "action": LOAD_SUPPLIER_PRICES,
@@ -245,6 +279,7 @@ def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str
         code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload == {
         "ok": True,
         "action": LOAD_SUPPLIER_PRICES,
@@ -258,6 +293,7 @@ def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) 
     code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices="not-json")
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["ok"] is False
     assert payload["action"] == LOAD_SUPPLIER_PRICES
     assert payload["error"]["kind"] == "SupplierPricesMappingError"
@@ -273,6 +309,7 @@ def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(LOAD_CONFIG, config_path=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload == {
         "ok": True,
         "action": LOAD_CONFIG,
@@ -289,6 +326,7 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
         code = machine_json(LOAD_CONFIG, config_path=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
+    _assert_elapsed(payload)
     assert payload["files"] == dests
     mock_load.assert_called_once_with(raw)
 
@@ -298,6 +336,7 @@ def test_json_load_config_error(capsys: pytest.CaptureFixture[str]) -> None:
     code = machine_json(LOAD_CONFIG, config_path="")
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["ok"] is False
     assert payload["action"] == LOAD_CONFIG
     assert payload["error"]["kind"] == "ConfigFileNotFoundError"
@@ -343,6 +382,7 @@ def test_fail_unknown_json(capsys: pytest.CaptureFixture[str]) -> None:
     code = fail_unknown_result_template(PARSE, "nope", json_mode=True)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
+    _assert_elapsed(payload)
     assert payload["ok"] is False
     assert payload["error"]["kind"] == "UnknownWriterTemplateError"
     assert "nope" in payload["error"]["message"]

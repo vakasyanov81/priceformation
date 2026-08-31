@@ -60,10 +60,11 @@ uv run --no-dev --locked python src/run.py parse --json
 
 Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
 
-Код выхода: `0` при успехе, `1` при ошибке. Для `parse` / `doubles` / `zapaska` в JSON всегда одни и те же ключи: `ok`, `action`, `stats`, `files` (пути к jsonl и `result_meta.json`), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`.
-`get_supliers` печатает каталог поставщиков: ключ — код, значение — `sup_code` (папка) и `sup_title` (название). `--json` для этой команды не обязателен.
-`load_supplier_prices` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути к `price.xls` / `price.xlsx`), `suppliers` (загруженные). Ошибка: `ok`, `action`, `error`. Полей разбора (`positions`, `stats`, …) нет. Файл с диска перемещается, исходное имя не сохраняется.
-`load_config` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути в `parse_config`). Ошибка: `ok`, `action`, `error`. Полей разбора нет. Исходные файлы перемещаются, имена сохраняются. Из папки берутся только файлы верхнего уровня.
+Код выхода: `0` при успехе, `1` при ошибке. Во всех JSON-ответах с `ok` есть `elapsed_seconds` (секунды, два знака) — и при успехе, и при ошибке. Для `parse` / `doubles` те же ключи, что раньше: `ok`, `action`, `stats`, `files` (пути к jsonl и `result_meta.json`), `warnings`, `suppliers` (включённые), `disabled_suppliers` (выключенные в `vendor_list.json`), `positions`, `error`; `elapsed_seconds` дублируется на верхнем уровне и в `stats`.
+`zapaska_load_api_data` в JSON: успех `ok`, `action`, `elapsed_seconds`; ошибка `ok`, `action`, `error`, `elapsed_seconds`. Полей разбора нет.
+`get_supliers` печатает каталог поставщиков: ключ — код, значение — `sup_code` (папка) и `sup_title` (название). `--json` для этой команды не обязателен. Каталог без `ok`/`elapsed_seconds`.
+`load_supplier_prices` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути к `price.xls` / `price.xlsx`), `suppliers` (загруженные), `elapsed_seconds`. Ошибка: `ok`, `action`, `error`, `elapsed_seconds`. Полей разбора (`positions`, `stats`, …) нет. Файл с диска перемещается, исходное имя не сохраняется.
+`load_config` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути в `parse_config`), `elapsed_seconds`. Ошибка: `ok`, `action`, `error`, `elapsed_seconds`. Полей разбора нет. Исходные файлы перемещаются, имена сохраняются. Из папки берутся только файлы верхнего уровня.
 Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
 Расшифровка — в `result_meta.json` в той же папке: `{"1": "Тип товара", "2": "Бренд", …}`. Ключ у колонки общий для всех jsonl запуска.
 Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа (цены, остатки) не кодируются.

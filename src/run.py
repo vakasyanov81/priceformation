@@ -12,7 +12,7 @@
     python src/run.py parse --json --clear-previous-result
     python src/run.py parse --json --result-template for_drom
     python src/run.py doubles --json
-    python src/run.py zapaska --json
+    python src/run.py zapaska_load_api_data --json
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_supplier_prices={"poshk": "/full/path/any_price_name.xls"}
