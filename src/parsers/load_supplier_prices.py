@@ -16,13 +16,14 @@ from parsers.supplier_price_errors import (
 
 _ALLOWED_EXTENSIONS = frozenset((".xls", ".xlsx"))
 _PRICE_STEM = "price"
-_MSG_MAPPING = "Ожидается объект {ид_поставщика: путь_к_файлу}"
-_MSG_NONEMPTY = "ИД поставщика и путь к файлу должны быть непустыми строками"
+_MSG_MAPPING = "Ожидается объект {ид_или_код_поставщика: путь_к_файлу}"
+_MSG_NONEMPTY = "Ключ поставщика и путь к файлу должны быть непустыми строками"
 _MSG_EXTENSION = "Недопустимое расширение {0!r}. Допустимые: xls, xlsx"
+_MSG_UNKNOWN = "Неизвестный ИД или код поставщика: {0}"
 
 
 def parse_prices_json(raw: str) -> dict[str, str]:
-    """Разобрать JSON-объект ИД поставщика → путь к файлу."""
+    """Разобрать JSON-объект ИД или sup_code → путь к файлу."""
     try:
         loaded: object = json.loads(raw)
     except json.JSONDecodeError as exc:
@@ -40,17 +41,31 @@ def parse_prices_json(raw: str) -> dict[str, str]:
 def load_supplier_prices(mapping: Mapping[str, str]) -> list[str]:
     """Переместить файлы в папки поставщиков как price.xls / price.xlsx."""
     catalog = all_vendor_supplier_catalog()
-    prepared = [_job_for(code, path, catalog) for code, path in mapping.items()]
+    prepared = [_job_for(key, path, catalog) for key, path in mapping.items()]
     return [_move_price(*job) for job in prepared]
 
 
+def catalog_entry_for(
+    supplier_key: str,
+    catalog: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    """Запись каталога по ИД поставщика или sup_code."""
+    by_id = catalog.get(supplier_key)
+    if by_id is not None:
+        return by_id
+    for entry in catalog.values():
+        if entry["sup_code"] == supplier_key:
+            return entry
+    raise UnknownSupplierCodeError(_MSG_UNKNOWN.format(supplier_key))
+
+
 def _job_for(
-    supplier_id: str,
+    supplier_key: str,
     source_raw: str,
     catalog: dict[str, dict[str, str]],
 ) -> tuple[Path, Path]:
     source = Path(source_raw)
-    dest = _destination(source, _supplier_folder(supplier_id, catalog))
+    dest = _destination(source, catalog_entry_for(supplier_key, catalog)["sup_code"])
     _ensure_xls_file(source)
     return source, dest
 
@@ -58,13 +73,6 @@ def _job_for(
 def _destination(source: Path, folder: str) -> Path:
     dest_dir = Path(get_parse_paths().file_prices_folder) / folder
     return dest_dir / (_PRICE_STEM + source.suffix.lower())
-
-
-def _supplier_folder(supplier_id: str, catalog: dict[str, dict[str, str]]) -> str:
-    entry = catalog.get(supplier_id)
-    if entry is None:
-        raise UnknownSupplierCodeError(f"Неизвестный ИД поставщика: {supplier_id}")
-    return entry["sup_code"]
 
 
 def _ensure_xls_file(source: Path) -> None:

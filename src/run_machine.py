@@ -10,7 +10,7 @@ from parse_report_build import report_from_common
 from parsers.all_vendors import all_vendor_supplier_catalog, all_vendors
 from parsers.common_price import CommonPrice
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
-from parsers.load_supplier_prices import load_supplier_prices, parse_prices_json
+from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA
@@ -103,7 +103,7 @@ def _json_load_prices(raw: str | None) -> dict[str, object]:
         "ok": True,
         "action": LOAD_SUPPLIER_PRICES,
         "files": load_supplier_prices(mapping),
-        "suppliers": {code: catalog[code]["sup_title"] for code in mapping},
+        "suppliers": {key: catalog_entry_for(key, catalog)["sup_title"] for key in mapping},
     }
 
 

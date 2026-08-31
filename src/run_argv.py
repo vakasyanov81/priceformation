@@ -14,7 +14,7 @@ LOAD_SUPPLIER_PRICES = "load_supplier_prices"
 MACHINE_COMMANDS = (PARSE, DOUBLES, ZAPASKA, GET_SUPLIERS, LOAD_SUPPLIER_PRICES)
 JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES))
 _LOAD_INLINE_PREFIX = f"{LOAD_SUPPLIER_PRICES}="
-_PRICES_HELP = 'JSON-объект {"ИД": "путь к xls или xlsx"}.'
+_PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь к xls или xlsx"}.'
 
 _HELP_FLAGS = ("-h", "--help")
 _JSON_HELP = "JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов)."

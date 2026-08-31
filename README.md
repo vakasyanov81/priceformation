@@ -48,7 +48,7 @@ uv run --no-dev --locked python src/run.py parse --json
 - `doubles` — разобрать прайсы и записать отчёт о дублях
 - `zapaska` — выгрузить прайсы запаски по API
 - `get_supliers` — названия поставщиков: `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`
-- `load_supplier_prices` — загрузить прайсы в папки поставщиков: `{"1": "/full/path/any_price_name.xls"}`. Файл перемещается в `file_prices/<sup_code>/price.xls` (или `.xlsx`). Допустимы только `xls` и `xlsx`
+- `load_supplier_prices` — загрузить прайсы в папки поставщиков: `{"1": "/full/path/any_price_name.xls"}` или `{"poshk": "/full/path/any_price_name.xls"}`. Ключ — ИД поставщика или `sup_code`. Файл перемещается в `file_prices/<sup_code>/price.xls` (или `.xlsx`). Допустимы только `xls` и `xlsx`
 
 Флаги:
 
@@ -74,6 +74,7 @@ uv run --no-dev --locked python src/run.py doubles --json
 uv run --no-dev --locked python src/run.py zapaska --json
 uv run --no-dev --locked python src/run.py get_supliers
 uv run --no-dev --locked python src/run.py load_supplier_prices='{"1": "/full/path/any_price_name.xls"}'
+uv run --no-dev --locked python src/run.py load_supplier_prices='{"poshk": "/full/path/any_price_name.xls"}'
 ```
 
 ## Technical details:

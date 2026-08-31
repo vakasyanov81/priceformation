@@ -231,6 +231,28 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     mock_load.assert_called_once_with({"1": "/incoming/any.xls"})
 
 
+def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str]) -> None:
+    """load_supplier_prices: ключ sup_code в suppliers."""
+    files = ["file_prices/poshk/price.xls"]
+    catalog = {"1": {"sup_code": "poshk", "sup_title": "Пошк"}}
+    raw = '{"poshk": "/incoming/any.xls"}'
+    mapping = {"poshk": "/incoming/any.xls"}
+    with (
+        patch("run_machine.parse_prices_json", return_value=mapping),
+        patch("run_machine.load_supplier_prices", return_value=files),
+        patch("run_machine.all_vendor_supplier_catalog", return_value=catalog),
+    ):
+        code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload == {
+        "ok": True,
+        "action": LOAD_SUPPLIER_PRICES,
+        "files": files,
+        "suppliers": {"poshk": "Пошк"},
+    }
+
+
 def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) -> None:
     """битый JSON загрузки → ok=false."""
     code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices="not-json")
