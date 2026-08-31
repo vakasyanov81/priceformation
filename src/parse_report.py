@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from collections.abc import Mapping
 from typing import Any, TextIO, TypedDict
 
 REPORT_VERSION = 1
+_OK_KEY = "ok"
 
 
 class JsonError(TypedDict):
@@ -37,9 +39,17 @@ def dump_json(payload: Mapping[str, Any]) -> str:
     return json.dumps(payload, ensure_ascii=False, default=str)
 
 
-def emit_json(payload: Mapping[str, Any], stream: TextIO | None = None) -> None:
-    """Печать JSON в stdout (или переданный поток)."""
-    print(dump_json(payload), file=stream or sys.stdout, flush=True)
+def emit_json(
+    payload: Mapping[str, Any],
+    stream: TextIO | None = None,
+    *,
+    started: float | None = None,
+) -> None:
+    """Печать JSON в stdout (или переданный поток). started — monotonic, добавляет elapsed_seconds."""
+    report: Mapping[str, Any] = payload
+    if started is not None and _OK_KEY in payload:
+        report = {**payload, "elapsed_seconds": round(time.monotonic() - started, 2)}
+    print(dump_json(report), file=stream or sys.stdout, flush=True)
 
 
 def empty_stats(elapsed: float) -> dict[str, Any]:
@@ -90,7 +100,7 @@ def error_payload(
     """Собрать ответ об ошибке. compact — только ok/action/error (не разбор)."""
     error: JsonError = {"kind": kind, "message": message}
     if compact:
-        return {"ok": False, "action": action, "error": error}
+        return {_OK_KEY: False, "action": action, "error": error}
     return {
         "ok": False,
         "version": REPORT_VERSION,

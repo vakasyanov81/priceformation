@@ -240,6 +240,7 @@ def test_run_machine_unknown_template_json(capsys: pytest.CaptureFixture[str]) -
     assert payload["ok"] is False
     assert payload["error"]["kind"] == "UnknownWriterTemplateError"
     assert "nope" in payload["error"]["message"]
+    assert payload["elapsed_seconds"] >= 0
 
 
 def test_run_machine_unknown_template_human(capsys: pytest.CaptureFixture[str]) -> None:

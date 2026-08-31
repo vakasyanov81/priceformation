@@ -1,5 +1,7 @@
 """JSON-отчёт разбора прайса."""
 
+import json
+import time
 from io import StringIO
 from unittest.mock import patch
 
@@ -75,6 +77,24 @@ def test_emit_json_writes_stream() -> None:
     emit_json(error_payload("zapaska", "OSError", "no net"), stream)
     assert stream.getvalue().endswith("\n")
     assert "no net" in stream.getvalue()
+
+
+def test_emit_json_adds_elapsed() -> None:
+    """started добавляет elapsed_seconds к ответу с ok."""
+    stream = StringIO()
+    emit_json({"ok": True, "action": "parse"}, stream, started=time.monotonic())
+    payload = json.loads(stream.getvalue())
+    assert payload["ok"] is True
+    assert payload["action"] == "parse"
+    assert payload["elapsed_seconds"] >= 0
+
+
+def test_emit_json_skips_elapsed_without_ok() -> None:
+    """каталог без ok не дополняется elapsed_seconds."""
+    stream = StringIO()
+    catalog = {"1": {"sup_code": "poshk"}}
+    emit_json(catalog, stream, started=time.monotonic())
+    assert json.loads(stream.getvalue()) == catalog
 
 
 def test_row_items_include_parse_errors() -> None:
