@@ -13,6 +13,7 @@ from parsers.writer.jsonl_writer import RESULT_META_FILE
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
+from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
@@ -231,6 +232,37 @@ def test_write_all_prices_single_template() -> None:
         result_folder=_result_folder(),
     )
     assert written == ["file_prices/result/drom.xlsx"]
+
+
+def test_write_all_prices_full_template() -> None:
+    """for_full пишется только при явном выборе."""
+    writer_cls = MagicMock()
+    driver_cls = MagicMock()
+    writer_instance = MagicMock()
+    writer_instance.get_result_path.return_value = "file_prices/result/full.xlsx"
+    writer_cls.return_value = writer_instance
+    driver_instance = MagicMock()
+    driver_cls.return_value = driver_instance
+    out = CommonPriceOut(
+        [RowItem({_TITLE: "t1"})],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+    )
+    raw_rows = [{_TITLE: "t1"}]
+
+    with (
+        patch.object(out, "nomenclature_title_correction"),
+        patch("parsers.common_price_output._to_raw_dicts", return_value=raw_rows),
+    ):
+        written = out.write_all_prices(result_template="for_full")
+
+    writer_cls.assert_called_once_with(
+        driver_instance,
+        raw_rows,
+        ForFull,
+        result_folder=_result_folder(),
+    )
+    assert written == ["file_prices/result/full.xlsx"]
 
 
 def test_write_all_prices_unknown_template() -> None:

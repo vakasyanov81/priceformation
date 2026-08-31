@@ -56,7 +56,7 @@ uv run --no-dev --locked python src/run.py parse --json
 - `--json` — одна JSON-строка в stdout, логи не печатаются; прайсы пишутся в `.jsonl` (те же шаблоны, что xlsx), рядом — `result_meta.json`
 - `--all-result` — в JSON включить позиции разбора (без флага — только статистика). Сам по себе тоже включает JSON-режим
 - `--clear-previous-result` — удалить всё из `file_prices/result` перед записью
-- `--result-template NAME` — для `parse`: записать только этот шаблон (`for_inner`, `for_drom`). Без флага — все шаблоны. Неизвестное имя — ошибка (код 1; в JSON-режиме `ok: false`)
+- `--result-template NAME` — для `parse`: записать только этот шаблон (`for_inner`, `for_drom`, `for_full`). Без флага — `for_inner` и `for_drom` (`for_full` только явно). Неизвестное имя — ошибка (код 1; в JSON-режиме `ok: false`)
 
 Без `--json` та же команда выполняется как в меню (человекочитаемый вывод).
 
@@ -65,14 +65,15 @@ uv run --no-dev --locked python src/run.py parse --json
 `get_supliers` печатает каталог поставщиков: ключ — код, значение — `sup_code` (папка) и `sup_title` (название). `--json` для этой команды не обязателен. Каталог без `ok`/`elapsed_seconds`.
 `load_supplier_prices` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути к `price.xls` / `price.xlsx`), `suppliers` (загруженные), `elapsed_seconds`. Ошибка: `ok`, `action`, `error`, `elapsed_seconds`. Полей разбора (`positions`, `stats`, …) нет. Файл с диска перемещается, исходное имя не сохраняется.
 `load_config` тоже всегда в JSON. Успех: `ok`, `action`, `files` (пути в `parse_config`), `elapsed_seconds`. Ошибка: `ok`, `action`, `error`, `elapsed_seconds`. Полей разбора нет. Исходные файлы перемещаются, имена сохраняются. Из папки берутся только файлы верхнего уровня.
-Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
+Каждая строка jsonl — объект с ключами `"1"`, `"2"`, … вместо названий колонок (`price_*.jsonl`, `price_drom_*.jsonl`, `price_full_*.jsonl`, `doubles_*.jsonl`). Ключи с `null` в строку не пишутся.
 Расшифровка — в `result_meta.json` в той же папке: `{"1": "Тип товара", "2": "Бренд", …}`. Ключ у колонки общий для всех jsonl запуска.
-Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа (цены, остатки) не кодируются.
+Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …, только если код короче значения; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа и строки-числа (в том числе с точкой) не кодируются.
 
 ```
 uv run --no-dev --locked python src/run.py parse --json --clear-previous-result
 uv run --no-dev --locked python src/run.py parse --json --all-result
 uv run --no-dev --locked python src/run.py parse --json --result-template for_drom
+uv run --no-dev --locked python src/run.py parse --json --result-template for_full
 uv run --no-dev --locked python src/run.py doubles --json
 uv run --no-dev --locked python src/run.py zapaska_load_api_data --json
 uv run --no-dev --locked python src/run.py get_supliers

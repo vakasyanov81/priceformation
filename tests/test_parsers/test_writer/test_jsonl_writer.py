@@ -17,6 +17,19 @@ _TYPE_NAME = "Тип товара"
 _PRICE_NAME = "Цена"
 
 
+class _RepeatFieldsTemplate(IWriteTemplate):
+    """короткие и числовые поля для проверки кодирования повторов."""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [
+        {"Номенклатура": {"field": RowItem.title.name}},
+        {"Сезон": {"field": RowItem.season.name}},
+        {"Шип": {"field": RowItem.spike.name}},
+        {"Ширина": {"field": RowItem.width.name}},
+        {"Профиль": {"field": RowItem.height_percent.name}},
+    ]
+    __FILE__ = "repeat_{now}.xlsx"
+
+
 class _SkipColumnTemplate(IWriteTemplate):
     """колонка skip не попадает в jsonl."""
 
@@ -161,3 +174,50 @@ def test_jsonl_reuses_value_codes_across_files(tmp_path: Path) -> None:
     codebook = _load_values(tmp_path)
     assert drom_row[type_key] == "@1"
     assert codebook["@1"] == "Автошина"
+
+
+def _repeat_pair(**fields: Any) -> list[dict[str, Any]]:
+    return [
+        {**write_data[0], "title": "t1", **fields},
+        {**write_data[0], "title": "t2", **fields},
+    ]
+
+
+def test_jsonl_skips_code_not_shorter(tmp_path: Path) -> None:
+    """@N не ставится, если он не короче исходной строки."""
+    path = write_template_jsonl(
+        _repeat_pair(season="да", spike="Y"),
+        _RepeatFieldsTemplate,
+        str(tmp_path),
+    )
+    meta = _load_meta(tmp_path)
+    first = _first_row(path)
+    assert first[_meta_key(meta, "Сезон")] == "да"
+    assert first[_meta_key(meta, "Шип")] == "Y"
+    assert not _load_values(tmp_path)
+
+
+def test_jsonl_skips_numeric_strings(tmp_path: Path) -> None:
+    """строки-числа, в том числе с точкой, не кодируются."""
+    path = write_template_jsonl(
+        _repeat_pair(width="225", height_percent="40.5"),
+        _RepeatFieldsTemplate,
+        str(tmp_path),
+    )
+    meta = _load_meta(tmp_path)
+    first = _first_row(path)
+    assert first[_meta_key(meta, "Ширина")] == "225"
+    assert first[_meta_key(meta, "Профиль")] == "40.5"
+    assert not _load_values(tmp_path)
+
+
+def test_jsonl_encodes_when_code_is_shorter(tmp_path: Path) -> None:
+    """повтор длиннее @N по-прежнему сжимается."""
+    path = write_template_jsonl(
+        _repeat_pair(season="зима"),
+        _RepeatFieldsTemplate,
+        str(tmp_path),
+    )
+    season_key = _meta_key(_load_meta(tmp_path), "Сезон")
+    assert _first_row(path)[season_key] == "@1"
+    assert _load_values(tmp_path)["@1"] == "зима"

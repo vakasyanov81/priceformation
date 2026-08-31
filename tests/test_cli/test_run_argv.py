@@ -81,6 +81,12 @@ def test_parse_result_template_flag() -> None:
     assert args.result_template == "for_drom"
 
 
+def test_parse_result_template_full() -> None:
+    """--result-template принимает for_full."""
+    args = parse_machine_args([PARSE, "--result-template", "for_full"])
+    assert args.result_template == "for_full"
+
+
 def test_parse_result_template_default() -> None:
     """без --result-template имя пустое."""
     args = parse_machine_args([PARSE])

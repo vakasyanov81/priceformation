@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from parsers.row_item.row_item import RowItem
+from parsers.writer.jsonl_codeable import is_codable_value, usable_codes
 from parsers.writer.templates.column_helper import ColumnHelper
 
 VALUES_KEY = "values"
@@ -26,7 +27,7 @@ def apply_value_codes(
     name_to_key: NameToKey,
     meta_path: Path,
 ) -> None:
-    """Заменить повторяющиеся строки на @N и дописать словарь в meta."""
+    """Заменить повторяющиеся строки на @N, если код короче значения."""
     skipped = _title_keys(columns, name_to_key)
     codebook = _assign_codes(rows, skipped, read_value_codes(meta_path))
     _replace_values(rows, skipped, {original: code for code, original in codebook.items()})
@@ -58,19 +59,22 @@ def _count_cells(rows: list[JsonlRow], skipped: set[str]) -> dict[Any, int]:
     counts: dict[Any, int] = {}
     for row in rows:
         for key, cell in row.items():
-            if key in skipped or not isinstance(cell, str):
+            if key in skipped or not is_codable_value(cell):
                 continue
             counts[cell] = counts.get(cell, 0) + 1
     return counts
 
 
 def _assign_codes(rows: list[JsonlRow], skipped: set[str], existing: ValueCodes) -> ValueCodes:
-    reverse = {original: code for code, original in existing.items()}
+    reverse = usable_codes(existing)
 
     def _register(original: object, count: int) -> None:
         if original in reverse or count < _MIN_REPEAT:
             return
-        reverse[original] = f"{_CODE_PREFIX}{_next_index()}"
+        next_code = f"{_CODE_PREFIX}{_next_index()}"
+        if not is_codable_value(original, next_code):
+            return
+        reverse[original] = next_code
 
     def _next_index() -> int:
         used = [int(code[1:]) for code in reverse.values()]
