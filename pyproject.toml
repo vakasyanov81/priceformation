@@ -21,7 +21,7 @@ dev = [
     "black==26.5.1",
     "ruff==0.16.6",
     "pytest-testmon==2.2.0",
-    "pytest-randomly==4.1.0",
+    "pytest-randomly==5.0.0",
     "pytest-xdist==3.8.0",
     "wemake-python-styleguide==1.8.0",
     "mypy==2.3.1",
