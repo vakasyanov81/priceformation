@@ -9,7 +9,7 @@ from core.exceptions import CoreExceptionError
 
 _DEFAULT_HOST = "ka2.sibzapaska.ru:16500"
 _ENV_LOGIN = "ZAPASKA_API_LOGIN"
-_ENV_PASSWORD = "ZAPASKA_API_PASSWORD"
+_ENV_PASSWORD = "ZAPASKA_API_PASSWORD"  # nosec — имя переменной окружения, а не пароль
 _ENV_HOST = "ZAPASKA_API_HOST"
 _MSG_MISSING_ENV_FILE = (
     "Не найден файл .env с данными для подключения к API Запаски. "

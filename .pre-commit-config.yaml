@@ -34,3 +34,15 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
+      - id: bandit
+        name: bandit
+        entry: uv run bandit -r src -c pyproject.toml
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: pip-audit
+        name: pip-audit
+        entry: uv run pip-audit
+        language: system
+        pass_filenames: false
+        always_run: true

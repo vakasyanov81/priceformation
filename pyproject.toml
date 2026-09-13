@@ -26,6 +26,8 @@ dev = [
     "wemake-python-styleguide==1.8.0",
     "mypy==2.3.1",
     "vulture==2.16",
+    "bandit==1.9.4",
+    "pip-audit==2.7.1",
 ]
 
 [build-system]
@@ -172,3 +174,24 @@ exclude = [
 ]
 min_confidence = 100
 ignore_decorators = ["@pytest.fixture"]
+
+[tool.bandit]
+targets = ["src"]
+# Exclude tests, mutants, and generated code.
+exclude_dirs = [
+    "tests",
+    "integration_tests",
+    "load_tests",
+    "mutants",
+    "pipelines",
+    ".venv",
+    ".mypy_cache",
+    ".ruff_cache",
+    "htmlcov",
+]
+# Allow assert statements in source (they are production-use in this project).
+skips = ["B101"]
+
+[tool.pip-audit]
+# Audit the current environment (all dev+prod deps).
+# Vulnerability service: PyPI JSON API by default.
