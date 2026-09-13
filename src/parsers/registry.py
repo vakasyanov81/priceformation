@@ -52,6 +52,10 @@ _VENDORS_TO_IMPORT = (
 _registry: dict[str, type[BaseParser]] = {}
 
 
+class UnknownVendorError(KeyError):
+    """Поставщик с указанным кодом не найден (или у него нет конфига)."""
+
+
 def _ensure_vendors_imported() -> None:
     """Импортировать модули вендоров из _VENDORS_TO_IMPORT, чтобы заполнить реестр."""
     if _registry:
@@ -151,6 +155,18 @@ def all_vendors_from_registry() -> list[VendorEntry]:
         if config is not None:
             vendors.append((vendor_cls, config))
     return vendors
+
+
+def vendor_entry_for(code: str) -> VendorEntry:
+    """Запись (класс, config) зарегистрированного поставщика по коду реестра."""
+    if not _registry:
+        _ensure_vendors_imported()
+    vendor_cls = _registry.get(code)
+    if vendor_cls is not None:
+        config = _get_config_for_vendor(vendor_cls)
+        if config is not None:
+            return (vendor_cls, config)
+    raise UnknownVendorError(code)
 
 
 def vendor_markup_policy_for(
