@@ -9,14 +9,11 @@
 
     python src/run.py parse --json
     python src/run.py parse --json --all-result
-    python src/run.py parse --json --clear-previous-result
     python src/run.py parse --json --result-template for_drom
     python src/run.py doubles --json
     python src/run.py zapaska_load_api_data --json
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
-    python src/run.py load_supplier_prices={"poshk": "/full/path/any_price_name.xls"}
-    python src/run.py load_config=/full/path/vendor_list.json
     python src/run.py load_config=/full/path/settings_dir
 
 JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
@@ -26,25 +23,22 @@ JSON печатается в stdout, логи в этом режиме не вы
 import sys
 
 from cfg import init_cfg
-from cfg.zapaska_api import get_zapaska_api_config
 from core.async_utils import try_call
 from core.log_message import print_log
 from core.parse_paths import clear_result_folder
-from parsers.all_vendors import all_vendors
-from parsers.common_price import CommonPrice
-from parsers.common_price_output import CommonPriceOut
-from parsers.remote.zapaska_client import load_remote_vendor_data
 from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
 from services.configure import configure_services
+from services.doubles_service import DoublesService
+from services.parse_orchestrator import ParseOrchestrator
+from services.price_report import PriceReportService
+from services.service_provider import ServiceProvider
+from services.zapaska_service import ZapaskaService
 
 
 def main() -> None:
-    """
-    entry point
-    :return:
-    """
+    """entry point"""
     init_cfg()
     configure_services()
     argv = sys.argv[1:]
@@ -96,7 +90,6 @@ def _machine_human(command: str, result_template: str | None) -> int:
 
 def response_processing() -> bool:
     """Ask questions"""
-    continuation_of_execution = True
     match ask_action():
         case AnswerResult.MAKE_PRICE_BY_SUPPLIER:
             try_call(run_make_price_by_supplier)
@@ -105,29 +98,26 @@ def response_processing() -> bool:
         case AnswerResult.REPORT_DOUBLES:
             try_call(run_report_doubles)
         case AnswerResult.EXIT:
-            continuation_of_execution = False
-    return continuation_of_execution
+            return False
+    return True
 
 
 def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
     """Make common price list by price list supplier's"""
-    common_price = CommonPrice()
-    common_price.parse_all_vendors(all_vendors())
-    CommonPriceOut(common_price.parsed_items).write_all_prices(result_template=result_template)
+    parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
+    ServiceProvider.resolve(PriceReportService).write_prices(parse_result.parsed_items, template=result_template)
 
 
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
-    load_remote_vendor_data(api=get_zapaska_api_config())
+    ServiceProvider.resolve(ZapaskaService).upload_data()
     print_log('*** Данные успешно загружены. ***\n')
 
 
 def run_report_doubles() -> None:
     """Parse supplier prices and write duplicates report."""
-    common_price = CommonPrice()
-    common_price.parse_all_vendors(all_vendors())
-    report_path = CommonPriceOut(common_price.parsed_items).write_doubles_report()
-    print_log(f'*** Отчёт о дублях сформирован. ***\n{report_path}\n')
+    report = ServiceProvider.resolve(DoublesService).make_report()
+    print_log(f'*** Отчёт о дублях сформирован. ***\n{report.path}\n')
 
 
 if __name__ == '__main__':

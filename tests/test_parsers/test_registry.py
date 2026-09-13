@@ -9,11 +9,15 @@ and check specific entries.
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from parsers.registry import (
+    UnknownVendorError,
     _registry,
     all_vendors_from_registry,
     clear_registry,
     register_vendor,
+    vendor_entry_for,
     vendor_markup_policy_for,
 )
 
@@ -318,4 +322,37 @@ def test_clear_registry_empties_dict() -> None:
         assert len(_registry) == 0
     finally:
         # Restore real vendors so other tests in the same worker work.
+        _registry.update(saved)
+
+
+def test_vendor_entry_for_returns_entry() -> None:
+    """vendor_entry_for возвращает (класс, config) по коду реестра."""
+    saved = dict(_registry)
+    try:
+        clear_registry()
+
+        @register_vendor(_UNIQUE + '_entry')
+        class EntryParser(_FakeBaseParser):  # noqa: WPS431
+            pass
+
+        vendor_cls, config = vendor_entry_for(_UNIQUE + '_entry')
+        assert vendor_cls is EntryParser
+        assert config.supplier.folder_name == 'fake_vendor'
+    finally:
+        _registry.clear()
+        _registry.update(saved)
+
+
+def test_vendor_entry_for_unknown_code() -> None:
+    """неизвестный код — UnknownVendorError."""
+    saved = dict(_registry)
+    try:
+        clear_registry()
+        with (
+            patch('parsers.registry._VENDORS_TO_IMPORT', ()),
+            pytest.raises(UnknownVendorError),
+        ):
+            vendor_entry_for('missing_vendor')
+    finally:
+        _registry.clear()
         _registry.update(saved)

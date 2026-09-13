@@ -10,14 +10,16 @@ from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 from run_machine import fail_unknown_result_template, machine_json
+from services.doubles_service import DoublesService
+from services.parse_orchestrator import ParseOrchestrator
+from services.price_report import PriceReportService
+from services.zapaska_service import ZapaskaService
 
 _TITLE = 'шина'
 _PATH = 'file_prices/result/price.jsonl'
 _DOUBLE_PATH = 'file_prices/result/doubles.jsonl'
 _PRICE_FIELDS = {'title': _TITLE, 'price_opt': 10, 'price_markup': 12}
-_COMMON_PRICE = 'run_machine.CommonPrice'
-_ALL_VENDORS = 'run_machine.all_vendors'
-_PRICE_OUT = 'run_machine.CommonPriceOut'
+_RESOLVE = 'run_machine.ServiceProvider.resolve'
 _LOG_NOISE = 'NOISE-ON-STDOUT'
 
 
@@ -27,7 +29,7 @@ def _assert_elapsed(payload: dict[str, object]) -> None:
     assert elapsed >= 0
 
 
-def _common_with_row() -> MagicMock:
+def _result_with_row() -> MagicMock:
     row = RowItem(_PRICE_FIELDS)
     common = MagicMock()
     common.parsed_items = [row]
@@ -36,7 +38,7 @@ def _common_with_row() -> MagicMock:
     return common
 
 
-def _mark_common(rows: list[RowItem]) -> MagicMock:
+def _mark_result(rows: list[RowItem]) -> MagicMock:
     common = MagicMock()
     common.parsed_items = rows
     common.unknown_category_skips = []
@@ -45,14 +47,16 @@ def _mark_common(rows: list[RowItem]) -> MagicMock:
 
 
 def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
-    """parse --json без --all-result: статистика процесса, без позиций."""
-    common = _common_with_row()
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
+    """parse --json без --all-parsed: статистика процесса, без позиций."""
+    parsed = _result_with_row()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
+    reporter.write_prices.return_value = [_PATH]
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
-        mock_out.return_value.write_all_prices.return_value = [_PATH]
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -62,38 +66,43 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
-    mock_out.return_value.write_all_prices.assert_called_once_with(as_jsonl=True, result_template=None)
+    reporter.write_prices.assert_called_once_with(parsed.parsed_items, None, as_jsonl=True)
 
 
 def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
-    """parse --result-template передаёт имя в write_all_prices."""
-    common = _common_with_row()
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
+    """parse --parsed-template передаёт имя в write_prices."""
+    parsed = _result_with_row()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
+    reporter.write_prices.return_value = [_PATH]
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
-        mock_out.return_value.write_all_prices.return_value = [_PATH]
         code = machine_json(PARSE, result_template='for_drom')
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    mock_out.return_value.write_all_prices.assert_called_once_with(
-        as_jsonl=True,
-        result_template='for_drom',
-    )
+    reporter.write_prices.assert_called_once_with(parsed.parsed_items, 'for_drom', as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     """логи разбора не попадают в stdout и stderr."""
-    common = _common_with_row()
-    common.parse_all_vendors.side_effect = lambda _vendors: print_log(_LOG_NOISE)
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
+    parsed = _result_with_row()
+
+    def noisy_parse_all() -> MagicMock:
+        print_log(_LOG_NOISE)
+        return parsed
+
+    orchestrator = MagicMock()
+    orchestrator.parse_all.side_effect = noisy_parse_all
+    reporter = MagicMock()
+    reporter.write_prices.return_value = [_PATH]
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
-        mock_out.return_value.write_all_prices.return_value = [_PATH]
         machine_json(PARSE)
     captured = capsys.readouterr()
     assert _LOG_NOISE not in captured.out
@@ -102,14 +111,16 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
-    """parse --all-result: позиции в JSON."""
-    common = _common_with_row()
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
+    """parse --all-parsed: позиции в JSON."""
+    parsed = _result_with_row()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
+    reporter.write_prices.return_value = [_PATH]
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
-        mock_out.return_value.write_all_prices.return_value = [_PATH]
         code = machine_json(PARSE, all_result=True)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -120,7 +131,12 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
     """исключение разбора → JSON с ok=false и код 1."""
-    with patch(_COMMON_PRICE, side_effect=RuntimeError('boom')):
+    orchestrator = MagicMock()
+    orchestrator.parse_all.side_effect = RuntimeError('boom')
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: MagicMock()}.__getitem__,
+    ):
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
@@ -132,7 +148,12 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
     """KeyboardInterrupt → JSON-ошибка, код 1."""
-    with patch(_COMMON_PRICE, side_effect=KeyboardInterrupt):
+    orchestrator = MagicMock()
+    orchestrator.parse_all.side_effect = KeyboardInterrupt
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: MagicMock()}.__getitem__,
+    ):
         code = machine_json(PARSE)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
@@ -141,17 +162,18 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
-    """doubles --json без --all-result: статистика, без позиций."""
+    """doubles --json без --all-parsed: статистика, без позиций."""
     double_row = RowItem({'title': 'dup', 'price_opt': 1, 'price_markup': 2})
     double_row.is_double = True
     unique = RowItem({'title': 'uniq', 'price_opt': 1, 'price_markup': 2})
-    common = _mark_common([double_row, unique])
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
-    ):
-        mock_out.return_value.write_doubles_report.return_value = _DOUBLE_PATH
+    parsed = _mark_result([double_row, unique])
+    doubles_service = MagicMock()
+    doubles_service.make_report.return_value = MagicMock(
+        parse_result=parsed,
+        doubles=[double_row],
+        path=_DOUBLE_PATH,
+    )
+    with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -160,23 +182,24 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['positions'] == []
     assert payload['stats']['doubles'] == 1
     assert payload['files'] == jsonl_output_files([_DOUBLE_PATH])
-    mock_out.return_value.write_doubles_report.assert_called_once_with(as_jsonl=True)
+    doubles_service.make_report.assert_called_once_with(as_jsonl=True)
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
-    """doubles --all-result отдаёт только дубли."""
+    """doubles --all-parsed отдаёт только дубли."""
     double_row = RowItem({'title': 'dup', 'price_opt': 1, 'price_markup': 2})
     double_row.is_double = True
     candidate = RowItem({'title': 'cand', 'price_opt': 1, 'price_markup': 2})
     candidate.double_candidate = True
     unique = RowItem({'title': 'uniq', 'price_opt': 1, 'price_markup': 2})
-    common = _mark_common([double_row, candidate, unique])
-    with (
-        patch(_COMMON_PRICE, return_value=common),
-        patch(_ALL_VENDORS, return_value=[]),
-        patch(_PRICE_OUT) as mock_out,
-    ):
-        mock_out.return_value.write_doubles_report.return_value = _DOUBLE_PATH
+    parsed = _mark_result([double_row, candidate, unique])
+    doubles_service = MagicMock()
+    doubles_service.make_report.return_value = MagicMock(
+        parse_result=parsed,
+        doubles=[double_row, candidate],
+        path=_DOUBLE_PATH,
+    )
+    with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES, all_result=True)
     payload = json.loads(capsys.readouterr().out)
     titles = {position['title'] for position in payload['positions']}
@@ -198,10 +221,8 @@ def test_json_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
     """zapaska_load_api_data: compact ok, без полей разбора."""
-    with (
-        patch('run_machine.get_zapaska_api_config', return_value=MagicMock()),
-        patch('run_machine.load_remote_vendor_data') as mock_load,
-    ):
+    zapaska_service = MagicMock()
+    with patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service}.__getitem__):
         code = machine_json(ZAPASKA_LOAD_API_DATA)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -210,15 +231,14 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         'ok': True,
         'action': ZAPASKA_LOAD_API_DATA,
     }
-    mock_load.assert_called_once()
+    zapaska_service.upload_data.assert_called_once_with()
 
 
 def test_json_zapaska_error(capsys: pytest.CaptureFixture[str]) -> None:
     """ошибка zapaska_load_api_data → compact JSON."""
-    with (
-        patch('run_machine.get_zapaska_api_config', return_value=MagicMock()),
-        patch('run_machine.load_remote_vendor_data', side_effect=RuntimeError('no net')),
-    ):
+    zapaska_service = MagicMock()
+    zapaska_service.upload_data.side_effect = RuntimeError('no net')
+    with patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service}.__getitem__):
         code = machine_json(ZAPASKA_LOAD_API_DATA)
     payload = json.loads(capsys.readouterr().out)
     assert code == 1

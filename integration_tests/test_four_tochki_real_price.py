@@ -61,7 +61,7 @@ def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
 
-    with patch('run.all_vendors', return_value=_four_tochki_vendors()):
+    with patch('services.parse_orchestrator.all_vendors', return_value=_four_tochki_vendors()):
         run_make_price_by_supplier()
 
     result_files = sorted(_RESULT_DIR.glob('*.xlsx'))

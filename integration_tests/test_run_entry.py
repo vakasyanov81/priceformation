@@ -6,12 +6,17 @@ import pytest
 
 from core.exceptions import SupplierNotHavePricesError
 from run_dialog import AnswerResult
+from services.doubles_service import DoublesService
+from services.parse_orchestrator import ParseOrchestrator
+from services.price_report import PriceReportService
+from services.zapaska_service import ZapaskaService
 
 _INPUT = 'builtins.input'
 _RUN_EXIT = 'run.sys.exit'
 _QUIT = 'q'
 _PARSED_ROW = 'item'
-_VENDOR = 'vendor'
+_RESOLVE = 'run.ServiceProvider.resolve'
+_REPORT_PATH = 'file_prices/result/doubles.xlsx'
 
 
 def test_main_exits_on_quit() -> None:
@@ -33,14 +38,18 @@ def test_main_exits_on_quit() -> None:
 
 def test_main_make_price_then_exit() -> None:
     """выбор 1 вызывает полный путь формирования прайса, затем выход."""
-    common = MagicMock()
-    common.parsed_items = [_PARSED_ROW]
+    parsed = MagicMock()
+    parsed.parsed_items = [_PARSED_ROW]
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
 
     with (
         patch(_INPUT, side_effect=['1', _QUIT]),
-        patch('run.CommonPrice', return_value=common) as mock_cp,
-        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
-        patch('run.CommonPriceOut') as mock_out,
+        patch(
+            _RESOLVE,
+            side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
+        ),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -48,22 +57,20 @@ def test_main_make_price_then_exit() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_cp.assert_called_once()
-        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
-        mock_out.assert_called_once_with([_PARSED_ROW])
-        mock_out.return_value.write_all_prices.assert_called_once()
+        orchestrator.parse_all.assert_called_once()
+        reporter.write_prices.assert_called_once_with([_PARSED_ROW], template=None)
 
 
 def test_main_report_doubles_then_exit() -> None:
     """выбор 3 вызывает отчёт о дублях, затем выход."""
-    common = MagicMock()
-    common.parsed_items = [_PARSED_ROW]
+    report = MagicMock()
+    report.path = _REPORT_PATH
+    doubles_service = MagicMock()
+    doubles_service.make_report.return_value = report
 
     with (
         patch(_INPUT, side_effect=['3', _QUIT]),
-        patch('run.CommonPrice', return_value=common) as mock_cp,
-        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
-        patch('run.CommonPriceOut') as mock_out,
+        patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
         patch('run.print_log'),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
@@ -72,18 +79,15 @@ def test_main_report_doubles_then_exit() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_cp.assert_called_once()
-        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
-        mock_out.assert_called_once_with([_PARSED_ROW])
-        mock_out.return_value.write_doubles_report.assert_called_once()
+        doubles_service.make_report.assert_called_once()
 
 
 def test_main_update_zapaska_then_exit() -> None:
     """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
+    zapaska_service = MagicMock()
     with (
         patch(_INPUT, side_effect=['2', _QUIT]),
-        patch('run.get_zapaska_api_config', return_value=MagicMock()),
-        patch('run.load_remote_vendor_data') as mock_load,
+        patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service}.__getitem__),
         patch('run.print_log') as mock_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
@@ -92,7 +96,7 @@ def test_main_update_zapaska_then_exit() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_load.assert_called_once()
+        zapaska_service.upload_data.assert_called_once()
         mock_log.assert_called_once()
 
 
@@ -114,21 +118,25 @@ def test_main_retries_invalid_menu_input() -> None:
 
 def test_response_make_price_via_try_call() -> None:
     """response_processing проходит через try_call до run_make_price_by_supplier."""
-    common = MagicMock()
-    common.parsed_items = []
+    parsed = MagicMock()
+    parsed.parsed_items = []
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
 
     with (
         patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
-        patch('run.CommonPrice', return_value=common),
-        patch('run.all_vendors', return_value=[]),
-        patch('run.CommonPriceOut') as mock_out,
+        patch(
+            _RESOLVE,
+            side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
+        ),
     ):
         from run import response_processing
 
         assert response_processing() is True
 
-        common.parse_all_vendors.assert_called_once_with([])
-        mock_out.return_value.write_all_prices.assert_called_once()
+        orchestrator.parse_all.assert_called_once()
+        reporter.write_prices.assert_called_once_with([], template=None)
 
 
 def test_response_supplier_error_exits() -> None:

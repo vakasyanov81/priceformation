@@ -14,13 +14,13 @@ from parse_report import (
     ok_payload,
 )
 from parse_report_build import (
-    report_from_common,
+    report_from_result,
     row_items_to_json,
-    stats_from_common,
-    warnings_from_common,
+    stats_from_result,
+    warnings_from_result,
 )
-from parsers.common_price import CommonPrice
 from parsers.row_item.row_item import RowItem
+from services.parse_orchestrator import ParseResult
 
 _TITLE = 'шина test'
 _OPT = 100
@@ -111,34 +111,39 @@ def test_row_items_without_errors() -> None:
     assert 'parse_errors' not in payload
 
 
-def test_stats_and_warnings_from_common() -> None:
-    """счётчики и тексты предупреждений из CommonPrice."""
-    common = CommonPrice()
+def _result_with_skips() -> ParseResult:
+    parsed = ParseResult()
     row = _priced_row()
     row.is_double = True
-    common.parsed_items.append(row)
-    common.unknown_category_skips.append(('МИМ', _SUV))
-    common.black_list_skips = 3
-    stats = stats_from_common(common, _ELAPSED)
+    parsed.parsed_items = [row]
+    parsed.unknown_category_skips.append(('МИМ', _SUV))
+    parsed.black_list_skips = 3
+    return parsed
+
+
+def test_stats_and_warnings_from_result() -> None:
+    """счётчики и тексты предупреждений из ParseResult."""
+    parsed = _result_with_skips()
+    stats = stats_from_result(parsed, _ELAPSED)
     assert stats['items'] == 1
     assert stats['priced_items'] == 1
     assert stats['doubles'] == 1
     assert stats['unknown_category_skips'] == 1
     assert stats['black_list_skips'] == 3
     assert stats['elapsed_seconds'] == _ROUNDED
-    warnings = warnings_from_common(common)
+    warnings = warnings_from_result(parsed)
     assert any(_SUV in message for message in warnings)
     assert any('black_list' in message for message in warnings)
 
 
 def test_warnings_empty_without_skips() -> None:
     """без пропусков список предупреждений пуст."""
-    assert warnings_from_common(CommonPrice()) == []
+    assert warnings_from_result(ParseResult()) == []
 
 
-def test_empty_common_stats() -> None:
+def test_empty_result_stats() -> None:
     """пустой разбор даёт нулевые счётчики."""
-    stats = stats_from_common(CommonPrice(), 0)
+    stats = stats_from_result(ParseResult(), 0)
     assert stats['items'] == 0
     assert stats['doubles'] == 0
     assert stats['priced_items'] == 0
@@ -146,30 +151,30 @@ def test_empty_common_stats() -> None:
 
 def test_warnings_category_only() -> None:
     """только неизвестные категории."""
-    common = CommonPrice()
-    common.unknown_category_skips.append(('МИМ', _SUV))
-    warnings = warnings_from_common(common)
+    parsed = ParseResult()
+    parsed.unknown_category_skips.append(('МИМ', _SUV))
+    warnings = warnings_from_result(parsed)
     assert len(warnings) == 1
     assert _SUV in warnings[0]
 
 
 def test_warnings_black_list_only() -> None:
     """только black_list."""
-    common = CommonPrice()
-    common.black_list_skips = 2
-    warnings = warnings_from_common(common)
+    parsed = ParseResult()
+    parsed.black_list_skips = 2
+    warnings = warnings_from_result(parsed)
     assert len(warnings) == 1
     assert 'black_list' in warnings[0]
 
 
-def test_report_from_common_subset_rows() -> None:
+def test_report_from_result_subset_rows() -> None:
     """rows= ограничивает positions, stats считаются по всему разбору."""
-    common = CommonPrice()
+    parsed = ParseResult()
     keep = _priced_row()
     keep.is_double = True
     skip = RowItem({'title': 'other', 'price_opt': _OPT, 'price_markup': _MARKUP})
-    common.parsed_items.extend([keep, skip])
-    report = report_from_common('doubles', common, [_RESULT_D], 0.5, rows=[keep], all_result=True)
+    parsed.parsed_items.extend([keep, skip])
+    report = report_from_result('doubles', parsed, [_RESULT_D], 0.5, rows=[keep], all_result=True)
     assert report['ok'] is True
     assert report['action'] == 'doubles'
     assert len(report['positions']) == 1
@@ -179,9 +184,9 @@ def test_report_from_common_subset_rows() -> None:
 
 def test_report_stats_only() -> None:
     """без all_result в JSON только статистика процесса."""
-    common = CommonPrice()
-    common.parsed_items.append(_priced_row())
-    report = report_from_common('parse', common, [_RESULT_A], 0.4)
+    parsed = ParseResult()
+    parsed.parsed_items.append(_priced_row())
+    report = report_from_result('parse', parsed, [_RESULT_A], 0.4)
     assert report['positions'] == []
     assert report['stats']['items'] == 1
     assert report['stats']['elapsed_seconds'] == 0.4
@@ -190,11 +195,11 @@ def test_report_stats_only() -> None:
 
 def test_report_splits_disabled_suppliers() -> None:
     """активные и отключённые поставщики — разные поля JSON."""
-    common = CommonPrice()
+    parsed = ParseResult()
     with patch(
         'parse_report_build.split_vendor_supplier_info',
         return_value=({'3': 'Пионер'}, {'7': 'STK'}),
     ):
-        report = report_from_common('parse', common, [_RESULT_A], 0)
+        report = report_from_result('parse', parsed, [_RESULT_A], 0)
     assert report['suppliers'] == {'3': 'Пионер'}
     assert report['disabled_suppliers'] == {'7': 'STK'}

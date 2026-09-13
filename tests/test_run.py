@@ -3,9 +3,12 @@
 from unittest.mock import MagicMock, patch
 
 from run_dialog import AnswerResult
+from services.doubles_service import DoublesService
+from services.parse_orchestrator import ParseOrchestrator
+from services.price_report import PriceReportService
+from services.zapaska_service import ZapaskaService
 
 _ASK_ACTION = 'run.ask_action'
-_VENDOR = 'v'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
 
 
@@ -57,59 +60,60 @@ def test_response_exit() -> None:
 
 
 def test_run_make_price() -> None:
-    """сборка общего прайса и запись"""
-    common = MagicMock()
-    common.parsed_items = [1]
+    """сборка общего прайса и запись через сервисы"""
+    parsed = MagicMock()
+    parsed.parsed_items = [1]
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
 
-    with (
-        patch('run.CommonPrice', return_value=common) as mock_cp,
-        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
-        patch('run.CommonPriceOut') as mock_out,
+    with patch(
+        'run.ServiceProvider.resolve',
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
         from run import run_make_price_by_supplier
 
         run_make_price_by_supplier()
-        mock_cp.assert_called_once()
-        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
-        mock_out.assert_called_once_with([1])
-        mock_out.return_value.write_all_prices.assert_called_once_with(result_template=None)
+        orchestrator.parse_all.assert_called_once()
+        reporter.write_prices.assert_called_once_with([1], template=None)
         run_make_price_by_supplier(result_template='for_drom')
-        mock_out.return_value.write_all_prices.assert_called_with(result_template='for_drom')
+        reporter.write_prices.assert_called_with([1], template='for_drom')
 
 
 def test_run_upload_zapaska() -> None:
-    """загрузка данных запаски и сообщение об успехе"""
-    api = MagicMock()
+    """загрузка данных запаски через сервис и сообщение об успехе"""
+    zapaska_service = MagicMock()
     with (
-        patch('run.get_zapaska_api_config', return_value=api),
-        patch('run.load_remote_vendor_data') as mock_load,
+        patch(
+            'run.ServiceProvider.resolve',
+            side_effect={ZapaskaService: zapaska_service}.__getitem__,
+        ),
         patch('run.print_log') as mock_log,
     ):
         from run import run_upload_zapaska_data
 
         run_upload_zapaska_data()
-        mock_load.assert_called_once_with(api=api)
+        zapaska_service.upload_data.assert_called_once_with()
         mock_log.assert_called_once()
 
 
 def test_run_report_doubles() -> None:
-    """разбор прайсов и запись отчёта о дублях"""
-    common = MagicMock()
-    common.parsed_items = [1]
+    """разбор прайсов и запись отчёта о дублях через сервис"""
+    report = MagicMock()
+    report.path = _REPORT_PATH
+    doubles_service = MagicMock()
+    doubles_service.make_report.return_value = report
 
     with (
-        patch('run.CommonPrice', return_value=common) as mock_cp,
-        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
-        patch('run.CommonPriceOut') as mock_out,
+        patch(
+            'run.ServiceProvider.resolve',
+            side_effect={DoublesService: doubles_service}.__getitem__,
+        ),
         patch('run.print_log') as mock_log,
     ):
         from run import run_report_doubles
 
-        mock_out.return_value.write_doubles_report.return_value = _REPORT_PATH
         run_report_doubles()
-        mock_cp.assert_called_once()
-        common.parse_all_vendors.assert_called_once_with([(_VENDOR, None)])
-        mock_out.assert_called_once_with([1])
-        mock_out.return_value.write_doubles_report.assert_called_once()
+        doubles_service.make_report.assert_called_once_with()
         mock_log.assert_called_once()
         assert _REPORT_PATH in mock_log.call_args.args[0]
