@@ -17,6 +17,7 @@ from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices
 from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
+from services.configure import ensure_services_configured
 
 _INTERRUPT = 'interrupted'
 _COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA))
@@ -55,6 +56,7 @@ def machine_json(
     config_path: str | None = None,
 ) -> int:
     """Выполнить команду, JSON в stdout. Логи в этом режиме не печатаются."""
+    ensure_services_configured()
     set_print_quiet(True)
     code = _emit_command(
         command,
