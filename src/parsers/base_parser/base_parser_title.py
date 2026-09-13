@@ -6,10 +6,10 @@ from parsers.base_parser.base_parser_access import ParserConfigAccess
 from parsers.data_provider.black_list import title_matches_mask
 from parsers.row_item.row_item import RowItem
 
-_COMMA_IN_NUMBER = re.compile(r"(\d),(\d)")
+_COMMA_IN_NUMBER = re.compile(r'(\d),(\d)')
 
-_SPIKE_YES = {"ш.", "да"}
-_SEASON_TITLES = {"зима": "Зимняя", "лето": "Летняя"}
+_SPIKE_YES = {'ш.', 'да'}
+_SEASON_TITLES = {'зима': 'Зимняя', 'лето': 'Летняя'}
 
 
 def replace_season(row_item: RowItem) -> str | None:
@@ -34,7 +34,7 @@ class ParserTitleOps:
         """prepare title"""
         chunks = cls.strip_chunks_title(title.split())
         chunks = cls._prepare_title_chunks(chunks)
-        return _COMMA_IN_NUMBER.sub(r"\1.\2", " ".join(chunks))
+        return _COMMA_IN_NUMBER.sub(r'\1.\2', ' '.join(chunks))
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:
@@ -48,19 +48,19 @@ class ParserTitleOps:
     @classmethod
     def strip_words_in_title(cls, title: str) -> str:
         """ " 385/65   R22.5..." -> "385/65 R22.5..." """
-        stripped_title = (title or "").strip()
+        stripped_title = (title or '').strip()
         if not stripped_title:
             return title
-        return " ".join(cls.strip_chunks_title(title.split()))
+        return ' '.join(cls.strip_chunks_title(title.split()))
 
     @classmethod
     def get_spike_title(cls, row_item: RowItem) -> str:
         """Наличие шипа"""
         if not row_item.spike:
-            return ""
+            return ''
         if row_item.spike.strip().lower() in _SPIKE_YES:
-            return "Да"
-        return ""
+            return 'Да'
+        return ''
 
 
 class ParserTitleFilters(ParserTitleOps, ParserConfigAccess):

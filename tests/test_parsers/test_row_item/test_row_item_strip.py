@@ -6,17 +6,17 @@ from parsers.row_item.row_item_casts import get_sanitized_code
 from parsers.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
 
 _XLS_FLOAT_CODE = 123.0
-_SANITIZED_CODE = "123"
+_SANITIZED_CODE = '123'
 
 
 @pytest.mark.parametrize(
-    ("raw", "expected"),
+    ('raw', 'expected'),
     [
-        ("<40", "40"),
-        (">40", "40"),
-        ("БОЛЕЕ40", "40"),
-        ("1,500", "1.500"),
-        ("100руб.", "100"),
+        ('<40', '40'),
+        ('>40', '40'),
+        ('БОЛЕЕ40', '40'),
+        ('1,500', '1.500'),
+        ('100руб.', '100'),
     ],
 )
 def test_prepare_str_to_float(raw: str, expected: str) -> None:
@@ -24,11 +24,11 @@ def test_prepare_str_to_float(raw: str, expected: str) -> None:
 
 
 def test_strip_into_str_drops_spaces() -> None:
-    assert strip_into_str("1 500") == "1500"
+    assert strip_into_str('1 500') == '1500'
 
 
 def test_get_stripped_none() -> None:
-    assert get_stripped(None) == ""
+    assert get_stripped(None) == ''
 
 
 def test_get_sanitized_code_from_xls_float() -> None:
@@ -36,4 +36,4 @@ def test_get_sanitized_code_from_xls_float() -> None:
 
 
 def test_get_sanitized_code_keeps_string() -> None:
-    assert get_sanitized_code("ABC") == "ABC"
+    assert get_sanitized_code('ABC') == 'ABC'

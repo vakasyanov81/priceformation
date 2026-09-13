@@ -9,10 +9,10 @@ from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
 from core.parse_paths import get_parse_paths
 
-_CONFIG_FILE = "markup_rules.json"
+_CONFIG_FILE = 'markup_rules.json'
 
-ABSOLUTE_MODE_MULTIPLIER = "multiplier"
-ABSOLUTE_MODE_DELTA = "delta"
+ABSOLUTE_MODE_MULTIPLIER = 'multiplier'
+ABSOLUTE_MODE_DELTA = 'delta'
 
 
 class PriceRulesConfigFileError(CoreExceptionError):
@@ -29,10 +29,10 @@ class MarkUpParams(NamedTuple):
 
 def markup_params_from_rule(rule: dict[str, Any]) -> MarkUpParams:
     """JSON rule → MarkUpParams. Accepts ``percent`` or ``percent_markup``."""
-    percent = rule.get("percent_markup", rule.get("percent", 0))
+    percent = rule.get('percent_markup', rule.get('percent', 0))
     return MarkUpParams(
-        min=rule.get("min", 0),
-        max=rule.get("max", 0),
+        min=rule.get('min', 0),
+        max=rule.get('max', 0),
         percent_markup=percent,
     )
 
@@ -96,7 +96,7 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
         try:
             return self._load_markup_json()
         except FileNotFoundError as exc:
-            raise PriceRulesConfigFileError(f"Filed to read vendor ({self.supplier_name}) settings.") from exc
+            raise PriceRulesConfigFileError(f'Filed to read vendor ({self.supplier_name}) settings.') from exc
 
     def _load_markup_json(self) -> dict[str, Any]:
         """Read and parse markup JSON file."""
@@ -107,5 +107,5 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
         """Get user config file path by supplier name or by default"""
         file_name = _CONFIG_FILE
         if self.supplier_name:
-            file_name = f"{self.supplier_name}_{_CONFIG_FILE}"
+            file_name = f'{self.supplier_name}_{_CONFIG_FILE}'
         return get_parse_paths().config_file(file_name)

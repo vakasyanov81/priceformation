@@ -60,7 +60,7 @@ def _run_machine(argv: list[str]) -> int:
     command = args.command
     if not isinstance(command, str):
         return 1
-    result_template = getattr(args, "result_template", None)
+    result_template = getattr(args, 'result_template', None)
     json_mode = bool(args.json or args.all_result or command in JSON_ONLY_COMMANDS)
     rejected = fail_unknown_result_template(command, result_template, json_mode=json_mode)
     if rejected is not None:
@@ -72,8 +72,8 @@ def _run_machine(argv: list[str]) -> int:
             command,
             all_result=bool(args.all_result),
             result_template=result_template,
-            supplier_prices=getattr(args, "prices", None),
-            config_path=getattr(args, "config", None),
+            supplier_prices=getattr(args, 'prices', None),
+            config_path=getattr(args, 'config', None),
         )
     return _machine_human(command, result_template)
 
@@ -87,7 +87,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
     }
     extra: dict[str, str | None] = {}
     if command == PARSE:
-        extra["result_template"] = result_template
+        extra['result_template'] = result_template
     try_call(handlers[command], **extra)
     return 0
 
@@ -117,7 +117,7 @@ def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
     load_remote_vendor_data(api=get_zapaska_api_config())
-    print_log("*** Данные успешно загружены. ***\n")
+    print_log('*** Данные успешно загружены. ***\n')
 
 
 def run_report_doubles() -> None:
@@ -125,8 +125,8 @@ def run_report_doubles() -> None:
     common_price = CommonPrice()
     common_price.parse_all_vendors(all_vendors())
     report_path = CommonPriceOut(common_price.parsed_items).write_doubles_report()
-    print_log(f"*** Отчёт о дублях сформирован. ***\n{report_path}\n")
+    print_log(f'*** Отчёт о дублях сформирован. ***\n{report_path}\n')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

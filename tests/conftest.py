@@ -9,8 +9,8 @@ import pytest
 
 _ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(_ROOT.parent))
-sys.path.insert(0, str((_ROOT / "../src").resolve()))
-sys.path.insert(0, str((_ROOT / "../tests").resolve()))
+sys.path.insert(0, str((_ROOT / '../src').resolve()))
+sys.path.insert(0, str((_ROOT / '../tests').resolve()))
 
 from cfg import init_cfg  # noqa: E402
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache  # noqa: E402

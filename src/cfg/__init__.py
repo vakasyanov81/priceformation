@@ -10,7 +10,7 @@ from . import main
 type ConfigType = dict[str, type[main.MainConfig]]
 
 __config__: ConfigType = {
-    "main": main.get_config(),
+    'main': main.get_config(),
 }
 
 

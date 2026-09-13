@@ -36,4 +36,4 @@ class ManufacturerFinder:
 
     def correction_manufacturer(self, rec: RowItem) -> None:
         """correction manufacturer"""
-        self._finder.correction_field(rec, field_name="manufacturer", aliases=self.aliases)
+        self._finder.correction_field(rec, field_name='manufacturer', aliases=self.aliases)

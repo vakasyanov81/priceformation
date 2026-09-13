@@ -8,7 +8,7 @@ from typing import Any
 from core.file_reader import read_file
 from core.parse_paths import get_parse_paths
 
-_CONFIG_FILE = "title_aliases.json"
+_CONFIG_FILE = 'title_aliases.json'
 
 
 def invert_title_aliases(title_aliases: dict[str, Any]) -> dict[str, Any]:

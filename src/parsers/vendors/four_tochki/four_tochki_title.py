@@ -6,20 +6,20 @@ from parsers.row_item.row_item_casts import get_try_to_int_or_str
 
 from .four_tochki_title_parts import default_tire_title, ext_diameter_title, truck_title
 
-_PROFILE_L = "L"
-_DASH = "-"
+_PROFILE_L = 'L'
+_DASH = '-'
 _METRIC_WIDTH_MIN = 100
-_L_FROM_EXCEL = f"{_PROFILE_L}.0"
+_L_FROM_EXCEL = f'{_PROFILE_L}.0'
 
 
 def is_truck_tire(row_item: RowItem) -> bool:
     """Грузовая шина?"""
-    return row_item.tire_type.lower() == "грузовая" if row_item.tire_type else False
+    return row_item.tire_type.lower() == 'грузовая' if row_item.tire_type else False
 
 
 def is_special_tire(row_item: RowItem) -> bool:
     """Спецтехника?"""
-    return row_item.tire_type.lower() == "спецтехника" if row_item.tire_type else False
+    return row_item.tire_type.lower() == 'спецтехника' if row_item.tire_type else False
 
 
 def get_prepared_title(row_item: RowItem) -> str:
@@ -54,33 +54,33 @@ def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
     """Ширина, профиль, диаметр и тип конструкции."""
 
     def canon(raw: object) -> str:
-        text = str(raw or "").replace(",", ".")
+        text = str(raw or '').replace(',', '.')
         return str(get_try_to_int_or_str(text))
 
     width = canon(row_item.width)
-    height = canon(row_item.height_percent).replace("999", _PROFILE_L)
+    height = canon(row_item.height_percent).replace('999', _PROFILE_L)
     height = height.replace(_L_FROM_EXCEL, _PROFILE_L)
-    diameter = str(row_item.diameter or "").replace("—", _DASH)
-    diameter = diameter.replace(",", ".").replace("R", "")
-    construct = "R"
+    diameter = str(row_item.diameter or '').replace('—', _DASH)
+    diameter = diameter.replace(',', '.').replace('R', '')
+    construct = 'R'
     if _DASH in diameter:
         construct = _DASH
-        diameter = diameter.replace(_DASH, "")
+        diameter = diameter.replace(_DASH, '')
     return width, height, diameter, construct
 
 
 def _compose_title(row_item: RowItem, dims: tuple[str, str, str, str]) -> str:
     """Собрать title по типу шины. dims: width, height_raw, diameter, construct."""
-    height = f"/{dims[1]}"
+    height = f'/{dims[1]}'
     if not dims[1] or dims[1] == _PROFILE_L:
-        height = ""
+        height = ''
     postfix = _resolve_width_postfix(row_item, dims[0], dims[1], dims[2])
-    construct_diameter = f"{dims[3]}{dims[2]}".replace("RZ", "ZR")
+    construct_diameter = f'{dims[3]}{dims[2]}'.replace('RZ', 'ZR')
     size = join_size_parts(dims[0], postfix, height, construct_diameter)
     if is_truck_tire(row_item):
         return truck_title(row_item, size)
     if row_item.ext_diameter:
-        size = join_size_parts(row_item.ext_diameter, "x", dims[0], construct_diameter)
+        size = join_size_parts(row_item.ext_diameter, 'x', dims[0], construct_diameter)
         return ext_diameter_title(row_item, size)
     return default_tire_title(row_item, size)
 
@@ -99,10 +99,10 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
     if height_percent == _PROFILE_L:
         return height_percent
     if _special_inch_dot(row_item, width, height_percent):
-        return ".0"
-    if width == "10" and diameter == "20":
-        return ".00"
-    skip_truck_dot = diameter in {"22.5", "16"} or height_percent
+        return '.0'
+    if width == '10' and diameter == '20':
+        return '.00'
+    skip_truck_dot = diameter in {'22.5', '16'} or height_percent
     if not is_truck_tire(row_item) or skip_truck_dot:
-        return ""
-    return ".00"
+        return ''
+    return '.00'

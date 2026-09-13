@@ -8,13 +8,14 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
     make_parse_config,
 )
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab_title import fill_from_title
 
 autosnab_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="autosnab54_ru", name="Автоснабжение", code="6"),
+    supplier=ParseParamsSupplier(folder_name='autosnab54_ru', name='Автоснабжение', code='6'),
     start_row=2,
-    sheet_info="",
+    sheet_info='',
     columns={
         0: RowItem.type_production.name,
         1: RowItem.manufacturer.name,
@@ -25,7 +26,7 @@ autosnab_params = ParserParams(
         6: RowItem.rest_count.name,
     },
     stop_words=[],
-    file_templates=["price*.xls", "price*.xlsx"],
+    file_templates=['price*.xls', 'price*.xlsx'],
     sheet_indexes=[],
     row_item_adaptor=RowItem,
 )
@@ -33,6 +34,7 @@ autosnab_params = ParserParams(
 autosnab_config = make_parse_config(autosnab_params)
 
 
+@register_vendor('autosnab54', markup_policy='identity')
 class Autosnab54Parser(BaseParser):
     """
     logic for autosnab54_ru vendor

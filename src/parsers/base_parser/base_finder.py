@@ -82,7 +82,7 @@ class BaseFinder:
 
     def _find(self, lower_alias: str) -> int:
         """find alias wrapped whitespace in title, and find in start title, and find in end title"""
-        white_space = " "
+        white_space = ' '
         title_lower = self.title_lower
         if not title_lower:
             return -1

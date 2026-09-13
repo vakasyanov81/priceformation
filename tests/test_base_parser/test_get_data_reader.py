@@ -12,8 +12,8 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 
 _START_ROW = 3
-_COLUMNS = {0: "title", 5: "price"}
-_XLS_PATH = "prices/vendor.xls"
+_COLUMNS = {0: 'title', 5: 'price'}
+_XLS_PATH = 'prices/vendor.xls'
 
 
 def _parse_config() -> ParseConfiguration:
@@ -25,9 +25,9 @@ def _parse_config() -> ParseConfiguration:
             vendor_list=stub,
             manufacturer_aliases=stub,
             parser_params=ParserParams(
-                supplier=ParseParamsSupplier(folder_name="x", name="x", code="x"),
+                supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),
                 start_row=_START_ROW,
-                sheet_info="",
+                sheet_info='',
                 columns=_COLUMNS,
                 stop_words=[],
                 file_templates=[],
@@ -48,7 +48,7 @@ def test_get_data_reader_passes_path_and_params() -> None:
     data_reader.get_instance.assert_called_once_with(
         _XLS_PATH,
         {
-            "start_row": _START_ROW - 1,
-            "columns": _COLUMNS,
+            'start_row': _START_ROW - 1,
+            'columns': _COLUMNS,
         },
     )

@@ -10,7 +10,7 @@ from core.parse_paths import get_parse_paths
 
 VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1
-_NOMENCLATURE_FILE = "correct-nomenclature.xlsx"
+_NOMENCLATURE_FILE = 'correct-nomenclature.xlsx'
 
 
 class _NomenclatureCache:
@@ -42,7 +42,7 @@ def load_file() -> dict[str, str]:
 
 def _read_corrections(file_path: str) -> dict[str, str]:
     """Прочитать Sheet1 в словарь vendor_title -> correct_title."""
-    rows = CalamineWorkbook.from_path(file_path).get_sheet_by_name("Sheet1").to_python()
+    rows = CalamineWorkbook.from_path(file_path).get_sheet_by_name('Sheet1').to_python()
     return dict(_iter_correction_pairs(rows))
 
 

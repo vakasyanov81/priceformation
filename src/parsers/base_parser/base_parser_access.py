@@ -9,7 +9,7 @@ class ParseConfigNotSetError(RuntimeError):
     """Raised when parse_config() is used before config is assigned."""
 
     def __init__(self) -> None:
-        super().__init__("parse_config is not set")
+        super().__init__('parse_config is not set')
 
 
 class ParserConfigAccess:
@@ -51,8 +51,8 @@ class ParserConfigAccess:
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         supplier_name = self.parser_params().supplier.name
-        sup_name = f"{class_name}: {supplier_name}"
+        sup_name = f'{class_name}: {supplier_name}'
         sheet_info = self.parser_params().sheet_info
         if sheet_info:
-            sup_name = f"{sup_name} ({sheet_info})"
+            sup_name = f'{sup_name} ({sheet_info})'
         return sup_name

@@ -5,13 +5,14 @@ logic for four_tochki vendor (sheet 1)
 import dataclasses
 
 from parsers.base_parser.base_parser_config import make_parse_config
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from .four_tochki_title import get_prepared_title
 
 fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
-fourtochki_sheet_1_params.sheet_info = "Вкладка (шины) #1"
+fourtochki_sheet_1_params.sheet_info = 'Вкладка (шины) #1'
 fourtochki_sheet_1_params.sheet_indexes = [0]
 fourtochki_sheet_1_params.columns = {
     0: RowItem.code.name,
@@ -41,6 +42,7 @@ fourtochki_sheet_1_params.columns = {
 fourtochki_sheet_1_config = make_parse_config(fourtochki_sheet_1_params)
 
 
+@register_vendor('4tochki-1sheet', markup_policy='recommended_or_map')
 class FourTochkiParser1Sheet(FourTochkiParserBase):
     """
     parser for four_tochki vendor (sheet 1)
@@ -49,12 +51,12 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
     @classmethod
     def get_current_category(cls, row_item: RowItem) -> str:
         tyre_type_dict = {
-            "грузовая": "Грузовая шина",
-            "легковая": "Легковая шина",
-            "спецтехника": "Спецшина",
-            "мото": "Мотошина",
+            'грузовая': 'Грузовая шина',
+            'легковая': 'Легковая шина',
+            'спецтехника': 'Спецшина',
+            'мото': 'Мотошина',
         }
-        return tyre_type_dict.get(row_item.tire_type.lower().strip()) or "Автошина"
+        return tyre_type_dict.get(row_item.tire_type.lower().strip()) or 'Автошина'
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         return get_prepared_title(row_item)

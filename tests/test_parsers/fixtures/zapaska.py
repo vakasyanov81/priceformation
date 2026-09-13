@@ -11,28 +11,28 @@ def zapaska_one_item_result() -> tuple[dict[str, Any], list[RowItem]]:
     """one file, one price row parse result"""
     return (
         {
-            "file_prices\\zapaska\\rest_1.xls": [
+            'file_prices\\zapaska\\rest_1.xls': [
                 {
-                    "code": "00002",
-                    "title": "00 Сельх.шины",
-                    "rest_count": 17.0,
-                    "price_opt": 4012.4,
-                    "hash_title": "4d454469fa9bb61110e92a2317896b91",
-                    "codes": ["00002"],
-                    "supplier_name": "Запаска (остатки)",
+                    'code': '00002',
+                    'title': '00 Сельх.шины',
+                    'rest_count': 17.0,
+                    'price_opt': 4012.4,
+                    'hash_title': '4d454469fa9bb61110e92a2317896b91',
+                    'codes': ['00002'],
+                    'supplier_name': 'Запаска (остатки)',
                 }
             ]
         },
         [
             RowItem(
                 {
-                    "code": "00002",
-                    "brand": "АШК",
-                    "title": "00 Сельх.шины",
-                    "price_recommended": 4201.0,
-                    "hash_title": "4d454469fa9bb61110e92a2317896b91",
-                    "codes": ["00002"],
-                    "supplier_name": "Запаска",
+                    'code': '00002',
+                    'brand': 'АШК',
+                    'title': '00 Сельх.шины',
+                    'price_recommended': 4201.0,
+                    'hash_title': '4d454469fa9bb61110e92a2317896b91',
+                    'codes': ['00002'],
+                    'supplier_name': 'Запаска',
                 }
             )
         ],
@@ -43,50 +43,50 @@ def zapaska_2file_result() -> tuple[dict[str, Any], list[RowItem]]:
     """two files, two price row parse result"""
     return (
         {
-            "file_prices\\zapaska\\rest_1.xls": [
+            'file_prices\\zapaska\\rest_1.xls': [
                 {
-                    "code": "00002",
-                    "title": "00 Сельх.шины",
-                    "rest_count": 17.0,
-                    "price_opt": 4012.4,
-                    "hash_title": "4d454469fa9bb61110e92a2317896b91",
-                    "codes": ["00002"],
-                    "supplier_name": "Запаска (остатки)",
+                    'code': '00002',
+                    'title': '00 Сельх.шины',
+                    'rest_count': 17.0,
+                    'price_opt': 4012.4,
+                    'hash_title': '4d454469fa9bb61110e92a2317896b91',
+                    'codes': ['00002'],
+                    'supplier_name': 'Запаска (остатки)',
                 }
             ],
-            "file_prices\\zapaska\\rest_2.xls": [
+            'file_prices\\zapaska\\rest_2.xls': [
                 {
-                    "code": "00003",
-                    "title": "00 Сельх.шины__1",
-                    "rest_count": 10.0,
-                    "price_opt": 4012.4,
-                    "hash_title": "d25c14e72f2a951230173b9a68f9d294",
-                    "codes": ["00003"],
-                    "supplier_name": "Запаска (остатки)",
+                    'code': '00003',
+                    'title': '00 Сельх.шины__1',
+                    'rest_count': 10.0,
+                    'price_opt': 4012.4,
+                    'hash_title': 'd25c14e72f2a951230173b9a68f9d294',
+                    'codes': ['00003'],
+                    'supplier_name': 'Запаска (остатки)',
                 }
             ],
         },
         [
             RowItem(
                 {
-                    "code": "00002",
-                    "brand": "АШК",
-                    "title": "00 Сельх.шины",
-                    "price_recommended": 4201.0,
-                    "hash_title": "4d454469fa9bb61110e92a2317896b91",
-                    "codes": ["00002"],
-                    "supplier_name": "Запаска",
+                    'code': '00002',
+                    'brand': 'АШК',
+                    'title': '00 Сельх.шины',
+                    'price_recommended': 4201.0,
+                    'hash_title': '4d454469fa9bb61110e92a2317896b91',
+                    'codes': ['00002'],
+                    'supplier_name': 'Запаска',
                 }
             ),
             RowItem(
                 {
-                    "code": "00003",
-                    "brand": "АШК",
-                    "title": "00 Сельх.шины__1",
-                    "price_recommended": 4251.0,
-                    "hash_title": "d25c14e72f2a951230173b9a68f9d294",
-                    "codes": ["00003"],
-                    "supplier_name": "Запаска",
+                    'code': '00003',
+                    'brand': 'АШК',
+                    'title': '00 Сельх.шины__1',
+                    'price_recommended': 4251.0,
+                    'hash_title': 'd25c14e72f2a951230173b9a68f9d294',
+                    'codes': ['00003'],
+                    'supplier_name': 'Запаска',
                 }
             ),
         ],

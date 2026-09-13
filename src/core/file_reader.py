@@ -7,10 +7,10 @@ from pathlib import Path
 from .wrappers import logging
 
 
-@logging(label="...reading file...")
+@logging(label='...reading file...')
 def read_file(file_path: str) -> str:
     """read file"""
-    with Path(file_path).open(encoding="UTF-8") as text_file:
+    with Path(file_path).open(encoding='UTF-8') as text_file:
         return text_file.read()
 
 
@@ -19,7 +19,7 @@ def try_read_file(file_path: str) -> str:
     try:
         return read_file(file_path)
     except FileNotFoundError:
-        return ""
+        return ''
 
 
 __ALL__ = [read_file]

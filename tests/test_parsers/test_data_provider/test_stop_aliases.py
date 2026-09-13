@@ -16,7 +16,7 @@ from parsers.data_provider.manufacturer_aliases import (
 )
 from parsers.data_provider.manufacturer_group import manufacturer_group
 
-_PATHS = ParsePaths(file_prices_folder="/prices", user_config_folder="/cfg", result_folder="/prices/result")
+_PATHS = ParsePaths(file_prices_folder='/prices', user_config_folder='/cfg', result_folder='/prices/result')
 
 
 def test_aliases_base_raises() -> None:
@@ -27,29 +27,29 @@ def test_aliases_base_raises() -> None:
 def test_aliases_from_config() -> None:
     with (
         patch(
-            "parsers.data_provider.manufacturer_aliases.read_file",
+            'parsers.data_provider.manufacturer_aliases.read_file',
             return_value='{"A": "B"}',
         ),
-        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
+        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
     ):
-        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"A": "B"}
+        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'A': 'B'}
 
 
 @pytest.mark.parametrize(
-    ("raw", "expected"),
+    ('raw', 'expected'),
     [
-        ({"Brand": [""]}, {"Brand": []}),
-        ({"Brand": [" "]}, {"Brand": []}),
-        ({"Brand": ["", " ", "Bar"]}, {"Brand": ["Bar"]}),
-        ({"Brand": []}, {"Brand": []}),
-        ({"A": "B"}, {"A": "B"}),
+        ({'Brand': ['']}, {'Brand': []}),
+        ({'Brand': [' ']}, {'Brand': []}),
+        ({'Brand': ['', ' ', 'Bar']}, {'Brand': ['Bar']}),
+        ({'Brand': []}, {'Brand': []}),
+        ({'A': 'B'}, {'A': 'B'}),
         (
-            {"НКШЗ": {"aliases": ["", " ", "НК.ШЗ"], "group": "кама"}},
-            {"НКШЗ": {"aliases": ["НК.ШЗ"], "group": "кама"}},
+            {'НКШЗ': {'aliases': ['', ' ', 'НК.ШЗ'], 'group': 'кама'}},
+            {'НКШЗ': {'aliases': ['НК.ШЗ'], 'group': 'кама'}},
         ),
         (
-            {"Aeolus": ["Аеолус"]},
-            {"Aeolus": ["Аеолус"]},
+            {'Aeolus': ['Аеолус']},
+            {'Aeolus': ['Аеолус']},
         ),
     ],
 )
@@ -59,54 +59,54 @@ def test_drop_blank_aliases(raw: Any, expected: Any) -> None:
 
 def test_aliases_for_finder_object_and_list() -> None:
     raw = {
-        "НКШЗ": ["НК.ШЗ", "Нк.шз", "Кама", "Kama"],
-        "Aeolus": ["Аеолус"],
-        "Cordiant": {"aliases": ["КОРДИАНТ"], "group": "cordiant"},
+        'НКШЗ': ['НК.ШЗ', 'Нк.шз', 'Кама', 'Kama'],
+        'Aeolus': ['Аеолус'],
+        'Cordiant': {'aliases': ['КОРДИАНТ'], 'group': 'cordiant'},
     }
     assert aliases_for_finder(raw) == {
-        "НКШЗ": ("НК.ШЗ", "Нк.шз", "Кама", "Kama"),
-        "Aeolus": ("Аеолус",),
-        "Cordiant": ("КОРДИАНТ",),
+        'НКШЗ': ('НК.ШЗ', 'Нк.шз', 'Кама', 'Kama'),
+        'Aeolus': ('Аеолус',),
+        'Cordiant': ('КОРДИАНТ',),
     }
 
 
 def test_aliases_for_finder_string_and_invalid() -> None:
-    assert aliases_for_finder({"A": "B"}) == {"A": ("B",)}
-    assert aliases_for_finder({"A": ""}) == {"A": ()}
-    assert aliases_for_finder({"A": None}) == {"A": ()}
+    assert aliases_for_finder({'A': 'B'}) == {'A': ('B',)}
+    assert aliases_for_finder({'A': ''}) == {'A': ()}
+    assert aliases_for_finder({'A': None}) == {'A': ()}
 
 
 def test_drop_blank_aliases_skips_nonstring_items() -> None:
     """_filled_aliases пропускает нестроковые элементы списка."""
-    cleaned = drop_blank_aliases({"Brand": ["OK", None, 123, ""]})
-    assert cleaned == {"Brand": ["OK"]}
+    cleaned = drop_blank_aliases({'Brand': ['OK', None, 123, '']})
+    assert cleaned == {'Brand': ['OK']}
 
 
 def test_manufacturer_group_uses_group_or_key() -> None:
     aliases = {
-        "НКШЗ": ["НК.ШЗ", "Кама", "Kama"],
-        "Aeolus": ["Аеолус"],
-        "Cordiant": {"aliases": ["КОРДИАНТ"], "group": "cordiant"},
+        'НКШЗ': ['НК.ШЗ', 'Кама', 'Kama'],
+        'Aeolus': ['Аеолус'],
+        'Cordiant': {'aliases': ['КОРДИАНТ'], 'group': 'cordiant'},
     }
-    assert manufacturer_group("НКШЗ", aliases) == "нкшз"
-    assert manufacturer_group("Кама", aliases) == "нкшз"
-    assert manufacturer_group("Kama", aliases) == "нкшз"
-    assert manufacturer_group("Aeolus", aliases) == "aeolus"
-    assert manufacturer_group("Triangle", aliases) == "triangle"
-    assert manufacturer_group("", aliases) == ""
-    assert manufacturer_group("НКШЗ", {}) == "нкшз"
-    assert manufacturer_group("Cordiant", aliases) == "cordiant"
-    assert manufacturer_group("Aeolus", {"Aeolus": {"aliases": [], "group": ""}}) == "aeolus"
+    assert manufacturer_group('НКШЗ', aliases) == 'нкшз'
+    assert manufacturer_group('Кама', aliases) == 'нкшз'
+    assert manufacturer_group('Kama', aliases) == 'нкшз'
+    assert manufacturer_group('Aeolus', aliases) == 'aeolus'
+    assert manufacturer_group('Triangle', aliases) == 'triangle'
+    assert manufacturer_group('', aliases) == ''
+    assert manufacturer_group('НКШЗ', {}) == 'нкшз'
+    assert manufacturer_group('Cordiant', aliases) == 'cordiant'
+    assert manufacturer_group('Aeolus', {'Aeolus': {'aliases': [], 'group': ''}}) == 'aeolus'
 
 
 def test_manufacturer_group_lookup_once_per_map() -> None:
-    aliases = {"НКШЗ": ["Кама"]}
+    aliases = {'НКШЗ': ['Кама']}
     with patch(
-        "parsers.data_provider.manufacturer_group.aliases_for_finder",
+        'parsers.data_provider.manufacturer_group.aliases_for_finder',
         wraps=aliases_for_finder,
     ) as finder:
-        assert manufacturer_group("Кама", aliases) == "нкшз"
-        assert manufacturer_group("НКШЗ", aliases) == "нкшз"
+        assert manufacturer_group('Кама', aliases) == 'нкшз'
+        assert manufacturer_group('НКШЗ', aliases) == 'нкшз'
         assert finder.call_count == 1
 
 
@@ -114,10 +114,10 @@ def test_load_aliases_map_missing_file() -> None:
     clear_manufacturer_aliases_cache()
     with (
         patch(
-            "parsers.data_provider.manufacturer_aliases.read_file",
+            'parsers.data_provider.manufacturer_aliases.read_file',
             side_effect=FileNotFoundError,
         ),
-        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
+        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
     ):
         assert load_aliases_map() == {}
     clear_manufacturer_aliases_cache()
@@ -128,24 +128,24 @@ def test_load_aliases_map_reloads_after_clear() -> None:
     clear_manufacturer_aliases_cache()
     with (
         patch(
-            "parsers.data_provider.manufacturer_aliases.read_file",
+            'parsers.data_provider.manufacturer_aliases.read_file',
             side_effect=[FileNotFoundError, '{"A": "B"}'],
         ),
-        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
+        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
     ):
         assert load_aliases_map() == {}
         assert load_aliases_map() == {}
         clear_manufacturer_aliases_cache()
-        assert load_aliases_map() == {"A": "B"}
+        assert load_aliases_map() == {'A': 'B'}
     clear_manufacturer_aliases_cache()
 
 
 def test_aliases_from_config_drops_blanks() -> None:
     with (
         patch(
-            "parsers.data_provider.manufacturer_aliases.read_file",
+            'parsers.data_provider.manufacturer_aliases.read_file',
             return_value='{"Brand": ["", " ", "Bar"]}',
         ),
-        patch("parsers.data_provider.manufacturer_aliases.get_parse_paths", return_value=_PATHS),
+        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
     ):
-        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {"Brand": ["Bar"]}
+        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'Brand': ['Bar']}

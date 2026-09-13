@@ -19,9 +19,9 @@ _PERCENT_HIGH = 0.9
 
 def _parser_params() -> ParserParams:
     return ParserParams(
-        supplier=ParseParamsSupplier(folder_name="x", name="x", code="x"),
+        supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),
         start_row=1,
-        sheet_info="",
+        sheet_info='',
         columns={},
         stop_words=[],
         file_templates=[],
@@ -31,7 +31,7 @@ def _parser_params() -> ParserParams:
 
 
 def _markup_data(percent: float) -> dict[str, Any]:
-    return {"markup_rules": {"shelf": {"min": 0, "max": 1, "percent": percent}}}
+    return {'markup_rules': {'shelf': {'min': 0, 'max': 1, 'percent': percent}}}
 
 
 def _configuration(markup_data: dict[str, Any]) -> tuple[ParseConfiguration, MagicMock]:
@@ -66,7 +66,7 @@ def test_markup_provider_called_once() -> None:
 
 
 def test_empty_price_markup_map_is_cached() -> None:
-    config, provider = _configuration({"markup_rules": {}})
+    config, provider = _configuration({'markup_rules': {}})
     first = config.get_price_markup_map()
     second = config.get_price_markup_map()
     assert first == ()

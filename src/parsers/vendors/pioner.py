@@ -13,14 +13,15 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
     make_parse_config,
 )
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 PIONER_START_ROW = 12
 
 pioner_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="pioner", name="Пионер", code="3"),
+    supplier=ParseParamsSupplier(folder_name='pioner', name='Пионер', code='3'),
     start_row=PIONER_START_ROW,
-    sheet_info="",
+    sheet_info='',
     columns={
         1: RowItem.title.name,
         2: RowItem.price_opt.name,
@@ -28,14 +29,14 @@ pioner_params = ParserParams(
         5: RowItem.reserve_count.name,
     },
     stop_words=[],
-    file_templates=["price*.xls", "price*.xlsx"],
+    file_templates=['price*.xls', 'price*.xlsx'],
     sheet_indexes=[],
     row_item_adaptor=RowItem,
 )
 
 pioner_config = make_parse_config(pioner_params)
 
-_MANUFACTURER_MAP = {"рокбастер": "RockBuster"}
+_MANUFACTURER_MAP = {'рокбастер': 'RockBuster'}
 
 
 def _display_manufacturer(manufacturer_name: str) -> str:
@@ -43,6 +44,7 @@ def _display_manufacturer(manufacturer_name: str) -> str:
     return _MANUFACTURER_MAP.get(manufacturer_name, manufacturer_name)
 
 
+@register_vendor('pioner', markup_policy='map_on_opt')
 class PionerParser(BaseParser):
     """
     parser for pioner vendor
@@ -65,16 +67,16 @@ class PionerParser(BaseParser):
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """skip by min rest"""
         self.set_current_category(row_item)
-        if "прочие" in (self.current_category or "").lower():
+        if 'прочие' in (self.current_category or '').lower():
             row_item.rest_count = 0
         return super().skip_by_min_rest(row_item)
 
     def set_current_category(self, row_item: RowItem) -> None:
         """set current category by title and type_production"""
         if self.is_category_row(row_item):
-            self.current_category = (row_item.title or "").lower().strip()
-        category = (self.current_category or "").split("/")[0]
-        self.current_category_first_chunk = category.split(" ")[0]
+            self.current_category = (row_item.title or '').lower().strip()
+        category = (self.current_category or '').split('/')[0]
+        self.current_category_first_chunk = category.split(' ')[0]
         row_item.type_production = self.current_category_first_chunk
         self.correction_category(row_item)
 
@@ -91,21 +93,21 @@ class PionerParser(BaseParser):
         if display_name.lower() in title.lower():
             return
 
-        title_chunks = title.split(" ")
-        title_chunks[0] = f"{title_chunks[0]} {display_name}"
-        row_item.title = " ".join(title_chunks)
+        title_chunks = title.split(' ')
+        title_chunks[0] = f'{title_chunks[0]} {display_name}'
+        row_item.title = ' '.join(title_chunks)
 
     def get_manufacturer_name(self) -> str | None:
         """determine manufacturer name by current category"""
         if not self.current_category:
             return None
 
-        chunks = self.current_category.split(" ")
+        chunks = self.current_category.split(' ')
 
         if len(chunks) == 1:
             return None
 
-        if chunks[0] != "автошины":
+        if chunks[0] != 'автошины':
             return None
 
         return chunks[1]

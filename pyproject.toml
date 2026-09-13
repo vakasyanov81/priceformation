@@ -87,6 +87,9 @@ max-positional-args = 6
 "src/parse_report.py" = ["T201"]
 "src/cfg/zapaska_api.py" = ["S105"]
 
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
 [tool.ruff.format]
 quote-style = "single"
 
@@ -159,7 +162,7 @@ ignore_missing_imports = true
 strict = true
 local_partial_types = true
 warn_unreachable = true
-exclude = ["mutants/", "\\.venv/"]
+exclude = ["mutants/", "\\.venv/", "tests/test_parsers/test_registry.py", "tests/test_parsers/_registry_import_vendor.py"]
 
 [tool.vulture]
 # Scan library and tests together so test-only usage is not reported as dead.

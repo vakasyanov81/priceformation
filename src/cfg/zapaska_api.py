@@ -7,16 +7,16 @@ from pathlib import Path
 from cfg.main import __PROJECT_ROOT__
 from core.exceptions import CoreExceptionError
 
-_DEFAULT_HOST = "ka2.sibzapaska.ru:16500"
-_ENV_LOGIN = "ZAPASKA_API_LOGIN"
-_ENV_PASSWORD = "ZAPASKA_API_PASSWORD"  # nosec — имя переменной окружения, а не пароль
-_ENV_HOST = "ZAPASKA_API_HOST"
+_DEFAULT_HOST = 'ka2.sibzapaska.ru:16500'
+_ENV_LOGIN = 'ZAPASKA_API_LOGIN'
+_ENV_PASSWORD = 'ZAPASKA_API_PASSWORD'  # nosec — имя переменной окружения, а не пароль
+_ENV_HOST = 'ZAPASKA_API_HOST'
 _MSG_MISSING_ENV_FILE = (
-    "Не найден файл .env с данными для подключения к API Запаски. "
-    "Скопируйте .env.example в .env и укажите логин и пароль."
+    'Не найден файл .env с данными для подключения к API Запаски. '
+    'Скопируйте .env.example в .env и укажите логин и пароль.'
 )
 _MSG_MISSING_CREDENTIALS = (
-    f"В файле .env не заданы данные для подключения к API Запаски. Укажите {_ENV_LOGIN} и {_ENV_PASSWORD}."
+    f'В файле .env не заданы данные для подключения к API Запаски. Укажите {_ENV_LOGIN} и {_ENV_PASSWORD}.'
 )
 
 
@@ -35,9 +35,9 @@ class ZapaskaApiConfig:
 
 def _parse_dotenv_line(raw_line: str) -> tuple[str, str] | None:
     line = raw_line.strip()
-    if not line or line.startswith("#") or "=" not in line:
+    if not line or line.startswith('#') or '=' not in line:
         return None
-    key, _, raw_value = line.partition("=")
+    key, _, raw_value = line.partition('=')
     key = key.strip()
     if not key:
         return None
@@ -46,11 +46,11 @@ def _parse_dotenv_line(raw_line: str) -> tuple[str, str] | None:
 
 def load_dotenv(env_path: Path | None = None) -> bool:
     """Load .env into os.environ (does not override existing keys)."""
-    path = env_path or Path(__PROJECT_ROOT__) / ".env"
+    path = env_path or Path(__PROJECT_ROOT__) / '.env'
     if not path.is_file():
         return False
 
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
+    for raw_line in path.read_text(encoding='utf-8').splitlines():
         parsed = _parse_dotenv_line(raw_line)
         if parsed is None:
             continue
@@ -64,8 +64,8 @@ def get_zapaska_api_config() -> ZapaskaApiConfig:
     """Zapaska API settings from env / .env."""
     has_env_file = load_dotenv()
 
-    login = os.environ.get(_ENV_LOGIN, "").strip()
-    password = os.environ.get(_ENV_PASSWORD, "").strip()
+    login = os.environ.get(_ENV_LOGIN, '').strip()
+    password = os.environ.get(_ENV_PASSWORD, '').strip()
     host = os.environ.get(_ENV_HOST, _DEFAULT_HOST).strip() or _DEFAULT_HOST
 
     if not login or not password:

@@ -18,7 +18,7 @@ from parsers.remote.zapaska_client import load_remote_vendor_data
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 
-_INTERRUPT = "interrupted"
+_INTERRUPT = 'interrupted'
 _COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA))
 
 
@@ -79,7 +79,7 @@ def _emit_command(
         emit_json(
             error_payload(
                 command,
-                "KeyboardInterrupt",
+                'KeyboardInterrupt',
                 _INTERRUPT,
                 compact=command in _COMPACT_ERROR_COMMANDS,
             ),
@@ -112,32 +112,27 @@ def _command_payload(
         return _json_load_prices(payload_arg)
     if command == LOAD_CONFIG:
         return {
-            "ok": True,
-            "action": LOAD_CONFIG,
-            "files": load_config(payload_arg or ""),
+            'ok': True,
+            'action': LOAD_CONFIG,
+            'files': load_config(payload_arg or ''),
         }
     if command == ZAPASKA_LOAD_API_DATA:
         load_remote_vendor_data(api=get_zapaska_api_config())
         return {
-            "ok": True,
-            "action": ZAPASKA_LOAD_API_DATA,
+            'ok': True,
+            'action': ZAPASKA_LOAD_API_DATA,
         }
-    return {
-        PARSE: _json_parse,
-        DOUBLES: _json_doubles,
-    }[
-        command
-    ](all_result, result_template)
+    return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
 
 
 def _json_load_prices(raw: str | None) -> dict[str, object]:
-    mapping = parse_prices_json(raw or "")
+    mapping = parse_prices_json(raw or '')
     catalog = all_vendor_supplier_catalog()
     return {
-        "ok": True,
-        "action": LOAD_SUPPLIER_PRICES,
-        "files": load_supplier_prices(mapping),
-        "suppliers": {key: catalog_entry_for(key, catalog)["sup_title"] for key in mapping},
+        'ok': True,
+        'action': LOAD_SUPPLIER_PRICES,
+        'files': load_supplier_prices(mapping),
+        'suppliers': {key: catalog_entry_for(key, catalog)['sup_title'] for key in mapping},
     }
 
 

@@ -9,7 +9,7 @@ from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
 from core.parse_paths import get_parse_paths
 
-_CONFIG_FILE = "vendor_list.json"
+_CONFIG_FILE = 'vendor_list.json'
 
 
 class VendorListConfigFileError(CoreExceptionError):
@@ -43,7 +43,7 @@ class VendorListProviderFromUserConfig(VendorListProviderBase):
         try:
             return cls._load_vendor_list_json()
         except FileNotFoundError as exc:
-            raise VendorListConfigFileError(f"Failed to read all vendor settings {_CONFIG_FILE}") from exc
+            raise VendorListConfigFileError(f'Failed to read all vendor settings {_CONFIG_FILE}') from exc
 
     @classmethod
     def _load_vendor_list_json(cls) -> dict[str, Any]:

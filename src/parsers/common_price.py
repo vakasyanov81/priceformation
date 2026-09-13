@@ -10,22 +10,12 @@ from parsers.all_vendors import vendor_config_is_enabled
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
-from parsers.base_parser.markup_policy import (
-    IdentityMarkupPolicy,
-    MarkupPolicy,
-    RecommendedOrMapMarkupPolicy,
-    make_map_on_opt_markup_policy,
-)
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.data_provider.vendor_list import VendorListConfigFileError
+from parsers.registry import vendor_markup_policy_for
 from parsers.row_item.row_item import RowItem
-from parsers.vendors.autosnab54_ru import Autosnab54Parser
-from parsers.vendors.four_tochki.four_tochki_sheet1 import FourTochkiParser1Sheet
-from parsers.vendors.pioner import PionerParser
-from parsers.vendors.poshk import PoshkParser
-from parsers.vendors.stk import STKParser
 
 type VendorList = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
 type UnknownCategorySkip = tuple[str, str]
@@ -49,7 +39,7 @@ class CommonPrice:
         self.black_list_skips = 0
 
         start_time = time.monotonic()
-        log_msg("\n============== Начало разбора прайсов =================\n", need_print_log=True)
+        log_msg('\n============== Начало разбора прайсов =================\n', need_print_log=True)
 
         for vendor_cls, vendor_config in vendors:
             self.parse_vendor(_parser_for_vendor(vendor_cls, vendor_config))
@@ -58,19 +48,19 @@ class CommonPrice:
         grouper = _price_run_grouper(self._parsed_items)
         self._parsed_items = grouper.group_by_params().get_row_items()
 
-        log_msg(f"\nКоличество дублей: {len(grouper.get_double_row_items())}\n", need_print_log=True)
+        log_msg(f'\nКоличество дублей: {len(grouper.get_double_row_items())}\n', need_print_log=True)
 
         elapsed = time.monotonic() - start_time
-        log_msg(f"\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n", need_print_log=True)
+        log_msg(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n', need_print_log=True)
 
     def parse_vendor(self, parser: BaseParser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к общему результату."""
         try:
             parsed = parser.parse()
         except VendorListConfigFileError:
-            warn_msg("Отсутствует файл конфигурации parse_config/vendor_list.json", need_print_log=True)
+            warn_msg('Отсутствует файл конфигурации parse_config/vendor_list.json', need_print_log=True)
         except Exception as exc:
-            err_msg(f"Ошибка разбора прайса поставщика {parser!r} // {exc}")
+            err_msg(f'Ошибка разбора прайса поставщика {parser!r} // {exc}')
             raise
         else:
             self._parsed_items.extend(parsed)
@@ -78,7 +68,7 @@ class CommonPrice:
             self.black_list_skips += _black_list_skip_count(parser)
 
     def _remember_unknown_category_skips(self, parser: BaseParser) -> None:
-        skips = getattr(parser, "unknown_category_skips", ())
+        skips = getattr(parser, 'unknown_category_skips', ())
         if not isinstance(skips, list) or not skips:
             return
         supplier = parser.parser_params().supplier.name
@@ -98,14 +88,9 @@ class CommonPrice:
         return self._parsed_items
 
 
-_MAP_ON_OPT_VENDORS: tuple[type[BaseParser], ...] = (PoshkParser, PionerParser, STKParser)
-_IDENTITY_VENDORS: tuple[type[BaseParser], ...] = (Autosnab54Parser,)
-_RECOMMENDED_OR_MAP_VENDORS: tuple[type[BaseParser], ...] = (FourTochkiParser1Sheet,)
-
-
 def _black_list_skip_count(parser: BaseParser) -> int:
     """Rows a vendor parser dropped by black_list; ignore non-int stubs."""
-    count = getattr(parser, "black_list_skips", 0)
+    count = getattr(parser, 'black_list_skips', 0)
     if isinstance(count, int):
         return count
     return 0
@@ -115,19 +100,6 @@ def _price_run_grouper(row_items: list[RowItem]) -> CommonPriceGrouper:
     """Сброс aliases-кэша на прогон, затем группировка со свежей картой."""
     clear_manufacturer_aliases_cache()
     return CommonPriceGrouper(row_items)
-
-
-def _markup_policy_for_vendor(
-    vendor_cls: type[BaseParser],
-    vendor_config: ParseConfiguration,
-) -> MarkupPolicy | None:
-    if vendor_cls in _MAP_ON_OPT_VENDORS:
-        return make_map_on_opt_markup_policy(vendor_config)
-    if vendor_cls in _IDENTITY_VENDORS:
-        return IdentityMarkupPolicy.create()
-    if vendor_cls in _RECOMMENDED_OR_MAP_VENDORS:
-        return RecommendedOrMapMarkupPolicy.from_config(vendor_config)
-    return None
 
 
 def _parser_for_vendor(
@@ -141,5 +113,5 @@ def _parser_for_vendor(
     return make_parser(
         vendor_cls,
         vendor_config,
-        markup_policy=_markup_policy_for_vendor(vendor_cls, vendor_config),
+        markup_policy=vendor_markup_policy_for(vendor_cls, vendor_config),
     )

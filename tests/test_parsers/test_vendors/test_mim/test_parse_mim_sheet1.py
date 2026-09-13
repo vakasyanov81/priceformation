@@ -52,12 +52,12 @@ def _title_parser() -> MimParser1Sheet:
 
 
 @pytest.mark.parametrize(
-    "row_elements, prepared_title",
+    'row_elements, prepared_title',
     [
-        (("30", "9.5", "15"), "30x9.5R15"),
-        (("30", "9.0", "15"), "30x9.0R15"),
-        (("30", "9.00", "15"), "30x9.00R15"),
-        (("30", "9", "15"), "30/9R15"),
+        (('30', '9.5', '15'), '30x9.5R15'),
+        (('30', '9.0', '15'), '30x9.0R15'),
+        (('30', '9.00', '15'), '30x9.00R15'),
+        (('30', '9', '15'), '30/9R15'),
     ],
 )
 def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
@@ -65,10 +65,10 @@ def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
 
     row_item = RowItem(
         {
-            "title": "",
-            "width": row_elements[0],
-            "height_percent": row_elements[1],
-            "diameter": row_elements[2],
+            'title': '',
+            'width': row_elements[0],
+            'height_percent': row_elements[1],
+            'diameter': row_elements[2],
         }
     )
     title = _title_parser().get_prepared_title(row_item).strip()
@@ -76,11 +76,11 @@ def test_prepare_title(row_elements: Any, prepared_title: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    ("fields", "expected"),
+    ('fields', 'expected'),
     [
-        ({"width": "30", "diameter": "15"}, "30/R15"),
-        ({"height_percent": "9", "diameter": "15"}, "/9R15"),
-        ({"width": "30", "height_percent": "9"}, "30/9R"),
+        ({'width': '30', 'diameter': '15'}, '30/R15'),
+        ({'height_percent': '9', 'diameter': '15'}, '/9R15'),
+        ({'width': '30', 'height_percent': '9'}, '30/9R'),
     ],
 )
 def test_prepare_title_skips_empty_parts(fields: dict[str, str], expected: str) -> None:
@@ -93,10 +93,10 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == "31x10.5R15 Crossleader DSU02 92Y"
-    assert parsed_items[0].type_production == "Легковая шина"
+    assert parsed_items[0].title == '31x10.5R15 Crossleader DSU02 92Y'
+    assert parsed_items[0].type_production == 'Легковая шина'
     assert parsed_items[0].price_markup == 4220
-    assert parsed_items[0].supplier_name == "Мим"
+    assert parsed_items[0].supplier_name == 'Мим'
     assert parsed_items[0].percent_markup == 22.07
 
 
@@ -109,13 +109,13 @@ class TestParseMimSheet1:
         """test exclude price-position by small rest count"""
         parse_result = mim_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["rest_count"] = 3
+        first_row['rest_count'] = 3
 
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
         assert len(parsed_items) == 0
 
     @pytest.mark.parametrize(
-        "price, price_recommended, price_with_markup",
+        'price, price_recommended, price_with_markup',
         [
             (1000, 2000, 2000),
             (1000, 1200, 1500),
@@ -127,8 +127,8 @@ class TestParseMimSheet1:
         """test calculation price-markup"""
         parse_result = mim_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["price_opt"] = price
-        first_row["price_recommended"] = price_recommended
+        first_row['price_opt'] = price
+        first_row['price_recommended'] = price_recommended
 
         parser = get_fake_parser(parse_result)
 

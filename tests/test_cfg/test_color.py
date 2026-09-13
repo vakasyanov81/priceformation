@@ -2,7 +2,7 @@
 
 from cfg.color import Colors
 
-_ANSI_PREFIX = "\033["
+_ANSI_PREFIX = '\033['
 
 
 def test_header_and_ok_colors() -> None:
@@ -17,6 +17,6 @@ def test_warning_fail_and_style_colors() -> None:
     """WARNING/FAIL и стиль форматирования"""
     assert Colors.WARNING.startswith(_ANSI_PREFIX)
     assert Colors.FAIL.startswith(_ANSI_PREFIX)
-    assert Colors.END_COLOR == "\033[0m"
-    assert Colors.BOLD == "\033[1m"
-    assert Colors.UNDERLINE == "\033[4m"
+    assert Colors.END_COLOR == '\033[0m'
+    assert Colors.BOLD == '\033[1m'
+    assert Colors.UNDERLINE == '\033[4m'

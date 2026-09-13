@@ -14,7 +14,7 @@ type WriteExclude = dict[str, Any]
 class IWriteTemplate:
     """interface for writing template"""
 
-    __EMPTY_COLUMN__ = "empty_column"
+    __EMPTY_COLUMN__ = 'empty_column'
 
     """ write template interface """
 
@@ -23,22 +23,22 @@ class IWriteTemplate:
 
     def exclude(self) -> dict[str, Any]:
         """get exclude"""
-        ex_field = "__EXCLUDE__"
+        ex_field = '__EXCLUDE__'
         return getattr(self, ex_field) if hasattr(self, ex_field) else {}
 
     def get_file_name(self) -> str:
         """get exclude"""
-        file_field = "__FILE__"
-        return getattr(self, file_field) if hasattr(self, file_field) else "default_result.xls"
+        file_field = '__FILE__'
+        return getattr(self, file_field) if hasattr(self, file_field) else 'default_result.xls'
 
     def columns(self) -> list[dict[str, Any]]:
         """get columns"""
-        col_field = "__COLUMNS__"
+        col_field = '__COLUMNS__'
         return getattr(self, col_field) if hasattr(self, col_field) else []
 
     def colors(self) -> dict[str, Any]:
         """get colors"""
-        col_field = "__COLOR__"
+        col_field = '__COLOR__'
         return getattr(self, col_field) if hasattr(self, col_field) else {}
 
     def get_columns(self) -> dict[str, ColumnHelper]:

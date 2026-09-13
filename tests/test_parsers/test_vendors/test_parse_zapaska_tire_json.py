@@ -18,7 +18,7 @@ from parsers.base_parser.base_parser_config import (
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
 
-_FIXTURE_TIRE = "tests/test_parsers/fixtures/zapaska_tire.json"
+_FIXTURE_TIRE = 'tests/test_parsers/fixtures/zapaska_tire.json'
 
 parser_config = make_parse_configuration(
     zapaska_tire_params,
@@ -42,7 +42,7 @@ def test_tire_aliases_use_supplier_name(monkeypatch: pytest.MonkeyPatch) -> None
         seen.append(name)
         return {}
 
-    monkeypatch.setattr("parsers.vendors.zapaska_disk_json.load_title_aliases", capture)
+    monkeypatch.setattr('parsers.vendors.zapaska_disk_json.load_title_aliases', capture)
     get_fake_parser([])
     assert seen == [zapaska_tire_params.supplier.name]
 
@@ -74,36 +74,36 @@ class TestParseZapaskaTireJSON:
         """check all field for one price-row"""
 
         root = get_config()().project_root
-        parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
+        parser = get_fake_parser([f'{root}/{_FIXTURE_TIRE}'])
         parsed_items: list[RowItem] = parser.parse()
 
         res = parsed_items[0]
 
         assert len(parsed_items) == 1
-        assert res.title == "315/80R22.5 Three-A T276+ 20PR 157/154M TL"
+        assert res.title == '315/80R22.5 Three-A T276+ 20PR 157/154M TL'
         assert res.price_markup == 25830.0
         assert res.price_recommended == 24670.0
-        assert res.supplier_name == "Запаска (шины)"
+        assert res.supplier_name == 'Запаска (шины)'
         assert res.percent_markup == 12.04
-        assert res.season == "Летняя"
-        assert res.type_production == "Грузовая шина"
+        assert res.season == 'Летняя'
+        assert res.type_production == 'Грузовая шина'
 
     def test_unknown_category_is_skipped(self, tmp_path: Path) -> None:
         """неизвестная категория поставщика не попадает в прайс"""
         root = get_config()().project_root
-        rows = json.loads((Path(root) / _FIXTURE_TIRE).read_text(encoding="utf-8"))
-        rows[0]["category"] = "SUV"
-        price_file = tmp_path / "tire.json"
-        price_file.write_text(json.dumps(rows), encoding="utf-8")
+        rows = json.loads((Path(root) / _FIXTURE_TIRE).read_text(encoding='utf-8'))
+        rows[0]['category'] = 'SUV'
+        price_file = tmp_path / 'tire.json'
+        price_file.write_text(json.dumps(rows), encoding='utf-8')
 
         parser = get_fake_parser([str(price_file)])
         parsed_items: list[RowItem] = parser.parse()
 
         assert parsed_items == []
-        assert parser.unknown_category_skips == ["SUV"]
+        assert parser.unknown_category_skips == ['SUV']
 
     @pytest.mark.parametrize(
-        "prices",
+        'prices',
         [
             (100, 400, 400),
             (1000, 1100, 1150),
@@ -113,11 +113,11 @@ class TestParseZapaskaTireJSON:
             (60000, 60100, 67200),
         ],
     )
-    @skip("markup parametrize not ready")
+    @skip('markup parametrize not ready')
     def test_markup(self, prices: Any) -> None:
         """test calculation price-markup"""
         _price_opt, _price_recommended, price_markup = prices
         root = get_config()().project_root
-        parser = get_fake_parser([f"{root}/{_FIXTURE_TIRE}"])
+        parser = get_fake_parser([f'{root}/{_FIXTURE_TIRE}'])
         parsed_items: list[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_markup

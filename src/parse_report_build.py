@@ -17,14 +17,14 @@ def stats_from_common(common: CommonPrice, elapsed: float) -> dict[str, Any]:
     percent = statistic.real_percents_markup()
     absolute = statistic.real_absolute_markup()
     return {
-        "items": len(common.parsed_items),
-        "priced_items": statistic.count_items(),
-        "doubles": _double_count(common.parsed_items),
-        "unknown_category_skips": len(common.unknown_category_skips),
-        "black_list_skips": common.black_list_skips,
-        "elapsed_seconds": round(elapsed, 2),
-        "percent_markup": {"min": percent[0], "max": percent[1]},
-        "absolute_markup": {"min": absolute[0], "max": absolute[1]},
+        'items': len(common.parsed_items),
+        'priced_items': statistic.count_items(),
+        'doubles': _double_count(common.parsed_items),
+        'unknown_category_skips': len(common.unknown_category_skips),
+        'black_list_skips': common.black_list_skips,
+        'elapsed_seconds': round(elapsed, 2),
+        'percent_markup': {'min': percent[0], 'max': percent[1]},
+        'absolute_markup': {'min': absolute[0], 'max': absolute[1]},
     }
 
 
@@ -67,14 +67,14 @@ def report_from_common(
         files=files,
         suppliers=enabled,
     )
-    payload["disabled_suppliers"] = disabled
+    payload['disabled_suppliers'] = disabled
     return payload
 
 
 def _item_payload(row: RowItem) -> dict[str, Any]:
     payload = row.to_dict()
     if row.parse_errors:
-        payload["parse_errors"] = row.parse_errors
+        payload['parse_errors'] = row.parse_errors
     return payload
 
 

@@ -14,10 +14,10 @@ class ForDoubles(ForInner):
 
     __COLUMNS__: ClassVar[WriteColumns] = [
         *ForInner.__COLUMNS__,
-        {"Группа по параметрам": {"field": RowItem.group_by_params.name}},
-        {"Дубль": {"field": RowItem.is_double.name}},
-        {"Главный дубль": {"field": RowItem.double_candidate.name}},
-        {"Спорная": {"field": RowItem.disputed.name}},
+        {'Группа по параметрам': {'field': RowItem.group_by_params.name}},
+        {'Дубль': {'field': RowItem.is_double.name}},
+        {'Главный дубль': {'field': RowItem.double_candidate.name}},
+        {'Спорная': {'field': RowItem.disputed.name}},
     ]
 
-    __FILE__ = "doubles_{now}.xlsx"
+    __FILE__ = 'doubles_{now}.xlsx'

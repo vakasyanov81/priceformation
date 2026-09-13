@@ -14,9 +14,9 @@ def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
     try:
         method(**kwargs)
     except SupplierNotHavePricesError as exc:
-        print_log(f"{exc}", level=logging.WARNING)
+        print_log(f'{exc}', level=logging.WARNING)
         sys.exit(1)
     except CoreExceptionError as exc:
-        print_log(f"{exc}", level=logging.ERROR)
+        print_log(f'{exc}', level=logging.ERROR)
     except KeyboardInterrupt:
         sys.exit(0)

@@ -2,9 +2,9 @@
 
 from parsers.writer.fake_driver import FakeXlwtDriver
 
-_FOLDER = "folder/"
-_FILE_NAME = "file.xls"
-_SHEET = "Sheet1"
+_FOLDER = 'folder/'
+_FILE_NAME = 'file.xls'
+_SHEET = 'Sheet1'
 _WIDTH = 100
 
 
@@ -23,9 +23,9 @@ def test_fake_driver_init_and_sheet() -> None:
 def test_fake_driver_write_body() -> None:
     """запись шапки и тела"""
     driver = FakeXlwtDriver()
-    driver.write_head(["a", "b"])
-    driver.write(1, 0, "val")
-    driver.set_column_format({0: "@"})
+    driver.write_head(['a', 'b'])
+    driver.write(1, 0, 'val')
+    driver.set_column_format({0: '@'})
     driver.save()
-    assert driver.head == ["a", "b"]
-    assert driver.body["cell(1,0)"] == "val"
+    assert driver.head == ['a', 'b']
+    assert driver.body['cell(1,0)'] == 'val'

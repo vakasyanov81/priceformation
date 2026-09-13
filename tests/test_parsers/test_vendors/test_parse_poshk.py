@@ -24,13 +24,13 @@ from parsers.vendors.poshk import (
 )
 
 vendor_list_config = {
-    "poshk": {"enabled": 1},
-    "zapaska": {"enabled": 1},
-    "mim": {"enabled": 1},
-    "pioner": {"enabled": 1},
-    "four_tochki": {"enabled": 1},
-    "autosnab54_ru": {"enabled": 1},
-    "stk": {"enabled": 1},
+    'poshk': {'enabled': 1},
+    'zapaska': {'enabled': 1},
+    'mim': {'enabled': 1},
+    'pioner': {'enabled': 1},
+    'four_tochki': {'enabled': 1},
+    'autosnab54_ru': {'enabled': 1},
+    'stk': {'enabled': 1},
 }
 
 
@@ -40,16 +40,16 @@ class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     def get_markup_data(self) -> dict[str, Any]:
         """get markup rules"""
         return {
-            "markup_rules": {
-                "rule_70": {"min": 0, "max": 200, "percent_markup": 0.7},
-                "rule_50": {"min": 200, "max": 300, "percent_markup": 0.5},
-                "rule_40": {"min": 300, "max": 500, "percent_markup": 0.4},
-                "rule_30": {"min": 500, "max": 1500, "percent_markup": 0.3},
-                "rule_25": {"min": 1500, "max": 5000, "percent_markup": 0.25},
-                "rule_15": {"min": 5000, "max": 8000, "percent_markup": 0.15},
-                "rule_14": {"min": 8000, "max": 20000, "percent_markup": 0.14},
-                "rule_8": {"min": 20000, "max": 30000, "percent_markup": 0.08},
-                "rule_7": {"min": 30000, "max": 60000, "percent_markup": 0.07},
+            'markup_rules': {
+                'rule_70': {'min': 0, 'max': 200, 'percent_markup': 0.7},
+                'rule_50': {'min': 200, 'max': 300, 'percent_markup': 0.5},
+                'rule_40': {'min': 300, 'max': 500, 'percent_markup': 0.4},
+                'rule_30': {'min': 500, 'max': 1500, 'percent_markup': 0.3},
+                'rule_25': {'min': 1500, 'max': 5000, 'percent_markup': 0.25},
+                'rule_15': {'min': 5000, 'max': 8000, 'percent_markup': 0.15},
+                'rule_14': {'min': 8000, 'max': 20000, 'percent_markup': 0.14},
+                'rule_8': {'min': 20000, 'max': 30000, 'percent_markup': 0.08},
+                'rule_7': {'min': 30000, 'max': 60000, 'percent_markup': 0.07},
             }
         }
 
@@ -67,11 +67,11 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
 
     def get_black_list_data(self) -> list[str]:
         """get black list"""
-        return ["wrong title", "wrong title 2"]
+        return ['wrong title', 'wrong title 2']
 
     def get_stop_words_data(self) -> list[str]:
         """get glob masks (same as *lines* in black_list)"""
-        return ["*некондиция*", "*2 сорт*", "*восстановленная*", "брак*"]
+        return ['*некондиция*', '*2 сорт*', '*восстановленная*', 'брак*']
 
 
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
@@ -114,32 +114,32 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == "10-16.5 Nortec ER-218 10PR 135B TL спецшина"
-    assert parsed_items[0].type_production == "Автошина"
+    assert parsed_items[0].title == '10-16.5 Nortec ER-218 10PR 135B TL спецшина'
+    assert parsed_items[0].type_production == 'Автошина'
     assert parsed_items[0].price_markup == 6070
-    assert parsed_items[0].supplier_name == "Пошк"
+    assert parsed_items[0].supplier_name == 'Пошк'
     assert parsed_items[0].percent_markup == 25.0
 
 
 @pytest.mark.parametrize(
-    "title, prepared_title",
+    'title, prepared_title',
     [
         # remove whitespace
-        ("385/65 R22.5 ...", "385/65R22.5 ..."),
-        ("385/65 R22.5", "385/65R22.5"),
-        ("R22.5", "R22.5"),
-        ("385/65  R22.5 ...", "385/65R22.5 ..."),
-        ("10.00 R20 ...", "10.00R20 ..."),
+        ('385/65 R22.5 ...', '385/65R22.5 ...'),
+        ('385/65 R22.5', '385/65R22.5'),
+        ('R22.5', 'R22.5'),
+        ('385/65  R22.5 ...', '385/65R22.5 ...'),
+        ('10.00 R20 ...', '10.00R20 ...'),
         # replace * -> x
-        ("... 31*10.5-15 ...", "... 31x10.5-15 ..."),
-        ("... bla 6.75*19.5 6*222.25 ...", "... bla 6.75x19.5 6x222.25 ..."),
-        ("... i*cept", "... i*cept"),
+        ('... 31*10.5-15 ...', '... 31x10.5-15 ...'),
+        ('... bla 6.75*19.5 6*222.25 ...', '... bla 6.75x19.5 6x222.25 ...'),
+        ('... i*cept', '... i*cept'),
     ],
 )
 def test_prepare_title(title: Any, prepared_title: Any) -> None:
     """check prepare title"""
 
-    row_item = RowItem({"title": title})
+    row_item = RowItem({'title': title})
     title = PoshkParser.prepare_title(row_item.title)
 
     assert title == prepared_title
@@ -151,26 +151,26 @@ class TestParsePoshk:
     """
 
     @pytest.mark.parametrize(
-        "title, category",
+        'title, category',
         [
-            ("some product", "Разное"),
-            ("some диск product", "Диск"),
-            ("some ободная лента product", "Ободная лента"),
-            ("some шина product", "Автошина"),
-            ("some покрышка product", "Автошина"),
-            ("some камера product", "Автокамера"),
+            ('some product', 'Разное'),
+            ('some диск product', 'Диск'),
+            ('some ободная лента product', 'Ободная лента'),
+            ('some шина product', 'Автошина'),
+            ('some покрышка product', 'Автошина'),
+            ('some камера product', 'Автокамера'),
         ],
     )
     def test_set_category(self, title: Any, category: Any) -> None:
         """test define category name by title"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["title"] = title
+        first_row['title'] = title
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
         assert parsed_items[0].type_production == category
 
     @pytest.mark.parametrize(
-        "price, price_with_markup",
+        'price, price_with_markup',
         [
             (100, 170),
             (150, 260),
@@ -206,7 +206,7 @@ class TestParsePoshk:
         """test calculation price-markup"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["price_opt"] = price
+        first_row['price_opt'] = price
 
         parser = get_fake_parser(parse_result)
 
@@ -215,20 +215,20 @@ class TestParsePoshk:
         assert parsed_items[0].price_markup == price_with_markup
 
     @pytest.mark.parametrize(
-        ("title", "expected_count"),
+        ('title', 'expected_count'),
         [
-            ("some некондиция product", 0),
-            ("some 2 сорт product", 0),
-            ("185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт", 0),
-            ("брак покрышка 185/75", 0),
-            ("какой-то брак покрышка 185/75", 1),
+            ('some некондиция product', 0),
+            ('some 2 сорт product', 0),
+            ('185/75 R16 Forward Dinamic 156 92Q TL автопокрышка (ВОССТАНОВЛЕННАЯ), , шт', 0),
+            ('брак покрышка 185/75', 0),
+            ('какой-то брак покрышка 185/75', 1),
         ],
     )
     def test_stop_words(self, title: Any, expected_count: Any) -> None:
         """test exclude price position by stop word in title"""
         parse_result = poshk_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["title"] = title
+        first_row['title'] = title
 
         parser = get_fake_parser(parse_result)
         parsed_items: list[RowItem] = parser.parse()

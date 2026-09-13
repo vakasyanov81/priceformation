@@ -10,15 +10,15 @@ from parsers.base_parser.base_parser_config import (
 from parsers.data_provider import MarkupRulesProviderFromUserConfig
 from parsers.row_item.row_item import RowItem
 
-_FOLDER_NAME = "acme_folder"
-_SUPPLIER_NAME = "Acme Name"
+_FOLDER_NAME = 'acme_folder'
+_SUPPLIER_NAME = 'Acme Name'
 
 
 def _parser_params() -> ParserParams:
     return ParserParams(
-        supplier=ParseParamsSupplier(folder_name=_FOLDER_NAME, name=_SUPPLIER_NAME, code="99"),
+        supplier=ParseParamsSupplier(folder_name=_FOLDER_NAME, name=_SUPPLIER_NAME, code='99'),
         start_row=1,
-        sheet_info="",
+        sheet_info='',
         columns={},
         stop_words=[],
         file_templates=[],

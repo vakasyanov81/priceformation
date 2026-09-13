@@ -24,10 +24,10 @@ class CoreExceptionError(Exception):
     def to_log(cls, msg: str | None) -> None:
         """Write message and stack to the error log file, not to the console."""
         trace_message = str(traceback.extract_stack(limit=__STACK_TRACE_LIMIT__))
-        trace_message = f"{msg} \n {trace_message}"
+        trace_message = f'{msg} \n {trace_message}'
         try:
             err_msg(trace_message, need_print_log=False)
-        except (RuntimeError, OSError):
+        except RuntimeError, OSError:
             logging.exception(trace_message)
 
 

@@ -10,12 +10,12 @@ from typing import Protocol
 from core.exceptions import CoreExceptionError
 from core.parse_paths import get_parse_paths
 
-_VENDOR_FOLDER = "zapaska"
-_GET_TIRES_URL = "/API/hs/V2/GetTires"
-_GET_DISK_URL = "/API/hs/V2/GetDisk"
-_TIRE_FILENAME = "tire.json"
-_DISK_FILENAME = "disk.json"
-_MSG_CONNECTION_FAILED = "Не удалось подключиться к API Запаски. Проверьте интернет-соединение и параметры подключения."
+_VENDOR_FOLDER = 'zapaska'
+_GET_TIRES_URL = '/API/hs/V2/GetTires'
+_GET_DISK_URL = '/API/hs/V2/GetDisk'
+_TIRE_FILENAME = 'tire.json'
+_DISK_FILENAME = 'disk.json'
+_MSG_CONNECTION_FAILED = 'Не удалось подключиться к API Запаски. Проверьте интернет-соединение и параметры подключения.'
 
 
 class ZapaskaApiAuth(Protocol):
@@ -39,8 +39,8 @@ class ZapaskaApiConnectionError(CoreExceptionError):
 
 def basic_auth(username: str, password: str) -> str:
     """Basic Authorization header value."""
-    token = b64encode(f"{username}:{password}".encode()).decode("ascii")
-    return f"Basic {token}"
+    token = b64encode(f'{username}:{password}'.encode()).decode('ascii')
+    return f'Basic {token}'
 
 
 def get_data(url: str, api_config: ZapaskaApiAuth) -> str:
@@ -48,15 +48,15 @@ def get_data(url: str, api_config: ZapaskaApiAuth) -> str:
     try:
         return _request_zapaska(url, api_config)
     except (OSError, HTTPException) as exc:
-        detail = f"host={api_config.host} url={url}\n{exc!r}\n{traceback.format_exc()}"
+        detail = f'host={api_config.host} url={url}\n{exc!r}\n{traceback.format_exc()}'
         raise ZapaskaApiConnectionError(detail=detail) from exc
 
 
 def download_catalogs(*, dest_dir: Path, api: ZapaskaApiAuth) -> None:
     """GET GetTires / GetDisk → dest_dir/tire.json, disk.json."""
     dest_dir.mkdir(parents=True, exist_ok=True)
-    (dest_dir / _TIRE_FILENAME).write_text(get_data(_GET_TIRES_URL, api_config=api), encoding="utf-8")
-    (dest_dir / _DISK_FILENAME).write_text(get_data(_GET_DISK_URL, api_config=api), encoding="utf-8")
+    (dest_dir / _TIRE_FILENAME).write_text(get_data(_GET_TIRES_URL, api_config=api), encoding='utf-8')
+    (dest_dir / _DISK_FILENAME).write_text(get_data(_GET_DISK_URL, api_config=api), encoding='utf-8')
 
 
 def load_remote_vendor_data(*, api: ZapaskaApiAuth) -> None:
@@ -68,6 +68,6 @@ def load_remote_vendor_data(*, api: ZapaskaApiAuth) -> None:
 def _request_zapaska(url: str, api_config: ZapaskaApiAuth) -> str:
     """Perform GET against Zapaska HTTPS API."""
     with closing(HTTPSConnection(api_config.host)) as connection:
-        headers = {"Authorization": basic_auth(api_config.login, api_config.password)}
-        connection.request("GET", url, headers=headers)
-        return connection.getresponse().read().decode("utf-8")
+        headers = {'Authorization': basic_auth(api_config.login, api_config.password)}
+        connection.request('GET', url, headers=headers)
+        return connection.getresponse().read().decode('utf-8')

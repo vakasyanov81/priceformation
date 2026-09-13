@@ -7,11 +7,11 @@ import pytest
 from core.exceptions import SupplierNotHavePricesError
 from run_dialog import AnswerResult
 
-_INPUT = "builtins.input"
-_RUN_EXIT = "run.sys.exit"
-_QUIT = "q"
-_PARSED_ROW = "item"
-_VENDOR = "vendor"
+_INPUT = 'builtins.input'
+_RUN_EXIT = 'run.sys.exit'
+_QUIT = 'q'
+_PARSED_ROW = 'item'
+_VENDOR = 'vendor'
 
 
 def test_main_exits_on_quit() -> None:
@@ -19,7 +19,7 @@ def test_main_exits_on_quit() -> None:
     with (
         patch(_INPUT, return_value=_QUIT),
         patch(_RUN_EXIT, side_effect=SystemExit(0)) as mock_exit,
-        patch("run.init_cfg") as mock_init,
+        patch('run.init_cfg') as mock_init,
     ):
         from run import main
 
@@ -37,10 +37,10 @@ def test_main_make_price_then_exit() -> None:
     common.parsed_items = [_PARSED_ROW]
 
     with (
-        patch(_INPUT, side_effect=["1", _QUIT]),
-        patch("run.CommonPrice", return_value=common) as mock_cp,
-        patch("run.all_vendors", return_value=[(_VENDOR, None)]),
-        patch("run.CommonPriceOut") as mock_out,
+        patch(_INPUT, side_effect=['1', _QUIT]),
+        patch('run.CommonPrice', return_value=common) as mock_cp,
+        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
+        patch('run.CommonPriceOut') as mock_out,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -60,11 +60,11 @@ def test_main_report_doubles_then_exit() -> None:
     common.parsed_items = [_PARSED_ROW]
 
     with (
-        patch(_INPUT, side_effect=["3", _QUIT]),
-        patch("run.CommonPrice", return_value=common) as mock_cp,
-        patch("run.all_vendors", return_value=[(_VENDOR, None)]),
-        patch("run.CommonPriceOut") as mock_out,
-        patch("run.print_log"),
+        patch(_INPUT, side_effect=['3', _QUIT]),
+        patch('run.CommonPrice', return_value=common) as mock_cp,
+        patch('run.all_vendors', return_value=[(_VENDOR, None)]),
+        patch('run.CommonPriceOut') as mock_out,
+        patch('run.print_log'),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -81,10 +81,10 @@ def test_main_report_doubles_then_exit() -> None:
 def test_main_update_zapaska_then_exit() -> None:
     """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
     with (
-        patch(_INPUT, side_effect=["2", _QUIT]),
-        patch("run.get_zapaska_api_config", return_value=MagicMock()),
-        patch("run.load_remote_vendor_data") as mock_load,
-        patch("run.print_log") as mock_log,
+        patch(_INPUT, side_effect=['2', _QUIT]),
+        patch('run.get_zapaska_api_config', return_value=MagicMock()),
+        patch('run.load_remote_vendor_data') as mock_load,
+        patch('run.print_log') as mock_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -99,9 +99,9 @@ def test_main_update_zapaska_then_exit() -> None:
 def test_main_retries_invalid_menu_input() -> None:
     """неверный ввод меню игнорируется, затем выполняется валидное действие."""
     with (
-        patch(_INPUT, side_effect=["x", _QUIT]),
-        patch("run.print_log"),
-        patch("run_dialog.print_log") as mock_dialog_log,
+        patch(_INPUT, side_effect=['x', _QUIT]),
+        patch('run.print_log'),
+        patch('run_dialog.print_log') as mock_dialog_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -118,10 +118,10 @@ def test_response_make_price_via_try_call() -> None:
     common.parsed_items = []
 
     with (
-        patch("run.ask_action", return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
-        patch("run.CommonPrice", return_value=common),
-        patch("run.all_vendors", return_value=[]),
-        patch("run.CommonPriceOut") as mock_out,
+        patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
+        patch('run.CommonPrice', return_value=common),
+        patch('run.all_vendors', return_value=[]),
+        patch('run.CommonPriceOut') as mock_out,
     ):
         from run import response_processing
 
@@ -134,10 +134,10 @@ def test_response_make_price_via_try_call() -> None:
 def test_response_supplier_error_exits() -> None:
     """SupplierNotHavePricesError в try_call завершает процесс с кодом 1."""
     with (
-        patch("run.ask_action", return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
-        patch("run.run_make_price_by_supplier", side_effect=SupplierNotHavePricesError("empty")),
-        patch("core.async_utils.print_log"),
-        patch("core.async_utils.sys.exit", side_effect=SystemExit(1)) as mock_exit,
+        patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
+        patch('run.run_make_price_by_supplier', side_effect=SupplierNotHavePricesError('empty')),
+        patch('core.async_utils.print_log'),
+        patch('core.async_utils.sys.exit', side_effect=SystemExit(1)) as mock_exit,
     ):
         from run import response_processing
 

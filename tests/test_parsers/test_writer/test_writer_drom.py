@@ -23,8 +23,8 @@ def test_xls_write_for_drom(tmp_path: Any) -> None:
         template=ForDrom,
         result_folder=result_folder,
     ).write()
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    now = datetime.datetime.now().strftime('%Y-%m-%d')
 
-    assert fake_driver.file_name == f"price_drom_{now}.xlsx"
+    assert fake_driver.file_name == f'price_drom_{now}.xlsx'
     assert fake_driver.folder == result_folder
     assert fake_driver.body == result_body_drom

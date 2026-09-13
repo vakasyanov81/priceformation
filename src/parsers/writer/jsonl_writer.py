@@ -12,8 +12,8 @@ from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.xls_writer import PriceRow, get_value, make_exclude
 
-RESULT_META_FILE = "result_meta.json"
-_SEPARATORS = (",", ":")
+RESULT_META_FILE = 'result_meta.json'
+_SEPARATORS = (',', ':')
 
 type JsonlColumns = list[dict[str, Any]]
 type NameToKey = dict[str, str]
@@ -35,9 +35,9 @@ def write_template_jsonl(
 
 
 def _jsonl_file_name(template: IWriteTemplate) -> str:
-    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    current_date = datetime.datetime.now().strftime('%Y-%m-%d')
     xlsx_name = template.get_file_name().format(now=current_date)
-    return Path(xlsx_name).with_suffix(".jsonl").name
+    return Path(xlsx_name).with_suffix('.jsonl').name
 
 
 def _write_jsonl(path: Path, rows: list[PriceRow], template: IWriteTemplate) -> None:
@@ -45,10 +45,10 @@ def _write_jsonl(path: Path, rows: list[PriceRow], template: IWriteTemplate) -> 
     keys = _extend_meta(path.parent, columns)
     compact = [_compact_row(product, columns, keys) for product in rows]
     apply_value_codes(compact, columns, keys, path.parent / RESULT_META_FILE)
-    with path.open("w", encoding="utf-8") as stream:
+    with path.open('w', encoding='utf-8') as stream:
         for packed in compact:
             stream.write(json.dumps(packed, ensure_ascii=False, default=str, separators=_SEPARATORS))
-            stream.write("\n")
+            stream.write('\n')
 
 
 def _extend_meta(folder: Path, columns: JsonlColumns) -> NameToKey:
@@ -61,7 +61,7 @@ def _extend_meta(folder: Path, columns: JsonlColumns) -> NameToKey:
         payload[VALUES_KEY] = codebook
     (folder / RESULT_META_FILE).write_text(
         json.dumps(payload, ensure_ascii=False),
-        encoding="utf-8",
+        encoding='utf-8',
     )
     return by_name
 
@@ -81,7 +81,7 @@ def _read_meta(folder: Path) -> KeyToName:
     path = folder / RESULT_META_FILE
     if not path.exists():
         return {}
-    loaded = json.loads(path.read_text(encoding="utf-8"))
+    loaded = json.loads(path.read_text(encoding='utf-8'))
     columns: KeyToName = {}
     for key, column_name in loaded.items():
         if not str(key).isdigit():

@@ -14,12 +14,12 @@ from parsers.supplier_price_errors import (
     UnknownSupplierCodeError,
 )
 
-_ALLOWED_EXTENSIONS = frozenset((".xls", ".xlsx"))
-_PRICE_STEM = "price"
-_MSG_MAPPING = "Ожидается объект {ид_или_код_поставщика: путь_к_файлу}"
-_MSG_NONEMPTY = "Ключ поставщика и путь к файлу должны быть непустыми строками"
-_MSG_EXTENSION = "Недопустимое расширение {0!r}. Допустимые: xls, xlsx"
-_MSG_UNKNOWN = "Неизвестный ИД или код поставщика: {0}"
+_ALLOWED_EXTENSIONS = frozenset(('.xls', '.xlsx'))
+_PRICE_STEM = 'price'
+_MSG_MAPPING = 'Ожидается объект {ид_или_код_поставщика: путь_к_файлу}'
+_MSG_NONEMPTY = 'Ключ поставщика и путь к файлу должны быть непустыми строками'
+_MSG_EXTENSION = 'Недопустимое расширение {0!r}. Допустимые: xls, xlsx'
+_MSG_UNKNOWN = 'Неизвестный ИД или код поставщика: {0}'
 
 
 def parse_prices_json(raw: str) -> dict[str, str]:
@@ -54,7 +54,7 @@ def catalog_entry_for(
     if by_id is not None:
         return by_id
     for entry in catalog.values():
-        if entry["sup_code"] == supplier_key:
+        if entry['sup_code'] == supplier_key:
             return entry
     raise UnknownSupplierCodeError(_MSG_UNKNOWN.format(supplier_key))
 
@@ -65,7 +65,7 @@ def _job_for(
     catalog: dict[str, dict[str, str]],
 ) -> tuple[Path, Path]:
     source = Path(source_raw)
-    dest = _destination(source, catalog_entry_for(supplier_key, catalog)["sup_code"])
+    dest = _destination(source, catalog_entry_for(supplier_key, catalog)['sup_code'])
     _ensure_xls_file(source)
     return source, dest
 
@@ -79,7 +79,7 @@ def _ensure_xls_file(source: Path) -> None:
     if source.suffix.lower() not in _ALLOWED_EXTENSIONS:
         raise InvalidPriceExtensionError(_MSG_EXTENSION.format(source.suffix))
     if not source.is_file():
-        raise SupplierPriceFileNotFoundError(f"Файл не найден: {source}")
+        raise SupplierPriceFileNotFoundError(f'Файл не найден: {source}')
 
 
 def _move_price(source: Path, dest: Path) -> str:

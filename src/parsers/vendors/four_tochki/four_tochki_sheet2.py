@@ -5,6 +5,7 @@ logic for four_tochki vendor (sheet 2)
 import dataclasses
 
 from parsers.nomenclature_title import brand_label, join_size_parts, join_title_parts
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -17,7 +18,7 @@ from .four_tochki_disk_title import (
 )
 
 fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
-fourtochki_sheet_2_params.sheet_info = "Вкладка (диски) #2"
+fourtochki_sheet_2_params.sheet_info = 'Вкладка (диски) #2'
 fourtochki_sheet_2_params.sheet_indexes = [1]
 fourtochki_sheet_2_params.columns = {
     0: RowItem.code.name,
@@ -44,6 +45,7 @@ fourtochki_sheet_2_params.columns = {
 fourtochki_sheet_2_config = make_parse_config(fourtochki_sheet_2_params)
 
 
+@register_vendor('4tochki-2sheet', markup_policy='recommended_or_map')
 class FourTochkiParser2Sheet(FourTochkiParserBase):
     """
     parser for four_tochki vendor (sheet 2)
@@ -51,10 +53,10 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 
     @classmethod
     def get_current_category(cls, row_item: RowItem) -> str:
-        return "Диск"
+        return 'Диск'
 
     def get_prepared_title(self, row_item: RowItem) -> str:
-        original_name = row_item.title or ""
+        original_name = row_item.title or ''
         fill_disk_thickness(row_item)
         return join_title_parts(
             _disk_title(row_item, disk_diameter(row_item.diameter)),
@@ -65,8 +67,8 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 def _disk_title(row_item: RowItem, diameter: str) -> str:
     """Title диска: size bolts ET dia color mark model."""
     return join_title_parts(
-        join_size_parts(row_item.width, "x", diameter),
-        join_size_parts(row_item.slot_count, "x", row_item.pcd1),
+        join_size_parts(row_item.width, 'x', diameter),
+        join_size_parts(row_item.slot_count, 'x', row_item.pcd1),
         et_label(row_item.eet),
         row_item.central_diameter,
         row_item.color,

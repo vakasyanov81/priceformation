@@ -15,29 +15,30 @@ from parsers.base_parser.base_parser_reader import ReaderFactory
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.json_reader import JsonPriceReader
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 column_mapping = {
-    "cae": RowItem.code_art.name,
-    "rest": RowItem.rest_count.name,
-    "price": RowItem.price_opt.name,
-    "retail": RowItem.price_recommended.name,
-    "diam_center": RowItem.central_diameter.name,
-    "holes": RowItem.slot_count.name,
-    "diam_holes": RowItem.pcd1.name,
-    "ET": RowItem.eet.name,
-    "brand": RowItem.manufacturer.name,
-    "name": RowItem.title.name,
-    "category": RowItem.type_production.name,
+    'cae': RowItem.code_art.name,
+    'rest': RowItem.rest_count.name,
+    'price': RowItem.price_opt.name,
+    'retail': RowItem.price_recommended.name,
+    'diam_center': RowItem.central_diameter.name,
+    'holes': RowItem.slot_count.name,
+    'diam_holes': RowItem.pcd1.name,
+    'ET': RowItem.eet.name,
+    'brand': RowItem.manufacturer.name,
+    'name': RowItem.title.name,
+    'category': RowItem.type_production.name,
 }
 
 zapaska_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="zapaska", name="Запаска (диски)", code="2"),
+    supplier=ParseParamsSupplier(folder_name='zapaska', name='Запаска (диски)', code='2'),
     start_row=0,
-    sheet_info="",
+    sheet_info='',
     columns=column_mapping,
     stop_words=[],
-    file_templates=["disk.json"],
+    file_templates=['disk.json'],
     sheet_indexes=[],
     row_item_adaptor=RowItem,
 )
@@ -45,12 +46,13 @@ zapaska_params = ParserParams(
 zapaska_config = make_parse_config(zapaska_params)
 
 
+@register_vendor('zapaska-disk', markup_policy=None)
 class ZapaskaDiskJSON(BaseParser):
     """
     Parser rest and price opt for zapaska vendor
     """
 
-    _type_production = "Диск"
+    _type_production = 'Диск'
 
     def __init__(
         self,
