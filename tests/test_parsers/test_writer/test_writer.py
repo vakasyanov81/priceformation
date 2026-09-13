@@ -115,3 +115,65 @@ def test_import_xls_writer_does_not_call_init_cfg(monkeypatch: pytest.MonkeyPatc
     importlib.reload(writer_mod)
 
     spy.assert_not_called()
+
+
+def test_get_value_skips_column() -> None:
+    """get_value возвращает None для колонки с skip=True."""
+    from parsers.writer.xls_writer import get_value
+
+    assert get_value({"Скрытая": {"field": "title", "skip": True}}, {}) is None
+
+
+def test_get_value_returns_list_as_string() -> None:
+    """get_value конвертирует список в строку через запятую."""
+    from parsers.writer.xls_writer import _to_str
+
+    assert _to_str(["a", "", "b"]) == "a, b"
+    assert _to_str([]) == ""
+    assert _to_str(["only"]) == "only"
+
+
+def test_get_value_falls_back_to_default() -> None:
+    """get_value возвращает дефолтное значение, если поля нет."""
+    from parsers.writer.xls_writer import get_value
+
+    # default_value 0, поле отсутствует → raw_value = None → None or 0 = 0
+    got = get_value({"Цена": {"field": "price_markup", "default_value": "0"}}, {})
+    assert got == "0"
+
+
+def test_make_exclude_empty_keeps_all() -> None:
+    """make_exclude с пустым exclude возвращает все строки."""
+    from parsers.writer.xls_writer import make_exclude
+
+    rows = [{"a": 1}, {"a": 2}]
+    assert make_exclude(rows, {}) is rows
+
+
+def test_get_color_without_map(tmp_path: Any) -> None:
+    """_get_color возвращает (None, None), если нет карты цветов."""
+    from .fixtures import ColorsWithoutMapTemplate
+
+    fake_driver = FakeXlwtDriver()
+    writer = XlsWriter(
+        fake_driver,
+        write_data,
+        template=ColorsWithoutMapTemplate,
+        result_folder=str(tmp_path),
+    )
+    color = writer._get_color(write_data[0])
+    assert color == (None, None)
+
+
+def test_write_row_empty_value_skips(tmp_path: Any) -> None:
+    """_write_row пропускает колонки с пустым значением, не падает."""
+    from .fixtures import FixtureTemplate
+
+    fake_driver = FakeXlwtDriver()
+    XlsWriter(
+        fake_driver,
+        [{}],
+        template=FixtureTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert fake_driver.body == {}  # ничего не записано, но save вызван

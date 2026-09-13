@@ -68,3 +68,12 @@ class ColorsWithoutMapTemplate(IWriteTemplate):
         "by_column": RowItem.supplier_name.name,
         "set_to_column_index": 0,
     }
+
+
+class SkipColumnTemplate(IWriteTemplate):
+    """шаблон с пропущенной колонкой"""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [
+        {"Скрытая": {"field": RowItem.title.name, "skip": True}},
+        {"Цена": {"field": RowItem.price_markup.name}},
+    ]

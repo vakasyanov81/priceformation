@@ -119,3 +119,30 @@ def test_prepared_title_replaces_comma_in_size(monkeypatch: pytest.MonkeyPatch) 
     parser = get_fake_parser([])
     row = RowItem({"title": "31x10,50R15 Mazzini Giantsaver 109S"})
     assert parser.get_prepared_title(row) == "31x10.50R15 Mazzini Giantsaver 109S"
+
+
+def test_add_price_markup_no_opt_returns_early() -> None:
+    """add_price_markup ничего не делает при пустом price_opt."""
+    parser = get_fake_parser([])
+    row = RowItem({"title": "Test"})
+    parser.add_price_markup(row)
+    assert row.price_markup == 0  # дефолтное значение
+
+
+def test_add_price_markup_zero_opt_returns_early() -> None:
+    """add_price_markup ничего не делает при price_opt = 0."""
+    parser = get_fake_parser([])
+    row = RowItem({"price_opt": 0, "title": "Test"})
+    parser.add_price_markup(row)
+    assert row.price_markup == 0  # дефолтное значение
+
+
+def test_apply_category_no_type_zeroes_rest() -> None:
+    """apply_category обнуляет остаток, если type_production не установлен."""
+    parser = get_fake_parser([])
+    row = RowItem({"title": "Test", "rest_count": 10, "price_opt": 1000})
+    parser.apply_category(row)
+    # apply_category вызывает category_for ("Диск") и super().apply_category (BaseParser.apply_category)
+    # BaseParser.apply_category вызывает correction_category через _category_finder
+    # без finder type_production не меняется, rest_count не обнуляется
+    assert row.rest_count == 10

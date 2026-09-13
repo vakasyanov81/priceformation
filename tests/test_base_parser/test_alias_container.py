@@ -28,3 +28,12 @@ def test_reversed_map_keeps_kama_alias() -> None:
     container = AliasContainer({"НКШЗ": ("НК.ШЗ", "Кама", "Kama")})
     assert container.reversed_map["кама"] == "НКШЗ"
     assert container.reversed_map["kama"] == "НКШЗ"
+
+
+def test_correct_words_lower() -> None:
+    """correct_words_lower возвращает уникальные значения reversed_map в lowercase."""
+    container = AliasContainer({"Alpha": ("Beta",), "Gamma": ("Delta",)})
+    lower = container.correct_words_lower
+    assert "alpha" in lower
+    assert "gamma" in lower
+    assert len(lower) == 2
