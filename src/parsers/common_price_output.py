@@ -3,7 +3,7 @@ Make parse all price and make inner and drom prices
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, cast
 
 from core.parse_paths import get_parse_paths
 from parsers.base_parser.nomenclature_correction import (
@@ -11,12 +11,36 @@ from parsers.base_parser.nomenclature_correction import (
     get_nomenclature_corrected_title,
 )
 from parsers.row_item.row_item import RowItem
+from parsers.writer.ixls_driver import IXlsDriver
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
 from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xwlt_driver import XlsxWriterDriver
+from services.service_provider import ServiceProvider
+
+
+class WriteDriverFactory(Protocol):
+    """Фабрика драйвера записи xlsx."""
+
+    def __call__(self) -> IXlsDriver:
+        """Создать драйвер записи."""
+        ...
+
+
+class XlsWriterFactory(Protocol):
+    """Фабрика писателя прайса: драйвер + строки + шаблон → писатель."""
+
+    def __call__(
+        self,
+        driver: IXlsDriver,
+        parse_result: list[dict[str, Any]],
+        template: type[IWriteTemplate],
+        *,
+        result_folder: str,
+    ) -> XlsWriter:
+        """Создать писатель для шаблона."""
+        ...
 
 
 class CommonPriceOut:
@@ -27,12 +51,13 @@ class CommonPriceOut:
     def __init__(
         self,
         row_items: list[RowItem],
-        xls_writer: type[XlsWriter] = XlsWriter,
-        write_driver: type[XlsxWriterDriver] = XlsxWriterDriver,
+        *,
+        xls_writer: XlsWriterFactory | None = None,
+        write_driver: WriteDriverFactory | None = None,
     ) -> None:
         """init"""
-        self.xls_writer = xls_writer
-        self.write_driver = write_driver
+        self.xls_writer = xls_writer or cast(XlsWriterFactory, ServiceProvider.resolve(XlsWriterFactory))
+        self.write_driver = write_driver or cast(WriteDriverFactory, ServiceProvider.resolve(WriteDriverFactory))
         self.row_items = row_items
 
     def nomenclature_title_correction(self) -> None:

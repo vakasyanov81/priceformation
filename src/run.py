@@ -37,6 +37,7 @@ from parsers.remote.zapaska_client import load_remote_vendor_data
 from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
+from services.configure import configure_services
 
 
 def main() -> None:
@@ -45,6 +46,7 @@ def main() -> None:
     :return:
     """
     init_cfg()
+    configure_services()
     argv = sys.argv[1:]
     if is_machine_argv(argv):
         sys.exit(_run_machine(argv))
