@@ -120,3 +120,18 @@ def test_enrich_empty_title_not_counted() -> None:
     parser = _parser()
     assert enrich_items(parser, [RowItem({})]) == []
     assert parser.black_list_skips == 0
+
+
+def test_enrich_skips_title_value_error() -> None:
+    """ValueError от set_prepared_title логируется, строка пропускается."""
+    parser = _parser()
+
+    # Мокаем set_prepared_title, чтобы он выбросил ValueError с любым title
+    def _raise_on_title(row_item: RowItem) -> bool:
+        if row_item.title:
+            raise ValueError("bad title")
+        return True
+
+    parser.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    rows = enrich_items(parser, [_priced(_TITLE)])
+    assert rows == []

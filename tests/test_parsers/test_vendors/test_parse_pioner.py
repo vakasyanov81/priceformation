@@ -205,3 +205,36 @@ def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
     assert parsed[0].title.count("Triangle") == 1
     category_and_item_rows = 3
     assert process_count == category_and_item_rows
+
+
+def test_set_manufacturer_to_title_appends_brand() -> None:
+    """set_manufacturer_to_title добавляет название бренда к первому слову title."""
+    parser = get_fake_parser(pioner_one_item_result())
+    row = RowItem({"title": "шина", "price_opt": 1000})
+    parser.current_category = "автошины Triangle"
+    parser.set_manufacturer_to_title(row)
+    assert row.brand == "Triangle"
+    assert row.title == "шина Triangle"
+
+
+def test_set_manufacturer_skips_if_present() -> None:
+    """Если бренд уже в title — дублирование не происходит."""
+    parser = get_fake_parser(pioner_one_item_result())
+    row = RowItem({"title": "TRIANGLE шина", "price_opt": 1000})
+    parser.current_category = "автошины Triangle"
+    parser.set_manufacturer_to_title(row)
+    assert row.title == "TRIANGLE шина"
+
+
+def test_manufacturer_name_requires_avtosiny() -> None:
+    """get_manufacturer_name возвращает None, если категория не начинается с 'автошины'."""
+    parser = get_fake_parser(pioner_one_item_result())
+    parser.current_category = "диски r16"
+    assert parser.get_manufacturer_name() is None
+
+
+def test_get_manufacturer_name_single_word() -> None:
+    """get_manufacturer_name возвращает None, если в категории только одно слово."""
+    parser = get_fake_parser(pioner_one_item_result())
+    parser.current_category = "автошины"
+    assert parser.get_manufacturer_name() is None

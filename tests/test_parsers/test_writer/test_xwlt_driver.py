@@ -119,6 +119,17 @@ def test_save_requires_file_name(tmp_path: Any) -> None:
         driver.save()
 
 
+def test_add_sheet_raises_when_active_is_none(tmp_path: Any) -> None:
+    """add_sheet — WorksheetNotInitializedError при workbook.active = None."""
+    driver = XlsxWriterDriver()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    # Удаляем все листы — тогда workbook.active вернёт None
+    for sheet_name in driver.work_book.sheetnames:  # type: ignore[union-attr]
+        del driver.work_book[sheet_name]  # type: ignore[union-attr]
+    with pytest.raises(WorksheetNotInitializedError, match="worksheet is not initialized"):
+        driver.add_sheet(_SHEET)
+
+
 def _assert_saved_sheet(path: Path) -> None:
     sheet = openpyxl.load_workbook(path)[_SHEET]
     assert sheet["A1"].value == _HEAD_A

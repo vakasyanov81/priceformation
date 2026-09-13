@@ -76,6 +76,12 @@ def test_aliases_for_finder_string_and_invalid() -> None:
     assert aliases_for_finder({"A": None}) == {"A": ()}
 
 
+def test_drop_blank_aliases_skips_nonstring_items() -> None:
+    """_filled_aliases пропускает нестроковые элементы списка."""
+    cleaned = drop_blank_aliases({"Brand": ["OK", None, 123, ""]})
+    assert cleaned == {"Brand": ["OK"]}
+
+
 def test_manufacturer_group_uses_group_or_key() -> None:
     aliases = {
         "НКШЗ": ["НК.ШЗ", "Кама", "Kama"],

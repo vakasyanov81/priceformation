@@ -163,3 +163,17 @@ def test_parse_resets_skipped_empty_rows() -> None:
     with pytest.raises(MaxRowsReached):
         reader.parse([0])
     assert reader.skipped_empty_rows == 0
+
+
+def test_ixls_reader_parse_raises_not_implemented() -> None:
+    """IXlsReader.parse() по умолчанию — NotImplementedError."""
+    from parsers.xls_reader import IXlsReader
+
+    with pytest.raises(NotImplementedError):
+        IXlsReader().parse()
+
+
+def test_get_instance_raises_on_missing_file() -> None:
+    """get_instance с несуществующим файлом — FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        XlsReader.get_instance("/nonexistent/file.xlsx", {})

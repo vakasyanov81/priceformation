@@ -33,3 +33,12 @@ def test_from_dict_roundtrip() -> None:
 def test_field_descriptor_stores_name() -> None:
     descriptor = FieldDescriptor[str]("title")
     assert descriptor.name == "title"
+
+
+def test_field_descriptor_set_handles_value_error() -> None:
+    """FieldDescriptor.__set__ записывает ошибку в _errors при ValueError."""
+    row = RowItem({})
+    row.price_opt = "не число"
+    assert "price_opt" in row._errors
+    assert "не число" in row._errors["price_opt"]["value"]
+    assert isinstance(row._errors["price_opt"]["error"], str)

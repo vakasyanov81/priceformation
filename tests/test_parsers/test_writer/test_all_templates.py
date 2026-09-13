@@ -47,3 +47,15 @@ def test_get_writer_template_unknown() -> None:
     assert "for_drom" in str(error.value)
     assert "for_inner" in str(error.value)
     assert "for_full" in str(error.value)
+
+
+def test_get_columns_format_empty_without_format() -> None:
+    """get_columns_format возвращает пустой словарь, если нет колонок с format."""
+    from parsers.writer.templates.iwrite_template import IWriteTemplate
+
+    class _NoFormat(IWriteTemplate):  # noqa: WPS431
+        __COLUMNS__ = [{"A": {"field": "title"}}]  # noqa: RUF012
+
+    no_format = _NoFormat()
+    fmt = no_format.get_columns_format()
+    assert fmt == {}
