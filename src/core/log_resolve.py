@@ -7,15 +7,15 @@ from typing import Any
 from core.log_paths import get_log_paths
 
 __level_map__ = {
-    logging.ERROR: "ERROR",
-    logging.INFO: "INFO",
-    logging.WARNING: "WARNING",
+    logging.ERROR: 'ERROR',
+    logging.INFO: 'INFO',
+    logging.WARNING: 'WARNING',
 }
 
 
 def get_log_level_text(log_level: int) -> str:
     """Map logging level int to text label."""
-    return __level_map__.get(log_level) or "INFO"
+    return __level_map__.get(log_level) or 'INFO'
 
 
 def resolve_log_path(level: int = logging.INFO) -> str:

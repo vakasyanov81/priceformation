@@ -4,8 +4,8 @@ import logging
 from unittest.mock import patch
 
 from cfg import init_cfg
-from core.log_message import err_msg, log_msg, warn_msg
-from core.log_paths import LogPaths, configure_log_paths, get_log_paths
+from core.log_message import err_msg, log_msg, log_to_file, warn_msg
+from core.log_paths import LogPaths, LogPathsNotConfiguredError, configure_log_paths, get_log_paths
 from core.log_resolve import (
     get_log_level_text,
     resolve_log_method,
@@ -19,26 +19,26 @@ _UNKNOWN_METHOD_LEVEL = 12345
 
 def test_get_log_level_text_known() -> None:
     """известные уровни"""
-    assert get_log_level_text(logging.ERROR) == "ERROR"
-    assert get_log_level_text(logging.WARNING) == "WARNING"
+    assert get_log_level_text(logging.ERROR) == 'ERROR'
+    assert get_log_level_text(logging.WARNING) == 'WARNING'
 
 
 def test_get_log_level_text_fallback() -> None:
     """неизвестный уровень → INFO"""
-    assert get_log_level_text(_UNKNOWN_LEVEL) == "INFO"
+    assert get_log_level_text(_UNKNOWN_LEVEL) == 'INFO'
 
 
 def test_resolve_log_path_by_level() -> None:
     """ERROR идёт в err-лог, остальное — в обычный"""
     configure_log_paths(
         LogPaths(
-            folder="/var/log/priceformation",
-            log_file="/var/log/priceformation/info.log",
-            err_file="/var/log/priceformation/err.log",
+            folder='/var/log/priceformation',
+            log_file='/var/log/priceformation/info.log',
+            err_file='/var/log/priceformation/err.log',
         )
     )
-    assert resolve_log_path(logging.ERROR) == "/var/log/priceformation/err.log"
-    assert resolve_log_path(logging.INFO) == "/var/log/priceformation/info.log"
+    assert resolve_log_path(logging.ERROR) == '/var/log/priceformation/err.log'
+    assert resolve_log_path(logging.INFO) == '/var/log/priceformation/info.log'
 
 
 def test_init_cfg_configures_log_paths() -> None:
@@ -64,10 +64,10 @@ def test_resolve_log_method_mapping() -> None:
 
 def test_warn_msg_delegates() -> None:
     """warn_msg вызывает log_msg с WARNING"""
-    with patch("core.log_message.log_msg", return_value="w") as mock_log:
-        assert warn_msg("attention", need_print_log=True) == "w"
+    with patch('core.log_message.log_msg', return_value='w') as mock_log:
+        assert warn_msg('attention', need_print_log=True) == 'w'
         mock_log.assert_called_once_with(
-            "attention",
+            'attention',
             level=logging.WARNING,
             need_print_log=True,
         )
@@ -75,18 +75,45 @@ def test_warn_msg_delegates() -> None:
 
 def test_err_msg_delegates() -> None:
     """err_msg вызывает log_msg с ERROR"""
-    with patch("core.log_message.log_msg", return_value="e") as mock_log:
-        assert err_msg("bad", need_print_log=False) == "e"
-        mock_log.assert_called_once_with("bad", level=logging.ERROR, need_print_log=False)
+    with patch('core.log_message.log_msg', return_value='e') as mock_log:
+        assert err_msg('bad', need_print_log=False) == 'e'
+        mock_log.assert_called_once_with('bad', level=logging.ERROR, need_print_log=False)
 
 
 def test_log_msg_error_writes_file() -> None:
     """ERROR-уровень пишет в файл и возвращает сообщение со временем"""
     with (
-        patch("core.log_message.log_to_file") as mock_file,
-        patch("core.log_message.print_log") as mock_print,
+        patch('core.log_message.log_to_file') as mock_file,
+        patch('core.log_message.print_log') as mock_print,
     ):
-        message = log_msg("boom", level=logging.ERROR, need_print_log=True)
+        message = log_msg('boom', level=logging.ERROR, need_print_log=True)
         mock_file.assert_called_once()
         mock_print.assert_called_once()
-        assert "boom" in message
+        assert 'boom' in message
+
+
+def test_log_to_file_writes_message() -> None:
+    """при успехе метод логирования вызывается, возвращается True"""
+    with (
+        patch('core.log_message.init_log') as mock_init,
+        patch('core.log_message.logging.basicConfig') as mock_basic,
+        patch('core.log_message.resolve_log_path', return_value='err.log'),
+        patch('core.log_message.resolve_log_method') as mock_method,
+    ):
+        written = log_to_file('boom', level=logging.ERROR)
+    mock_init.assert_called_once()
+    mock_basic.assert_called_once()
+    mock_method.assert_called_once()
+    assert written is True
+
+
+def test_log_to_file_returns_false_on_folder_error() -> None:
+    """недоступная папка логов → False, без исключения"""
+    with patch('core.log_message.init_log', side_effect=PermissionError('denied')):
+        assert not log_to_file('boom', level=logging.INFO)
+
+
+def test_log_to_file_returns_false_without_log_paths() -> None:
+    """log paths не настроены → False, без исключения"""
+    with patch('core.log_message.get_log_paths', side_effect=LogPathsNotConfiguredError()):
+        assert not log_to_file('boom', level=logging.INFO)

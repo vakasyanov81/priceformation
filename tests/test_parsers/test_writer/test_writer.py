@@ -15,12 +15,12 @@ from .fixtures import FixtureTemplate, write_data
 
 
 @pytest.mark.parametrize(
-    "method, call_count",
+    'method, call_count',
     [
-        ("parsers.writer.fake_driver.FakeXlwtDriver.add_sheet", 1),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.write_head", 1),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.write", 3),
-        ("parsers.writer.fake_driver.FakeXlwtDriver.save", 1),
+        ('parsers.writer.fake_driver.FakeXlwtDriver.add_sheet', 1),
+        ('parsers.writer.fake_driver.FakeXlwtDriver.write_head', 1),
+        ('parsers.writer.fake_driver.FakeXlwtDriver.write', 3),
+        ('parsers.writer.fake_driver.FakeXlwtDriver.save', 1),
     ],
 )
 def test_xls_write_call_counts(method: Any, call_count: Any, tmp_path: Any) -> None:
@@ -40,7 +40,7 @@ def test_xls_write_call_counts(method: Any, call_count: Any, tmp_path: Any) -> N
 
 def test_constructor_does_not_touch_disk(tmp_path: Any) -> None:
     """конструктор не создаёт папку и не пишет xlsx."""
-    result_folder = tmp_path / "result"
+    result_folder = tmp_path / 'result'
     fake_driver = FakeXlwtDriver()
     XlsWriter(
         fake_driver,
@@ -56,7 +56,7 @@ def test_constructor_does_not_touch_disk(tmp_path: Any) -> None:
 
 def test_write_creates_result_folder(tmp_path: Any) -> None:
     """write создаёт папку результата, если её нет."""
-    result_folder = tmp_path / "result"
+    result_folder = tmp_path / 'result'
     XlsWriter(
         FakeXlwtDriver(),
         write_data,
@@ -68,7 +68,7 @@ def test_write_creates_result_folder(tmp_path: Any) -> None:
 
 def test_write_when_result_folder_exists(tmp_path: Any) -> None:
     """write не падает, если папка уже есть."""
-    result_folder = tmp_path / "existing"
+    result_folder = tmp_path / 'existing'
     result_folder.mkdir()
     XlsWriter(
         FakeXlwtDriver(),
@@ -81,7 +81,7 @@ def test_write_when_result_folder_exists(tmp_path: Any) -> None:
 
 def test_write_saves_xlsx_into_result_folder(tmp_path: Any) -> None:
     """write кладёт xlsx в result_folder; без write диск пуст."""
-    result_folder = tmp_path / "out"
+    result_folder = tmp_path / 'out'
     writer = XlsWriter(
         XlsxWriterDriver(),
         write_data,
@@ -110,7 +110,7 @@ def test_xls_writer_result_path(tmp_path: Any) -> None:
 def test_import_xls_writer_does_not_call_init_cfg(monkeypatch: pytest.MonkeyPatch) -> None:
     """импорт модуля writer не поднимает композиционный корень cfg."""
     spy = MagicMock()
-    monkeypatch.setattr("cfg.init_cfg", spy)
+    monkeypatch.setattr('cfg.init_cfg', spy)
 
     importlib.reload(writer_mod)
 
@@ -121,16 +121,16 @@ def test_get_value_skips_column() -> None:
     """get_value возвращает None для колонки с skip=True."""
     from parsers.writer.xls_writer import get_value
 
-    assert get_value({"Скрытая": {"field": "title", "skip": True}}, {}) is None
+    assert get_value({'Скрытая': {'field': 'title', 'skip': True}}, {}) is None
 
 
 def test_get_value_returns_list_as_string() -> None:
     """get_value конвертирует список в строку через запятую."""
     from parsers.writer.xls_writer import _to_str
 
-    assert _to_str(["a", "", "b"]) == "a, b"
-    assert _to_str([]) == ""
-    assert _to_str(["only"]) == "only"
+    assert _to_str(['a', '', 'b']) == 'a, b'
+    assert _to_str([]) == ''
+    assert _to_str(['only']) == 'only'
 
 
 def test_get_value_falls_back_to_default() -> None:
@@ -138,15 +138,15 @@ def test_get_value_falls_back_to_default() -> None:
     from parsers.writer.xls_writer import get_value
 
     # default_value 0, поле отсутствует → raw_value = None → None or 0 = 0
-    got = get_value({"Цена": {"field": "price_markup", "default_value": "0"}}, {})
-    assert got == "0"
+    got = get_value({'Цена': {'field': 'price_markup', 'default_value': '0'}}, {})
+    assert got == '0'
 
 
 def test_make_exclude_empty_keeps_all() -> None:
     """make_exclude с пустым exclude возвращает все строки."""
     from parsers.writer.xls_writer import make_exclude
 
-    rows = [{"a": 1}, {"a": 2}]
+    rows = [{'a': 1}, {'a': 2}]
     assert make_exclude(rows, {}) is rows
 
 

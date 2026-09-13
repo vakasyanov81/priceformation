@@ -13,13 +13,13 @@ from parsers.common_price_size import canon_number, size_fields
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.row_item.row_item import RowItem
 
-_KNOWN_MODEL_PREFIXES = ("кама", "kama")
-_PREFIX_SEPARATORS = "- "
+_KNOWN_MODEL_PREFIXES = ('кама', 'kama')
+_PREFIX_SEPARATORS = '- '
 
 
 def sanitize_value(price_list_values: list[Any]) -> tuple[str, ...]:
     """Преобразует значения в строки, корректно обрабатывая None."""
-    return tuple("" if price_list_val is None else str(price_list_val) for price_list_val in price_list_values)
+    return tuple('' if price_list_val is None else str(price_list_val) for price_list_val in price_list_values)
 
 
 def clear_model(
@@ -29,11 +29,11 @@ def clear_model(
 ) -> str:
     """Очистка модели: нижний регистр, без пробелов, без префикса бренда."""
     if not model:
-        return ""
+        return ''
     normalized = model.lower()
     for prefix in _model_prefixes(manufacturer, brand):
         normalized = _lstrip_brand_prefix(normalized, prefix)
-    return normalized.replace(" ", "")
+    return normalized.replace(' ', '')
 
 
 def _lstrip_brand_prefix(model: str, prefix: str) -> str:
@@ -42,7 +42,7 @@ def _lstrip_brand_prefix(model: str, prefix: str) -> str:
         return model
     rest = model[len(prefix) :]
     if not rest:
-        return ""
+        return ''
     if rest[0] in _PREFIX_SEPARATORS:
         return rest.lstrip(_PREFIX_SEPARATORS)
     return model
@@ -59,29 +59,29 @@ def define_intimacy(row_item: RowItem) -> str | None:
     """Определить камерность (TL/TT/TTF) из title."""
 
     def is_float_diameter(diameter: Any) -> bool:
-        diameter_str = str(diameter or 0).replace(",", ".")
+        diameter_str = str(diameter or 0).replace(',', '.')
         try:
             return not float(diameter_str).is_integer()
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return False
 
-    chunks = (row_item.title or "").lower().split()
-    for intimacy in ("tl", "tt", "ttf"):
+    chunks = (row_item.title or '').lower().split()
+    for intimacy in ('tl', 'tt', 'ttf'):
         if intimacy in chunks:
             return intimacy.upper()
 
-    type_prod = (row_item.type_production or "").lower()
-    if "грузовая" in type_prod and is_float_diameter(row_item.diameter):
-        return "TL"
+    type_prod = (row_item.type_production or '').lower()
+    if 'грузовая' in type_prod and is_float_diameter(row_item.diameter):
+        return 'TL'
     return None
 
 
 def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any]:
     """Значения полей для ключа группировки."""
     mark, brand, mark_group, key_brand = brand_key_parts(row_item, aliases_map)
-    intimacy = (row_item.intimacy or define_intimacy(row_item) or "").upper()
+    intimacy = (row_item.intimacy or define_intimacy(row_item) or '').upper()
     return [
-        (row_item.type_production or "").lower(),
+        (row_item.type_production or '').lower(),
         *size_fields(row_item),
         canon_number(row_item.height_percent),
         row_item.index_velocity,

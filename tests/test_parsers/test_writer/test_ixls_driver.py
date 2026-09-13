@@ -7,7 +7,7 @@ from parsers.writer.ixls_driver import IXlsDriver
 
 def test_add_sheet_raises() -> None:
     with pytest.raises(NotImplementedError):
-        IXlsDriver().add_sheet("s")
+        IXlsDriver().add_sheet('s')
 
 
 def test_write_head_raises() -> None:
@@ -32,4 +32,4 @@ def test_save_raises() -> None:
 
 def test_init_workbook_raises() -> None:
     with pytest.raises(NotImplementedError):
-        IXlsDriver().init_workbook("f", "n")
+        IXlsDriver().init_workbook('f', 'n')

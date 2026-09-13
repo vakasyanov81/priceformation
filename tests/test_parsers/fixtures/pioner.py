@@ -8,14 +8,14 @@ from typing import Any
 def pioner_one_item_result() -> dict[str, Any]:
     """one file, one price row parse result"""
     return {
-        "file_prices\\pioner\\price.xls": [
+        'file_prices\\pioner\\price.xls': [
             {
-                "title": "Автокамера 14.00-24",
-                "price_opt": "2200,0 Руб.",
-                "rest_count": 20.0,
-                "reserve_count": "",
-                "supplier_name": "Пионер",
-                "price_markup": 2350.0,
+                'title': 'Автокамера 14.00-24',
+                'price_opt': '2200,0 Руб.',
+                'rest_count': 20.0,
+                'reserve_count': '',
+                'supplier_name': 'Пионер',
+                'price_markup': 2350.0,
             }
         ]
     }
@@ -24,19 +24,19 @@ def pioner_one_item_result() -> dict[str, Any]:
 def pioner_one_item_result_with_categories() -> dict[str, Any]:
     """one file, one price row parse result with categories"""
     return {
-        "file_prices\\pioner\\price.xls": [
-            {"title": "Автошины"},
-            {"title": "Автошины TRIANGLE"},
+        'file_prices\\pioner\\price.xls': [
+            {'title': 'Автошины'},
+            {'title': 'Автошины TRIANGLE'},
             {
-                "title": "185/75R16C Triangle TR646 104/102Q 8PR TL",
-                "price_opt": 2200.0,
-                "price_recommended": 2350.0,
-                "rest_count": 20.0,
-                "reserve_count": "",
-                "supplier_name": "Пионер",
-                "price_markup": 2350.0,
-                "brand": None,
-                "percent_markup": 6.82,
+                'title': '185/75R16C Triangle TR646 104/102Q 8PR TL',
+                'price_opt': 2200.0,
+                'price_recommended': 2350.0,
+                'rest_count': 20.0,
+                'reserve_count': '',
+                'supplier_name': 'Пионер',
+                'price_markup': 2350.0,
+                'brand': None,
+                'percent_markup': 6.82,
             },
         ]
     }

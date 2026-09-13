@@ -7,9 +7,9 @@ from fnmatch import fnmatchcase
 from core.file_reader import read_file
 from core.parse_paths import get_parse_paths
 
-_CONFIG_FILE = "black_list"
-_MASK_WILDCARD = "*"
-_MSG_SKIPPED_BLACK_LIST = "\nОтброшено {count} позиций по правилам black_list."
+_CONFIG_FILE = 'black_list'
+_MASK_WILDCARD = '*'
+_MSG_SKIPPED_BLACK_LIST = '\nОтброшено {count} позиций по правилам black_list.'
 
 
 def split_exact_and_masks(lines: list[str]) -> tuple[list[str], list[str]]:

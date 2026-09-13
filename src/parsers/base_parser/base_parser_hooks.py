@@ -17,7 +17,7 @@ class MarkupPolicyNotSetError(RuntimeError):
     """Raised when markup is used before MarkupPolicy is injected."""
 
     def __init__(self) -> None:
-        super().__init__("markup_policy is not set")
+        super().__init__('markup_policy is not set')
 
 
 class ParserMarkupOps(ParserTitleFilters):

@@ -44,7 +44,7 @@ def _optional_disk_parts(row_item: RowItem) -> tuple[str, ...]:
         canon_number(row_item.pcd1),
         canon_number(row_item.eet),
         canon_number(row_item.central_diameter),
-        (row_item.color or "").strip().lower(),
+        (row_item.color or '').strip().lower(),
     )
 
 

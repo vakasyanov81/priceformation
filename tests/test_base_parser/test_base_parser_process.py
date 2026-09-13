@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 from parsers.base_parser.base_parser import BaseParser
 from parsers.row_item.row_item import RowItem
 
-_FIRST_FILE = "brand_kind_cat_tires.xls"
-_SECOND_FILE = "brand_kind_cat_disks.xls"
+_FIRST_FILE = 'brand_kind_cat_tires.xls'
+_SECOND_FILE = 'brand_kind_cat_disks.xls'
 _FIRST_COUNT = 2
 _SECOND_COUNT = 1
 _TOTAL_COUNT = 3
@@ -24,12 +24,12 @@ class _ProcessParser(BaseParser):
         self.type_production: str | None = None
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
-        return [{"file": full_file_xls_path}]
+        return [{'file': full_file_xls_path}]
 
     def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
         mapped_rows: list[RowItem] = []
         for raw in raw_rows:
-            mapped_rows.extend(self._rows_by_file[str(raw["file"])])
+            mapped_rows.extend(self._rows_by_file[str(raw['file'])])
         return mapped_rows
 
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
@@ -58,4 +58,4 @@ def test_process_sums_rows_from_two_files() -> None:
 
     assert parser.process() == _TOTAL_COUNT
     assert parser.parsed_items == first_rows + second_rows
-    assert parser.type_production == "disks.xls"
+    assert parser.type_production == 'disks.xls'

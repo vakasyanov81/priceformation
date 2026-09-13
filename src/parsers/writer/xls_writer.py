@@ -30,7 +30,7 @@ def _to_str(raw_value: object) -> str:
     """list to string"""
     if isinstance(raw_value, list):
         filtered_items = [element for element in raw_value if element]
-        return ", ".join(filtered_items)
+        return ', '.join(filtered_items)
 
     return raw_value  # type: ignore[return-value]
 
@@ -69,7 +69,7 @@ class XlsWriter:
         folder = Path(self._result_folder)
         folder.mkdir(parents=True, exist_ok=True)
         self.driver.init_workbook(str(folder), self.get_file_name())
-        self.driver.add_sheet("price")
+        self.driver.add_sheet('price')
         self.driver.set_column_format(self.template.get_columns_format())
         self.driver.write_head(self.col_names())
         filtered_data = make_exclude(self.parse_result, self.exclude)
@@ -80,7 +80,7 @@ class XlsWriter:
     def get_file_name(self) -> str:
         """get file name for writing"""
         file_template = self.template.get_file_name()
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
         return file_template.format(now=current_date)
 
     def get_result_path(self) -> str:
@@ -97,7 +97,7 @@ class XlsWriter:
         if not colors:
             return None, None
 
-        column_name = colors.get("by_column")
+        column_name = colors.get('by_column')
         if not column_name or column_name not in product:
             return None, None
 
@@ -105,11 +105,11 @@ class XlsWriter:
         if not column_value:
             return None, None
 
-        color_map = colors.get("with_map")
+        color_map = colors.get('with_map')
         if not color_map:
             return None, None
 
-        index = colors.get("set_to_column_index")
+        index = colors.get('set_to_column_index')
         return color_map.get(column_value), index
 
     def _write_row(self, row_item: PriceRow, row_index: int, color: RowColor | None = None) -> None:

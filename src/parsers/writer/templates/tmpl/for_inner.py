@@ -13,59 +13,59 @@ class ForInner(IWriteTemplate):
 
     __COLUMNS__: ClassVar[WriteColumns] = [
         {
-            "Тип товара": {
-                "style": {"width": 256 * 10},
-                "field": RowItem.type_production.name,
+            'Тип товара': {
+                'style': {'width': 256 * 10},
+                'field': RowItem.type_production.name,
             }
         },
         {
-            "Бренд": {
-                "style": {"width": 356 * 15},
-                "field": RowItem.manufacturer.name,
+            'Бренд': {
+                'style': {'width': 356 * 15},
+                'field': RowItem.manufacturer.name,
             }
         },
-        {"Номенклатура": {"style": {"width": 256 * 100}, "field": RowItem.title.name}},
-        {"Сезон": {"field": RowItem.season.name}},
-        {"Шип": {"field": RowItem.spike.name}},
+        {'Номенклатура': {'style': {'width': 256 * 100}, 'field': RowItem.title.name}},
+        {'Сезон': {'field': RowItem.season.name}},
+        {'Шип': {'field': RowItem.spike.name}},
         {
-            "Цена закуп.": {
-                "style": {"width": 256 * 15},
-                "field": RowItem.price_opt.name,
-                "format": "@",
+            'Цена закуп.': {
+                'style': {'width': 256 * 15},
+                'field': RowItem.price_opt.name,
+                'format': '@',
             }
         },
-        {"Цена": {"field": RowItem.price_markup.name}},
+        {'Цена': {'field': RowItem.price_markup.name}},
         {
-            "Рекомендуемая Цена": {
-                "style": {"width": 256 * 25},
-                "field": RowItem.price_recommended.name,
-                "format": "@",
+            'Рекомендуемая Цена': {
+                'style': {'width': 256 * 25},
+                'field': RowItem.price_recommended.name,
+                'format': '@',
             }
         },
-        {"Наценка %": {"style": {"width": 256 * 15}, "field": RowItem.percent_markup.name}},
-        {"Остаток": {"field": RowItem.rest_count.name}},
+        {'Наценка %': {'style': {'width': 256 * 15}, 'field': RowItem.percent_markup.name}},
+        {'Остаток': {'field': RowItem.rest_count.name}},
         {
-            "Поставщик": {
-                "style": {"width": 256 * 15},
-                "field": RowItem.supplier_name.name,
+            'Поставщик': {
+                'style': {'width': 256 * 15},
+                'field': RowItem.supplier_name.name,
             }
         },
-        {"Наличие": {"field": RowItem.available.name, "default_value": "В наличии"}},
-        {"Срок доставки": {"field": RowItem.delivery_period.name}},
-        {"Состояние": {"field": RowItem.condition.name, "default_value": "Новое"}},
+        {'Наличие': {'field': RowItem.available.name, 'default_value': 'В наличии'}},
+        {'Срок доставки': {'field': RowItem.delivery_period.name}},
+        {'Состояние': {'field': RowItem.condition.name, 'default_value': 'Новое'}},
     ]
 
     __COLOR__: ClassVar[WriteColors] = {
-        "by_column": RowItem.supplier_name.name,
-        "with_map": {
-            "Пошк": "blue",
-            "Мим": "#f7d5d2",
-            "Запаска (остатки)": "#99706d",
-            "Форточки": "#658c68",
+        'by_column': RowItem.supplier_name.name,
+        'with_map': {
+            'Пошк': 'blue',
+            'Мим': '#f7d5d2',
+            'Запаска (остатки)': '#99706d',
+            'Форточки': '#658c68',
         },
-        "set_to_column_index": 0,
+        'set_to_column_index': 0,
     }
 
-    __FILE__ = "price_{now}.xlsx"
+    __FILE__ = 'price_{now}.xlsx'
 
     __EXCLUDE__: ClassVar[WriteExclude] = {}

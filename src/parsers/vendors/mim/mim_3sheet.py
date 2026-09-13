@@ -4,6 +4,7 @@ logic for mim vendor (sheet 3)
 
 import dataclasses
 
+from parsers.registry import register_vendor
 from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -11,7 +12,7 @@ from ...row_item.row_item import RowItem
 from .mim_base import MimParserBase
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)
-mim_sheet_3_params.sheet_info = "Вкладка #3"
+mim_sheet_3_params.sheet_info = 'Вкладка #3'
 mim_sheet_3_params.sheet_indexes = [2]
 mim_sheet_3_params.columns = {
     0: RowItem.code.name,
@@ -33,6 +34,7 @@ mim_sheet_3_params.columns = {
 mim_sheet_3_config = make_parse_config(mim_sheet_3_params)
 
 
+@register_vendor('mim-3sheet', markup_policy=None)
 class MimParser3Sheet(MimParserBase):
     """
     parser for mim vendor (sheet 3)
@@ -40,4 +42,4 @@ class MimParser3Sheet(MimParserBase):
 
     @classmethod
     def get_current_category(cls) -> str:
-        return "Диск"
+        return 'Диск'

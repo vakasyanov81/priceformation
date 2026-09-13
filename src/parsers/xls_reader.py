@@ -77,7 +77,7 @@ class XlsReader(IXlsReader):
         """get sheet list"""
         book = self.book
         if book is None or not book.sheet_names:
-            core.make_raise("В прайсе отсутствуют вкладки!")
+            core.make_raise('В прайсе отсутствуют вкладки!')
         workbook = cast(CalamineWorkbook, book)
 
         return [workbook.get_sheet_by_name(s_name).to_python(skip_empty_area=False) for s_name in workbook.sheet_names]
@@ -126,4 +126,4 @@ class MaxRowsReached(core.CoreExceptionError):
     """max rows reached exception"""
 
     def __init__(self, max_rows_count: int) -> None:
-        super().__init__(f"maximum rows ({max_rows_count}) reached")
+        super().__init__(f'maximum rows ({max_rows_count}) reached')

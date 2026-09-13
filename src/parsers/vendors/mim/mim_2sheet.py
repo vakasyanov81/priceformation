@@ -5,6 +5,7 @@ logic for mim vendor (sheet 2)
 import dataclasses
 
 from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
@@ -15,7 +16,7 @@ TRUCK_TIRE_MARKUP_LOW = 0.07
 TRUCK_TIRE_MARKUP_HIGH = 0.05
 
 mim_sheet_2_params = dataclasses.replace(mim_params)
-mim_sheet_2_params.sheet_info = "Вкладка #2"
+mim_sheet_2_params.sheet_info = 'Вкладка #2'
 mim_sheet_2_params.sheet_indexes = [1]
 mim_sheet_2_params.columns = {
     0: RowItem.code.name,
@@ -39,6 +40,7 @@ mim_sheet_2_params.columns = {
 mim_sheet_2_config = make_parse_config(mim_sheet_2_params)
 
 
+@register_vendor('mim-2sheet', markup_policy=None)
 class MimParser2Sheet(MimParserBase):
     """
     parser for mim vendor (sheet 2)
@@ -47,7 +49,7 @@ class MimParser2Sheet(MimParserBase):
     @classmethod
     def get_current_category(cls) -> str:
         """current category"""
-        return "Грузовая шина"
+        return 'Грузовая шина'
 
     def get_markup_percent(self, price_value: float) -> float:
         """Для грузовых позиций наценка"""
@@ -63,8 +65,8 @@ class MimParser2Sheet(MimParserBase):
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         """prepare title"""
-        profile = f"/{row_item.height_percent}" if row_item.height_percent else ""
-        diameter = f"R{row_item.diameter}" if row_item.diameter else ""
+        profile = f'/{row_item.height_percent}' if row_item.height_percent else ''
+        diameter = f'R{row_item.diameter}' if row_item.diameter else ''
         size = join_size_parts(row_item.width, profile, diameter)
         return compose_tire_title(
             row_item,

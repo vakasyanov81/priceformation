@@ -11,14 +11,14 @@ from parsers.load_config_errors import (
     InvalidConfigKindError,
 )
 
-_BLACK_LIST_NAME = "black_list"
-_JSON_SUFFIX = ".json"
-_XLSX_SUFFIX = ".xlsx"
+_BLACK_LIST_NAME = 'black_list'
+_JSON_SUFFIX = '.json'
+_XLSX_SUFFIX = '.xlsx'
 _ALLOWED_SUFFIXES = frozenset((_JSON_SUFFIX, _XLSX_SUFFIX))
-_MSG_KIND = "Недопустимый файл {0!r}. Допустимы: *.json, *.xlsx, black_list"
-_MSG_JSON = "Файл не является JSON: {0}"
-_MSG_PATH = "Ожидается полный путь к файлу или папке"
-_MSG_EMPTY = "В папке нет файлов настроек: {0}"
+_MSG_KIND = 'Недопустимый файл {0!r}. Допустимы: *.json, *.xlsx, black_list'
+_MSG_JSON = 'Файл не является JSON: {0}'
+_MSG_PATH = 'Ожидается полный путь к файлу или папке'
+_MSG_EMPTY = 'В папке нет файлов настроек: {0}'
 
 
 def load_config(source_raw: str) -> list[str]:
@@ -38,7 +38,7 @@ def _resolve_sources(source_raw: str) -> list[Path]:
         return _files_in_folder(source)
     if source.exists():
         return [source]
-    raise ConfigFileNotFoundError(f"Файл или папка не найдены: {source}")
+    raise ConfigFileNotFoundError(f'Файл или папка не найдены: {source}')
 
 
 def _files_in_folder(folder: Path) -> list[Path]:
@@ -63,7 +63,7 @@ def _validate_json(source: Path) -> None:
     if source.suffix.lower() != _JSON_SUFFIX:
         return
     try:
-        json.loads(source.read_text(encoding="utf-8"))
+        json.loads(source.read_text(encoding='utf-8'))
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise InvalidConfigJsonError(_MSG_JSON.format(exc)) from exc
 

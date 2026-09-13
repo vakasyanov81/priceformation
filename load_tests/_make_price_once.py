@@ -18,15 +18,15 @@ def main() -> None:
         ParsePaths(
             file_prices_folder=paths.file_prices_folder,
             user_config_folder=paths.user_config_folder,
-            result_folder=f"{result_dir}/",
+            result_folder=f'{result_dir}/',
         ),
     )
 
     start = time.perf_counter()
     run_make_price_by_supplier()
     elapsed = time.perf_counter() - start
-    elapsed_path.write_text(f"{elapsed:.6f}", encoding="utf-8")
+    elapsed_path.write_text(f'{elapsed:.6f}', encoding='utf-8')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

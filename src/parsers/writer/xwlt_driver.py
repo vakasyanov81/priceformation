@@ -18,14 +18,14 @@ class WorkbookNotInitializedError(RuntimeError):
     """Raised when the xlsx driver is used before init_workbook."""
 
     def __init__(self) -> None:
-        super().__init__("workbook is not initialized")
+        super().__init__('workbook is not initialized')
 
 
 class WorksheetNotInitializedError(RuntimeError):
     """Raised when the xlsx driver is used before add_sheet."""
 
     def __init__(self) -> None:
-        super().__init__("worksheet is not initialized")
+        super().__init__('worksheet is not initialized')
 
 
 def number_to_excel_column(number: int) -> str:
@@ -33,7 +33,7 @@ def number_to_excel_column(number: int) -> str:
     Конвертирует номер колонки в символьное обозначение Excel
     1 -> A, 2 -> B, ..., 26 -> Z, 27 -> AA, и т.д.
     """
-    column_label = ""
+    column_label = ''
     while number > 0:
         number, remainder = divmod(number - 1, EXCEL_ALPHABET_SIZE)
         column_label = chr(EXCEL_COLUMN_A_ORD + remainder) + column_label
@@ -42,8 +42,8 @@ def number_to_excel_column(number: int) -> str:
 
 def solid_fill(_color: str) -> PatternFill:
     """Solid PatternFill from #RRGGBB / RRGGBB."""
-    rgb = Color(rgb=_color.lstrip("#"))
-    return PatternFill(fgColor=rgb, fill_type="solid")
+    rgb = Color(rgb=_color.lstrip('#'))
+    return PatternFill(fgColor=rgb, fill_type='solid')
 
 
 class XlsxWriterDriver(IXlsDriver):
@@ -115,7 +115,7 @@ class XlsxWriterDriver(IXlsDriver):
 
         self.current_col_index = col_idx
         self.current_row_index = row_idx
-        content_length = len(str(cell_content or ""))
+        content_length = len(str(cell_content or ''))
         known_max = self.col_max_length.get(col_idx)
         if known_max is None or known_max < content_length:
             self.col_max_length[col_idx] = content_length

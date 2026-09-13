@@ -12,8 +12,8 @@ from .log_message import log_msg
 
 CALL_BEGIN_MSG = 'Calling method "{method}".'
 CALL_END_MSG = 'End of call to method "{method}" [exec_period] {period}'
-CALL_LABEL_MSG = "\n\rLabel {label}"
-CALL_PARAMS_MSG = "\n\rParams: {params}"
+CALL_LABEL_MSG = '\n\rLabel {label}'
+CALL_PARAMS_MSG = '\n\rParams: {params}'
 CALL_TRACE_MSG = 'Runtime error "{method}":\n\r{trace}'
 CALL_RESULT_MSG = 'Result "{method}": {res}'
 
@@ -30,7 +30,7 @@ def _build_begin_msg(
         msg += CALL_LABEL_MSG.format(label=label)
     msg += CALL_PARAMS_MSG.format(params=str(args))
     if kwargs:
-        msg = "".join((msg, f"\n{kwargs}"))
+        msg = ''.join((msg, f'\n{kwargs}'))
     return msg
 
 
@@ -51,14 +51,14 @@ def _log_trace(method_name: str) -> None:
 
 def _decorator[RT](
     func: Callable[..., RT],
-    label: str = "",
+    label: str = '',
 ) -> Callable[..., RT]:
     """log decorator"""
 
     def wrapped(*args: Any, **kwargs: Any) -> RT:
         """wrapper for super method"""
         call_output: RT | None = None
-        method_name = f"{func.__module__}.{func.__name__}"
+        method_name = f'{func.__module__}.{func.__name__}'
         start_time = time.time()
         log_msg(_build_begin_msg(method_name, label, args, kwargs))
         try:
@@ -82,7 +82,7 @@ class LogDecorator(Protocol):
     ) -> Callable[..., RT]: ...
 
 
-def logging(label: str = "") -> LogDecorator:
+def logging(label: str = '') -> LogDecorator:
     """
     Wrapper for logging function
     """

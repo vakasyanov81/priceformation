@@ -11,9 +11,9 @@ from core.parse_paths import (
     get_parse_paths,
 )
 
-_FOLDER = "/var/parse_config"
-_PRICES = "/var/file_prices"
-_RESULT_FOLDER = "/var/file_prices/result"
+_FOLDER = '/var/parse_config'
+_PRICES = '/var/file_prices'
+_RESULT_FOLDER = '/var/file_prices/result'
 
 
 @pytest.fixture
@@ -32,11 +32,11 @@ def test_configure_and_get_parse_paths(_restore_parse_paths: None) -> None:
     assert paths.file_prices_folder == _PRICES
     assert paths.user_config_folder == _FOLDER
     assert paths.result_folder == _RESULT_FOLDER
-    assert paths.config_file("black_list") == f"{_FOLDER}/black_list"
+    assert paths.config_file('black_list') == f'{_FOLDER}/black_list'
 
 
 def test_get_parse_paths_requires_configure(_restore_parse_paths: None) -> None:
     """без configure_parse_paths — явная ошибка."""
     _CurrentParsePaths.configured = None  # noqa: WPS437
-    with pytest.raises(RuntimeError, match="Parse paths are not configured"):
+    with pytest.raises(RuntimeError, match='Parse paths are not configured'):
         get_parse_paths()

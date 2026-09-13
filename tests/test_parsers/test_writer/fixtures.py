@@ -9,44 +9,44 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColors
 
 write_data = [
     {
-        "code": 87674341266.0,
-        "title": "225/40R18 Crossleader 92Y",
-        "mark": "CROSSLEADER",
-        "model": "DSU02",
-        "diameter": "18",
-        "width": "225",
-        "profile": "40",
-        "index_velocity": "Y",
-        "index_load": "92",
-        "rest_count": 4.0,
-        "price_opt": 3457.0,
-        "price_recommended": "",
-        "supplier_name": "Мим",
-        "price_markup": 3980.0,
-        "type_production": "Автошина",
-        "percent_markup": 15.13,
+        'code': 87674341266.0,
+        'title': '225/40R18 Crossleader 92Y',
+        'mark': 'CROSSLEADER',
+        'model': 'DSU02',
+        'diameter': '18',
+        'width': '225',
+        'profile': '40',
+        'index_velocity': 'Y',
+        'index_load': '92',
+        'rest_count': 4.0,
+        'price_opt': 3457.0,
+        'price_recommended': '',
+        'supplier_name': 'Мим',
+        'price_markup': 3980.0,
+        'type_production': 'Автошина',
+        'percent_markup': 15.13,
     }
 ]
 
 result_body_drom = {
-    "cell(1,0)": "Автошина",
-    "cell(1,2)": "225/40R18 Crossleader 92Y",
-    "cell(1,5)": 3980.0,
-    "cell(1,6)": 4.0,
-    "cell(1,7)": "В наличии",
-    "cell(1,9)": "Новое",
+    'cell(1,0)': 'Автошина',
+    'cell(1,2)': '225/40R18 Crossleader 92Y',
+    'cell(1,5)': 3980.0,
+    'cell(1,6)': 4.0,
+    'cell(1,7)': 'В наличии',
+    'cell(1,9)': 'Новое',
 }
 
 result_body_inner = {
-    "cell(1,0)": "Автошина",
-    "cell(1,10)": "Мим",
-    "cell(1,11)": "В наличии",
-    "cell(1,13)": "Новое",
-    "cell(1,2)": "225/40R18 Crossleader 92Y",
-    "cell(1,5)": 3457.0,
-    "cell(1,6)": 3980.0,
-    "cell(1,8)": 15.13,
-    "cell(1,9)": 4.0,
+    'cell(1,0)': 'Автошина',
+    'cell(1,10)': 'Мим',
+    'cell(1,11)': 'В наличии',
+    'cell(1,13)': 'Новое',
+    'cell(1,2)': '225/40R18 Crossleader 92Y',
+    'cell(1,5)': 3457.0,
+    'cell(1,6)': 3980.0,
+    'cell(1,8)': 15.13,
+    'cell(1,9)': 4.0,
 }
 
 
@@ -54,9 +54,9 @@ class FixtureTemplate(IWriteTemplate):
     """fixture template"""
 
     __COLUMNS__: ClassVar[WriteColumns] = [
-        {"Номенклатура": {"field": RowItem.title.name}},
-        {"Цена": {"field": RowItem.price_markup.name}},
-        {"Остаток": {"field": RowItem.rest_count.name}},
+        {'Номенклатура': {'field': RowItem.title.name}},
+        {'Цена': {'field': RowItem.price_markup.name}},
+        {'Остаток': {'field': RowItem.rest_count.name}},
     ]
 
 
@@ -65,8 +65,8 @@ class ColorsWithoutMapTemplate(IWriteTemplate):
 
     __COLUMNS__: ClassVar[WriteColumns] = FixtureTemplate.__COLUMNS__
     __COLOR__: ClassVar[WriteColors] = {
-        "by_column": RowItem.supplier_name.name,
-        "set_to_column_index": 0,
+        'by_column': RowItem.supplier_name.name,
+        'set_to_column_index': 0,
     }
 
 
@@ -74,6 +74,6 @@ class SkipColumnTemplate(IWriteTemplate):
     """шаблон с пропущенной колонкой"""
 
     __COLUMNS__: ClassVar[WriteColumns] = [
-        {"Скрытая": {"field": RowItem.title.name, "skip": True}},
-        {"Цена": {"field": RowItem.price_markup.name}},
+        {'Скрытая': {'field': RowItem.title.name, 'skip': True}},
+        {'Цена': {'field': RowItem.price_markup.name}},
     ]

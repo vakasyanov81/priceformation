@@ -8,14 +8,15 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
     make_parse_config,
 )
+from parsers.registry import register_vendor
 from parsers.row_item.row_item import RowItem
 
 STK_START_ROW = 14
 
 stk_params = ParserParams(
-    supplier=ParseParamsSupplier(folder_name="stk", name="STK", code="7"),
+    supplier=ParseParamsSupplier(folder_name='stk', name='STK', code='7'),
     start_row=STK_START_ROW,
-    sheet_info="",
+    sheet_info='',
     columns={
         1: RowItem.code.name,
         2: RowItem.title.name,
@@ -23,7 +24,7 @@ stk_params = ParserParams(
         4: RowItem.rest_count.name,
     },
     stop_words=[],
-    file_templates=["price*.xls", "price*.xlsx"],
+    file_templates=['price*.xls', 'price*.xlsx'],
     sheet_indexes=[],
     row_item_adaptor=RowItem,
 )
@@ -31,6 +32,7 @@ stk_params = ParserParams(
 stk_config = make_parse_config(stk_params)
 
 
+@register_vendor('stk', markup_policy='map_on_opt')
 class STKParser(BaseParser):
     """
     parser for Greenstone vendor

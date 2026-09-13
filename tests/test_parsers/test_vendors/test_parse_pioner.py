@@ -53,9 +53,9 @@ class TestParsePioner:
         parsed_items: list[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].title == "Автокамера 14.00-24"
+        assert parsed_items[0].title == 'Автокамера 14.00-24'
         assert parsed_items[0].price_markup == 2310
-        assert parsed_items[0].supplier_name == "Пионер"
+        assert parsed_items[0].supplier_name == 'Пионер'
         assert parsed_items[0].percent_markup == 5
 
     def test_parse_brand(self) -> None:
@@ -64,24 +64,24 @@ class TestParsePioner:
         parsed_items: list[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].brand == "triangle"
+        assert parsed_items[0].brand == 'triangle'
 
     def test_small_rest(self) -> None:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["rest_count"] = 3
+        first_row['rest_count'] = 3
 
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 0
 
-    @pytest.mark.parametrize("price_opt", [0, None])
+    @pytest.mark.parametrize('price_opt', [0, None])
     def test_null_price_opt(self, price_opt: Any) -> None:
         """test exclude price-position with null price purchase"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["price_opt"] = price_opt
+        first_row['price_opt'] = price_opt
 
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
@@ -91,20 +91,20 @@ class TestParsePioner:
         """test exclude price-position with small rest count"""
         parse_result = pioner_one_item_result()
         first_row = get_first_row_item(parse_result)
-        first_row["rest_count"] = 10
-        first_row["reserve_count"] = 7
+        first_row['rest_count'] = 10
+        first_row['reserve_count'] = 7
 
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 0
 
     @pytest.mark.parametrize(
-        "markup_case",
+        'markup_case',
         [
             {
-                "price": 150000,
-                "price_with_markup": 157500,
-                "category": "автошины TRIANGLE",
+                'price': 150000,
+                'price_with_markup': 157500,
+                'category': 'автошины TRIANGLE',
             },
         ],
     )
@@ -112,19 +112,19 @@ class TestParsePioner:
         """test markup"""
         parse_result = pioner_one_item_result_with_categories()
         rows = get_rows(parse_result)
-        rows[1]["title"] = markup_case.get("category")
-        rows[2]["price_opt"] = markup_case.get("price")
-        rows[2]["price_recommended"] = markup_case.get("price_recommended")
+        rows[1]['title'] = markup_case.get('category')
+        rows[2]['price_opt'] = markup_case.get('price')
+        rows[2]['price_recommended'] = markup_case.get('price_recommended')
 
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].price_markup == markup_case.get("price_with_markup")
-        assert parsed_items[0].title.count("Triangle") == 1
+        assert parsed_items[0].price_markup == markup_case.get('price_with_markup')
+        assert parsed_items[0].title.count('Triangle') == 1
 
 
 @pytest.mark.parametrize(
-    ("price_opt", "percent"),
+    ('price_opt', 'percent'),
     [
         (1000, 0.20),
         (1001, 0.18),
@@ -138,7 +138,7 @@ def test_markup_percent_includes_rule_min(price_opt: float, percent: float) -> N
 
 class _EmptyMarkupRules(MarkupRulesProviderBase):
     def get_markup_data(self) -> dict[str, Any]:
-        return {"markup_rules": {}}
+        return {'markup_rules': {}}
 
 
 def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
@@ -155,13 +155,13 @@ def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:
 
 def test_prochie_category_zeroes_rest() -> None:
     parse_result = {
-        "file_prices\\pioner\\price.xls": [
-            {"title": "Прочие"},
+        'file_prices\\pioner\\price.xls': [
+            {'title': 'Прочие'},
             {
-                "title": "Автокамера 14.00-24",
-                "price_opt": "2200,0 Руб.",
-                "rest_count": 20.0,
-                "reserve_count": "",
+                'title': 'Автокамера 14.00-24',
+                'price_opt': '2200,0 Руб.',
+                'rest_count': 20.0,
+                'reserve_count': '',
             },
         ]
     }
@@ -170,7 +170,7 @@ def test_prochie_category_zeroes_rest() -> None:
 
 def test_item_rest_missing_is_zero() -> None:
     assert PionerParser.get_item_rest(RowItem({})) == 0
-    assert PionerParser.get_item_rest(RowItem({"rest_count": 10, "reserve_count": 3})) == 7
+    assert PionerParser.get_item_rest(RowItem({'rest_count': 10, 'reserve_count': 3})) == 7
 
 
 def test_add_price_markup_without_opt_stays_zero() -> None:
@@ -182,7 +182,7 @@ def test_add_price_markup_without_opt_stays_zero() -> None:
 
 def test_add_price_markup_empty_rules_keeps_opt() -> None:
     parser = _parser_with_markup(_EmptyMarkupRules())
-    row = RowItem({"price_opt": 1000})
+    row = RowItem({'price_opt': 1000})
     parser.add_price_markup(row)
     assert row.price_markup == 1000
     assert row.percent_markup == 0
@@ -199,10 +199,10 @@ def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
         process_count += 1
         original_process(self, row_item)
 
-    monkeypatch.setattr(ManufacturerFinder, "process", counting_process)
+    monkeypatch.setattr(ManufacturerFinder, 'process', counting_process)
     parsed = get_fake_parser(pioner_one_item_result_with_categories()).parse()
     assert len(parsed) == 1
-    assert parsed[0].title.count("Triangle") == 1
+    assert parsed[0].title.count('Triangle') == 1
     category_and_item_rows = 3
     assert process_count == category_and_item_rows
 
@@ -210,31 +210,31 @@ def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
 def test_set_manufacturer_to_title_appends_brand() -> None:
     """set_manufacturer_to_title добавляет название бренда к первому слову title."""
     parser = get_fake_parser(pioner_one_item_result())
-    row = RowItem({"title": "шина", "price_opt": 1000})
-    parser.current_category = "автошины Triangle"
+    row = RowItem({'title': 'шина', 'price_opt': 1000})
+    parser.current_category = 'автошины Triangle'
     parser.set_manufacturer_to_title(row)
-    assert row.brand == "Triangle"
-    assert row.title == "шина Triangle"
+    assert row.brand == 'Triangle'
+    assert row.title == 'шина Triangle'
 
 
 def test_set_manufacturer_skips_if_present() -> None:
     """Если бренд уже в title — дублирование не происходит."""
     parser = get_fake_parser(pioner_one_item_result())
-    row = RowItem({"title": "TRIANGLE шина", "price_opt": 1000})
-    parser.current_category = "автошины Triangle"
+    row = RowItem({'title': 'TRIANGLE шина', 'price_opt': 1000})
+    parser.current_category = 'автошины Triangle'
     parser.set_manufacturer_to_title(row)
-    assert row.title == "TRIANGLE шина"
+    assert row.title == 'TRIANGLE шина'
 
 
 def test_manufacturer_name_requires_avtosiny() -> None:
     """get_manufacturer_name возвращает None, если категория не начинается с 'автошины'."""
     parser = get_fake_parser(pioner_one_item_result())
-    parser.current_category = "диски r16"
+    parser.current_category = 'диски r16'
     assert parser.get_manufacturer_name() is None
 
 
 def test_get_manufacturer_name_single_word() -> None:
     """get_manufacturer_name возвращает None, если в категории только одно слово."""
     parser = get_fake_parser(pioner_one_item_result())
-    parser.current_category = "автошины"
+    parser.current_category = 'автошины'
     assert parser.get_manufacturer_name() is None

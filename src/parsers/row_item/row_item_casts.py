@@ -9,7 +9,7 @@ from parsers.row_item.row_item_strip import get_stripped, prepare_str_to_float, 
 @lru_cache
 def get_float(field_raw: Any) -> float:
     """get float value"""
-    return float(prepare_str_to_float(strip_into_str(get_stripped(field_raw, null_value="0"))))
+    return float(prepare_str_to_float(strip_into_str(get_stripped(field_raw, null_value='0'))))
 
 
 def get_integer(field_raw: Any) -> int:

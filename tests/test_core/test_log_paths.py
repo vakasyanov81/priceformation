@@ -11,9 +11,9 @@ from core.log_paths import (
     get_log_paths,
 )
 
-_FOLDER = "/var/log"
-_LOG_FILE = "/var/log/log_2026-01-01.log"
-_ERR_FILE = "/var/log/error_2026-01-01.log"
+_FOLDER = '/var/log'
+_LOG_FILE = '/var/log/log_2026-01-01.log'
+_ERR_FILE = '/var/log/error_2026-01-01.log'
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def test_configure_and_get_log_paths(_restore_log_paths: None) -> None:
 def test_get_log_paths_requires_configure(_restore_log_paths: None) -> None:
     """без configure_log_paths — явная ошибка."""
     _CurrentLogPaths.configured = None
-    with pytest.raises(RuntimeError, match="Log paths are not configured"):
+    with pytest.raises(RuntimeError, match='Log paths are not configured'):
         get_log_paths()
 
 
@@ -46,4 +46,4 @@ def test_log_paths_not_configured_error_message() -> None:
     from core.log_paths import LogPathsNotConfiguredError
 
     error = LogPathsNotConfiguredError()
-    assert str(error) == "Log paths are not configured"
+    assert str(error) == 'Log paths are not configured'

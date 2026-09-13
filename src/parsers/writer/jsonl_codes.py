@@ -10,8 +10,8 @@ from parsers.row_item.row_item import RowItem
 from parsers.writer.jsonl_codeable import is_codable_value, usable_codes
 from parsers.writer.templates.column_helper import ColumnHelper
 
-VALUES_KEY = "values"
-_CODE_PREFIX = "@"
+VALUES_KEY = 'values'
+_CODE_PREFIX = '@'
 _MIN_REPEAT = 2
 
 type JsonlRow = dict[str, Any]
@@ -38,7 +38,7 @@ def read_value_codes(meta_path: Path) -> ValueCodes:
     """Словарь @N → исходное значение из result_meta.json."""
     if not meta_path.exists():
         return {}
-    loaded = json.loads(meta_path.read_text(encoding="utf-8"))
+    loaded = json.loads(meta_path.read_text(encoding='utf-8'))
     raw = loaded.get(VALUES_KEY)
     if isinstance(raw, dict):
         return raw
@@ -71,7 +71,7 @@ def _assign_codes(rows: list[JsonlRow], skipped: set[str], existing: ValueCodes)
     def _register(original: object, count: int) -> None:
         if original in reverse or count < _MIN_REPEAT:
             return
-        next_code = f"{_CODE_PREFIX}{_next_index()}"
+        next_code = f'{_CODE_PREFIX}{_next_index()}'
         if not is_codable_value(original, next_code):
             return
         reverse[original] = next_code
@@ -98,9 +98,9 @@ def _replace_values(rows: list[JsonlRow], skipped: set[str], to_code: CellToCode
 
 
 def _save_values(meta_path: Path, codebook: ValueCodes) -> None:
-    loaded = json.loads(meta_path.read_text(encoding="utf-8"))
+    loaded = json.loads(meta_path.read_text(encoding='utf-8'))
     if codebook:
         loaded[VALUES_KEY] = codebook
     else:
         loaded.pop(VALUES_KEY, None)
-    meta_path.write_text(json.dumps(loaded, ensure_ascii=False), encoding="utf-8")
+    meta_path.write_text(json.dumps(loaded, ensure_ascii=False), encoding='utf-8')

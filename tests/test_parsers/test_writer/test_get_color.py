@@ -11,22 +11,22 @@ from parsers.writer.xls_writer import XlsWriter
 
 from .fixtures import ColorsWithoutMapTemplate, FixtureTemplate, write_data
 
-_MIM_COLOR = "#f7d5d2"
-_POSHK_COLOR = "blue"
+_MIM_COLOR = '#f7d5d2'
+_POSHK_COLOR = 'blue'
 _COLOR_COLUMN = 0
 
 
 def _make_writer(template: type[IWriteTemplate]) -> XlsWriter:
-    return XlsWriter(FakeXlwtDriver(), write_data, template=template, result_folder=".")
+    return XlsWriter(FakeXlwtDriver(), write_data, template=template, result_folder='.')
 
 
 @pytest.mark.parametrize(
-    ("product", "expected"),
+    ('product', 'expected'),
     [
-        ({"supplier_name": "Мим"}, (_MIM_COLOR, _COLOR_COLUMN)),
-        ({"supplier_name": "Пошк"}, (_POSHK_COLOR, _COLOR_COLUMN)),
-        ({"supplier_name": "Unknown"}, (None, _COLOR_COLUMN)),
-        ({"supplier_name": ""}, (None, None)),
+        ({'supplier_name': 'Мим'}, (_MIM_COLOR, _COLOR_COLUMN)),
+        ({'supplier_name': 'Пошк'}, (_POSHK_COLOR, _COLOR_COLUMN)),
+        ({'supplier_name': 'Unknown'}, (None, _COLOR_COLUMN)),
+        ({'supplier_name': ''}, (None, None)),
         ({}, (None, None)),
     ],
 )
@@ -50,4 +50,4 @@ def test_get_color_without_template_colors() -> None:
 
 def test_get_color_without_value_map() -> None:
     writer = _make_writer(ColorsWithoutMapTemplate)
-    assert writer._get_color({"supplier_name": "Мим"}) == (None, None)
+    assert writer._get_color({'supplier_name': 'Мим'}) == (None, None)

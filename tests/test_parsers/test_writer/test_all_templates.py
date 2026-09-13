@@ -29,24 +29,24 @@ def test_extra_writer_templates() -> None:
 def test_writer_template_cli_names() -> None:
     """имена CLI совпадают с модулями шаблонов."""
     names = writer_templates_by_name()
-    assert names == {"for_inner": ForInner, "for_drom": ForDrom, "for_full": ForFull}
-    assert writer_template_name(ForDrom) == "for_drom"
-    assert writer_template_name(ForFull) == "for_full"
+    assert names == {'for_inner': ForInner, 'for_drom': ForDrom, 'for_full': ForFull}
+    assert writer_template_name(ForDrom) == 'for_drom'
+    assert writer_template_name(ForFull) == 'for_full'
 
 
 def test_get_writer_template_known() -> None:
     """известное имя возвращает класс шаблона."""
-    assert get_writer_template("for_drom") is ForDrom
-    assert get_writer_template("for_full") is ForFull
+    assert get_writer_template('for_drom') is ForDrom
+    assert get_writer_template('for_full') is ForFull
 
 
 def test_get_writer_template_unknown() -> None:
     """неизвестное имя — ошибка со списком доступных."""
-    with pytest.raises(UnknownWriterTemplateError, match="nope") as error:
-        get_writer_template("nope")
-    assert "for_drom" in str(error.value)
-    assert "for_inner" in str(error.value)
-    assert "for_full" in str(error.value)
+    with pytest.raises(UnknownWriterTemplateError, match='nope') as error:
+        get_writer_template('nope')
+    assert 'for_drom' in str(error.value)
+    assert 'for_inner' in str(error.value)
+    assert 'for_full' in str(error.value)
 
 
 def test_get_columns_format_empty_without_format() -> None:
@@ -54,7 +54,7 @@ def test_get_columns_format_empty_without_format() -> None:
     from parsers.writer.templates.iwrite_template import IWriteTemplate
 
     class _NoFormat(IWriteTemplate):  # noqa: WPS431
-        __COLUMNS__ = [{"A": {"field": "title"}}]  # noqa: RUF012
+        __COLUMNS__ = [{'A': {'field': 'title'}}]  # noqa: RUF012
 
     no_format = _NoFormat()
     fmt = no_format.get_columns_format()

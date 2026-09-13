@@ -333,7 +333,7 @@ def test_rom_policy_percent_to_store_is_none() -> None:
 def _zapaska_like_policy(
     *,
     min_absolute: float = 0,
-    absolute_mode: str = "multiplier",
+    absolute_mode: str = 'multiplier',
     replace_small: bool = True,
 ) -> MarkupPolicy:
     rules = MarkupRules(

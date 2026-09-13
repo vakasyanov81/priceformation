@@ -9,7 +9,7 @@ class ParsePathsNotConfiguredError(RuntimeError):
     """Raised when get_parse_paths runs before configure_parse_paths."""
 
     def __init__(self) -> None:
-        super().__init__("Parse paths are not configured")
+        super().__init__('Parse paths are not configured')
 
 
 @dataclass(frozen=True)

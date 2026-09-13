@@ -7,7 +7,7 @@ class LogPathsNotConfiguredError(RuntimeError):
     """Raised when get_log_paths runs before configure_log_paths."""
 
     def __init__(self) -> None:
-        super().__init__("Log paths are not configured")
+        super().__init__('Log paths are not configured')
 
 
 @dataclass(frozen=True)

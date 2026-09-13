@@ -9,7 +9,7 @@ from typing import Any, cast
 from core.file_reader import read_file
 from core.parse_paths import get_parse_paths
 
-_CONFIG_FILE = "manufacturer_aliases.json"
+_CONFIG_FILE = 'manufacturer_aliases.json'
 
 
 def _filled_aliases(aliases: Any) -> Any:
@@ -19,7 +19,7 @@ def _filled_aliases(aliases: Any) -> Any:
     for alias in aliases:
         if not isinstance(alias, str):
             continue
-        if alias.strip() == "":
+        if alias.strip() == '':
             continue
         filled.append(alias)
     return filled
@@ -31,7 +31,7 @@ def drop_blank_aliases(aliases_map: dict[str, Any]) -> dict[str, Any]:
     for brand, entry in aliases_map.items():
         if isinstance(entry, dict):
             record = dict(entry)
-            record["aliases"] = _filled_aliases(record.get("aliases", []))
+            record['aliases'] = _filled_aliases(record.get('aliases', []))
             cleaned[brand] = record
             continue
         cleaned[brand] = _filled_aliases(entry)
@@ -46,7 +46,7 @@ def aliases_for_finder(
     for brand, entry in aliases_map.items():
         raw: Any = entry
         if isinstance(entry, dict):
-            raw = entry.get("aliases", [])
+            raw = entry.get('aliases', [])
         if isinstance(raw, str):
             raw = [raw]
         if isinstance(raw, tuple):

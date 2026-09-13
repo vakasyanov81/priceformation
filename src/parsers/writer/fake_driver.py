@@ -39,7 +39,7 @@ class FakeXlwtDriver(IXlsDriver):
         _color: str | None = None,
     ) -> None:
         """write"""
-        self.body[f"cell({row_idx},{col_idx})"] = cell_content
+        self.body[f'cell({row_idx},{col_idx})'] = cell_content
 
     def init_workbook(self, _folder: str, _file_name: str) -> None:
         self.file_name = _file_name

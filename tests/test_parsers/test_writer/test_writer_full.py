@@ -41,7 +41,7 @@ _CHARACTERISTIC_FIELDS = (
 
 
 def _cell(body: dict[str, Any], head: list[str], title: str) -> Any:
-    return body[f"cell(1,{head.index(title)})"]
+    return body[f'cell(1,{head.index(title)})']
 
 
 def test_for_full_includes_characteristics() -> None:
@@ -59,13 +59,13 @@ def test_xls_write_for_full(tmp_path: Any) -> None:
     """полный шаблон пишет коды, характеристики и цены."""
     row = {
         **write_data[0],
-        "height_percent": "40",
-        "season": "зима",
-        "spike": "шип",
-        "pcd1": 112,
-        "eet": 45,
-        "slot_count": 5,
-        "layering": "14PR",
+        'height_percent': '40',
+        'season': 'зима',
+        'spike': 'шип',
+        'pcd1': 112,
+        'eet': 45,
+        'slot_count': 5,
+        'layering': '14PR',
     }
     fake_driver = FakeXlwtDriver()
     result_folder = str(tmp_path)
@@ -75,23 +75,23 @@ def test_xls_write_for_full(tmp_path: Any) -> None:
         template=ForFull,
         result_folder=result_folder,
     ).write()
-    now = datetime.datetime.now().strftime("%Y-%m-%d")
+    now = datetime.datetime.now().strftime('%Y-%m-%d')
     head = fake_driver.head
 
-    assert fake_driver.file_name == f"price_full_{now}.xlsx"
+    assert fake_driver.file_name == f'price_full_{now}.xlsx'
     assert fake_driver.folder == result_folder
-    assert _cell(fake_driver.body, head, "Номенклатура") == "225/40R18 Crossleader 92Y"
-    assert _cell(fake_driver.body, head, "Ширина") == "225"
-    assert _cell(fake_driver.body, head, "Профиль") == "40"
-    assert _cell(fake_driver.body, head, "Диаметр") == "18"
-    assert _cell(fake_driver.body, head, "Сезон") == "зима"
-    assert _cell(fake_driver.body, head, "Шип") == "шип"
-    assert _cell(fake_driver.body, head, "Индекс нагрузки") == "92"
-    assert _cell(fake_driver.body, head, "Индекс скорости") == "Y"
-    assert _cell(fake_driver.body, head, "PCD") == 112
-    assert _cell(fake_driver.body, head, "ET") == 45
-    assert _cell(fake_driver.body, head, "Кол-во отверстий") == 5
-    assert _cell(fake_driver.body, head, "Слойность") == "14PR"
-    assert _cell(fake_driver.body, head, "Цена") == 3980.0
-    assert _cell(fake_driver.body, head, "Марка") == "CROSSLEADER"
-    assert _cell(fake_driver.body, head, "Модель") == "DSU02"
+    assert _cell(fake_driver.body, head, 'Номенклатура') == '225/40R18 Crossleader 92Y'
+    assert _cell(fake_driver.body, head, 'Ширина') == '225'
+    assert _cell(fake_driver.body, head, 'Профиль') == '40'
+    assert _cell(fake_driver.body, head, 'Диаметр') == '18'
+    assert _cell(fake_driver.body, head, 'Сезон') == 'зима'
+    assert _cell(fake_driver.body, head, 'Шип') == 'шип'
+    assert _cell(fake_driver.body, head, 'Индекс нагрузки') == '92'
+    assert _cell(fake_driver.body, head, 'Индекс скорости') == 'Y'
+    assert _cell(fake_driver.body, head, 'PCD') == 112
+    assert _cell(fake_driver.body, head, 'ET') == 45
+    assert _cell(fake_driver.body, head, 'Кол-во отверстий') == 5
+    assert _cell(fake_driver.body, head, 'Слойность') == '14PR'
+    assert _cell(fake_driver.body, head, 'Цена') == 3980.0
+    assert _cell(fake_driver.body, head, 'Марка') == 'CROSSLEADER'
+    assert _cell(fake_driver.body, head, 'Модель') == 'DSU02'

@@ -16,7 +16,7 @@ class JsonPriceNotListError(CoreExceptionError):
     """JSON root is not a list of row objects."""
 
     def __init__(self) -> None:
-        super().__init__("JSON price must be a list of objects")
+        super().__init__('JSON price must be a list of objects')
 
 
 class JsonPriceReader(IXlsReader):
@@ -49,7 +49,7 @@ def rename_fields(rows: JsonRows, columns: ColumnMap) -> None:
 
 def columns_from_params(reader_params: dict[str, Any]) -> ColumnMap:
     """Keep string-key columns; ignore xls int→name maps."""
-    raw_columns = reader_params.get("columns") or {}
+    raw_columns = reader_params.get('columns') or {}
     mapped: ColumnMap = {}
     for key, name in raw_columns.items():
         if isinstance(key, str):
@@ -58,7 +58,7 @@ def columns_from_params(reader_params: dict[str, Any]) -> ColumnMap:
 
 
 def _load_json_rows(file_path: str) -> JsonRows:
-    loaded: Any = json.loads(Path(file_path).read_text(encoding="utf-8"))
+    loaded: Any = json.loads(Path(file_path).read_text(encoding='utf-8'))
     if not isinstance(loaded, list):
         raise JsonPriceNotListError()
     return cast(JsonRows, loaded)

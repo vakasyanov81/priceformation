@@ -5,17 +5,17 @@ from typing import Any
 
 from parsers.row_item.row_item import RowItem
 
-_INCH_SIZE_RE = re.compile(r"(?i)(?<!\d)(\d{2,3})[xх](\d+(?:[.,]\d+)?)r(\d+(?:[.,]\d+)?)")
-_DIAMETER_PREFIX_RE = re.compile(r"(?i)^(zr|rz|r)")
+_INCH_SIZE_RE = re.compile(r'(?i)(?<!\d)(\d{2,3})[xх](\d+(?:[.,]\d+)?)r(\d+(?:[.,]\d+)?)')
+_DIAMETER_PREFIX_RE = re.compile(r'(?i)^(zr|rz|r)')
 
 
 def canon_number(raw: Any) -> str:
     """Запятая → точка; 12.50 и 12.5 — одно число."""
-    if raw is None or raw == "":
-        return ""
-    text = str(raw).replace(",", ".").strip()
+    if raw is None or raw == '':
+        return ''
+    text = str(raw).replace(',', '.').strip()
     if not text:
-        return ""
+        return ''
     try:
         number = float(text)
     except ValueError:
@@ -27,18 +27,18 @@ def canon_number(raw: Any) -> str:
 
 def canon_diameter(raw: Any) -> str:
     """R16 / ZR16 / 16 — один диаметр для ключа."""
-    text = str(raw or "").strip()
+    text = str(raw or '').strip()
     if not text:
-        return ""
-    return canon_number(_DIAMETER_PREFIX_RE.sub("", text, count=1))
+        return ''
+    return canon_number(_DIAMETER_PREFIX_RE.sub('', text, count=1))
 
 
 def _inch_size_from_title(title: str | None) -> tuple[str, str, str]:
     if not title:
-        return "", "", ""
+        return '', '', ''
     match = _INCH_SIZE_RE.search(title)
     if not match:
-        return "", "", ""
+        return '', '', ''
     ext_diameter, width, diameter = match.groups()
     return (
         canon_number(width),

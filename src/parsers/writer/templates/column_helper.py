@@ -27,9 +27,9 @@ class ColumnHelper:
         first_col = next(iter(col.values()))
         self.column: dict[str, Any] = cast(dict[str, Any], first_col)
         self.name: str = next(iter(col.keys()))
-        self.style: dict[str, Any] = self.column.get("style") or {}
-        self.style_width: int | None = self.style.get("width")
-        self.def_value: str | None = self.column.get("default_value")
-        self.field: str | None = self.column.get("field")
-        self.skip: bool = bool(self.column.get("skip"))
-        self.format: str | None = self.column.get("format")
+        self.style: dict[str, Any] = self.column.get('style') or {}
+        self.style_width: int | None = self.style.get('width')
+        self.def_value: str | None = self.column.get('default_value')
+        self.field: str | None = self.column.get('field')
+        self.skip: bool = bool(self.column.get('skip'))
+        self.format: str | None = self.column.get('format')

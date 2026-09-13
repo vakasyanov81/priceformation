@@ -8,9 +8,9 @@ from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
 from parsers.row_item.row_item import RowItem
 
-_UNKNOWN_TYPE_LABEL = "не указан"
+_UNKNOWN_TYPE_LABEL = 'не указан'
 _MSG_SKIPPED_CATEGORIES = (
-    "Пропущено {count} позиций у поставщиков ({suppliers}) из-за невозможности сопоставить категории ({categories})."
+    'Пропущено {count} позиций у поставщиков ({suppliers}) из-за невозможности сопоставить категории ({categories}).'
 )
 
 
@@ -45,14 +45,14 @@ class CategoryFinder:
 
 
 map_categories: dict[str, tuple[str, ...] | str] = {
-    "Грузовая шина": "грузовая",
-    "Легковая шина": ("легковая", "легкогрузовая", "грязевая"),
-    "Спецшина": ("спецшина", "сельхоз"),
-    "Мотошина": ("мотошина", "квадроциклы"),
-    "Автокамера": ("камеры", "камера", "автокамеры"),
-    "Автошина": ("шина", "шины", "автошины"),
-    "Диск": ("диски", "автодиск", "автодиски"),
-    "Ободная лента": ("о/лента", "лента", "ленты"),
+    'Грузовая шина': 'грузовая',
+    'Легковая шина': ('легковая', 'легкогрузовая', 'грязевая'),
+    'Спецшина': ('спецшина', 'сельхоз'),
+    'Мотошина': ('мотошина', 'квадроциклы'),
+    'Автокамера': ('камеры', 'камера', 'автокамеры'),
+    'Автошина': ('шина', 'шины', 'автошины'),
+    'Диск': ('диски', 'автодиск', 'автодиски'),
+    'Ободная лента': ('о/лента', 'лента', 'ленты'),
 }
 
 
@@ -76,7 +76,7 @@ def raw_category_label(raw_type: str | None) -> str:
 
 def _joined_unique(labels: Sequence[str]) -> str:
     """Join unique values in stable order."""
-    return ", ".join(sorted(set(labels)))
+    return ', '.join(sorted(set(labels)))
 
 
 def skipped_unknown_categories_message(skips: Sequence[tuple[str, str]]) -> str | None:

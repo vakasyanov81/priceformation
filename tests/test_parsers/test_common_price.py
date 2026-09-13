@@ -32,7 +32,7 @@ from parsers.vendors.pioner import PionerParser, pioner_params
 from parsers.vendors.poshk import PoshkParser, poshk_params
 from parsers.vendors.stk import STKParser, stk_params
 
-fake_result = [RowItem({"title": 1})]
+fake_result = [RowItem({'title': 1})]
 
 
 class FakeParser:
@@ -55,7 +55,7 @@ class FakeParser:
 
 
 class _SkipSupplier:
-    name = "Запаска (шины)"
+    name = 'Запаска (шины)'
 
 
 class _SkipParserParams:
@@ -75,7 +75,7 @@ class FakeParserWithSkips:
     ) -> None:
         """init"""
         self.parse_config = parse_config
-        self.unknown_category_skips = ["SUV", "Foo"]
+        self.unknown_category_skips = ['SUV', 'Foo']
 
     def parse(self) -> list[RowItem]:
         """fake parse"""
@@ -109,7 +109,7 @@ class FakeParserWithBlackListSkips:
 def test_parse_all_vendors() -> None:
     """парсинг списка вендоров и группировка результата"""
     common_price = CommonPrice()
-    with patch("parsers.common_price.log_msg"):
+    with patch('parsers.common_price.log_msg'):
         common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
     assert common_price.parsed_items == fake_result
 
@@ -118,9 +118,9 @@ def test_parse_all_vendors_clears_aliases_cache() -> None:
     """каждый прогон сбрасывает кэш aliases и читает карту заново"""
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch("parsers.common_price.clear_manufacturer_aliases_cache") as mock_clear,
-        patch("parsers.common_price_grouper.load_aliases_map", return_value={}) as mock_load,
+        patch('parsers.common_price.log_msg'),
+        patch('parsers.common_price.clear_manufacturer_aliases_cache') as mock_clear,
+        patch('parsers.common_price_grouper.load_aliases_map', return_value={}) as mock_load,
     ):
         common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
         common_price.parse_all_vendors([(cast(type[BaseParser], FakeParser), None)])
@@ -133,8 +133,8 @@ def test_parse_all_vendors_passes_config() -> None:
     vendor_config = MagicMock()
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch.object(common_price, "parse_vendor") as mock_parse,
+        patch('parsers.common_price.log_msg'),
+        patch.object(common_price, 'parse_vendor') as mock_parse,
     ):
         common_price.parse_all_vendors(
             [(cast(type[BaseParser], FakeParser), vendor_config)],
@@ -147,11 +147,11 @@ def test_parse_all_vendors_passes_config() -> None:
 def test_parse_vendor_config_error() -> None:
     """VendorListConfigFileError не валит общий разбор"""
     parser = MagicMock()
-    with patch.object(VendorListConfigFileError, "to_log"):
-        parser.parse.side_effect = VendorListConfigFileError("missing")
+    with patch.object(VendorListConfigFileError, 'to_log'):
+        parser.parse.side_effect = VendorListConfigFileError('missing')
     common_price = CommonPrice()
 
-    with patch("parsers.common_price.warn_msg") as mock_warn:
+    with patch('parsers.common_price.warn_msg') as mock_warn:
         common_price.parse_vendor(parser)
         mock_warn.assert_called_once()
         assert common_price.parsed_items == []
@@ -160,11 +160,11 @@ def test_parse_vendor_config_error() -> None:
 def test_parse_vendor_reraises() -> None:
     """прочие ошибки логируются и пробрасываются"""
     parser = MagicMock()
-    parser.parse.side_effect = RuntimeError("boom")
+    parser.parse.side_effect = RuntimeError('boom')
     common_price = CommonPrice()
 
-    with patch("parsers.common_price.err_msg") as mock_err:
-        with pytest.raises(RuntimeError, match="boom"):
+    with patch('parsers.common_price.err_msg') as mock_err:
+        with pytest.raises(RuntimeError, match='boom'):
             common_price.parse_vendor(parser)
         mock_err.assert_called_once()
 
@@ -175,7 +175,7 @@ def test_parse_vendor_skips_bad_counter() -> None:
     parser.parse.return_value = []
     parser.unknown_category_skips = []
     common_price = CommonPrice()
-    with patch("parsers.common_price.log_msg"):
+    with patch('parsers.common_price.log_msg'):
         common_price.parse_vendor(parser)
     assert common_price.parsed_items == []
 
@@ -184,33 +184,33 @@ def test_skipped_categories_logged() -> None:
     """пропуски неизвестных категорий печатаются в консоль"""
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch("parsers.common_price.warn_msg") as mock_warn,
+        patch('parsers.common_price.log_msg'),
+        patch('parsers.common_price.warn_msg') as mock_warn,
     ):
         common_price.parse_all_vendors([(cast(type[BaseParser], FakeParserWithSkips), None)])
     mock_warn.assert_called_once()
     message = mock_warn.call_args.args[0]
-    assert "Пропущено 2 позиций" in message
-    assert "Запаска (шины)" in message
-    assert "Foo, SUV" in message
-    assert mock_warn.call_args.kwargs["need_print_log"] is True
+    assert 'Пропущено 2 позиций' in message
+    assert 'Запаска (шины)' in message
+    assert 'Foo, SUV' in message
+    assert mock_warn.call_args.kwargs['need_print_log'] is True
     assert common_price.unknown_category_skips == [
-        ("Запаска (шины)", "SUV"),
-        ("Запаска (шины)", "Foo"),
+        ('Запаска (шины)', 'SUV'),
+        ('Запаска (шины)', 'Foo'),
     ]
 
 
-_BLACK_LIST_SKIP_LOG = "\nОтброшено 3 позиций по правилам black_list."
+_BLACK_LIST_SKIP_LOG = '\nОтброшено 3 позиций по правилам black_list.'
 
 
 def test_black_list_skips_logged() -> None:
     """отброшенные по black_list позиции печатаются в консоль"""
     common_price = CommonPrice()
-    with patch("parsers.common_price.log_msg") as mock_log:
+    with patch('parsers.common_price.log_msg') as mock_log:
         common_price.parse_all_vendors([(cast(type[BaseParser], FakeParserWithBlackListSkips), None)])
     messages = [call.args[0] for call in mock_log.call_args_list]
     skip_index = messages.index(_BLACK_LIST_SKIP_LOG)
-    assert mock_log.call_args_list[skip_index].kwargs["need_print_log"] is True
+    assert mock_log.call_args_list[skip_index].kwargs['need_print_log'] is True
     assert common_price.black_list_skips == 3
 
 
@@ -218,7 +218,7 @@ def test_suppliers_info() -> None:
     """supplier maps cover vendor codes and do not overlap."""
     enabled, disabled = split_vendor_supplier_info()
     combined = {**enabled, **disabled}
-    assert combined["22"] == "Запаска (шины)"
+    assert combined['22'] == 'Запаска (шины)'
     assert None not in combined.values()
     assert not set(enabled) & set(disabled)
 
@@ -227,8 +227,8 @@ def _markup_policy_from_parse_all(parser_cls: type[BaseParser], vendor_params: A
     config = ParseConfiguration(make_parse_configuration(vendor_params))
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch.object(common_price, "parse_vendor") as mock_parse,
+        patch('parsers.common_price.log_msg'),
+        patch.object(common_price, 'parse_vendor') as mock_parse,
     ):
         common_price.parse_all_vendors([(parser_cls, config)])
     assert mock_parse.call_args is not None
@@ -237,7 +237,7 @@ def _markup_policy_from_parse_all(parser_cls: type[BaseParser], vendor_params: A
 
 
 @pytest.mark.parametrize(
-    ("parser_cls", "vendor_params"),
+    ('parser_cls', 'vendor_params'),
     [
         (PoshkParser, poshk_params),
         (PionerParser, pioner_params),
@@ -261,15 +261,15 @@ def test_four_tochki_sheet1_rom_policy() -> None:
 
 class _BoomMarkupRules(MarkupRulesProviderBase):
     def get_markup_data(self) -> dict[str, Any]:
-        raise AssertionError("must not read markup rules")
+        raise AssertionError('must not read markup rules')
 
 
 def test_autosnab_skips_markup_file() -> None:
     config = ParseConfiguration(make_parse_configuration(autosnab_params, markup_rules=_BoomMarkupRules()))
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch.object(common_price, "parse_vendor") as mock_parse,
+        patch('parsers.common_price.log_msg'),
+        patch.object(common_price, 'parse_vendor') as mock_parse,
     ):
         common_price.parse_all_vendors([(Autosnab54Parser, config)])
     assert mock_parse.call_args is not None
@@ -280,25 +280,25 @@ def test_autosnab_skips_markup_file() -> None:
 def test_disabled_vendor_is_skipped() -> None:
     parse_config = ParseConfiguration(
         make_parse_configuration(stk_params, markup_rules=_BoomMarkupRules())._replace(
-            vendor_list=VendorListProviderForTests({"stk": {"enabled": 0}}),
+            vendor_list=VendorListProviderForTests({'stk': {'enabled': 0}}),
         ),
     )
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch("parsers.base_parser.log_parser_process.warn_msg") as mock_warn,
+        patch('parsers.common_price.log_msg'),
+        patch('parsers.base_parser.log_parser_process.warn_msg') as mock_warn,
     ):
         common_price.parse_all_vendors([(STKParser, parse_config)])
     assert common_price.parsed_items == []
     assert mock_warn.call_args is not None
     message = mock_warn.call_args.args[0]
-    assert message == "поставщик STKParser: STK не активен"
-    assert mock_warn.call_args.kwargs["need_print_log"] is True
+    assert message == 'поставщик STKParser: STK не активен'
+    assert mock_warn.call_args.kwargs['need_print_log'] is True
 
 
 class _MissingVendorList(VendorListProviderBase):
     def get_config_vendor_list(self) -> dict[str, Any]:
-        raise VendorListConfigFileError("missing")
+        raise VendorListConfigFileError('missing')
 
 
 def test_missing_vendor_list_skips_markup() -> None:
@@ -309,14 +309,14 @@ def test_missing_vendor_list_skips_markup() -> None:
     )
     common_price = CommonPrice()
     with (
-        patch("parsers.common_price.log_msg"),
-        patch.object(VendorListConfigFileError, "to_log"),
-        patch("parsers.common_price.warn_msg") as mock_warn,
+        patch('parsers.common_price.log_msg'),
+        patch.object(VendorListConfigFileError, 'to_log'),
+        patch('parsers.common_price.warn_msg') as mock_warn,
     ):
         common_price.parse_all_vendors([(STKParser, parse_config)])
     assert common_price.parsed_items == []
     assert mock_warn.call_args is not None
-    assert "vendor_list.json" in mock_warn.call_args.args[0]
+    assert 'vendor_list.json' in mock_warn.call_args.args[0]
 
 
 def test_other_vendor_keeps_default_markup_policy() -> None:

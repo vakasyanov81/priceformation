@@ -41,8 +41,8 @@ class ParserFileReader(ParserRowHooks):
         return self.data_reader.get_instance(
             full_file_xls_path,
             {
-                "start_row": self.parser_params().start_row - 1,
-                "columns": self.parser_params().columns,
+                'start_row': self.parser_params().start_row - 1,
+                'columns': self.parser_params().columns,
             },
         )
 
@@ -59,10 +59,10 @@ class ParserFileReader(ParserRowHooks):
         )
         if not files:
             supplier_name = parse_params.supplier.name
-            raise SupplierNotHavePricesError(f"Прайсов у поставщика ({supplier_name}) не обнаружено!")
+            raise SupplierNotHavePricesError(f'Прайсов у поставщика ({supplier_name}) не обнаружено!')
         return files
 
 
 def _type_production_from_filename(price_file: str) -> str:
     """Последний суффикс имени файла после `_` (например disks.xls)."""
-    return price_file.rsplit("_", maxsplit=1)[-1]
+    return price_file.rsplit('_', maxsplit=1)[-1]

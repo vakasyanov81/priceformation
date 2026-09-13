@@ -13,14 +13,14 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.row_item.row_item import RowItem
 
-_AEOLUS_ALIASES = {"Aeolus": ("Аеолус",)}
+_AEOLUS_ALIASES = {'Aeolus': ('Аеолус',)}
 
 
 def _parser_params() -> ParserParams:
     return ParserParams(
-        supplier=ParseParamsSupplier(folder_name="x", name="x", code="x"),
+        supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),
         start_row=1,
-        sheet_info="",
+        sheet_info='',
         columns={},
         stop_words=[],
         file_templates=[],
@@ -67,7 +67,7 @@ def test_parser_reuses_manufacturer_finder() -> None:
 def test_set_parse_config_drops_cached_finder() -> None:
     parser = BaseParser(parse_config=_configuration()[0])
     first = parser.manufacturer_finder()
-    parser.set_parse_config(_configuration({"Bridgestone": ("Бриджстоун",)})[0])
+    parser.set_parse_config(_configuration({'Bridgestone': ('Бриджстоун',)})[0])
     second = parser.manufacturer_finder()
     assert first is not second
 
@@ -80,12 +80,12 @@ def test_enrich_builds_finder_once(monkeypatch: Any) -> None:
         created.append(1)
         original_init(self, aliases)
 
-    monkeypatch.setattr(ManufacturerFinder, "__init__", counting_init)
+    monkeypatch.setattr(ManufacturerFinder, '__init__', counting_init)
     parser = BaseParser(parse_config=_configuration()[0])
     parser.enrich(
         [
-            RowItem({"title": "Aeolus winter"}),
-            RowItem({"title": "Aeolus summer"}),
+            RowItem({'title': 'Aeolus winter'}),
+            RowItem({'title': 'Aeolus summer'}),
         ]
     )
     assert created == [1]

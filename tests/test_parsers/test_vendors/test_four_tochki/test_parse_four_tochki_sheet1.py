@@ -50,32 +50,32 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
 
     assert len(parsed_items) == 3
-    assert parsed_items[0].title == "205/55R16 BF Goodrich Advantage 94W"
-    assert parsed_items[0].type_production == "Легковая шина"
+    assert parsed_items[0].title == '205/55R16 BF Goodrich Advantage 94W'
+    assert parsed_items[0].type_production == 'Легковая шина'
     assert parsed_items[0].price_markup == 7340
-    assert parsed_items[0].supplier_name == "Форточки"
+    assert parsed_items[0].supplier_name == 'Форточки'
     assert parsed_items[0].percent_markup == 27.17
 
     # метрический размер
-    assert parsed_items[1].title == "31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT"
+    assert parsed_items[1].title == '31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT'
     assert parsed_items[1].price_markup == 24870
     assert parsed_items[1].percent_markup == 27.04
 
     # грузовая шина
-    assert parsed_items[2].title == "235/75R17.5 BF Goodrich Route Control D 132/130M"
-    assert parsed_items[2].type_production == "Грузовая шина"
+    assert parsed_items[2].title == '235/75R17.5 BF Goodrich Route Control D 132/130M'
+    assert parsed_items[2].type_production == 'Грузовая шина'
 
 
 def test_replace_diameter() -> None:
     """check replace RZ -> ZR"""
 
-    parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter="RZ16")).parse()
+    parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter='RZ16')).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == "205/55ZR16 BF Goodrich Advantage 94W"
-    assert parsed_items[0].type_production == "Легковая шина"
+    assert parsed_items[0].title == '205/55ZR16 BF Goodrich Advantage 94W'
+    assert parsed_items[0].type_production == 'Легковая шина'
     assert parsed_items[0].price_markup == 7340
-    assert parsed_items[0].supplier_name == "Форточки"
+    assert parsed_items[0].supplier_name == 'Форточки'
     assert parsed_items[0].percent_markup == 27.17
 
 
@@ -84,14 +84,14 @@ def test_prepare_title_replace_999() -> None:
 
     row = RowItem(
         {
-            RowItem.height_percent.name: "999",
-            RowItem.width.name: "11",
-            RowItem.diameter.name: "--20",
+            RowItem.height_percent.name: '999',
+            RowItem.width.name: '11',
+            RowItem.diameter.name: '--20',
         }
     )
 
     prepared_title = _title_parser().get_prepared_title(row)
-    assert prepared_title == "11L-20"
+    assert prepared_title == '11L-20'
 
 
 def test_prepare_title_width_two_zero() -> None:
@@ -100,16 +100,16 @@ def test_prepare_title_width_two_zero() -> None:
     row = RowItem(
         {
             RowItem.width.name: 10,
-            RowItem.diameter.name: "--20",
-            RowItem.manufacturer.name: "Armour",
-            RowItem.model.name: "TI300",
-            RowItem.layering.name: "16PR",
-            RowItem.camera_type.name: "TTF",
+            RowItem.diameter.name: '--20',
+            RowItem.manufacturer.name: 'Armour',
+            RowItem.model.name: 'TI300',
+            RowItem.layering.name: '16PR',
+            RowItem.camera_type.name: 'TTF',
         }
     )
 
     prepared_title = _title_parser().get_prepared_title(row)
-    assert prepared_title == "10.00-20 Armour TI300 16PR TTF"
+    assert prepared_title == '10.00-20 Armour TI300 16PR TTF'
 
 
 def test_prepare_title_width_one_zero() -> None:
@@ -119,17 +119,17 @@ def test_prepare_title_width_one_zero() -> None:
         {
             RowItem.width.name: 10,
             RowItem.height_percent.name: 75,
-            RowItem.diameter.name: "--15.3",
-            RowItem.manufacturer.name: "Forerunner",
-            RowItem.model.name: "QH602 R-4",
-            RowItem.layering.name: "12PR",
-            RowItem.camera_type.name: "TL",
-            RowItem.tire_type.name: "Спецтехника",
+            RowItem.diameter.name: '--15.3',
+            RowItem.manufacturer.name: 'Forerunner',
+            RowItem.model.name: 'QH602 R-4',
+            RowItem.layering.name: '12PR',
+            RowItem.camera_type.name: 'TL',
+            RowItem.tire_type.name: 'Спецтехника',
         }
     )
 
     prepared_title = _title_parser().get_prepared_title(row)
-    assert prepared_title == "10.0/75-15.3 Forerunner QH602 R-4 12PR TL"
+    assert prepared_title == '10.0/75-15.3 Forerunner QH602 R-4 12PR TL'
 
 
 def test_prepare_title_width_1() -> None:
@@ -137,19 +137,19 @@ def test_prepare_title_width_1() -> None:
 
     row = RowItem(
         {
-            RowItem.width.name: "11",
-            RowItem.height_percent.name: "999",
-            RowItem.diameter.name: "--15",
-            RowItem.manufacturer.name: "Galaxy",
-            RowItem.model.name: "Rib Implement I-1",
-            RowItem.layering.name: "12PR",
-            RowItem.camera_type.name: "TL",
-            RowItem.tire_type.name: "Спецтехника",
+            RowItem.width.name: '11',
+            RowItem.height_percent.name: '999',
+            RowItem.diameter.name: '--15',
+            RowItem.manufacturer.name: 'Galaxy',
+            RowItem.model.name: 'Rib Implement I-1',
+            RowItem.layering.name: '12PR',
+            RowItem.camera_type.name: 'TL',
+            RowItem.tire_type.name: 'Спецтехника',
         }
     )
 
     prepared_title = _title_parser().get_prepared_title(row)
-    assert prepared_title == "11L-15 Galaxy Rib Implement I-1 12PR TL"
+    assert prepared_title == '11L-15 Galaxy Rib Implement I-1 12PR TL'
 
 
 def test_prepare_title_1() -> None:
@@ -157,80 +157,80 @@ def test_prepare_title_1() -> None:
 
     row = RowItem(
         {
-            RowItem.width.name: "12.5",
+            RowItem.width.name: '12.5',
             RowItem.height_percent.name: 80,
-            RowItem.diameter.name: "--18",
-            RowItem.manufacturer.name: "Armour",
-            RowItem.model.name: "L-5B",
-            RowItem.layering.name: "16",
-            RowItem.camera_type.name: "TL",
-            RowItem.tire_type.name: "Спецтехника",
+            RowItem.diameter.name: '--18',
+            RowItem.manufacturer.name: 'Armour',
+            RowItem.model.name: 'L-5B',
+            RowItem.layering.name: '16',
+            RowItem.camera_type.name: 'TL',
+            RowItem.tire_type.name: 'Спецтехника',
         }
     )
 
     prepared_title = _title_parser().get_prepared_title(row)
-    assert prepared_title == "12.5/80-18 Armour L-5B 16 TL"
+    assert prepared_title == '12.5/80-18 Armour L-5B 16 TL'
 
 
 @pytest.mark.parametrize(
-    ("fields", "expected"),
+    ('fields', 'expected'),
     [
         (
             {
                 RowItem.width.name: 30.5,
                 RowItem.height_percent.name: 999.0,
-                RowItem.diameter.name: "--32",
-                RowItem.manufacturer.name: "Белшина",
-                RowItem.model.name: "ФБел-179М",
-                RowItem.layering.name: "18",
-                RowItem.camera_type.name: "TT",
-                RowItem.index_load.name: "170",
-                RowItem.index_velocity.name: "A6",
+                RowItem.diameter.name: '--32',
+                RowItem.manufacturer.name: 'Белшина',
+                RowItem.model.name: 'ФБел-179М',
+                RowItem.layering.name: '18',
+                RowItem.camera_type.name: 'TT',
+                RowItem.index_load.name: '170',
+                RowItem.index_velocity.name: 'A6',
             },
-            "30.5L-32 Белшина ФБел-179М 18 TT 170A6",
+            '30.5L-32 Белшина ФБел-179М 18 TT 170A6',
         ),
         (
             {
                 RowItem.width.name: 11.0,
                 RowItem.height_percent.name: 999.0,
-                RowItem.diameter.name: "--15",
-                RowItem.manufacturer.name: "Advance",
-                RowItem.model.name: "I1",
-                RowItem.layering.name: "12",
-                RowItem.camera_type.name: "TL",
-                RowItem.index_load.name: "123",
-                RowItem.index_velocity.name: "J",
-                RowItem.tire_type.name: "Спецтехника",
+                RowItem.diameter.name: '--15',
+                RowItem.manufacturer.name: 'Advance',
+                RowItem.model.name: 'I1',
+                RowItem.layering.name: '12',
+                RowItem.camera_type.name: 'TL',
+                RowItem.index_load.name: '123',
+                RowItem.index_velocity.name: 'J',
+                RowItem.tire_type.name: 'Спецтехника',
             },
-            "11L-15 Advance I1 12 TL 123J",
+            '11L-15 Advance I1 12 TL 123J',
         ),
         (
             {
                 RowItem.width.name: 12.4,
                 RowItem.height_percent.name: 999.0,
-                RowItem.diameter.name: "--16",
-                RowItem.manufacturer.name: "Белшина",
-                RowItem.model.name: "ФБел-160М",
-                RowItem.camera_type.name: "TT",
-                RowItem.index_load.name: "111",
-                RowItem.index_velocity.name: "A6",
-                RowItem.tire_type.name: "Спецтехника",
+                RowItem.diameter.name: '--16',
+                RowItem.manufacturer.name: 'Белшина',
+                RowItem.model.name: 'ФБел-160М',
+                RowItem.camera_type.name: 'TT',
+                RowItem.index_load.name: '111',
+                RowItem.index_velocity.name: 'A6',
+                RowItem.tire_type.name: 'Спецтехника',
             },
-            "12.4L-16 Белшина ФБел-160М TT 111A6",
+            '12.4L-16 Белшина ФБел-160М TT 111A6',
         ),
         (
             {
                 RowItem.width.name: 140.0,
                 RowItem.height_percent.name: 55.0,
-                RowItem.diameter.name: "--9",
-                RowItem.manufacturer.name: "Advance",
-                RowItem.model.name: "Kargo K3",
-                RowItem.inscription_on_the_side.name: "Цельнолитая с бортом",
-                RowItem.index_load.name: "104",
-                RowItem.index_velocity.name: "A5",
-                RowItem.tire_type.name: "Спецтехника",
+                RowItem.diameter.name: '--9',
+                RowItem.manufacturer.name: 'Advance',
+                RowItem.model.name: 'Kargo K3',
+                RowItem.inscription_on_the_side.name: 'Цельнолитая с бортом',
+                RowItem.index_load.name: '104',
+                RowItem.index_velocity.name: 'A5',
+                RowItem.tire_type.name: 'Спецтехника',
             },
-            "140/55-9 Advance Kargo K3 Цельнолитая с бортом 104A5",
+            '140/55-9 Advance Kargo K3 Цельнолитая с бортом 104A5',
         ),
     ],
 )
@@ -239,14 +239,14 @@ def test_prepare_title_size_canon(fields: dict[str, Any], expected: str) -> None
 
 
 @pytest.mark.parametrize(
-    ("tire_type", "expected"),
+    ('tire_type', 'expected'),
     [
-        ("грузовая", "Грузовая шина"),
-        ("  ГРУЗОВАЯ  ", "Грузовая шина"),
-        ("легковая", "Легковая шина"),
-        ("спецтехника", "Спецшина"),
-        ("мото", "Мотошина"),
-        ("unknown", "Автошина"),
+        ('грузовая', 'Грузовая шина'),
+        ('  ГРУЗОВАЯ  ', 'Грузовая шина'),
+        ('легковая', 'Легковая шина'),
+        ('спецтехника', 'Спецшина'),
+        ('мото', 'Мотошина'),
+        ('unknown', 'Автошина'),
     ],
 )
 def test_current_category_by_tire_type(tire_type: str, expected: str) -> None:

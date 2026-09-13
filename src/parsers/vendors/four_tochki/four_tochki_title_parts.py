@@ -3,14 +3,14 @@
 from parsers.nomenclature_title import compose_tire_title, load_velocity
 from parsers.row_item.row_item import RowItem
 
-_RUNFLAT_YES = frozenset(("да", "yes", "1", "true"))
+_RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 
 
 def _extra_labels(row_item: RowItem) -> tuple[str, str]:
     """Боковина и RunFlat для title."""
-    sidewall = str(row_item.inscription_on_the_side or "").strip()
-    raw = str(row_item.run_flat or "").strip().lower()
-    runflat = "RunFlat" if raw in _RUNFLAT_YES else ""
+    sidewall = str(row_item.inscription_on_the_side or '').strip()
+    raw = str(row_item.run_flat or '').strip().lower()
+    runflat = 'RunFlat' if raw in _RUNFLAT_YES else ''
     return sidewall, runflat
 
 

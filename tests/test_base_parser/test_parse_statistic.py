@@ -9,7 +9,7 @@ _PRICE = 100
 
 def _row_with_zero_markup() -> RowItem:
     """Позиция как у Autosnab54: закупочная цена равна цене с наценкой."""
-    row = RowItem({"price_opt": _PRICE, "price_markup": _PRICE})
+    row = RowItem({'price_opt': _PRICE, 'price_markup': _PRICE})
     fill_percent_markup([row])
     return row
 
@@ -38,45 +38,45 @@ def test_empty_statistic_zeros() -> None:
 
 
 def test_percent_markup_uses_stored_value() -> None:
-    row = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW, "percent_markup": _PERCENT})
+    row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': _PERCENT})
     assert ParseResultStatistic([row]).real_percents_markup() == (_PERCENT, _PERCENT)
 
 
 def test_absolute_markup_min_max() -> None:
-    cheap = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})
-    pricey = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_HIGH})
+    cheap = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})
+    pricey = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_HIGH})
     min_margin, max_margin = ParseResultStatistic([cheap, pricey]).real_absolute_markup()
     assert min_margin == _MARGIN_LOW
     assert max_margin == _MARGIN_HIGH
 
 
 def test_count_items_with_purchase_price() -> None:
-    rows = [RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})]
+    rows = [RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})]
     assert ParseResultStatistic(rows).count_items() == 1
 
 
 def test_fill_percent_keeps_stored_value() -> None:
-    row = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW, "percent_markup": _PERCENT})
+    row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': _PERCENT})
     fill_percent_markup([row])
     assert row.percent_markup == _PERCENT
 
 
 def test_fill_percent_from_prices() -> None:
-    row = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})
+    row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})
     fill_percent_markup([row])
     assert row.percent_markup == _PERCENT
 
 
 def test_fill_percent_after_stored_row() -> None:
     """Первая строка уже с percent не должна оборвать расчёт остальных."""
-    stored = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW, "percent_markup": _PERCENT})
-    needs_fill = RowItem({"price_opt": _OPT, "price_markup": _MARKUP_LOW})
+    stored = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': _PERCENT})
+    needs_fill = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})
     fill_percent_markup([stored, needs_fill])
     assert stored.percent_markup == _PERCENT
     assert needs_fill.percent_markup == _PERCENT
 
 
 def test_fill_percent_skips_empty_markup() -> None:
-    row = RowItem({"price_opt": _OPT})
+    row = RowItem({'price_opt': _OPT})
     fill_percent_markup([row])
     assert not row.percent_markup

@@ -60,10 +60,10 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == "295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S"
-    assert parsed_items[0].type_production == "Грузовая шина"
+    assert parsed_items[0].title == '295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S'
+    assert parsed_items[0].type_production == 'Грузовая шина'
     assert parsed_items[0].price_markup == 24360.0
-    assert parsed_items[0].supplier_name == "Мим"
+    assert parsed_items[0].supplier_name == 'Мим'
     assert parsed_items[0].percent_markup == 5
 
 
@@ -72,7 +72,7 @@ def _sheet2_parser() -> MimParser2Sheet:
 
 
 @pytest.mark.parametrize(
-    ("price_opt", "percent"),
+    ('price_opt', 'percent'),
     [
         (TRUCK_TIRE_PRICE_THRESHOLD, TRUCK_TIRE_MARKUP_LOW),
         (TRUCK_TIRE_PRICE_THRESHOLD + 1, TRUCK_TIRE_MARKUP_HIGH),
@@ -89,11 +89,11 @@ def test_markup_without_price_opt_is_zero() -> None:
 
 
 @pytest.mark.parametrize(
-    ("fields", "expected"),
+    ('fields', 'expected'),
     [
-        ({"width": "295", "diameter": "22.5"}, "295R22.5"),
-        ({"width": "295", "height_percent": "75"}, "295/75"),
-        ({"height_percent": "75", "diameter": "22.5"}, "/75R22.5"),
+        ({'width': '295', 'diameter': '22.5'}, '295R22.5'),
+        ({'width': '295', 'height_percent': '75'}, '295/75'),
+        ({'height_percent': '75', 'diameter': '22.5'}, '/75R22.5'),
     ],
 )
 def test_prepared_title_skips_empty_parts(fields: dict[str, str], expected: str) -> None:
