@@ -144,7 +144,7 @@ def _json_parse(all_result: bool, result_template: str | None) -> JsonReport:
     parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
     files = ServiceProvider.resolve(PriceReportService).write_prices(
         parse_result.parsed_items,
-        result_template,
+        template=result_template,
         as_jsonl=True,
     )
     return report_from_result(PARSE, parse_result, files, time.monotonic() - started, all_result=all_result)
