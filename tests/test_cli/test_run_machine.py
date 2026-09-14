@@ -1,7 +1,7 @@
 """JSON-режим CLI."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 
@@ -66,7 +66,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, None, as_jsonl=True)
+    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template=None, as_jsonl=True)
 
 
 def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
@@ -84,7 +84,23 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, 'for_drom', as_jsonl=True)
+    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
+
+
+def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]) -> None:
+    """write_prices принимает template только keyword-only (регрессия TypeError)."""
+    parsed = _result_with_row()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = create_autospec(PriceReportService)
+    reporter.write_prices.return_value = [_PATH]
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
+    ):
+        code = machine_json(PARSE, result_template='for_drom')
+    assert code == 0
+    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
