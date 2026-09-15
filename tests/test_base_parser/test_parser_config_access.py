@@ -3,7 +3,7 @@
 import pytest
 
 from parsers.base_parser.base_parser import BaseParser
-from parsers.base_parser.base_parser_access import ParseConfigNotSetError
+from parsers.base_parser.base_parser_config import ParseConfigNotSetError
 
 
 def test_parse_config_not_set_error_message() -> None:
@@ -18,8 +18,6 @@ def test_parse_config_raises_without_config() -> None:
     BaseParser.__init__ вызывает repr(self) → parser_params() →
     parse_config() → ParseConfigNotSetError.
     """
-    from parsers.base_parser.base_parser_access import ParseConfigNotSetError
-
     # Прямая проверка исключения через внутренний метод
     error = ParseConfigNotSetError()
     assert str(error) == 'parse_config is not set'

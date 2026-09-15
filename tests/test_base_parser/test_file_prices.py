@@ -11,6 +11,7 @@ from cfg import init_cfg
 from core.exceptions import SupplierNotHavePricesError
 from core.parse_paths import ParsePaths, configure_parse_paths
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.price_source import FilePricesSource, PriceSource
 
 _SUPPLIER = 'poshk'
@@ -57,7 +58,8 @@ class _SilentParser(BaseParser):
         self._parse_params.supplier.folder_name = _SUPPLIER
         self._parse_params.supplier.name = _SUPPLIER_NAME
         self._parse_params.file_templates = [_TEMPLATE]
-        super().__init__(file_prices=file_prices, price_source=price_source)
+        super().__init__(file_reader=FileReader(price_source=price_source))
+        self.files = file_prices
 
     @property
     def is_active(self) -> bool:

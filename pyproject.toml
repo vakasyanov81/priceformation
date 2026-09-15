@@ -83,7 +83,7 @@ max-positional-args = 6
 "load_tests/*.py" = ["S101", "PLR2004"]
 "load_tests/**/*.py" = ["S101", "PLR2004"]
 "load_tests/test_make_price_by_supplier.py" = ["S101", "S603", "PLR2004"]
-"src/core/log_message.py" = ["T201"]
+"src/parsers/base_parser/base_parser.py" = ["I001"]
 "src/parse_report.py" = ["T201"]
 "src/cfg/zapaska_api.py" = ["S105"]
 
