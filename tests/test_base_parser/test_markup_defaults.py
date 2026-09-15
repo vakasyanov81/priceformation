@@ -8,13 +8,13 @@ from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTest
 
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
-from parsers.base_parser.base_parser_hooks import MarkupPolicyNotSetError
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
     MarkupPolicy,
     make_map_on_opt_markup_policy,
 )
+from parsers.base_parser.row_processor import MarkupPolicyNotSetError
 from parsers.data_provider.markup_rules import AbsoluteMarkUpRules, MarkUpParams, MarkupRules, MarkupRulesProviderBase
 from parsers.data_provider.vendor_list import VendorParams
 from parsers.row_item.row_item import RowItem

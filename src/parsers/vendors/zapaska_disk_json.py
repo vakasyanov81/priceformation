@@ -11,8 +11,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
     make_parse_config,
 )
-from parsers.base_parser.base_parser_reader import ReaderFactory
-from parsers.base_parser.markup_policy import MarkupPolicy
+from parsers.base_parser.protocols import ReaderFactory
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.json_reader import JsonPriceReader
 from parsers.registry import register_vendor
@@ -57,15 +56,22 @@ class ZapaskaDiskJSON(BaseParser):
     def __init__(
         self,
         parse_config: ParseConfiguration,
-        file_prices: list[Any] | None = None,
-        data_reader: type[ReaderFactory] = JsonPriceReader,
         *,
-        markup_policy: MarkupPolicy | None = None,
+        file_reader: Any | None = None,
+        data_reader: type[ReaderFactory] = JsonPriceReader,
+        row_processor: Any | None = None,
+        title_filter: Any | None = None,
     ) -> None:
         """init"""
         self.not_matched_position: list[str] = []
         self.title_aliases = load_title_aliases(parse_config.supplier.name)
-        super().__init__(parse_config, file_prices, data_reader, markup_policy=markup_policy)
+        super().__init__(
+            parse_config,
+            file_reader=file_reader,
+            data_reader=data_reader,
+            row_processor=row_processor,
+            title_filter=title_filter,
+        )
 
     def category_for(self, row_item: RowItem) -> str | None:
         return self._type_production

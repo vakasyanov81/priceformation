@@ -43,8 +43,7 @@ class FakeParser:
         parse_config: Any = None,
         file_prices: list[str] | None = None,
         data_reader: Any = None,
-        *,
-        markup_policy: Any = None,
+        **kwargs: Any,
     ) -> None:
         """init"""
         self.parse_config = parse_config
@@ -70,8 +69,7 @@ class FakeParserWithSkips:
         parse_config: Any = None,
         file_prices: list[str] | None = None,
         data_reader: Any = None,
-        *,
-        markup_policy: Any = None,
+        **kwargs: Any,
     ) -> None:
         """init"""
         self.parse_config = parse_config
@@ -94,8 +92,7 @@ class FakeParserWithBlackListSkips:
         parse_config: Any = None,
         file_prices: list[str] | None = None,
         data_reader: Any = None,
-        *,
-        markup_policy: Any = None,
+        **kwargs: Any,
     ) -> None:
         """init"""
         self.parse_config = parse_config
@@ -264,7 +261,7 @@ def _markup_policy_from_parse_all(parser_cls: type[BaseParser], vendor_params: A
         orchestrator.parse_all([(parser_cls, config)])
     assert mock_parse.call_args is not None
     parser = mock_parse.call_args.args[1]
-    return cast(MarkupPolicy, parser._markup_policy)  # noqa: WPS437
+    return cast(MarkupPolicy, parser._row_processor._markup_policy)  # noqa: WPS437
 
 
 @pytest.mark.parametrize(
@@ -307,7 +304,7 @@ def test_autosnab_skips_markup_file() -> None:
         orchestrator.parse_all([(Autosnab54Parser, config)])
     assert mock_parse.call_args is not None
     parser = mock_parse.call_args.args[1]
-    assert isinstance(parser._markup_policy, IdentityMarkupPolicy)  # noqa: WPS437
+    assert isinstance(parser._row_processor._markup_policy, IdentityMarkupPolicy)  # noqa: WPS437
 
 
 def test_disabled_vendor_is_skipped() -> None:

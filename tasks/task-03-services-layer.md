@@ -82,7 +82,7 @@ def run_make_price_by_supplier(result_template=None):
 
 ## Критерии готовности
 
-- [ ] `run.py` не содержит бизнес-логики — только вызов сервисов.
-- [ ] `CommonPrice` не содержит orchestration (либо удалён).
-- [ ] Каждая операция (parse, doubles, zapaska upload) реализована в отдельном сервисе.
-- [ ] Тонкие entry points = `run.py` < 50 строк.
+- [x] `run.py` не содержит бизнес-логики — только вызов сервисов.
+- [x] `CommonPrice` не содержит orchestration (либо удалён).
+- [x] Каждая операция (parse, doubles, zapaska upload) реализована в отдельном сервисе.
+- [x] Тонкие entry points = `run.py` < 50 строк.

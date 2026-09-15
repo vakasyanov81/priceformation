@@ -9,6 +9,13 @@ from parsers import data_provider
 from parsers.row_item.row_item import RowItem
 
 
+class ParseConfigNotSetError(RuntimeError):
+    """Raised when parse_config is not set on parser instance."""
+
+    def __init__(self) -> None:
+        super().__init__('parse_config is not set')
+
+
 @dataclass
 class ParseParamsSupplier:
     """suppler params"""
@@ -108,13 +115,6 @@ class ParseConfiguration:
         return self._all_vendor_config
 
 
-def _provider_or_default[ProviderT](provider: ProviderT | None, default: ProviderT) -> ProviderT:
-    """Keep an explicit provider, otherwise use the factory default."""
-    if provider is None:
-        return default
-    return provider
-
-
 def make_parse_config(
     parser_params: ParserParams,
     *,
@@ -127,22 +127,10 @@ def make_parse_config(
     folder_name = parser_params.supplier.folder_name
     return ParseConfiguration(
         BasePriceParseConfigurationParams(
-            markup_rules_provider=_provider_or_default(
-                markup_rules_provider,
-                data_provider.MarkupRulesProviderFromUserConfig(folder_name),
-            ),
-            black_list_provider=_provider_or_default(
-                black_list_provider,
-                data_provider.BlackListProviderFromUserConfig(),
-            ),
-            vendor_list=_provider_or_default(
-                vendor_list,
-                data_provider.VendorListProviderFromUserConfig(),
-            ),
-            manufacturer_aliases=_provider_or_default(
-                manufacturer_aliases,
-                data_provider.ManufacturerAliasesProviderFromUserConfig(),
-            ),
+            markup_rules_provider=markup_rules_provider or data_provider.MarkupRulesProviderFromUserConfig(folder_name),
+            black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(),
+            vendor_list=vendor_list or data_provider.VendorListProviderFromUserConfig(),
+            manufacturer_aliases=manufacturer_aliases or data_provider.ManufacturerAliasesProviderFromUserConfig(),
             parser_params=parser_params,
         )
     )
