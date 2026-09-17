@@ -153,11 +153,8 @@ class RowItem:
     manufacturer = FieldDescriptor[str]('manufacturer_name')
 
     # ==== Цены
-    # закупочная цена
     price_opt = FieldDescriptor[float](PRICE_OPT)
-    # рекомендуемая поставщиком цена
     price_recommended = FieldDescriptor[float](PRICE_RECOMMENDED)
-    # цена с учетом наценки
     price_markup = FieldDescriptor[float](PRICE_MARKUP)
     percent_markup = FieldDescriptor[float]('percent_markup')
 
@@ -183,55 +180,37 @@ class RowItem:
     mark = FieldDescriptor[str]('mark')
     diameter = FieldDescriptor[str]('diameter')
     ext_diameter = FieldDescriptor[int | float]('ext_diameter')
-    # толщина диска
     disk_thickness = FieldDescriptor[str]('disk_thickness')
-    # кол-во отверстий
     slot_count = FieldDescriptor[int]('slot_count')
-    # американское обозначение принадлежности
     us_aff_designation = FieldDescriptor[str]('us_aff_designation')
-    # сверловка отверстий в дисках, бывает под один размер бывает универсальный тип под два размера
     pcd1 = FieldDescriptor[int | float]('pcd1')
     pcd2 = FieldDescriptor[int]('pcd2')
-    # вылет - конструктивная особенность диска, выступ крепежной части относительно центра
     eet = FieldDescriptor[int | float]('eet')
     central_diameter = FieldDescriptor[int | float]('central_diameter')
 
     # ==== Дополнительные параметры
     color = FieldDescriptor[str]('color')
-    # основной цвет
     main_color = FieldDescriptor[str]('main_color')
     tire_type = FieldDescriptor[str]('tire_type')
-    # Надпись на боковине
     inscription_on_the_side = FieldDescriptor[int]('inscription_on_the_side')
-    # Тяжелая шина, можно ехать на спущенной
     run_flat = FieldDescriptor[int]('run_flat')
     index_velocity = FieldDescriptor[str]('index_velocity')
     index_load = FieldDescriptor[str]('index_load')
     model = FieldDescriptor[str]('model')
     construction_type = FieldDescriptor[str]('construction_type')
-    # Ось (ведущая, рулевая...)
     axis = FieldDescriptor[str]('axis')
-    # слойность
     layering = FieldDescriptor[str]('layering')
-    # камерность
     intimacy = FieldDescriptor[str]('intimacy')
-    # наличие и тип камеры
     camera_type = FieldDescriptor[str]('camera_type')
-    # крепеж
     fastener = FieldDescriptor[int]('fastener')
     disk_type = FieldDescriptor[int]('disk_type')
-    # вид диска - легковой / грузовой
     disk_type_1 = FieldDescriptor[int]('disk_type_1')
     title_chunks = FieldDescriptor[int]('title_chunks')
 
     # ==== Служебные поля и группировка
-    # порядок записей в списке
     order = FieldDescriptor[int]('order')
-    # группировка по параметрам, для поиска дублей
     group_by_params = FieldDescriptor[int]('group_by_params')
-    # кандидат среди дублей наименований
     double_candidate = FieldDescriptor[bool]('double_candidate')
-    # пометка, что наименование является дублем
     is_double = FieldDescriptor[bool]('is_double')
     disputed = FieldDescriptor[str]('disputed')
 
@@ -279,8 +258,8 @@ class RowItem:
 
     # ── Value Object accessors ─────────────────────────────────────────
 
-    tire = VOProperty(TireDimensions)  # габариты шины
-    disk = VOProperty(DiskParameters)  # параметры диска
-    pricing = VOProperty(Pricing)  # цены и наценки
-    product_identity = VOProperty(ProductIdentity)  # производитель, бренд, модель
-    duplicate = VOProperty(DuplicateInfo)  # служебные поля дублей
+    tire = VOProperty(TireDimensions)
+    disk = VOProperty(DiskParameters)
+    pricing = VOProperty(Pricing)
+    product_identity = VOProperty(ProductIdentity)
+    duplicate = VOProperty(DuplicateInfo)
