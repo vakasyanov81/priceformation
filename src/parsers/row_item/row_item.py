@@ -106,16 +106,32 @@ class FieldDescriptor[TValue]:
             instance._errors[self.name] = {'value': attr_value, 'error': str(err)}
 
 
-# ——— Связанные группы полей (для VO свойств) ——————————————————————————
+class VOProperty[VOType]:
+    """Дескриптор для value-object свойства RowItem."""
 
-_TIRE_FIELDS = frozenset(('width', 'height_percent', 'diameter', 'ext_diameter'))
-_DISK_FIELDS = frozenset(('slot_count', 'pcd1', 'pcd2', 'eet', 'central_diameter', 'disk_thickness'))
-_PRICING_FIELDS = frozenset((PRICE_OPT, PRICE_RECOMMENDED, PRICE_MARKUP, 'percent_markup'))
-_IDENTITY_FIELDS = frozenset(('manufacturer', 'brand', 'model'))
-_DUPLICATE_FIELDS = frozenset(('order', 'group_by_params', 'is_double', 'double_candidate', 'disputed'))
+    def __init__(self, vo_class: type[VOType]) -> None:
+        self.vo_class = vo_class
+
+    @overload
+    def __get__(self, instance: None, _owner: type | None = None) -> Self: ...
+
+    @overload
+    def __get__(self, instance: RowItem, _owner: type | None = None) -> VOType: ...
+
+    def __get__(
+        self,
+        instance: RowItem | None,
+        _owner: type | None = None,
+    ) -> Self | VOType:
+        if instance is None:
+            return self
+        return cast(VOType, self.vo_class.from_flat(instance._key_value_store))  # type: ignore[attr-defined]
+
+    def __set__(self, instance: RowItem, vo: VOType) -> None:
+        instance._key_value_store.update(vo.to_flat())  # type: ignore[attr-defined]
 
 
-class RowItem:  # noqa: WPS214  FIXME: 01 — вынести VO-property setter/getter блоки в трейты/миксины после стабилизации всех полей
+class RowItem:
     """
     Строка разобранного прайса.
 
@@ -242,47 +258,8 @@ class RowItem:  # noqa: WPS214  FIXME: 01 — вынести VO-property setter/
 
     # ── Value Object accessors ─────────────────────────────────────────
 
-    @property
-    def tire(self) -> TireDimensions:
-        """Габариты шины."""
-        return TireDimensions.from_flat(self._key_value_store)
-
-    @tire.setter
-    def tire(self, vo: TireDimensions) -> None:
-        self._key_value_store.update(vo.to_flat())
-
-    @property
-    def disk(self) -> DiskParameters:
-        """Параметры диска."""
-        return DiskParameters.from_flat(self._key_value_store)
-
-    @disk.setter
-    def disk(self, vo: DiskParameters) -> None:
-        self._key_value_store.update(vo.to_flat())
-
-    @property
-    def pricing(self) -> Pricing:
-        """Цены и наценки."""
-        return Pricing.from_flat(self._key_value_store)
-
-    @pricing.setter
-    def pricing(self, vo: Pricing) -> None:
-        self._key_value_store.update(vo.to_flat())
-
-    @property
-    def product_identity(self) -> ProductIdentity:
-        """Производитель, бренд, модель."""
-        return ProductIdentity.from_flat(self._key_value_store)
-
-    @product_identity.setter
-    def product_identity(self, vo: ProductIdentity) -> None:
-        self._key_value_store.update(vo.to_flat())
-
-    @property
-    def duplicate(self) -> DuplicateInfo:
-        """Служебные поля дублей."""
-        return DuplicateInfo.from_flat(self._key_value_store)
-
-    @duplicate.setter
-    def duplicate(self, vo: DuplicateInfo) -> None:
-        self._key_value_store.update(vo.to_flat())
+    tire = VOProperty(TireDimensions)
+    disk = VOProperty(DiskParameters)
+    pricing = VOProperty(Pricing)
+    product_identity = VOProperty(ProductIdentity)
+    duplicate = VOProperty(DuplicateInfo)
