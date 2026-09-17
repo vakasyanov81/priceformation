@@ -10,17 +10,41 @@ from functools import cache
 from typing import Any, Self, cast, overload
 
 from parsers.row_item import row_item_formatter as row_format
+from parsers.row_item.value_objects import (
+    DiskParameters,
+    DuplicateInfo,
+    Pricing,
+    ProductIdentity,
+    TireDimensions,
+)
+
+PRICE_OPT = 'price_opt'
+PRICE_RECOMMENDED = 'price_recommended'
+PRICE_MARKUP = 'price_markup'
 
 FIELD_FORMAT = {
     row_format.code: ('code', 'code_man', 'code_art'),
-    row_format.money: ('price_opt', 'price_recommended', 'price_markup'),
+    row_format.money: (PRICE_OPT, PRICE_RECOMMENDED, PRICE_MARKUP),
     row_format.floated: ('percent_markup',),
-    row_format.integer: ('rest_count', 'reserve_count', 'delivery_period', 'slot_count', 'group_by_params'),
-    row_format.int_or_float: ('ext_diameter', 'pcd1', 'eet', 'central_diameter'),
+    row_format.integer: (
+        'rest_count',
+        'reserve_count',
+        'delivery_period',
+        'slot_count',
+        'group_by_params',
+        'order',
+    ),
+    row_format.int_or_float: (
+        'ext_diameter',
+        'pcd1',
+        'pcd2',
+        'eet',
+        'central_diameter',
+    ),
     row_format.boolean: ('double_candidate', 'is_double'),
 }
 
-DEFAULT_VALUES = {('price_opt', 'price_recommended', 'price_markup'): 0}
+DEFAULT_VALUES = {(PRICE_OPT, PRICE_RECOMMENDED, PRICE_MARKUP): 0}
 
 
 def _format_field(attr_value: Any, formatter: Any) -> Any:
@@ -82,9 +106,43 @@ class FieldDescriptor[TValue]:
             instance._errors[self.name] = {'value': attr_value, 'error': str(err)}
 
 
+class VOProperty[VOType]:
+    """Дескриптор для value-object свойства RowItem."""
+
+    def __init__(self, vo_class: type[VOType]) -> None:
+        self.vo_class = vo_class
+
+    @overload
+    def __get__(self, instance: None, _owner: type | None = None) -> Self: ...
+
+    @overload
+    def __get__(self, instance: RowItem, _owner: type | None = None) -> VOType: ...
+
+    def __get__(
+        self,
+        instance: RowItem | None,
+        _owner: type | None = None,
+    ) -> Self | VOType:
+        if instance is None:
+            return self
+        return cast(VOType, self.vo_class.from_flat(instance._key_value_store))  # type: ignore[attr-defined]
+
+    def __set__(self, instance: RowItem, vo: VOType) -> None:
+        instance._key_value_store.update(vo.to_flat())  # type: ignore[attr-defined]
+
+
 class RowItem:
     """
-    price row item description
+    Строка разобранного прайса.
+
+    Плоские поля доступны напрямую (``row_item.width``, ``row_item.price_opt``).
+    Семантические группы — через value-object свойства:
+
+    * ``row_item.tire`` — габариты шины
+    * ``row_item.disk`` — параметры диска
+    * ``row_item.pricing`` — цены и наценки
+    * ``row_item.product_identity`` — производитель/бренд/модель
+    * ``row_item.duplicate`` — служебная информация о дублях
     """
 
     # ==== Основные коды и наименования
@@ -96,11 +154,11 @@ class RowItem:
 
     # ==== Цены
     # закупочная цена
-    price_opt = FieldDescriptor[float]('price_opt')
+    price_opt = FieldDescriptor[float](PRICE_OPT)
     # рекомендуемая поставщиком цена
-    price_recommended = FieldDescriptor[float]('price_recommended')
+    price_recommended = FieldDescriptor[float](PRICE_RECOMMENDED)
     # цена с учетом наценки
-    price_markup = FieldDescriptor[float]('price_markup')
+    price_markup = FieldDescriptor[float](PRICE_MARKUP)
     percent_markup = FieldDescriptor[float]('percent_markup')
 
     # ==== Поставщик и характеристики
@@ -134,6 +192,7 @@ class RowItem:
     # сверловка отверстий в дисках, бывает под один размер бывает универсальный тип под два размера
     pcd1 = FieldDescriptor[int | float]('pcd1')
     pcd2 = FieldDescriptor[int]('pcd2')
+    # вылет - конструктивная особенность диска, выступ крепежной части относительно центра
     eet = FieldDescriptor[int | float]('eet')
     central_diameter = FieldDescriptor[int | float]('central_diameter')
 
@@ -166,10 +225,13 @@ class RowItem:
     title_chunks = FieldDescriptor[int]('title_chunks')
 
     # ==== Служебные поля и группировка
+    # порядок записей в списке
     order = FieldDescriptor[int]('order')
     # группировка по параметрам, для поиска дублей
     group_by_params = FieldDescriptor[int]('group_by_params')
+    # кандидат среди дублей наименований
     double_candidate = FieldDescriptor[bool]('double_candidate')
+    # пометка, что наименование является дублем
     is_double = FieldDescriptor[bool]('is_double')
     disputed = FieldDescriptor[str]('disputed')
 
@@ -214,3 +276,11 @@ class RowItem:
     def to_dict(self) -> dict[str, Any]:
         """to dict"""
         return dict(self._key_value_store)
+
+    # ── Value Object accessors ─────────────────────────────────────────
+
+    tire = VOProperty(TireDimensions)  # габариты шины
+    disk = VOProperty(DiskParameters)  # параметры диска
+    pricing = VOProperty(Pricing)  # цены и наценки
+    product_identity = VOProperty(ProductIdentity)  # производитель, бренд, модель
+    duplicate = VOProperty(DuplicateInfo)  # служебные поля дублей
