@@ -3,6 +3,9 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
+from python_calamine import WorksheetNotFound
+
 from core.parse_paths import ParsePaths
 from parsers.base_parser import nomenclature_correction as noc
 
@@ -55,6 +58,66 @@ def test_corrected_title_cache() -> None:
         assert noc.get_nomenclature_corrected_title('C') == 'C'
         mock_load.assert_called_once()
     noc.clear_nomenclature_cache()
+
+
+def test_invalid_file_raises_error(tmp_path: Any) -> None:
+    """битый xlsx — CalamineError/ZipError обёрнуты в NomenclatureCorrectionFileError"""
+    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'garbage')
+    with (
+        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
+        patch.object(noc, 'err_msg'),
+        pytest.raises(
+            noc.NomenclatureCorrectionFileError,
+            match=r'correct-nomenclature\.xlsx повреждён',
+        ),
+    ):
+        noc.load_file()
+
+
+def test_missing_sheet_raises_error(tmp_path: Any) -> None:
+    """нет листа Sheet1 — WorksheetNotFound обёрнут в NomenclatureCorrectionFileError"""
+    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'placeholder')
+    fake_wb = MagicMock()
+    fake_wb.get_sheet_by_name.side_effect = WorksheetNotFound('Sheet1')
+    fake_wb.sheet_names = ['OtherSheet']
+    with (
+        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
+        patch(
+            'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
+            return_value=fake_wb,
+        ),
+        patch.object(noc, 'err_msg'),
+        pytest.raises(
+            noc.NomenclatureCorrectionFileError,
+            match=r'correct-nomenclature\.xlsx повреждён',
+        ),
+    ):
+        noc.load_file()
+
+
+def test_too_few_columns_raises_error(tmp_path: Any) -> None:
+    """строка с одной колонкой — IndexError обёрнут в NomenclatureCorrectionFileError"""
+    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'placeholder')
+    fake_sheet = MagicMock()
+    fake_sheet.to_python.return_value = [
+        ['vendor'],
+        ['old title'],
+    ]
+    fake_wb = MagicMock()
+    fake_wb.get_sheet_by_name.return_value = fake_sheet
+    with (
+        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
+        patch(
+            'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
+            return_value=fake_wb,
+        ),
+        patch.object(noc, 'err_msg'),
+        pytest.raises(
+            noc.NomenclatureCorrectionFileError,
+            match=r'correct-nomenclature\.xlsx повреждён',
+        ),
+    ):
+        noc.load_file()
 
 
 def test_corrected_title_reloads_after_clear() -> None:
