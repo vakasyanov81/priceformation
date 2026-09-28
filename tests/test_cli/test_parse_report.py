@@ -52,13 +52,67 @@ def test_dump_json_roundtrip() -> None:
     assert payload['error'] is None
 
 
+def test_dump_json_keeps_cyrillic() -> None:
+    """Кириллица пишется литералом, а не escape-последовательностями."""
+    text = dump_json({'type_production': 'Автошина'})
+    assert 'Автошина' in text
+    assert '\\u' not in text
+    assert json.loads(text) == {'type_production': 'Автошина'}
+
+
+def test_empty_stats_exact() -> None:
+    """Нулевая статистика: все ключи и значения — контракт для внешних скриптов."""
+    assert empty_stats(_ELAPSED) == {
+        'items': 0,
+        'priced_items': 0,
+        'doubles': 0,
+        'unknown_category_skips': 0,
+        'black_list_skips': 0,
+        'elapsed_seconds': _ROUNDED,
+        'percent_markup': {'min': 0, 'max': 0},
+        'absolute_markup': {'min': 0, 'max': 0},
+    }
+
+
+def test_ok_payload_exact() -> None:
+    """Успешный ответ: полный набор ключей схемы JsonReport."""
+    payload = ok_payload(
+        action='parse',
+        positions=[{'title': _TITLE}],
+        stats=empty_stats(0),
+        warnings=['w'],
+        files=[_RESULT_A],
+        suppliers={'22': 'Запаска'},
+    )
+    assert payload == {
+        'ok': True,
+        'version': REPORT_VERSION,
+        'action': 'parse',
+        'positions': [{'title': _TITLE}],
+        'stats': empty_stats(0),
+        'warnings': ['w'],
+        'files': [_RESULT_A],
+        'suppliers': {'22': 'Запаска'},
+        'disabled_suppliers': {},
+        'error': None,
+    }
+
+
 def test_error_payload_stable_keys() -> None:
     """ошибка заполняет ту же схему, ok=false."""
     payload = error_payload('parse', 'RuntimeError', 'boom')
-    assert payload['ok'] is False
-    assert payload['positions'] == []
-    assert payload['disabled_suppliers'] == {}
-    assert payload['error'] == {'kind': 'RuntimeError', 'message': 'boom'}
+    assert payload == {
+        'ok': False,
+        'version': REPORT_VERSION,
+        'action': 'parse',
+        'positions': [],
+        'stats': empty_stats(0),
+        'warnings': [],
+        'files': [],
+        'suppliers': {},
+        'disabled_suppliers': {},
+        'error': {'kind': 'RuntimeError', 'message': 'boom'},
+    }
 
 
 def test_error_payload_compact() -> None:
@@ -124,16 +178,54 @@ def _result_with_skips() -> ParseResult:
 def test_stats_and_warnings_from_result() -> None:
     """счётчики и тексты предупреждений из ParseResult."""
     parsed = _result_with_skips()
-    stats = stats_from_result(parsed, _ELAPSED)
-    assert stats['items'] == 1
-    assert stats['priced_items'] == 1
-    assert stats['doubles'] == 1
-    assert stats['unknown_category_skips'] == 1
-    assert stats['black_list_skips'] == 3
-    assert stats['elapsed_seconds'] == _ROUNDED
+    assert stats_from_result(parsed, _ELAPSED) == {
+        'items': 1,
+        'priced_items': 1,
+        'doubles': 1,
+        'unknown_category_skips': 1,
+        'black_list_skips': 3,
+        'elapsed_seconds': _ROUNDED,
+        'percent_markup': {'min': 0, 'max': 0},
+        'absolute_markup': {'min': 20.0, 'max': 20.0},
+    }
     warnings = warnings_from_result(parsed)
     assert any(_SUV in message for message in warnings)
     assert any('black_list' in message for message in warnings)
+
+
+def test_stats_markup_range_across_rows() -> None:
+    """вилка наценки считается по всем строкам с ценой."""
+    parsed = ParseResult()
+    first = RowItem({'title': 'a', 'price_opt': 100, 'price_markup': 120, 'percent_markup': 20})
+    second = RowItem({'title': 'b', 'price_opt': 200, 'price_markup': 300, 'percent_markup': 50})
+    parsed.parsed_items.append(first)
+    parsed.parsed_items.append(second)
+    assert stats_from_result(parsed, 0.0) == {
+        'items': 2,
+        'priced_items': 2,
+        'doubles': 0,
+        'unknown_category_skips': 0,
+        'black_list_skips': 0,
+        'elapsed_seconds': 0.0,
+        'percent_markup': {'min': 20.0, 'max': 50.0},
+        'absolute_markup': {'min': 20.0, 'max': 100.0},
+    }
+
+
+def test_stats_skip_unpriced_rows() -> None:
+    """Строка без price_opt попадает в items, но не в наценку и priced_items."""
+    parsed = ParseResult()
+    parsed.parsed_items.append(RowItem({'title': 'no price', 'price_opt': 0, 'price_markup': 120}))
+    assert stats_from_result(parsed, 0.0) == {
+        'items': 1,
+        'priced_items': 0,
+        'doubles': 0,
+        'unknown_category_skips': 0,
+        'black_list_skips': 0,
+        'elapsed_seconds': 0.0,
+        'percent_markup': {'min': 0, 'max': 0},
+        'absolute_markup': {'min': 0, 'max': 0},
+    }
 
 
 def test_warnings_empty_without_skips() -> None:
@@ -143,10 +235,7 @@ def test_warnings_empty_without_skips() -> None:
 
 def test_empty_result_stats() -> None:
     """пустой разбор даёт нулевые счётчики."""
-    stats = stats_from_result(ParseResult(), 0)
-    assert stats['items'] == 0
-    assert stats['doubles'] == 0
-    assert stats['priced_items'] == 0
+    assert stats_from_result(ParseResult(), 0) == empty_stats(0)
 
 
 def test_warnings_category_only() -> None:

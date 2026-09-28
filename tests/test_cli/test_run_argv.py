@@ -188,3 +188,54 @@ def test_parse_unknown_command_exits() -> None:
     with pytest.raises(SystemExit) as exit_info:
         parse_machine_args(['nope'])
     assert exit_info.value.code == 2
+
+
+def test_no_command_is_error() -> None:
+    """пустой argv — ошибка argparse, а не молчаливый Namespace(command=None)."""
+    with pytest.raises(SystemExit) as exit_info:
+        parse_machine_args([])
+    assert exit_info.value.code == 2
+
+
+def test_inline_keeps_extra_flags() -> None:
+    """load_config=path разворачивается в команду, хвост argv не теряется."""
+    args = parse_machine_args([f'{_CONFIG_CMD}=/incoming/black_list', '--json'])
+    assert args.command == _CONFIG_CMD
+    assert args.config == '/incoming/black_list'
+    assert args.json is True
+
+
+def test_inline_prices_keeps_extra_flags() -> None:
+    """load_supplier_prices={...} вместе с флагом json не теряет ни то, ни другое."""
+    raw = '{"1": "/incoming/any_price_name.xlsx"}'
+    args = parse_machine_args([f'{LOAD_SUPPLIER_PRICES}={raw}', '--json'])
+    assert args.command == LOAD_SUPPLIER_PRICES
+    assert args.prices == raw
+    assert args.json is True
+
+
+def test_result_template_help_lists_all_templates(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """--help перечисляет все зарегистрированные шаблоны записи: дрейф реестра не пройдёт."""
+    from parsers.writer.templates.all_templates import (
+        all_writer_templates,
+        writer_template_name,
+        writer_templates_by_name,
+    )
+
+    with pytest.raises(SystemExit) as exit_info:
+        parse_machine_args([PARSE, '--help'])
+    assert exit_info.value.code == 0
+
+    help_text = ' '.join(capsys.readouterr().out.split())
+    available = writer_templates_by_name()
+    for name in available:
+        assert name in help_text
+    defaults_part = help_text.split('Без флага — ')[1]
+    default_names = [writer_template_name(template) for template in all_writer_templates()]
+    for name in default_names:
+        assert name in defaults_part
+    for name in available:
+        if name not in default_names:
+            assert name not in defaults_part

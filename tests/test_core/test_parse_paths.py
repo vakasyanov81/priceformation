@@ -38,5 +38,6 @@ def test_configure_and_get_parse_paths(_restore_parse_paths: None) -> None:
 def test_get_parse_paths_requires_configure(_restore_parse_paths: None) -> None:
     """без configure_parse_paths — явная ошибка."""
     _CurrentParsePaths.configured = None  # noqa: WPS437
-    with pytest.raises(RuntimeError, match='Parse paths are not configured'):
+    with pytest.raises(RuntimeError) as raised:
         get_parse_paths()
+    assert str(raised.value) == 'Parse paths are not configured'

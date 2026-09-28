@@ -1,6 +1,7 @@
 """tests for price grouping key helpers."""
 
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -328,3 +329,111 @@ def test_group_key_passenger_disk_without_extras() -> None:
         title='5.5x14 Скад Ягуар (КЛ147)',
     )
     assert group_key(with_model_code) == group_key(same_model)
+
+
+def test_group_key_exact() -> None:
+    """Буквальный ключ: форма и порядок частей — контракт, а не «равны между собой»."""
+    row = RowItem(
+        {
+            'title': '225/40R18 KAMA PRO 205 TL',
+            'manufacturer_name': 'KAMA',
+            'brand': 'KAMA',
+            'model': 'KAMA PRO 205',
+            'width': '225',
+            'height_percent': '40',
+            'diameter': 'ZR18',
+            'type_production': 'Легковая',
+            'index_velocity': 'Y',
+            'index_load': '92',
+        },
+    )
+    assert group_key(row, {}) == (
+        'легковая',
+        '225',
+        '18',
+        '',
+        '40',
+        'Y',
+        '92',
+        'pro205',
+        'kama',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+    )
+
+
+def test_group_key_exact_strips_own_brand_prefixes() -> None:
+    """Бренд срезается раньше производителя: длинный префикс проверяется первым."""
+    row = RowItem(
+        {
+            'title': '225/40R18 Cordiant Premium Cordiant B200',
+            'manufacturer_name': 'Cordiant',
+            'brand': 'Cordiant Premium',
+            'model': 'Cordiant Premium Cordiant B200',
+            'width': '225',
+            'height_percent': '40',
+            'diameter': '18',
+            'type_production': 'Легковая',
+        },
+    )
+    assert group_key(row, {}) == (
+        'легковая',
+        '225',
+        '18',
+        '',
+        '40',
+        '',
+        '',
+        'b200',
+        'cordiant',
+        '',
+        'cordiant premium',
+        '',
+        '',
+        '',
+        '',
+        '',
+    )
+
+
+def test_group_key_exact_blank_row() -> None:
+    """Пустая строка без размеров в title: все части ключа — пустые строки."""
+    assert group_key(RowItem({'title': 'no marker'}), {}) == ('',) * 16
+
+
+@pytest.mark.parametrize(
+    ('fields', 'expected'),
+    [
+        ({'intimacy': 'tt'}, 'TT'),
+        ({'intimacy': 'ttf'}, 'TTF'),
+        ({'title': 'tyre tt extra'}, 'TT'),
+        ({'camera_type': 'ttf'}, 'TTF'),
+        ({'camera_type': 'только шина'}, 'TT-ONLY'),
+        ({'camera_type': 'tl'}, ''),
+        ({'intimacy': 'tl'}, ''),
+    ],
+)
+def test_group_key_camera_part(fields: dict[str, Any], expected: str) -> None:
+    """Камерность приводится к верхнему регистру и попадает в свою часть ключа."""
+    assert group_key(_row(**fields), {})[11] == expected
+
+
+def test_group_key_loads_user_aliases_by_default() -> None:
+    """Без явной карты group_key берёт алиасы пользователя, а не пустую карту."""
+    with patch(
+        'parsers.common_price_group_key.load_aliases_map',
+        return_value={'ZZZTEST': {'aliases': [], 'group': 'zzz-canon'}},
+    ):
+        key = group_key(_row(manufacturer_name='ZZZTEST'))
+    assert key[8] == 'zzz-canon'
+    assert group_key(_row(manufacturer_name='ZZZTEST'), {})[8] == 'zzztest'
+
+
+def test_clear_model_applies_prefixes_longest_first() -> None:
+    """Префиксы применяются от длинного к короткому, а не в алфавитном порядке."""
+    assert clear_model('AABCD ZZ 205', 'ZZ', 'AABCD') == '205'

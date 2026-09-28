@@ -42,3 +42,18 @@ def test_field_descriptor_set_handles_value_error() -> None:
     assert 'price_opt' in row._errors
     assert 'не число' in row._errors['price_opt']['value']
     assert isinstance(row._errors['price_opt']['error'], str)
+
+
+def test_field_descriptor_error_dict_keys_are_exact() -> None:
+    """Запись об ошибке имеет ровно ключи 'value' и 'error': потребитель читает их по имени."""
+    row = RowItem({})
+    row.price_opt = 'не число'
+    assert set(row._errors['price_opt']) == {'value', 'error'}
+
+
+def test_row_item_from_raw_row_keeps_error_keys() -> None:
+    """Сырая строка с битым полем: в parse_errors остаются ключи 'value' и 'error'."""
+    row = RowItem({'price_opt': 'не число', 'title': 't1'})
+    assert set(row.parse_errors) == {'price_opt'}
+    assert set(row.parse_errors['price_opt']) == {'value', 'error'}
+    assert row.parse_errors['price_opt']['value'] == 'не число'

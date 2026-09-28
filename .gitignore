@@ -222,5 +222,6 @@ setup.py
 src/core/config.py
 .testmondata
 mutants
+reports/
 /parse_config/
 integration_tests/result_for_test/

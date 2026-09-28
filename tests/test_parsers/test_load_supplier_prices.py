@@ -233,3 +233,26 @@ def test_load_empty_mapping(prices_root: Path) -> None:
     """пустая карта — пустой список."""
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
         assert load_supplier_prices({}) == []
+
+
+def test_load_supplier_prices_creates_nested_supplier_folder(
+    tmp_path: Path,
+    _restore_parse_paths: None,
+) -> None:
+    """Папка file_prices/<sup_code> создаётся целиком: parents=True, а не exist_ok."""
+    file_prices = tmp_path / 'file_prices'
+    assert not file_prices.exists()
+    configure_parse_paths(
+        ParsePaths(
+            file_prices_folder=str(file_prices),
+            user_config_folder=str(tmp_path / 'cfg'),
+            result_folder=str(file_prices / 'result'),
+        ),
+    )
+    source = _write_source(tmp_path, 'poshk.xlsx', _XLSX_BYTES)
+
+    with patch(_CATALOG_PATCH, return_value=_CATALOG):
+        found = load_supplier_prices({'1': str(source)})
+
+    assert found == [str(file_prices / 'poshk' / 'price.xlsx')]
+    assert (file_prices / 'poshk' / 'price.xlsx').read_bytes() == _XLSX_BYTES
