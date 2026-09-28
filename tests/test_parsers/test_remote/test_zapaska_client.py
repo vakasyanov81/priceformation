@@ -110,3 +110,19 @@ def _https_mock(*, body: bytes | None = None, error: Exception | None = None) ->
     else:
         connection.request.side_effect = error
     return mock_cls
+
+
+def test_download_catalogs_twice_overwrites_existing_files(tmp_path: Path) -> None:
+    """Повторная выгрузка в ту же папку не падает: exist_ok=True."""
+    dest = tmp_path / 'prices' / 'zapaska'
+    payloads = {
+        _GET_TIRES_URL: '{"tires": 1}',
+        _GET_DISK_URL: '{"disks": 1}',
+    }
+
+    with patch(_GET_DATA, side_effect=lambda url, api_config: payloads[url]):
+        download_catalogs(dest_dir=dest, api=_API)
+        download_catalogs(dest_dir=dest, api=_API)
+
+    assert (dest / 'tire.json').read_text(encoding='utf-8') == '{"tires": 1}'
+    assert (dest / 'disk.json').read_text(encoding='utf-8') == '{"disks": 1}'

@@ -136,3 +136,27 @@ def test_extract_zapaska_policy_fields() -> None:
     assert rules.min_recommended_percent_markup == pytest.approx(_ZAPASKA_MIN_RECOMMENDED)
     assert rules.absolute_markup_rules.min_absolute_markup == _ZAPASKA_DELTA
     assert rules.absolute_markup_rules.mode == _MODE_DELTA
+
+
+def test_extract_reads_nonzero_max_cap_by_exact_key() -> None:
+    """Верхний кап читается по точному ключу конфига и не по похожему названию."""
+    rules = extract_markup_rules(
+        {
+            'min_recommended_percent_markup': 0.05,
+            'max_recommended_percent_markup': 0.3,
+        },
+    )
+    assert rules.min_recommended_percent_markup == 0.05
+    assert rules.max_recommended_percent_markup == 0.3
+
+
+def test_extract_ignores_unknown_cap_key() -> None:
+    """Ключ с другим именем не подставляется вместо max_recommended_percent_markup."""
+    rules = extract_markup_rules(
+        {
+            'max_recommended_percent_markup': 0.3,
+            'max_recommended_percent_markup_typo': 0.9,
+            'MAX_RECOMMENDED_PERCENT_MARKUP': 0.9,
+        },
+    )
+    assert rules.max_recommended_percent_markup == 0.3

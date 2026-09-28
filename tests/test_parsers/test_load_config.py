@@ -299,3 +299,21 @@ def test_load_json_binary(tmp_path: Path, config_root: Path) -> None:
     with pytest.raises(InvalidConfigJsonError):
         load_config(str(source))
     assert source.exists()
+
+
+def test_load_config_creates_nested_config_folder(tmp_path: Path, _restore_parse_paths: None) -> None:
+    """parse_config создаётся вместе с промежуточными папками, а не требует готовой."""
+    nested = tmp_path / 'deeply' / 'nested' / 'parse_config'
+    configure_parse_paths(
+        ParsePaths(
+            file_prices_folder=str(tmp_path / 'file_prices'),
+            user_config_folder=str(nested),
+            result_folder=str(tmp_path / 'result'),
+        ),
+    )
+    source = _write_source(tmp_path, 'vendor_list.json', _JSON_TEXT.encode('utf-8'))
+
+    found = load_config(str(source))
+
+    assert found == [str(nested / 'vendor_list.json')]
+    assert (nested / 'vendor_list.json').is_file()

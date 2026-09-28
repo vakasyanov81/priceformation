@@ -1,5 +1,6 @@
 """JSONL-запись по шаблону xlsx."""
 
+import datetime
 import json
 from pathlib import Path
 from typing import Any, ClassVar
@@ -38,6 +39,16 @@ class _SkipColumnTemplate(IWriteTemplate):
         {'Скрыто': {'field': RowItem.code.name, 'skip': True}},
     ]
     __FILE__ = 'skip_{now}.xlsx'
+
+
+class _TitleLastTemplate(IWriteTemplate):
+    """title не первая колонка: обход всех колонок обязан дойти до конца."""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [
+        {'Сезон': {'field': RowItem.season.name}},
+        {'Номенклатура': {'field': RowItem.title.name}},
+    ]
+    __FILE__ = 'title_last_{now}.xlsx'
 
 
 def _load_meta(folder: Path) -> dict[str, str]:
@@ -221,3 +232,104 @@ def test_jsonl_encodes_when_code_is_shorter(tmp_path: Path) -> None:
     season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
     assert _first_row(path)[season_key] == '@1'
     assert _load_values(tmp_path)['@1'] == 'зима'
+
+
+def test_jsonl_raw_bytes(tmp_path: Path) -> None:
+    """Файл jsonl: компактный JSON, кириллица литералом, вложенная папка создаётся."""
+    path = write_template_jsonl(write_data, ForInner, str(tmp_path / 'nested' / 'deeper'))
+    text = Path(path).read_text(encoding='utf-8')
+    assert 'Автошина' in text
+    assert 'Мим' in text
+    assert '\\u' not in text
+    assert '": ' not in text
+    assert text.endswith('\n')
+    assert text.count('\n') == 1
+
+
+def test_jsonl_file_name_has_four_digit_year(tmp_path: Path) -> None:
+    """В имени файла — четырёхзначный год, а не %y."""
+    path = write_template_jsonl(write_data, ForInner, str(tmp_path))
+    assert str(datetime.datetime.now().year) in Path(path).name
+
+
+def test_meta_json_keeps_cyrillic(tmp_path: Path) -> None:
+    """result_meta.json: имена колонок кириллицей, а не escape-последовательностями."""
+    write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
+    text = (tmp_path / RESULT_META_FILE).read_text(encoding='utf-8')
+    assert 'Номенклатура' in text
+    assert '\\u' not in text
+
+
+def _write_meta(folder: Path, payload: dict[str, Any]) -> None:
+    (folder / RESULT_META_FILE).write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+
+
+def test_meta_extends_partial_keys(tmp_path: Path) -> None:
+    """Новые колонки дописываются после уже известных, нечисловые ключи мета выбрасываются."""
+    _write_meta(tmp_path, {'note': 'ручной', '1': 'Номенклатура'})
+    path = write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
+    assert _first_row(path) == {'1': _TITLE, '2': 3980.0, '3': 4.0}
+    assert _load_meta(tmp_path) == {'1': 'Номенклатура', '2': _PRICE_NAME, '3': 'Остаток'}
+
+
+def test_meta_keeps_key_order_of_existing_meta(tmp_path: Path) -> None:
+    """Нечисловые ключи в начале мета пропускаются, а не обрывают разбор."""
+    _write_meta(
+        tmp_path,
+        {'values': {}, 'note': 1, '1': 'Остаток', '2': _PRICE_NAME, '3': 'Номенклатура'},
+    )
+    path = write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
+    assert _first_row(path) == {'1': 4.0, '2': 3980.0, '3': _TITLE}
+
+
+def test_meta_drops_unusable_stored_codes(tmp_path: Path) -> None:
+    """Код, не короче значения, из мета не переиспользуется."""
+    _write_meta(tmp_path, {'values': {'@1': 'да'}})
+    path = write_template_jsonl(_repeat_pair(season='да'), _RepeatFieldsTemplate, str(tmp_path))
+    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
+    assert _first_row(path)[season_key] == 'да'
+    assert not _load_values(tmp_path)
+
+
+def test_meta_reuses_stored_code_index(tmp_path: Path) -> None:
+    """Новый код продолжает нумерацию сохранённой, а не начинается с @1."""
+    _write_meta(tmp_path, {'values': {'@1': 'Автошина', '@2': 'Зимняя', '@3': '225'}})
+    path = write_template_jsonl(_repeat_pair(season='Зимняя'), _RepeatFieldsTemplate, str(tmp_path))
+    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
+    assert _first_row(path)[season_key] == '@2'
+    assert _load_values(tmp_path) == {'@1': 'Автошина', '@2': 'Зимняя'}
+
+
+def test_meta_drops_values_without_codes(tmp_path: Path) -> None:
+    """Непригодные сохранённые коды вычищаются из мета, а не висят вечно."""
+    _write_meta(tmp_path, {'values': {'@1': '225'}})
+    path = write_template_jsonl(_repeat_pair(season='Зимняя'), _RepeatFieldsTemplate, str(tmp_path))
+    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
+    assert _first_row(path)[season_key] == '@1'
+    assert _load_values(tmp_path) == {'@1': 'Зимняя'}
+
+
+def test_repeated_title_is_not_coded(tmp_path: Path) -> None:
+    """Одинаковый длинный title в строках остаётся текстом: @N ставится только на другие колонки."""
+    same = _repeat_pair(season='Зимняя')
+    same[0]['title'] = _TITLE
+    same[1]['title'] = _TITLE
+    path = write_template_jsonl(same, _RepeatFieldsTemplate, str(tmp_path))
+    meta = _load_meta(tmp_path)
+    first = _first_row(path)
+    assert first[_meta_key(meta, 'Номенклатура')] == _TITLE
+    assert first[_meta_key(meta, 'Сезон')] == '@1'
+    assert _load_values(tmp_path) == {'@1': 'Зимняя'}
+
+
+def test_repeated_title_is_not_coded_when_title_is_last(tmp_path: Path) -> None:
+    """title в последней колонке тоже не кодируется: обход идёт до конца списка."""
+    same = _repeat_pair(season='Зимняя')
+    same[0]['title'] = _TITLE
+    same[1]['title'] = _TITLE
+    path = write_template_jsonl(same, _TitleLastTemplate, str(tmp_path))
+    meta = _load_meta(tmp_path)
+    first = _first_row(path)
+    assert first[_meta_key(meta, 'Номенклатура')] == _TITLE
+    assert first[_meta_key(meta, 'Сезон')] == '@1'
+    assert _load_values(tmp_path) == {'@1': 'Зимняя'}

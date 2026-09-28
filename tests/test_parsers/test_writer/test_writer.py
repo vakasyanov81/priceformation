@@ -8,6 +8,8 @@ import pytest
 
 from parsers.writer import xls_writer as writer_mod
 from parsers.writer.fake_driver import FakeXlwtDriver
+from parsers.writer.templates.tmpl.for_drom import ForDrom
+from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
@@ -177,3 +179,135 @@ def test_write_row_empty_value_skips(tmp_path: Any) -> None:
         result_folder=str(tmp_path),
     ).write()
     assert fake_driver.body == {}  # ничего не записано, но save вызван
+
+
+class _ColorRecordingDriver(FakeXlwtDriver):
+    """драйвер, который запоминает цвет ячейки: FakeXlwtDriver его отбрасывает."""
+
+    def __init__(self) -> None:
+        """init"""
+        super().__init__()
+        self.colors: dict[str, str | None] = {}
+
+    def write(
+        self,
+        row_idx: int,
+        col_idx: int,
+        cell_content: Any,
+        style: Any = None,
+        _color: str | None = None,
+    ) -> None:
+        """write"""
+        super().write(row_idx, col_idx, cell_content, style, _color)
+        self.colors[f'cell({row_idx},{col_idx})'] = _color
+
+
+def test_write_sheet_name_and_head(tmp_path: Any) -> None:
+    """Имя листа и шапка — контракт: файл открывают в Excel глазами."""
+    driver = FakeXlwtDriver()
+    XlsWriter(
+        driver,
+        write_data,
+        template=FixtureTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert driver.sheet_name == 'price'
+    assert driver.head == ['Номенклатура', 'Цена', 'Остаток']
+
+
+def test_write_body_cells(tmp_path: Any) -> None:
+    """Тело листа: значения стоят в своих колонках, пустые ячейки не пишутся."""
+    driver = FakeXlwtDriver()
+    XlsWriter(
+        driver,
+        write_data,
+        template=FixtureTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert driver.body == {
+        'cell(1,0)': '225/40R18 Crossleader 92Y',
+        'cell(1,1)': 3980.0,
+        'cell(1,2)': 4.0,
+    }
+
+
+def test_write_applies_color_to_target_column(tmp_path: Any) -> None:
+    """Цвет строки ставится только в колонку set_to_column_index."""
+    driver = _ColorRecordingDriver()
+    XlsWriter(
+        driver,
+        write_data,
+        template=ForInner,
+        result_folder=str(tmp_path),
+    ).write()
+    assert driver.colors['cell(1,0)'] == '#f7d5d2'
+    assert driver.colors['cell(1,5)'] is None
+    assert driver.colors['cell(1,10)'] is None
+
+
+def test_write_without_known_supplier_has_no_color(tmp_path: Any) -> None:
+    """Поставщик не из карты — ячейки без цвета, а не с чужим."""
+    driver = _ColorRecordingDriver()
+    row = {**write_data[0], 'supplier_name': 'Неизвестный поставщик'}
+    XlsWriter(
+        driver,
+        [row],
+        template=ForInner,
+        result_folder=str(tmp_path),
+    ).write()
+    assert set(driver.colors.values()) == {None}
+
+
+def test_write_respects_template_exclude(tmp_path: Any) -> None:
+    """Колонка из exclude шаблона не попадает в тело листа."""
+    from .fixtures import SkipColumnTemplate
+
+    driver = FakeXlwtDriver()
+    XlsWriter(
+        driver,
+        write_data,
+        template=SkipColumnTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert driver.head == ['Скрытая', 'Цена']
+    assert driver.body == {'cell(1,1)': 3980.0}
+
+
+def test_get_color_requires_existing_column(tmp_path: Any) -> None:
+    """Пустое имя колонки цвета — цвета нет, даже если колонка указана."""
+    writer = XlsWriter(
+        FakeXlwtDriver(),
+        write_data,
+        template=FixtureTemplate,
+        result_folder=str(tmp_path),
+    )
+    assert writer._get_color({}) == (None, None)
+    assert writer._get_color({**write_data[0], 'supplier_name': ''}) == (None, None)
+    assert writer._get_color({**write_data[0], 'supplier_name': 'Мим'}) == (None, None)
+
+
+def test_write_applies_template_exclude(tmp_path: Any) -> None:
+    """Строки, отсечённые __EXCLUDE__ шаблона, в лист не попадают."""
+    driver = FakeXlwtDriver()
+    without_rest = {**write_data[0], 'rest_count': None}
+    XlsWriter(
+        driver,
+        [write_data[0], without_rest],
+        template=ForDrom,
+        result_folder=str(tmp_path),
+    ).write()
+    assert 'cell(1,0)' in driver.body
+    second_row = [cell for cell in driver.body if cell.startswith('cell(2,')]
+    assert second_row == []
+
+
+def test_write_creates_nested_result_folder(tmp_path: Any) -> None:
+    """write создаёт и вложенные папки: parents=True, а не exist_ok в пустоту."""
+    result_folder = tmp_path / 'prices' / 'result'
+    XlsWriter(
+        FakeXlwtDriver(),
+        write_data,
+        template=FixtureTemplate,
+        result_folder=str(result_folder),
+    ).write()
+    assert result_folder.is_dir()

@@ -145,6 +145,10 @@ do_not_mutate = [
     "src/core/log_resolve.py",
     "src/core/init_log.py",
     "src/parsers/base_parser/log_parser_process.py",
+    # Тест-дубли: проверяем их снаружи, мутировать их внутреннее состояние смысла нет.
+    "src/parsers/fake_xls_reader.py",
+    "src/parsers/fake_json_reader.py",
+    "src/parsers/writer/fake_driver.py",
 ]
 do_not_mutate_patterns = [
     'logger\.\w+',
@@ -153,6 +157,14 @@ do_not_mutate_patterns = [
     'warn_msg\(',
     'err_msg\(',
     'need_print_log=',
+    # cast() — аннотация для mypy, в рантайме не выполняет ничего.
+    'cast\(',
+    # encoding='utf-8' эквивалентен значению по умолчанию, пока локаль UTF-8.
+    'encoding=',
+    # Тексты argparse: help / description / metavar не влияют на разбор аргументов.
+    'help=',
+    'description=',
+    'metavar=',
 ]
 
 [tool.mypy]

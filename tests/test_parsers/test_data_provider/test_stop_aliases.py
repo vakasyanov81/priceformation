@@ -149,3 +149,23 @@ def test_aliases_from_config_drops_blanks() -> None:
         patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
     ):
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'Brand': ['Bar']}
+
+
+def test_filled_aliases_keeps_values_after_nonstring() -> None:
+    """Нестроковый элемент пропускается, а не обрывает весь список."""
+    cleaned = drop_blank_aliases({'Brand': [None, 123, 'Bar', 'Бар']})
+    assert cleaned == {'Brand': ['Bar', 'Бар']}
+
+
+def test_drop_blank_aliases_keeps_brands_after_dict_entry() -> None:
+    """Запись-словарь не обрывает разбор: следующие бренды тоже чистятся."""
+    raw = {
+        'Cordiant': {'aliases': ['', 'КОРДИАНТ'], 'group': 'cordiant'},
+        'Kama': ['  ', 'Кама'],
+        'Aeolus': '',
+    }
+    assert drop_blank_aliases(raw) == {
+        'Cordiant': {'aliases': ['КОРДИАНТ'], 'group': 'cordiant'},
+        'Kama': ['Кама'],
+        'Aeolus': '',
+    }

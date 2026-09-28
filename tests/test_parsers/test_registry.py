@@ -7,6 +7,8 @@ clear_registry and populates_when_empty tests). Use unique vendor codes
 and check specific entries.
 """
 
+import sys
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -209,20 +211,38 @@ def test_vendor_markup_policy_for_recommended_or_map() -> None:
     assert isinstance(policy, RecommendedOrMapMarkupPolicy)
 
 
-def test_all_vendors_from_registry_populates_when_empty() -> None:
-    """Пустой реестр: _ensure_vendors_imported() импортирует модули вендоров и заполняет реестр."""
+def _restore_registry(saved: dict[str, Any]) -> None:
+    """Вернуть глобальный _registry к состоянию до теста."""
+    _registry.clear()
+    _registry.update(saved)
+
+
+def _vendors_from_stub_import() -> set[Any]:
+    """Собрать вендоров, зарегистрированных импортом стаб-модуля, и вернуть реестр как был."""
+    stub = 'tests.test_parsers._registry_import_vendor'
+    # Регистрация выполняется в момент импорта, поэтому модуль обязан быть
+    # вычищен из sys.modules: иначе тест зависит от того, что ran раньше
+    # (при прогоне mutmut в одном процессе это ломает clean-тесты).
+    cached = sys.modules.pop(stub, None)
     saved = dict(_registry)
     try:
         clear_registry()
-        with patch('parsers.registry._VENDORS_TO_IMPORT', ('tests.test_parsers._registry_import_vendor',)):
-            vendor_classes = {parser for parser, _ in all_vendors_from_registry()}
+        with patch('parsers.registry._VENDORS_TO_IMPORT', (stub,)):
+            return {parser for parser, _ in all_vendors_from_registry()}
     finally:
-        _registry.clear()
-        _registry.update(saved)
+        _restore_registry(saved)
+        if cached is not None:  # noqa: WPS229
+            sys.modules[stub] = cached
 
-    from tests.test_parsers._registry_import_vendor import ImportTestVendor
 
-    assert ImportTestVendor in vendor_classes
+def test_all_vendors_from_registry_populates_when_empty() -> None:
+    """Пустой реестр: _ensure_vendors_imported() импортирует модули вендоров и заполняет реестр."""
+    vendor_classes = _vendors_from_stub_import()
+
+    # Сверяем имя класса, а не сам класс: при повторном импорте стаб-модуля
+    # это другой объект, и сравнение по идентичности зависит от порядка тестов.
+    names = {vendor.__name__ for vendor in vendor_classes}
+    assert 'ImportTestVendor' in names
 
 
 def test_ensure_vendors_imported_short_circuits() -> None:
