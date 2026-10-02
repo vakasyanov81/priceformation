@@ -2,12 +2,11 @@
 
 import logging
 
-from infrastructure.logging.log_message import err_msg
+from infrastructure.logging.console import FILE_ONLY
+
+logger = logging.getLogger(__name__)
 
 
 def write_exception_log(message: str) -> None:
-    """Писать в лог-файл; если он недоступен — в logging модуль."""
-    try:
-        err_msg(message, need_print_log=False)
-    except RuntimeError, OSError:
-        logging.error(message)
+    """Писать в лог-файл; в консоль traceback не выводится."""
+    logger.error(message, extra={FILE_ONLY: True})

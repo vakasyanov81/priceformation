@@ -1,12 +1,15 @@
 """tests for try_call helper"""
 
-import logging
+from logging import ERROR, WARNING
 from unittest.mock import MagicMock, patch
 
 import pytest
+from log_watch import LoggerWatcher
 
 from domain.exceptions import CoreExceptionError, SupplierNotHavePricesError
 from services.async_utils import try_call
+
+_ASYNC_LOGGER = 'services.async_utils'
 
 
 def test_try_call_success() -> None:
@@ -16,19 +19,17 @@ def test_try_call_success() -> None:
     method.assert_called_once_with(a=1, b=2)
 
 
-def test_try_call_supplier_error_exits() -> None:
+def test_try_call_supplier_error_exits(watch_logger: LoggerWatcher) -> None:
     """SupplierNotHavePricesError логируется и завершает процесс"""
+    entries = watch_logger(_ASYNC_LOGGER)
     with patch.object(SupplierNotHavePricesError, 'to_log'):
         method = MagicMock(side_effect=SupplierNotHavePricesError('нет прайса'))
 
-    with (
-        patch('services.async_utils.print_log') as mock_log,
-        patch('services.async_utils.sys.exit') as mock_exit,
-    ):
+    with patch('services.async_utils.sys.exit') as mock_exit:
         try_call(method)
-        mock_log.assert_called_once()
-        assert mock_log.call_args.kwargs['level'] == logging.WARNING
-        mock_exit.assert_called_once_with(1)
+
+    assert entries() == [(WARNING, 'нет прайса')]
+    mock_exit.assert_called_once_with(1)
 
 
 def test_try_call_keyboard_interrupt() -> None:
@@ -37,23 +38,20 @@ def test_try_call_keyboard_interrupt() -> None:
 
     with patch('services.async_utils.sys.exit') as mock_exit:
         try_call(method)
-        mock_exit.assert_called_once_with(0)
+    mock_exit.assert_called_once_with(0)
 
 
-def test_try_call_core_error() -> None:
+def test_try_call_core_error(watch_logger: LoggerWatcher) -> None:
     """CoreExceptionError печатается в консоль, процесс не завершается"""
+    entries = watch_logger(_ASYNC_LOGGER)
     with patch.object(CoreExceptionError, 'to_log'):
         method = MagicMock(side_effect=CoreExceptionError('понятная ошибка'))
 
-    with (
-        patch('services.async_utils.print_log') as mock_log,
-        patch('services.async_utils.sys.exit') as mock_exit,
-    ):
+    with patch('services.async_utils.sys.exit') as mock_exit:
         try_call(method)
-        mock_log.assert_called_once()
-        assert 'понятная ошибка' in mock_log.call_args.args[0]
-        assert mock_log.call_args.kwargs['level'] == logging.ERROR
-        mock_exit.assert_not_called()
+
+    assert entries() == [(ERROR, 'понятная ошибка')]
+    mock_exit.assert_not_called()
 
 
 def test_try_call_other_exception() -> None:

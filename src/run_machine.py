@@ -5,7 +5,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from infrastructure.logging.log_message import print_log, set_print_quiet
+from infrastructure.logging.json_mode import quiet_console
 from parse_report import JsonReport, emit_json, error_payload
 from parse_report_build import report_from_result
 from parsers.all_vendors import all_vendor_supplier_catalog
@@ -19,6 +19,8 @@ from services.configure import ensure_services_configured
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
+
+logger = logging.getLogger(__name__)
 
 _INTERRUPT = 'interrupted'
 _COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA))
@@ -43,7 +45,7 @@ def fail_unknown_result_template(
                 started=started,
             )
         else:
-            print_log(str(exc), level=logging.ERROR)
+            logger.error(str(exc))
         return 1
     return None
 
@@ -58,15 +60,13 @@ def machine_json(
 ) -> int:
     """Выполнить команду, JSON в stdout. Логи в этом режиме не печатаются."""
     ensure_services_configured()
-    set_print_quiet(True)
-    code = _emit_command(
-        command,
-        all_result,
-        result_template,
-        config_path if command == LOAD_CONFIG else supplier_prices,
-    )
-    set_print_quiet(False)
-    return code
+    with quiet_console():
+        return _emit_command(
+            command,
+            all_result,
+            result_template,
+            config_path if command == LOAD_CONFIG else supplier_prices,
+        )
 
 
 def _emit_command(

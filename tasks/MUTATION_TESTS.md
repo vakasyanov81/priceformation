@@ -113,10 +113,9 @@ uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 4408 мутантов — оценка, а не факт.
 
 **Мутация `to_none` убирает вызов `input()` целиком.** Из-за этого
-`ask_action` с `answer = None` крутит `while True` вообще без ввода:
-`print_log` вызывается бесконечно, тест на «сколько раз спросили» его не
-убивает. Лечится ограничителем числа вызовов `print_log` в тесте
-(`_log_budget`) — при превышении тест падает, а не висит.
+`ask_action` с `answer = None` крутит `while True` вообще без ввода: подсказка
+логируется бесконечно. Лечится заглушкой `input` в тесте — `_dialog_input`
+падает с `AssertionError`, когда ответы кончились, поэтому диалог не виснет.
 
 **Тест на импорт вендора ломается в clean-прогоне mutmut.** `test_registry.py`
 импортирует стаб-модуль `tests.test_parsers._registry_import_vendor` ради
@@ -182,7 +181,10 @@ uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 do_not_mutate = [
     "src/infrastructure/logging/wrappers.py",
     "src/services/async_utils.py",
-    "src/infrastructure/logging/log_message.py",
+    "src/infrastructure/logging/console.py",
+    "src/infrastructure/logging/exception_logging.py",
+    "src/infrastructure/logging/file_logging.py",
+    "src/infrastructure/logging/json_mode.py",
     "src/infrastructure/logging/log_resolve.py",
     "src/infrastructure/logging/log_setup.py",
     "src/parsers/base_parser/log_parser_process.py",
@@ -192,12 +194,7 @@ do_not_mutate = [
     "src/parsers/writer/fake_driver.py",
 ]
 do_not_mutate_patterns = [
-    'logger\.\w+',
-    'log_msg\(',
-    'print_log\(',
-    'warn_msg\(',
-    'err_msg\(',
-    'need_print_log=',
+    'logger\.\w+',              # тексты логов проверяются снаружи
     'cast\(',                    # аннотация, не рантайм
     'encoding=',                 # эквивалентно при locale == UTF-8
     'help=',

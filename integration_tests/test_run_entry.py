@@ -1,8 +1,10 @@
 """Integration tests for application entry point (src/run.py)."""
 
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
+from log_watch import LoggerWatcher, texts_at
 
 from domain.exceptions import SupplierNotHavePricesError
 from run_dialog import AnswerResult
@@ -17,6 +19,8 @@ _QUIT = 'q'
 _PARSED_ROW = 'item'
 _RESOLVE = 'run.ServiceProvider.resolve'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
+_RUN_LOGGER = 'run'
+_DIALOG_LOGGER = 'run_dialog'
 
 
 def test_main_exits_on_quit() -> None:
@@ -71,7 +75,6 @@ def test_main_report_doubles_then_exit() -> None:
     with (
         patch(_INPUT, side_effect=['3', _QUIT]),
         patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
-        patch('run.print_log'),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -82,13 +85,13 @@ def test_main_report_doubles_then_exit() -> None:
         doubles_service.make_report.assert_called_once()
 
 
-def test_main_update_zapaska_then_exit() -> None:
+def test_main_update_zapaska_then_exit(watch_logger: LoggerWatcher) -> None:
     """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
     zapaska_service = MagicMock()
+    entries = watch_logger(_RUN_LOGGER)
     with (
         patch(_INPUT, side_effect=['2', _QUIT]),
         patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service}.__getitem__),
-        patch('run.print_log') as mock_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -96,16 +99,15 @@ def test_main_update_zapaska_then_exit() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        zapaska_service.upload_data.assert_called_once()
-        mock_log.assert_called_once()
+    zapaska_service.upload_data.assert_called_once()
+    assert texts_at(entries(), logging.INFO) == ['*** Данные успешно загружены. ***\n']
 
 
-def test_main_retries_invalid_menu_input() -> None:
+def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
     """неверный ввод меню игнорируется, затем выполняется валидное действие."""
+    entries = watch_logger(_DIALOG_LOGGER)
     with (
         patch(_INPUT, side_effect=['x', _QUIT]),
-        patch('run.print_log'),
-        patch('run_dialog.print_log') as mock_dialog_log,
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
@@ -113,7 +115,9 @@ def test_main_retries_invalid_menu_input() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_dialog_log.assert_called_once()
+    texts = texts_at(entries(), logging.INFO)
+    assert len(texts) == 1
+    assert 'Не понял' in texts[0]
 
 
 def test_response_make_price_via_try_call() -> None:
@@ -144,7 +148,6 @@ def test_response_supplier_error_exits() -> None:
     with (
         patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
         patch('run.run_make_price_by_supplier', side_effect=SupplierNotHavePricesError('empty')),
-        patch('services.async_utils.print_log'),
         patch('services.async_utils.sys.exit', side_effect=SystemExit(1)) as mock_exit,
     ):
         from run import response_processing

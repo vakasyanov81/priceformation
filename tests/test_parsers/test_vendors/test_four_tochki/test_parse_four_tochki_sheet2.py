@@ -2,9 +2,10 @@
 tests for four_tochki vendor (sheet 2) after raw-parser process
 """
 
+import logging
 from typing import Any
-from unittest.mock import patch
 
+import pytest
 from test_parsers.fixtures.four_tochki_sheet2 import (
     four_tochki_invalid_item_result,
     four_tochki_one_item_result,
@@ -25,6 +26,7 @@ from parsers.vendors.four_tochki.four_tochki_sheet2 import (
 )
 
 parser_config = make_parse_configuration(fourtochki_sheet_2_params, MimMarkupRulesProviderForTests())
+_ROW_LOGGER = 'parsers.base_parser.base_parser_row'
 
 
 def get_fake_parser(parse_result: Any) -> FourTochkiParser2Sheet:
@@ -64,25 +66,23 @@ def test_parse() -> None:
     assert parsed_items_alt[0].percent_markup == 14.7
 
 
-def test_parse_with_invalid_item() -> None:
+def test_parse_with_invalid_item(caplog: pytest.LogCaptureFixture) -> None:
     """one invalid item is skipped"""
+    caplog.set_level(logging.ERROR, logger=_ROW_LOGGER)
 
-    with patch('infrastructure.logging.log_message.log_msg') as mock_log_msg:
-        parsed_items: list[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
+    parsed_items: list[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
+
     assert len(parsed_items) == 1
-    assert mock_log_msg.call_count == 2
+    errors = [record.getMessage() for record in caplog.records if record.name == _ROW_LOGGER]
+    assert len(errors) == 2
 
-    log_arg_value = mock_log_msg.mock_calls[0].args[0]
+    assert 'Не удалось разобрать строку (№ 3) у поставщика: ' in errors[0]
+    assert 'FourTochkiParser2Sheet' in errors[0]
+    assert "value': 'invalid value'" in errors[0]
+    assert "could not convert string to float: 'invalid value'" in errors[0]
 
-    assert 'Не удалось разобрать строку (№ 3) у поставщика: ' in log_arg_value
-    assert 'FourTochkiParser2Sheet' in log_arg_value
-    assert "value': 'invalid value'" in log_arg_value
-    assert "could not convert string to float: 'invalid value'" in log_arg_value
-    assert mock_log_msg.mock_calls[0].kwargs == {'level': 40, 'need_print_log': True}
-
-    assert 'Alcasta' in mock_log_msg.mock_calls[1].args[0]
-    assert 'WHS198858' in mock_log_msg.mock_calls[1].args[0]
-    assert mock_log_msg.mock_calls[1].kwargs == {'level': 40, 'need_print_log': False}
+    assert 'Alcasta' in errors[1]
+    assert 'WHS198858' in errors[1]
 
 
 def test_prepared_title_skips_empty_parts() -> None:

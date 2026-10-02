@@ -63,7 +63,6 @@ def test_invalid_file_raises_error(fake_config_provider: FakeConfigProvider) -> 
     """битый xlsx — CalamineError/ZipError обёрнуты в NomenclatureCorrectionFileError"""
     _write_nomenclature(fake_config_provider, b'garbage')
     with (
-        patch.object(noc, 'err_msg'),
         pytest.raises(
             noc.NomenclatureCorrectionFileError,
             match=r'correct-nomenclature\.xlsx повреждён',
@@ -83,7 +82,6 @@ def test_missing_sheet_raises_error(fake_config_provider: FakeConfigProvider) ->
             'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
             return_value=fake_wb,
         ),
-        patch.object(noc, 'err_msg'),
         pytest.raises(
             noc.NomenclatureCorrectionFileError,
             match=r'correct-nomenclature\.xlsx повреждён',
@@ -107,7 +105,6 @@ def test_too_few_columns_raises_error(fake_config_provider: FakeConfigProvider) 
             'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
             return_value=fake_wb,
         ),
-        patch.object(noc, 'err_msg'),
         pytest.raises(
             noc.NomenclatureCorrectionFileError,
             match=r'correct-nomenclature\.xlsx повреждён',

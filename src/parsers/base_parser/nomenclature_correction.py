@@ -1,5 +1,6 @@
 """Correction map for vendor nomenclature titles."""
 
+import logging
 import traceback
 from collections.abc import Iterator
 from pathlib import Path
@@ -9,7 +10,8 @@ from python_calamine import CalamineError, CalamineWorkbook, WorksheetNotFound, 
 
 from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
-from infrastructure.logging.log_message import err_msg
+
+logger = logging.getLogger(__name__)
 
 VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1
@@ -59,13 +61,13 @@ def _read_corrections(file_path: str) -> dict[str, str]:
     try:
         wb = CalamineWorkbook.from_path(file_path)
     except (CalamineError, ZipError) as exc:
-        err_msg(f'{_CORRECTION_ERROR_MSG}\nПуть: {file_path}\n{exc!r}\n{traceback.format_exc()}')
+        logger.error(f'{_CORRECTION_ERROR_MSG}\nПуть: {file_path}\n{exc!r}\n{traceback.format_exc()}')
         raise NomenclatureCorrectionFileError(_CORRECTION_ERROR_MSG) from exc
 
     try:
         sheet = wb.get_sheet_by_name('Sheet1')
     except WorksheetNotFound as exc:
-        err_msg(
+        logger.error(
             f'{_CORRECTION_ERROR_MSG}\nПуть: {file_path}\n{exc!r}\n'
             f'Доступные листы: {wb.sheet_names}\n{traceback.format_exc()}',
         )
@@ -76,7 +78,7 @@ def _read_corrections(file_path: str) -> dict[str, str]:
     try:
         return dict(_iter_correction_pairs(rows))
     except (IndexError, TypeError) as exc:
-        err_msg(
+        logger.error(
             f'{_CORRECTION_ERROR_MSG}\nПуть: {file_path}\n{exc!r}\n'
             f'Строк в листе: {len(rows)}\n{traceback.format_exc()}',
         )

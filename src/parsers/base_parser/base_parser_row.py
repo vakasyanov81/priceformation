@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
-from infrastructure.logging.log_message import err_msg
 from parsers.base_parser.base_parser_title import replace_season
 from parsers.row_item.row_item import RowItem
 
 if TYPE_CHECKING:
     from parsers.base_parser.base_parser import BaseParser
+
+logger = logging.getLogger(__name__)
 
 
 def _set_title_or_log(parser: BaseParser, row_id: int, row_item: RowItem) -> bool:
@@ -17,22 +19,16 @@ def _set_title_or_log(parser: BaseParser, row_id: int, row_item: RowItem) -> boo
     try:
         parser.set_prepared_title(row_item)
     except ValueError as err:
-        err_msg(
-            f'Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {err}',
-            need_print_log=True,
-        )
-        err_msg(f'строка: {row_item!r}')
+        logger.error(f'Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {err}')
+        logger.error(f'строка: {row_item!r}')
         return False
     return True
 
 
 def _log_row_parse_errors(parser: BaseParser, row_id: int, row_item: RowItem) -> None:
     """Лог ошибок разбора полей строки."""
-    err_msg(
-        f'Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {row_item.parse_errors}',
-        need_print_log=True,
-    )
-    err_msg(f'строка: {row_item.to_dict()!r}')
+    logger.error(f'Не удалось разобрать строку (№ {row_id}) у поставщика: {parser!r} // {row_item.parse_errors}')
+    logger.error(f'строка: {row_item.to_dict()!r}')
 
 
 def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:

@@ -8,7 +8,7 @@ import traceback
 from collections.abc import Callable
 from typing import Any, Protocol
 
-from .log_message import log_msg
+logger = _logging_module.getLogger(__name__)
 
 CALL_BEGIN_MSG = 'Calling method "{method}".'
 CALL_END_MSG = 'End of call to method "{method}" [exec_period] {period}'
@@ -37,16 +37,13 @@ def _build_begin_msg(
 def _log_call_end(method_name: str, start_time: float, call_output: Any) -> None:
     """Лог результата и длительности вызова."""
     delta = int((time.time() - start_time) * 1000)
-    log_msg(CALL_RESULT_MSG.format(method=method_name, res=repr(call_output)))
-    log_msg(CALL_END_MSG.format(method=method_name, period=delta))
+    logger.debug(CALL_RESULT_MSG.format(method=method_name, res=repr(call_output)))
+    logger.debug(CALL_END_MSG.format(method=method_name, period=delta))
 
 
 def _log_trace(method_name: str) -> None:
     """Лог traceback при ошибке."""
-    log_msg(
-        CALL_TRACE_MSG.format(method=method_name, trace=traceback.format_exc()),
-        level=_logging_module.WARNING,
-    )
+    logger.warning(CALL_TRACE_MSG.format(method=method_name, trace=traceback.format_exc()))
 
 
 def _decorator[RT](
@@ -60,7 +57,7 @@ def _decorator[RT](
         call_output: RT | None = None
         method_name = f'{func.__module__}.{func.__name__}'
         start_time = time.time()
-        log_msg(_build_begin_msg(method_name, label, args, kwargs))
+        logger.debug(_build_begin_msg(method_name, label, args, kwargs))
         try:
             call_output = func(*args, **kwargs)
         except Exception:

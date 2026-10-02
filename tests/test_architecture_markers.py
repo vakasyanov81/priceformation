@@ -16,6 +16,7 @@ _CONFIG_MODULE = _PARSERS_ROOT / 'base_parser' / 'base_parser_config.py'
 _LEGACY_CORE_ROOT = _SRC_ROOT / 'core'
 _DEMETER_CHAIN = 'parse_config.parser_params'
 _MAIN_CONFIG_MARKERS = ('MainConfig', 'MainCfg', 'cfg.main', 'get_parse_paths')
+_LEGACY_LOGGING_MARKERS = ('log_msg(', 'err_msg(', 'warn_msg(', 'print_log(', 'need_print_log')
 
 
 def _offenders(root: Path, markers: tuple[str, ...]) -> list[str]:
@@ -44,3 +45,8 @@ def test_no_module_refers_to_removed_main_config() -> None:
 def test_legacy_core_package_is_gone() -> None:
     """core/ разделён на domain/ и infrastructure/, пакет удалён."""
     assert not _LEGACY_CORE_ROOT.exists()
+
+
+def test_no_module_calls_legacy_log_functions() -> None:
+    """логирование идёт через logging.getLogger(__name__), глобальных log-функций нет."""
+    assert not _offenders(_SRC_ROOT, _LEGACY_LOGGING_MARKERS)
