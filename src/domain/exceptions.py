@@ -34,3 +34,7 @@ __ALL__ = [make_raise]
 
 class SupplierNotHavePricesError(CoreExceptionError):
     """Raise in case supplier have not price"""
+
+
+class ConfigValidationError(CoreExceptionError):
+    """Конфиг не соответствует ожидаемой форме: в сообщении имя файла и путь до ключа"""

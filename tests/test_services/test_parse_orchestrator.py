@@ -16,8 +16,13 @@ from parsers.base_parser.markup_policy import (
     RecommendedOrMapMarkupPolicy,
     percent_to_store,
 )
-from parsers.data_provider.markup_rules import MarkupRulesProviderBase
-from parsers.data_provider.vendor_list import VendorListConfigFileError, VendorListProviderBase
+from parsers.data_provider import (
+    MarkupRulesConfig,
+    MarkupRulesProviderBase,
+    VendorConfigEntry,
+    VendorListProviderBase,
+)
+from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.registry import UnknownVendorError
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_params
@@ -288,7 +293,7 @@ def test_four_tochki_sheet1_rom_policy() -> None:
 
 
 class _BoomMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> dict[str, Any]:
+    def get_markup_data(self) -> MarkupRulesConfig:
         raise AssertionError('must not read markup rules')
 
 
@@ -327,7 +332,7 @@ def test_disabled_vendor_is_skipped() -> None:
 
 
 class _MissingVendorList(VendorListProviderBase):
-    def get_config_vendor_list(self) -> dict[str, Any]:
+    def get_config_vendor_list(self) -> dict[str, VendorConfigEntry]:
         raise VendorListConfigFileError('missing')
 
 

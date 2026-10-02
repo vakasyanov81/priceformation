@@ -1,6 +1,5 @@
 """Markup cache lives on the ParseConfiguration instance, not the class."""
 
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,6 +10,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.data_provider import MarkupRulesConfig
 from parsers.row_item.row_item import RowItem
 
 _PERCENT_LOW = 0.1
@@ -30,11 +30,14 @@ def _parser_params() -> ParserParams:
     )
 
 
-def _markup_data(percent: float) -> dict[str, Any]:
-    return {'markup_rules': {'shelf': {'min': 0, 'max': 1, 'percent': percent}}}
+def _markup_data(percent: float) -> MarkupRulesConfig:
+    return MarkupRulesConfig.from_dict(
+        {'markup_rules': {'shelf': {'min': 0, 'max': 1, 'percent': percent}}},
+        'test_markup_rules.json',
+    )
 
 
-def _configuration(markup_data: dict[str, Any]) -> tuple[ParseConfiguration, MagicMock]:
+def _configuration(markup_data: MarkupRulesConfig) -> tuple[ParseConfiguration, MagicMock]:
     provider = MagicMock()
     provider.get_markup_data.return_value = markup_data
     stub = MagicMock()
@@ -66,7 +69,7 @@ def test_markup_provider_called_once() -> None:
 
 
 def test_empty_price_markup_map_is_cached() -> None:
-    config, provider = _configuration({'markup_rules': {}})
+    config, provider = _configuration(MarkupRulesConfig.from_dict({}, 'test_markup_rules.json'))
     first = config.get_price_markup_map()
     second = config.get_price_markup_map()
     assert first == ()

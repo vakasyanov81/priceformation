@@ -11,11 +11,11 @@ from parsers.base_parser.markup_policy import (
     percent_to_store,
 )
 from parsers.base_parser.price_markup import get_markup, recommended_percent
-from parsers.data_provider.markup_rules import (
+from parsers.data_provider import (
     ABSOLUTE_MODE_DELTA,
     AbsoluteMarkUpRules,
-    MarkUpParams,
-    MarkupRules,
+    MarkUpRule,
+    MarkupRulesConfig,
 )
 
 _OPT = 1000
@@ -45,13 +45,13 @@ _ZERO = 0
 _ROUND_UP_PRICE = 1121
 _ROUNDED_UP_PRICE = 1130
 _ROUND_EXACT_PRICE = 1120
-_FIRST_RULE = MarkUpParams(min=0, max=5001, percent_markup=_PERCENT)
-_SECOND_RULE = MarkUpParams(min=5000, max=10001, percent_markup=_SECOND_PERCENT)
+_FIRST_RULE = MarkUpRule(min=0, max=5001, percent_markup=_PERCENT)
+_SECOND_RULE = MarkUpRule(min=5000, max=10001, percent_markup=_SECOND_PERCENT)
 _OVERLAP_MAP = (_FIRST_RULE, _SECOND_RULE)
 _MAP_OPT = 100
 _MAP_PERCENT = 0.7
 _MAP_PRICE = 170
-_MAP_RULE = MarkUpParams(min=0, max=201, percent_markup=_MAP_PERCENT)
+_MAP_RULE = MarkUpRule(min=0, max=201, percent_markup=_MAP_PERCENT)
 _IGNORED_RRC = 9999
 _MAP_STORED_PERCENT = 70
 _IDENTITY_OPT = 1234.56
@@ -63,11 +63,11 @@ _MAP_AT_OPT = 1220
 _DELTA_FLOOR = 150
 _RRC_HITS_DELTA = 1100
 _DELTA_PRICE = 1150
-_ZAPASKA_SHELF = MarkUpParams(min=0, max=5000, percent_markup=_ZAPASKA_SHELF_PERCENT)
+_ZAPASKA_SHELF = MarkUpRule(min=0, max=5000, percent_markup=_ZAPASKA_SHELF_PERCENT)
 
 
 def _policy(
-    price_map: tuple[MarkUpParams, ...],
+    price_map: tuple[MarkUpRule, ...],
     *,
     min_recommended: float = 0,
     max_recommended: float = 0,
@@ -75,7 +75,7 @@ def _policy(
     absolute_percent: float = 0,
     policy_cls: type[MarkupPolicy] = MarkupPolicy,
 ) -> MarkupPolicy:
-    rules = MarkupRules(
+    rules = MarkupRulesConfig(
         markup_rules={},
         min_recommended_percent_markup=min_recommended,
         max_recommended_percent_markup=max_recommended,
@@ -336,7 +336,7 @@ def _zapaska_like_policy(
     absolute_mode: str = 'multiplier',
     replace_small: bool = True,
 ) -> MarkupPolicy:
-    rules = MarkupRules(
+    rules = MarkupRulesConfig(
         markup_rules={},
         min_recommended_percent_markup=_ZAPASKA_MIN_RECOMMENDED,
         absolute_markup_rules=AbsoluteMarkUpRules(

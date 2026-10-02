@@ -1,7 +1,5 @@
 """tests for markup fallbacks and missing vendor config."""
 
-from typing import Any
-
 import pytest
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
 from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
@@ -15,8 +13,8 @@ from parsers.base_parser.markup_policy import (
     make_map_on_opt_markup_policy,
 )
 from parsers.base_parser.row_processor import MarkupPolicyNotSetError
-from parsers.data_provider.markup_rules import AbsoluteMarkUpRules, MarkUpParams, MarkupRules, MarkupRulesProviderBase
-from parsers.data_provider.vendor_list import VendorParams
+from parsers.data_provider import AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig, VendorConfigEntry
+from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import pioner_params
 
@@ -27,11 +25,12 @@ _MAP_PERCENT = 0.7
 _MAP_PRICE = 170
 _MAP_STORED_PERCENT = 70
 _IDENTITY_OPT = 1234.56
+_EMPTY_RULES_WHERE = 'test_markup_rules.json'
 
 
 class _EmptyMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> dict[str, Any]:
-        return {'markup_rules': {}}
+    def get_markup_data(self) -> MarkupRulesConfig:
+        return MarkupRulesConfig.from_dict({}, _EMPTY_RULES_WHERE)
 
 
 def _parser(
@@ -44,11 +43,8 @@ def _parser(
 
 def _map_on_opt_policy() -> MapOnOptMarkupPolicy:
     return MapOnOptMarkupPolicy(
-        MarkupRules(
-            markup_rules={},
-            absolute_markup_rules=AbsoluteMarkUpRules(),
-        ),
-        (MarkUpParams(min=0, max=201, percent_markup=_MAP_PERCENT),),
+        MarkupRulesConfig(absolute_markup_rules=AbsoluteMarkUpRules()),
+        (MarkUpRule(min=0, max=201, percent_markup=_MAP_PERCENT),),
     )
 
 
@@ -61,7 +57,7 @@ def test_markup_percent_empty_map_is_zero() -> None:
 def test_missing_vendor_is_disabled() -> None:
     config = make_parse_configuration(pioner_params)._replace(vendor_list=VendorListProviderForTests({}))
     parser = _parser(config)
-    assert parser.get_current_vendor_config() == VendorParams(enabled=0)
+    assert parser.get_current_vendor_config() == VendorConfigEntry(enabled=False)
     assert parser.is_active is False
 
 

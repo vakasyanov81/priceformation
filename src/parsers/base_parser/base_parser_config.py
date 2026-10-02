@@ -3,7 +3,7 @@ base parser config logic
 """
 
 from dataclasses import dataclass
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple
 
 from parsers import data_provider
 from parsers.row_item.row_item import RowItem
@@ -49,19 +49,6 @@ class BasePriceParseConfigurationParams(NamedTuple):
     parser_params: ParserParams
 
 
-def extract_markup_rules(markup_data: dict[str, Any]) -> data_provider.MarkupRules:
-    """dict -> named tuple"""
-    raw_rules = markup_data.get('markup_rules') or {}
-    raw_absolute = markup_data.get('absolute_markup_rules') or {}
-    return data_provider.MarkupRules(
-        markup_rules=cast(dict[str, dict[str, Any]], raw_rules),
-        min_recommended_percent_markup=float(markup_data.get('min_recommended_percent_markup') or 0),
-        max_recommended_percent_markup=float(markup_data.get('max_recommended_percent_markup') or 0),
-        absolute_markup_rules=data_provider.AbsoluteMarkUpRules(**raw_absolute),
-        replace_small_recommended=bool(markup_data.get('replace_small_recommended')),
-    )
-
-
 class ParseConfiguration:
     """base price parser configuration"""
 
@@ -70,24 +57,21 @@ class ParseConfiguration:
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self.parser_params = parse_config.parser_params
         self.supplier = self.parser_params.supplier
-        self._markup_rules: data_provider.MarkupRules | None = None
-        self._price_markup_map: tuple[data_provider.MarkUpParams, ...] | None = None
-        self._all_vendor_config: dict[str, data_provider.VendorParams] | None = None
+        self._markup_rules: data_provider.MarkupRulesConfig | None = None
+        self._price_markup_map: tuple[data_provider.MarkUpRule, ...] | None = None
+        self._all_vendor_config: dict[str, data_provider.VendorConfigEntry] | None = None
         self._manufacturer_aliases: dict[str, Any] | None = None
 
-    def get_markup_rules(self) -> data_provider.MarkupRules:
+    def get_markup_rules(self) -> data_provider.MarkupRulesConfig:
         """get markup rules and caching"""
         if self._markup_rules is None:
-            markup_data = self.parse_config.markup_rules_provider.get_markup_data() or {}
-            self._markup_rules = extract_markup_rules(markup_data)
+            self._markup_rules = self.parse_config.markup_rules_provider.get_markup_data()
         return self._markup_rules
 
-    def get_price_markup_map(self) -> tuple[data_provider.MarkUpParams, ...]:
-        """get tuple with markup params and caching"""
+    def get_price_markup_map(self) -> tuple[data_provider.MarkUpRule, ...]:
+        """get tuple with markup rules and caching"""
         if self._price_markup_map is None:
-            raw_rules = list(self.get_markup_rules().markup_rules.values())
-            mapped_rules = [data_provider.markup_params_from_rule(rule) for rule in raw_rules]
-            self._price_markup_map = tuple(mapped_rules)
+            self._price_markup_map = tuple(self.get_markup_rules().markup_rules.values())
         return self._price_markup_map
 
     def black_list(self) -> list[str]:
@@ -104,14 +88,10 @@ class ParseConfiguration:
             self._manufacturer_aliases = self.parse_config.manufacturer_aliases.get_aliases()
         return self._manufacturer_aliases
 
-    def all_vendor_config(self) -> dict[str, data_provider.VendorParams]:
+    def all_vendor_config(self) -> dict[str, data_provider.VendorConfigEntry]:
         """config for all vendors"""
         if self._all_vendor_config is None:
-            vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
-            config = {}
-            for vendor_name, raw_vendor_config in vendor_config.items():
-                config[vendor_name] = data_provider.VendorParams(**raw_vendor_config)
-            self._all_vendor_config = config
+            self._all_vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
         return self._all_vendor_config
 
 
