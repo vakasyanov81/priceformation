@@ -1,17 +1,13 @@
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.price_markup import get_markup, recommended_percent
-from parsers.data_provider.markup_rules import (
-    ABSOLUTE_MODE_DELTA,
-    MarkUpParams,
-    MarkupRules,
-)
+from parsers.data_provider.models import ABSOLUTE_MODE_DELTA, MarkUpRule, MarkupRulesConfig
 
 
 class MarkupPolicy:
     def __init__(
         self,
-        rules: MarkupRules,
-        price_map: tuple[MarkUpParams, ...],
+        rules: MarkupRulesConfig,
+        price_map: tuple[MarkUpRule, ...],
     ) -> None:
         self._rules = rules
         self._price_map = price_map
@@ -78,7 +74,7 @@ class IdentityMarkupPolicy(MarkupPolicy):
     @classmethod
     def create(cls) -> IdentityMarkupPolicy:
         """Политика «без наценки». JSON не читает."""
-        return cls(MarkupRules(markup_rules={}), ())
+        return cls(MarkupRulesConfig(), ())
 
     def apply(self, price_opt: float, price_recommended: float | None) -> float:
         """Отпускная = закуп. Внутренний склад: цена уже с наценкой, JSON не нужен."""

@@ -2,8 +2,11 @@
 read file logic
 """
 
+import json
 from pathlib import Path
+from typing import Any
 
+from domain.exceptions import ConfigValidationError
 from infrastructure.logging.wrappers import logging
 
 
@@ -14,6 +17,14 @@ def read_file(file_path: str) -> str:
         return text_file.read()
 
 
+def read_json_file(file_path: str) -> Any:
+    """Прочитать JSON-файл; нечитаемый JSON — `ConfigValidationError` с именем файла."""
+    try:
+        return json.loads(read_file(file_path))
+    except json.JSONDecodeError as exc:
+        raise ConfigValidationError(f'{Path(file_path).name}: не удалось разобрать JSON ({exc})') from exc
+
+
 def try_read_file(file_path: str) -> str:
     """try read file"""
     try:
@@ -22,4 +33,4 @@ def try_read_file(file_path: str) -> str:
         return ''
 
 
-__ALL__ = [read_file]
+__ALL__ = [read_file, read_json_file]

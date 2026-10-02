@@ -7,35 +7,33 @@ from .manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
 )
-from .markup_rules import (
+from .markup_rules import MarkupRulesProviderBase, MarkupRulesProviderFromUserConfig
+from .models import (
+    ABSOLUTE_MODE_DELTA,
+    ABSOLUTE_MODE_MULTIPLIER,
     AbsoluteMarkUpRules,
-    MarkUpParams,
-    MarkupRules,
-    MarkupRulesProviderBase,
-    MarkupRulesProviderFromUserConfig,
-    markup_params_from_rule,
+    MarkUpRule,
+    MarkupRulesConfig,
+    VendorConfigEntry,
 )
 from .title_aliases import TitleAliasesProviderBase, TitleAliasesProviderFromUserConfig
-from .vendor_list import (
-    VendorListProviderBase,
-    VendorListProviderFromUserConfig,
-    VendorParams,
-)
+from .vendor_list import VendorListProviderBase, VendorListProviderFromUserConfig
 
 __all__ = [
+    'ABSOLUTE_MODE_DELTA',
+    'ABSOLUTE_MODE_MULTIPLIER',
     'AbsoluteMarkUpRules',
     'BlackListProviderBase',
     'BlackListProviderFromUserConfig',
     'ManufacturerAliasesProviderBase',
     'ManufacturerAliasesProviderFromUserConfig',
-    'MarkUpParams',
-    'MarkupRules',
+    'MarkUpRule',
+    'MarkupRulesConfig',
     'MarkupRulesProviderBase',
     'MarkupRulesProviderFromUserConfig',
     'TitleAliasesProviderBase',
     'TitleAliasesProviderFromUserConfig',
+    'VendorConfigEntry',
     'VendorListProviderBase',
     'VendorListProviderFromUserConfig',
-    'VendorParams',
-    'markup_params_from_rule',
 ]

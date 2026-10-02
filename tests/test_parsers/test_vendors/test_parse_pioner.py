@@ -21,12 +21,14 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
+from parsers.data_provider import MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.fake_xls_reader import FakeXlsReader
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser, pioner_params
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests())
+_EMPTY_RULES_WHERE = 'test_markup_rules.json'
 
 
 def get_fake_parser(parse_result: Any) -> PionerParser:
@@ -137,8 +139,8 @@ def test_markup_percent_includes_rule_min(price_opt: float, percent: float) -> N
 
 
 class _EmptyMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> dict[str, Any]:
-        return {'markup_rules': {}}
+    def get_markup_data(self) -> MarkupRulesConfig:
+        return MarkupRulesConfig.from_dict({}, _EMPTY_RULES_WHERE)
 
 
 def _parser_with_markup(markup: MarkupRulesProviderBase) -> PionerParser:

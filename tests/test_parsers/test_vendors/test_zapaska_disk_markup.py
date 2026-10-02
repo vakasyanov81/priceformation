@@ -5,9 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from parsers.base_parser.base_parser_config import extract_markup_rules
 from parsers.base_parser.markup_policy import MarkupPolicy
-from parsers.data_provider.markup_rules import markup_params_from_rule
+from parsers.data_provider import MarkupRulesConfig
 
 _OPT = 1000
 _ENOUGH_RECOMMENDED = 2000
@@ -19,13 +18,12 @@ _ABSOLUTE_FLOOR = 1150
 _NO_RRC_OPT = 10000
 _NO_RRC_PRICE = 11600
 _RULES_PATH = Path(__file__).with_name('zapaska_markup_rules.json')
+_RULES_WHERE = 'zapaska_markup_rules.json'
 
 
 def _zapaska_policy() -> MarkupPolicy:
-    markup_data = json.loads(_RULES_PATH.read_text(encoding='utf-8'))
-    rules = extract_markup_rules(markup_data)
-    price_map = tuple(markup_params_from_rule(rule) for rule in rules.markup_rules.values())
-    return MarkupPolicy(rules, price_map)
+    rules = MarkupRulesConfig.from_dict(json.loads(_RULES_PATH.read_text(encoding='utf-8')), _RULES_WHERE)
+    return MarkupPolicy(rules, tuple(rules.markup_rules.values()))
 
 
 @pytest.mark.parametrize(

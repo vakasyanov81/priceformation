@@ -98,14 +98,14 @@ class BaseParser:  # noqa: WPS214
             self._manufacturer_finder = ManufacturerFinder(aliases)
         return self._manufacturer_finder
 
-    def get_current_vendor_config(self) -> data_provider.VendorParams:
+    def get_current_vendor_config(self) -> data_provider.VendorConfigEntry:
         folder_name = self.parser_params().supplier.folder_name
         vendor = self.parse_config().all_vendor_config().get(folder_name)
-        return vendor or data_provider.VendorParams(enabled=0)
+        return vendor or data_provider.VendorConfigEntry(enabled=False)
 
     @property
     def is_active(self) -> bool:
-        return bool(self.get_current_vendor_config().enabled)
+        return self.get_current_vendor_config().enabled
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__

@@ -23,6 +23,9 @@ from parsers.vendors.poshk import (
     poshk_params,
 )
 
+_TEST_RULES_WHERE = 'test_markup_rules.json'
+_TEST_VENDOR_LIST_WHERE = 'test vendor_list.json'
+
 vendor_list_config = {
     'poshk': {'enabled': 1},
     'zapaska': {'enabled': 1},
@@ -37,21 +40,24 @@ vendor_list_config = {
 class MarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for tests"""
 
-    def get_markup_data(self) -> dict[str, Any]:
+    def get_markup_data(self) -> data_provider.MarkupRulesConfig:
         """get markup rules"""
-        return {
-            'markup_rules': {
-                'rule_70': {'min': 0, 'max': 200, 'percent_markup': 0.7},
-                'rule_50': {'min': 200, 'max': 300, 'percent_markup': 0.5},
-                'rule_40': {'min': 300, 'max': 500, 'percent_markup': 0.4},
-                'rule_30': {'min': 500, 'max': 1500, 'percent_markup': 0.3},
-                'rule_25': {'min': 1500, 'max': 5000, 'percent_markup': 0.25},
-                'rule_15': {'min': 5000, 'max': 8000, 'percent_markup': 0.15},
-                'rule_14': {'min': 8000, 'max': 20000, 'percent_markup': 0.14},
-                'rule_8': {'min': 20000, 'max': 30000, 'percent_markup': 0.08},
-                'rule_7': {'min': 30000, 'max': 60000, 'percent_markup': 0.07},
-            }
-        }
+        return data_provider.MarkupRulesConfig.from_dict(
+            {
+                'markup_rules': {
+                    'rule_70': {'min': 0, 'max': 200, 'percent_markup': 0.7},
+                    'rule_50': {'min': 200, 'max': 300, 'percent_markup': 0.5},
+                    'rule_40': {'min': 300, 'max': 500, 'percent_markup': 0.4},
+                    'rule_30': {'min': 500, 'max': 1500, 'percent_markup': 0.3},
+                    'rule_25': {'min': 1500, 'max': 5000, 'percent_markup': 0.25},
+                    'rule_15': {'min': 5000, 'max': 8000, 'percent_markup': 0.15},
+                    'rule_14': {'min': 8000, 'max': 20000, 'percent_markup': 0.14},
+                    'rule_8': {'min': 20000, 'max': 30000, 'percent_markup': 0.08},
+                    'rule_7': {'min': 30000, 'max': 60000, 'percent_markup': 0.07},
+                },
+            },
+            _TEST_RULES_WHERE,
+        )
 
 
 class ManufacturerAliasesProviderForTests(data_provider.ManufacturerAliasesProviderBase):
@@ -77,13 +83,16 @@ class BlackListProviderForTests(data_provider.BlackListProviderBase):
 class VendorListProviderForTests(data_provider.VendorListProviderBase):
     """Base data provider with supplier config"""
 
-    def __init__(self, config: Any) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """set test config"""
-        self.config = config or {}
+        self.config = config
 
-    def get_config_vendor_list(self) -> dict[str, Any]:
+    def get_config_vendor_list(self) -> dict[str, data_provider.VendorConfigEntry]:
         """get config"""
-        return cast(dict[str, Any], self.config)
+        return {
+            code: data_provider.VendorConfigEntry.from_dict(entry, f'{_TEST_VENDOR_LIST_WHERE} → {code}')
+            for code, entry in self.config.items()
+        }
 
 
 parser_config = BasePriceParseConfigurationParams(

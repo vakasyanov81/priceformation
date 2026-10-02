@@ -1,13 +1,12 @@
 """tests for STK vendor markup logic"""
 
-from typing import Any
-
 import pytest
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
+from parsers.data_provider import MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.row_item.row_item import RowItem
 from parsers.vendors.stk import STKParser, stk_params
@@ -20,15 +19,19 @@ _ROUND_UP_OPT = 1001
 _ROUND_UP_MARKUP = 1070
 _STORED_PERCENT = 6
 _EMPTY_MARKUP = 0
+_STK_RULES_WHERE = 'stk_markup_rules.json'
 
 
 class _StkMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> dict[str, Any]:
-        return {
-            'markup_rules': {
-                'rule_6': {'min': 0, 'max': 999999999, 'percent': 0.06},
-            }
-        }
+    def get_markup_data(self) -> MarkupRulesConfig:
+        return MarkupRulesConfig.from_dict(
+            {
+                'markup_rules': {
+                    'rule_6': {'min': 0, 'max': 999999999, 'percent': 0.06},
+                },
+            },
+            _STK_RULES_WHERE,
+        )
 
 
 def _parser() -> STKParser:

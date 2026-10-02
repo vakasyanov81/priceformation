@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
@@ -14,8 +14,10 @@ from test_parsers.test_vendors.test_parse_poshk import (
 
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams
+from parsers.data_provider.models import MarkupRulesConfig
 
 _ZAPASKA_RULES_PATH = Path(__file__).with_name('zapaska_markup_rules.json')
+_ZAPASKA_RULES_WHERE = 'zapaska_markup_rules.json'
 
 
 def make_parse_configuration(
@@ -32,48 +34,58 @@ def make_parse_configuration(
     )
 
 
+def markup_config_from_dict(raw: dict[str, Any], where: str = 'test_markup_rules.json') -> MarkupRulesConfig:
+    """Тестовый хелпер: JSON → типизированная модель наценок."""
+    return MarkupRulesConfig.from_dict(raw, where)
+
+
 class ZapaskaMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules from the Zapaska test fixture JSON."""
 
-    def get_markup_data(self) -> dict[str, Any]:
+    def get_markup_data(self) -> MarkupRulesConfig:
         """get markup rules"""
-        raw = json.loads(_ZAPASKA_RULES_PATH.read_text(encoding='utf-8'))
-        return cast(dict[str, Any], raw)
+        return MarkupRulesConfig.from_dict(
+            json.loads(_ZAPASKA_RULES_PATH.read_text(encoding='utf-8')), _ZAPASKA_RULES_WHERE
+        )
 
 
 class MimMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
     """markup rules data provider for mim supplier tests"""
 
-    def get_markup_data(self) -> dict[str, Any]:
+    def get_markup_data(self) -> MarkupRulesConfig:
         """get markup rules"""
-        return {
-            'markup_rules': {
-                'rule_70': {'min': 0, 'max': 5001, 'percent_markup': 0.22},
-                'rule_50': {'min': 5000, 'max': 10001, 'percent_markup': 0.22},
-                'rule_40': {'min': 10000, 'max': 15001, 'percent_markup': 0.22},
-                'rule_30': {'min': 15000, 'max': 20001, 'percent_markup': 0.14},
-                'rule_25': {'min': 20000, 'max': 25001, 'percent_markup': 0.12},
+        return markup_config_from_dict(
+            {
+                'markup_rules': {
+                    'rule_70': {'min': 0, 'max': 5001, 'percent_markup': 0.22},
+                    'rule_50': {'min': 5000, 'max': 10001, 'percent_markup': 0.22},
+                    'rule_40': {'min': 10000, 'max': 15001, 'percent_markup': 0.22},
+                    'rule_30': {'min': 15000, 'max': 20001, 'percent_markup': 0.14},
+                    'rule_25': {'min': 20000, 'max': 25001, 'percent_markup': 0.12},
+                },
+                'min_recommended_percent_markup': 0.14,
+                'max_recommended_percent_markup': 0.27,
+                'absolute_markup_rules': {
+                    'min_absolute_markup': 300,
+                    'markup_percent': 1.5,
+                },
             },
-            'min_recommended_percent_markup': 0.14,
-            'max_recommended_percent_markup': 0.27,
-            'absolute_markup_rules': {
-                'min_absolute_markup': 300,
-                'markup_percent': 1.5,
-            },
-        }
+        )
 
 
 class PionerMarkupRulesProviderForTests(data_provider.MarkupRulesProviderBase):
-    """markup rules data provider for mim supplier tests"""
+    """markup rules data provider for pioner supplier tests"""
 
-    def get_markup_data(self) -> dict[str, Any]:
+    def get_markup_data(self) -> MarkupRulesConfig:
         """get markup rules"""
-        return {
-            'markup_rules': {
-                'rule_70': {'min': 0, 'max': 1000, 'percent_markup': 0.20},
-                'rule_30': {'min': 1001, 'max': 2000, 'percent_markup': 0.18},
-                'rule_15': {'min': 5000, 'max': 15000, 'percent_markup': 0.12},
-                'rule_14': {'min': 15001, 'max': 99999, 'percent_markup': 0.07},
-                'rule_7': {'min': 100000, 'max': 500000, 'percent_markup': 0.05},
-            }
-        }
+        return markup_config_from_dict(
+            {
+                'markup_rules': {
+                    'rule_70': {'min': 0, 'max': 1000, 'percent_markup': 0.20},
+                    'rule_30': {'min': 1001, 'max': 2000, 'percent_markup': 0.18},
+                    'rule_15': {'min': 5000, 'max': 15000, 'percent_markup': 0.12},
+                    'rule_14': {'min': 15001, 'max': 99999, 'percent_markup': 0.07},
+                    'rule_7': {'min': 100000, 'max': 500000, 'percent_markup': 0.05},
+                },
+            },
+        )
