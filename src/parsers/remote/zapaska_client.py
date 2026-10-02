@@ -7,8 +7,8 @@ from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 from typing import Protocol
 
+from core.config_provider import get_config_provider
 from core.exceptions import CoreExceptionError
-from core.parse_paths import get_parse_paths
 
 _VENDOR_FOLDER = 'zapaska'
 _GET_TIRES_URL = '/API/hs/V2/GetTires'
@@ -61,7 +61,7 @@ def download_catalogs(*, dest_dir: Path, api: ZapaskaApiAuth) -> None:
 
 def load_remote_vendor_data(*, api: ZapaskaApiAuth) -> None:
     """Скачать каталоги Запаски в file_prices/zapaska."""
-    dest_dir = Path(get_parse_paths().file_prices_folder) / _VENDOR_FOLDER
+    dest_dir = Path(get_config_provider().price_folder(_VENDOR_FOLDER))
     download_catalogs(dest_dir=dest_dir, api=api)
 
 

@@ -6,13 +6,11 @@ from typing import Any
 
 import pytest
 
-from cfg import init_cfg
+from core.config_provider import get_config_provider
 from parsers.xls_reader import MaxRowsReached, XlsReader
 from parsers.xls_reader_row import __SKIPPED_EMPTY_ROW__
 
-config = init_cfg()
-
-_PROJECT_ROOT = str(config.main.project_root)
+_PROJECT_ROOT = get_config_provider().project_root
 _FILE_PATH = f'{_PROJECT_ROOT}/tests/test_parsers/fixtures/price.xlsx'
 _OLD_FILE_PATH = f'{_PROJECT_ROOT}/tests/test_parsers/fixtures/price_old.xls'
 _PIONER_FILE_PATH = f'{_PROJECT_ROOT}/tests/test_parsers/fixtures/price_pioner.xlsx'

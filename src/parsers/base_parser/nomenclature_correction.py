@@ -7,9 +7,9 @@ from typing import Any
 
 from python_calamine import CalamineError, CalamineWorkbook, WorksheetNotFound, ZipError
 
+from core.config_provider import get_config_provider
 from core.exceptions import CoreExceptionError
 from core.log_message import err_msg
-from core.parse_paths import get_parse_paths
 
 VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1
@@ -37,7 +37,7 @@ def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
 
 def load_file() -> dict[str, str]:
     """Load title corrections from correct-nomenclature.xlsx."""
-    file_path = get_parse_paths().config_file(_NOMENCLATURE_FILE)
+    file_path = get_config_provider().config_file(_NOMENCLATURE_FILE)
     if not Path(file_path).exists():
         return {}
     return _read_corrections(file_path)

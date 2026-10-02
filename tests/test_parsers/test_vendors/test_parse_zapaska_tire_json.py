@@ -10,7 +10,7 @@ from unittest import skip
 import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
-from cfg.main import get_config
+from core.config_provider import get_config_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -73,7 +73,7 @@ class TestParseZapaskaTireJSON:
     def test_parse(self) -> None:
         """check all field for one price-row"""
 
-        root = get_config()().project_root
+        root = get_config_provider().project_root
         parser = get_fake_parser([f'{root}/{_FIXTURE_TIRE}'])
         parsed_items: list[RowItem] = parser.parse()
 
@@ -90,7 +90,7 @@ class TestParseZapaskaTireJSON:
 
     def test_unknown_category_is_skipped(self, tmp_path: Path) -> None:
         """неизвестная категория поставщика не попадает в прайс"""
-        root = get_config()().project_root
+        root = get_config_provider().project_root
         rows = json.loads((Path(root) / _FIXTURE_TIRE).read_text(encoding='utf-8'))
         rows[0]['category'] = 'SUV'
         price_file = tmp_path / 'tire.json'
@@ -117,7 +117,7 @@ class TestParseZapaskaTireJSON:
     def test_markup(self, prices: Any) -> None:
         """test calculation price-markup"""
         _price_opt, _price_recommended, price_markup = prices
-        root = get_config()().project_root
+        root = get_config_provider().project_root
         parser = get_fake_parser([f'{root}/{_FIXTURE_TIRE}'])
         parsed_items: list[RowItem] = parser.parse()
         assert parsed_items[0].price_markup == price_markup

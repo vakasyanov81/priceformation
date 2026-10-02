@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from cfg.main import __PROJECT_ROOT__
+from core.config_provider import get_config_provider
 from core.exceptions import CoreExceptionError
 
 _DEFAULT_HOST = 'ka2.sibzapaska.ru:16500'
@@ -46,7 +46,7 @@ def _parse_dotenv_line(raw_line: str) -> tuple[str, str] | None:
 
 def load_dotenv(env_path: Path | None = None) -> bool:
     """Load .env into os.environ (does not override existing keys)."""
-    path = env_path or Path(__PROJECT_ROOT__) / '.env'
+    path = env_path or Path(get_config_provider().project_root) / '.env'
     if not path.is_file():
         return False
 

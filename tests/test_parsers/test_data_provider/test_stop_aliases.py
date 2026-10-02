@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from core.parse_paths import ParsePaths
 from parsers.data_provider.manufacturer_aliases import (
     ManufacturerAliasesProviderBase,
     ManufacturerAliasesProviderFromUserConfig,
@@ -16,8 +15,6 @@ from parsers.data_provider.manufacturer_aliases import (
 )
 from parsers.data_provider.manufacturer_group import manufacturer_group
 
-_PATHS = ParsePaths(file_prices_folder='/prices', user_config_folder='/cfg', result_folder='/prices/result')
-
 
 def test_aliases_base_raises() -> None:
     with pytest.raises(NotImplementedError):
@@ -25,13 +22,7 @@ def test_aliases_base_raises() -> None:
 
 
 def test_aliases_from_config() -> None:
-    with (
-        patch(
-            'parsers.data_provider.manufacturer_aliases.read_file',
-            return_value='{"A": "B"}',
-        ),
-        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.manufacturer_aliases.read_file', return_value='{"A": "B"}'):
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'A': 'B'}
 
 
@@ -112,13 +103,7 @@ def test_manufacturer_group_lookup_once_per_map() -> None:
 
 def test_load_aliases_map_missing_file() -> None:
     clear_manufacturer_aliases_cache()
-    with (
-        patch(
-            'parsers.data_provider.manufacturer_aliases.read_file',
-            side_effect=FileNotFoundError,
-        ),
-        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=FileNotFoundError):
         assert load_aliases_map() == {}
     clear_manufacturer_aliases_cache()
 
@@ -126,13 +111,7 @@ def test_load_aliases_map_missing_file() -> None:
 def test_load_aliases_map_reloads_after_clear() -> None:
     """FileNotFound кэширует {}; после сброса появляется файл."""
     clear_manufacturer_aliases_cache()
-    with (
-        patch(
-            'parsers.data_provider.manufacturer_aliases.read_file',
-            side_effect=[FileNotFoundError, '{"A": "B"}'],
-        ),
-        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=[FileNotFoundError, '{"A": "B"}']):
         assert load_aliases_map() == {}
         assert load_aliases_map() == {}
         clear_manufacturer_aliases_cache()
@@ -141,13 +120,7 @@ def test_load_aliases_map_reloads_after_clear() -> None:
 
 
 def test_aliases_from_config_drops_blanks() -> None:
-    with (
-        patch(
-            'parsers.data_provider.manufacturer_aliases.read_file',
-            return_value='{"Brand": ["", " ", "Bar"]}',
-        ),
-        patch('parsers.data_provider.manufacturer_aliases.get_parse_paths', return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.manufacturer_aliases.read_file', return_value='{"Brand": ["", " ", "Bar"]}'):
         assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'Brand': ['Bar']}
 
 

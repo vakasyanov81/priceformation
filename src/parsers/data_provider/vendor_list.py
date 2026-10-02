@@ -5,9 +5,9 @@ vendor list provider
 import json
 from typing import Any, NamedTuple, cast
 
+from core.config_provider import get_config_provider
 from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
-from core.parse_paths import get_parse_paths
 
 _CONFIG_FILE = 'vendor_list.json'
 
@@ -48,5 +48,5 @@ class VendorListProviderFromUserConfig(VendorListProviderBase):
     @classmethod
     def _load_vendor_list_json(cls) -> dict[str, Any]:
         """Read and parse vendor list JSON."""
-        raw: str = read_file(get_parse_paths().config_file(_CONFIG_FILE))
+        raw: str = read_file(get_config_provider().config_file(_CONFIG_FILE))
         return cast(dict[str, Any], json.loads(raw))

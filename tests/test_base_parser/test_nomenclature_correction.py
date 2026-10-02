@@ -1,30 +1,31 @@
 """tests for nomenclature title correction"""
 
-from typing import Any
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from python_calamine import WorksheetNotFound
 
-from core.parse_paths import ParsePaths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser import nomenclature_correction as noc
 
 _NOMENCLATURE_FILE = 'correct-nomenclature.xlsx'
 
 
-def _paths(tmp_path: Any) -> ParsePaths:
-    return ParsePaths(file_prices_folder='.', user_config_folder=str(tmp_path), result_folder='.')
+def _write_nomenclature(fake_config_provider: FakeConfigProvider, file_bytes: bytes) -> str:
+    file_path = fake_config_provider.config_file(_NOMENCLATURE_FILE)
+    Path(file_path).write_bytes(file_bytes)
+    return file_path
 
 
-def test_load_file_missing(tmp_path: Any) -> None:
+def test_load_file_missing(fake_config_provider: FakeConfigProvider) -> None:
     """нет файла — пустой словарь"""
-    with patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)):
-        assert not noc.load_file()
+    assert not noc.load_file()
 
 
-def test_load_file_reads_xlsx(tmp_path: Any) -> None:
+def test_load_file_reads_xlsx(fake_config_provider: FakeConfigProvider) -> None:
     """читает пары из Sheet1, пропуская заголовок"""
-    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'placeholder')
+    expected_path = _write_nomenclature(fake_config_provider, b'placeholder')
     fake_sheet = MagicMock()
     fake_sheet.to_python.return_value = [
         ['vendor', 'correct'],
@@ -34,10 +35,8 @@ def test_load_file_reads_xlsx(tmp_path: Any) -> None:
     ]
     fake_wb = MagicMock()
     fake_wb.get_sheet_by_name.return_value = fake_sheet
-    expected_path = str(tmp_path / _NOMENCLATURE_FILE)
 
     with (
-        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
         patch(
             'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
             return_value=fake_wb,
@@ -60,11 +59,10 @@ def test_corrected_title_cache() -> None:
     noc.clear_nomenclature_cache()
 
 
-def test_invalid_file_raises_error(tmp_path: Any) -> None:
+def test_invalid_file_raises_error(fake_config_provider: FakeConfigProvider) -> None:
     """битый xlsx — CalamineError/ZipError обёрнуты в NomenclatureCorrectionFileError"""
-    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'garbage')
+    _write_nomenclature(fake_config_provider, b'garbage')
     with (
-        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
         patch.object(noc, 'err_msg'),
         pytest.raises(
             noc.NomenclatureCorrectionFileError,
@@ -74,14 +72,13 @@ def test_invalid_file_raises_error(tmp_path: Any) -> None:
         noc.load_file()
 
 
-def test_missing_sheet_raises_error(tmp_path: Any) -> None:
+def test_missing_sheet_raises_error(fake_config_provider: FakeConfigProvider) -> None:
     """нет листа Sheet1 — WorksheetNotFound обёрнут в NomenclatureCorrectionFileError"""
-    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'placeholder')
+    _write_nomenclature(fake_config_provider, b'placeholder')
     fake_wb = MagicMock()
     fake_wb.get_sheet_by_name.side_effect = WorksheetNotFound('Sheet1')
     fake_wb.sheet_names = ['OtherSheet']
     with (
-        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
         patch(
             'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
             return_value=fake_wb,
@@ -95,9 +92,9 @@ def test_missing_sheet_raises_error(tmp_path: Any) -> None:
         noc.load_file()
 
 
-def test_too_few_columns_raises_error(tmp_path: Any) -> None:
+def test_too_few_columns_raises_error(fake_config_provider: FakeConfigProvider) -> None:
     """строка с одной колонкой — IndexError обёрнут в NomenclatureCorrectionFileError"""
-    (tmp_path / _NOMENCLATURE_FILE).write_bytes(b'placeholder')
+    _write_nomenclature(fake_config_provider, b'placeholder')
     fake_sheet = MagicMock()
     fake_sheet.to_python.return_value = [
         ['vendor'],
@@ -106,7 +103,6 @@ def test_too_few_columns_raises_error(tmp_path: Any) -> None:
     fake_wb = MagicMock()
     fake_wb.get_sheet_by_name.return_value = fake_sheet
     with (
-        patch('parsers.base_parser.nomenclature_correction.get_parse_paths', return_value=_paths(tmp_path)),
         patch(
             'parsers.base_parser.nomenclature_correction.CalamineWorkbook.from_path',
             return_value=fake_wb,

@@ -1,42 +1,18 @@
 """Очистка папки result."""
 
-from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
-
-from core.parse_paths import ParsePaths, _CurrentParsePaths, clear_result_folder, configure_parse_paths
-
-_FOLDER = 'cfg'
-_PRICES = 'prices'
+from core.parse_paths import clear_result_folder
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 
 
-@pytest.fixture
-def _restore_parse_paths() -> Iterator[None]:
-    previous = _CurrentParsePaths.configured  # noqa: WPS437
-    yield
-    _CurrentParsePaths.configured = previous  # noqa: WPS437
-
-
-def _configure(result_folder: Path) -> None:
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=_PRICES,
-            user_config_folder=_FOLDER,
-            result_folder=str(result_folder),
-        ),
-    )
-
-
-def test_clear_result_folder_removes_contents(tmp_path: Path, _restore_parse_paths: None) -> None:
+def test_clear_result_folder_removes_contents(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:
     """файлы и подпапки удаляются, сама result остаётся."""
-    result_dir = tmp_path / 'result'
-    result_dir.mkdir()
+    result_dir = Path(fake_config_provider.result_folder())
     (result_dir / 'old.xlsx').write_text('x', encoding='utf-8')
     nested = result_dir / 'nested'
     nested.mkdir()
     (nested / 'inner.jsonl').write_text('{}', encoding='utf-8')
-    _configure(result_dir)
 
     clear_result_folder()
 
@@ -44,22 +20,22 @@ def test_clear_result_folder_removes_contents(tmp_path: Path, _restore_parse_pat
     assert list(result_dir.iterdir()) == []
 
 
-def test_clear_result_folder_missing_is_noop(tmp_path: Path, _restore_parse_paths: None) -> None:
+def test_clear_result_folder_missing_is_noop(fake_config_provider: FakeConfigProvider) -> None:
     """нет папки — ничего не делаем."""
-    missing = tmp_path / 'absent'
-    _configure(missing)
+    missing = Path(fake_config_provider.result_folder())
+    missing.rmdir()
+
     clear_result_folder()
+
     assert not missing.exists()
 
 
-def test_clear_result_folder_unlinks_symlink(tmp_path: Path, _restore_parse_paths: None) -> None:
+def test_clear_result_folder_unlinks_symlink(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:
     """симлинк удаляется, цель снаружи не трогаем."""
-    result_dir = tmp_path / 'result'
-    result_dir.mkdir()
+    result_dir = Path(fake_config_provider.result_folder())
     outside = tmp_path / 'keep.txt'
     outside.write_text('keep', encoding='utf-8')
     (result_dir / 'link.txt').symlink_to(outside)
-    _configure(result_dir)
 
     clear_result_folder()
 

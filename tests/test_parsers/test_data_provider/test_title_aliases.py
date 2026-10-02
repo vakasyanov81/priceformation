@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core.parse_paths import ParsePaths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.data_provider.title_aliases import (
     TitleAliasesProviderBase,
     TitleAliasesProviderFromUserConfig,
@@ -15,8 +15,7 @@ from parsers.data_provider.title_aliases import (
 )
 from parsers.vendors import zapaska_disk_json
 
-_PATHS = ParsePaths(file_prices_folder='/prices', user_config_folder='/cfg', result_folder='/prices/result')
-_GET_PATHS = 'parsers.data_provider.title_aliases.get_parse_paths'
+_ALIASES_FILE = 'title_aliases.json'
 _DISK_SUPPLIER = 'Запаска (диски)'
 _TIRE_SUPPLIER = 'Запаска (шины)'
 _ALIASES_JSON = json.dumps(
@@ -37,42 +36,28 @@ def test_invert_title_aliases() -> None:
 
 
 def test_load_title_aliases_missing_file() -> None:
-    with (
-        patch('parsers.data_provider.title_aliases.read_file', side_effect=FileNotFoundError),
-        patch(_GET_PATHS, return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.title_aliases.read_file', side_effect=FileNotFoundError):
         assert load_title_aliases(_DISK_SUPPLIER) == {}
 
 
-def test_load_aliases_inverts_supplier_section() -> None:
-    with (
-        patch('parsers.data_provider.title_aliases.read_file', return_value=_ALIASES_JSON) as mock_read,
-        patch(_GET_PATHS, return_value=_PATHS),
-    ):
+def test_load_aliases_inverts_supplier_section(fake_config_provider: FakeConfigProvider) -> None:
+    with patch('parsers.data_provider.title_aliases.read_file', return_value=_ALIASES_JSON) as mock_read:
         assert load_title_aliases(_DISK_SUPPLIER) == {'Replay HND': 'Replay Honda'}
         assert load_title_aliases(_TIRE_SUPPLIER) == {'THREE-A': 'Three-A'}
         assert load_title_aliases('unknown') == {}
-        mock_read.assert_called_with('/cfg/title_aliases.json')
+        mock_read.assert_called_with(fake_config_provider.config_file(_ALIASES_FILE))
 
 
-def test_load_title_aliases_from_real_file(tmp_path: Path) -> None:
-    (tmp_path / 'title_aliases.json').write_text(_ALIASES_JSON, encoding='utf-8')
-    paths = ParsePaths(
-        file_prices_folder=str(tmp_path),
-        user_config_folder=str(tmp_path),
-        result_folder=str(tmp_path),
-    )
-    with patch(_GET_PATHS, return_value=paths):
-        assert load_title_aliases(_DISK_SUPPLIER) == {'Replay HND': 'Replay Honda'}
+def test_load_title_aliases_from_real_file(fake_config_provider: FakeConfigProvider) -> None:
+    config_file = Path(fake_config_provider.config_file(_ALIASES_FILE))
+    config_file.write_text(_ALIASES_JSON, encoding='utf-8')
+    assert load_title_aliases(_DISK_SUPPLIER) == {'Replay HND': 'Replay Honda'}
 
 
-def test_provider_reads_parse_paths_config_file() -> None:
-    with (
-        patch('parsers.data_provider.title_aliases.read_file', return_value='{}') as mock_read,
-        patch(_GET_PATHS, return_value=_PATHS),
-    ):
+def test_provider_reads_config_file(fake_config_provider: FakeConfigProvider) -> None:
+    with patch('parsers.data_provider.title_aliases.read_file', return_value='{}') as mock_read:
         assert TitleAliasesProviderFromUserConfig(_DISK_SUPPLIER).get_aliases() == {}
-        mock_read.assert_called_once_with('/cfg/title_aliases.json')
+        mock_read.assert_called_once_with(fake_config_provider.config_file(_ALIASES_FILE))
 
 
 def test_zapaska_disk_json_does_not_import_cfg() -> None:

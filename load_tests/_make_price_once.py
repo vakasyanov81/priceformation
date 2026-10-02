@@ -5,22 +5,17 @@ import time
 from pathlib import Path
 
 from cfg import init_cfg
-from core.parse_paths import ParsePaths, configure_parse_paths, get_parse_paths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.config.file_config_provider import FileConfigProvider
 from run import run_make_price_by_supplier
+from services.configure import configure_services
 
 
 def main() -> None:
-    init_cfg()
     result_dir = Path(sys.argv[1]).resolve()
     elapsed_path = Path(sys.argv[2])
-    paths = get_parse_paths()
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=paths.file_prices_folder,
-            user_config_folder=paths.user_config_folder,
-            result_folder=f'{result_dir}/',
-        ),
-    )
+    init_cfg(FakeConfigProvider(Path(FileConfigProvider().project_root), result_folder=result_dir))
+    configure_services()
 
     start = time.perf_counter()
     run_make_price_by_supplier()

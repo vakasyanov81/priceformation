@@ -1,11 +1,12 @@
 """Загрузка файлов настроек в parse_config."""
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from core.parse_paths import ParsePaths, _CurrentParsePaths, configure_parse_paths
+from cfg import init_cfg
+from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.config.file_config_provider import FileConfigProvider
 from parsers.load_config import load_config
 from parsers.load_config_errors import (
     ConfigFileNotFoundError,
@@ -19,23 +20,8 @@ _BLACK_LIST_TEXT = 'exact title\n*mask*\n'
 
 
 @pytest.fixture
-def _restore_parse_paths() -> Iterator[None]:
-    previous = _CurrentParsePaths.configured  # noqa: WPS437
-    yield
-    _CurrentParsePaths.configured = previous  # noqa: WPS437
-
-
-@pytest.fixture
-def config_root(tmp_path: Path, _restore_parse_paths: None) -> Path:
-    config = tmp_path / 'parse_config'
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=str(tmp_path / 'file_prices'),
-            user_config_folder=str(config),
-            result_folder=str(tmp_path / 'result'),
-        ),
-    )
-    return config
+def config_root(fake_config_provider: FakeConfigProvider) -> Path:
+    return Path(fake_config_provider.config_file(''))
 
 
 def _write_source(tmp_path: Path, name: str, file_bytes: bytes) -> Path:
@@ -79,7 +65,6 @@ def test_load_json_rejects_invalid(tmp_path: Path, config_root: Path) -> None:
 
 def test_load_json_keeps_dest_on_invalid(tmp_path: Path, config_root: Path) -> None:
     """битый json не затирает существующий dest."""
-    config_root.mkdir()
     dest = config_root / 'markup_rules.json'
     dest.write_text(_JSON_TEXT, encoding='utf-8')
     source = _write_source(tmp_path, 'markup_rules.json', b'{')
@@ -123,7 +108,6 @@ def test_load_xlsx_uppercase_suffix(tmp_path: Path, config_root: Path) -> None:
 
 def test_load_xlsx_replaces(tmp_path: Path, config_root: Path) -> None:
     """существующий xlsx заменяется."""
-    config_root.mkdir()
     dest = config_root / 'correct-nomenclature.xlsx'
     dest.write_bytes(b'old')
     source = _write_source(tmp_path, 'correct-nomenclature.xlsx', _XLSX_BYTES)
@@ -143,7 +127,6 @@ def test_load_black_list_moves(tmp_path: Path, config_root: Path) -> None:
 
 def test_load_black_list_replaces(tmp_path: Path, config_root: Path) -> None:
     """существующий black_list заменяется."""
-    config_root.mkdir()
     dest = config_root / 'black_list'
     dest.write_text('old', encoding='utf-8')
     source = _write_source(tmp_path, 'black_list', _BLACK_LIST_TEXT.encode())
@@ -160,7 +143,6 @@ def test_load_creates_config_folder(tmp_path: Path, config_root: Path) -> None:
 
 def test_load_already_in_place(config_root: Path) -> None:
     """файл уже в parse_config — не трогаем."""
-    config_root.mkdir()
     dest = config_root / 'vendor_list.json'
     dest.write_text(_JSON_TEXT, encoding='utf-8')
     assert load_config(str(dest)) == [str(dest)]
@@ -275,7 +257,6 @@ def test_load_folder_empty(tmp_path: Path, config_root: Path) -> None:
 
 def test_load_folder_replaces(tmp_path: Path, config_root: Path) -> None:
     """файлы из папки заменяют существующие."""
-    config_root.mkdir()
     dest = config_root / 'vendor_list.json'
     dest.write_text('{}', encoding='utf-8')
     folder = _write_folder(tmp_path, {'vendor_list.json': _JSON_TEXT.encode()})
@@ -301,19 +282,13 @@ def test_load_json_binary(tmp_path: Path, config_root: Path) -> None:
     assert source.exists()
 
 
-def test_load_config_creates_nested_config_folder(tmp_path: Path, _restore_parse_paths: None) -> None:
+def test_load_config_creates_nested_config_folder(tmp_path: Path) -> None:
     """parse_config создаётся вместе с промежуточными папками, а не требует готовой."""
-    nested = tmp_path / 'deeply' / 'nested' / 'parse_config'
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=str(tmp_path / 'file_prices'),
-            user_config_folder=str(nested),
-            result_folder=str(tmp_path / 'result'),
-        ),
-    )
+    nested = tmp_path / 'deeply' / 'nested'
+    init_cfg(FileConfigProvider(str(nested)))
     source = _write_source(tmp_path, 'vendor_list.json', _JSON_TEXT.encode('utf-8'))
 
     found = load_config(str(source))
 
-    assert found == [str(nested / 'vendor_list.json')]
-    assert (nested / 'vendor_list.json').is_file()
+    assert found == [str(nested / 'parse_config' / 'vendor_list.json')]
+    assert (nested / 'parse_config' / 'vendor_list.json').is_file()

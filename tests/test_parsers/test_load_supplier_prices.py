@@ -1,12 +1,13 @@
 """Загрузка прайсов поставщиков в file_prices."""
 
-from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from core.parse_paths import ParsePaths, _CurrentParsePaths, configure_parse_paths
+from cfg import init_cfg
+from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.config.file_config_provider import FileConfigProvider
 from parsers.load_supplier_prices import load_supplier_prices, parse_prices_json
 from parsers.supplier_price_errors import (
     InvalidPriceExtensionError,
@@ -25,24 +26,8 @@ _XLSX_BYTES = b'xlsx-content'
 
 
 @pytest.fixture
-def _restore_parse_paths() -> Iterator[None]:
-    previous = _CurrentParsePaths.configured  # noqa: WPS437
-    yield
-    _CurrentParsePaths.configured = previous  # noqa: WPS437
-
-
-@pytest.fixture
-def prices_root(tmp_path: Path, _restore_parse_paths: None) -> Path:
-    file_prices = tmp_path / 'file_prices'
-    file_prices.mkdir()
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=str(file_prices),
-            user_config_folder=str(tmp_path / 'cfg'),
-            result_folder=str(file_prices / 'result'),
-        ),
-    )
-    return file_prices
+def prices_root(fake_config_provider: FakeConfigProvider) -> Path:
+    return Path(fake_config_provider.price_folder(''))
 
 
 def _write_source(tmp_path: Path, name: str, file_bytes: bytes) -> Path:
@@ -235,24 +220,16 @@ def test_load_empty_mapping(prices_root: Path) -> None:
         assert load_supplier_prices({}) == []
 
 
-def test_load_supplier_prices_creates_nested_supplier_folder(
-    tmp_path: Path,
-    _restore_parse_paths: None,
-) -> None:
+def test_load_supplier_prices_creates_nested_supplier_folder(tmp_path: Path) -> None:
     """Папка file_prices/<sup_code> создаётся целиком: parents=True, а не exist_ok."""
-    file_prices = tmp_path / 'file_prices'
-    assert not file_prices.exists()
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=str(file_prices),
-            user_config_folder=str(tmp_path / 'cfg'),
-            result_folder=str(file_prices / 'result'),
-        ),
-    )
+    root = tmp_path / 'env'
+    assert not root.exists()
+    init_cfg(FileConfigProvider(str(root)))
     source = _write_source(tmp_path, 'poshk.xlsx', _XLSX_BYTES)
 
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
         found = load_supplier_prices({'1': str(source)})
 
-    assert found == [str(file_prices / 'poshk' / 'price.xlsx')]
-    assert (file_prices / 'poshk' / 'price.xlsx').read_bytes() == _XLSX_BYTES
+    price_file = root / 'file_prices' / 'poshk' / 'price.xlsx'
+    assert found == [str(price_file)]
+    assert price_file.read_bytes() == _XLSX_BYTES

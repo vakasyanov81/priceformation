@@ -132,7 +132,30 @@ def set_config_provider(provider: ConfigProvider) -> None:
 
 ## Критерии готовности
 
-- [ ] Ни один модуль не ссылается на `MainConfig` или `cfg.main.get_config()`.
-- [ ] `core/parse_paths.py` работает через `ConfigProvider`.
-- [ ] Тесты могут подменить конфигурацию без файловой системы.
-- [ ] При добавлении нового пути не нужно править класс-синглтон, только протокол.
+- [x] Ни один модуль не ссылается на `MainConfig` или `cfg.main.get_config()`.
+- [x] `core/parse_paths.py` работает через `ConfigProvider`.
+- [x] Тесты могут подменить конфигурацию без файловой системы.
+- [x] При добавлении нового пути не нужно править класс-синглтон, только протокол.
+
+## Что сделано (2026-10-02)
+
+- `domain/protocols.py` — порт `ConfigProvider` (`project_root`, `config_file`,
+  `price_folder`, `result_folder`, `log_folder`).
+- `infrastructure/config/file_config_provider.py` — реализация по структуре
+  репозитория, корень определяется по модулю (`src` → корень проекта).
+- `infrastructure/config/fake_config_provider.py` — тест-дуб в `src`, как
+  `fake_json_reader` / `fake_xls_reader`: переиспользуется в `tests`, `integration_tests`
+  и `load_tests`, умеет переопределять отдельные папки.
+- `core/config_provider.py` — `get_config_provider()` / `set_config_provider()`;
+  `core/parse_paths.py` остался только для `clear_result_folder()`.
+- `cfg/__init__.py` — композиционный корень: `init_cfg(provider=None)` ставит
+  провайдер и `LogPaths.for_folder(...)`; `cfg/main.py` удалён.
+- `core/log_paths.py` — `LogPaths.for_folder(folder)` собирает датированные файлы логов.
+- Фикстура `fake_config_provider` + автофикстура `_config_provider_restored` в
+  `tests/conftest.py` и `integration_tests/conftest.py`: тесты подменяют окружение
+  временной папкой и не зависят от файлов проекта.
+- Проверки границ в `tests/test_parsers/test_layer_boundaries.py`: в `domain/` нет
+  импортов инфраструктуры, в `src/` нет ссылок на `MainConfig` и `get_parse_paths`.
+
+Не сделано (в задаче 09): `core/` не разделён на `domain/` и `infrastructure/`
+целиком, `core/exceptions.py`, `core/file_reader.py`, `core/init_log.py` на месте.
