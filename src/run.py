@@ -20,11 +20,11 @@ JSON печатается в stdout, логи в этом режиме не вы
 Код выхода 0 при успехе, 1 при ошибке.
 """
 
+import logging
 import sys
 
 from cfg import init_cfg
 from infrastructure.config.result_folder import clear_result_folder
-from infrastructure.logging.log_message import print_log
 from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
@@ -35,6 +35,8 @@ from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
 from services.zapaska_service import ZapaskaService
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -111,13 +113,13 @@ def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
     ServiceProvider.resolve(ZapaskaService).upload_data()
-    print_log('*** Данные успешно загружены. ***\n')
+    logger.info('*** Данные успешно загружены. ***\n')
 
 
 def run_report_doubles() -> None:
     """Parse supplier prices and write duplicates report."""
     report = ServiceProvider.resolve(DoublesService).make_report()
-    print_log(f'*** Отчёт о дублях сформирован. ***\n{report.path}\n')
+    logger.info(f'*** Отчёт о дублях сформирован. ***\n{report.path}\n')
 
 
 if __name__ == '__main__':

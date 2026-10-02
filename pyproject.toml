@@ -87,6 +87,7 @@ max-positional-args = 6
 # I001 — keep merged from X import a, b as c to stay under flake8 WPS201 (18 imports).
 "src/parsers/base_parser/base_parser.py" = ["I001"]
 "src/parse_report.py" = ["T201"]
+"src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
 
 [tool.ruff.lint.flake8-quotes]
@@ -142,7 +143,10 @@ mutate_only_covered_lines=true
 do_not_mutate = [
     "src/infrastructure/logging/wrappers.py",
     "src/services/async_utils.py",
-    "src/infrastructure/logging/log_message.py",
+    "src/infrastructure/logging/console.py",
+    "src/infrastructure/logging/exception_logging.py",
+    "src/infrastructure/logging/file_logging.py",
+    "src/infrastructure/logging/json_mode.py",
     "src/infrastructure/logging/log_resolve.py",
     "src/infrastructure/logging/log_setup.py",
     "src/parsers/base_parser/log_parser_process.py",
@@ -153,11 +157,6 @@ do_not_mutate = [
 ]
 do_not_mutate_patterns = [
     'logger\.\w+',
-    'log_msg\(',
-    'print_log\(',
-    'warn_msg\(',
-    'err_msg\(',
-    'need_print_log=',
     # cast() — аннотация для mypy, в рантайме не выполняет ничего.
     'cast\(',
     # encoding='utf-8' эквивалентен значению по умолчанию, пока локаль UTF-8.

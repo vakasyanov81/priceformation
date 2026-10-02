@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from parsers.registry import (
+    _VENDORS_TO_IMPORT,
     UnknownVendorError,
     _registry,
     all_vendors_from_registry,
@@ -71,6 +72,7 @@ class _FakeBaseParser:
 
 
 _UNIQUE = '_test_unique_vendor_for_registry_test'
+_MISSING_VENDOR_MODULE = 'tests.test_parsers._registry_absent_vendor'
 
 
 def test_register_vendor_sets_attributes() -> None:
@@ -245,17 +247,34 @@ def test_all_vendors_from_registry_populates_when_empty() -> None:
     assert 'ImportTestVendor' in names
 
 
-def test_ensure_vendors_imported_short_circuits() -> None:
-    """_ensure_vendors_imported() при заполненном реестре ничего не импортирует."""
+def test_ensure_vendors_imported_imports_only_missing_modules() -> None:
+    """Импортируются только те модули вендоров, которых ещё нет в sys.modules."""
     from parsers.registry import _ensure_vendors_imported
 
     @register_vendor(_UNIQUE + '_10')
     class PresentParser(_FakeBaseParser):  # noqa: WPS431
         pass
 
-    with patch('parsers.registry.importlib.import_module') as mock_import:
+    # json — любой заведомо импортированный модуль вместо уже загруженного вендора,
+    # missing — модуль, которого в sys.modules не бывает.
+    with (
+        patch('parsers.registry._VENDORS_TO_IMPORT', ('json', _MISSING_VENDOR_MODULE)),
+        patch('parsers.registry.importlib.import_module') as mock_import,
+    ):
         _ensure_vendors_imported()
-    mock_import.assert_not_called()
+    mock_import.assert_called_once_with(_MISSING_VENDOR_MODULE)
+
+
+def test_all_vendors_from_registry_imports_every_vendor_module() -> None:
+    """Непустой реестр не мешает доимпортировать остальные модули вендоров."""
+
+    @register_vendor(_UNIQUE + '_14')
+    class FillerParser(_FakeBaseParser):  # noqa: WPS431
+        pass
+
+    all_vendors_from_registry()
+
+    assert [name for name in _VENDORS_TO_IMPORT if name not in sys.modules] == []
 
 
 def test_config_uses_valid_make_config() -> None:

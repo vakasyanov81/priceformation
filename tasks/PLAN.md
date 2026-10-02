@@ -24,7 +24,7 @@
 
 | # | Задача | Кратко | Статус |
 |---|--------|--------|--------|
-| 7 | [Logging через logging.Logger](./task-07-logging.md) | Заменить глобальные `log_msg`/`err_msg`/`warn_msg` на `logging.Logger` с иерархическими именами. | ⬜ |
+| 7 | [Logging через logging.Logger](./task-07-logging.md) | Заменить глобальные `log_msg`/`err_msg`/`warn_msg` на `logging.Logger` с иерархическими именами. | ✅ |
 | 8 | [Типизированные конфиги](./task-08-typed-configs.md) | Заменить `dict[str, Any]` + `cast()` на dataclass-модели с валидацией на границе. Без внешних зависимостей. | ✅ |
 | 9 | [Разделение core/ на domain/ и infrastructure/](./task-09-domain-infrastructure.md) | IO-операции (файлы, JSON) — в `infrastructure/`. Чистые сущности и исключения — в `domain/`. | ✅ |
 | 10 | [Абстрактный ConfigProvider](./task-10-config-provider.md) | Вынести управление путями и env в интерфейс `ConfigProvider`. Текущий `MainConfig` — одна из реализаций. | ✅ |

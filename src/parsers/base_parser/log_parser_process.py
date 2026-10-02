@@ -2,14 +2,11 @@
 logging parse process
 """
 
-from infrastructure.logging.log_message import log_msg, warn_msg
+import logging
 
 from .parse_statistic import ParseResultStatistic
 
-
-def _log_msg(msg: str) -> None:
-    """log msg"""
-    log_msg(msg, need_print_log=True)
+logger = logging.getLogger(__name__)
 
 
 class LoggerParseProcess:
@@ -23,26 +20,26 @@ class LoggerParseProcess:
     def log_start(self) -> None:
         """logging start parse process"""
 
-        _log_msg(f'{self.parser_repr} // старт')
+        logger.info(f'{self.parser_repr} // старт')
 
     def log_finish(self, result_statistic: ParseResultStatistic | None = None) -> None:
         """logging finish parse process"""
         if result_statistic:
             min_percent, max_percent = result_statistic.real_percents_markup()
             min_margin, max_margin = result_statistic.real_absolute_markup()
-            _log_msg(f'Обработано позиций - {result_statistic.count_items()} ')
-            _log_msg(f'Наценка (%) - Мин: {min_percent}, Макс: {max_percent} ')
-            _log_msg(f'Наценка (Руб.) - Мин: {min_margin}, Макс: {max_margin} ')
-            _log_msg(f'{self.parser_repr} // финиш')
-        _log_msg('--------------------------------------------------------')
+            logger.info(f'Обработано позиций - {result_statistic.count_items()} ')
+            logger.info(f'Наценка (%) - Мин: {min_percent}, Макс: {max_percent} ')
+            logger.info(f'Наценка (Руб.) - Мин: {min_margin}, Макс: {max_margin} ')
+            logger.info(f'{self.parser_repr} // финиш')
+        logger.info('--------------------------------------------------------')
 
     @classmethod
     def log_list_files(cls, files: list[str]) -> None:
         """logging files list"""
 
-        _log_msg(f'список файлов для обработки - {files}')
+        logger.info(f'список файлов для обработки - {files}')
 
     def log_disable_status(self) -> None:
         """logging disabled"""
-        warn_msg(f'поставщик {self.parser_repr} не активен', need_print_log=True)
+        logger.warning(f'поставщик {self.parser_repr} не активен')
         self.log_finish()

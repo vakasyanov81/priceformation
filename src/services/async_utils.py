@@ -6,7 +6,8 @@ from collections.abc import Callable
 from typing import Any
 
 from domain.exceptions import CoreExceptionError, SupplierNotHavePricesError
-from infrastructure.logging.log_message import print_log
+
+logger = logging.getLogger(__name__)
 
 
 def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
@@ -14,9 +15,9 @@ def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
     try:
         method(**kwargs)
     except SupplierNotHavePricesError as exc:
-        print_log(f'{exc}', level=logging.WARNING)
+        logger.warning(f'{exc}')
         sys.exit(1)
     except CoreExceptionError as exc:
-        print_log(f'{exc}', level=logging.ERROR)
+        logger.error(f'{exc}')
     except KeyboardInterrupt:
         sys.exit(0)

@@ -1,9 +1,11 @@
 """CLI dialog for main console actions."""
 
+import logging
 from enum import Enum
 
 from cfg.color import Colors
-from infrastructure.logging.log_message import print_log
+
+logger = logging.getLogger(__name__)
 
 
 class AnswerResult(Enum):
@@ -36,4 +38,4 @@ def ask_action() -> AnswerResult:
         answer = ANSWER_MAP.get(input(msg).strip().lower())
         if answer:
             return answer
-        print_log('Не понял, давай ещё раз. \n')
+        logger.info('Не понял, давай ещё раз. \n')

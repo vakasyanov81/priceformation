@@ -1,16 +1,13 @@
-"""Resolve log level labels, paths and logging callables."""
+"""Текстовые подписи и цвета уровней логирования для форматтеров и фильтров."""
 
 import logging
-from collections.abc import Callable
-from typing import Any
-
-from infrastructure.logging.log_paths import get_log_paths
 
 __level_map__ = {
     logging.ERROR: 'ERROR',
     logging.INFO: 'INFO',
     logging.WARNING: 'WARNING',
 }
+__level_colors__ = {'ERROR': 'red', 'WARNING': 'yellow'}
 
 
 def get_log_level_text(log_level: int) -> str:
@@ -18,20 +15,6 @@ def get_log_level_text(log_level: int) -> str:
     return __level_map__.get(log_level) or 'INFO'
 
 
-def resolve_log_path(level: int = logging.INFO) -> str:
-    """get directory path for logging by log-level"""
-    paths = get_log_paths()
-    log_file_map = {logging.ERROR: paths.err_file}
-
-    return log_file_map.get(level) or paths.log_file
-
-
-def resolve_log_method(level: int = logging.INFO) -> Callable[..., Any]:
-    """get logging method by log-level"""
-    log_method_mapping = {
-        logging.INFO: logging.info,
-        logging.WARNING: logging.warning,
-        logging.ERROR: logging.error,
-    }
-
-    return log_method_mapping.get(level) or logging.info
+def get_level_color(level_text: str) -> str | None:
+    """Цвет уровня для консоли; INFO и служебные записи остаются без цвета."""
+    return __level_colors__.get(level_text)

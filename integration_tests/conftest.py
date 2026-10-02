@@ -1,5 +1,6 @@
 """fixtures for integration tests"""
 
+import logging
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -10,6 +11,9 @@ _ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(_ROOT.parent))
 sys.path.insert(0, str((_ROOT / '../src').resolve()))
 sys.path.insert(0, str(_ROOT))
+sys.path.insert(0, str(_ROOT.parent / 'tests'))  # хелперы логирования из tests/
+
+from log_watch import LoggerWatch, LoggerWatcher, records_of  # noqa: E402
 
 from cfg import init_cfg  # noqa: E402
 from domain.config_context import get_config_provider, set_config_provider  # noqa: E402
@@ -19,6 +23,17 @@ from parsers.data_provider.manufacturer_aliases import (  # noqa: E402
 )
 from services.configure import configure_services  # noqa: E402
 from services.service_provider import ServiceProvider  # noqa: E402
+
+
+@pytest.fixture
+def watch_logger(caplog: pytest.LogCaptureFixture) -> LoggerWatcher:
+    """Поднять уровень логгера и отдавать его записи: (уровень, текст) — после вызова кода."""
+
+    def _watch(logger_name: str, level: int = logging.INFO) -> LoggerWatch:
+        caplog.set_level(level, logger=logger_name)
+        return lambda: records_of(caplog, logger_name)
+
+    return _watch
 
 
 def pytest_configure() -> None:

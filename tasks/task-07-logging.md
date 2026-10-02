@@ -86,10 +86,32 @@ def log_msg(msg: str, level=logging.INFO) -> None:
 6. Удалить `infrastructure/logging/log_message.py` (или оставить как deprecation wrapper).
 7. Поправить тесты — заменить моки `log_msg` на проверки через `caplog`.
 
+## Что сделано
+
+- Пакет `infrastructure/logging/` разложен по ролям:
+  - `log_setup.py` — `setup_logging(paths, level)`: консоль всегда, файлы при известных путях; повторный
+    вызов снимает только свои обработчики (помечены `__SETUP_MARK__`), чужие (pytest) не трогает;
+  - `console.py` — `ConsoleHandler` и форматтер: пишет в **текущий** `sys.stdout` (в момент `emit`),
+    поэтому `capsys`/`redirect_stdout` работают; INFO — голое сообщение, остальные уровни с префиксом
+    `[LEVEL]:` и цветом; фильтры `JsonModeFilter` и `FileOnlyFilter`;
+  - `file_logging.py` — два файловых обработчика (`log_<date>.log` для INFO+, `error_<date>.log` для ERROR)
+    с `delay=True`; недоступная папка не ломает запуск — остаётся консоль;
+  - `json_mode.py` — `set_json_mode()`/`json_mode_active()` (состояние в `ContextVar`) и контекст-менеджер
+    `quiet_console()` вместо глобального флага `set_print_quiet`; `run_machine.machine_json` оборачивает
+    команду в `with quiet_console():`;
+  - `log_resolve.py` — подписи и цвета уровней для форматтера.
+- Traceback домена (`domain/exception_log.py` → `exception_logging.write_exception_log`) пишется как
+  `logger.error(..., extra={FILE_ONLY: True})`: в файле есть, в консоли пользователя нет.
+- Декоратор `@logging` из `infrastructure/logging/wrappers.py` пишет детали вызова на DEBUG
+  (в консоль не попадают), traceback ошибки — WARNING.
+- `infrastructure/logging/log_message.py` удалён.
+- Тесты проверяют логи через `caplog`; `tests/test_architecture_markers.py` запрещает возврат
+  глобальных log-функций.
+
 ## Критерии готовности
 
-- [ ] Нигде не импортируется `log_msg`, `err_msg`, `warn_msg`, `print_log`.
-- [ ] Все модули используют `logging.getLogger(__name__)`.
-- [ ] JSON-режим не выводит логи благодаря настройке handler'а, не через глобальный флаг.
-- [ ] Тесты проверяют логи через `caplog` (pytest built-in).
-- [ ] `infrastructure/logging/log_message.py` удалён или помечен как deprecated.
+- [x] Нигде не импортируется `log_msg`, `err_msg`, `warn_msg`, `print_log`.
+- [x] Все модули используют `logging.getLogger(__name__)`.
+- [x] JSON-режим не выводит логи благодаря настройке handler'а, не через глобальный флаг.
+- [x] Тесты проверяют логи через `caplog` (pytest built-in).
+- [x] `infrastructure/logging/log_message.py` удалён или помечен как deprecated.

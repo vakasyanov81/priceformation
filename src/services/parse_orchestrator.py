@@ -6,12 +6,12 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, cast
 
-from infrastructure.logging.log_message import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendors, vendor_config_is_enabled
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -24,6 +24,8 @@ from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.registry import vendor_entry_for, vendor_markup_policy_for
 from parsers.row_item.row_item import RowItem
 from services.service_provider import ServiceProvider
+
+logger = logging.getLogger(__name__)
 
 type VendorList = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
 type UnknownCategorySkip = tuple[str, str]
@@ -86,15 +88,15 @@ class ParseOrchestrator:
         """Общий цикл разбора списка поставщиков с итоговой группировкой."""
         parse_result = ParseResult()
         start_time = time.monotonic()
-        log_msg('\n============== Начало разбора прайсов =================\n', need_print_log=True)
+        logger.info('\n============== Начало разбора прайсов =================\n')
         self._parse_all_vendors(parse_result, vendors)
         self._log_skips(parse_result)
         clear_manufacturer_aliases_cache()
         grouper = self._grouper_factory(parse_result.parsed_items)
         parse_result.parsed_items = grouper.group_by_params().get_row_items()
-        log_msg(f'\nКоличество дублей: {len(grouper.get_double_row_items())}\n', need_print_log=True)
+        logger.info(f'\nКоличество дублей: {len(grouper.get_double_row_items())}\n')
         elapsed = time.monotonic() - start_time
-        log_msg(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n', need_print_log=True)
+        logger.info(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n')
         return parse_result
 
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
@@ -107,9 +109,9 @@ class ParseOrchestrator:
         try:
             parsed = parser.parse()
         except VendorListConfigFileError:
-            warn_msg('Отсутствует файл конфигурации parse_config/vendor_list.json', need_print_log=True)
+            logger.warning('Отсутствует файл конфигурации parse_config/vendor_list.json')
         except Exception as exc:
-            err_msg(f'Ошибка разбора прайса поставщика {parser!r} // {exc}')
+            logger.error(f'Ошибка разбора прайса поставщика {parser!r} // {exc}')
             raise
         else:
             parse_result.parsed_items.extend(parsed)
@@ -120,10 +122,10 @@ class ParseOrchestrator:
         """Печать сводки по пропускам категорий и black_list."""
         category_message = skipped_unknown_categories_message(parse_result.unknown_category_skips)
         if category_message:
-            warn_msg(category_message, need_print_log=True)
+            logger.warning(category_message)
         black_list_message = skipped_black_list_message(parse_result.black_list_skips)
         if black_list_message:
-            log_msg(black_list_message, need_print_log=True)
+            logger.info(black_list_message)
 
 
 def _parser_for_vendor(

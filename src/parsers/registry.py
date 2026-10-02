@@ -11,6 +11,7 @@ Usage::
 """
 
 import importlib
+import sys
 from collections.abc import Callable
 from typing import Literal
 
@@ -33,7 +34,7 @@ VendorEntry = tuple[type[BaseParser], ParseConfiguration]
 
 MarkupPolicySpec = type[MarkupPolicy] | Literal['map_on_opt', 'identity', 'recommended_or_map'] | None
 
-# List of vendor modules to import if registry is empty
+# Vendor modules to import on demand (see _ensure_vendors_imported)
 _VENDORS_TO_IMPORT = (
     'parsers.vendors.autosnab54_ru',
     'parsers.vendors.four_tochki.four_tochki_sheet1',
@@ -57,11 +58,15 @@ class UnknownVendorError(KeyError):
 
 
 def _ensure_vendors_imported() -> None:
-    """Импортировать модули вендоров из _VENDORS_TO_IMPORT, чтобы заполнить реестр."""
-    if _registry:
-        return
+    """Импортировать ещё не импортированные модули вендоров, чтобы заполнить реестр.
+
+    Признак «модуль уже зарегистрировался» — сам модуль в sys.modules, а не заполненность
+    реестра: часть вендоров импортируется напрямую (тесты, точечные сценарии), и тогда
+    непустой реестр не должен мешать доимпортировать остальных.
+    """
     for module_name in _VENDORS_TO_IMPORT:
-        importlib.import_module(module_name)
+        if module_name not in sys.modules:
+            importlib.import_module(module_name)
 
 
 def register_vendor(
@@ -146,8 +151,7 @@ def _config_from_parser_params(vendor_cls: type[BaseParser]) -> ParseConfigurati
 
 def all_vendors_from_registry() -> list[VendorEntry]:
     """Собрать список (класс, config) из зарегистрированных вендоров."""
-    if not _registry:
-        _ensure_vendors_imported()
+    _ensure_vendors_imported()
 
     vendors: list[VendorEntry] = []
     for vendor_cls in _registry.values():
@@ -159,8 +163,7 @@ def all_vendors_from_registry() -> list[VendorEntry]:
 
 def vendor_entry_for(code: str) -> VendorEntry:
     """Запись (класс, config) зарегистрированного поставщика по коду реестра."""
-    if not _registry:
-        _ensure_vendors_imported()
+    _ensure_vendors_imported()
     vendor_cls = _registry.get(code)
     if vendor_cls is not None:
         config = _get_config_for_vendor(vendor_cls)

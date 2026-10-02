@@ -1,11 +1,12 @@
 """JSON-режим CLI."""
 
 import json
+import logging
 from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 
-from infrastructure.logging.log_message import print_log
+from infrastructure.logging.json_mode import json_mode_active
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
@@ -21,6 +22,7 @@ _DOUBLE_PATH = 'file_prices/result/doubles.jsonl'
 _PRICE_FIELDS = {'title': _TITLE, 'price_opt': 10, 'price_markup': 12}
 _RESOLVE = 'run_machine.ServiceProvider.resolve'
 _LOG_NOISE = 'NOISE-ON-STDOUT'
+_NOISY_LOGGER = 'tests.noisy'
 
 
 def _assert_elapsed(payload: dict[str, object]) -> None:
@@ -104,11 +106,15 @@ def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
-    """логи разбора не попадают в stdout и stderr."""
+    """логи разбора не попадают в stdout и stderr, но JSON-режим на время команды включён."""
     parsed = _result_with_row()
+    noisy_logger = logging.getLogger(_NOISY_LOGGER)
+    json_mode_seen: list[bool] = []
 
     def noisy_parse_all() -> MagicMock:
-        print_log(_LOG_NOISE)
+        json_mode_seen.append(json_mode_active())
+        noisy_logger.info(_LOG_NOISE)
+        noisy_logger.error(_LOG_NOISE)
         return parsed
 
     orchestrator = MagicMock()
@@ -124,6 +130,16 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     assert _LOG_NOISE not in captured.out
     assert _LOG_NOISE not in captured.err
     json.loads(captured.out)
+    assert json_mode_seen == [True]
+    assert not json_mode_active()
+
+
+def test_json_mode_off_outside_machine_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """вне JSON-режима консольный лог виден."""
+    assert not json_mode_active()
+    logging.getLogger(_NOISY_LOGGER).info(_LOG_NOISE)
+
+    assert _LOG_NOISE in capsys.readouterr().out
 
 
 def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
