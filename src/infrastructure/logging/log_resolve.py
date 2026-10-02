@@ -4,7 +4,7 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from core.log_paths import get_log_paths
+from infrastructure.logging.log_paths import get_log_paths
 
 __level_map__ = {
     logging.ERROR: 'ERROR',

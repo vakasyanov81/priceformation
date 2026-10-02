@@ -11,7 +11,7 @@ from cfg.zapaska_api import (
     get_zapaska_api_config,
     load_dotenv,
 )
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 
 _LOGIN = 'ZAPASKA_API_LOGIN'

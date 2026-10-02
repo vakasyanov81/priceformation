@@ -31,7 +31,10 @@
 - `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски.
 
 ## Архитектура
-- Пути окружения (настройки, прайсы, результаты, логи) даёт порт `ConfigProvider` — `src/domain/protocols.py`; реализация по умолчанию `FileConfigProvider` (`src/infrastructure/config/`), тест-дуб `FakeConfigProvider` там же. Активный провайдер ставит `init_cfg()` в `src/cfg/__init__.py`; читать — `get_config_provider()` из `src/core/config_provider.py`. `MainConfig` больше нет.
+- Слои: `src/domain/` (чистое: порты, исключения, конфиг-контекст — без IO), `src/infrastructure/` (адаптеры: `config/`, `data/`, `logging/`), `src/parsers/`, `src/services/`, `src/cfg/` (композиционный корень). Пакета `src/core/` больше нет; правила слоёв проверяет `tests/test_layer_boundaries.py`.
+- Логи и чтение файлов лежат в инфраструктуре: `infrastructure/logging/log_message.py` (`log_msg`/`err_msg`/`warn_msg`/`print_log`), `infrastructure/data/file_reader.py`, `infrastructure/config/result_folder.py`.
+- Исключения домена (`CoreExceptionError`, `SupplierNotHavePricesError`, `make_raise`) — `src/domain/exceptions.py`; они не пишут логи сами, а отдают сообщение приёмнику (`domain/exception_log.py`), который назначает `init_cfg()` — реализация в `infrastructure/logging/exception_logging.py`.
+- Пути окружения (настройки, прайсы, результаты, логи) даёт порт `ConfigProvider` — `src/domain/protocols.py`; реализация по умолчанию `FileConfigProvider` (`src/infrastructure/config/`), тест-дуб `FakeConfigProvider` там же. Активный провайдер ставит `init_cfg()` в `src/cfg/__init__.py`; читать — `get_config_provider()` из `src/domain/config_context.py`. `MainConfig` больше нет.
 - Вендоры регистрируются декоратором `@register_vendor(code, markup_policy=...)`; код реестра — `src/parsers/registry.py`. Список вендоров для импорта — один, `_VENDORS_TO_IMPORT` в registry; `all_vendors.py` — чистая делегация.
 - Политики наценки — `src/parsers/base_parser/markup_policy.py`. Цепочка: `CommonPrice.parse_all_vendors()` → `CommonPriceGrouper` → шаблоны writer (`for_inner` / `for_drom` / `for_full`).
 - Стиль: чёрные, line-length 120, кавычки одинарные (`skip-string-normalization`). Комментарии и docstring — на русском. `tasks/PLAN.md` — план рефакторинга (registry, DI, services, pydantic).

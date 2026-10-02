@@ -1,11 +1,8 @@
-"""
-raise logic
-"""
+"""Исключения домена: чистые классы без инфраструктуры и файлового IO."""
 
-import logging
 import traceback
 
-from core.log_message import err_msg
+from domain.exception_log import log_exception
 
 __STACK_TRACE_LIMIT__ = 10
 
@@ -22,13 +19,9 @@ class CoreExceptionError(Exception):
 
     @classmethod
     def to_log(cls, msg: str | None) -> None:
-        """Write message and stack to the error log file, not to the console."""
-        trace_message = str(traceback.extract_stack(limit=__STACK_TRACE_LIMIT__))
-        trace_message = f'{msg} \n {trace_message}'
-        try:
-            err_msg(trace_message, need_print_log=False)
-        except RuntimeError, OSError:
-            logging.exception(trace_message)
+        """Собрать сообщение со стеком и отдать приёмнику логов."""
+        stack = str(traceback.extract_stack(limit=__STACK_TRACE_LIMIT__))
+        log_exception(f'{msg} \n {stack}')
 
 
 def make_raise(message: str) -> None:

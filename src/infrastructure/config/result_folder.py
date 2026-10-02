@@ -3,7 +3,7 @@
 import shutil
 from pathlib import Path
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 
 
 def clear_result_folder() -> None:

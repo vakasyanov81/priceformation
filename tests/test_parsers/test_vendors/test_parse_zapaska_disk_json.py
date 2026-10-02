@@ -5,7 +5,7 @@ tests for zapaska vendor after raw-parser process
 import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,

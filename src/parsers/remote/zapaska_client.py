@@ -7,8 +7,8 @@ from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
 from typing import Protocol
 
-from core.config_provider import get_config_provider
-from core.exceptions import CoreExceptionError
+from domain.config_context import get_config_provider
+from domain.exceptions import CoreExceptionError
 
 _VENDOR_FOLDER = 'zapaska'
 _GET_TIRES_URL = '/API/hs/V2/GetTires'

@@ -7,9 +7,9 @@ from typing import Any
 
 from python_calamine import CalamineError, CalamineWorkbook, WorksheetNotFound, ZipError
 
-from core.config_provider import get_config_provider
-from core.exceptions import CoreExceptionError
-from core.log_message import err_msg
+from domain.config_context import get_config_provider
+from domain.exceptions import CoreExceptionError
+from infrastructure.logging.log_message import err_msg
 
 VENDOR_TITLE_IDX = 0
 CORRECT_TITLE_IDX = 1

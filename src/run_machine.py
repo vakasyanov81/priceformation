@@ -5,7 +5,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from core.log_message import print_log, set_print_quiet
+from infrastructure.logging.log_message import print_log, set_print_quiet
 from parse_report import JsonReport, emit_json, error_payload
 from parse_report_build import report_from_result
 from parsers.all_vendors import all_vendor_supplier_catalog

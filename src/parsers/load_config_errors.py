@@ -1,6 +1,6 @@
 """Ошибки загрузки файлов настроек в parse_config."""
 
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 
 
 class InvalidConfigKindError(CoreExceptionError):

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import extract_markup_rules

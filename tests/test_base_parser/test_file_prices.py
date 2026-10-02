@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from core.exceptions import SupplierNotHavePricesError
+from domain.exceptions import SupplierNotHavePricesError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.file_reader import FileReader

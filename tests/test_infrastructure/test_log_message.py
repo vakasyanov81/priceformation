@@ -7,7 +7,7 @@ from io import StringIO
 
 import pytest
 
-from core.log_message import print_log, set_print_quiet, set_print_stream
+from infrastructure.logging.log_message import print_log, set_print_quiet, set_print_stream
 
 
 @pytest.fixture(autouse=True)

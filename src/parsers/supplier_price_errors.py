@@ -1,6 +1,6 @@
 """Ошибки загрузки прайсов поставщиков."""
 
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 
 
 class SupplierPricesMappingError(CoreExceptionError):

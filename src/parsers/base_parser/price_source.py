@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Protocol
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 
 
 class PriceSource(Protocol):

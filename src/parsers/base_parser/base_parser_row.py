@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from core import err_msg
+from infrastructure.logging.log_message import err_msg
 from parsers.base_parser.base_parser_title import replace_season
 from parsers.row_item.row_item import RowItem
 

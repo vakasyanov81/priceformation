@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from parsers.writer.jsonl_writer import RESULT_META_FILE

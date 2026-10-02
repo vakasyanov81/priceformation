@@ -13,7 +13,7 @@ class ConfigProviderNotConfiguredError(RuntimeError):
 
 
 class _CurrentConfigProvider:
-    """Process-wide provider without a cfg import."""
+    """Process-wide provider, чтобы порт доставали без прокидывания через конструкторы."""
 
     configured: ConfigProvider | None = None
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 from parsers.data_provider.black_list import BlackListProviderBase, BlackListProviderFromUserConfig
 from parsers.data_provider.vendor_list import (
     VendorListConfigFileError,

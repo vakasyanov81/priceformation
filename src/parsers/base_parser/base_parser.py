@@ -4,7 +4,7 @@
 from re import sub as _re_sub
 from typing import Any, Protocol
 
-from core.exceptions import SupplierNotHavePricesError
+from domain.exceptions import SupplierNotHavePricesError
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import ParseConfigNotSetError, ParseConfiguration, ParserParams
 from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items

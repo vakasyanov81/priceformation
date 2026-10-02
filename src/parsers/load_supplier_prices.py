@@ -5,7 +5,7 @@ import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.supplier_price_errors import (
     InvalidPriceExtensionError,

@@ -5,7 +5,7 @@ Make parse all price and make inner and drom prices
 from pathlib import Path
 from typing import Any, Protocol, cast
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,

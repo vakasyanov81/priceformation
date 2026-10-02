@@ -12,7 +12,7 @@ sys.path.insert(0, str((_ROOT / '../src').resolve()))
 sys.path.insert(0, str(_ROOT))
 
 from cfg import init_cfg  # noqa: E402
-from core.config_provider import get_config_provider, set_config_provider  # noqa: E402
+from domain.config_context import get_config_provider, set_config_provider  # noqa: E402
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache  # noqa: E402
 from parsers.data_provider.manufacturer_aliases import (  # noqa: E402
     clear_manufacturer_aliases_cache,

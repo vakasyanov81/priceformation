@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from python_calamine import CalamineWorkbook
 
-import core
+from domain.exceptions import CoreExceptionError, make_raise
 from parsers.xls_reader_row import (
     is_empty_row,
     is_end_row,
@@ -77,7 +77,7 @@ class XlsReader(IXlsReader):
         """get sheet list"""
         book = self.book
         if book is None or not book.sheet_names:
-            core.make_raise('В прайсе отсутствуют вкладки!')
+            make_raise('В прайсе отсутствуют вкладки!')
         workbook = cast(CalamineWorkbook, book)
 
         return [workbook.get_sheet_by_name(s_name).to_python(skip_empty_area=False) for s_name in workbook.sheet_names]
@@ -93,7 +93,7 @@ class XlsReader(IXlsReader):
         self.cur_row += 1
 
         if self.cur_row > self.reader_params.max_rows:
-            raise MaxRowsReached(self.reader_params.max_rows)
+            raise MaxRowsReachedError(self.reader_params.max_rows)
 
         try:
             self.cur_row_values = [strip_cell_value(cell) for cell in row_values(sheet, cur_row, end_col)]
@@ -122,7 +122,7 @@ class XlsReader(IXlsReader):
         return rows
 
 
-class MaxRowsReached(core.CoreExceptionError):
+class MaxRowsReachedError(CoreExceptionError):
     """max rows reached exception"""
 
     def __init__(self, max_rows_count: int) -> None:

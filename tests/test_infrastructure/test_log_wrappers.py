@@ -1,12 +1,10 @@
-"""
-test init_log
-"""
+"""tests for the call logging decorator"""
 
 from contextlib import suppress
 from typing import Any
 from unittest.mock import patch
 
-from core.wrappers import logging
+from infrastructure.logging.wrappers import logging
 
 
 @logging(label='test_logging')
@@ -19,7 +17,7 @@ def test_logging() -> None:
     """logging wrapper emits call/result messages"""
     param1, param2 = 10, 20
     expected_result = param1 + param2
-    with patch('core.wrappers.log_msg') as mock_log_msg:
+    with patch('infrastructure.logging.wrappers.log_msg') as mock_log_msg:
         logging_function(param1, param2, other_param='some text')
     assert mock_log_msg.call_count == 3
     first_msg = str(mock_log_msg.call_args_list[0].args[0])
@@ -34,7 +32,7 @@ def test_logging() -> None:
 def test_logging_when_wrong_argument() -> None:
     """test logging call function with wrong argument"""
 
-    with patch('core.wrappers.log_msg') as mock_log_msg, suppress(TypeError):
+    with patch('infrastructure.logging.wrappers.log_msg') as mock_log_msg, suppress(TypeError):
         logging_function()
 
     assert mock_log_msg.call_count == 4

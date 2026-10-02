@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.exceptions import SupplierNotHavePricesError
+from domain.exceptions import SupplierNotHavePricesError
 from run_dialog import AnswerResult
 from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator
@@ -144,8 +144,8 @@ def test_response_supplier_error_exits() -> None:
     with (
         patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
         patch('run.run_make_price_by_supplier', side_effect=SupplierNotHavePricesError('empty')),
-        patch('core.async_utils.print_log'),
-        patch('core.async_utils.sys.exit', side_effect=SystemExit(1)) as mock_exit,
+        patch('services.async_utils.print_log'),
+        patch('services.async_utils.sys.exit', side_effect=SystemExit(1)) as mock_exit,
     ):
         from run import response_processing
 

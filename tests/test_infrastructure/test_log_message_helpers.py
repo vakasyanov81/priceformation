@@ -6,15 +6,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cfg import init_cfg
-from core.config_provider import get_config_provider
-from core.log_message import err_msg, log_msg, log_to_file, warn_msg
-from core.log_paths import LogPaths, LogPathsNotConfiguredError, configure_log_paths, get_log_paths
-from core.log_resolve import (
+from domain.config_context import get_config_provider
+from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.logging.log_message import err_msg, log_msg, log_to_file, warn_msg
+from infrastructure.logging.log_paths import LogPaths, LogPathsNotConfiguredError, configure_log_paths, get_log_paths
+from infrastructure.logging.log_resolve import (
     get_log_level_text,
     resolve_log_method,
     resolve_log_path,
 )
-from infrastructure.config.fake_config_provider import FakeConfigProvider
 
 _UNKNOWN_LEVEL = 999
 _UNKNOWN_METHOD_LEVEL = 12345
@@ -45,7 +45,7 @@ def test_resolve_log_path_by_level() -> None:
 
 
 def test_init_cfg_configures_log_paths() -> None:
-    """init_cfg передаёт провайдер путей и логи в core, без импорта cfg из core."""
+    """init_cfg передаёт провайдер путей и логи в слои домена и инфраструктуры."""
     provider = init_cfg()
     log_folder = provider.log_folder()
     today = datetime.date.today()
@@ -78,7 +78,7 @@ def test_resolve_log_method_mapping() -> None:
 
 def test_warn_msg_delegates() -> None:
     """warn_msg вызывает log_msg с WARNING"""
-    with patch('core.log_message.log_msg', return_value='w') as mock_log:
+    with patch('infrastructure.logging.log_message.log_msg', return_value='w') as mock_log:
         assert warn_msg('attention', need_print_log=True) == 'w'
         mock_log.assert_called_once_with(
             'attention',
@@ -89,7 +89,7 @@ def test_warn_msg_delegates() -> None:
 
 def test_err_msg_delegates() -> None:
     """err_msg вызывает log_msg с ERROR"""
-    with patch('core.log_message.log_msg', return_value='e') as mock_log:
+    with patch('infrastructure.logging.log_message.log_msg', return_value='e') as mock_log:
         assert err_msg('bad', need_print_log=False) == 'e'
         mock_log.assert_called_once_with('bad', level=logging.ERROR, need_print_log=False)
 
@@ -97,8 +97,8 @@ def test_err_msg_delegates() -> None:
 def test_log_msg_error_writes_file() -> None:
     """ERROR-уровень пишет в файл и возвращает сообщение со временем"""
     with (
-        patch('core.log_message.log_to_file') as mock_file,
-        patch('core.log_message.print_log') as mock_print,
+        patch('infrastructure.logging.log_message.log_to_file') as mock_file,
+        patch('infrastructure.logging.log_message.print_log') as mock_print,
     ):
         message = log_msg('boom', level=logging.ERROR, need_print_log=True)
         mock_file.assert_called_once()
@@ -109,10 +109,10 @@ def test_log_msg_error_writes_file() -> None:
 def test_log_to_file_writes_message() -> None:
     """при успехе метод логирования вызывается, возвращается True"""
     with (
-        patch('core.log_message.init_log') as mock_init,
-        patch('core.log_message.logging.basicConfig') as mock_basic,
-        patch('core.log_message.resolve_log_path', return_value='err.log'),
-        patch('core.log_message.resolve_log_method') as mock_method,
+        patch('infrastructure.logging.log_message.init_log') as mock_init,
+        patch('infrastructure.logging.log_message.logging.basicConfig') as mock_basic,
+        patch('infrastructure.logging.log_message.resolve_log_path', return_value='err.log'),
+        patch('infrastructure.logging.log_message.resolve_log_method') as mock_method,
     ):
         written = log_to_file('boom', level=logging.ERROR)
     mock_init.assert_called_once()
@@ -123,11 +123,11 @@ def test_log_to_file_writes_message() -> None:
 
 def test_log_to_file_returns_false_on_folder_error() -> None:
     """недоступная папка логов → False, без исключения"""
-    with patch('core.log_message.init_log', side_effect=PermissionError('denied')):
+    with patch('infrastructure.logging.log_message.init_log', side_effect=PermissionError('denied')):
         assert not log_to_file('boom', level=logging.INFO)
 
 
 def test_log_to_file_returns_false_without_log_paths() -> None:
     """log paths не настроены → False, без исключения"""
-    with patch('core.log_message.get_log_paths', side_effect=LogPathsNotConfiguredError()):
+    with patch('infrastructure.logging.log_message.get_log_paths', side_effect=LogPathsNotConfiguredError()):
         assert not log_to_file('boom', level=logging.INFO)
