@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cfg.zapaska_api import get_zapaska_api_config
+from infrastructure.config.zapaska_api_config import get_zapaska_api_config
 from parsers.remote.zapaska_client import load_remote_vendor_data
 
 

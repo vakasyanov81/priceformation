@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cfg.zapaska_api import ZapaskaApiConfig
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.config.zapaska_api_config import ZapaskaApiConfig
 from parsers.remote.zapaska_client import (
     ZapaskaApiConnectionError,
     basic_auth,

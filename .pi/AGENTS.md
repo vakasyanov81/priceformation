@@ -79,7 +79,19 @@ uv run mypy .
 - Не переопределять флаги (`--strict` и т.п.), если пользователь не просил — берётся `[tool.mypy]`
 - При ошибках — исправить и перезапустить mypy до exit 0
 
-6. **Vulture** — поиск неиспользуемого кода, конфиг из `pyproject.toml` (`[tool.vulture]`):
+6. **Import-linter** — проверка слоёв и контрактов импортов, конфиг из `pyproject.toml` (`[tool.importlinter]`):
+
+```bash
+uv run lint-imports
+```
+
+Правила запуска:
+- Через `uv run` (не системный `lint-imports`)
+- Не переопределять флаги, если пользователь не просил — контракты берутся из `[tool.importlinter]`
+- Новый импорт между слоями (например, `parsers` → `services` или `services` → `cfg`) надо убрать, а не заглушать `ignore_imports`
+- При нарушении — развернуть зависимость (передать объект аргументом, спросить порт в `domain/protocols.py`) и перезапустить до exit 0
+
+7. **Vulture** — поиск неиспользуемого кода, конфиг из `pyproject.toml` (`[tool.vulture]`):
 
 ```bash
 uv run vulture
@@ -90,7 +102,7 @@ uv run vulture
 - Не передавать пути и флаги, если пользователь не просил — берутся `paths` и `min_confidence` из `[tool.vulture]`
 - При находках — убрать мёртвый код или явно пометить ложные срабатывания и снова запустить `uv run vulture` до exit 0
 
-7. **Bandit** — статический анализ безопасности Python-кода, конфиг из `pyproject.toml` (`[tool.bandit]`):
+8. **Bandit** — статический анализ безопасности Python-кода, конфиг из `pyproject.toml` (`[tool.bandit]`):
 
 ```bash
 uv run bandit -r src -c pyproject.toml
@@ -100,7 +112,7 @@ uv run bandit -r src -c pyproject.toml
 - Сканируется только директория `src` (тесты и прочее исключены в `[tool.bandit]`)
 - При находках — исправить или явно пометить как ложное срабатывание (`# nosec`) и перезапустить до exit 0
 
-8. **pip-audit** — аудит зависимостей на известные уязвимости:
+9. **pip-audit** — аудит зависимостей на известные уязвимости:
 
 ```bash
 uv run pip-audit

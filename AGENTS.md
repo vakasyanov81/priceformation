@@ -13,9 +13,10 @@
 3. `uv run ruff check .`
 4. `uv run flake8 .`
 5. `uv run mypy .`
-6. `uv run vulture`
-7. `uv run bandit -r src -c pyproject.toml`
-8. `uv run pip-audit`
+6. `uv run lint-imports` — контракты слоёв из `pyproject.toml [tool.importlinter]`.
+7. `uv run vulture`
+8. `uv run bandit -r src -c pyproject.toml`
+9. `uv run pip-audit`
 
 Подавление линт/типов (`# noqa`, `# type: ignore`) — только в крайнем случае, с правилами и FIXME-форматом; подробно в `.pi/AGENTS.md`. `pyright` настроен, но в CI не входит.
 
@@ -31,7 +32,7 @@
 - `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски.
 
 ## Архитектура
-- Слои: `src/domain/` (чистое: порты, исключения, конфиг-контекст — без IO), `src/infrastructure/` (адаптеры: `config/`, `data/`, `logging/`), `src/parsers/`, `src/services/`, `src/cfg/` (композиционный корень). Пакета `src/core/` больше нет; правила слоёв проверяет `tests/test_layer_boundaries.py`.
+- Слои: `src/domain/` (чистое: порты, исключения, конфиг-контекст — без IO), `src/infrastructure/` (адаптеры: `config/`, `data/`, `logging/`), `src/parsers/`, `src/services/`, `src/cfg/` (композиционный корень). Пакета `src/core/` больше нет; правила слоёв проверяет `uv run lint-imports` (контракты в `pyproject.toml [tool.importlinter]`: `cfg`/`services` → `parsers` → `infrastructure` → `domain`, только вниз), не-импортные маркеры — `tests/test_architecture_markers.py`.
 - Логи и чтение файлов лежат в инфраструктуре: `infrastructure/logging/log_message.py` (`log_msg`/`err_msg`/`warn_msg`/`print_log`), `infrastructure/data/file_reader.py`, `infrastructure/config/result_folder.py`.
 - Исключения домена (`CoreExceptionError`, `SupplierNotHavePricesError`, `make_raise`) — `src/domain/exceptions.py`; они не пишут логи сами, а отдают сообщение приёмнику (`domain/exception_log.py`), который назначает `init_cfg()` — реализация в `infrastructure/logging/exception_logging.py`.
 - Пути окружения (настройки, прайсы, результаты, логи) даёт порт `ConfigProvider` — `src/domain/protocols.py`; реализация по умолчанию `FileConfigProvider` (`src/infrastructure/config/`), тест-дуб `FakeConfigProvider` там же. Активный провайдер ставит `init_cfg()` в `src/cfg/__init__.py`; читать — `get_config_provider()` из `src/domain/config_context.py`. `MainConfig` больше нет.

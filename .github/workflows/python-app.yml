@@ -36,5 +36,7 @@ jobs:
         run: uv run flake8 .
       - name: Check types with mypy
         run: uv run mypy .
+      - name: Check import layers with import-linter
+        run: uv run lint-imports
       - name: Find unused code with vulture
         run: uv run vulture
