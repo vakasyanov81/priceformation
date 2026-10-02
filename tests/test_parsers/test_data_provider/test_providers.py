@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from core.exceptions import CoreExceptionError
-from core.parse_paths import ParsePaths
 from parsers.data_provider.black_list import BlackListProviderBase, BlackListProviderFromUserConfig
 from parsers.data_provider.vendor_list import (
     VendorListConfigFileError,
@@ -14,8 +13,6 @@ from parsers.data_provider.vendor_list import (
 )
 
 _TO_LOG = 'to_log'
-_PATHS = ParsePaths(file_prices_folder='/prices', user_config_folder='/cfg', result_folder='/prices/result')
-_GET_PATHS = 'parsers.data_provider.black_list.get_parse_paths'
 
 
 def test_black_list_base_raises() -> None:
@@ -29,10 +26,7 @@ def test_black_list_masks_base_raises() -> None:
 
 
 def test_black_list_from_config() -> None:
-    with (
-        patch('parsers.data_provider.black_list.read_file', return_value='a\nb\n'),
-        patch(_GET_PATHS, return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.black_list.read_file', return_value='a\nb\n'):
         provider = BlackListProviderFromUserConfig()
         assert provider.get_black_list_data() == ['a', 'b']
         assert provider.get_stop_words_data() == []
@@ -40,10 +34,7 @@ def test_black_list_from_config() -> None:
 
 def test_black_list_from_config_splits_masks() -> None:
     raw = 'exact title\n*некондиция*\n*2 сорт*\n'
-    with (
-        patch('parsers.data_provider.black_list.read_file', return_value=raw),
-        patch(_GET_PATHS, return_value=_PATHS),
-    ):
+    with patch('parsers.data_provider.black_list.read_file', return_value=raw):
         provider = BlackListProviderFromUserConfig()
         assert provider.get_black_list_data() == ['exact title']
         assert provider.get_stop_words_data() == ['*некондиция*', '*2 сорт*']

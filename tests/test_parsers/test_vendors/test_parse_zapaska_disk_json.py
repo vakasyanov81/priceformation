@@ -5,7 +5,7 @@ tests for zapaska vendor after raw-parser process
 import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
-from cfg.main import get_config
+from core.config_provider import get_config_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -38,7 +38,7 @@ class TestParseZapaskaDiskJSON:
     def test_parse(self) -> None:
         """check all field for one price-row"""
 
-        root = get_config()().project_root
+        root = get_config_provider().project_root
         parsed_items: list[RowItem] = get_fake_parser([f'{root}/tests/test_parsers/fixtures/zapaska_disk.json']).parse()
 
         res = parsed_items[0]

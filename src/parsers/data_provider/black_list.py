@@ -4,8 +4,8 @@ black list provider
 
 from fnmatch import fnmatchcase
 
+from core.config_provider import get_config_provider
 from core.file_reader import read_file
-from core.parse_paths import get_parse_paths
 
 _CONFIG_FILE = 'black_list'
 _MASK_WILDCARD = '*'
@@ -55,7 +55,7 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
         return self._load_entries()[1]
 
     def _load_entries(self) -> tuple[list[str], list[str]]:
-        raw = read_file(get_parse_paths().config_file(_CONFIG_FILE))
+        raw = read_file(get_config_provider().config_file(_CONFIG_FILE))
         return split_exact_and_masks(self.split_and_filtration(raw))
 
     @classmethod

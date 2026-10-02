@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Protocol
 
-from core.parse_paths import get_parse_paths
+from core.config_provider import get_config_provider
 
 
 class PriceSource(Protocol):
@@ -18,7 +18,7 @@ class FilePricesSource:
     """Прайсы на диске: glob шаблонов в file_prices/<folder_name>/."""
 
     def list_files(self, folder_name: str, templates: list[str]) -> list[str]:
-        supplier_folder = Path(get_parse_paths().file_prices_folder) / folder_name
+        supplier_folder = Path(get_config_provider().price_folder(folder_name))
         return _glob_price_files(supplier_folder, templates)
 
 

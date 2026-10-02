@@ -5,7 +5,7 @@ import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
-from core.parse_paths import get_parse_paths
+from core.config_provider import get_config_provider
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.supplier_price_errors import (
     InvalidPriceExtensionError,
@@ -71,7 +71,7 @@ def _job_for(
 
 
 def _destination(source: Path, folder: str) -> Path:
-    dest_dir = Path(get_parse_paths().file_prices_folder) / folder
+    dest_dir = Path(get_config_provider().price_folder(folder))
     return dest_dir / (_PRICE_STEM + source.suffix.lower())
 
 

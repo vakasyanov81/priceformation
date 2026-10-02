@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from core.exceptions import CoreExceptionError
-from core.parse_paths import ParsePaths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import extract_markup_rules
 from parsers.data_provider.markup_rules import (
@@ -21,10 +21,9 @@ _PERCENT_ALT = 0.15
 _PREFERRED = 0.1
 _RULE_MAX = 50
 _MISSING_FILE = '/no'
-_STK_RULES_PATH = '/cfg/stk_markup_rules.json'
+_STK_RULES_FILE = 'stk_markup_rules.json'
+_MARKUP_RULES_FILE = 'markup_rules.json'
 _MISSING_MSG = r'Filed to read vendor \(stk\) settings'
-_PATHS = ParsePaths(file_prices_folder='/prices', user_config_folder='/cfg', result_folder='/prices/result')
-_GET_PATHS = 'parsers.data_provider.markup_rules.get_parse_paths'
 
 
 def test_markup_rules_base() -> None:
@@ -34,16 +33,14 @@ def test_markup_rules_base() -> None:
         provider.get_markup_data()
 
 
-def test_markup_path_with_supplier() -> None:
+def test_markup_path_with_supplier(fake_config_provider: FakeConfigProvider) -> None:
     provider = MarkupRulesProviderFromUserConfig('stk')
-    with patch(_GET_PATHS, return_value=_PATHS):
-        assert provider.get_file_path() == _STK_RULES_PATH
+    assert provider.get_file_path() == fake_config_provider.config_file(_STK_RULES_FILE)
 
 
-def test_markup_path_default() -> None:
+def test_markup_path_default(fake_config_provider: FakeConfigProvider) -> None:
     provider = MarkupRulesProviderFromUserConfig()
-    with patch(_GET_PATHS, return_value=_PATHS):
-        assert provider.get_file_path() == '/cfg/markup_rules.json'
+    assert provider.get_file_path() == fake_config_provider.config_file(_MARKUP_RULES_FILE)
 
 
 def test_markup_missing_file() -> None:
@@ -61,14 +58,12 @@ def test_markup_missing_file() -> None:
     mock_read.assert_called_once_with(_MISSING_FILE)
 
 
-def test_load_markup_reads_file_path() -> None:
+def test_load_markup_reads_file_path(fake_config_provider: FakeConfigProvider) -> None:
     provider = MarkupRulesProviderFromUserConfig('stk')
-    with (
-        patch(_GET_PATHS, return_value=_PATHS),
-        patch('parsers.data_provider.markup_rules.read_file', return_value='{}') as mock_read,
-    ):
+    rules_path = fake_config_provider.config_file(_STK_RULES_FILE)
+    with patch('parsers.data_provider.markup_rules.read_file', return_value='{}') as mock_read:
         assert provider.get_markup_data() == {}
-        mock_read.assert_called_once_with(_STK_RULES_PATH)
+        mock_read.assert_called_once_with(rules_path)
 
 
 def test_rule_defaults_when_keys_missing() -> None:

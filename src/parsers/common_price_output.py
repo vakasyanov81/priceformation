@@ -5,7 +5,7 @@ Make parse all price and make inner and drom prices
 from pathlib import Path
 from typing import Any, Protocol, cast
 
-from core.parse_paths import get_parse_paths
+from core.config_provider import get_config_provider
 from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
@@ -99,7 +99,7 @@ class CommonPriceOut:
     ) -> str:
         """Записать файл шаблона (xlsx или jsonl) и вернуть путь."""
         raw_rows = _to_raw_dicts(rows)
-        folder = get_parse_paths().result_folder
+        folder = get_config_provider().result_folder()
         if as_jsonl:
             return write_template_jsonl(raw_rows, template, folder)
         writer = self.xls_writer(

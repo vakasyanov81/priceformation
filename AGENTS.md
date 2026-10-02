@@ -22,6 +22,7 @@
 ## Тесты
 - Параметры из `pyproject.toml [tool.pytest.ini_options]`: `-n=2` (xdist), branch-покрытие, html/xml отчёты. `pytest-testmon` доступен, но активируется только флагом `--testmon`.
 - `src/parsers/registry.py` держит глобальный `_registry` — тесты не должны чистить его без restore (`tests/test_parsers/test_registry.py`).
+- Пути окружения в тестах подменяются фикстурой `fake_config_provider` (временная папка), а автофикстура `_config_provider_restored` возвращает боевой провайдер после теста.
 - Интеграционные тесты (`integration_tests/`) и модульные делят общий `parse_config/`; эталонные конфиги — в `tests/parse_config_example/`. STK без `stk_markup_rules.json` в `parse_config/` при разборе падает с ошибкой чтения.
 
 ## Данные (не код)
@@ -30,6 +31,7 @@
 - `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски.
 
 ## Архитектура
+- Пути окружения (настройки, прайсы, результаты, логи) даёт порт `ConfigProvider` — `src/domain/protocols.py`; реализация по умолчанию `FileConfigProvider` (`src/infrastructure/config/`), тест-дуб `FakeConfigProvider` там же. Активный провайдер ставит `init_cfg()` в `src/cfg/__init__.py`; читать — `get_config_provider()` из `src/core/config_provider.py`. `MainConfig` больше нет.
 - Вендоры регистрируются декоратором `@register_vendor(code, markup_policy=...)`; код реестра — `src/parsers/registry.py`. Список вендоров для импорта — один, `_VENDORS_TO_IMPORT` в registry; `all_vendors.py` — чистая делегация.
 - Политики наценки — `src/parsers/base_parser/markup_policy.py`. Цепочка: `CommonPrice.parse_all_vendors()` → `CommonPriceGrouper` → шаблоны writer (`for_inner` / `for_drom` / `for_full`).
 - Стиль: чёрные, line-length 120, кавычки одинарные (`skip-string-normalization`). Комментарии и docstring — на русском. `tasks/PLAN.md` — план рефакторинга (registry, DI, services, pydantic).

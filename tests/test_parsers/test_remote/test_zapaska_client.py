@@ -8,7 +8,7 @@ import pytest
 
 from cfg.zapaska_api import ZapaskaApiConfig
 from core.exceptions import CoreExceptionError
-from core.parse_paths import ParsePaths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.remote.zapaska_client import (
     ZapaskaApiConnectionError,
     basic_auth,
@@ -26,11 +26,7 @@ _GET_DISK_URL = '/API/hs/V2/GetDisk'
 _HTTPS = 'parsers.remote.zapaska_client.HTTPSConnection'
 _GET_DATA = 'parsers.remote.zapaska_client.get_data'
 _API = ZapaskaApiConfig(host=_TEST_HOST, login='u', password=_TEST_SECRET)
-_PATHS = ParsePaths(
-    file_prices_folder='/prices',
-    user_config_folder='/cfg',
-    result_folder='/result',
-)
+_VENDOR_FOLDER = 'zapaska'
 
 
 def test_basic_auth_header() -> None:
@@ -92,14 +88,12 @@ def test_download_catalogs_writes_tire_and_disk(tmp_path: Path) -> None:
     assert (dest / 'disk.json').read_text(encoding='utf-8') == '{"disks": true}'
 
 
-def test_load_remote_vendor_data_uses_parse_paths() -> None:
-    with (
-        patch('parsers.remote.zapaska_client.get_parse_paths', return_value=_PATHS),
-        patch('parsers.remote.zapaska_client.download_catalogs') as mock_download,
-    ):
+def test_load_remote_vendor_data_uses_config_provider(fake_config_provider: FakeConfigProvider) -> None:
+    with patch('parsers.remote.zapaska_client.download_catalogs') as mock_download:
         load_remote_vendor_data(api=_API)
 
-    mock_download.assert_called_once_with(dest_dir=Path('/prices') / 'zapaska', api=_API)
+    dest_dir = Path(fake_config_provider.price_folder(_VENDOR_FOLDER))
+    mock_download.assert_called_once_with(dest_dir=dest_dir, api=_API)
 
 
 def _https_mock(*, body: bytes | None = None, error: Exception | None = None) -> MagicMock:

@@ -5,9 +5,9 @@ markup rules provider
 import json
 from typing import Any, NamedTuple, cast
 
+from core.config_provider import get_config_provider
 from core.exceptions import CoreExceptionError
 from core.file_reader import read_file
-from core.parse_paths import get_parse_paths
 
 _CONFIG_FILE = 'markup_rules.json'
 
@@ -108,4 +108,4 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
         file_name = _CONFIG_FILE
         if self.supplier_name:
             file_name = f'{self.supplier_name}_{_CONFIG_FILE}'
-        return get_parse_paths().config_file(file_name)
+        return get_config_provider().config_file(file_name)

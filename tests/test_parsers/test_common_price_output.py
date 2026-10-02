@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.parse_paths import get_parse_paths
+from core.config_provider import get_config_provider
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from parsers.writer.jsonl_writer import RESULT_META_FILE
@@ -22,7 +22,7 @@ _REPORT_PATH = 'file_prices/result/doubles.xlsx'
 
 
 def _result_folder() -> str:
-    return get_parse_paths().result_folder
+    return get_config_provider().result_folder()
 
 
 def test_nomenclature_title_correction() -> None:

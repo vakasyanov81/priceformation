@@ -5,8 +5,8 @@ title aliases provider
 import json
 from typing import Any
 
+from core.config_provider import get_config_provider
 from core.file_reader import read_file
-from core.parse_paths import get_parse_paths
 
 _CONFIG_FILE = 'title_aliases.json'
 
@@ -44,6 +44,6 @@ class TitleAliasesProviderFromUserConfig(TitleAliasesProviderBase):
 
     def get_aliases(self) -> dict[str, Any]:
         """Read JSON and invert map for this supplier name."""
-        raw: str = read_file(get_parse_paths().config_file(_CONFIG_FILE))
+        raw: str = read_file(get_config_provider().config_file(_CONFIG_FILE))
         payload: Any = json.loads(raw) or {}
         return invert_title_aliases(payload.get(self._supplier_name) or {})

@@ -1,9 +1,12 @@
 """tests for log_message helpers beyond print_log"""
 
+import datetime
 import logging
+from pathlib import Path
 from unittest.mock import patch
 
 from cfg import init_cfg
+from core.config_provider import get_config_provider
 from core.log_message import err_msg, log_msg, log_to_file, warn_msg
 from core.log_paths import LogPaths, LogPathsNotConfiguredError, configure_log_paths, get_log_paths
 from core.log_resolve import (
@@ -11,7 +14,7 @@ from core.log_resolve import (
     resolve_log_method,
     resolve_log_path,
 )
-from core.parse_paths import get_parse_paths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 
 _UNKNOWN_LEVEL = 999
 _UNKNOWN_METHOD_LEVEL = 12345
@@ -42,16 +45,27 @@ def test_resolve_log_path_by_level() -> None:
 
 
 def test_init_cfg_configures_log_paths() -> None:
-    """init_cfg передаёт пути логов и parse_config в core, без импорта cfg из core."""
-    compiler = init_cfg()
+    """init_cfg передаёт провайдер путей и логи в core, без импорта cfg из core."""
+    provider = init_cfg()
+    log_folder = provider.log_folder()
+    today = datetime.date.today()
     paths = get_log_paths()
-    assert paths.folder == compiler.main.log_folder_path
-    assert paths.log_file == compiler.main.current_log_file_path
-    assert paths.err_file == compiler.main.current_err_log_file_path
-    parse_paths = get_parse_paths()
-    assert parse_paths.user_config_folder == compiler.main.user_config_folder_path
-    assert parse_paths.file_prices_folder.endswith(compiler.main.folder_file_prices)
-    assert parse_paths.result_folder == compiler.main.result_folder_path
+    assert paths.folder == log_folder
+    assert paths.log_file == f'{log_folder}/log_{today}.log'
+    assert paths.err_file == f'{log_folder}/error_{today}.log'
+    assert get_config_provider() is provider
+
+
+def test_init_cfg_keeps_given_provider(tmp_path: Path) -> None:
+    """переданный провайдер становится активным, файлы логов — в его папке."""
+    previous = get_config_provider()
+    provider = FakeConfigProvider(tmp_path)
+    try:
+        assert init_cfg(provider) is provider
+        assert get_config_provider() is provider
+        assert get_log_paths().folder == provider.log_folder()
+    finally:
+        init_cfg(previous)
 
 
 def test_resolve_log_method_mapping() -> None:

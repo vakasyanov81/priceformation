@@ -7,8 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from cfg import init_cfg
-from cfg.main import MainConfig
-from core.parse_paths import ParsePaths, configure_parse_paths
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser_config import make_parse_config
 from parsers.vendors.four_tochki.four_tochki_sheet1 import (
     FourTochkiParser1Sheet,
@@ -21,11 +20,9 @@ from parsers.vendors.four_tochki.four_tochki_sheet2 import (
 from run import run_make_price_by_supplier
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
-_PRICES_REL = 'integration_tests/file_prices_for_test'
+_PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
 _RESULT_DIR = _INTEGRATION_ROOT / 'result_for_test'
 _PARSE_CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
-_PARSE_CONFIG = f'{_PARSE_CONFIG_DIR.as_posix()}/'
-_RESULT_PATH = f'{_RESULT_DIR.as_posix()}/'
 
 
 def _four_tochki_vendors() -> list[tuple[type, object]]:
@@ -45,19 +42,20 @@ def _clear_result_dir() -> None:
 
 
 @pytest.fixture
-def _example_parse_paths() -> Iterator[None]:
-    configure_parse_paths(
-        ParsePaths(
-            file_prices_folder=str(Path(MainConfig().project_root) / _PRICES_REL),
-            user_config_folder=_PARSE_CONFIG,
-            result_folder=_RESULT_PATH,
+def _example_config() -> Iterator[None]:
+    init_cfg(
+        FakeConfigProvider(
+            _INTEGRATION_ROOT,
+            config_folder=_PARSE_CONFIG_DIR,
+            prices_folder=_PRICES_DIR,
+            result_folder=_RESULT_DIR,
         ),
     )
     yield
     init_cfg()
 
 
-def test_run_make_price_four_tochki_real(_example_parse_paths: None) -> None:
+def test_run_make_price_four_tochki_real(_example_config: None) -> None:
     """разбор реального прайса four_tochki и запись результатов в result_for_test."""
     _clear_result_dir()
 

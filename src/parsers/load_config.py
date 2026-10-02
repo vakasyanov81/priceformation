@@ -4,7 +4,7 @@ import json
 import shutil
 from pathlib import Path
 
-from core.parse_paths import get_parse_paths
+from core.config_provider import get_config_provider
 from parsers.load_config_errors import (
     ConfigFileNotFoundError,
     InvalidConfigJsonError,
@@ -50,7 +50,7 @@ def _files_in_folder(folder: Path) -> list[Path]:
 
 def _destination(source: Path) -> Path:
     name = source.stem + source.suffix.lower()
-    return Path(get_parse_paths().user_config_folder) / name
+    return Path(get_config_provider().config_file(name))
 
 
 def _ensure_allowed(source: Path) -> None:
