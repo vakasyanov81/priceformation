@@ -4,7 +4,7 @@ read file logic
 
 from pathlib import Path
 
-from .wrappers import logging
+from infrastructure.logging.wrappers import logging
 
 
 @logging(label='...reading file...')

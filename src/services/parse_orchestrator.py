@@ -11,7 +11,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, cast
 
-from core import err_msg, log_msg, warn_msg
+from infrastructure.logging.log_message import err_msg, log_msg, warn_msg
 from parsers.all_vendors import all_vendors, vendor_config_is_enabled
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration

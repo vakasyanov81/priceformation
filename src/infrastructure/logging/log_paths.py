@@ -1,4 +1,4 @@
-"""Log file locations; configured from cfg, never imported from it."""
+"""Log file locations; configured by the composition root, never imported from it."""
 
 import datetime
 from dataclasses import dataclass

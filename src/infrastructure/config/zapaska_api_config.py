@@ -4,8 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from core.config_provider import get_config_provider
-from core.exceptions import CoreExceptionError
+from domain.config_context import get_config_provider
+from domain.exceptions import CoreExceptionError
 
 _DEFAULT_HOST = 'ka2.sibzapaska.ru:16500'
 _ENV_LOGIN = 'ZAPASKA_API_LOGIN'

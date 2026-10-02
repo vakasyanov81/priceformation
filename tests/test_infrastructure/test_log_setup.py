@@ -1,13 +1,11 @@
-"""
-test init_log
-"""
+"""tests for the log folder setup"""
 
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from core.init_log import (
+from infrastructure.logging.log_setup import (
     create_logs_folder,
     create_logs_folder_if_not_exists,
     folder_is_exists,
@@ -20,7 +18,7 @@ _FOLDER = '~/some_folder/'
 def test_init_log() -> None:
     """test init log"""
 
-    with patch('core.init_log.create_logs_folder_if_not_exists') as mock_create_logs_folder:
+    with patch('infrastructure.logging.log_setup.create_logs_folder_if_not_exists') as mock_create_logs_folder:
         init_log(_FOLDER)
 
     assert mock_create_logs_folder.call_count == 1
@@ -47,7 +45,7 @@ def test_folder_is_exists(mock_os_isdir: Any, folder_is_exist: Any) -> None:
     assert folder_exists == folder_is_exist
 
 
-@patch('core.init_log.folder_is_exists')
+@patch('infrastructure.logging.log_setup.folder_is_exists')
 @pytest.mark.parametrize('folder_is_exist, folder_created', [(True, False), (False, True)])
 def test_create_logs_folder_if_not_exists(
     mock_folder_is_exists: Any, folder_is_exist: Any, folder_created: Any
@@ -56,7 +54,7 @@ def test_create_logs_folder_if_not_exists(
 
     mock_folder_is_exists.return_value = folder_is_exist
 
-    with patch('core.init_log.create_logs_folder', return_value=True):
+    with patch('infrastructure.logging.log_setup.create_logs_folder', return_value=True):
         folder_created_flag = create_logs_folder_if_not_exists(_FOLDER)
 
     assert mock_folder_is_exists.call_count == 1

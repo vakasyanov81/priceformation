@@ -6,8 +6,8 @@ import json
 from functools import lru_cache
 from typing import Any, cast
 
-from core.config_provider import get_config_provider
-from core.file_reader import read_file
+from domain.config_context import get_config_provider
+from infrastructure.data.file_reader import read_file
 
 _CONFIG_FILE = 'manufacturer_aliases.json'
 

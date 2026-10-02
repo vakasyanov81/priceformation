@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.async_utils import try_call
-from core.exceptions import CoreExceptionError, SupplierNotHavePricesError
+from domain.exceptions import CoreExceptionError, SupplierNotHavePricesError
+from services.async_utils import try_call
 
 
 def test_try_call_success() -> None:
@@ -22,8 +22,8 @@ def test_try_call_supplier_error_exits() -> None:
         method = MagicMock(side_effect=SupplierNotHavePricesError('нет прайса'))
 
     with (
-        patch('core.async_utils.print_log') as mock_log,
-        patch('core.async_utils.sys.exit') as mock_exit,
+        patch('services.async_utils.print_log') as mock_log,
+        patch('services.async_utils.sys.exit') as mock_exit,
     ):
         try_call(method)
         mock_log.assert_called_once()
@@ -35,7 +35,7 @@ def test_try_call_keyboard_interrupt() -> None:
     """KeyboardInterrupt завершает процесс с кодом 0"""
     method = MagicMock(side_effect=KeyboardInterrupt)
 
-    with patch('core.async_utils.sys.exit') as mock_exit:
+    with patch('services.async_utils.sys.exit') as mock_exit:
         try_call(method)
         mock_exit.assert_called_once_with(0)
 
@@ -46,8 +46,8 @@ def test_try_call_core_error() -> None:
         method = MagicMock(side_effect=CoreExceptionError('понятная ошибка'))
 
     with (
-        patch('core.async_utils.print_log') as mock_log,
-        patch('core.async_utils.sys.exit') as mock_exit,
+        patch('services.async_utils.print_log') as mock_log,
+        patch('services.async_utils.sys.exit') as mock_exit,
     ):
         try_call(method)
         mock_log.assert_called_once()

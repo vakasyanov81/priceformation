@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from core.parse_paths import clear_result_folder
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.config.result_folder import clear_result_folder
 
 
 def test_clear_result_folder_removes_contents(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:

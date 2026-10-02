@@ -4,13 +4,11 @@ tests for zapaska (json) tire vendor after raw-parser process
 
 import json
 from pathlib import Path
-from typing import Any
-from unittest import skip
 
 import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -101,23 +99,3 @@ class TestParseZapaskaTireJSON:
 
         assert parsed_items == []
         assert parser.unknown_category_skips == ['SUV']
-
-    @pytest.mark.parametrize(
-        'prices',
-        [
-            (100, 400, 400),
-            (1000, 1100, 1150),
-            (10000, 11000, 11000),
-            (20000, 20020, 22410),
-            (20000, 25000, 25000),
-            (60000, 60100, 67200),
-        ],
-    )
-    @skip('markup parametrize not ready')
-    def test_markup(self, prices: Any) -> None:
-        """test calculation price-markup"""
-        _price_opt, _price_recommended, price_markup = prices
-        root = get_config_provider().project_root
-        parser = get_fake_parser([f'{root}/{_FIXTURE_TIRE}'])
-        parsed_items: list[RowItem] = parser.parse()
-        assert parsed_items[0].price_markup == price_markup

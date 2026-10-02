@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
-from core.exceptions import CoreExceptionError
+from domain.exceptions import CoreExceptionError
 from parsers.xls_reader import IXlsReader
 
 type JsonRow = dict[str, Any]

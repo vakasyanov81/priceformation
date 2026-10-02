@@ -67,7 +67,7 @@ def test_parse() -> None:
 def test_parse_with_invalid_item() -> None:
     """one invalid item is skipped"""
 
-    with patch('core.log_message.log_msg') as mock_log_msg:
+    with patch('infrastructure.logging.log_message.log_msg') as mock_log_msg:
         parsed_items: list[RowItem] = get_fake_parser(four_tochki_invalid_item_result()).parse()
     assert len(parsed_items) == 1
     assert mock_log_msg.call_count == 2

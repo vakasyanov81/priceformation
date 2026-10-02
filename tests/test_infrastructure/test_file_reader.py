@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from core.file_reader import read_file, try_read_file
+from infrastructure.data.file_reader import read_file, try_read_file
 
 
 def test_read_file(tmp_path: Any) -> None:

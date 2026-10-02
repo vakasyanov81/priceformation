@@ -10,9 +10,9 @@ from typing import Literal, TextIO
 from colorama import init
 from termcolor import colored
 
-from core.init_log import init_log
-from core.log_paths import get_log_paths
-from core.log_resolve import get_log_level_text, resolve_log_method, resolve_log_path
+from infrastructure.logging.log_paths import get_log_paths
+from infrastructure.logging.log_resolve import get_log_level_text, resolve_log_method, resolve_log_path
+from infrastructure.logging.log_setup import init_log
 
 init()
 

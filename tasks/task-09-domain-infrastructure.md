@@ -100,8 +100,49 @@ class FileConfigProvider:
 
 ## Критерии готовности
 
-- [ ] `domain/` не имеет импортов из `core/`, `infrastructure/` или IO-библиотек.
-- [ ] `infrastructure/` не имеет импортов из `parsers/` (только из `domain/`).
-- [ ] Все IO-операции проходят через порты (protocols).
-- [ ] `cfg/main.py` удалён или помечен deprecated.
-- [ ] `core/exceptions.py` удалён или является re-export из `domain/exceptions.py`.
+- [x] `domain/` не имеет импортов из `core/`, `infrastructure/` или IO-библиотек.
+- [x] `infrastructure/` не имеет импортов из `parsers/` (только из `domain/`).
+- [x] Все IO-операции проходят через порты (protocols).
+- [x] `cfg/main.py` удалён или помечен deprecated.
+- [x] `core/exceptions.py` удалён или является re-export из `domain/exceptions.py`.
+
+## Что сделано (2026-10-02)
+
+Пакет `src/core/` удалён целиком, модули разложены по слоям:
+
+| Откуда | Куда | Что |
+| --- | --- | --- |
+| `core/exceptions.py` | `domain/exceptions.py` | `CoreExceptionError`, `SupplierNotHavePricesError`, `make_raise` |
+| `core/config_provider.py` | `domain/config_context.py` | `get_config_provider()` / `set_config_provider()` |
+| `core/parse_paths.py` | `infrastructure/config/result_folder.py` | `clear_result_folder()` |
+| `core/file_reader.py` | `infrastructure/data/file_reader.py` | `read_file`, `try_read_file` |
+| `core/log_message.py` | `infrastructure/logging/log_message.py` | `log_msg`/`err_msg`/`warn_msg`/`print_log` |
+| `core/log_paths.py` | `infrastructure/logging/log_paths.py` | `LogPaths`, `configure_log_paths` |
+| `core/log_resolve.py` | `infrastructure/logging/log_resolve.py` | уровни, пути и методы логирования |
+| `core/init_log.py` | `infrastructure/logging/log_setup.py` | `init_log` и создание папки логов |
+| `core/wrappers.py` | `infrastructure/logging/wrappers.py` | декоратор `@logging` |
+| `core/async_utils.py` | `services/async_utils.py` | `try_call` — перевод ошибок домена в код возврата |
+
+Новые файлы:
+
+- `domain/exception_log.py` — приёмник сообщений об исключениях (`ExceptionLogSink`,
+  `set_exception_log_sink`, `log_exception`). Домен больше не импортирует логи и не
+  знает, куда пишет: `CoreExceptionError.to_log` собирает сообщение со стеком и
+  отдаёт приёмнику.
+- `infrastructure/logging/exception_logging.py` — `write_exception_log`: пишет в
+  лог-файл, а при недоступном логе — в `logging.error`. Регистрируется в
+  `cfg.init_cfg()`.
+
+Правки по шагам:
+
+- `import core` в `src/parsers/xls_reader.py` заменён на прямой импорт из
+  `domain.exceptions`; попутно `MaxRowsReached` → `MaxRowsReachedError` (ruff N818).
+- `init_cfg()` дополнительно назначает приёмник логов исключений.
+- Тесты `tests/test_core/` разложены по слоям: `tests/test_domain/`,
+  `tests/test_infrastructure/`, `tests/test_services/test_async_utils.py`.
+- Проверки границ слоёв живут в `tests/test_layer_boundaries.py`; добавлены запреты
+  `infrastructure → parsers/cfg` и проверка, что `src/core/` больше нет.
+- Конфиги обновлены: `[tool.mutmut] do_not_mutate` и `per-file-ignores` в `setup.cfg`.
+
+Не в объёме задачи (остаётся за другими тикетами): `cfg/zapaska_api.py` читает `.env`
+напрямую — перенос чтения env за порт отдельная задача.

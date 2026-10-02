@@ -1,10 +1,10 @@
-"""tests for core exceptions"""
+"""tests for domain exceptions"""
 
 from unittest.mock import patch
 
 import pytest
 
-from core.exceptions import (
+from domain.exceptions import (
     CoreExceptionError,
     SupplierNotHavePricesError,
     make_raise,
@@ -53,32 +53,20 @@ def test_supplier_error_type() -> None:
         assert isinstance(SupplierNotHavePricesError('empty'), CoreExceptionError)
 
 
-def test_to_log_writes_error_log() -> None:
-    """to_log пишет stack-trace в лог-файл, не в консоль"""
-    with patch('core.exceptions.err_msg') as mock_err:
+def test_to_log_passes_message_with_stack_to_sink() -> None:
+    """to_log отдаёт приёмнику сообщение и стек вызовов"""
+    with patch('domain.exceptions.log_exception') as mock_log:
         CoreExceptionError.to_log('trace-me')
-        mock_err.assert_called_once()
-        assert 'trace-me' in mock_err.call_args.args[0]
-        assert mock_err.call_args.kwargs['need_print_log'] is False
+
+    mock_log.assert_called_once()
+    assert 'trace-me' in mock_log.call_args.args[0]
+    assert 'test_to_log_passes_message_with_stack_to_sink' in mock_log.call_args.args[0]
 
 
-def test_to_log_fallback_without_log_paths() -> None:
-    """если лог-файл недоступен, пишем в logging.error"""
-    with (
-        patch('core.exceptions.err_msg', side_effect=RuntimeError('Log paths are not configured')),
-        patch('core.exceptions.logging.error') as mock_err,
-    ):
-        CoreExceptionError.to_log('trace-me')
-        mock_err.assert_called_once()
-        assert 'trace-me' in mock_err.call_args.args[0]
+def test_to_log_without_message() -> None:
+    """без сообщения приёмник всё равно получает стек"""
+    with patch('domain.exceptions.log_exception') as mock_log:
+        CoreExceptionError.to_log(None)
 
-
-def test_to_log_fallback_on_os_error() -> None:
-    """ошибка записи лог-файла не должна пробрасываться"""
-    with (
-        patch('core.exceptions.err_msg', side_effect=PermissionError('denied')),
-        patch('core.exceptions.logging.error') as mock_err,
-    ):
-        CoreExceptionError.to_log('trace-me')
-        mock_err.assert_called_once()
-        assert 'trace-me' in mock_err.call_args.args[0]
+    mock_log.assert_called_once()
+    assert 'None' in mock_log.call_args.args[0]

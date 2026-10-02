@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from core.config_provider import get_config_provider
-from parsers.xls_reader import MaxRowsReached, XlsReader
+from domain.config_context import get_config_provider
+from parsers.xls_reader import MaxRowsReachedError, XlsReader
 from parsers.xls_reader_row import __SKIPPED_EMPTY_ROW__
 
 _PROJECT_ROOT = get_config_provider().project_root
@@ -123,7 +123,7 @@ def test_next_row_values_allows_exactly_max_rows() -> None:
     sheet = [['a'], ['b'], ['c']]
     assert reader.next_row_values(sheet) == ['a']
     assert reader.next_row_values(sheet) == ['b']
-    with pytest.raises(MaxRowsReached):
+    with pytest.raises(MaxRowsReachedError):
         reader.next_row_values(sheet)
 
 
@@ -158,7 +158,7 @@ def test_parse_resets_skipped_empty_rows() -> None:
         return [[['a'], ['b']]]
 
     reader.sheets = fake_sheets  # type: ignore[method-assign]
-    with pytest.raises(MaxRowsReached):
+    with pytest.raises(MaxRowsReachedError):
         reader.parse([0])
     assert reader.skipped_empty_rows == 0
 

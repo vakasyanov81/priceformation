@@ -5,8 +5,8 @@ import sys
 from collections.abc import Callable
 from typing import Any
 
-from core.exceptions import CoreExceptionError, SupplierNotHavePricesError
-from core.log_message import print_log
+from domain.exceptions import CoreExceptionError, SupplierNotHavePricesError
+from infrastructure.logging.log_message import print_log
 
 
 def try_call(method: Callable[..., Any], **kwargs: Any) -> None:

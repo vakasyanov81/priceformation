@@ -180,11 +180,11 @@ uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 
 ```toml
 do_not_mutate = [
-    "src/core/wrappers.py",
-    "src/core/async_utils.py",
-    "src/core/log_message.py",
-    "src/core/log_resolve.py",
-    "src/core/init_log.py",
+    "src/infrastructure/logging/wrappers.py",
+    "src/services/async_utils.py",
+    "src/infrastructure/logging/log_message.py",
+    "src/infrastructure/logging/log_resolve.py",
+    "src/infrastructure/logging/log_setup.py",
     "src/parsers/base_parser/log_parser_process.py",
     # Фейки: мутируем их внутреннее состояние, а не тесты, которые их проверяют.
     "src/parsers/fake_xls_reader.py",

@@ -5,9 +5,9 @@ vendor list provider
 import json
 from typing import Any, NamedTuple, cast
 
-from core.config_provider import get_config_provider
-from core.exceptions import CoreExceptionError
-from core.file_reader import read_file
+from domain.config_context import get_config_provider
+from domain.exceptions import CoreExceptionError
+from infrastructure.data.file_reader import read_file
 
 _CONFIG_FILE = 'vendor_list.json'
 

@@ -28,6 +28,7 @@ dev = [
     "vulture==2.16",
     "bandit==1.9.4",
     "pip-audit==2.10.1",
+    "import-linter>=2.15",
 ]
 
 [build-system]
@@ -76,7 +77,7 @@ max-positional-args = 6
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
-"tests/test_cfg/test_zapaska_api.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
+"tests/test_infrastructure/test_zapaska_api_config.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "tests/test_parsers/test_remote/test_zapaska_client.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "integration_tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "integration_tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
@@ -86,7 +87,7 @@ max-positional-args = 6
 # I001 — keep merged from X import a, b as c to stay under flake8 WPS201 (18 imports).
 "src/parsers/base_parser/base_parser.py" = ["I001"]
 "src/parse_report.py" = ["T201"]
-"src/cfg/zapaska_api.py" = ["S105"]
+"src/infrastructure/config/zapaska_api_config.py" = ["S105"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
@@ -139,11 +140,11 @@ tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
 # Logging modules and call sites: tests do not assert log text.
 do_not_mutate = [
-    "src/core/wrappers.py",
-    "src/core/async_utils.py",
-    "src/core/log_message.py",
-    "src/core/log_resolve.py",
-    "src/core/init_log.py",
+    "src/infrastructure/logging/wrappers.py",
+    "src/services/async_utils.py",
+    "src/infrastructure/logging/log_message.py",
+    "src/infrastructure/logging/log_resolve.py",
+    "src/infrastructure/logging/log_setup.py",
     "src/parsers/base_parser/log_parser_process.py",
     # Тест-дубли: проверяем их снаружи, мутировать их внутреннее состояние смысла нет.
     "src/parsers/fake_xls_reader.py",
@@ -211,3 +212,50 @@ skips = ["B101"]
 [tool.pip-audit]
 # Audit the current environment (all dev+prod deps).
 # Vulnerability service: PyPI JSON API by default.
+
+[tool.importlinter]
+# Пакеты лежат в src/, но импортируются как верхний уровень (src в sys.path).
+root_packages = ["cfg", "domain", "infrastructure", "parsers", "services"]
+
+# Слои сверху вниз: композиционный корень → сервисы → парсеры → инфраструктура → домен.
+# Внутри одного слоя (cfg и services) импорты разрешены, между слоями — только вниз.
+[[tool.importlinter.contracts]]
+name = "Слои: cfg/services -> parsers -> infrastructure -> domain"
+type = "layers"
+layers = [
+    "cfg",
+    "services",
+    "parsers",
+    "infrastructure",
+    "domain",
+]
+broken_contract_guidance = "Импорт из слоя выше запрещён: развернуть зависимость или передать объект через параметр."
+
+# Строгая форма правил: domain — чистый слой без IO.
+[[tool.importlinter.contracts]]
+name = "Domain не зависит от инфраструктуры, парсеров, сервисов и композиционного корня"
+type = "forbidden"
+source_modules = ["domain"]
+forbidden_modules = ["infrastructure", "parsers", "services", "cfg"]
+broken_contract_guidance = "Домен не знает про внешние слои: описать порт в domain/protocols.py и внести реализацию в infrastructure."
+
+[[tool.importlinter.contracts]]
+name = "Инфраструктура не зависит от прикладных слоёв"
+type = "forbidden"
+source_modules = ["infrastructure"]
+forbidden_modules = ["parsers", "services", "cfg"]
+broken_contract_guidance = "Инфраструктура — адаптеры: прикладные слои вызывают её, а не наоборот."
+
+[[tool.importlinter.contracts]]
+name = "Парсеры не знают про композиционный корень и сервисы"
+type = "forbidden"
+source_modules = ["parsers"]
+forbidden_modules = ["cfg", "services"]
+broken_contract_guidance = "Зависимости парсера передаются аргументом или через порт домена; сборку делает src/cfg."
+
+[[tool.importlinter.contracts]]
+name = "Сервисы не зависят от композиционного корня"
+type = "forbidden"
+source_modules = ["services"]
+forbidden_modules = ["cfg"]
+broken_contract_guidance = "Настройки читать через get_config_provider() или инфраструктурный адаптер, а не импортом из cfg."

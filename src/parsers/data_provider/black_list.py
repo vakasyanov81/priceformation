@@ -4,8 +4,8 @@ black list provider
 
 from fnmatch import fnmatchcase
 
-from core.config_provider import get_config_provider
-from core.file_reader import read_file
+from domain.config_context import get_config_provider
+from infrastructure.data.file_reader import read_file
 
 _CONFIG_FILE = 'black_list'
 _MASK_WILDCARD = '*'

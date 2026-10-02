@@ -2,7 +2,7 @@
 logging parse process
 """
 
-from core.log_message import log_msg, warn_msg
+from infrastructure.logging.log_message import log_msg, warn_msg
 
 from .parse_statistic import ParseResultStatistic
 

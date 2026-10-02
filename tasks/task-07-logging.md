@@ -2,7 +2,7 @@
 
 ## Проблема
 
-В проекте используются глобальные функции `log_msg`, `err_msg`, `warn_msg` из `core.log_message`. Они:
+В проекте используются глобальные функции `log_msg`, `err_msg`, `warn_msg` из `infrastructure.logging.log_message`. Они:
 
 1. **Не иерархические** — нельзя настроить уровень логирования для конкретного модуля.
 2. **Смешивают ответственность** — функция и пишет в консоль, и в файл, и в JSON.
@@ -15,7 +15,7 @@
 ### 1. Переход на `logging.Logger` с именами `__name__`
 
 ```python
-# core/log_setup.py
+# infrastructure/logging/log_setup.py
 
 import logging
 
@@ -63,7 +63,7 @@ def set_json_mode(active: bool) -> None:
     _json_mode_active.set(active)
 ```
 
-### 4. `core/log_message.py` — удалить или оставить как фасад
+### 4. `infrastructure/logging/log_message.py` — удалить или оставить как фасад
 
 Если оставить — фасад должен просто проксировать в логгер:
 
@@ -74,7 +74,7 @@ def log_msg(msg: str, level=logging.INFO) -> None:
 
 ## План миграции
 
-1. Создать `core/log_setup.py` с настройкой логгера.
+1. Создать `infrastructure/logging/log_setup.py` с настройкой логгера.
 2. В `init_cfg()` вызывать `setup_logging()`.
 3. Пройти по всем модулям:
    - Добавить `logger = logging.getLogger(__name__)`
@@ -83,7 +83,7 @@ def log_msg(msg: str, level=logging.INFO) -> None:
    - Заменить `warn_msg(...)` → `logger.warning(...)`
 4. Переписать JSON-режим: вместо `set_print_quiet` — `logging.disable(logging.WARNING)` или свой Filter.
 5. Удалить `need_print_log` из вызовов (теперь это настройка handler'а).
-6. Удалить `core/log_message.py` (или оставить как deprecation wrapper).
+6. Удалить `infrastructure/logging/log_message.py` (или оставить как deprecation wrapper).
 7. Поправить тесты — заменить моки `log_msg` на проверки через `caplog`.
 
 ## Критерии готовности
@@ -92,4 +92,4 @@ def log_msg(msg: str, level=logging.INFO) -> None:
 - [ ] Все модули используют `logging.getLogger(__name__)`.
 - [ ] JSON-режим не выводит логи благодаря настройке handler'а, не через глобальный флаг.
 - [ ] Тесты проверяют логи через `caplog` (pytest built-in).
-- [ ] `core/log_message.py` удалён или помечен как deprecated.
+- [ ] `infrastructure/logging/log_message.py` удалён или помечен как deprecated.

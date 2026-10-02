@@ -28,6 +28,13 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
+      - id: lint-imports
+        name: import-linter
+        entry: uv run lint-imports
+        language: system
+        pass_filenames: false
+        types: [python]
+        always_run: true
       - id: vulture
         name: vulture
         entry: uv run vulture

@@ -3,9 +3,9 @@ Make parse all price and make inner and drom prices
 """
 
 from pathlib import Path
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
-from core.config_provider import get_config_provider
+from domain.config_context import get_config_provider
 from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
@@ -17,7 +17,6 @@ from parsers.writer.templates.all_templates import all_writer_templates, get_wri
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
-from services.service_provider import ServiceProvider
 
 
 class WriteDriverFactory(Protocol):
@@ -52,12 +51,12 @@ class CommonPriceOut:
         self,
         row_items: list[RowItem],
         *,
-        xls_writer: XlsWriterFactory | None = None,
-        write_driver: WriteDriverFactory | None = None,
+        xls_writer: XlsWriterFactory,
+        write_driver: WriteDriverFactory,
     ) -> None:
         """init"""
-        self.xls_writer = xls_writer or cast(XlsWriterFactory, ServiceProvider.resolve(XlsWriterFactory))
-        self.write_driver = write_driver or cast(WriteDriverFactory, ServiceProvider.resolve(WriteDriverFactory))
+        self.xls_writer = xls_writer
+        self.write_driver = write_driver
         self.row_items = row_items
 
     def nomenclature_title_correction(self) -> None:

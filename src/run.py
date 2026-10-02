@@ -23,12 +23,12 @@ JSON печатается в stdout, логи в этом режиме не вы
 import sys
 
 from cfg import init_cfg
-from core.async_utils import try_call
-from core.log_message import print_log
-from core.parse_paths import clear_result_folder
+from infrastructure.config.result_folder import clear_result_folder
+from infrastructure.logging.log_message import print_log
 from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
 from run_dialog import AnswerResult, ask_action
 from run_machine import fail_unknown_result_template, machine_json
+from services.async_utils import try_call
 from services.configure import configure_services
 from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator

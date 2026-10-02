@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 
-from core.log_message import print_log
+from infrastructure.logging.log_message import print_log
 from parsers.common_price_output import jsonl_output_files
 from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA

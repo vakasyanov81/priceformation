@@ -3,7 +3,7 @@
 from enum import Enum
 
 from cfg.color import Colors
-from core.log_message import print_log
+from infrastructure.logging.log_message import print_log
 
 
 class AnswerResult(Enum):
