@@ -10,7 +10,7 @@ from typing import Any
 from parsers.writer.jsonl_codes import VALUES_KEY, apply_value_codes, read_value_codes
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-from parsers.writer.xls_writer import PriceRow, get_value, make_exclude
+from parsers.writer.xls_writer import PriceRow, get_value, has_value, make_exclude
 
 RESULT_META_FILE = 'result_meta.json'
 _SEPARATORS = (',', ':')
@@ -98,7 +98,7 @@ def _compact_row(
     payload: dict[str, Any] = {}
     for column in columns:
         cell = get_value(column, product)
-        if cell is None:
+        if not has_value(cell):
             continue
         payload[name_to_key[ColumnHelper(column).name]] = cell
     return payload

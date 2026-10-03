@@ -51,6 +51,16 @@ class _TitleLastTemplate(IWriteTemplate):
     __FILE__ = 'title_last_{now}.xlsx'
 
 
+class _EmptyDefaultTemplate(IWriteTemplate):
+    """колонка с пустым default_value."""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [
+        {'Номенклатура': {'field': RowItem.title.name}},
+        {'Сезон': {'field': RowItem.season.name, 'default_value': ''}},
+    ]
+    __FILE__ = 'empty_default_{now}.xlsx'
+
+
 def _load_meta(folder: Path) -> dict[str, str]:
     loaded = json.loads((folder / RESULT_META_FILE).read_text(encoding='utf-8'))
     columns: dict[str, str] = {}
@@ -146,6 +156,21 @@ def test_jsonl_omits_null_columns(tmp_path: Path) -> None:
     path = write_template_jsonl([row], FixtureTemplate, str(tmp_path))
     assert _first_row(path) == {'1': _TITLE, '3': 4.0}
     assert _load_meta(tmp_path)['2'] == _PRICE_NAME
+
+
+def test_jsonl_omits_falsy_like_xlsx(tmp_path: Path) -> None:
+    """falsy-значение не пишется, как и пустая ячейка xlsx: состав полей один."""
+    path = write_template_jsonl(write_data, _EmptyDefaultTemplate, str(tmp_path))
+    assert _first_row(path) == {'1': _TITLE}
+    assert _load_meta(tmp_path) == {'1': 'Номенклатура', '2': 'Сезон'}
+
+
+def test_jsonl_omits_empty_string_value(tmp_path: Path) -> None:
+    """пустая строка в поле не превращается в ключ с пустым значением."""
+    row = {**write_data[0], 'price_recommended': ''}
+    path = write_template_jsonl([row], ForInner, str(tmp_path))
+    meta = _load_meta(tmp_path)
+    assert _meta_key(meta, 'Рекомендуемая Цена') not in _first_row(path)
 
 
 def test_jsonl_encodes_repeating_values(tmp_path: Path) -> None:

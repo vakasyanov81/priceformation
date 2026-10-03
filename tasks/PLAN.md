@@ -16,9 +16,9 @@
 | # | Задача | Кратко | Статус |
 |---|--------|--------|--------|
 | 3 | [Services layer](./task-03-services-layer.md) | Выделить слой оркестрации в `services/`: `ParseOrchestrator`, `PriceReportService`. Убрать бизнес-логику из `run.py` и `common_price.py`. | ✅ |
-| 4 | [Composition over Inheritance в BaseParser](./task-04-composition.md) | Заменить 6-уровневую иерархию наследования на композицию. `BaseParser` получает ридер, политику наценки, обработчик строк через конструктор. | ⬜ |
+| 4 | [Composition over Inheritance в BaseParser](./task-04-composition.md) | Заменить 6-уровневую иерархию наследования на композицию. `BaseParser` получает ридер, политику наценки, обработчик строк через конструктор. | ✅ |
 | 5 | [Value Objects для RowItem](./task-05-value-objects.md) | Разбить `RowItem` на композитные value objects: `TireDimensions`, `DiskParams`, `Pricing`. | ⬜ |
-| 6 | [Typed parser stats](./task-06-typed-stats.md) | Убрать `getattr(parser, "black_list_skips", 0)`. Ввести интерфейс `ParserStats`. | ⬜ |
+| 6 | [Typed parser stats](./task-06-typed-stats.md) | Убрать `getattr(parser, "black_list_skips", 0)`. Ввести интерфейс `ParserStats`. | ✅ |
 
 ## P2 — Перспективные (качество, тестируемость)
 

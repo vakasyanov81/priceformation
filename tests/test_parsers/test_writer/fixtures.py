@@ -5,7 +5,12 @@ fixtures for writer
 from typing import ClassVar
 
 from parsers.row_item.row_item import RowItem
-from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColors, WriteColumns
+from parsers.writer.templates.iwrite_template import (
+    IWriteTemplate,
+    WriteColors,
+    WriteColumns,
+    WriteExclude,
+)
 
 write_data = [
     {
@@ -76,4 +81,22 @@ class SkipColumnTemplate(IWriteTemplate):
     __COLUMNS__: ClassVar[WriteColumns] = [
         {'Скрытая': {'field': RowItem.title.name, 'skip': True}},
         {'Цена': {'field': RowItem.price_markup.name}},
+    ]
+
+
+class TwoRulesExcludeTemplate(FixtureTemplate):
+    """шаблон с двумя правилами exclude"""
+
+    __EXCLUDE__: ClassVar[WriteExclude] = {
+        RowItem.rest_count.name: [None, ''],
+        RowItem.season.name: ['лето'],
+    }
+
+
+class EmptyDefaultTemplate(IWriteTemplate):
+    """шаблон с пустым default_value: falsy значение не пишется"""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [
+        {'Номенклатура': {'field': RowItem.title.name}},
+        {'Сезон': {'field': RowItem.season.name, 'default_value': ''}},
     ]
