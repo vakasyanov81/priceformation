@@ -41,22 +41,22 @@ def test_replace_title_and_add_manufacturer(title: Any, title_new: Any, manufact
     row_item = RowItem({'title': title})
     ManufacturerFinder(map_manufacturer).process(row_item)
 
-    assert row_item.title == title_new
-    assert row_item.manufacturer == manufacturer
+    assert row_item.identity.title == title_new
+    assert row_item.identity.manufacturer == manufacturer
 
 
 def test_blank_aliases_do_not_match_title() -> None:
     row_item = RowItem({'title': '11.00R20 some tyre 16PR'})
     ManufacturerFinder({'GhostBrand': ('', ' ')}).process(row_item)
 
-    assert row_item.title == '11.00R20 some tyre 16PR'
-    assert not row_item.manufacturer
+    assert row_item.identity.title == '11.00R20 some tyre 16PR'
+    assert not row_item.identity.manufacturer
 
 
 def test_longer_alias_matches_before_shorter() -> None:
     row_item = RowItem({'title': 'BF Goodrich winter'})
     ManufacturerFinder({'BF': (), 'BF Goodrich': ()}).process(row_item)
-    assert row_item.manufacturer == 'BF Goodrich'
+    assert row_item.identity.manufacturer == 'BF Goodrich'
 
 
 def test_object_aliases_keep_nkshz_not_kama() -> None:
@@ -64,8 +64,8 @@ def test_object_aliases_keep_nkshz_not_kama() -> None:
     row_item = RowItem({'title': 'Нк.шз Кама-310'})
     ManufacturerFinder(aliases).process(row_item)
 
-    assert row_item.manufacturer == 'НКШЗ'
-    assert row_item.title == 'НКШЗ Кама-310'
+    assert row_item.identity.manufacturer == 'НКШЗ'
+    assert row_item.identity.title == 'НКШЗ Кама-310'
 
 
 def test_finder_rewrites_kama_to_nkshz() -> None:
@@ -73,7 +73,7 @@ def test_finder_rewrites_kama_to_nkshz() -> None:
     row_item = RowItem({'title': '315/80R22.5 NU701', 'manufacturer_name': 'Кама'})
     ManufacturerFinder(aliases).process(row_item)
 
-    assert row_item.manufacturer == 'НКШЗ'
+    assert row_item.identity.manufacturer == 'НКШЗ'
 
     kama_title = RowItem({'title': 'Кама NU701'})
     ManufacturerFinder(aliases).process(kama_title)
@@ -86,8 +86,8 @@ def test_object_aliases_replace_like_list() -> None:
     row_item = RowItem({'title': '--> Аеолус <--'})
     ManufacturerFinder(aliases).process(row_item)
 
-    assert row_item.manufacturer == 'Aeolus'
-    assert row_item.title == '--> Aeolus <--'
+    assert row_item.identity.manufacturer == 'Aeolus'
+    assert row_item.identity.title == '--> Aeolus <--'
 
 
 def test_empty_alias_skips_title_replace() -> None:
@@ -97,8 +97,8 @@ def test_empty_alias_skips_title_replace() -> None:
         return_value=('Brand', ''),
     ):
         ManufacturerFinder({'Brand': ()}).process(row_item)
-    assert row_item.title == 'keep title'
-    assert row_item.manufacturer == 'Brand'
+    assert row_item.identity.title == 'keep title'
+    assert row_item.identity.manufacturer == 'Brand'
 
 
 map_manufacturer = {

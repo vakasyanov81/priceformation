@@ -116,7 +116,7 @@ def test_disk_title_keeps_thickness_and_et0() -> None:
     assert 'прицеп' not in title
     assert '8221107' not in title
     assert '5 000' not in title
-    assert row.disk_thickness == '15.5'
+    assert row.disk.disk_thickness == '15.5'
 
 
 def test_disk_title_tube_keeps_thickness() -> None:
@@ -138,7 +138,7 @@ def test_disk_title_tube_keeps_thickness() -> None:
     title = _title_parser().get_prepared_title(row)
     assert 'под камеру' in title
     assert 'x24 ' in title or title.startswith('8.5x24')
-    assert row.disk_thickness == '16'
+    assert row.disk.disk_thickness == '16'
 
 
 _ZEPP_FIELDS = {

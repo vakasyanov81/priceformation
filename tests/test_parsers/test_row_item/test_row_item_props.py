@@ -37,7 +37,7 @@ def test_hash_title_filled() -> None:
 def test_from_dict_roundtrip() -> None:
     """сериализация через from_dict / to_dict"""
     row = RowItem.from_dict('{"title": "t1", "price_opt": 10}')
-    assert row.title == 't1'
+    assert row.identity.title == 't1'
     assert row.to_dict()['title'] == 't1'
 
 
@@ -57,7 +57,7 @@ def test_row_field_rejects_unknown_key() -> None:
 def test_row_field_set_handles_value_error() -> None:
     """Запись через RowField пишет ошибку в _errors при ValueError."""
     row = RowItem({})
-    row.price_opt = 'не число'
+    row.set_field('price_opt', 'не число')
     assert 'price_opt' in row._errors
     assert 'не число' in row._errors['price_opt']['value']
     assert isinstance(row._errors['price_opt']['error'], str)
@@ -66,7 +66,7 @@ def test_row_field_set_handles_value_error() -> None:
 def test_row_field_error_dict_keys_are_exact() -> None:
     """Запись об ошибке имеет ровно ключи 'value' и 'error': потребитель читает их по имени."""
     row = RowItem({})
-    row.price_opt = 'не число'
+    row.set_field('price_opt', 'не число')
     assert set(row._errors['price_opt']) == {'value', 'error'}
 
 
@@ -110,8 +110,8 @@ def test_vendor_keys_stay_in_extra() -> None:
 def test_set_field_keeps_first_key_position() -> None:
     """повторная запись поля не меняет его места в плоском словаре."""
     row = RowItem({'title': 't1', 'width': '225'})
-    row.title = 't2'
-    row.season = 'Зима'
+    row.set_field('title', 't2')
+    row.set_field('season', 'Зима')
     assert list(row.to_dict()) == ['title', 'width', 'season']
     assert row.to_dict()['title'] == 't2'
 
@@ -125,7 +125,7 @@ def test_set_field_keeps_explicit_none() -> None:
 def test_failed_conversion_leaves_previous_value() -> None:
     """неудачная запись не затирает уже приведённое значение."""
     row = RowItem({'price_opt': '10'})
-    row.price_opt = 'не число'
+    row.set_field('price_opt', 'не число')
     assert row.pricing.price_opt == 10
     assert 'price_opt' in row.parse_errors
 

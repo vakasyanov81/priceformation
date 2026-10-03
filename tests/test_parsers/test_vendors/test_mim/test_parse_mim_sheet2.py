@@ -85,7 +85,7 @@ def test_truck_markup_percent(price_opt: float, percent: float) -> None:
 def test_markup_without_price_opt_is_zero() -> None:
     row = RowItem({})
     _sheet2_parser().add_price_markup(row)
-    assert row.price_markup == 0
+    assert row.pricing.price_markup == 0
 
 
 @pytest.mark.parametrize(

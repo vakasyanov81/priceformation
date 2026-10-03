@@ -43,13 +43,13 @@ class _ParsedSize(NamedTuple):
 
 def fill_from_title(row_item: RowItem) -> None:
     """Заполнить width/height/diameter/model из title. Без совпадения — не трогать."""
-    parsed = _parse_size((row_item.title or '').strip())
+    parsed = _parse_size((row_item.identity.title or '').strip())
     if parsed is None:
         return
     _apply_size(row_item, parsed)
     model = _model_from_rest(parsed.rest, row_item)
-    if model and not row_item.model:
-        row_item.model = model
+    if model and not row_item.identity.model:
+        row_item.set_field('model', model)
 
 
 def _parse_size(title: str) -> _ParsedSize | None:
@@ -81,21 +81,21 @@ def _parse_size(title: str) -> _ParsedSize | None:
 
 def _apply_size(row_item: RowItem, parsed: _ParsedSize) -> None:
     """Писать только пустые поля размера."""
-    if not row_item.width:
-        row_item.width = parsed.width
-    if parsed.height and not row_item.height_percent:
-        row_item.height_percent = parsed.height
-    if not row_item.diameter:
-        row_item.diameter = parsed.diameter
-    if parsed.ext_diameter and not row_item.ext_diameter:
-        row_item.ext_diameter = parsed.ext_diameter
+    if not row_item.tire.width:
+        row_item.set_field('width', parsed.width)
+    if parsed.height and not row_item.tire.height_percent:
+        row_item.set_field('height_percent', parsed.height)
+    if not row_item.tire.diameter:
+        row_item.set_field('diameter', parsed.diameter)
+    if parsed.ext_diameter and not row_item.tire.ext_diameter:
+        row_item.set_field('ext_diameter', parsed.ext_diameter)
 
 
 def _model_from_rest(rest: str, row_item: RowItem) -> str:
     """Токены после размера и бренда до служебных (PR, индекс, ось)."""
     leftover = rest.strip()
-    leftover = _lstrip_name(leftover, row_item.manufacturer)
-    leftover = _lstrip_name(leftover, row_item.brand)
+    leftover = _lstrip_name(leftover, row_item.identity.manufacturer)
+    leftover = _lstrip_name(leftover, row_item.identity.brand)
     leftover = _PAREN.sub(' ', leftover)
     tokens: list[str] = []
     for token in leftover.split():

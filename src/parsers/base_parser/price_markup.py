@@ -23,7 +23,7 @@ def recommended_percent(price_opt: float, price_recommended: float | None) -> fl
 def fill_percent_markup(row_items: list[RowItem]) -> None:
     """Записать percent_markup из цен, если его ещё нет (Poshk/Pioner уже пишут сами)."""
     for row_item in row_items:
-        if row_item.percent_markup or not row_item.price_markup:
+        if row_item.pricing.percent_markup or not row_item.pricing.price_markup:
             continue
-        fraction = calc_percent(row_item.price_markup, row_item.price_opt)
-        row_item.percent_markup = round(fraction * 100, 2)
+        fraction = calc_percent(row_item.pricing.price_markup, row_item.pricing.price_opt)
+        row_item.set_field('percent_markup', round(fraction * 100, 2))

@@ -90,7 +90,7 @@ def test_markup_without_recommended() -> None:
     row = RowItem({'price_opt': _NO_RRC_OPT, 'title': 'No retail'})
     parser.add_price_markup(row)
     assert parser.not_matched_position == ['No retail']
-    assert row.price_markup == _NO_RRC_MARKUP
+    assert row.pricing.price_markup == _NO_RRC_MARKUP
 
 
 def test_prepared_title_collapses_spaces(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,7 +126,7 @@ def test_add_price_markup_no_opt_returns_early() -> None:
     parser = get_fake_parser([])
     row = RowItem({'title': 'Test'})
     parser.add_price_markup(row)
-    assert row.price_markup == 0  # дефолтное значение
+    assert row.pricing.price_markup == 0  # дефолтное значение
 
 
 def test_add_price_markup_zero_opt_returns_early() -> None:
@@ -134,7 +134,7 @@ def test_add_price_markup_zero_opt_returns_early() -> None:
     parser = get_fake_parser([])
     row = RowItem({'price_opt': 0, 'title': 'Test'})
     parser.add_price_markup(row)
-    assert row.price_markup == 0  # дефолтное значение
+    assert row.pricing.price_markup == 0  # дефолтное значение
 
 
 def test_apply_category_no_type_zeroes_rest() -> None:
@@ -145,4 +145,4 @@ def test_apply_category_no_type_zeroes_rest() -> None:
     # apply_category вызывает category_for ("Диск") и super().apply_category (BaseParser.apply_category)
     # BaseParser.apply_category вызывает correction_category через _category_finder
     # без finder type_production не меняется, rest_count не обнуляется
-    assert row.rest_count == 10
+    assert row.stock.rest_count == 10

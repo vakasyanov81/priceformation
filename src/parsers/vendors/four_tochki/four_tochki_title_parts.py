@@ -8,8 +8,8 @@ _RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 
 def _extra_labels(row_item: RowItem) -> tuple[str, str]:
     """Боковина и RunFlat для title."""
-    sidewall = str(row_item.inscription_on_the_side or '').strip()
-    raw = str(row_item.run_flat or '').strip().lower()
+    sidewall = str(row_item.tire.inscription_on_the_side or '').strip()
+    raw = str(row_item.tire.run_flat or '').strip().lower()
     runflat = 'RunFlat' if raw in _RUNFLAT_YES else ''
     return sidewall, runflat
 
@@ -19,8 +19,8 @@ def truck_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        row_item.layering,
-        row_item.camera_type,
+        row_item.tire.layering,
+        row_item.tire.camera_type,
         _extra_labels(row_item)[0],
         load_velocity(row_item),
     )
@@ -32,8 +32,8 @@ def ext_diameter_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        row_item.index_load,
-        row_item.us_aff_designation,
+        row_item.tire.index_load,
+        row_item.tire.us_aff_designation,
         sidewall,
         runflat,
     )
@@ -45,8 +45,8 @@ def default_tire_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        row_item.layering,
-        row_item.camera_type,
+        row_item.tire.layering,
+        row_item.tire.camera_type,
         sidewall,
         load_velocity(row_item),
         runflat,

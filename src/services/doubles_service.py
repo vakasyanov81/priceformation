@@ -33,6 +33,8 @@ class DoublesService:
     def make_report(self, *, as_jsonl: bool = False) -> DoublesReport:
         """Разобрать всех поставщиков и записать отчёт о дублях."""
         parse_result = self._orchestrator.parse_all()
-        doubles = [row for row in parse_result.parsed_items if row.is_double or row.double_candidate]
+        doubles = [
+            row for row in parse_result.parsed_items if row.duplicate.is_double or row.duplicate.double_candidate
+        ]
         path = self._report_service.write_doubles(parse_result.parsed_items, as_jsonl=as_jsonl)
         return DoublesReport(parse_result=parse_result, doubles=doubles, path=path)

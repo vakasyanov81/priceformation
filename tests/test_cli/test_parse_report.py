@@ -168,7 +168,7 @@ def test_row_items_without_errors() -> None:
 def _result_with_skips() -> ParseResult:
     parsed = ParseResult()
     row = _priced_row()
-    row.is_double = True
+    row.set_field('is_double', True)
     parsed.parsed_items = [row]
     parsed.unknown_category_skips.append(('МИМ', _SUV))
     parsed.black_list_skips = 3

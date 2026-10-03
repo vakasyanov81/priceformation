@@ -9,8 +9,8 @@ from parsers.row_item.row_item import RowItem
 def dispute_note(row_items: list[RowItem]) -> str:
     """Метки конфликта: шип и/или сезон."""
     notes = (
-        _conflict_label('шип', (_spike_label(row_item.spike) for row_item in row_items)),
-        _conflict_label('сезон', (_season_label(row_item.season) for row_item in row_items)),
+        _conflict_label('шип', (_spike_label(row_item.tire.spike) for row_item in row_items)),
+        _conflict_label('сезон', (_season_label(row_item.tire.season) for row_item in row_items)),
     )
     return ', '.join(marker for marker in notes if marker)
 

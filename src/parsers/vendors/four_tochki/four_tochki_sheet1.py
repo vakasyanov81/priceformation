@@ -56,7 +56,8 @@ class FourTochkiParser1Sheet(FourTochkiParserBase):
             'спецтехника': 'Спецшина',
             'мото': 'Мотошина',
         }
-        return tyre_type_dict.get(row_item.tire_type.lower().strip()) or 'Автошина'
+        tire_type = row_item.tire.tire_type or ''
+        return tyre_type_dict.get(tire_type.lower().strip()) or 'Автошина'
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         return get_prepared_title(row_item)

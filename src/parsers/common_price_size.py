@@ -49,11 +49,11 @@ def _inch_size_from_title(title: str | None) -> tuple[str, str, str]:
 
 def size_fields(row_item: RowItem) -> tuple[str, str, str]:
     """width, diameter, внешний дюймовый диаметр — канон для ключа."""
-    parsed = _inch_size_from_title(row_item.title)
-    ext_raw = row_item.ext_diameter
+    parsed = _inch_size_from_title(row_item.identity.title)
+    ext_raw = row_item.tire.ext_diameter
     ext_diameter = canon_number(ext_raw) if ext_raw else parsed[2]
     return (
-        canon_number(row_item.width) or parsed[0],
-        canon_diameter(row_item.diameter) or parsed[1],
+        canon_number(row_item.tire.width) or parsed[0],
+        canon_diameter(row_item.tire.diameter) or parsed[1],
         ext_diameter,
     )

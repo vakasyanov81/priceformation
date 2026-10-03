@@ -54,7 +54,7 @@ class MimParser1Sheet(MimParserBase):
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         """get prepared title"""
-        profile = row_item.height_percent or ''
+        profile = row_item.tire.height_percent or ''
         delimiter = 'x' if is_number(profile) else '/'
-        size = join_size_parts(row_item.width, delimiter, profile, 'R', row_item.diameter)
+        size = join_size_parts(row_item.tire.width, delimiter, profile, 'R', row_item.tire.diameter)
         return compose_tire_title(row_item, size, load_velocity(row_item))

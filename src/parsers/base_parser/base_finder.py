@@ -17,7 +17,9 @@ def str_lower(_str: str) -> str:
 
 def replace_alias_in_title(row_item: RowItem, old_man: str, new_man: str) -> None:
     """replace manufacturer in title chunks"""
-    row_item.title = row_item.title.replace(old_man, new_man)
+    title = row_item.identity.title
+    if title:
+        row_item.set_field('title', title.replace(old_man, new_man))
 
 
 class BaseFinder:
@@ -38,7 +40,7 @@ class BaseFinder:
         """lowercase title"""
         return self._title.lower() if self._title else self._title
 
-    def find_word_in_title(self, title: str) -> tuple[str | None, str | None]:
+    def find_word_in_title(self, title: str | None) -> tuple[str | None, str | None]:
         """find substring in title"""
         self._title = title
         correct_alias, incorrect_alias = self._find_from_lower_list(self._correct_lowers, return_correct=True)
@@ -99,10 +101,12 @@ class BaseFinder:
             return len(title_lower) - alias_len
         return -1
 
-    def correction_field(self, rec: RowItem, field_name: str, aliases: AliasContainer) -> None:
-        """replace property in rec if it has bad signature"""
-        l_man = str_lower(getattr(rec, field_name))
-        correct = aliases.reversed_map.get(l_man)
+    def correction_field(self, rec: RowItem, field_key: str, aliases: AliasContainer) -> None:
+        """replace field value in rec if it has bad signature"""
+        raw_value = rec.get_field(field_key)
+        if not raw_value:
+            return
+        correct = aliases.reversed_map.get(str_lower(str(raw_value)))
         if not correct:
             return
-        setattr(rec, field_name, correct)
+        rec.set_field(field_key, correct)

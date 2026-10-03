@@ -14,12 +14,12 @@ _L_FROM_EXCEL = f'{_PROFILE_L}.0'
 
 def is_truck_tire(row_item: RowItem) -> bool:
     """Грузовая шина?"""
-    return row_item.tire_type.lower() == 'грузовая' if row_item.tire_type else False
+    return row_item.tire.tire_type.lower() == 'грузовая' if row_item.tire.tire_type else False
 
 
 def is_special_tire(row_item: RowItem) -> bool:
     """Спецтехника?"""
-    return row_item.tire_type.lower() == 'спецтехника' if row_item.tire_type else False
+    return row_item.tire.tire_type.lower() == 'спецтехника' if row_item.tire.tire_type else False
 
 
 def get_prepared_title(row_item: RowItem) -> str:
@@ -57,10 +57,10 @@ def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
         text = str(raw or '').replace(',', '.')
         return str(get_try_to_int_or_str(text))
 
-    width = canon(row_item.width)
-    height = canon(row_item.height_percent).replace('999', _PROFILE_L)
+    width = canon(row_item.tire.width)
+    height = canon(row_item.tire.height_percent).replace('999', _PROFILE_L)
     height = height.replace(_L_FROM_EXCEL, _PROFILE_L)
-    diameter = str(row_item.diameter or '').replace('—', _DASH)
+    diameter = str(row_item.tire.diameter or '').replace('—', _DASH)
     diameter = diameter.replace(',', '.').replace('R', '')
     construct = 'R'
     if _DASH in diameter:
@@ -79,8 +79,8 @@ def _compose_title(row_item: RowItem, dims: tuple[str, str, str, str]) -> str:
     size = join_size_parts(dims[0], postfix, height, construct_diameter)
     if is_truck_tire(row_item):
         return truck_title(row_item, size)
-    if row_item.ext_diameter:
-        size = join_size_parts(row_item.ext_diameter, 'x', dims[0], construct_diameter)
+    if row_item.tire.ext_diameter:
+        size = join_size_parts(row_item.tire.ext_diameter, 'x', dims[0], construct_diameter)
         return ext_diameter_title(row_item, size)
     return default_tire_title(row_item, size)
 

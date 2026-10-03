@@ -2,6 +2,7 @@
 
 from functools import partial
 from itertools import groupby
+from operator import attrgetter
 from typing import Any
 
 from parsers.common_price_dispute import dispute_note
@@ -11,13 +12,14 @@ from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.row_item.row_item import RowItem
 
 _MIN_ITEMS_FOR_DOUBLES = 2
+_GROUP_ORDER_KEY = attrgetter('duplicate.group_by_params', 'duplicate.order')
 
 
 def _has_product_identity(row_item: RowItem) -> bool:
     """Есть размер или модель — позицию можно искать среди дублей."""
     if any(size_fields(row_item)):
         return True
-    return bool(clear_model(row_item.model, row_item.manufacturer, row_item.brand))
+    return bool(clear_model(row_item.identity.model, row_item.identity.manufacturer, row_item.identity.brand))
 
 
 def _mark_double_items(row_items: list[RowItem]) -> None:
@@ -25,26 +27,26 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
     if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
-    min_price_item = min(row_items, key=lambda row_item: row_item.price_markup)
+    min_price_item = min(row_items, key=lambda row_item: row_item.pricing.price_markup)
     dispute = dispute_note(row_items)
 
     for row_item in row_items:
-        if row_item.order == min_price_item.order:
-            row_item.double_candidate = True
+        if row_item.duplicate.order == min_price_item.duplicate.order:
+            row_item.set_field('double_candidate', True)
         else:
-            row_item.is_double = True
+            row_item.set_field('is_double', True)
         if dispute:
-            row_item.disputed = dispute
+            row_item.set_field('disputed', dispute)
 
 
 def _optional_disk_parts(row_item: RowItem) -> tuple[str, ...]:
     """ET/PCD/цвет: пустое — wildcard, заполненное сравниваем жёстко."""
     return (
-        canon_number(row_item.slot_count),
-        canon_number(row_item.pcd1),
-        canon_number(row_item.eet),
-        canon_number(row_item.central_diameter),
-        (row_item.color or '').strip().lower(),
+        canon_number(row_item.disk.slot_count),
+        canon_number(row_item.disk.pcd1),
+        canon_number(row_item.disk.eet),
+        canon_number(row_item.disk.central_diameter),
+        (row_item.disk.color or '').strip().lower(),
     )
 
 
@@ -103,14 +105,14 @@ class CommonPriceGrouper:
 
         self._assign_orders()
         self._assign_groups()
-        self.row_items.sort(key=lambda grouped: (grouped.group_by_params, grouped.order))
+        self.row_items.sort(key=_GROUP_ORDER_KEY)
         self._is_grouped = True
         return self
 
     def _assign_orders(self) -> None:
         """Проставить исходный порядок (O(N))."""
         for idx, row_item in enumerate(self.row_items, start=1):
-            row_item.order = idx
+            row_item.set_field('order', idx)
 
     def _assign_groups(self) -> None:
         """Сгруппировать, разметить дубли и выставить group_by_params."""
@@ -125,7 +127,7 @@ class CommonPriceGrouper:
         if _has_product_identity(group_items[0]):
             _mark_double_items(group_items)
         for row_item in group_items:
-            row_item.group_by_params = group_id
+            row_item.set_field('group_by_params', group_id)
 
     def get_row_items(self) -> list[RowItem]:
         """Получить сгруппированные позиции."""
@@ -137,4 +139,8 @@ class CommonPriceGrouper:
         """Получить список дублей."""
         if not self._is_grouped:
             self.group_by_params()
-        return [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]
+        return [
+            row_item
+            for row_item in self.row_items
+            if row_item.duplicate.is_double or row_item.duplicate.double_candidate
+        ]

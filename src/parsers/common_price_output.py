@@ -62,7 +62,10 @@ class CommonPriceOut:
     def nomenclature_title_correction(self) -> None:
         """make correct nomenclature title"""
         for row_item in self.row_items:
-            row_item.title = get_nomenclature_corrected_title(row_item.title)
+            title = row_item.identity.title
+            if title is None:
+                continue
+            row_item.set_field('title', get_nomenclature_corrected_title(title))
 
     def write_all_prices(
         self,
@@ -86,7 +89,11 @@ class CommonPriceOut:
 
     def write_doubles_report(self, *, as_jsonl: bool = False) -> str:
         """Write only items marked as duplicates and return the file path."""
-        doubles = [row_item for row_item in self.row_items if row_item.is_double or row_item.double_candidate]
+        doubles = [
+            row_item
+            for row_item in self.row_items
+            if row_item.duplicate.is_double or row_item.duplicate.double_candidate
+        ]
         return self._write_with_template(doubles, ForDoubles, as_jsonl=as_jsonl)
 
     def _write_with_template(

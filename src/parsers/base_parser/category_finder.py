@@ -26,9 +26,9 @@ class CategoryFinder:
 
     def find(self, row_item: RowItem) -> tuple[str | None, str | None]:
         """find"""
-        return self.find_in_str(row_item.title)
+        return self.find_in_str(row_item.identity.title)
 
-    def find_in_str(self, _str: str) -> tuple[str | None, str | None]:
+    def find_in_str(self, _str: str | None) -> tuple[str | None, str | None]:
         """find in str"""
         category, bad_category = self._finder.find_word_in_title(_str)
         return category, bad_category

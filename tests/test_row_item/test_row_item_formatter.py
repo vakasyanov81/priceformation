@@ -30,4 +30,4 @@ def test_get_integer() -> None:
 def test_row_item_set_boolean() -> None:
     """boolean field accepts True"""
     row = RowItem()
-    row.double_candidate = True
+    row.set_field('double_candidate', True)

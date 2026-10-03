@@ -140,4 +140,4 @@ def test_markup_without_prices_is_zero() -> None:
     parser = get_fake_parser(mim_one_item_result())
     row = RowItem({})
     parser.add_price_markup(row)
-    assert row.price_markup == 0
+    assert row.pricing.price_markup == 0

@@ -149,9 +149,10 @@ def test_prepare_title(title: Any, prepared_title: Any) -> None:
     """check prepare title"""
 
     row_item = RowItem({'title': title})
-    title = PoshkParser.prepare_title(row_item.title)
+    row_title = row_item.identity.title
 
-    assert title == prepared_title
+    assert row_title is not None
+    assert PoshkParser.prepare_title(row_title) == prepared_title
 
 
 class TestParsePoshk:

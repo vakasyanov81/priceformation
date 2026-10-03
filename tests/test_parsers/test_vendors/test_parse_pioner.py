@@ -179,15 +179,15 @@ def test_add_price_markup_without_opt_stays_zero() -> None:
     parser = get_fake_parser(pioner_one_item_result())
     row = RowItem({})
     parser.add_price_markup(row)
-    assert row.price_markup == 0
+    assert row.pricing.price_markup == 0
 
 
 def test_add_price_markup_empty_rules_keeps_opt() -> None:
     parser = _parser_with_markup(_EmptyMarkupRules())
     row = RowItem({'price_opt': 1000})
     parser.add_price_markup(row)
-    assert row.price_markup == 1000
-    assert row.percent_markup == 0
+    assert row.pricing.price_markup == 1000
+    assert row.pricing.percent_markup == 0
 
 
 def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
@@ -215,8 +215,8 @@ def test_set_manufacturer_to_title_appends_brand() -> None:
     row = RowItem({'title': 'шина', 'price_opt': 1000})
     parser.current_category = 'автошины Triangle'
     parser.set_manufacturer_to_title(row)
-    assert row.brand == 'Triangle'
-    assert row.title == 'шина Triangle'
+    assert row.identity.brand == 'Triangle'
+    assert row.identity.title == 'шина Triangle'
 
 
 def test_set_manufacturer_skips_if_present() -> None:
@@ -225,7 +225,7 @@ def test_set_manufacturer_skips_if_present() -> None:
     row = RowItem({'title': 'TRIANGLE шина', 'price_opt': 1000})
     parser.current_category = 'автошины Triangle'
     parser.set_manufacturer_to_title(row)
-    assert row.title == 'TRIANGLE шина'
+    assert row.identity.title == 'TRIANGLE шина'
 
 
 def test_manufacturer_name_requires_avtosiny() -> None:

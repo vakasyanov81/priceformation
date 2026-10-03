@@ -23,7 +23,7 @@ class MarkupPolicyNotSetError(RuntimeError):
 def apply_min_rest(row_item: RowItem, rest: Any, min_rest: int) -> None:
     """Обнулить остаток, если он меньше минимального."""
     if rest is None or rest < min_rest:
-        row_item.rest_count = 0
+        row_item.set_field('rest_count', 0)
 
 
 def apply_manufacturer(row_item: RowItem, find_on_enrich: bool, manufacturer_finder: Any) -> None:
@@ -34,11 +34,11 @@ def apply_manufacturer(row_item: RowItem, find_on_enrich: bool, manufacturer_fin
 
 def correction_category(row_item: RowItem, category_finder: Any) -> None:
     """Скорректировать категорию, если найдена плохая."""
-    if not row_item.type_production or category_finder is None:
+    if not row_item.vendor.type_production or category_finder is None:
         return
-    category, bad_category = category_finder.find_in_str(row_item.type_production)
+    category, bad_category = category_finder.find_in_str(row_item.vendor.type_production)
     if bad_category:
-        row_item.type_production = category
+        row_item.set_field('type_production', category)
 
 
 class RowProcessor:  # noqa: WPS214
@@ -61,12 +61,12 @@ class RowProcessor:  # noqa: WPS214
 
     def add_price_markup(self, row_item: RowItem) -> None:
         policy = self._require_markup_policy()
-        opt = row_item.price_opt or 0
-        price = policy.apply(opt, row_item.price_recommended)
+        opt = row_item.pricing.price_opt or 0
+        price = policy.apply(opt, row_item.pricing.price_recommended)
         if isinstance(policy, IdentityMarkupPolicy):
-            row_item.price_markup = price
+            row_item.set_field('price_markup', price)
         else:
-            row_item.price_markup = -(-price // _CENTS_STEP) * _CENTS_STEP
+            row_item.set_field('price_markup', -(-price // _CENTS_STEP) * _CENTS_STEP)
         percent = percent_to_store(policy, opt)
         if percent is not None:
-            row_item.percent_markup = percent
+            row_item.set_field('percent_markup', percent)

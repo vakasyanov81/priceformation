@@ -20,11 +20,11 @@ def thickness_from_name(name: str) -> str:
 
 def fill_disk_thickness(row_item: RowItem) -> None:
     """Заполнить толщину из исходного наименования, если колонка пуста."""
-    if row_item.disk_thickness:
+    if row_item.disk.disk_thickness:
         return
-    thickness = thickness_from_name(row_item.title or '')
+    thickness = thickness_from_name(row_item.identity.title or '')
     if thickness:
-        row_item.disk_thickness = thickness
+        row_item.set_field('disk_thickness', thickness)
 
 
 def disk_name_suffix(name: str) -> str:
