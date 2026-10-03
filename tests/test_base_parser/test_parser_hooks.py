@@ -49,8 +49,8 @@ def test_default_row_pipeline_order() -> None:
     row = RowItem({'price_opt': _OPT, 'rest_count': _REST_OK})
     parser.process_parsed_row(row)
     assert _CALLS == ['after', 'skip', 'category', 'markup']
-    assert row.type_production == _CATEGORY
-    assert row.price_markup == _OPT
+    assert row.vendor.type_production == _CATEGORY
+    assert row.pricing.price_markup == _OPT
 
 
 def test_skip_zeroes_low_rest() -> None:
@@ -76,4 +76,4 @@ def test_category_for_none_keeps_type() -> None:
     )
     row = RowItem({'price_opt': _OPT, 'rest_count': _REST_OK, 'type_production': _CATEGORY})
     parser.process_parsed_row(row)
-    assert row.type_production == _CATEGORY
+    assert row.vendor.type_production == _CATEGORY

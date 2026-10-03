@@ -56,5 +56,5 @@ def test_load_velocity_concatenates() -> None:
 
 def test_compose_tire_title_order_and_extras() -> None:
     row = _row(manufacturer_name='pirelli', model='P Zero', layering='XL')
-    title = compose_tire_title(row, '235/40R18', row.layering, '103Y')
+    title = compose_tire_title(row, '235/40R18', row.tire.layering, '103Y')
     assert title == '235/40R18 Pirelli P Zero XL 103Y'

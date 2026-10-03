@@ -205,10 +205,10 @@ def test_fill_from_title_size_and_model(
     model: str,
 ) -> None:
     row_item = _fill(title, manufacturer)
-    assert row_item.width == width
-    assert row_item.height_percent == height
-    assert row_item.diameter == diameter
-    assert row_item.model == model
+    assert row_item.tire.width == width
+    assert row_item.tire.height_percent == height
+    assert row_item.tire.diameter == diameter
+    assert row_item.identity.model == model
 
 
 @pytest.mark.parametrize(
@@ -222,21 +222,21 @@ def test_fill_from_title_size_and_model(
 )
 def test_fill_from_title_skips_unparsed(title: str) -> None:
     row_item = _fill(title, 'GreenStone')
-    assert not row_item.width
-    assert not row_item.height_percent
-    assert not row_item.diameter
-    assert not row_item.model
+    assert not row_item.tire.width
+    assert not row_item.tire.height_percent
+    assert not row_item.tire.diameter
+    assert not row_item.identity.model
 
 
 def test_unknown_brand_stays_in_model() -> None:
     row_item = _fill('11R22.5 GREENSTONE DR55 16PR', 'Viatti')
-    assert row_item.model == 'GREENSTONE DR55'
+    assert row_item.identity.model == 'GREENSTONE DR55'
 
 
 def test_fill_from_title_inch_sets_ext_diameter() -> None:
     row_item = _fill('31x10.5R15 Crossleader DSU02 92Y', 'Crossleader')
-    assert row_item.ext_diameter == 31
-    assert not row_item.height_percent
+    assert row_item.tire.ext_diameter == 31
+    assert not row_item.tire.height_percent
 
 
 @pytest.mark.parametrize(
@@ -255,15 +255,15 @@ def test_fill_from_title_comma_decimals(
     ext: int | None,
 ) -> None:
     row_item = _fill(title, 'Brand')
-    assert row_item.width == width
-    assert row_item.height_percent == height
-    assert row_item.diameter == diameter
-    assert row_item.ext_diameter == ext
+    assert row_item.tire.width == width
+    assert row_item.tire.height_percent == height
+    assert row_item.tire.diameter == diameter
+    assert row_item.tire.ext_diameter == ext
 
 
 def test_partial_brand_not_stripped() -> None:
     row_item = _fill('11R22.5 GreenStone DR55 16PR', 'Green')
-    assert row_item.model == 'GreenStone DR55'
+    assert row_item.identity.model == 'GreenStone DR55'
 
 
 def test_fill_from_title_strips_brand_field() -> None:
@@ -274,7 +274,7 @@ def test_fill_from_title_strips_brand_field() -> None:
         },
     )
     fill_from_title(row_item)
-    assert row_item.model == 'DR55'
+    assert row_item.identity.model == 'DR55'
 
 
 def test_fill_from_title_keeps_existing_fields() -> None:
@@ -288,10 +288,10 @@ def test_fill_from_title_keeps_existing_fields() -> None:
         },
     )
     fill_from_title(row_item)
-    assert row_item.width == '999'
-    assert row_item.height_percent == '1'
-    assert row_item.diameter == '10'
-    assert row_item.model == 'KEEP'
+    assert row_item.tire.width == '999'
+    assert row_item.tire.height_percent == '1'
+    assert row_item.tire.diameter == '10'
+    assert row_item.identity.model == 'KEEP'
 
 
 def test_keeps_existing_ext_diameter() -> None:
@@ -303,7 +303,7 @@ def test_keeps_existing_ext_diameter() -> None:
         },
     )
     fill_from_title(row_item)
-    assert row_item.ext_diameter == 99
+    assert row_item.tire.ext_diameter == 99
 
 
 def test_parse_greenstone_and_passenger() -> None:
@@ -322,28 +322,28 @@ def test_parse_greenstone_and_passenger() -> None:
     assert len(parsed) == 2
 
     truck = parsed[0]
-    assert truck.manufacturer == 'GreenStone'
-    assert truck.width == '11'
-    assert not truck.height_percent
-    assert truck.diameter == '22.5'
-    assert truck.model == 'DR55'
-    assert truck.price_markup == _PRICE_AUTOSNAB
-    assert truck.supplier_name == 'Автоснабжение'
+    assert truck.identity.manufacturer == 'GreenStone'
+    assert truck.tire.width == '11'
+    assert not truck.tire.height_percent
+    assert truck.tire.diameter == '22.5'
+    assert truck.identity.model == 'DR55'
+    assert truck.pricing.price_markup == _PRICE_AUTOSNAB
+    assert truck.vendor.supplier_name == 'Автоснабжение'
 
     passenger = parsed[1]
-    assert passenger.manufacturer == 'Viatti'
-    assert passenger.width == '175'
-    assert passenger.height_percent == '65'
-    assert passenger.diameter == '14'
-    assert passenger.model == 'Brina V-521'
-    assert passenger.price_markup == _PRICE_PASSENGER
+    assert passenger.identity.manufacturer == 'Viatti'
+    assert passenger.tire.width == '175'
+    assert passenger.tire.height_percent == '65'
+    assert passenger.tire.diameter == '14'
+    assert passenger.identity.model == 'Brina V-521'
+    assert passenger.pricing.price_markup == _PRICE_PASSENGER
 
 
 def test_parse_keeps_opt_without_rounding() -> None:
     parsed = _fake_parser(_as_parse_result([_raw_row(price_opt=_UNROUNDED_OPT)])).parse()
     row_item = parsed[0]
-    assert row_item.price_markup == _UNROUNDED_OPT
-    assert row_item.percent_markup == _ZERO_PERCENT
+    assert row_item.pricing.price_markup == _UNROUNDED_OPT
+    assert row_item.pricing.percent_markup == _ZERO_PERCENT
 
 
 def test_parse_ignores_recommended_price() -> None:
@@ -352,7 +352,7 @@ def test_parse_ignores_recommended_price() -> None:
             [_raw_row(price_opt=_IDENTITY_OPT, price_recommended=_IGNORED_RECOMMENDED)],
         ),
     ).parse()
-    assert parsed[0].price_markup == _IDENTITY_OPT
+    assert parsed[0].pricing.price_markup == _IDENTITY_OPT
 
 
 def test_greenstone_different_sizes_not_grouped() -> None:
@@ -369,8 +369,8 @@ def test_greenstone_different_sizes_not_grouped() -> None:
     ).parse()
     grouped = CommonPriceGrouper(parsed, aliases_map={'GreenStone': []}).get_double_row_items()
     assert grouped == []
-    assert parsed[0].width != parsed[1].width
-    assert parsed[0].model == parsed[1].model == 'DR668'
+    assert parsed[0].tire.width != parsed[1].tire.width
+    assert parsed[0].identity.model == parsed[1].identity.model == 'DR668'
 
 
 def test_matching_model_joins_cross_vendor_group() -> None:
@@ -402,4 +402,4 @@ def test_matching_model_joins_cross_vendor_group() -> None:
         aliases_map={'Triangle': []},
     ).get_double_row_items()
     assert len(doubles) == 2
-    assert {price_row.supplier_name for price_row in doubles} == {'Автоснабжение', 'Мим'}
+    assert {price_row.vendor.supplier_name for price_row in doubles} == {'Автоснабжение', 'Мим'}

@@ -41,8 +41,8 @@ def test_nomenclature_title_correction() -> None:
     ):
         out.nomenclature_title_correction()
 
-    assert row_old.title == 'fixed-old'
-    assert row_keep.title == 'keep'
+    assert row_old.identity.title == 'fixed-old'
+    assert row_keep.identity.title == 'keep'
 
 
 def test_write_all_prices() -> None:
@@ -131,18 +131,18 @@ def test_write_all_prices_reloads_nomenclature() -> None:
         patch('parsers.common_price_output.all_writer_templates', return_value=[]),
     ):
         out.write_all_prices()
-        assert row.title == 'A'
-        row.title = 'old'
+        assert row.identity.title == 'A'
+        row.set_field('title', 'old')
         out.write_all_prices()
-        assert row.title == 'B'
+        assert row.identity.title == 'B'
 
 
 def test_write_doubles_report() -> None:
     """write_doubles_report пишет только размеченные дубли шаблоном ForDoubles"""
     double_row = RowItem({_TITLE: 'dup'})
-    double_row.is_double = True
+    double_row.set_field('is_double', True)
     candidate = RowItem({_TITLE: 'cand'})
-    candidate.double_candidate = True
+    candidate.set_field('double_candidate', True)
     unique = RowItem({_TITLE: 'uniq'})
     rows = [double_row, candidate, unique]
     writer_cls = MagicMock()
@@ -184,7 +184,7 @@ def test_write_doubles_report() -> None:
 def test_write_doubles_report_jsonl() -> None:
     """as_jsonl для дублей идёт в jsonl."""
     double_row = RowItem({_TITLE: 'dup'})
-    double_row.is_double = True
+    double_row.set_field('is_double', True)
     out = CommonPriceOut(
         [double_row],
         xls_writer=cast(type[XlsWriter], MagicMock),

@@ -16,6 +16,6 @@ _SEASON_TITLES = {'зима': 'Зимняя', 'лето': 'Летняя'}
 
 def replace_season(row_item: RowItem) -> str | None:
     """Каноническое имя сезона или исходная строка."""
-    if not row_item.season:
+    if not row_item.tire.season:
         return None
-    return _SEASON_TITLES.get(row_item.season.lower()) or row_item.season
+    return _SEASON_TITLES.get(row_item.tire.season.lower()) or row_item.tire.season

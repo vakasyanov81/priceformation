@@ -63,7 +63,7 @@ class ZapaskaDiskJSON(BaseParser):
         title_filter: Any | None = None,
     ) -> None:
         """init"""
-        self.not_matched_position: list[str] = []
+        self.not_matched_position: list[str | None] = []
         self.title_aliases = load_title_aliases(parse_config.supplier.name)
         super().__init__(
             parse_config,
@@ -78,29 +78,31 @@ class ZapaskaDiskJSON(BaseParser):
 
     def apply_category(self, row_item: RowItem) -> None:
         super().apply_category(row_item)
-        if not row_item.type_production:
-            row_item.rest_count = 0
+        if not row_item.vendor.type_production:
+            row_item.set_field('rest_count', 0)
 
     @classmethod
-    def get_item_rest(cls, row_item: RowItem) -> int:
+    def get_item_rest(cls, row_item: RowItem) -> int | None:
         """get rest count"""
-        return row_item.rest_count
+        return row_item.stock.rest_count
 
-    def get_prepared_title(self, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str | None:
         """Normalize title spaces and apply title aliases."""
-        title = self.prepare_title(row_item.title)
+        if row_item.identity.title is None:
+            return None
+        title = self.prepare_title(row_item.identity.title)
         return self.title_aliases.get(title) or title
 
     def add_price_markup(self, row_item: RowItem) -> None:
         """Отпускная по MarkupPolicy; пустой закуп не трогает строку."""
-        price_recommended = row_item.price_recommended or 0
-        price_opt = row_item.price_opt
+        price_recommended = row_item.pricing.price_recommended or 0
+        price_opt = row_item.pricing.price_opt
 
         if not price_opt:
             return
 
         if not price_recommended:
-            self.not_matched_position.append(row_item.title)
+            self.not_matched_position.append(row_item.identity.title)
 
-        price_with_markup = self._require_markup_policy().apply(price_opt, row_item.price_recommended)
-        row_item.price_markup = self.round_price(price_with_markup) if price_with_markup else None
+        price_with_markup = self._require_markup_policy().apply(price_opt, row_item.pricing.price_recommended)
+        row_item.set_field('price_markup', self.round_price(price_with_markup) if price_with_markup else None)

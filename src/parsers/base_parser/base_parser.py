@@ -210,14 +210,14 @@ class BaseParser:  # noqa: WPS214
     def apply_category(self, row_item: RowItem) -> None:
         category = self.category_for(row_item)
         if category is not None:
-            row_item.type_production = category
+            row_item.set_field('type_production', category)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         apply_min_rest(row_item, self.get_item_rest(row_item), self.get_min_rest_count())
 
     @classmethod
-    def get_item_rest(cls, row_item: RowItem) -> int:
-        return row_item.rest_count
+    def get_item_rest(cls, row_item: RowItem) -> int | None:
+        return row_item.stock.rest_count
 
     @classmethod
     def get_min_rest_count(cls) -> int:
@@ -225,7 +225,7 @@ class BaseParser:  # noqa: WPS214
 
     @classmethod
     def is_category_row(cls, row_item: RowItem) -> bool:
-        return bool(row_item.title and not row_item.price_opt)
+        return bool(row_item.identity.title and not row_item.pricing.price_opt)
 
     def apply_manufacturer(self, row_item: RowItem) -> None:
         apply_row_manufacturer(row_item, self.find_manufacturer_on_enrich, self.manufacturer_finder())
@@ -254,16 +254,16 @@ class BaseParser:  # noqa: WPS214
     # Title (delegates to TitleFilter)
     # ------------------------------------------------------------------
 
-    def get_prepared_title(self, row_item: RowItem) -> str:
+    def get_prepared_title(self, row_item: RowItem) -> str | None:
         return self._title_filter.get_prepared_title(row_item)
 
     def set_prepared_title(self, row_item: RowItem) -> bool:
         prepared_title = self.get_prepared_title(row_item)
-        title_is_prepared = row_item.title == prepared_title
-        row_item.title = prepared_title or row_item.title
+        title_is_prepared = row_item.identity.title == prepared_title
+        row_item.set_field('title', prepared_title or row_item.identity.title)
         return title_is_prepared
 
-    def is_valid_title(self, title: str) -> bool:
+    def is_valid_title(self, title: str | None) -> bool:
         return self._title_filter.is_valid_title(title)
 
     def has_stop_word(self, title: str) -> bool:
@@ -304,9 +304,9 @@ class BaseParser:  # noqa: WPS214
 
     @classmethod
     def get_spike_title(cls, row_item: RowItem) -> str:
-        if not row_item.spike:
+        if not row_item.tire.spike:
             return ''
-        if row_item.spike.strip().lower() in _SPIKE_YES_VALUES:
+        if row_item.tire.spike.strip().lower() in _SPIKE_YES_VALUES:
             return 'Да'
         return ''
 

@@ -60,11 +60,11 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == '295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S'
-    assert parsed_items[0].type_production == 'Грузовая шина'
-    assert parsed_items[0].price_markup == 24360.0
-    assert parsed_items[0].supplier_name == 'Мим'
-    assert parsed_items[0].percent_markup == 5
+    assert parsed_items[0].identity.title == '295/75R22.5 Hifly HH312 PR16 146/143L TL Ведущая M+S'
+    assert parsed_items[0].vendor.type_production == 'Грузовая шина'
+    assert parsed_items[0].pricing.price_markup == 24360.0
+    assert parsed_items[0].vendor.supplier_name == 'Мим'
+    assert parsed_items[0].pricing.percent_markup == 5
 
 
 def _sheet2_parser() -> MimParser2Sheet:
@@ -85,7 +85,7 @@ def test_truck_markup_percent(price_opt: float, percent: float) -> None:
 def test_markup_without_price_opt_is_zero() -> None:
     row = RowItem({})
     _sheet2_parser().add_price_markup(row)
-    assert row.price_markup == 0
+    assert row.pricing.price_markup == 0
 
 
 @pytest.mark.parametrize(

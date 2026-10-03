@@ -23,17 +23,17 @@ class ManufacturerFinder:
     def process(self, row_item: RowItem) -> None:
         """process"""
 
-        manufacturer, bad_manufacturer = self._finder.find_word_in_title(row_item.title)
+        manufacturer, bad_manufacturer = self._finder.find_word_in_title(row_item.identity.title)
 
         if bad_manufacturer and manufacturer:
             replace_alias_in_title(row_item, bad_manufacturer, manufacturer)
 
         # replace manufacturer
         if manufacturer:
-            row_item.manufacturer = manufacturer
-        elif row_item.manufacturer:
+            row_item.set_field('manufacturer_name', manufacturer)
+        elif row_item.identity.manufacturer:
             self.correction_manufacturer(row_item)
 
     def correction_manufacturer(self, rec: RowItem) -> None:
         """correction manufacturer"""
-        self._finder.correction_field(rec, field_name='manufacturer', aliases=self.aliases)
+        self._finder.correction_field(rec, field_key='manufacturer_name', aliases=self.aliases)

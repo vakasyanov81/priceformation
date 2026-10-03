@@ -44,12 +44,12 @@ class TestParseZapaskaDiskJSON:
         res = parsed_items[0]
 
         assert len(parsed_items) == 1
-        assert res.title == '20 Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF'
-        assert res.price_markup == 29500.0
-        assert res.price_recommended == 29500.0
-        assert res.supplier_name == 'Запаска (диски)'
-        assert res.pcd1 == 114.3
-        assert res.percent_markup == 14.94
+        assert res.identity.title == '20 Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF'
+        assert res.pricing.price_markup == 29500.0
+        assert res.pricing.price_recommended == 29500.0
+        assert res.vendor.supplier_name == 'Запаска (диски)'
+        assert res.disk.pcd1 == 114.3
+        assert res.pricing.percent_markup == 14.94
 
 
 def test_make_parser_uses_json_price_reader() -> None:
@@ -80,9 +80,9 @@ def test_parse_with_fake_json_reader_without_disk(monkeypatch: pytest.MonkeyPatc
     )
     parsed_items = parser.parse()
     assert len(parsed_items) == 1
-    assert parsed_items[0].code_art == '1'
-    assert parsed_items[0].price_opt == 10000
-    assert parsed_items[0].title == 'Replay HND'
+    assert parsed_items[0].identity.code_art == '1'
+    assert parsed_items[0].pricing.price_opt == 10000
+    assert parsed_items[0].identity.title == 'Replay HND'
 
 
 def test_markup_without_recommended() -> None:
@@ -90,7 +90,7 @@ def test_markup_without_recommended() -> None:
     row = RowItem({'price_opt': _NO_RRC_OPT, 'title': 'No retail'})
     parser.add_price_markup(row)
     assert parser.not_matched_position == ['No retail']
-    assert row.price_markup == _NO_RRC_MARKUP
+    assert row.pricing.price_markup == _NO_RRC_MARKUP
 
 
 def test_prepared_title_collapses_spaces(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,7 +126,7 @@ def test_add_price_markup_no_opt_returns_early() -> None:
     parser = get_fake_parser([])
     row = RowItem({'title': 'Test'})
     parser.add_price_markup(row)
-    assert row.price_markup == 0  # дефолтное значение
+    assert row.pricing.price_markup == 0  # дефолтное значение
 
 
 def test_add_price_markup_zero_opt_returns_early() -> None:
@@ -134,7 +134,7 @@ def test_add_price_markup_zero_opt_returns_early() -> None:
     parser = get_fake_parser([])
     row = RowItem({'price_opt': 0, 'title': 'Test'})
     parser.add_price_markup(row)
-    assert row.price_markup == 0  # дефолтное значение
+    assert row.pricing.price_markup == 0  # дефолтное значение
 
 
 def test_apply_category_no_type_zeroes_rest() -> None:
@@ -145,4 +145,4 @@ def test_apply_category_no_type_zeroes_rest() -> None:
     # apply_category вызывает category_for ("Диск") и super().apply_category (BaseParser.apply_category)
     # BaseParser.apply_category вызывает correction_category через _category_finder
     # без finder type_production не меняется, rest_count не обнуляется
-    assert row.rest_count == 10
+    assert row.stock.rest_count == 10

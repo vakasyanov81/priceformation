@@ -196,7 +196,7 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
 def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     """doubles --json без --all-parsed: статистика, без позиций."""
     double_row = RowItem({'title': 'dup', 'price_opt': 1, 'price_markup': 2})
-    double_row.is_double = True
+    double_row.set_field('is_double', True)
     unique = RowItem({'title': 'uniq', 'price_opt': 1, 'price_markup': 2})
     parsed = _mark_result([double_row, unique])
     doubles_service = MagicMock()
@@ -220,9 +220,9 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     """doubles --all-parsed отдаёт только дубли."""
     double_row = RowItem({'title': 'dup', 'price_opt': 1, 'price_markup': 2})
-    double_row.is_double = True
+    double_row.set_field('is_double', True)
     candidate = RowItem({'title': 'cand', 'price_opt': 1, 'price_markup': 2})
-    candidate.double_candidate = True
+    candidate.set_field('double_candidate', True)
     unique = RowItem({'title': 'uniq', 'price_opt': 1, 'price_markup': 2})
     parsed = _mark_result([double_row, candidate, unique])
     doubles_service = MagicMock()

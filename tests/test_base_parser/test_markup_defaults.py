@@ -65,7 +65,7 @@ def test_markup_without_prices_is_zero() -> None:
     parser = _parser(make_parse_configuration(pioner_params, markup_rules=MimMarkupRulesProviderForTests()))
     row = RowItem({})
     parser.add_price_markup(row)
-    assert row.price_markup == _ZERO
+    assert row.pricing.price_markup == _ZERO
 
 
 def test_markup_without_policy_raises() -> None:
@@ -78,15 +78,15 @@ def test_mim_skips_stored_percent() -> None:
     parser = _parser(make_parse_configuration(pioner_params, markup_rules=MimMarkupRulesProviderForTests()))
     row = RowItem({'price_opt': _SOME_PRICE})
     parser.add_price_markup(row)
-    assert row.percent_markup is None
+    assert row.pricing.percent_markup is None
 
 
 def test_map_on_opt_stores_percent() -> None:
     parser = _parser(make_parse_configuration(pioner_params), markup_policy=_map_on_opt_policy())
     row = RowItem({'price_opt': _MAP_OPT})
     parser.add_price_markup(row)
-    assert row.price_markup == _MAP_PRICE
-    assert row.percent_markup == _MAP_STORED_PERCENT
+    assert row.pricing.price_markup == _MAP_PRICE
+    assert row.pricing.percent_markup == _MAP_STORED_PERCENT
 
 
 def test_make_map_on_opt_markup_policy() -> None:
@@ -98,5 +98,5 @@ def test_identity_add_price_markup_keeps_opt() -> None:
     parser = _parser(make_parse_configuration(pioner_params), markup_policy=IdentityMarkupPolicy.create())
     row = RowItem({'price_opt': _IDENTITY_OPT})
     parser.add_price_markup(row)
-    assert row.price_markup == _IDENTITY_OPT
-    assert row.percent_markup is None
+    assert row.pricing.price_markup == _IDENTITY_OPT
+    assert row.pricing.percent_markup is None

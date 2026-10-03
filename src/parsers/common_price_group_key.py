@@ -65,13 +65,13 @@ def define_intimacy(row_item: RowItem) -> str | None:
         except ValueError, TypeError:
             return False
 
-    chunks = (row_item.title or '').lower().split()
+    chunks = (row_item.identity.title or '').lower().split()
     for intimacy in ('tl', 'tt', 'ttf'):
         if intimacy in chunks:
             return intimacy.upper()
 
-    type_prod = (row_item.type_production or '').lower()
-    if 'грузовая' in type_prod and is_float_diameter(row_item.diameter):
+    type_prod = (row_item.vendor.type_production or '').lower()
+    if 'грузовая' in type_prod and is_float_diameter(row_item.tire.diameter):
         return 'TL'
     return None
 
@@ -79,21 +79,21 @@ def define_intimacy(row_item: RowItem) -> str | None:
 def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any]:
     """Значения полей для ключа группировки."""
     mark, brand, mark_group, key_brand = brand_key_parts(row_item, aliases_map)
-    intimacy = (row_item.intimacy or define_intimacy(row_item) or '').upper()
+    intimacy = (row_item.tire.intimacy or define_intimacy(row_item) or '').upper()
     return [
-        (row_item.type_production or '').lower(),
+        (row_item.vendor.type_production or '').lower(),
         *size_fields(row_item),
-        canon_number(row_item.height_percent),
-        row_item.index_velocity,
-        row_item.index_load,
-        clear_model(row_item.model, mark, brand),
+        canon_number(row_item.tire.height_percent),
+        row_item.tire.index_velocity,
+        row_item.tire.index_load,
+        clear_model(row_item.identity.model, mark, brand),
         mark_group,
-        row_item.layering,
+        row_item.tire.layering,
         key_brand,
         camera_key(row_item, intimacy),
-        canon_number(row_item.disk_thickness),
-        yes_flag(row_item.run_flat),
-        sidewall(row_item.inscription_on_the_side),
+        canon_number(row_item.disk.disk_thickness),
+        yes_flag(row_item.tire.run_flat),
+        sidewall(row_item.tire.inscription_on_the_side),
         disk_extras_key(row_item),
     ]
 

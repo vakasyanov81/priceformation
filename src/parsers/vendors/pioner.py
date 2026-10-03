@@ -68,34 +68,34 @@ class PionerParser(BaseParser):
         """skip by min rest"""
         self.set_current_category(row_item)
         if 'прочие' in (self.current_category or '').lower():
-            row_item.rest_count = 0
+            row_item.set_field('rest_count', 0)
         return super().skip_by_min_rest(row_item)
 
     def set_current_category(self, row_item: RowItem) -> None:
         """set current category by title and type_production"""
         if self.is_category_row(row_item):
-            self.current_category = (row_item.title or '').lower().strip()
+            self.current_category = (row_item.identity.title or '').lower().strip()
         category = (self.current_category or '').split('/')[0]
         self.current_category_first_chunk = category.split(' ')[0]
-        row_item.type_production = self.current_category_first_chunk
+        row_item.set_field('type_production', self.current_category_first_chunk)
         self.correction_category(row_item)
 
     def set_manufacturer_to_title(self, row_item: RowItem) -> None:
         """set manufacturer name to title and brand for row item"""
         m_name = self.get_manufacturer_name()
-        row_item.brand = m_name
+        row_item.set_field('brand', m_name)
 
-        if not m_name or not row_item.price_opt:
+        if not m_name or not row_item.pricing.price_opt:
             return
 
         display_name = _display_manufacturer(m_name)
-        title = row_item.title
-        if display_name.lower() in title.lower():
+        title = row_item.identity.title
+        if title is None or display_name.lower() in title.lower():
             return
 
         title_chunks = title.split(' ')
         title_chunks[0] = f'{title_chunks[0]} {display_name}'
-        row_item.title = ' '.join(title_chunks)
+        row_item.set_field('title', ' '.join(title_chunks))
 
     def get_manufacturer_name(self) -> str | None:
         """determine manufacturer name by current category"""
@@ -115,6 +115,6 @@ class PionerParser(BaseParser):
     @classmethod
     def get_item_rest(cls, row_item: RowItem) -> int:
         """see base function"""
-        rest = row_item.rest_count or 0
-        reserve = row_item.reserve_count or 0
+        rest = row_item.stock.rest_count or 0
+        reserve = row_item.stock.reserve_count or 0
         return rest - reserve

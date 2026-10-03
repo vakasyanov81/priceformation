@@ -50,20 +50,19 @@ class TitleFilter:  # noqa: WPS214
             self._stop_words = self._parse_config().stop_words()
         return self._stop_words
 
-    def get_prepared_title(self, row_item: RowItem) -> str:
-        return row_item.title
+    def get_prepared_title(self, row_item: RowItem) -> str | None:
+        return row_item.identity.title
 
     def set_prepared_title(self, row_item: RowItem) -> bool:
         prepared_title = self.get_prepared_title(row_item)
-        title_is_prepared = row_item.title == prepared_title
-        row_item.title = prepared_title or row_item.title
+        title_is_prepared = row_item.identity.title == prepared_title
+        row_item.set_field('title', prepared_title or row_item.identity.title)
         return title_is_prepared
 
-    def is_valid_title(self, title: str) -> bool:
-        has_content = bool(title)
-        no_stop = not self.has_stop_word(title)
-        not_blacklisted = not self.check_title_in_black_list(title)
-        return has_content and no_stop and not_blacklisted
+    def is_valid_title(self, title: str | None) -> bool:
+        if not title:
+            return False
+        return not self.has_stop_word(title) and not self.check_title_in_black_list(title)
 
     def has_stop_word(self, title: str) -> bool:
         return any(title_matches_mask(title, mask) for mask in self.get_stop_words())

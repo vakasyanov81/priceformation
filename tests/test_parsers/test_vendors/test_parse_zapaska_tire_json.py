@@ -78,13 +78,13 @@ class TestParseZapaskaTireJSON:
         res = parsed_items[0]
 
         assert len(parsed_items) == 1
-        assert res.title == '315/80R22.5 Three-A T276+ 20PR 157/154M TL'
-        assert res.price_markup == 25830.0
-        assert res.price_recommended == 24670.0
-        assert res.supplier_name == 'Запаска (шины)'
-        assert res.percent_markup == 12.04
-        assert res.season == 'Летняя'
-        assert res.type_production == 'Грузовая шина'
+        assert res.identity.title == '315/80R22.5 Three-A T276+ 20PR 157/154M TL'
+        assert res.pricing.price_markup == 25830.0
+        assert res.pricing.price_recommended == 24670.0
+        assert res.vendor.supplier_name == 'Запаска (шины)'
+        assert res.pricing.percent_markup == 12.04
+        assert res.tire.season == 'Летняя'
+        assert res.vendor.type_production == 'Грузовая шина'
 
     def test_unknown_category_is_skipped(self, tmp_path: Path) -> None:
         """неизвестная категория поставщика не попадает в прайс"""

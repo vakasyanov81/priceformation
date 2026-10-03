@@ -16,12 +16,12 @@ def brand_key_parts(
     aliases_map: dict[str, Any],
 ) -> tuple[str, str, str, str]:
     """manufacturer/brand для модели и ключа."""
-    mark = (row_item.manufacturer or '').lower()
-    brand = (row_item.brand or '').lower()
+    mark = (row_item.identity.manufacturer or '').lower()
+    brand = (row_item.identity.brand or '').lower()
     if brand == mark:
         brand = ''
-    mark_group = manufacturer_group(row_item.manufacturer, aliases_map)
-    key_brand = manufacturer_group(row_item.brand, aliases_map)
+    mark_group = manufacturer_group(row_item.identity.manufacturer, aliases_map)
+    key_brand = manufacturer_group(row_item.identity.brand, aliases_map)
     if not key_brand or key_brand == mark_group:
         key_brand = ''
     return mark, brand, mark_group, key_brand
@@ -55,7 +55,7 @@ def camera_from_field(camera_type: Any) -> str | None:
 
 def camera_key(row_item: RowItem, intimacy: str | None) -> str | None:
     """Камерность из поля поставщика, иначе из title."""
-    from_field = camera_from_field(row_item.camera_type)
+    from_field = camera_from_field(row_item.tire.camera_type)
     if from_field:
         return from_field
     token = (intimacy or '').upper()
@@ -66,7 +66,7 @@ def camera_key(row_item: RowItem, intimacy: str | None) -> str | None:
 
 def disk_extras_key(row_item: RowItem) -> str:
     """Хвосты диска в ключе; пусто если не диск или хвоста нет."""
-    kind = (row_item.type_production or '').lower()
+    kind = (row_item.vendor.type_production or '').lower()
     if _DISK_KIND not in kind:
         return ''
-    return disk_name_extras(row_item.title or '').lower()
+    return disk_name_extras(row_item.identity.title or '').lower()

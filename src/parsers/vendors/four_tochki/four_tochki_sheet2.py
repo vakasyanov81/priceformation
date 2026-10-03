@@ -56,10 +56,10 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
         return 'Диск'
 
     def get_prepared_title(self, row_item: RowItem) -> str:
-        original_name = row_item.title or ''
+        original_name = row_item.identity.title or ''
         fill_disk_thickness(row_item)
         return join_title_parts(
-            _disk_title(row_item, disk_diameter(row_item.diameter)),
+            _disk_title(row_item, disk_diameter(row_item.tire.diameter)),
             disk_name_suffix(original_name),
         )
 
@@ -67,11 +67,11 @@ class FourTochkiParser2Sheet(FourTochkiParserBase):
 def _disk_title(row_item: RowItem, diameter: str) -> str:
     """Title диска: size bolts ET dia color mark model."""
     return join_title_parts(
-        join_size_parts(row_item.width, 'x', diameter),
-        join_size_parts(row_item.slot_count, 'x', row_item.pcd1),
-        et_label(row_item.eet),
-        row_item.central_diameter,
-        row_item.color,
+        join_size_parts(row_item.tire.width, 'x', diameter),
+        join_size_parts(row_item.disk.slot_count, 'x', row_item.disk.pcd1),
+        et_label(row_item.disk.eet),
+        row_item.disk.central_diameter,
+        row_item.disk.color,
         brand_label(row_item),
-        row_item.model,
+        row_item.identity.model,
     )

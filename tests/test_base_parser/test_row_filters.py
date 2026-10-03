@@ -32,21 +32,21 @@ def test_correction_category_skips_without_finder() -> None:
     parser = _parser()
     row = RowItem({'type_production': 'грузовая'})
     parser.correction_category(row)
-    assert row.type_production == 'грузовая'
+    assert row.vendor.type_production == 'грузовая'
 
 
 def test_correction_category_skips_empty_type() -> None:
     parser = _parser_with_finder()
     row = RowItem({})
     parser.correction_category(row)
-    assert not row.type_production
+    assert not row.vendor.type_production
 
 
 def test_correction_category_maps_alias() -> None:
     parser = _parser_with_finder()
     row = RowItem({'type_production': 'грузовая'})
     parser.correction_category(row)
-    assert row.type_production == 'Грузовая шина'
+    assert row.vendor.type_production == 'Грузовая шина'
 
 
 def test_strip_words_collapses_spaces() -> None:
@@ -112,7 +112,7 @@ def test_enrich_counts_blacklist_after_title() -> None:
     parser = _parser()
     kept = _priced(_TITLE)
     kept_rows = enrich_items(parser, [_priced('wrong title 2'), kept])
-    assert [row_item.title for row_item in kept_rows] == [_TITLE]
+    assert [row_item.identity.title for row_item in kept_rows] == [_TITLE]
     assert parser.stats.black_list_skips == 1
 
 
@@ -128,7 +128,7 @@ def test_enrich_skips_title_value_error() -> None:
 
     # Мокаем set_prepared_title, чтобы он выбросил ValueError с любым title
     def _raise_on_title(row_item: RowItem) -> bool:
-        if row_item.title:
+        if row_item.identity.title:
             raise ValueError('bad title')
         return True
 

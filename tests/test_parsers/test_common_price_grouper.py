@@ -111,23 +111,29 @@ def _assert_grouped(
     disputed: str = '',
 ) -> None:
     assert _doubles(*rows, aliases=aliases) == list(rows)
-    assert len({row.group_by_params for row in rows}) == 1
-    assert all((row.disputed or '') == disputed for row in rows)
+    assert len({row.duplicate.group_by_params for row in rows}) == 1
+    assert all((row.duplicate.disputed or '') == disputed for row in rows)
 
 
 def _assert_split(*rows: RowItem, aliases: dict[str, Any] | None = None) -> None:
     assert _doubles(*rows, aliases=aliases) == []
-    assert len({row.group_by_params for row in rows}) == len(rows)
+    assert len({row.duplicate.group_by_params for row in rows}) == len(rows)
 
 
 def _assert_flags(candidate: RowItem, *others: RowItem) -> None:
-    assert candidate.double_candidate and not candidate.is_double
-    assert all(other.is_double and not other.double_candidate for other in others)
+    assert candidate.duplicate.double_candidate and not candidate.duplicate.is_double
+    assert all(other.duplicate.is_double and not other.duplicate.double_candidate for other in others)
+
+
+def _has_double_marker(row: RowItem) -> bool:
+    return bool(row.duplicate.is_double or row.duplicate.double_candidate)
 
 
 def _assert_orders(*rows: RowItem) -> None:
     for expected, row in enumerate(rows, start=_FIRST_ORDER):
-        assert int(row.order) == expected
+        order = row.duplicate.order
+        assert order is not None
+        assert int(order) == expected
 
 
 def test_grouper() -> None:
@@ -158,9 +164,9 @@ def test_grouper_loads_aliases_once_when_omitted() -> None:
 def test_single_item_is_not_double() -> None:
     price_row = _row()
     assert _doubles(price_row) == []
-    assert not (price_row.is_double or price_row.double_candidate)
+    assert not (price_row.duplicate.is_double or price_row.duplicate.double_candidate)
     _assert_orders(price_row)
-    assert price_row.group_by_params == 1
+    assert price_row.duplicate.group_by_params == 1
 
 
 def test_cheapest_of_three_is_double_candidate() -> None:
@@ -177,7 +183,7 @@ def test_distinct_keys_get_separate_groups() -> None:
     narrow = _row(width='205')
     grouper = CommonPriceGrouper([wide, narrow])
     assert grouper.get_row_items() == [narrow, wide]
-    assert (narrow.group_by_params, wide.group_by_params) == (1, 2)
+    assert (narrow.duplicate.group_by_params, wide.duplicate.group_by_params) == (1, 2)
     assert grouper.get_double_row_items() == []
 
 
@@ -185,16 +191,16 @@ def test_group_by_params_does_not_regroup() -> None:
     grouper = CommonPriceGrouper([_row(), _high()])
     grouped = grouper.group_by_params()
     price_row = grouper.row_items[0]
-    price_row.order = _FROZEN_ORDER
+    price_row.set_field('order', _FROZEN_ORDER)
     assert grouper.group_by_params() is grouped
     assert grouper.get_row_items() is grouper.row_items
-    assert str(price_row.order) == _FROZEN_ORDER
+    assert str(price_row.duplicate.order) == _FROZEN_ORDER
 
 
 def test_get_row_items_triggers_grouping() -> None:
     price_row = _row()
     assert CommonPriceGrouper([price_row]).get_row_items() == [price_row]
-    assert price_row.group_by_params == 1
+    assert price_row.duplicate.group_by_params == 1
     _assert_orders(price_row)
 
 
@@ -235,7 +241,7 @@ def test_blank_identity_not_doubles(type_production: str) -> None:
     first = _empty_identity(type_production=type_production)
     second = _empty_identity(type_production=type_production, price_markup=_PRICE_HIGH)
     assert _doubles(first, second) == []
-    assert not any(row.is_double or row.double_candidate for row in (first, second))
+    assert not any(_has_double_marker(row) for row in (first, second))
 
 
 @pytest.mark.parametrize(
@@ -250,7 +256,7 @@ def test_stripped_model_not_double(fields: dict[str, str]) -> None:
     first = _empty_identity(**fields)
     second = _empty_identity(**fields, price_markup=_PRICE_HIGH)
     assert _doubles(first, second) == []
-    assert not any(row.is_double or row.double_candidate for row in (first, second))
+    assert not any(_has_double_marker(row) for row in (first, second))
 
 
 def test_filled_identity_still_duplicates() -> None:

@@ -54,15 +54,15 @@ def test_add_price_markup(price_opt: float, markup: float) -> None:
     """наценка 6% с округлением вверх до десятков"""
     row = RowItem({'price_opt': price_opt})
     _parser().add_price_markup(row)
-    assert row.price_markup == markup
-    assert row.percent_markup == _STORED_PERCENT
+    assert row.pricing.price_markup == markup
+    assert row.pricing.percent_markup == _STORED_PERCENT
 
 
 def test_add_price_markup_empty() -> None:
     """без закупочной цены наценка не ставится"""
     row = RowItem({})
     _parser().add_price_markup(row)
-    assert row.price_markup == _EMPTY_MARKUP
+    assert row.pricing.price_markup == _EMPTY_MARKUP
 
 
 def test_process_markup_and_rest() -> None:
@@ -74,8 +74,8 @@ def test_process_markup_and_rest() -> None:
     parser.process_parsed_row(row_ok)
     parser.process_parsed_row(row_low)
 
-    assert row_ok.price_markup == _MARKUP
-    assert row_ok.rest_count == 10
+    assert row_ok.pricing.price_markup == _MARKUP
+    assert row_ok.stock.rest_count == 10
     # 0 через дескриптор даёт falsy → None при чтении
     assert row_low.to_dict().get('rest_count') == 0
-    assert row_low.price_markup == _LOW_MARKUP
+    assert row_low.pricing.price_markup == _LOW_MARKUP

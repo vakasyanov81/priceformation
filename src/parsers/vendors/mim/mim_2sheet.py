@@ -59,20 +59,21 @@ class MimParser2Sheet(MimParserBase):
         return TRUCK_TIRE_MARKUP_HIGH
 
     def add_price_markup(self, row_item: RowItem) -> None:
-        price_opt = row_item.price_opt or 0
+        price_opt = row_item.pricing.price_opt or 0
         price = self.get_markup(price_opt, self.get_markup_percent(price_opt))
-        row_item.price_markup = self.round_price(price)
+        row_item.set_field('price_markup', self.round_price(price))
 
     def get_prepared_title(self, row_item: RowItem) -> str:
         """prepare title"""
-        profile = f'/{row_item.height_percent}' if row_item.height_percent else ''
-        diameter = f'R{row_item.diameter}' if row_item.diameter else ''
-        size = join_size_parts(row_item.width, profile, diameter)
+        height_percent = row_item.tire.height_percent or ''
+        diameter = row_item.tire.diameter or ''
+        profile = f'/{height_percent}' if height_percent else ''
+        size = join_size_parts(row_item.tire.width, profile, f'R{diameter}' if diameter else '')
         return compose_tire_title(
             row_item,
             size,
-            row_item.layering,
+            row_item.tire.layering,
             load_velocity(row_item),
-            row_item.intimacy,
-            row_item.axis,
+            row_item.tire.intimacy,
+            row_item.tire.axis,
         )

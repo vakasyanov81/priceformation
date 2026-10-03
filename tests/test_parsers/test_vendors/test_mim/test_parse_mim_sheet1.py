@@ -93,11 +93,11 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(mim_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == '31x10.5R15 Crossleader DSU02 92Y'
-    assert parsed_items[0].type_production == 'Легковая шина'
-    assert parsed_items[0].price_markup == 4220
-    assert parsed_items[0].supplier_name == 'Мим'
-    assert parsed_items[0].percent_markup == 22.07
+    assert parsed_items[0].identity.title == '31x10.5R15 Crossleader DSU02 92Y'
+    assert parsed_items[0].vendor.type_production == 'Легковая шина'
+    assert parsed_items[0].pricing.price_markup == 4220
+    assert parsed_items[0].vendor.supplier_name == 'Мим'
+    assert parsed_items[0].pricing.percent_markup == 22.07
 
 
 class TestParseMimSheet1:
@@ -133,11 +133,11 @@ class TestParseMimSheet1:
         parser = get_fake_parser(parse_result)
 
         parsed_items: list[RowItem] = parser.parse()
-        assert parsed_items[0].price_markup == price_with_markup
+        assert parsed_items[0].pricing.price_markup == price_with_markup
 
 
 def test_markup_without_prices_is_zero() -> None:
     parser = get_fake_parser(mim_one_item_result())
     row = RowItem({})
     parser.add_price_markup(row)
-    assert row.price_markup == 0
+    assert row.pricing.price_markup == 0

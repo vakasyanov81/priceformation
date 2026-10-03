@@ -35,9 +35,9 @@ def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
     """Производитель, категория, служебные поля."""
     parser.apply_manufacturer(row_item)
     parser.correction_category(row_item)
-    row_item.supplier_name = parser.parser_params().supplier.name
-    row_item.spike = parser.get_spike_title(row_item)
-    row_item.season = replace_season(row_item)
+    row_item.set_field('supplier_name', parser.parser_params().supplier.name)
+    row_item.set_field('spike', parser.get_spike_title(row_item))
+    row_item.set_field('season', replace_season(row_item))
     return row_item
 
 
@@ -48,8 +48,8 @@ def _try_prepare_row(parser: BaseParser, row_id: int, row_item: RowItem) -> RowI
     if row_item.parse_errors:
         _log_row_parse_errors(parser, row_id, row_item)
         return None
-    if not parser.is_valid_title(row_item.title):
-        if row_item.title:
+    if not parser.is_valid_title(row_item.identity.title):
+        if row_item.identity.title:
             parser.stats.black_list_skips += 1
         return None
     return _enrich_row_item(parser, row_item)
@@ -57,9 +57,9 @@ def _try_prepare_row(parser: BaseParser, row_id: int, row_item: RowItem) -> RowI
 
 def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
     """Оставить строку с ценой закупки и валидным title."""
-    if row_item.rest_count and not row_item.price_opt:
+    if row_item.stock.rest_count and not row_item.pricing.price_opt:
         return False
-    if not row_item.title or parser.is_valid_title(row_item.title):
+    if not row_item.identity.title or parser.is_valid_title(row_item.identity.title):
         return True
     parser.stats.black_list_skips += 1
     return False
@@ -81,4 +81,4 @@ def drop_empty_rest(row_items: list[RowItem]) -> list[RowItem]:
 
     rest_count может быть ``>40`` и не приводится к float — только истинность.
     """
-    return [row_item for row_item in row_items if row_item.price_opt and row_item.rest_count]
+    return [row_item for row_item in row_items if row_item.pricing.price_opt and row_item.stock.rest_count]

@@ -44,10 +44,15 @@ class PoshkParser(BaseParser):
 
     def after_row_mapped(self, row_item: RowItem) -> None:
         self.clear_and_set_title(row_item)
-        row_item.title = self.prepare_title(row_item.title)
+        title = row_item.identity.title
+        if title is not None:
+            row_item.set_field('title', self.prepare_title(title))
 
     def category_for(self, row_item: RowItem) -> str | None:
-        return self.get_category_by_title(row_item.title)
+        title = row_item.identity.title
+        if title is None:
+            return None
+        return self.get_category_by_title(title)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """Пошк не отсекает позиции по минимальному остатку."""
@@ -74,7 +79,9 @@ class PoshkParser(BaseParser):
     @classmethod
     def clear_and_set_title(cls, row_item: RowItem) -> None:
         """clear and set reared title"""
-        row_item.title = row_item.title.replace(', , шт', '').strip()
+        title = row_item.identity.title
+        if title:
+            row_item.set_field('title', title.replace(', , шт', '').strip())
 
     @classmethod
     def _prepare_title_chunks(cls, chunks: list[str]) -> list[str]:

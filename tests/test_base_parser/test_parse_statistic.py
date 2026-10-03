@@ -68,13 +68,13 @@ def test_count_items_with_purchase_price() -> None:
 def test_fill_percent_keeps_stored_value() -> None:
     row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': _PERCENT})
     fill_percent_markup([row])
-    assert row.percent_markup == _PERCENT
+    assert row.pricing.percent_markup == _PERCENT
 
 
 def test_fill_percent_from_prices() -> None:
     row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})
     fill_percent_markup([row])
-    assert row.percent_markup == _PERCENT
+    assert row.pricing.percent_markup == _PERCENT
 
 
 def test_fill_percent_after_stored_row() -> None:
@@ -82,11 +82,11 @@ def test_fill_percent_after_stored_row() -> None:
     stored = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': _PERCENT})
     needs_fill = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})
     fill_percent_markup([stored, needs_fill])
-    assert stored.percent_markup == _PERCENT
-    assert needs_fill.percent_markup == _PERCENT
+    assert stored.pricing.percent_markup == _PERCENT
+    assert needs_fill.pricing.percent_markup == _PERCENT
 
 
 def test_fill_percent_skips_empty_markup() -> None:
     row = RowItem({'price_opt': _OPT})
     fill_percent_markup([row])
-    assert not row.percent_markup
+    assert not row.pricing.percent_markup

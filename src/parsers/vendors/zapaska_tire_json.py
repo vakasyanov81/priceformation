@@ -46,8 +46,8 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
 
     def category_for(self, row_item: RowItem) -> str | None:
         """Map supplier category onto the allowed product types."""
-        resolved = canonical_product_type(row_item.type_production, self._category_finder)
+        resolved = canonical_product_type(row_item.vendor.type_production, self._category_finder)
         if resolved:
             return resolved
-        self.stats.unknown_category_skips.append(raw_category_label(row_item.type_production))
+        self.stats.unknown_category_skips.append(raw_category_label(row_item.vendor.type_production))
         return ''

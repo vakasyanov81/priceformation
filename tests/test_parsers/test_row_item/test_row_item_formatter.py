@@ -40,6 +40,6 @@ def test_try_to_int_or_str(code: Any, assert_result: Any) -> None:
 
 def test_row_item_price_opt() -> None:
     row = RowItem({'price_opt': '10'})
-    assert row.price_opt == 10
-    row.price_opt = '50 руб.'
-    assert row.price_opt == 50
+    assert row.pricing.price_opt == 10
+    row.set_field('price_opt', '50 руб.')
+    assert row.pricing.price_opt == 50

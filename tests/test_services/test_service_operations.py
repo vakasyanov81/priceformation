@@ -68,9 +68,9 @@ def test_writer_factory_receives_items() -> None:
 def test_make_report_filters_doubles() -> None:
     """make_report парсит, фильтрует дубли и пишет отчёт."""
     double_row = _row_item('dup')
-    double_row.is_double = True
+    double_row.set_field('is_double', True)
     candidate = _row_item('cand')
-    candidate.double_candidate = True
+    candidate.set_field('double_candidate', True)
     unique = _row_item('uniq')
     parsed = MagicMock()
     parsed.parsed_items = [double_row, candidate, unique]

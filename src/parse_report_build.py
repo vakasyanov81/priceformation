@@ -79,4 +79,4 @@ def _item_payload(row: RowItem) -> dict[str, Any]:
 
 
 def _double_count(rows: list[RowItem]) -> int:
-    return sum(1 for row in rows if row.is_double or row.double_candidate)
+    return sum(1 for row in rows if row.duplicate.is_double or row.duplicate.double_candidate)

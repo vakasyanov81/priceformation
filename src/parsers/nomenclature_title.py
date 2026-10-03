@@ -15,13 +15,13 @@ def join_size_parts(*parts: object) -> str:
 
 def brand_label(row_item: RowItem) -> str:
     """Бренд для title."""
-    return (row_item.manufacturer or '').lower().capitalize()
+    return (row_item.identity.manufacturer or '').lower().capitalize()
 
 
 def load_velocity(row_item: RowItem) -> str:
     """Индекс нагрузки и скорости одним токеном."""
-    load = row_item.index_load or ''
-    velocity = row_item.index_velocity or ''
+    load = row_item.tire.index_load or ''
+    velocity = row_item.tire.index_velocity or ''
     return f'{load}{velocity}'
 
 
@@ -30,7 +30,7 @@ def compose_tire_title(row_item: RowItem, size: str, *extras: object) -> str:
     return join_title_parts(
         size,
         brand_label(row_item),
-        row_item.model,
+        row_item.identity.model,
         *extras,
     )
 
