@@ -98,4 +98,4 @@ class TestParseZapaskaTireJSON:
         parsed_items: list[RowItem] = parser.parse()
 
         assert parsed_items == []
-        assert parser.unknown_category_skips == ['SUV']
+        assert parser.stats.unknown_category_skips == ['SUV']

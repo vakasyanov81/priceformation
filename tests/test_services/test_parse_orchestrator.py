@@ -12,6 +12,7 @@ from test_parsers.test_vendors import test_parse_poshk
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.parse_statistic import ParserStats
 from parsers.data_provider import (
     MarkupRulesConfig,
     MarkupRulesProviderBase,
@@ -44,6 +45,7 @@ class FakeParser:
     ) -> None:
         """init"""
         self.parse_config = parse_config
+        self.stats = ParserStats()
 
     def parse(self) -> list[RowItem]:
         """fake parse"""
@@ -70,7 +72,7 @@ class FakeParserWithSkips:
     ) -> None:
         """init"""
         self.parse_config = parse_config
-        self.unknown_category_skips = ['SUV', 'Foo']
+        self.stats = ParserStats(unknown_category_skips=['SUV', 'Foo'])
 
     def parse(self) -> list[RowItem]:
         """fake parse"""
@@ -93,7 +95,7 @@ class FakeParserWithBlackListSkips:
     ) -> None:
         """init"""
         self.parse_config = parse_config
-        self.black_list_skips = 3
+        self.stats = ParserStats(black_list_skips=3)
 
     def parse(self) -> list[RowItem]:
         """fake parse"""
@@ -194,17 +196,19 @@ def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
     assert texts_at(entries(), logging.ERROR) == [f'Ошибка разбора прайса поставщика {parser!r} // boom']
 
 
-def test_parse_vendor_skips_bad_counter() -> None:
-    """заглушки без int-счётчика не ломают сбор отброшенных по black_list"""
+def test_parse_vendor_without_skips() -> None:
+    """парсер без пропусков не добавляет их в результат разбора"""
     parser = MagicMock()
     parser.parse.return_value = []
-    parser.unknown_category_skips = []
+    parser.stats = ParserStats()
     parsed = ParseResult()
     orchestrator = ParseOrchestrator()
 
     orchestrator._parse_supplier(parsed, parser)
 
     assert not parsed.parsed_items
+    assert not parsed.unknown_category_skips
+    assert parsed.black_list_skips == 0
 
 
 def test_skipped_categories_logged(watch_logger: LoggerWatcher) -> None:

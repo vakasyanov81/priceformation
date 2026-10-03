@@ -243,4 +243,4 @@ class TestParsePoshk:
         parsed_items: list[RowItem] = parser.parse()
 
         assert len(parsed_items) == expected_count
-        assert parser.black_list_skips == int(expected_count == 0)
+        assert parser.stats.black_list_skips == int(expected_count == 0)

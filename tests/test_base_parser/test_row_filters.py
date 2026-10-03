@@ -93,19 +93,19 @@ def test_filter_keep_counts_exact_blacklist() -> None:
     parser = _parser()
     kept = _priced(_TITLE)
     assert parser.filter_keep([_priced('wrong title'), kept]) == [kept]
-    assert parser.black_list_skips == 1
+    assert parser.stats.black_list_skips == 1
 
 
 def test_filter_keep_counts_mask() -> None:
     parser = _parser()
     parser.filter_keep([_priced('some некондиция product')])
-    assert parser.black_list_skips == 1
+    assert parser.stats.black_list_skips == 1
 
 
 def test_filter_keep_does_not_count_missing_price() -> None:
     parser = _parser()
     parser.filter_keep([RowItem({'title': _TITLE, 'rest_count': _REST})])
-    assert parser.black_list_skips == 0
+    assert parser.stats.black_list_skips == 0
 
 
 def test_enrich_counts_blacklist_after_title() -> None:
@@ -113,13 +113,13 @@ def test_enrich_counts_blacklist_after_title() -> None:
     kept = _priced(_TITLE)
     kept_rows = enrich_items(parser, [_priced('wrong title 2'), kept])
     assert [row_item.title for row_item in kept_rows] == [_TITLE]
-    assert parser.black_list_skips == 1
+    assert parser.stats.black_list_skips == 1
 
 
 def test_enrich_empty_title_not_counted() -> None:
     parser = _parser()
     assert enrich_items(parser, [RowItem({})]) == []
-    assert parser.black_list_skips == 0
+    assert parser.stats.black_list_skips == 0
 
 
 def test_enrich_skips_title_value_error() -> None:

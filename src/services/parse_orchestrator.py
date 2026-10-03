@@ -116,7 +116,7 @@ class ParseOrchestrator:
         else:
             parse_result.parsed_items.extend(parsed)
             parse_result.unknown_category_skips.extend(_parser_unknown_skips(parser))
-            parse_result.black_list_skips += _black_list_skip_count(parser)
+            parse_result.black_list_skips += parser.stats.black_list_skips
 
     def _log_skips(self, parse_result: ParseResult) -> None:
         """Печать сводки по пропускам категорий и black_list."""
@@ -147,14 +147,8 @@ def _parser_for_vendor(
 
 def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
     """Пропуски неизвестных категорий парсера с именем поставщика."""
-    skips = getattr(parser, 'unknown_category_skips', ())
-    if not isinstance(skips, list) or not skips:
+    skips = parser.stats.unknown_category_skips
+    if not skips:
         return []
     supplier = parser.parser_params().supplier.name
     return [(supplier, category) for category in skips]
-
-
-def _black_list_skip_count(parser: BaseParser) -> int:
-    """Сколько записей парсер отбросил по black_list; игнорируем не-int заглушки."""
-    count = getattr(parser, 'black_list_skips', 0)
-    return count if isinstance(count, int) else 0

@@ -13,7 +13,7 @@ from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.markup_policy import MarkupPolicy, make_markup_policy
-from parsers.base_parser.parse_statistic import ParseResultStatistic
+from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatistic
 from parsers.base_parser.price_markup import fill_percent_markup, get_markup as price_get_markup
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
 from parsers.base_parser.row_processor import (
@@ -68,8 +68,7 @@ class BaseParser:  # noqa: WPS214
         self.logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self._category_finder: CategoryFinder | None = None
         self._manufacturer_finder: ManufacturerFinder | None = None
-        self.unknown_category_skips: list[str] = []
-        self.black_list_skips = 0
+        self.stats = ParserStats()
 
         self._file_reader_impl = file_reader or FileReader(data_reader=self.data_reader)
         self._row_processor = row_processor or RowProcessor()
