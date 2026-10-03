@@ -14,7 +14,7 @@ JSON-отчёт, поэтому `to_dict()` отдаёт ровно те же к
 from __future__ import annotations
 
 import hashlib
-from dataclasses import MISSING, dataclass, field, fields, replace
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from parsers.row_item import row_item_formatter as row_format
@@ -150,9 +150,16 @@ class RowItem:
 
     def __init__(self, raw_row: dict[str, Any] | None = None):
         """init"""
-        for entry in fields(self):
-            factory = entry.default_factory
-            setattr(self, entry.name, entry.default if factory is MISSING else factory())
+        self.identity = ProductIdentity()
+        self.tire = TireDimensions()
+        self.disk = DiskParameters()
+        self.pricing = Pricing()
+        self.stock = Stock()
+        self.duplicate = DuplicateInfo()
+        self.vendor = VendorMeta()
+        self.extra = {}
+        self._errors = {}
+        self._set_keys = {}
         self._load_raw_row(raw_row or {})
 
     def _load_raw_row(self, raw_row: dict[str, Any]) -> None:
@@ -180,14 +187,12 @@ class RowItem:
         spec = spec_of(key)
         if spec is None:
             return self.extra.get(key)
-        group, _, attribute = spec.path.partition('.')
-        return getattr(getattr(self, group), attribute)
+        return getattr(getattr(self, spec.group), spec.attribute)
 
     def _write_spec(self, spec: FieldSpec, attr_value: Any) -> None:
-        """Положить приведённое значение в value object по пути из реестра."""
-        group, _, attribute = spec.path.partition('.')
-        current = getattr(self, group)
-        setattr(self, group, replace(current, **{attribute: attr_value}))
+        """Положить приведённое значение в value object, описанное в реестре."""
+        current = getattr(self, spec.group)
+        setattr(self, spec.group, replace(current, **{spec.attribute: attr_value}))
 
     @property
     def parse_errors(self) -> dict[str, Any]:

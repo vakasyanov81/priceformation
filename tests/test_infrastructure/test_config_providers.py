@@ -21,9 +21,13 @@ def test_file_provider_paths_from_root() -> None:
 
 
 def test_file_provider_detects_project_root() -> None:
-    """без корня проект определяется по расположению модуля."""
+    """без корня проект определяется по расположению модуля.
+
+    Проверяем родителя папки `src`, а не наличие `parse_config`: под мутациями
+    mutmut раскладывает исходники в `mutants/`, и там своего `parse_config` нет.
+    """
     detected = FileConfigProvider().project_root
-    assert Path(detected, 'parse_config').is_dir()
+    assert Path(detected, 'src').is_dir()
     assert FileConfigProvider(detected).project_root == detected
 
 

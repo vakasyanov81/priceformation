@@ -50,8 +50,10 @@ def test_row_field_stores_name() -> None:
 
 def test_row_field_rejects_unknown_key() -> None:
     """RowField без описания в реестре — ошибка на этапе импорта класса."""
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError) as err:
         RowField('hash_title')
+
+    assert err.value.args == ('hash_title',)
 
 
 def test_flat_access_from_item_is_refused() -> None:
@@ -137,6 +139,14 @@ def test_set_field_keeps_first_key_position() -> None:
     row.set_field('season', 'Зима')
     assert list(row.to_dict()) == ['title', 'width', 'season']
     assert row.to_dict()['title'] == 't2'
+
+
+def test_set_keys_keep_only_keys_in_write_order() -> None:
+    """_set_keys — упорядоченное множество заданных ключей, значения не несут."""
+    row = RowItem({'title': 't1'})
+    row.set_field('width', '225')
+    row.set_field('title', 't2')
+    assert row._set_keys == {'title': None, 'width': None}
 
 
 def test_set_field_keeps_explicit_none() -> None:

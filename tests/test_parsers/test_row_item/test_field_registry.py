@@ -1,5 +1,8 @@
 """Инварианты реестра плоских полей строки."""
 
+import dataclasses
+from typing import get_type_hints
+
 import pytest
 
 from parsers.row_item import field_registry as registry
@@ -59,9 +62,38 @@ def test_paths_start_with_vo_group(path_prefix: str) -> None:
     """путь поля — это группа VO и имя атрибута в ней."""
     for spec in registry.FIELD_SPECS:
         if spec.path.startswith(f'{path_prefix}.'):
-            group, _, attribute = spec.path.partition('.')
-            assert group == path_prefix
-            assert attribute.isidentifier()
+            assert spec.group == path_prefix
+            assert spec.attribute.isidentifier()
+
+
+def test_spec_path_matches_group_and_attribute() -> None:
+    """path — склейка группы и атрибута, а не отдельное поле реестра."""
+    for spec in registry.FIELD_SPECS:
+        assert spec.path == f'{spec.group}.{spec.attribute}'
+
+
+def test_every_spec_points_to_existing_vo_field() -> None:
+    """у каждого описания есть настоящее поле в value object его группы."""
+    vo_classes = get_type_hints(RowItem)
+
+    for spec in registry.FIELD_SPECS:
+        vo = vo_classes[spec.group]
+        assert spec.attribute in {vo_field.name for vo_field in dataclasses.fields(vo)}, spec.key
+
+
+def test_registry_describes_every_vo_field() -> None:
+    """каждое поле value object описано в реестре — иначе оно не попадёт в to_dict."""
+    described = {(spec.group, spec.attribute) for spec in registry.FIELD_SPECS}
+
+    vo_classes = get_type_hints(RowItem)
+
+    for entry in dataclasses.fields(RowItem):
+        if entry.name in {'extra', '_errors', '_set_keys'}:
+            continue
+        vo_fields = {vo_field.name for vo_field in dataclasses.fields(vo_classes[entry.name])}
+        assert described & {(entry.name, name) for name in vo_fields} == {
+            (entry.name, name) for name in vo_fields
+        }, entry.name
 
 
 def test_spec_of_known_and_unknown_key() -> None:
@@ -71,7 +103,7 @@ def test_spec_of_known_and_unknown_key() -> None:
 
 
 def test_spec_is_immutable() -> None:
-    """описание поля нельзя переписать: key/path/coercer/default зафиксированы."""
+    """описание поля нельзя переписать: key/group/attribute зафиксированы."""
     spec = registry.SPEC_BY_KEY['width']
     with pytest.raises(AttributeError):
         spec.key = 'other'  # type: ignore[misc]
