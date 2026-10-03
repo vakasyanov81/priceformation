@@ -20,6 +20,15 @@
 
 Подавление линт/типов (`# noqa`, `# type: ignore`) — только в крайнем случае, с правилами и FIXME-форматом; подробно в `.pi/AGENTS.md`. `pyright` настроен, но в CI не входит.
 
+### Быстрые команды (`justfile`)
+Рецепты повторяют команды выше, ничего не переопределяя; `just --list` — список. Аргументы pytest передаются **без** `--` (иначе `--` уходит в pytest как путь).
+
+- `just unit` — юнит-тесты `tests/` без покрытия; `just integration` — `integration_tests/` без покрытия.
+- `just pick tests/.../test_writer.py -k exclude` — точечный запуск без покрытия (без аргументов — оба каталога из `testpaths`).
+- `just test` — полный прогон с покрытием, как в CI.
+- `just lint` (black, ruff, flake8), `just types` (mypy, lint-imports), `just audit` (vulture, bandit, pip-audit), `just check` — все проверки без тестов, `just ci` — проверки + `pytest`.
+- `just format` — автоформат (`black`, `ruff check --fix`).
+
 ## Тесты
 - Параметры из `pyproject.toml [tool.pytest.ini_options]`: `-n=2` (xdist), branch-покрытие, html/xml отчёты. `pytest-testmon` доступен, но активируется только флагом `--testmon`.
 - `src/parsers/registry.py` держит глобальный `_registry` — тесты не должны чистить его без restore (`tests/test_parsers/test_registry.py`).

@@ -13,7 +13,7 @@ from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xwlt_driver import XlsxWriterDriver
 
-from .fixtures import FixtureTemplate, write_data
+from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemplate, write_data
 
 
 @pytest.mark.parametrize(
@@ -150,6 +150,53 @@ def test_make_exclude_empty_keeps_all() -> None:
 
     rows = [{'a': 1}, {'a': 2}]
     assert make_exclude(rows, {}) is rows
+
+
+def test_make_exclude_requires_all_rules() -> None:
+    """make_exclude отбрасывает позицию, если она не проходит хотя бы одно правило."""
+    rows = [
+        {'a': 1, 'b': 3},
+        {'a': 2, 'b': 3},
+        {'a': 1, 'b': 2},
+    ]
+    passed = writer_mod.make_exclude(rows, {'a': [1], 'b': [2]})
+    assert passed == [{'a': 2, 'b': 3}]
+
+
+def test_make_exclude_drom_keeps_rule_of_template() -> None:
+    """регрессия: единственное правило ForDrom отсекает пустой остаток."""
+    rows: list[dict[str, Any]] = [{'rest_count': 4.0}, {'rest_count': None}, {'rest_count': ''}]
+    assert writer_mod.make_exclude(rows, ForDrom().exclude()) == [{'rest_count': 4.0}]
+
+
+def test_write_applies_all_exclude_rules(tmp_path: Any) -> None:
+    """Позиция, прошедшая только одно из двух правил exclude, в лист не попадает."""
+    driver = FakeXlwtDriver()
+    rows = [
+        {**write_data[0], 'season': 'лето'},
+        {**write_data[0], 'rest_count': None},
+        {**write_data[0], 'season': 'зима'},
+    ]
+    XlsWriter(
+        driver,
+        rows,
+        template=TwoRulesExcludeTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert list(driver.body) == ['cell(1,0)', 'cell(1,1)', 'cell(1,2)']
+
+
+def test_write_skips_falsy_default_value(tmp_path: Any) -> None:
+    """Пустой default_value не пишется: falsy значение не считается значимым."""
+    driver = FakeXlwtDriver()
+    XlsWriter(
+        driver,
+        [write_data[0]],
+        template=EmptyDefaultTemplate,
+        result_folder=str(tmp_path),
+    ).write()
+    assert driver.head == ['Номенклатура', 'Сезон']
+    assert driver.body == {'cell(1,0)': '225/40R18 Crossleader 92Y'}
 
 
 def test_get_color_without_map(tmp_path: Any) -> None:

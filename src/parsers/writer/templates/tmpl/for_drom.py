@@ -17,7 +17,7 @@ class ForDrom(IWriteTemplate):
         {'Номенклатура': {'style': {'width': 30}, 'field': RowItem.title.name}},
         {'Сезон': {'field': RowItem.season.name}},
         {'Шип': {'field': RowItem.spike.name}},
-        {'Цена': {'field': RowItem.price_markup.name}, 'format': '@'},
+        {'Цена': {'field': RowItem.price_markup.name, 'format': '@'}},
         {'Остаток': {'field': RowItem.rest_count.name}},
         {'Наличие': {'field': RowItem.available.name, 'default_value': 'В наличии'}},
         {'Срок доставки': {'field': RowItem.delivery_period.name}},

@@ -35,15 +35,29 @@ def _to_str(raw_value: object) -> str:
     return raw_value  # type: ignore[return-value]
 
 
+def has_value(cell: object) -> bool:
+    """значение, которое попадает в вывод; общее правило для xlsx и jsonl
+
+    get_value отбрасывает falsy-значения поля (0, False, '', []) ещё до вызова,
+    поэтому falsy сюда доходит только из default_value. Считаем его отсутствующим:
+    в xlsx такая ячейка остаётся пустой, и jsonl не должен добавлять ключ, которого
+    в xlsx нет.
+    """
+    return bool(cell)
+
+
+def _passes_exclude(product: PriceRow, exclude: dict[str, Any]) -> bool:
+    """позиция не отбрасывается ни одним правилом exclude"""
+    rules = exclude.items()
+    return all(product.get(field) not in ex_values for field, ex_values in rules)
+
+
 def make_exclude(products: list[PriceRow], exclude: dict[str, Any]) -> list[PriceRow]:
-    """filtration"""
+    """filtration: позиция попадает в вывод, только если проходит все правила exclude"""
     if not exclude:
         return products
 
-    included: list[PriceRow] = []
-    for field, ex_values in exclude.items():
-        included.extend(product for product in products if product.get(field) not in ex_values)
-    return included
+    return [product for product in products if _passes_exclude(product, exclude)]
 
 
 class XlsWriter:
@@ -116,7 +130,7 @@ class XlsWriter:
         """write row item"""
         for col_index, col in enumerate(self.template.columns()):
             cell_value = get_value(col, row_item)
-            if not cell_value:
+            if not has_value(cell_value):
                 continue
 
             cell_color = color[0] if color and color[1] == col_index else None
