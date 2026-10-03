@@ -2,7 +2,17 @@
 statistic for price formation result
 """
 
+from dataclasses import dataclass, field
+
 from parsers.row_item.row_item import RowItem
+
+
+@dataclass
+class ParserStats:
+    """Статистика работы парсера за один прогон: что и почему отбросили."""
+
+    black_list_skips: int = 0
+    unknown_category_skips: list[str] = field(default_factory=list)
 
 
 class ParseResultStatistic:

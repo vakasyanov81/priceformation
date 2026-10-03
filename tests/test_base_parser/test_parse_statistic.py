@@ -1,10 +1,20 @@
 """ParseResultStatistic: min/max наценки после разбора."""
 
-from parsers.base_parser.parse_statistic import ParseResultStatistic
+from parsers.base_parser.parse_statistic import ParseResultStatistic, ParserStats
 from parsers.base_parser.price_markup import fill_percent_markup
 from parsers.row_item.row_item import RowItem
 
 _PRICE = 100
+
+
+def test_parser_stats_starts_empty_and_is_independent() -> None:
+    """У каждого парсера своя статистика: поля не делятся между прогонами."""
+    first, second = ParserStats(), ParserStats()
+    first.unknown_category_skips.append('SUV')
+    first.black_list_skips += 1
+
+    assert (second.black_list_skips, second.unknown_category_skips) == (0, [])
+    assert (first.black_list_skips, first.unknown_category_skips) == (1, ['SUV'])
 
 
 def _row_with_zero_markup() -> RowItem:

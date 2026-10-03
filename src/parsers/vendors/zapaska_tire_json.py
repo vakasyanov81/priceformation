@@ -49,5 +49,5 @@ class ZapaskaTireJSON(ZapaskaDiskJSON):
         resolved = canonical_product_type(row_item.type_production, self._category_finder)
         if resolved:
             return resolved
-        self.unknown_category_skips.append(raw_category_label(row_item.type_production))
+        self.stats.unknown_category_skips.append(raw_category_label(row_item.type_production))
         return ''
