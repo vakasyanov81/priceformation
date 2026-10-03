@@ -2,8 +2,8 @@
 
 import pytest
 
-from parsers.row_item.row_item import RowField, RowItem
-from parsers.row_item.value_objects import (
+from domain.row_item.row_item import RowField, RowItem
+from domain.row_item.value_objects import (
     DiskParameters,
     DuplicateInfo,
     Pricing,

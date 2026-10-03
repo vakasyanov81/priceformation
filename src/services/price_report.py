@@ -9,8 +9,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import cast
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
-from parsers.row_item.row_item import RowItem
 from services.service_provider import ServiceProvider
 
 

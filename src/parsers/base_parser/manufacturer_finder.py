@@ -4,10 +4,10 @@ find manufacturer, make correct manufacturer in title
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder, replace_alias_in_title
 from parsers.data_provider.manufacturer_aliases import aliases_for_finder
-from parsers.row_item.row_item import RowItem
 
 
 class ManufacturerFinder:

@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from services.doubles_service import DoublesReport, DoublesService
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService

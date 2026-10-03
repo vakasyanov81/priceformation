@@ -25,6 +25,17 @@ pick *ARGS:
 test *ARGS:
     uv run pytest {{ARGS}}
 
+# Нагрузочные тесты (load_tests/) без xdist и порога покрытия
+load *ARGS:
+    uv run pytest load_tests -n0 {{ARGS}} --no-cov
+
+# --- Приложение ---
+
+# Интерактивное меню: just run. С аргументами — подкоманда CLI: just run parse --json
+# Без --no-dev: рецепт не должен выгонять тестовые зависимости из venv.
+run *ARGS:
+    uv run priceformation {{ARGS}}
+
 # --- Проверки ---
 
 # Автоформат: black + ruff --fix

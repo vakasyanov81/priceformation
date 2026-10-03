@@ -1,9 +1,9 @@
-"""tests for row item boolean field"""
+"""Приведение значений позиции к типам: числа, коды и поле-флаг."""
 
 import pytest
 
-from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_casts import (
+from domain.row_item.row_item import RowItem
+from domain.row_item.row_item_casts import (
     get_integer,
     get_try_to_int_or_float,
 )

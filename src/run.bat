@@ -1,1 +1,1 @@
-uv run --no-dev --locked python src/run.py
+uv run --no-dev --locked pf

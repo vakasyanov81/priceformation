@@ -71,7 +71,7 @@
 
 | Вопрос | Решение |
 | --- | --- |
-| Где живут VO | `src/parsers/row_item/value_objects.py`. Переезд в `domain/` — отдельная задача (см. «Отложено»), контракты слоёв его не требуют |
+| Где живут VO | `src/domain/row_item/value_objects.py`: на месте рождения, но не в `parsers/` — весь пакет переехал в `domain/` ([#275](https://github.com/vakasyanov81/priceformation/issues/275)) |
 | Неизвестные ключи | Pass-through: поле `extra` в `RowItem`, `to_dict()` эмитит их как есть |
 | Порядок | Задача 4 уже выполнена, конфликта по `base_parser/*` больше нет |
 | Смежные находки аудита | Только дешёвые, в фазе Ф5 |
@@ -84,7 +84,7 @@
 колонок (`RowItem.price_markup.name`). Единый источник правды — реестр:
 
 ```python
-# src/parsers/row_item/field_registry.py
+# src/domain/row_item/field_registry.py
 @dataclass(frozen=True, slots=True)
 class FieldSpec:
     """Описание одного плоского поля: путь в VO, приведение типа, дефолт."""
@@ -210,10 +210,10 @@ class RowItem:
 
 ## Отложено (не в этой задаче)
 
-- **Переезд `RowItem`/VO в `src/domain/`.** Целевая диаграмма `PLAN.md` рисует
-  `RowItem` в `domain/`, но контракты слоёв этого не требуют: `services → parsers`
-  разрешён. Переезд — механическая правка ~45 импортов и 47 тестовых файлов, его
-  разумно делать после того, как VO появятся. → [#275](https://github.com/vakasyanov81/priceformation/issues/275)
+- ~~**Переезд `RowItem`/VO в `src/domain/`.**~~ Сделан:
+  [#275](https://github.com/vakasyanov81/priceformation/issues/275) — весь пакет
+  `src/parsers/row_item/` живёт в `src/domain/row_item/`, тесты — в
+  `tests/test_domain/test_row_item/`.
 - **Находки аудита в слое записи:** потерянный `'format': '@'` в
   `templates/tmpl/for_drom.py:20`, OR-семантика `make_exclude`
   (`xls_writer.py:38`) и расхождение falsy-значений между `xls_writer.py:119`

@@ -4,11 +4,11 @@ logic for mim vendor (sheet 3)
 
 import dataclasses
 
+from domain.row_item.row_item import RowItem
 from parsers.registry import register_vendor
 from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
 
 from ...base_parser.base_parser_config import make_parse_config
-from ...row_item.row_item import RowItem
 from .mim_base import MimParserBase
 
 mim_sheet_3_params = dataclasses.replace(mim_sheet_2_params)

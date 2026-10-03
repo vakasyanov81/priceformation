@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from typing import Any
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 
 def dispute_note(row_items: list[RowItem]) -> str:

@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
-from parsers.row_item.row_item import RowItem
 
 _FIRST_FILE = 'brand_kind_cat_tires.xls'
 _SECOND_FILE = 'brand_kind_cat_disks.xls'

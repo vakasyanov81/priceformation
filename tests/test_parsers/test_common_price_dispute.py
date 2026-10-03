@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
-from parsers.row_item.row_item import RowItem
 
 
 def _rows(*rows: tuple[Any, Any]) -> list[RowItem]:

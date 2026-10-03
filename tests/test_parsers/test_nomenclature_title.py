@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.nomenclature_title import (
     brand_label,
     compose_tire_title,
@@ -11,7 +12,6 @@ from parsers.nomenclature_title import (
     join_title_parts,
     load_velocity,
 )
-from parsers.row_item.row_item import RowItem
 
 
 def _row(**fields: Any) -> RowItem:

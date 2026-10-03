@@ -25,7 +25,7 @@ file_prices
         ...
 ...
 ```
-3. Запустите скрипт "run.bat" лежащий в корне проекта.
+3. Запустите скрипт "run.bat" (на Windows) или "run.sh" (на Linux) из каталога `src`.
 4. В разделе "file_prices/result" будут расположены файлы с результатом работы скрипта.
 ```
 file_prices
@@ -39,8 +39,19 @@ file_prices
 Без аргументов открывается интерактивное меню. Для Django и других скриптов — подкоманда:
 
 ```
-uv run --no-dev --locked python src/run.py parse --json
+uv run pf parse --json
 ```
+
+Команда доступна как `priceformation` и короткий алиас `pf` — это одна и та же
+точка входа `src/run.py`, объявленная в `[project.scripts]`:
+
+```
+uv run priceformation parse --json
+uv run pf parse --json
+```
+
+Полный список флагов — `uv run pf --help`. Из justfile то же самое: `just run`
+(меню) и `just run parse --json`.
 
 Команды:
 
@@ -70,19 +81,19 @@ uv run --no-dev --locked python src/run.py parse --json
 Повторяющиеся строки (кроме номенклатуры) в jsonl заменяются на `"@1"`, `"@2"`, …, только если код короче значения; словарь лежит в `values`: `{"@1": "Автошина"}`. Числа и строки-числа (в том числе с точкой) не кодируются.
 
 ```
-uv run --no-dev --locked python src/run.py parse --json --clear-previous-result
-uv run --no-dev --locked python src/run.py parse --json --all-result
-uv run --no-dev --locked python src/run.py parse --json --result-template for_drom
-uv run --no-dev --locked python src/run.py parse --json --result-template for_full
-uv run --no-dev --locked python src/run.py doubles --json
-uv run --no-dev --locked python src/run.py zapaska_load_api_data --json
-uv run --no-dev --locked python src/run.py get_supliers
-uv run --no-dev --locked python src/run.py load_supplier_prices='{"1": "/full/path/any_price_name.xls"}'
-uv run --no-dev --locked python src/run.py load_supplier_prices='{"poshk": "/full/path/any_price_name.xls"}'
-uv run --no-dev --locked python src/run.py load_config=/full/path/vendor_list.json
-uv run --no-dev --locked python src/run.py load_config=/full/path/correct-nomenclature.xlsx
-uv run --no-dev --locked python src/run.py load_config=/full/path/black_list
-uv run --no-dev --locked python src/run.py load_config=/full/path/settings_dir
+uv run pf parse --json --clear-previous-result
+uv run pf parse --json --all-result
+uv run pf parse --json --result-template for_drom
+uv run pf parse --json --result-template for_full
+uv run pf doubles --json
+uv run pf zapaska_load_api_data --json
+uv run pf get_supliers
+uv run pf load_supplier_prices='{"1": "/full/path/any_price_name.xls"}'
+uv run pf load_supplier_prices='{"poshk": "/full/path/any_price_name.xls"}'
+uv run pf load_config=/full/path/vendor_list.json
+uv run pf load_config=/full/path/correct-nomenclature.xlsx
+uv run pf load_config=/full/path/black_list
+uv run pf load_config=/full/path/settings_dir
 ```
 
 ## Technical details:

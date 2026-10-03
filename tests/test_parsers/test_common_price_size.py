@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_size import canon_diameter, canon_number, size_fields
-from parsers.row_item.row_item import RowItem
 
 
 def _row(**fields: Any) -> RowItem:

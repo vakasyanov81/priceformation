@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfigNotSetError
 from parsers.data_provider.black_list import title_matches_mask
-from parsers.row_item.row_item import RowItem
 
 # --- Модульные функции (бывшие @staticmethod) ---
 

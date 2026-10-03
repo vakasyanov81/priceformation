@@ -9,6 +9,7 @@ from test_base_parser.test_manufacturer_finder import map_manufacturer
 from test_parsers.fixtures.poshk import poshk_one_item_result
 from test_parsers.test_vendors.parse_result_helpers import get_first_row_item
 
+from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
@@ -17,7 +18,6 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.poshk import (
     PoshkParser,
     poshk_params,

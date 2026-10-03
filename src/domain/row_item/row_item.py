@@ -17,9 +17,9 @@ import hashlib
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from parsers.row_item import row_item_formatter as row_format
-from parsers.row_item.field_registry import FieldSpec, spec_of
-from parsers.row_item.value_objects import (
+from domain.row_item import row_item_formatter as row_format
+from domain.row_item.field_registry import FieldSpec, spec_of
+from domain.row_item.value_objects import (
     DiskParameters,
     DuplicateInfo,
     Pricing,
@@ -58,9 +58,8 @@ class RowField:
 
     @property
     def _hint(self) -> str:
-        path = self._spec.path
-        key = self._spec.key
-        return f'Плоский доступ поля снят: читать {path}, писать row.set_field({key!r}, ...).'
+        spec = self._spec
+        return f'Плоский доступ поля снят: читать {spec.path}, писать row.set_field({spec.key!r}, ...).'
 
     def __get__(self, instance: RowItem | None, _owner: type | None = None) -> RowField:
         if instance is not None:

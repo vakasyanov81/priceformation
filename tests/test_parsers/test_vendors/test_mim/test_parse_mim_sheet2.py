@@ -13,13 +13,13 @@ from test_parsers.test_vendors.test_parse_poshk import (
     vendor_list_config,
 )
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
 from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.mim.mim_2sheet import (
     TRUCK_TIRE_MARKUP_HIGH,
     TRUCK_TIRE_MARKUP_LOW,

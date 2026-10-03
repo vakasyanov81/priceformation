@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 _INCH_SIZE_RE = re.compile(r'(?i)(?<!\d)(\d{2,3})[xх](\d+(?:[.,]\d+)?)r(\d+(?:[.,]\d+)?)')
 _DIAMETER_PREFIX_RE = re.compile(r'(?i)^(zr|rz|r)')

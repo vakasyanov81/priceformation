@@ -1,6 +1,6 @@
 """Сборка названия номенклатуры из параметров строки."""
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 
 def join_title_parts(*parts: object) -> str:

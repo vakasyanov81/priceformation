@@ -2,12 +2,12 @@
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parse_report import JsonReport, ok_payload
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.data_provider.black_list import skipped_black_list_message
-from parsers.row_item.row_item import RowItem
 from services.parse_orchestrator import ParseResult
 
 

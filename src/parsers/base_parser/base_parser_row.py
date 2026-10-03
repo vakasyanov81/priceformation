@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_title import replace_season
-from parsers.row_item.row_item import RowItem
 
 if TYPE_CHECKING:
     from parsers.base_parser.base_parser import BaseParser

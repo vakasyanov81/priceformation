@@ -23,7 +23,7 @@ from parsers.base_parser.row_processor import (
     correction_category,
 )
 from parsers.base_parser.title_filter import TitleFilter
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.xls_reader import IXlsReader, XlsReader
 
 # Konstanta для get_spike_title (прототип была в base_parser_title).

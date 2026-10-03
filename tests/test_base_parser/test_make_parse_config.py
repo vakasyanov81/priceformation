@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
     make_parse_config,
 )
 from parsers.data_provider import MarkupRulesProviderFromUserConfig
-from parsers.row_item.row_item import RowItem
 
 _FOLDER_NAME = 'acme_folder'
 _SUPPLIER_NAME = 'Acme Name'

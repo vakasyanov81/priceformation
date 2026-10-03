@@ -9,6 +9,7 @@ from log_watch import LoggerWatcher, texts_at
 from test_parsers.test_vendors import parse_config as vendor_parse_config
 from test_parsers.test_vendors import test_parse_poshk
 
+from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -21,7 +22,6 @@ from parsers.data_provider import (
 )
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.registry import UnknownVendorError
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.stk import STKParser, stk_params
 from services.parse_orchestrator import ParseOrchestrator, ParseResult
 

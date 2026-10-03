@@ -1,8 +1,8 @@
 """Title builders for four_tochki sheet 1 tires."""
 
+from domain.row_item.row_item import RowItem
+from domain.row_item.row_item_casts import get_try_to_int_or_str
 from parsers.nomenclature_title import join_size_parts
-from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_casts import get_try_to_int_or_str
 
 from .four_tochki_title_parts import default_tire_title, ext_diameter_title, truck_title
 

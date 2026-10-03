@@ -10,11 +10,11 @@
 """
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Final
 
-from parsers.row_item import row_item_formatter as row_format
+from domain.row_item import row_item_formatter as row_format
 
 IDENTITY: Final = 'identity'
 TIRE: Final = 'tire'
@@ -41,11 +41,15 @@ class FieldSpec:
     attribute: str
     coercer: Callable[[Any], Any]
     default: Any = None
+    _path: str = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, '_path', f'{self.group}.{self.attribute}')
 
     @property
     def path(self) -> str:
         """Путь поля в позиции, например `tire.width`: подсказки, тесты, отчёты."""
-        return f'{self.group}.{self.attribute}'
+        return self._path
 
 
 FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (

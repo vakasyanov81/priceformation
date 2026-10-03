@@ -5,8 +5,8 @@ base parser config logic
 from dataclasses import dataclass
 from typing import Any, NamedTuple
 
+from domain.row_item.row_item import RowItem
 from parsers import data_provider
-from parsers.row_item.row_item import RowItem
 
 
 class ParseConfigNotSetError(RuntimeError):

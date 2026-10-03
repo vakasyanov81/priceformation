@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-from parsers.row_item import field_registry as registry
-from parsers.row_item.value_objects import (
+from domain.row_item import field_registry as registry
+from domain.row_item.value_objects import (
     DiskParameters,
     DuplicateInfo,
     Pricing,

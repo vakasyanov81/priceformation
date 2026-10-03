@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_group_key import clear_model, define_intimacy, group_key, sanitize_value
-from parsers.row_item.row_item import RowItem
 
 
 def _row(**fields: Any) -> RowItem:

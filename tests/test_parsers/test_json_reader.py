@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.json_reader import JsonPriceNotListError, JsonPriceReader, columns_from_params
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_json import column_mapping as disk_columns
 from parsers.vendors.zapaska_tire_json import zapaska_tire_params
 

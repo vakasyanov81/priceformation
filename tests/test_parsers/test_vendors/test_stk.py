@@ -3,12 +3,12 @@
 import pytest
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.data_provider import MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.stk import STKParser, stk_params
 
 _PRICE_OPT = 1000

@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_group_fields import (
     brand_key_parts,
     camera_key,
@@ -11,7 +12,6 @@ from parsers.common_price_group_fields import (
 )
 from parsers.common_price_size import canon_number, size_fields
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
-from parsers.row_item.row_item import RowItem
 
 _KNOWN_MODEL_PREFIXES = ('кама', 'kama')
 _PREFIX_SEPARATORS = '- '

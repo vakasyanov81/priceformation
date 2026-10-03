@@ -4,8 +4,8 @@ row item field format logic
 
 from typing import Any
 
-from parsers.row_item.row_item_casts import get_float, get_integer, get_sanitized_code, get_try_to_int_or_float
-from parsers.row_item.row_item_strip import get_stripped
+from domain.row_item.row_item_casts import get_float, get_integer, get_sanitized_code, get_try_to_int_or_float
+from domain.row_item.row_item_strip import get_stripped
 
 
 def text(field_raw: Any) -> str:

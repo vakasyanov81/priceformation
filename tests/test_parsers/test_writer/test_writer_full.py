@@ -3,7 +3,7 @@
 import datetime
 from typing import Any
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.tmpl.for_full import ForFull
