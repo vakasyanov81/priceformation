@@ -55,10 +55,10 @@ class TestParsePioner:
         parsed_items: list[RowItem] = get_fake_parser(pioner_one_item_result()).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].title == 'Автокамера 14.00-24'
-        assert parsed_items[0].price_markup == 2310
-        assert parsed_items[0].supplier_name == 'Пионер'
-        assert parsed_items[0].percent_markup == 5
+        assert parsed_items[0].identity.title == 'Автокамера 14.00-24'
+        assert parsed_items[0].pricing.price_markup == 2310
+        assert parsed_items[0].vendor.supplier_name == 'Пионер'
+        assert parsed_items[0].pricing.percent_markup == 5
 
     def test_parse_brand(self) -> None:
         """check all field for one price-row"""
@@ -66,7 +66,7 @@ class TestParsePioner:
         parsed_items: list[RowItem] = get_fake_parser(pioner_one_item_result_with_categories()).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].brand == 'triangle'
+        assert parsed_items[0].identity.brand == 'triangle'
 
     def test_small_rest(self) -> None:
         """test exclude price-position with small rest count"""
@@ -121,8 +121,8 @@ class TestParsePioner:
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
 
         assert len(parsed_items) == 1
-        assert parsed_items[0].price_markup == markup_case.get('price_with_markup')
-        assert parsed_items[0].title.count('Triangle') == 1
+        assert parsed_items[0].pricing.price_markup == markup_case.get('price_with_markup')
+        assert (parsed_items[0].identity.title or '').count('Triangle') == 1
 
 
 @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ def test_manufacturer_finder_runs_once_per_row(monkeypatch: Any) -> None:
     monkeypatch.setattr(ManufacturerFinder, 'process', counting_process)
     parsed = get_fake_parser(pioner_one_item_result_with_categories()).parse()
     assert len(parsed) == 1
-    assert parsed[0].title.count('Triangle') == 1
+    assert (parsed[0].identity.title or '').count('Triangle') == 1
     category_and_item_rows = 3
     assert process_count == category_and_item_rows
 

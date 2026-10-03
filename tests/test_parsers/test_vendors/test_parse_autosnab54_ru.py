@@ -322,21 +322,21 @@ def test_parse_greenstone_and_passenger() -> None:
     assert len(parsed) == 2
 
     truck = parsed[0]
-    assert truck.manufacturer == 'GreenStone'
-    assert truck.width == '11'
-    assert not truck.height_percent
-    assert truck.diameter == '22.5'
-    assert truck.model == 'DR55'
-    assert truck.price_markup == _PRICE_AUTOSNAB
-    assert truck.supplier_name == 'Автоснабжение'
+    assert truck.identity.manufacturer == 'GreenStone'
+    assert truck.tire.width == '11'
+    assert not truck.tire.height_percent
+    assert truck.tire.diameter == '22.5'
+    assert truck.identity.model == 'DR55'
+    assert truck.pricing.price_markup == _PRICE_AUTOSNAB
+    assert truck.vendor.supplier_name == 'Автоснабжение'
 
     passenger = parsed[1]
-    assert passenger.manufacturer == 'Viatti'
-    assert passenger.width == '175'
-    assert passenger.height_percent == '65'
-    assert passenger.diameter == '14'
-    assert passenger.model == 'Brina V-521'
-    assert passenger.price_markup == _PRICE_PASSENGER
+    assert passenger.identity.manufacturer == 'Viatti'
+    assert passenger.tire.width == '175'
+    assert passenger.tire.height_percent == '65'
+    assert passenger.tire.diameter == '14'
+    assert passenger.identity.model == 'Brina V-521'
+    assert passenger.pricing.price_markup == _PRICE_PASSENGER
 
 
 def test_parse_keeps_opt_without_rounding() -> None:
@@ -352,7 +352,7 @@ def test_parse_ignores_recommended_price() -> None:
             [_raw_row(price_opt=_IDENTITY_OPT, price_recommended=_IGNORED_RECOMMENDED)],
         ),
     ).parse()
-    assert parsed[0].price_markup == _IDENTITY_OPT
+    assert parsed[0].pricing.price_markup == _IDENTITY_OPT
 
 
 def test_greenstone_different_sizes_not_grouped() -> None:
@@ -369,8 +369,8 @@ def test_greenstone_different_sizes_not_grouped() -> None:
     ).parse()
     grouped = CommonPriceGrouper(parsed, aliases_map={'GreenStone': []}).get_double_row_items()
     assert grouped == []
-    assert parsed[0].width != parsed[1].width
-    assert parsed[0].model == parsed[1].model == 'DR668'
+    assert parsed[0].tire.width != parsed[1].tire.width
+    assert parsed[0].identity.model == parsed[1].identity.model == 'DR668'
 
 
 def test_matching_model_joins_cross_vendor_group() -> None:

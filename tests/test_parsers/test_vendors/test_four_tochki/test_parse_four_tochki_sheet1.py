@@ -50,20 +50,20 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(four_tochki_many_item_result()).parse()
 
     assert len(parsed_items) == 3
-    assert parsed_items[0].title == '205/55R16 BF Goodrich Advantage 94W'
-    assert parsed_items[0].type_production == 'Легковая шина'
-    assert parsed_items[0].price_markup == 7340
-    assert parsed_items[0].supplier_name == 'Форточки'
-    assert parsed_items[0].percent_markup == 27.17
+    assert parsed_items[0].identity.title == '205/55R16 BF Goodrich Advantage 94W'
+    assert parsed_items[0].vendor.type_production == 'Легковая шина'
+    assert parsed_items[0].pricing.price_markup == 7340
+    assert parsed_items[0].vendor.supplier_name == 'Форточки'
+    assert parsed_items[0].pricing.percent_markup == 27.17
 
     # метрический размер
-    assert parsed_items[1].title == '31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT'
-    assert parsed_items[1].price_markup == 24870
-    assert parsed_items[1].percent_markup == 27.04
+    assert parsed_items[1].identity.title == '31x10.5R15 BF Goodrich All Terrain T/A KO2 109S LT'
+    assert parsed_items[1].pricing.price_markup == 24870
+    assert parsed_items[1].pricing.percent_markup == 27.04
 
     # грузовая шина
-    assert parsed_items[2].title == '235/75R17.5 BF Goodrich Route Control D 132/130M'
-    assert parsed_items[2].type_production == 'Грузовая шина'
+    assert parsed_items[2].identity.title == '235/75R17.5 BF Goodrich Route Control D 132/130M'
+    assert parsed_items[2].vendor.type_production == 'Грузовая шина'
 
 
 def test_replace_diameter() -> None:
@@ -72,11 +72,11 @@ def test_replace_diameter() -> None:
     parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result(diameter='RZ16')).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == '205/55ZR16 BF Goodrich Advantage 94W'
-    assert parsed_items[0].type_production == 'Легковая шина'
-    assert parsed_items[0].price_markup == 7340
-    assert parsed_items[0].supplier_name == 'Форточки'
-    assert parsed_items[0].percent_markup == 27.17
+    assert parsed_items[0].identity.title == '205/55ZR16 BF Goodrich Advantage 94W'
+    assert parsed_items[0].vendor.type_production == 'Легковая шина'
+    assert parsed_items[0].pricing.price_markup == 7340
+    assert parsed_items[0].vendor.supplier_name == 'Форточки'
+    assert parsed_items[0].pricing.percent_markup == 27.17
 
 
 def test_prepare_title_replace_999() -> None:

@@ -44,12 +44,12 @@ class TestParseZapaskaDiskJSON:
         res = parsed_items[0]
 
         assert len(parsed_items) == 1
-        assert res.title == '20 Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF'
-        assert res.price_markup == 29500.0
-        assert res.price_recommended == 29500.0
-        assert res.supplier_name == 'Запаска (диски)'
-        assert res.pcd1 == 114.3
-        assert res.percent_markup == 14.94
+        assert res.identity.title == '20 Replay HND369 7.5*20 5*114.3 ET49.5 D67.1 MGMF'
+        assert res.pricing.price_markup == 29500.0
+        assert res.pricing.price_recommended == 29500.0
+        assert res.vendor.supplier_name == 'Запаска (диски)'
+        assert res.disk.pcd1 == 114.3
+        assert res.pricing.percent_markup == 14.94
 
 
 def test_make_parser_uses_json_price_reader() -> None:
@@ -80,9 +80,9 @@ def test_parse_with_fake_json_reader_without_disk(monkeypatch: pytest.MonkeyPatc
     )
     parsed_items = parser.parse()
     assert len(parsed_items) == 1
-    assert parsed_items[0].code_art == '1'
-    assert parsed_items[0].price_opt == 10000
-    assert parsed_items[0].title == 'Replay HND'
+    assert parsed_items[0].identity.code_art == '1'
+    assert parsed_items[0].pricing.price_opt == 10000
+    assert parsed_items[0].identity.title == 'Replay HND'
 
 
 def test_markup_without_recommended() -> None:

@@ -77,8 +77,8 @@ def test_finder_rewrites_kama_to_nkshz() -> None:
 
     kama_title = RowItem({'title': 'Кама NU701'})
     ManufacturerFinder(aliases).process(kama_title)
-    assert kama_title.manufacturer == 'НКШЗ'
-    assert kama_title.title == 'НКШЗ NU701'
+    assert kama_title.identity.manufacturer == 'НКШЗ'
+    assert kama_title.identity.title == 'НКШЗ NU701'
 
 
 def test_object_aliases_replace_like_list() -> None:

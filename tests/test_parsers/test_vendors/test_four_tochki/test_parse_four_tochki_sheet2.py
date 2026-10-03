@@ -50,20 +50,20 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(four_tochki_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == '6.5x16 5x114.3 ET45 60.1 MBMF Alcasta M35'
-    assert parsed_items[0].type_production == 'Диск'
-    assert parsed_items[0].price_markup == 8270
-    assert parsed_items[0].supplier_name == 'Форточки'
-    assert parsed_items[0].percent_markup == 14.7
+    assert parsed_items[0].identity.title == '6.5x16 5x114.3 ET45 60.1 MBMF Alcasta M35'
+    assert parsed_items[0].vendor.type_production == 'Диск'
+    assert parsed_items[0].pricing.price_markup == 8270
+    assert parsed_items[0].vendor.supplier_name == 'Форточки'
+    assert parsed_items[0].pricing.percent_markup == 14.7
 
     parsed_items_alt: list[RowItem] = get_fake_parser(four_tochki_one_item_result_1()).parse()
 
     assert len(parsed_items_alt) == 1
-    assert parsed_items_alt[0].title == '5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)'
-    assert parsed_items_alt[0].type_production == 'Диск'
-    assert parsed_items_alt[0].price_markup == 8270
-    assert parsed_items_alt[0].supplier_name == 'Форточки'
-    assert parsed_items_alt[0].percent_markup == 14.7
+    assert parsed_items_alt[0].identity.title == '5.5x14 4x98 ET38 58.6 Алмаз Скад Ягуар (КЛ147)'
+    assert parsed_items_alt[0].vendor.type_production == 'Диск'
+    assert parsed_items_alt[0].pricing.price_markup == 8270
+    assert parsed_items_alt[0].vendor.supplier_name == 'Форточки'
+    assert parsed_items_alt[0].pricing.percent_markup == 14.7
 
 
 def test_parse_with_invalid_item(caplog: pytest.LogCaptureFixture) -> None:

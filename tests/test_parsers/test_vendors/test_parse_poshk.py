@@ -123,11 +123,11 @@ def test_parse() -> None:
     parsed_items: list[RowItem] = get_fake_parser(poshk_one_item_result()).parse()
 
     assert len(parsed_items) == 1
-    assert parsed_items[0].title == '10-16.5 Nortec ER-218 10PR 135B TL спецшина'
-    assert parsed_items[0].type_production == 'Автошина'
-    assert parsed_items[0].price_markup == 6070
-    assert parsed_items[0].supplier_name == 'Пошк'
-    assert parsed_items[0].percent_markup == 25.0
+    assert parsed_items[0].identity.title == '10-16.5 Nortec ER-218 10PR 135B TL спецшина'
+    assert parsed_items[0].vendor.type_production == 'Автошина'
+    assert parsed_items[0].pricing.price_markup == 6070
+    assert parsed_items[0].vendor.supplier_name == 'Пошк'
+    assert parsed_items[0].pricing.percent_markup == 25.0
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ class TestParsePoshk:
         first_row = get_first_row_item(parse_result)
         first_row['title'] = title
         parsed_items: list[RowItem] = get_fake_parser(parse_result).parse()
-        assert parsed_items[0].type_production == category
+        assert parsed_items[0].vendor.type_production == category
 
     @pytest.mark.parametrize(
         'price, price_with_markup',
@@ -222,7 +222,7 @@ class TestParsePoshk:
 
         parsed_items: list[RowItem] = parser.parse()
 
-        assert parsed_items[0].price_markup == price_with_markup
+        assert parsed_items[0].pricing.price_markup == price_with_markup
 
     @pytest.mark.parametrize(
         ('title', 'expected_count'),

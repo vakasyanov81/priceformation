@@ -260,7 +260,7 @@ def test_report_from_result_subset_rows() -> None:
     """rows= ограничивает positions, stats считаются по всему разбору."""
     parsed = ParseResult()
     keep = _priced_row()
-    keep.is_double = True
+    keep.set_field('is_double', True)
     skip = RowItem({'title': 'other', 'price_opt': _OPT, 'price_markup': _MARKUP})
     parsed.parsed_items.extend([keep, skip])
     report = report_from_result('doubles', parsed, [_RESULT_D], 0.5, rows=[keep], all_result=True)

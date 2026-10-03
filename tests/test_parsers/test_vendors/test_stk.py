@@ -78,4 +78,4 @@ def test_process_markup_and_rest() -> None:
     assert row_ok.stock.rest_count == 10
     # 0 через дескриптор даёт falsy → None при чтении
     assert row_low.to_dict().get('rest_count') == 0
-    assert row_low.price_markup == _LOW_MARKUP
+    assert row_low.pricing.price_markup == _LOW_MARKUP

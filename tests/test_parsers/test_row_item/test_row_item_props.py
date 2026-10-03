@@ -34,16 +34,16 @@ def test_hash_title_filled() -> None:
     assert len(title_hash) == _MD5_HEX_LEN
 
 
-def test_from_dict_roundtrip() -> None:
-    """сериализация через from_dict / to_dict"""
-    row = RowItem.from_dict('{"title": "t1", "price_opt": 10}')
+def test_to_dict_roundtrip() -> None:
+    """позиция строится из плоского словаря и отдаёт его же"""
+    row = RowItem({'title': 't1', 'price_opt': 10})
     assert row.identity.title == 't1'
     assert row.to_dict()['title'] == 't1'
 
 
 def test_row_field_stores_name() -> None:
     """RowField отдаёт имя плоского ключа по классу, а не по позиции."""
-    assert RowField[str]('title').name == 'title'
+    assert RowField('title').name == 'title'
     assert RowItem.title.name == 'title'
     assert RowItem.manufacturer.name == 'manufacturer_name'
 
@@ -51,7 +51,18 @@ def test_row_field_stores_name() -> None:
 def test_row_field_rejects_unknown_key() -> None:
     """RowField без описания в реестре — ошибка на этапе импорта класса."""
     with pytest.raises(KeyError):
-        RowField[str]('hash_title')
+        RowField('hash_title')
+
+
+def test_flat_access_from_item_is_refused() -> None:
+    """Плоский доступ с позиции снят: вместо значения он вернул бы молча ключ."""
+    row = RowItem({'title': 't1'})
+
+    with pytest.raises(AttributeError, match='Плоский доступ поля снят'):
+        RowItem.title.__get__(row)
+
+    with pytest.raises(AttributeError, match='Плоский доступ поля снят'):
+        RowItem.title.__set__(row, 't2')
 
 
 def test_row_field_set_handles_value_error() -> None:

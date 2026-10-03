@@ -41,8 +41,8 @@ def test_nomenclature_title_correction() -> None:
     ):
         out.nomenclature_title_correction()
 
-    assert row_old.title == 'fixed-old'
-    assert row_keep.title == 'keep'
+    assert row_old.identity.title == 'fixed-old'
+    assert row_keep.identity.title == 'keep'
 
 
 def test_write_all_prices() -> None:

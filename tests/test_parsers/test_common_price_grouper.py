@@ -122,7 +122,7 @@ def _assert_split(*rows: RowItem, aliases: dict[str, Any] | None = None) -> None
 
 def _assert_flags(candidate: RowItem, *others: RowItem) -> None:
     assert candidate.duplicate.double_candidate and not candidate.duplicate.is_double
-    assert all(other.is_double and not other.double_candidate for other in others)
+    assert all(other.duplicate.is_double and not other.duplicate.double_candidate for other in others)
 
 
 def _has_double_marker(row: RowItem) -> bool:
@@ -183,7 +183,7 @@ def test_distinct_keys_get_separate_groups() -> None:
     narrow = _row(width='205')
     grouper = CommonPriceGrouper([wide, narrow])
     assert grouper.get_row_items() == [narrow, wide]
-    assert (narrow.group_by_params, wide.group_by_params) == (1, 2)
+    assert (narrow.duplicate.group_by_params, wide.duplicate.group_by_params) == (1, 2)
     assert grouper.get_double_row_items() == []
 
 

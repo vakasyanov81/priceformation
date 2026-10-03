@@ -14,9 +14,8 @@ JSON-отчёт, поэтому `to_dict()` отдаёт ровно те же к
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import MISSING, dataclass, field, fields, replace
-from typing import Any, Self, cast, overload
+from typing import Any
 
 from parsers.row_item import row_item_formatter as row_format
 from parsers.row_item.field_registry import FieldSpec, spec_of
@@ -31,12 +30,17 @@ from parsers.row_item.value_objects import (
 )
 
 
-class RowField[TValue]:
-    """Поле позиции: на классе — описание (`.name`), на позиции — значение.
+class RowField:
+    """Плоский ключ поля позиции: с класса — описание (`.name`), с позиции — ничего.
 
-    Имена полей читают шаблоны колонок (`RowItem.price_markup.name`) и
-    jsonl_codes, поэтому доступ с класса остаётся всегда. Плоский доступ с
-    позиции — совместимость, её снимают переносом вызовов на `row.<vo>.<field>`.
+    Имена полей читают шаблоны колонок (`RowItem.price_markup.name`), маппинги
+    колонок вендоров и jsonl_codes, поэтому доступ с класса остаётся всегда.
+
+    С самой позиции поле не читается и не пишется: значение лежит в value
+    objects (`row.pricing.price_markup`), а запись идёт через `set_field`,
+    которая приводит тип, помнит порядок ключей и пишет ошибки разбора. Ключ
+    вместо значения молча вернул бы неверные данные, поэтому дескриптор на
+    позиции бросает AttributeError с подсказкой.
     """
 
     __slots__ = ('_spec',)
@@ -52,19 +56,19 @@ class RowField[TValue]:
         """Плоский ключ поля: так его видят шаблоны и jsonl."""
         return self._spec.key
 
-    @overload
-    def __get__(self, instance: None, _owner: type | None = None) -> Self: ...
+    @property
+    def _hint(self) -> str:
+        path = self._spec.path
+        key = self._spec.key
+        return f'Плоский доступ поля снят: читать {path}, писать row.set_field({key!r}, ...).'
 
-    @overload
-    def __get__(self, instance: RowItem, _owner: type | None = None) -> TValue: ...
-
-    def __get__(self, instance: RowItem | None, _owner: type | None = None) -> Self | TValue:
-        if instance is None:
-            return self
-        return cast(TValue, instance.get_field(self._spec.key))
+    def __get__(self, instance: RowItem | None, _owner: type | None = None) -> RowField:
+        if instance is not None:
+            raise AttributeError(self._hint)
+        return self
 
     def __set__(self, instance: RowItem, attr_value: Any) -> None:
-        instance.set_field(self._spec.key, attr_value)
+        raise AttributeError(self._hint)
 
 
 @dataclass(eq=False, init=False)
@@ -82,67 +86,67 @@ class RowItem:
     _errors: dict[str, Any] = field(default_factory=dict, repr=False)
     _set_keys: dict[str, None] = field(default_factory=dict, repr=False)
 
-    # ==== Совместимый плоский доступ: RowItem.price_markup.name для шаблонов
-    # и row_item.price_markup для существующих вызовов. Переносится на VO.
-    code = RowField[str]('code')
-    code_man = RowField[str]('code_man')
-    code_art = RowField[str]('code_art')
-    title = RowField[str]('title')
-    manufacturer = RowField[str]('manufacturer_name')
-    brand = RowField[str]('brand')
-    model = RowField[str]('model')
+    # ==== Плоские ключи полей: их читают шаблоны, маппинги колонок и jsonl
+    # (RowItem.price_markup.name). Значения лежат в value objects выше.
+    code = RowField('code')
+    code_man = RowField('code_man')
+    code_art = RowField('code_art')
+    title = RowField('title')
+    manufacturer = RowField('manufacturer_name')
+    brand = RowField('brand')
+    model = RowField('model')
 
-    price_opt = RowField[float]('price_opt')
-    price_recommended = RowField[float]('price_recommended')
-    price_markup = RowField[float]('price_markup')
-    percent_markup = RowField[float]('percent_markup')
+    price_opt = RowField('price_opt')
+    price_recommended = RowField('price_recommended')
+    price_markup = RowField('price_markup')
+    percent_markup = RowField('percent_markup')
 
-    supplier_name = RowField[str]('supplier_name')
-    type_production = RowField[str]('type_production')
+    supplier_name = RowField('supplier_name')
+    type_production = RowField('type_production')
 
-    rest_count = RowField[int]('rest_count')
-    reserve_count = RowField[int]('reserve_count')
-    delivery_period = RowField[int]('delivery_period')
-    condition = RowField[str]('condition')
-    available = RowField[int]('available')
+    rest_count = RowField('rest_count')
+    reserve_count = RowField('reserve_count')
+    delivery_period = RowField('delivery_period')
+    condition = RowField('condition')
+    available = RowField('available')
 
-    season = RowField[str]('season')
-    spike = RowField[str]('spike')
+    season = RowField('season')
+    spike = RowField('spike')
 
-    width = RowField[str]('width')
-    height_percent = RowField[str]('height_percent')
-    mark = RowField[str]('mark')
-    diameter = RowField[str]('diameter')
-    ext_diameter = RowField[int | float]('ext_diameter')
-    disk_thickness = RowField[str]('disk_thickness')
-    slot_count = RowField[int]('slot_count')
-    us_aff_designation = RowField[str]('us_aff_designation')
-    pcd1 = RowField[int | float]('pcd1')
-    pcd2 = RowField[int]('pcd2')
-    eet = RowField[int | float]('eet')
-    central_diameter = RowField[int | float]('central_diameter')
+    width = RowField('width')
+    height_percent = RowField('height_percent')
+    mark = RowField('mark')
+    diameter = RowField('diameter')
+    ext_diameter = RowField('ext_diameter')
+    disk_thickness = RowField('disk_thickness')
+    slot_count = RowField('slot_count')
+    us_aff_designation = RowField('us_aff_designation')
+    pcd1 = RowField('pcd1')
+    pcd2 = RowField('pcd2')
+    eet = RowField('eet')
+    central_diameter = RowField('central_diameter')
 
-    color = RowField[str]('color')
-    main_color = RowField[str]('main_color')
-    tire_type = RowField[str]('tire_type')
-    inscription_on_the_side = RowField[int]('inscription_on_the_side')
-    run_flat = RowField[int]('run_flat')
-    index_velocity = RowField[str]('index_velocity')
-    index_load = RowField[str]('index_load')
-    construction_type = RowField[str]('construction_type')
-    axis = RowField[str]('axis')
-    layering = RowField[str]('layering')
-    intimacy = RowField[str]('intimacy')
-    camera_type = RowField[str]('camera_type')
-    fastener = RowField[int]('fastener')
-    disk_type = RowField[int]('disk_type')
-    disk_type_1 = RowField[int]('disk_type_1')
+    color = RowField('color')
+    main_color = RowField('main_color')
+    tire_type = RowField('tire_type')
+    inscription_on_the_side = RowField('inscription_on_the_side')
+    run_flat = RowField('run_flat')
+    index_velocity = RowField('index_velocity')
+    index_load = RowField('index_load')
+    construction_type = RowField('construction_type')
+    axis = RowField('axis')
+    layering = RowField('layering')
+    intimacy = RowField('intimacy')
+    camera_type = RowField('camera_type')
+    fastener = RowField('fastener')
+    disk_type = RowField('disk_type')
+    disk_type_1 = RowField('disk_type_1')
 
-    order = RowField[int]('order')
-    group_by_params = RowField[int]('group_by_params')
-    double_candidate = RowField[bool]('double_candidate')
-    is_double = RowField[bool]('is_double')
-    disputed = RowField[str]('disputed')
+    order = RowField('order')
+    group_by_params = RowField('group_by_params')
+    double_candidate = RowField('double_candidate')
+    is_double = RowField('is_double')
+    disputed = RowField('disputed')
 
     def __init__(self, raw_row: dict[str, Any] | None = None):
         """init"""
@@ -188,7 +192,7 @@ class RowItem:
     @property
     def parse_errors(self) -> dict[str, Any]:
         """Поля, которые не удалось привести к своему типу."""
-        return self._errors
+        return dict(self._errors)
 
     @property
     def codes(self) -> list[str]:
@@ -203,12 +207,6 @@ class RowItem:
             return None
         title = self.identity.title
         return hashlib.md5(title.encode('utf-8'), usedforsecurity=False).hexdigest()
-
-    @classmethod
-    def from_dict(cls, serialized_data: str | dict[str, Any]) -> RowItem:
-        """from dict"""
-        parsed_data = json.loads(serialized_data) if isinstance(serialized_data, str) else serialized_data
-        return cls(parsed_data)
 
     def to_dict(self) -> dict[str, Any]:
         """to dict"""
