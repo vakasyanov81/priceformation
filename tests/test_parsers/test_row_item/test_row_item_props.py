@@ -89,6 +89,18 @@ def test_row_item_from_raw_row_keeps_error_keys() -> None:
     assert row.parse_errors['price_opt']['value'] == 'не число'
 
 
+def test_parse_errors_returns_copy() -> None:
+    """Потребитель не может дописать во внутренний словарь ошибок."""
+    row = RowItem({'price_opt': 'не число'})
+
+    errors = row.parse_errors
+    errors['price_opt'] = 'подмена'
+    errors['hash_title'] = {'value': 'x', 'error': 'y'}
+
+    assert set(row.parse_errors) == {'price_opt'}
+    assert row.parse_errors['price_opt']['error'] != 'подмена'
+
+
 def test_value_objects_are_filled_by_key() -> None:
     """плоский ключ попадает в value object по пути из реестра."""
     raw = {'title': 't1', 'width': '225', 'pcd1': '114.3', 'price_opt': '10', 'rest_count': '5'}
