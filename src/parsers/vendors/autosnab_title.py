@@ -3,7 +3,7 @@
 import re
 from typing import NamedTuple
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 _SIZE_PROFILE = re.compile(
     r'(?i)^(\d+(?:[.,]\d+)?)/(\d+(?:[.,]\d+)?)[z]?r(\d+(?:[.,]\d+)?)c?\b',

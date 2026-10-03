@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.vendors.four_tochki.four_tochki_title import (
     get_prepared_title,
     is_special_tire,

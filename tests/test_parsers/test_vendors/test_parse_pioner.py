@@ -15,6 +15,7 @@ from test_parsers.test_vendors.parse_config import (
 )
 from test_parsers.test_vendors.parse_result_helpers import get_first_row_item, get_rows
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -24,7 +25,6 @@ from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.data_provider import MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import PionerParser, pioner_params
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests())

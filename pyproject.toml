@@ -12,6 +12,12 @@ dependencies = [
     "python_calamine==0.8.2",
 ]
 
+# CLI-точка: `uv run priceformation ...` и короткий алиас `uv run pf ...`.
+# Раньше запуск был `uv run python src/run.py`; модуль run лежит в src/ верхним уровнем.
+[project.scripts]
+priceformation = "run:main"
+pf = "run:main"
+
 [dependency-groups]
 dev = [
     "pytest==9.1.1",

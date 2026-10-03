@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.writer.jsonl_codeable import is_codable_value, usable_codes
 from parsers.writer.templates.column_helper import ColumnHelper
 

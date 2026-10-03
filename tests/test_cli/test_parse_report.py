@@ -5,6 +5,7 @@ import time
 from io import StringIO
 from unittest.mock import patch
 
+from domain.row_item.row_item import RowItem
 from parse_report import (
     REPORT_VERSION,
     dump_json,
@@ -19,7 +20,6 @@ from parse_report_build import (
     stats_from_result,
     warnings_from_result,
 )
-from parsers.row_item.row_item import RowItem
 from services.parse_orchestrator import ParseResult
 
 _TITLE = 'шина test'

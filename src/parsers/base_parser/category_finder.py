@@ -4,9 +4,9 @@ ind category, and set
 
 from collections.abc import Sequence
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
-from parsers.row_item.row_item import RowItem
 
 _UNKNOWN_TYPE_LABEL = 'не указан'
 _MSG_SKIPPED_CATEGORIES = (

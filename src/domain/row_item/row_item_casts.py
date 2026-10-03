@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Any
 
-from parsers.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
+from domain.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
 
 
 @lru_cache

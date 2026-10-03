@@ -1,7 +1,7 @@
 """Title size format variants for four_tochki sheet 1."""
 
+from domain.row_item.row_item import RowItem
 from parsers.nomenclature_title import compose_tire_title, load_velocity
-from parsers.row_item.row_item import RowItem
 
 _RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 

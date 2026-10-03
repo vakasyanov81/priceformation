@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from services.parse_orchestrator import ParseOrchestrator, ParseResult
 from services.price_report import PriceReportService
 

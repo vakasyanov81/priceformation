@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Protocol
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 if TYPE_CHECKING:
     from parsers.xls_reader import IXlsReader

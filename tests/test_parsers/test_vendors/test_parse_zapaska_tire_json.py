@@ -9,11 +9,11 @@ import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
 from domain.config_context import get_config_provider
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_tire_json import ZapaskaTireJSON, zapaska_tire_params
 
 _FIXTURE_TIRE = 'tests/test_parsers/fixtures/zapaska_tire.json'

@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from parsers.row_item.row_item import RowItem
-from parsers.row_item.row_item_casts import get_try_to_int_or_float, get_try_to_int_or_str
+from domain.row_item.row_item import RowItem
+from domain.row_item.row_item_casts import get_try_to_int_or_float, get_try_to_int_or_str
 
 _INT_OR_FLOAT_CASES = [
     ('1', 1),

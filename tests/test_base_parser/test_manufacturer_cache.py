@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
@@ -11,7 +12,6 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
-from parsers.row_item.row_item import RowItem
 
 _AEOLUS_ALIASES = {'Aeolus': ('Аеолус',)}
 

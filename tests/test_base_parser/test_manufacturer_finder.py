@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
-from parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -11,7 +12,6 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.data_provider import MarkupRulesConfig
-from parsers.row_item.row_item import RowItem
 
 _PERCENT_LOW = 0.1
 _PERCENT_HIGH = 0.9

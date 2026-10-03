@@ -4,7 +4,7 @@ find word in title
 
 from functools import lru_cache
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 from .alias_container import AliasContainer
 

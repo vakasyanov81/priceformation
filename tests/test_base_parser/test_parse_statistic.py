@@ -1,8 +1,8 @@
 """ParseResultStatistic: min/max наценки после разбора."""
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.parse_statistic import ParseResultStatistic, ParserStats
 from parsers.base_parser.price_markup import fill_percent_markup
-from parsers.row_item.row_item import RowItem
 
 _PRICE = 100
 

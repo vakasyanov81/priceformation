@@ -2,9 +2,9 @@
 base logic for four_tochki vendor
 """
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams
-from parsers.row_item.row_item import RowItem
 
 fourtochki_params = ParserParams(
     supplier=ParseParamsSupplier(folder_name='four_tochki', name='Форточки', code='5'),

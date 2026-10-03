@@ -1,6 +1,6 @@
 """Percent and absolute markup arithmetic."""
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 
 def calc_percent(price_sale: float, price_purchase: float) -> float:

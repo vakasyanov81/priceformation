@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from domain.config_context import get_config_provider
+from domain.row_item.row_item import RowItem
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
-from parsers.row_item.row_item import RowItem
 from parsers.writer.jsonl_writer import RESULT_META_FILE
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles

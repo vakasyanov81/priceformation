@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from parsers.common_price_output import jsonl_output_files
-from parsers.row_item.row_item import RowItem
 from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
 from run_machine import fail_unknown_result_template, machine_json
 from services.doubles_service import DoublesService

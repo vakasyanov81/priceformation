@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from domain.row_item.disk_name_extras import disk_name_extras
+from domain.row_item.row_item import RowItem
 from parsers.data_provider.manufacturer_group import manufacturer_group
-from parsers.row_item.disk_name_extras import disk_name_extras
-from parsers.row_item.row_item import RowItem
 
 _DISTINGUISHING_INTIMACY = frozenset(('TT', 'TTF', 'TT-ONLY'))
 _YES_FLAGS = frozenset(('да', 'yes', '1', 'true', 'runflat'))

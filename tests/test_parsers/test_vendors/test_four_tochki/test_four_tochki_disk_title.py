@@ -12,7 +12,7 @@ def test_et_label_none_and_empty() -> None:
 
 def test_four_tochki_base_raises_not_implemented() -> None:
     """FourTochkiParserBase.get_current_category — абстрактный метод."""
-    from parsers.row_item.row_item import RowItem
+    from domain.row_item.row_item import RowItem
     from parsers.vendors.four_tochki.four_tochki_base import FourTochkiParserBase
 
     with pytest.raises(NotImplementedError):

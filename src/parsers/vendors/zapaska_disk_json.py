@@ -4,6 +4,7 @@ logic for zapaska (rest) vendor
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -15,7 +16,6 @@ from parsers.base_parser.protocols import ReaderFactory
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.json_reader import JsonPriceReader
 from parsers.registry import register_vendor
-from parsers.row_item.row_item import RowItem
 
 column_mapping = {
     'cae': RowItem.code_art.name,

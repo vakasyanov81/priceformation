@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, ClassVar
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
 from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns
 from parsers.writer.templates.tmpl.for_drom import ForDrom

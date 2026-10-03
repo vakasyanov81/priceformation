@@ -4,9 +4,9 @@ logic for mim vendor (sheet 1)
 
 import dataclasses
 
+from domain.row_item.row_item import RowItem
 from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
 from parsers.registry import register_vendor
-from parsers.row_item.row_item import RowItem
 
 from ...base_parser.base_parser_config import make_parse_config
 from .mim_base import MimParserBase, mim_params

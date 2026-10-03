@@ -7,8 +7,8 @@
 
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy, MarkupPolicy, percent_to_store
-from parsers.row_item.row_item import RowItem
 
 _CENTS_STEP = 10
 

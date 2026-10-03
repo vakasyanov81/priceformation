@@ -16,10 +16,10 @@ from test_parsers.test_vendors.parse_config import (
     make_parse_configuration,
 )
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.four_tochki.four_tochki_sheet2 import (
     FourTochkiParser2Sheet,
     fourtochki_sheet_2_params,

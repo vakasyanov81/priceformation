@@ -4,6 +4,7 @@ import pytest
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
 from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import BasePriceParseConfigurationParams, ParseConfiguration
 from parsers.base_parser.markup_policy import (
@@ -15,7 +16,6 @@ from parsers.base_parser.markup_policy import (
 from parsers.base_parser.row_processor import MarkupPolicyNotSetError
 from parsers.data_provider import AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig, VendorConfigEntry
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import pioner_params
 
 _ZERO = 0

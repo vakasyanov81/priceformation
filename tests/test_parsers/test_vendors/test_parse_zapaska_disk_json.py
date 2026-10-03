@@ -6,13 +6,13 @@ import pytest
 from test_parsers.test_vendors.parse_config import ZapaskaMarkupRulesProviderForTests, make_parse_configuration
 
 from domain.config_context import get_config_provider
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from parsers.fake_json_reader import FakeJsonPriceReader
 from parsers.json_reader import JsonPriceReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
 
 _NO_RRC_OPT = 10000

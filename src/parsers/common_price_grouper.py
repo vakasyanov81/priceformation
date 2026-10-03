@@ -5,11 +5,11 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Any
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
 from parsers.common_price_size import canon_number, size_fields
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
-from parsers.row_item.row_item import RowItem
 
 _MIN_ITEMS_FOR_DOUBLES = 2
 _GROUP_ORDER_KEY = attrgetter('duplicate.group_by_params', 'duplicate.order')

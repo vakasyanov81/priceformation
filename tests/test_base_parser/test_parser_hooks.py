@@ -2,10 +2,10 @@
 
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import pioner_params
 
 _OPT = 100

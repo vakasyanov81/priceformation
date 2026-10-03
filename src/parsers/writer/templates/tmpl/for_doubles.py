@@ -4,7 +4,7 @@ write template for duplicates report
 
 from typing import ClassVar
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.writer.templates.iwrite_template import WriteColumns
 from parsers.writer.templates.tmpl.for_inner import ForInner
 

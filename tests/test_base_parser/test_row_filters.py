@@ -2,11 +2,11 @@
 
 from test_parsers.test_vendors.parse_config import make_parse_configuration
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.base_parser_row import drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.pioner import pioner_params
 
 _TITLE = 'ok title'

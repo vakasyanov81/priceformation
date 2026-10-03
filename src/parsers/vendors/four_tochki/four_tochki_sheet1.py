@@ -4,9 +4,9 @@ logic for four_tochki vendor (sheet 1)
 
 import dataclasses
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import make_parse_config
 from parsers.registry import register_vendor
-from parsers.row_item.row_item import RowItem
 
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from .four_tochki_title import get_prepared_title

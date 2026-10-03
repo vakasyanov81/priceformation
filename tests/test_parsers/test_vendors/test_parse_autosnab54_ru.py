@@ -10,6 +10,7 @@ from test_parsers.test_vendors.test_parse_poshk import (
     VendorListProviderForTests,
 )
 
+from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
@@ -19,7 +20,6 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.fake_xls_reader import FakeXlsReader
-from parsers.row_item.row_item import RowItem
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_params
 from parsers.vendors.autosnab_title import fill_from_title
 

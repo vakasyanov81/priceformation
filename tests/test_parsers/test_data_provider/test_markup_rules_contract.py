@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -13,7 +14,6 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.data_provider import MarkUpRule, MarkupRulesConfig
-from parsers.row_item.row_item import RowItem
 
 _MIM_FIRST = 0.2
 _POSHK_FIRST = 0.7

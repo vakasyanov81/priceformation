@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.common_price_grouper import CommonPriceGrouper
-from parsers.row_item.row_item import RowItem
 
 _PRICE_LOW = 10
 _PRICE_MID = 15

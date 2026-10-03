@@ -45,11 +45,11 @@ class _FakeBaseParser:
 
     @classmethod
     def parser_params(cls):  # type: ignore[no-untyped-def]
+        from domain.row_item.row_item import RowItem
         from parsers.base_parser.base_parser_config import (
             ParseParamsSupplier,
             ParserParams,
         )
-        from parsers.row_item.row_item import RowItem
 
         return ParserParams(
             supplier=ParseParamsSupplier(

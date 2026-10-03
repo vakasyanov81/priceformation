@@ -6,13 +6,13 @@ from typing import Any
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.category_finder import (
     CategoryFinder,
     canonical_product_type,
     raw_category_label,
     skipped_unknown_categories_message,
 )
-from parsers.row_item.row_item import RowItem
 
 
 @pytest.mark.parametrize(

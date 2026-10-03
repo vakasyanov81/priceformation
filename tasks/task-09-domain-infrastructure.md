@@ -21,7 +21,7 @@ src/
     domain/                     ← бизнес-логика, независимая от IO
         __init__.py
         exceptions.py           ← CoreExceptionError, SupplierNotHavePricesError
-        row_item.py             ← RowItem, Value Objects (после Task-05)
+        row_item/               ← RowItem и Value Objects (после Task-05 и #275)
         markup_policy.py        ← чистые политики наценки
         protocols.py            ← Ports: ConfigProvider, DataProvider, PriceSource
         ...

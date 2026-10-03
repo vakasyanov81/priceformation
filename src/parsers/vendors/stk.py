@@ -2,6 +2,7 @@
 # stk
 """
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
@@ -9,7 +10,6 @@ from parsers.base_parser.base_parser_config import (
     make_parse_config,
 )
 from parsers.registry import register_vendor
-from parsers.row_item.row_item import RowItem
 
 STK_START_ROW = 14
 

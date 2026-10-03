@@ -1,7 +1,7 @@
 """tests for BaseParser spike title helper."""
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
-from parsers.row_item.row_item import RowItem
 
 
 def test_spike_title_empty() -> None:

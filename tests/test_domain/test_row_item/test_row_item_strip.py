@@ -2,8 +2,8 @@
 
 import pytest
 
-from parsers.row_item.row_item_casts import get_sanitized_code
-from parsers.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
+from domain.row_item.row_item_casts import get_sanitized_code
+from domain.row_item.row_item_strip import get_stripped, prepare_str_to_float, strip_into_str
 
 _XLS_FLOAT_CODE = 123.0
 _SANITIZED_CODE = '123'

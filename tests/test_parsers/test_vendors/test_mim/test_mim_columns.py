@@ -1,6 +1,6 @@
 """tests for Mim sheet column maps."""
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 from parsers.vendors.mim.mim_2sheet import mim_sheet_2_params
 from parsers.vendors.mim.mim_3sheet import mim_sheet_3_params
 

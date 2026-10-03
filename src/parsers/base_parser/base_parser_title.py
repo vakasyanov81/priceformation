@@ -6,7 +6,7 @@
 
 import re
 
-from parsers.row_item.row_item import RowItem
+from domain.row_item.row_item import RowItem
 
 _COMMA_IN_NUMBER = re.compile(r'(\d),(\d)')
 

@@ -12,6 +12,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol, cast
 
+from domain.row_item.row_item import RowItem
 from parsers.all_vendors import all_vendors, vendor_config_is_enabled
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -22,7 +23,6 @@ from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.data_provider.vendor_list import VendorListConfigFileError
 from parsers.registry import vendor_entry_for, vendor_markup_policy_for
-from parsers.row_item.row_item import RowItem
 from services.service_provider import ServiceProvider
 
 logger = logging.getLogger(__name__)

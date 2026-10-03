@@ -2,6 +2,8 @@
 logic for zapaska (json) tire vendor
 """
 
+from domain.row_item.row_item import RowItem
+
 from ..base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
@@ -9,7 +11,6 @@ from ..base_parser.base_parser_config import (
 )
 from ..base_parser.category_finder import canonical_product_type, raw_category_label
 from ..registry import register_vendor
-from ..row_item.row_item import RowItem
 from .zapaska_disk_json import ZapaskaDiskJSON, column_mapping
 
 column_mapping = dict(column_mapping)
