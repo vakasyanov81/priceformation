@@ -30,9 +30,14 @@ fourtochki_sheet_1_params = dataclasses.replace(
         12: RowItem.spike.name,
         13: RowItem.inscription_on_the_side.name,
         14: RowItem.run_flat.name,
-        15: RowItem.rest_count.name,
-        16: RowItem.price_opt.name,
-        17: RowItem.price_recommended.name,
+        15: RowItem.us_aff_designation.name,
+        16: RowItem.camera_type.name,
+        17: RowItem.axis.name,
+        18: RowItem.layering.name,
+        19: RowItem.construction_type.name,
+        20: RowItem.rest_count.name,
+        21: RowItem.price_recommended.name,
+        22: RowItem.price_opt.name,
     },
 )
 
