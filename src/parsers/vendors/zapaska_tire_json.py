@@ -28,9 +28,9 @@ zapaska_tire_params = ParserParams(
     start_row=0,
     sheet_info='',
     columns=column_mapping,
-    stop_words=[],
-    file_templates=['tire.json'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('tire.json',),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 

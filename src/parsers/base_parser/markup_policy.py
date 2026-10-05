@@ -1,6 +1,13 @@
+from typing import TYPE_CHECKING, Literal
+
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.price_markup import get_markup, recommended_percent
 from parsers.data_provider.models import ABSOLUTE_MODE_DELTA, MarkUpRule, MarkupRulesConfig
+
+if TYPE_CHECKING:
+    from parsers.base_parser import markup_policy as mp
+
+type MarkupPolicySpec = type['mp.MarkupPolicy'] | Literal['map_on_opt', 'identity', 'recommended_or_map'] | None
 
 
 class MarkupPolicy:

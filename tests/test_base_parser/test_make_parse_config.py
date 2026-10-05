@@ -20,9 +20,9 @@ def _parser_params() -> ParserParams:
         start_row=1,
         sheet_info='',
         columns={},
-        stop_words=[],
-        file_templates=[],
-        sheet_indexes=[],
+        stop_words=(),
+        file_templates=(),
+        sheet_indexes=(),
         row_item_adaptor=RowItem,
     )
 

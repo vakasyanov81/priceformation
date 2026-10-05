@@ -13,7 +13,6 @@ Usage::
 import importlib
 import sys
 from collections.abc import Callable
-from typing import Literal
 
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -24,6 +23,7 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MarkupPolicy,
+    MarkupPolicySpec,
     RecommendedOrMapMarkupPolicy,
     make_map_on_opt_markup_policy,
     make_markup_policy,
@@ -32,7 +32,7 @@ from parsers.base_parser.markup_policy import (
 # Type aliases (re-exported for convenience)
 VendorEntry = tuple[type[BaseParser], ParseConfiguration]
 
-MarkupPolicySpec = type[MarkupPolicy] | Literal['map_on_opt', 'identity', 'recommended_or_map'] | None
+# MarkupPolicySpec moved to parsers.base_parser.markup_policy
 
 # Vendor modules to import on demand (see _ensure_vendors_imported)
 _VENDORS_TO_IMPORT = (
@@ -73,7 +73,6 @@ def register_vendor(
     code: str,
     *,
     markup_policy: MarkupPolicySpec = None,
-    enabled_by_default: bool = True,
 ) -> Callable[[type[BaseParser]], type[BaseParser]]:
     """Декоратор: регистрирует класс парсера в глобальном реестре.
 
@@ -84,9 +83,7 @@ def register_vendor(
     """
 
     def wrapper(cls: type[BaseParser]) -> type[BaseParser]:
-        cls._vendor_code = code  # type: ignore[attr-defined]
-        cls._markup_policy_type = markup_policy  # type: ignore[attr-defined]
-        cls._enabled_by_default = enabled_by_default  # type: ignore[attr-defined]
+        cls._markup_policy_type = markup_policy
         _registry[code] = cls
         return cls
 

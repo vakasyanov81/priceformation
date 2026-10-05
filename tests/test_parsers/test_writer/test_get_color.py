@@ -4,10 +4,10 @@ from typing import Any
 
 import pytest
 
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import ColorsWithoutMapTemplate, FixtureTemplate, write_data
 

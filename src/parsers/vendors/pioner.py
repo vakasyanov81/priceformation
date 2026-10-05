@@ -28,9 +28,9 @@ pioner_params = ParserParams(
         4: RowItem.rest_count.name,
         5: RowItem.reserve_count.name,
     },
-    stop_words=[],
-    file_templates=['price*.xls', 'price*.xlsx'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('price*.xls', 'price*.xlsx'),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 

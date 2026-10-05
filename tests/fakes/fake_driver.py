@@ -4,7 +4,7 @@ write price list logic via xlwt module
 
 from typing import Any
 
-from .ixls_driver import IXlsDriver
+from parsers.writer.ixlsx_driver import IXlsDriver
 
 
 class FakeXlwtDriver(IXlsDriver):

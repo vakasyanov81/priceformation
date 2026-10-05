@@ -29,9 +29,9 @@ def _parse_config() -> ParseConfiguration:
                 start_row=_START_ROW,
                 sheet_info='',
                 columns=_COLUMNS,
-                stop_words=[],
-                file_templates=[],
-                sheet_indexes=[0],
+                stop_words=(),
+                file_templates=(),
+                sheet_indexes=(0,),
                 row_item_adaptor=RowItem,
             ),
         )

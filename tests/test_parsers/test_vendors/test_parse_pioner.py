@@ -24,8 +24,8 @@ from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
 from parsers.data_provider import MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
-from parsers.fake_xls_reader import FakeXlsReader
 from parsers.vendors.pioner import PionerParser, pioner_params
+from tests.fakes.fake_xls_reader import FakeXlsReader
 
 parser_config = make_parse_configuration(pioner_params, markup_rules=PionerMarkupRulesProviderForTests())
 _EMPTY_RULES_WHERE = 'test_markup_rules.json'

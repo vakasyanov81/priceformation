@@ -10,6 +10,7 @@ from parsers.writer.templates.all_templates import (
     writer_template_name,
     writer_templates_by_name,
 )
+from parsers.writer.templates.iwrite_template import DEFAULT_TEMPLATE_FILE, IWriteTemplate
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
@@ -51,7 +52,6 @@ def test_get_writer_template_unknown() -> None:
 
 def test_get_columns_format_empty_without_format() -> None:
     """get_columns_format возвращает пустой словарь, если нет колонок с format."""
-    from parsers.writer.templates.iwrite_template import IWriteTemplate
 
     class _NoFormat(IWriteTemplate):  # noqa: WPS431
         __COLUMNS__ = [{'A': {'field': 'title'}}]  # noqa: RUF012
@@ -59,3 +59,23 @@ def test_get_columns_format_empty_without_format() -> None:
     no_format = _NoFormat()
     fmt = no_format.get_columns_format()
     assert fmt == {}
+
+
+def test_misspelled_template_setting_is_not_silently_ignored() -> None:
+    """Опечатка в имени настройки ломает чтение, а не молча даёт пустой шаблон.
+
+    С hasattr/getattr опечатка в `__COLUMNS__` давала `[]`, и файл писался без
+    колонок. Теперь настройки объявлены в IWriteTemplate, поэтому подкласс без
+    них читает то, что задал родитель, а неожиданного имени нет вовсе.
+    """
+
+    class _Misspelled(IWriteTemplate):  # noqa: WPS431
+        __COLUMN__ = [{'A': {'field': 'title'}}]  # noqa: RUF012
+
+    # Имя есть в классе, но шаблон читает объявленное в IWriteTemplate
+    # __COLUMNS__: опечатка не подменяет настройку, а остаётся мёртвым атрибутом.
+    assert _Misspelled.__COLUMN__  # noqa: WPS609
+    assert _Misspelled().columns() == []
+    # Настоящая настройка видна на любом подклассе без hasattr/getattr.
+    assert IWriteTemplate.__COLUMNS__ == []
+    assert _Misspelled().get_file_name() == DEFAULT_TEMPLATE_FILE

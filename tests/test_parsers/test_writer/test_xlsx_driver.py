@@ -7,7 +7,7 @@ import openpyxl
 import pytest
 from openpyxl.styles import Font
 
-from parsers.writer.xwlt_driver import (
+from parsers.writer.xlsx_driver import (
     WorkbookNotInitializedError,
     WorksheetNotInitializedError,
     XlsxWriterDriver,

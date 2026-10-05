@@ -5,9 +5,9 @@ tests write duplicates report
 import datetime
 from typing import Any
 
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import result_body_inner, write_data
 

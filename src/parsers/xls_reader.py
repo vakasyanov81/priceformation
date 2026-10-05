@@ -2,6 +2,7 @@
 xls read logic
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
@@ -35,7 +36,7 @@ type ParseParams = dict[str, int | IndexToHeader]
 class IXlsReader:
     """interface xls reader"""
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
+    def parse(self, sheet_indexes: Sequence[int] | None = None) -> DSheet:
         """do parse"""
         raise NotImplementedError
 
@@ -106,7 +107,7 @@ class XlsReader(IXlsReader):
 
         return self.cur_row_values
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> DSheet:
+    def parse(self, sheet_indexes: Sequence[int] | None = None) -> DSheet:
         """parse given sheets or all if not specified"""
         all_sheets = self.sheets()
         sheet_indexes = sheet_indexes or list(range(len(all_sheets)))

@@ -51,16 +51,16 @@ class RowProcessor:  # noqa: WPS214
     def __init__(self, markup_policy: MarkupPolicy | None = None) -> None:
         self._markup_policy = markup_policy
 
-    def _require_markup_policy(self) -> MarkupPolicy:
+    def require_markup_policy(self) -> MarkupPolicy:
         if self._markup_policy is None:
             raise MarkupPolicyNotSetError()
         return self._markup_policy
 
     def get_markup_percent(self, price_value: float) -> float:
-        return self._require_markup_policy().markup_percent_for_opt(price_value)
+        return self.require_markup_policy().markup_percent_for_opt(price_value)
 
     def add_price_markup(self, row_item: RowItem) -> None:
-        policy = self._require_markup_policy()
+        policy = self.require_markup_policy()
         opt = row_item.pricing.price_opt or 0
         price = policy.apply(opt, row_item.pricing.price_recommended)
         if isinstance(policy, IdentityMarkupPolicy):

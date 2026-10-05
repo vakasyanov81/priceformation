@@ -11,9 +11,9 @@ from parsers.base_parser.base_parser import make_parser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
-from parsers.fake_json_reader import FakeJsonPriceReader
 from parsers.json_reader import JsonPriceReader
 from parsers.vendors.zapaska_disk_json import ZapaskaDiskJSON, zapaska_params
+from tests.fakes.fake_json_reader import FakeJsonPriceReader
 
 _NO_RRC_OPT = 10000
 _NO_RRC_MARKUP = 11600

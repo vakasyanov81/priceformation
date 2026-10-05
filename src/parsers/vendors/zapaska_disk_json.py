@@ -36,9 +36,9 @@ zapaska_params = ParserParams(
     start_row=0,
     sheet_info='',
     columns=column_mapping,
-    stop_words=[],
-    file_templates=['disk.json'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('disk.json',),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 
@@ -104,5 +104,5 @@ class ZapaskaDiskJSON(BaseParser):
         if not price_recommended:
             self.not_matched_position.append(row_item.identity.title)
 
-        price_with_markup = self._require_markup_policy().apply(price_opt, row_item.pricing.price_recommended)
+        price_with_markup = self.require_markup_policy().apply(price_opt, row_item.pricing.price_recommended)
         row_item.set_field('price_markup', self.round_price(price_with_markup) if price_with_markup else None)

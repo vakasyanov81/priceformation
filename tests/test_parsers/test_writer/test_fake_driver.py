@@ -1,6 +1,6 @@
 """tests for FakeXlwtDriver"""
 
-from parsers.writer.fake_driver import FakeXlwtDriver
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 _FOLDER = 'folder/'
 _FILE_NAME = 'file.xls'

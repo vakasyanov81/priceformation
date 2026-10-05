@@ -1,5 +1,6 @@
 """fake xls reader"""
 
+from collections.abc import Sequence
 from typing import Any
 
 from parsers.xls_reader import IXlsReader
@@ -19,9 +20,9 @@ class FakeXlsReader(IXlsReader):
         """init"""
         self.file_path = file_path
         self.reader_params = reader_params
-        self.sheet_indexes: list[int] | None = None
+        self.sheet_indexes: Sequence[int] | None = None
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> Any:
+    def parse(self, sheet_indexes: Sequence[int] | None = None) -> Any:
         """do parse"""
 
         self.sheet_indexes = sheet_indexes

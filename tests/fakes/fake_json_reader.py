@@ -1,5 +1,6 @@
 """In-memory JSON price reader for parser tests (no disk)."""
 
+from collections.abc import Sequence
 from typing import Any, ClassVar
 
 from parsers.json_reader import JsonRows, columns_from_params, rename_fields
@@ -19,7 +20,7 @@ class FakeJsonPriceReader(IXlsReader):
         self.file_path = file_path
         self._columns = columns_from_params(reader_params)
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> JsonRows:
+    def parse(self, sheet_indexes: Sequence[int] | None = None) -> JsonRows:
         """JSON has no worksheets; sheet_indexes is ignored."""
         rows = [dict(row) for row in self.raw_rows]
         rename_fields(rows, self._columns)

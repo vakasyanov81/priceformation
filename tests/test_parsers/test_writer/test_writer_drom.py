@@ -5,9 +5,9 @@ tests write price for drom.ru
 import datetime
 from typing import Any
 
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.xls_writer import XlsWriter
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import result_body_drom, write_data
 

@@ -12,7 +12,11 @@ from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
-from parsers.base_parser.markup_policy import MarkupPolicy, make_markup_policy
+from parsers.base_parser.markup_policy import (
+    MarkupPolicy,
+    MarkupPolicySpec,
+    make_markup_policy,
+)
 from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatistic
 from parsers.base_parser.price_markup import fill_percent_markup, get_markup as price_get_markup
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
@@ -46,10 +50,11 @@ class Parser(Protocol):
     def parse(self) -> list[RowItem]: ...
 
 
-class BaseParser:  # noqa: WPS214
+class BaseParser:
     """Парсер — композиция FileReader, RowProcessor, TitleFilter."""
 
     find_manufacturer_on_enrich: bool = True
+    _markup_policy_type: MarkupPolicySpec | None = None
 
     def __init__(
         self,
@@ -247,8 +252,8 @@ class BaseParser:  # noqa: WPS214
     def get_markup(cls, price: float, percent: float) -> float:
         return price_get_markup(price, percent)
 
-    def _require_markup_policy(self) -> MarkupPolicy:
-        return self._row_processor._require_markup_policy()
+    def require_markup_policy(self) -> MarkupPolicy:
+        return self._row_processor.require_markup_policy()
 
     # ------------------------------------------------------------------
     # Title (delegates to TitleFilter)
@@ -265,21 +270,6 @@ class BaseParser:  # noqa: WPS214
 
     def is_valid_title(self, title: str | None) -> bool:
         return self._title_filter.is_valid_title(title)
-
-    def has_stop_word(self, title: str) -> bool:
-        return self._title_filter.has_stop_word(title)
-
-    def check_title_in_black_list(self, title: str) -> bool:
-        return self._title_filter.check_title_in_black_list(title)
-
-    def get_black_list(self) -> list[str]:
-        return self._title_filter.get_black_list()
-
-    def prepare_black_list(self, black_list: list[str]) -> list[str]:
-        return self._title_filter.prepare_black_list(black_list)
-
-    def get_stop_words(self) -> list[str]:
-        return self._title_filter.get_stop_words()
 
     @classmethod
     def prepare_title(cls, title: str) -> str:

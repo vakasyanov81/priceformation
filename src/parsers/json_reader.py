@@ -1,6 +1,7 @@
 """JSON price reader: list[dict] with string column mapping."""
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, cast
 
@@ -32,7 +33,7 @@ class JsonPriceReader(IXlsReader):
         self._file_path = file_path
         self._columns = columns_from_params(reader_params)
 
-    def parse(self, sheet_indexes: list[int] | None = None) -> JsonRows:
+    def parse(self, sheet_indexes: Sequence[int] | None = None) -> JsonRows:
         """JSON has no worksheets; sheet_indexes is ignored."""
         rows = _load_json_rows(self._file_path)
         rename_fields(rows, self._columns)

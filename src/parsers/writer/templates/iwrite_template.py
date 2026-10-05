@@ -2,7 +2,7 @@
 write template interface
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from parsers.writer.templates.column_helper import ColumnHelper
 
@@ -10,11 +10,27 @@ type WriteColumns = list[dict[str, Any]]
 type WriteColors = dict[str, Any]
 type WriteExclude = dict[str, Any]
 
+# Настройки, которые шаблон задаёт классом. Имена в __COLUMNS__-стиле придуманы
+# исторически, но новые опечатки в них ловятся на импорте, а не на записи
+# файла: см. IWriteTemplate.
+DEFAULT_TEMPLATE_FILE = 'default_result.xls'
+EMPTY_COLUMN = 'empty_column'
+
 
 class IWriteTemplate:
-    """interface for writing template"""
+    """interface for writing template
 
-    __EMPTY_COLUMN__ = 'empty_column'
+    Настройки объявлены явно, с пустыми дефолтами: подкласс, который задал
+    `__COLUMNS__` с опечаткой, падает на импорте (нет такого поля), а не
+    молча пишет файл без колонок.
+    """
+
+    __EMPTY_COLUMN__ = EMPTY_COLUMN
+
+    __COLUMNS__: ClassVar[WriteColumns] = []
+    __FILE__: ClassVar[str] = DEFAULT_TEMPLATE_FILE
+    __EXCLUDE__: ClassVar[WriteExclude] = {}
+    __COLOR__: ClassVar[WriteColors] = {}
 
     """ write template interface """
 
@@ -23,23 +39,19 @@ class IWriteTemplate:
 
     def exclude(self) -> dict[str, Any]:
         """get exclude"""
-        ex_field = '__EXCLUDE__'
-        return getattr(self, ex_field) if hasattr(self, ex_field) else {}
+        return dict(self.__EXCLUDE__)
 
     def get_file_name(self) -> str:
-        """get exclude"""
-        file_field = '__FILE__'
-        return getattr(self, file_field) if hasattr(self, file_field) else 'default_result.xls'
+        """get file name pattern"""
+        return self.__FILE__
 
     def columns(self) -> list[dict[str, Any]]:
         """get columns"""
-        col_field = '__COLUMNS__'
-        return getattr(self, col_field) if hasattr(self, col_field) else []
+        return list(self.__COLUMNS__)
 
     def colors(self) -> dict[str, Any]:
         """get colors"""
-        col_field = '__COLOR__'
-        return getattr(self, col_field) if hasattr(self, col_field) else {}
+        return dict(self.__COLOR__)
 
     def get_columns(self) -> dict[str, ColumnHelper]:
         """cached columns as ColumnHelper map"""

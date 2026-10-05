@@ -4,10 +4,10 @@ import datetime
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.xls_writer import XlsWriter
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import write_data
 
