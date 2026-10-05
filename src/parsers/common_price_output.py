@@ -11,7 +11,7 @@ from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
 )
-from parsers.writer.ixls_driver import IXlsDriver
+from parsers.writer.ixlsx_driver import IXlsDriver
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
 from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
 from parsers.writer.templates.iwrite_template import IWriteTemplate

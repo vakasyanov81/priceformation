@@ -15,7 +15,7 @@ from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xwlt_driver import XlsxWriterDriver
+from parsers.writer.xlsx_driver import XlsxWriterDriver
 
 _TITLE = 'title'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'

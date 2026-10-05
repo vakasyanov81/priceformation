@@ -25,7 +25,7 @@ class ParseParamsSupplier:
     code: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ParserParams:
     """parser params"""
 
@@ -33,9 +33,9 @@ class ParserParams:
     start_row: int
     sheet_info: str
     columns: dict[Any, str]
-    stop_words: list[str]
-    file_templates: list[str]
-    sheet_indexes: list[int]
+    stop_words: tuple[str, ...]
+    file_templates: tuple[str, ...]
+    sheet_indexes: tuple[int, ...]
     row_item_adaptor: type[RowItem]
 
 

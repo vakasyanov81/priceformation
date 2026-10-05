@@ -11,33 +11,30 @@ from parsers.registry import register_vendor
 from .four_tochki_base import FourTochkiParserBase, fourtochki_params
 from .four_tochki_title import get_prepared_title
 
-fourtochki_sheet_1_params = dataclasses.replace(fourtochki_params)
-fourtochki_sheet_1_params.sheet_info = 'Вкладка (шины) #1'
-fourtochki_sheet_1_params.sheet_indexes = [0]
-fourtochki_sheet_1_params.columns = {
-    0: RowItem.code.name,
-    2: RowItem.manufacturer.name,
-    3: RowItem.model.name,
-    4: RowItem.width.name,
-    5: RowItem.height_percent.name,
-    6: RowItem.diameter.name,
-    7: RowItem.index_load.name,
-    8: RowItem.index_velocity.name,
-    9: RowItem.season.name,
-    10: RowItem.tire_type.name,
-    11: RowItem.ext_diameter.name,
-    12: RowItem.spike.name,
-    13: RowItem.inscription_on_the_side.name,
-    14: RowItem.run_flat.name,
-    15: RowItem.us_aff_designation.name,
-    16: RowItem.camera_type.name,
-    17: RowItem.axis.name,
-    18: RowItem.layering.name,
-    19: RowItem.construction_type.name,
-    20: RowItem.rest_count.name,
-    21: RowItem.price_recommended.name,
-    22: RowItem.price_opt.name,
-}
+fourtochki_sheet_1_params = dataclasses.replace(
+    fourtochki_params,
+    sheet_info='Вкладка (шины) #1',
+    sheet_indexes=(0,),
+    columns={
+        0: RowItem.code.name,
+        2: RowItem.manufacturer.name,
+        3: RowItem.model.name,
+        4: RowItem.width.name,
+        5: RowItem.height_percent.name,
+        6: RowItem.diameter.name,
+        7: RowItem.index_load.name,
+        8: RowItem.index_velocity.name,
+        9: RowItem.season.name,
+        10: RowItem.tire_type.name,
+        11: RowItem.ext_diameter.name,
+        12: RowItem.spike.name,
+        13: RowItem.inscription_on_the_side.name,
+        14: RowItem.run_flat.name,
+        15: RowItem.rest_count.name,
+        16: RowItem.price_opt.name,
+        17: RowItem.price_recommended.name,
+    },
+)
 
 fourtochki_sheet_1_config = make_parse_config(fourtochki_sheet_1_params)
 

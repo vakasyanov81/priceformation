@@ -19,9 +19,9 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
-from parsers.fake_xls_reader import FakeXlsReader
 from parsers.vendors.autosnab54_ru import Autosnab54Parser, autosnab_params
 from parsers.vendors.autosnab_title import fill_from_title
+from tests.fakes.fake_xls_reader import FakeXlsReader
 
 _PRICE_AUTOSNAB = 21200
 _PRICE_OTHER = 22000

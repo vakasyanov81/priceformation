@@ -1,6 +1,7 @@
 """tests for FilePricesSource and parser price_source injection"""
 
 import re
+from collections.abc import Sequence
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -29,9 +30,9 @@ class _ListSource:
         self.files = files
         self.called = False
         self.folder_name = ''
-        self.templates: list[str] = []
+        self.templates: Sequence[str] = ()
 
-    def list_files(self, folder_name: str, templates: list[str]) -> list[str]:
+    def list_files(self, folder_name: str, templates: Sequence[str]) -> list[str]:
         self.called = True
         self.folder_name = folder_name
         self.templates = templates

@@ -21,11 +21,11 @@ from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from parsers.fake_xls_reader import FakeXlsReader
 from parsers.vendors.mim.mim_1sheet import (
     MimParser1Sheet,
     mim_sheet_1_params,
 )
+from tests.fakes.fake_xls_reader import FakeXlsReader
 
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),

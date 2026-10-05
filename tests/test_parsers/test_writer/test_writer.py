@@ -7,11 +7,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from parsers.writer import xls_writer as writer_mod
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xwlt_driver import XlsxWriterDriver
+from parsers.writer.xlsx_driver import XlsxWriterDriver
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemplate, write_data
 
@@ -19,10 +19,10 @@ from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemp
 @pytest.mark.parametrize(
     'method, call_count',
     [
-        ('parsers.writer.fake_driver.FakeXlwtDriver.add_sheet', 1),
-        ('parsers.writer.fake_driver.FakeXlwtDriver.write_head', 1),
-        ('parsers.writer.fake_driver.FakeXlwtDriver.write', 3),
-        ('parsers.writer.fake_driver.FakeXlwtDriver.save', 1),
+        ('tests.fakes.fake_driver.FakeXlwtDriver.add_sheet', 1),
+        ('tests.fakes.fake_driver.FakeXlwtDriver.write_head', 1),
+        ('tests.fakes.fake_driver.FakeXlwtDriver.write', 3),
+        ('tests.fakes.fake_driver.FakeXlwtDriver.save', 1),
     ],
 )
 def test_xls_write_call_counts(method: Any, call_count: Any, tmp_path: Any) -> None:

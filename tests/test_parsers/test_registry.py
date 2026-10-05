@@ -35,9 +35,7 @@ from parsers.registry import (
 class _FakeBaseParser:
     """Minimal stand-in for BaseParser to test registry."""
 
-    _vendor_code: str = ''
     _markup_policy_type = None
-    _enabled_by_default = True
 
     @classmethod
     def supplier_folder_name(cls) -> str:
@@ -60,9 +58,9 @@ class _FakeBaseParser:
             start_row=0,
             sheet_info='',
             columns={0: RowItem.code.name, 1: RowItem.title.name},
-            stop_words=[],
-            file_templates=['fake*.xls'],
-            sheet_indexes=[],
+            stop_words=(),
+            file_templates=('fake*.xls',),
+            sheet_indexes=(),
             row_item_adaptor=RowItem,
         )
 
@@ -76,15 +74,13 @@ _MISSING_VENDOR_MODULE = 'tests.test_parsers._registry_absent_vendor'
 
 
 def test_register_vendor_sets_attributes() -> None:
-    """Декоратор устанавливает _vendor_code, _markup_policy_type, _enabled_by_default."""
+    """Декоратор устанавливает _markup_policy_type."""
 
-    @register_vendor(_UNIQUE + '_1', markup_policy='map_on_opt', enabled_by_default=False)
+    @register_vendor(_UNIQUE + '_1', markup_policy='map_on_opt')
     class TestParser(_FakeBaseParser):  # noqa: WPS431
         pass
 
-    assert TestParser._vendor_code == _UNIQUE + '_1'  # noqa: WPS336
     assert TestParser._markup_policy_type == 'map_on_opt'  # noqa: WPS336
-    assert TestParser._enabled_by_default is False  # type: ignore[unreachable]
 
 
 def test_register_vendor_defaults() -> None:
@@ -94,9 +90,7 @@ def test_register_vendor_defaults() -> None:
     class DefaultParser(_FakeBaseParser):  # noqa: WPS431
         pass
 
-    assert DefaultParser._vendor_code == _UNIQUE + '_2'
     assert DefaultParser._markup_policy_type is None
-    assert DefaultParser._enabled_by_default is True
 
 
 def test_registry_contains_registered_vendor() -> None:

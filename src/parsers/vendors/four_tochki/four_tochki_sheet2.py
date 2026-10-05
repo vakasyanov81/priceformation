@@ -17,30 +17,28 @@ from .four_tochki_disk_title import (
     fill_disk_thickness,
 )
 
-fourtochki_sheet_2_params = dataclasses.replace(fourtochki_params)
-fourtochki_sheet_2_params.sheet_info = 'Вкладка (диски) #2'
-fourtochki_sheet_2_params.sheet_indexes = [1]
-fourtochki_sheet_2_params.columns = {
-    0: RowItem.code.name,
-    1: RowItem.title.name,
-    2: RowItem.manufacturer.name,
-    3: RowItem.model.name,
-    4: RowItem.color.name,
-    5: RowItem.width.name,
-    6: RowItem.diameter.name,
-    7: RowItem.slot_count.name,
-    8: RowItem.pcd1.name,
-    9: RowItem.pcd2.name,
-    10: RowItem.eet.name,
-    11: RowItem.central_diameter.name,
-    12: RowItem.fastener.name,
-    13: RowItem.disk_type.name,
-    14: RowItem.disk_type_1.name,
-    15: RowItem.main_color.name,
-    18: RowItem.rest_count.name,
-    19: RowItem.price_recommended.name,
-    20: RowItem.price_opt.name,
-}
+fourtochki_sheet_2_params = dataclasses.replace(
+    fourtochki_params,
+    sheet_info='Вкладка (диски) #2',
+    sheet_indexes=(1,),
+    columns={
+        0: RowItem.code.name,
+        2: RowItem.manufacturer.name,
+        3: RowItem.model.name,
+        4: RowItem.diameter.name,
+        5: RowItem.width.name,
+        6: RowItem.slot_count.name,
+        7: RowItem.pcd1.name,
+        8: RowItem.pcd2.name,
+        9: RowItem.eet.name,
+        10: RowItem.central_diameter.name,
+        11: RowItem.disk_type.name,
+        12: RowItem.color.name,
+        13: RowItem.rest_count.name,
+        14: RowItem.price_opt.name,
+        15: RowItem.price_recommended.name,
+    },
+)
 
 fourtochki_sheet_2_config = make_parse_config(fourtochki_sheet_2_params)
 

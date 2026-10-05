@@ -11,7 +11,6 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.writer.fake_driver import FakeXlwtDriver
 from parsers.writer.jsonl_writer import write_template_jsonl
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
@@ -20,6 +19,7 @@ from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter, get_value
+from tests.fakes.fake_driver import FakeXlwtDriver
 
 type CellValue = tuple[str, Any]
 type ColumnCells = list[CellValue]

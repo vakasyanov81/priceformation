@@ -53,12 +53,6 @@ class TitleFilter:  # noqa: WPS214
     def get_prepared_title(self, row_item: RowItem) -> str | None:
         return row_item.identity.title
 
-    def set_prepared_title(self, row_item: RowItem) -> bool:
-        prepared_title = self.get_prepared_title(row_item)
-        title_is_prepared = row_item.identity.title == prepared_title
-        row_item.set_field('title', prepared_title or row_item.identity.title)
-        return title_is_prepared
-
     def is_valid_title(self, title: str | None) -> bool:
         if not title:
             return False

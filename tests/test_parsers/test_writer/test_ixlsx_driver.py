@@ -2,7 +2,7 @@
 
 import pytest
 
-from parsers.writer.ixls_driver import IXlsDriver
+from parsers.writer.ixlsx_driver import IXlsDriver
 
 
 def test_add_sheet_raises() -> None:

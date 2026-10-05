@@ -25,9 +25,9 @@ autosnab_params = ParserParams(
         5: RowItem.price_opt.name,
         6: RowItem.rest_count.name,
     },
-    stop_words=[],
-    file_templates=['price*.xls', 'price*.xlsx'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('price*.xls*',),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 

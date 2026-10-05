@@ -14,7 +14,7 @@ JSON-отчёт, поэтому `to_dict()` отдаёт ровно те же к
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from typing import Any
 
 from domain.row_item import row_item_formatter as row_format
@@ -74,16 +74,16 @@ class RowField:
 class RowItem:
     """Позиция прайса: value objects, вендорские колонки и ошибки разбора."""
 
-    identity: ProductIdentity = field(default_factory=ProductIdentity)
-    tire: TireDimensions = field(default_factory=TireDimensions)
-    disk: DiskParameters = field(default_factory=DiskParameters)
-    pricing: Pricing = field(default_factory=Pricing)
-    stock: Stock = field(default_factory=Stock)
-    duplicate: DuplicateInfo = field(default_factory=DuplicateInfo)
-    vendor: VendorMeta = field(default_factory=VendorMeta)
-    extra: dict[str, Any] = field(default_factory=dict)
-    _errors: dict[str, Any] = field(default_factory=dict, repr=False)
-    _set_keys: dict[str, None] = field(default_factory=dict, repr=False)
+    identity: ProductIdentity
+    tire: TireDimensions
+    disk: DiskParameters
+    pricing: Pricing
+    stock: Stock
+    duplicate: DuplicateInfo
+    vendor: VendorMeta
+    extra: dict[str, Any]
+    _errors: dict[str, Any]
+    _set_keys: dict[str, None]
 
     # ==== Плоские ключи полей: их читают шаблоны, маппинги колонок и jsonl
     # (RowItem.price_markup.name). Значения лежат в value objects выше.

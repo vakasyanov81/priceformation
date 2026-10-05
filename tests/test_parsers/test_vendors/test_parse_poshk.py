@@ -17,11 +17,11 @@ from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
 )
 from parsers.base_parser.markup_policy import make_map_on_opt_markup_policy
-from parsers.fake_xls_reader import FakeXlsReader
 from parsers.vendors.poshk import (
     PoshkParser,
     poshk_params,
 )
+from tests.fakes.fake_xls_reader import FakeXlsReader
 
 _TEST_RULES_WHERE = 'test_markup_rules.json'
 _TEST_VENDOR_LIST_WHERE = 'test vendor_list.json'

@@ -23,9 +23,9 @@ stk_params = ParserParams(
         3: RowItem.price_opt.name,
         4: RowItem.rest_count.name,
     },
-    stop_words=[],
-    file_templates=['price*.xls', 'price*.xlsx'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('price.xlsx',),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 

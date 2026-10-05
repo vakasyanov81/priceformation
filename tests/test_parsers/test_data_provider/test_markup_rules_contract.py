@@ -40,9 +40,9 @@ def _configuration_from_example(config_name: str) -> ParseConfiguration:
             start_row=0,
             sheet_info='',
             columns={},
-            stop_words=[],
-            file_templates=[],
-            sheet_indexes=[0],
+            stop_words=(),
+            file_templates=(),
+            sheet_indexes=(0,),
             row_item_adaptor=RowItem,
         ),
     )

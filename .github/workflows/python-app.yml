@@ -1,4 +1,4 @@
-# Mirrors local quality gates from .cursor/rules/post-change-checks.mdc.
+# Mirrors local quality gates from justfile (just ci) and .pre-commit-config.yaml.
 # Tool settings come from pyproject.toml / setup.cfg — do not override flags here.
 
 name: Lint and check types and tests
@@ -40,3 +40,7 @@ jobs:
         run: uv run lint-imports
       - name: Find unused code with vulture
         run: uv run vulture
+      - name: Check security with bandit
+        run: uv run bandit -r src -c pyproject.toml
+      - name: Audit dependencies
+        run: uv run pip-audit

@@ -11,9 +11,9 @@ fourtochki_params = ParserParams(
     start_row=2,
     sheet_info='',
     columns={},
-    stop_words=[],
-    file_templates=['price*.xls', 'price*.xlsx'],
-    sheet_indexes=[],
+    stop_words=(),
+    file_templates=('price*.xls', 'price*.xlsx'),
+    sheet_indexes=(),
     row_item_adaptor=RowItem,
 )
 

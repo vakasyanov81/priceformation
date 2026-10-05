@@ -19,7 +19,6 @@ from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
 )
-from parsers.fake_xls_reader import FakeXlsReader
 from parsers.vendors.mim.mim_2sheet import (
     TRUCK_TIRE_MARKUP_HIGH,
     TRUCK_TIRE_MARKUP_LOW,
@@ -27,6 +26,7 @@ from parsers.vendors.mim.mim_2sheet import (
     MimParser2Sheet,
     mim_sheet_2_params,
 )
+from tests.fakes.fake_xls_reader import FakeXlsReader
 
 from ..parse_config import MimMarkupRulesProviderForTests
 

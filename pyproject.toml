@@ -81,13 +81,11 @@ max-args = 6
 max-positional-args = 6
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
 "tests/test_infrastructure/test_zapaska_api_config.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "tests/test_parsers/test_remote/test_zapaska_client.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "integration_tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "integration_tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
-"load_tests/*.py" = ["S101", "PLR2004"]
 "load_tests/**/*.py" = ["S101", "PLR2004"]
 "load_tests/test_make_price_by_supplier.py" = ["S101", "S603", "PLR2004"]
 # I001 — keep merged from X import a, b as c to stay under flake8 WPS201 (18 imports).
@@ -124,9 +122,8 @@ addopts = [
     "--strict-config",
     # pytest-xdist
     "-n=2",
-    # pytest-cov
+    # pytest-cov: тестовый код не измеряется, список omit — в .coveragerc
     "--cov=src",
-    "--cov=tests",
     "--cov-branch",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
@@ -156,10 +153,6 @@ do_not_mutate = [
     "src/infrastructure/logging/log_resolve.py",
     "src/infrastructure/logging/log_setup.py",
     "src/parsers/base_parser/log_parser_process.py",
-    # Тест-дубли: проверяем их снаружи, мутировать их внутреннее состояние смысла нет.
-    "src/parsers/fake_xls_reader.py",
-    "src/parsers/fake_json_reader.py",
-    "src/parsers/writer/fake_driver.py",
 ]
 do_not_mutate_patterns = [
     'logger\.\w+',
@@ -211,8 +204,6 @@ exclude_dirs = [
     ".ruff_cache",
     "htmlcov",
 ]
-# Allow assert statements in source (they are production-use in this project).
-skips = ["B101"]
 
 [tool.pip-audit]
 # Audit the current environment (all dev+prod deps).
