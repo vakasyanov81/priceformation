@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -16,12 +18,14 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.json_reader import JsonPriceReader
 from parsers.strategies.pricing_registry import make_pricing_strategy
 from parsers.strategies.registry import make_category_strategy
 from parsers.strategies.rest_registry import make_rest_strategy
 from parsers.strategies.title_registry import make_title_strategy
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import READER_JSON, VendorConfig, VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
+from parsers.xls_reader import XlsReader
 
 
 def parser_params_from_section(section: VendorSection, folder: str) -> ParserParams:
@@ -78,7 +82,7 @@ def make_config_driven_parser(
 
     Args:
         section: Секция поставщика (один лист/файл).
-        vendor_config: Весь конфиг поставщика (нужен для ``behavior``).
+        vendor_config: Весь конфиг поставщика (нужен для ``behavior`` и ``reader``).
         parse_config: ``ParseConfiguration`` с провайдерами данных.
 
     Returns:
@@ -86,8 +90,17 @@ def make_config_driven_parser(
     """
     hooks = strategy_hooks_from_section(section, vendor_config.behavior)
     policy = vendor_markup_policy_from_config(section)
+    data_reader: type[Any] = _reader_for_config(vendor_config.reader)
     return BaseParser(
         parse_config=parse_config,
         row_processor=RowProcessor(markup_policy=policy),
         strategy_hooks=hooks,
+        data_reader=data_reader,
     )
+
+
+def _reader_for_config(reader: str) -> type[Any]:
+    """Вернуть класс ридера по типу из конфига."""
+    if reader == READER_JSON:
+        return JsonPriceReader
+    return XlsReader
