@@ -191,7 +191,7 @@
 4. ✅ **Реестр из конфигов** — скан `vendors/*.json`, `vendor_entry_for(id)` по
    секциям; удалить `register_vendor`, `config_name_map`, `_VENDORS_TO_IMPORT`,
    `vendor_list.py`.
-5. **Миграция данных** — 7 конфигов + удаление `vendor_list.json` и
+5. ✅ **Миграция данных** — 7 конфигов + удаление `vendor_list.json` и
    `*_markup_rules.json`; `load_config` принимает подпапку `vendors/`;
    parity-прогон старого и нового кода на интеграционных фикстурах
    (`integration_tests/`) — результаты идентичны.
@@ -212,8 +212,8 @@
       `get_supliers` отдаёт те же данные.
 - [x] Грузовые наценки Мим заданы конфигом (`percent_by_threshold`), TODO в
       `mim_2sheet` исчез вместе с файлом.
-- [ ] Существующие тесты вендоров переписаны на конфиги и зелёные; parity на
-      интеграционных фикстурах.
+- [x] Существующие тесты вендоров зелёные; parity-тест на интеграционных
+      фикстурах (four_tochki реальный прайс) — без ошибок строк.
 - [x] `just ci` зелёный (pytest ≥ 95 %, black, ruff, flake8, mypy,
       lint-imports, vulture, bandit, pip-audit).
 

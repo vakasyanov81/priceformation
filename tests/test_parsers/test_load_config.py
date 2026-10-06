@@ -292,3 +292,35 @@ def test_load_config_creates_nested_config_folder(tmp_path: Path) -> None:
 
     assert found == [str(nested / 'parse_config' / 'vendor_list.json')]
     assert (nested / 'parse_config' / 'vendor_list.json').is_file()
+
+
+def test_load_vendor_config_to_vendors_subfolder(tmp_path: Path, config_root: Path) -> None:
+    """Файл внутри vendors/ → parse_config/vendors/<filename>."""
+    source = _write_source(tmp_path, 'vendors/stk.json', _JSON_TEXT.encode())
+    dest = _loaded(source)
+    assert dest == config_root / 'vendors' / 'stk.json'
+    assert dest.read_text(encoding='utf-8') == _JSON_TEXT
+    assert not source.exists()
+
+
+def test_load_vendor_config_to_vendors_case_normalized(tmp_path: Path, config_root: Path) -> None:
+    """.JSON → .json, vendors/ сохраняется."""
+    source = _write_source(tmp_path, 'vendors/acme.JSON', _JSON_TEXT.encode())
+    dest = _loaded(source)
+    assert dest == config_root / 'vendors' / 'acme.json'
+
+
+def test_load_vendor_config_respects_deep_vendors_path(tmp_path: Path, config_root: Path) -> None:
+    """Глубокий путь с vendors/ — vendors/ сохраняется."""
+    deep = tmp_path / 'a' / 'b' / 'vendors' / 'mim.json'
+    deep.parent.mkdir(parents=True, exist_ok=True)
+    deep.write_text(_JSON_TEXT, encoding='utf-8')
+    dest = _loaded(deep)
+    assert dest == config_root / 'vendors' / 'mim.json'
+
+
+def test_flat_json_stays_flat(tmp_path: Path, config_root: Path) -> None:
+    """Обычный файл без vendors/ — в корень parse_config."""
+    source = _write_source(tmp_path, 'markup_rules.json', _JSON_TEXT.encode())
+    dest = _loaded(source)
+    assert dest == config_root / 'markup_rules.json'
