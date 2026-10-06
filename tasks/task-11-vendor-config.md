@@ -199,7 +199,7 @@
    устаревшие провайдеры (`VendorListProviderBase`, `register_vendor`) удалены;
    обновлён `tests/test_architecture_markers.py` (маркер vendors package gone),
    `AGENTS.md`.
-7. **Полный CI** — `just ci`.
+7. ✅ **Полный CI** — `just ci` зелёный (1297 тестов, 97.61 %, все линтеры).
 
 ## Критерии готовности
 
@@ -207,8 +207,10 @@
       `BaseParser`.
 - [x] 7 конфигов в `parse_config/vendors/`; `vendor_list.json` и
       `*_markup_rules.json` удалены.
-- [ ] Новый поставщик = 1 JSON без правки Python: подтверждается тестом
+- [x] Новый поставщик = 1 JSON без правки Python: подтверждается тестом
       (фиктивный конфиг поднимается и парсит фикстуру).
+- [x] Текущие этапы 1-7 завершены; `just ci` зелёный (1297 тестов, 97.61 %,
+      black/ruff/flake8/mypy/lint-imports/vulture/bandit/pip-audit).
 - [x] Внешние ИД каталога не изменились: 8 записей, zapaska → `2`/`22`,
       `get_supliers` отдаёт те же данные.
 - [x] Грузовые наценки Мим заданы конфигом (`percent_by_threshold`), TODO в
