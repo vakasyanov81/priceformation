@@ -7,7 +7,6 @@ from test_base_parser.test_manufacturer_finder import map_manufacturer
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     MarkupRulesProviderForTests,
-    VendorListProviderForTests,
 )
 
 from domain.row_item.row_item import RowItem
@@ -46,7 +45,6 @@ class _AutosnabAliases(data_provider.ManufacturerAliasesProviderBase):
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MarkupRulesProviderForTests(),
-    vendor_list=VendorListProviderForTests(_VENDOR_LIST),
     manufacturer_aliases=_AutosnabAliases(),
     parser_params=autosnab_params,
 )

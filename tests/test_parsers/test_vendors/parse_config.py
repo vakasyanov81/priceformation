@@ -8,8 +8,6 @@ from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
     MarkupRulesProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config,
 )
 
 from parsers import data_provider
@@ -28,7 +26,6 @@ def make_parse_configuration(
     return BasePriceParseConfigurationParams(
         black_list_provider=BlackListProviderForTests(),
         markup_rules_provider=markup_rules or MarkupRulesProviderForTests(),
-        vendor_list=VendorListProviderForTests(vendor_list_config),
         manufacturer_aliases=ManufacturerAliasesProviderForTests(),
         parser_params=parser_params,
     )

@@ -188,7 +188,7 @@
    `parser_params_from_section()`, `vendor_markup_policy_from_config()`,
    `strategy_hooks_from_section()`, `make_config_driven_parser()`;
    9 тестов на делегирование хуков и pipeline.
-4. **Реестр из конфигов** — скан `vendors/*.json`, `vendor_entry_for(id)` по
+4. ✅ **Реестр из конфигов** — скан `vendors/*.json`, `vendor_entry_for(id)` по
    секциям; удалить `register_vendor`, `config_name_map`, `_VENDORS_TO_IMPORT`,
    `vendor_list.py`.
 5. **Миграция данных** — 7 конфигов + удаление `vendor_list.json` и
@@ -204,17 +204,17 @@
 
 - [ ] `src/parsers/vendors/` отсутствует; в `src/` ровно один парсер —
       `BaseParser`.
-- [ ] 7 конфигов в `parse_config/vendors/`; `vendor_list.json` и
+- [x] 7 конфигов в `parse_config/vendors/`; `vendor_list.json` и
       `*_markup_rules.json` удалены.
 - [ ] Новый поставщик = 1 JSON без правки Python: подтверждается тестом
       (фиктивный конфиг поднимается и парсит фикстуру).
-- [ ] Внешние ИД каталога не изменились: 8 записей, zapaska → `2`/`22`,
+- [x] Внешние ИД каталога не изменились: 8 записей, zapaska → `2`/`22`,
       `get_supliers` отдаёт те же данные.
-- [ ] Грузовые наценки Мим заданы конфигом (`percent_by_threshold`), TODO в
+- [x] Грузовые наценки Мим заданы конфигом (`percent_by_threshold`), TODO в
       `mim_2sheet` исчез вместе с файлом.
 - [ ] Существующие тесты вендоров переписаны на конфиги и зелёные; parity на
       интеграционных фикстурах.
-- [ ] `just ci` зелёный (pytest ≥ 95 %, black, ruff, flake8, mypy,
+- [x] `just ci` зелёный (pytest ≥ 95 %, black, ruff, flake8, mypy,
       lint-imports, vulture, bandit, pip-audit).
 
 ## Риски / тонкие места

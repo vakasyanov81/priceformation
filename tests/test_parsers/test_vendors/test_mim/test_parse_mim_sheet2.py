@@ -9,8 +9,6 @@ from test_parsers.fixtures.mim_sheet2 import mim_one_item_result
 from test_parsers.test_vendors.test_parse_poshk import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
-    VendorListProviderForTests,
-    vendor_list_config,
 )
 
 from domain.row_item.row_item import RowItem
@@ -33,7 +31,6 @@ from ..parse_config import MimMarkupRulesProviderForTests
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MimMarkupRulesProviderForTests(),
-    vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
     parser_params=mim_sheet_2_params,
 )

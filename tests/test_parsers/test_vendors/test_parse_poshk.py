@@ -98,7 +98,6 @@ class VendorListProviderForTests(data_provider.VendorListProviderBase):
 parser_config = BasePriceParseConfigurationParams(
     black_list_provider=BlackListProviderForTests(),
     markup_rules_provider=MarkupRulesProviderForTests(),
-    vendor_list=VendorListProviderForTests(vendor_list_config),
     manufacturer_aliases=ManufacturerAliasesProviderForTests(),
     parser_params=poshk_params,
 )

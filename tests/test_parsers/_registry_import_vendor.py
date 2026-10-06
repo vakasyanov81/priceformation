@@ -1,14 +1,12 @@
-"""Стоб-модуль вендора для проверки импорта из `_VENDORS_TO_IMPORT`.
+"""Стаб-модуль вендора для проверки импорта (обратная совместимость).
 
-Используется в test_all_vendors_from_registry_populates_when_empty:
-модуль не должен быть уже импортирован, чтобы importlib.import_module
-заново выполнил регистрацию.
+Используется в старых тестах реестра; при полном переходе на конфиги
+может быть удалён вместе с ``test_registry.py``.
 """
 
 from parsers.registry import register_vendor
-from tests.test_parsers.test_registry import _FakeBaseParser
 
 
 @register_vendor('_test_import_vendor')
-class ImportTestVendor(_FakeBaseParser):
+class ImportTestVendor:
     """Регистрируется при импорте модуля."""

@@ -1,0 +1,138 @@
+{
+  "enabled": 1,
+  "code": "4",
+  "name": "Мим",
+  "start_row": 2,
+  "file_templates": ["price*.xls", "price*.xlsx"],
+  "sections": [
+    {
+      "name": "Мим",
+      "sheet_info": "Вкладка #1",
+      "sheet_indexes": [0],
+      "columns": {
+        "0": "code",
+        "1": "title",
+        "3": "season",
+        "4": "manufacturer",
+        "5": "model",
+        "6": "diameter",
+        "7": "width",
+        "8": "height_percent",
+        "9": "spike",
+        "10": "index_velocity",
+        "11": "index_load",
+        "17": "rest_count",
+        "19": "price_opt",
+        "20": "price_recommended"
+      },
+      "category": {
+        "strategy": "fixed",
+        "value": "Легковая шина"
+      },
+      "title": {
+        "strategy": "tire_compose",
+        "variant": "mim_simple"
+      },
+      "pricing": {
+        "policy": "base",
+        "rules": {
+          "markup_rules": {
+            "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
+            "rule_22_1": { "min": 5000, "max": 10001, "percent": 0.19 },
+            "rule_22_2": { "min": 10000, "max": 15001, "percent": 0.18 },
+            "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
+            "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
+          },
+          "min_recommended_percent_markup": 0.15,
+          "max_recommended_percent_markup": 0,
+          "absolute_markup_rules": {
+            "min_absolute_markup": 300,
+            "markup_percent": 1.3
+          }
+        }
+      }
+    },
+    {
+      "name": "Мим",
+      "sheet_info": "Вкладка #2",
+      "sheet_indexes": [1],
+      "columns": {
+        "0": "code",
+        "1": "title",
+        "3": "manufacturer",
+        "4": "model",
+        "6": "width",
+        "7": "height_percent",
+        "8": "construction_type",
+        "9": "diameter",
+        "11": "axis",
+        "12": "intimacy",
+        "13": "layering",
+        "14": "index_load",
+        "15": "index_velocity",
+        "20": "rest_count",
+        "22": "price_opt",
+        "23": "price_recommended"
+      },
+      "category": {
+        "strategy": "fixed",
+        "value": "Грузовая шина"
+      },
+      "title": {
+        "strategy": "tire_compose",
+        "variant": "mim_truck"
+      },
+      "pricing": {
+        "policy": "percent_by_threshold",
+        "rules": {
+          "threshold": 13000,
+          "low": 0.07,
+          "high": 0.05
+        }
+      }
+    },
+    {
+      "name": "Мим",
+      "sheet_info": "Вкладка #3",
+      "sheet_indexes": [2],
+      "columns": {
+        "0": "code",
+        "1": "title",
+        "3": "manufacturer",
+        "4": "model",
+        "6": "diameter",
+        "7": "width",
+        "8": "slot_count",
+        "9": "pcd1",
+        "11": "eet",
+        "12": "central_diameter",
+        "15": "disk_thickness",
+        "20": "rest_count",
+        "22": "price_opt",
+        "23": "price_recommended"
+      },
+      "category": {
+        "strategy": "fixed",
+        "value": "Диск"
+      },
+      "pricing": {
+        "policy": "base",
+        "rules": {
+          "markup_rules": {
+            "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
+            "rule_22_1": { "min": 5000, "max": 10001, "percent": 0.19 },
+            "rule_22_2": { "min": 10000, "max": 15001, "percent": 0.18 },
+            "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
+            "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
+          },
+          "min_recommended_percent_markup": 0.15,
+          "max_recommended_percent_markup": 0,
+          "absolute_markup_rules": {
+            "min_absolute_markup": 300,
+            "markup_percent": 1.3
+          }
+        }
+      }
+    }
+  ]
+}

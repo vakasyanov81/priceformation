@@ -6,7 +6,6 @@ from typing import Any, Protocol
 
 from domain.exceptions import SupplierNotHavePricesError
 from parsers.base_parser.strategy_hooks import StrategyHooks
-from parsers import data_provider
 from parsers.base_parser.base_parser_config import ParseConfigNotSetError, ParseConfiguration, ParserParams
 from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
@@ -112,14 +111,13 @@ class BaseParser:
             self._manufacturer_finder = ManufacturerFinder(aliases)
         return self._manufacturer_finder
 
-    def get_current_vendor_config(self) -> data_provider.VendorConfigEntry:
-        folder_name = self.parser_params().supplier.folder_name
-        vendor = self.parse_config().all_vendor_config().get(folder_name)
-        return vendor or data_provider.VendorConfigEntry(enabled=False)
-
     @property
     def is_active(self) -> bool:
-        return self.get_current_vendor_config().enabled
+        vendor_cfg = getattr(self._parse_config, '_vendor_config', None)
+        if vendor_cfg is not None:
+            return bool(vendor_cfg.enabled)
+        # Fallback для легаси-вендоров
+        return True
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__

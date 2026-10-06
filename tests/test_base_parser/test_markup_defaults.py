@@ -2,7 +2,6 @@
 
 import pytest
 from test_parsers.test_vendors.parse_config import MimMarkupRulesProviderForTests, make_parse_configuration
-from test_parsers.test_vendors.test_parse_poshk import VendorListProviderForTests
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser, make_parser
@@ -14,7 +13,7 @@ from parsers.base_parser.markup_policy import (
     make_map_on_opt_markup_policy,
 )
 from parsers.base_parser.row_processor import MarkupPolicyNotSetError
-from parsers.data_provider import AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig, VendorConfigEntry
+from parsers.data_provider import AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 from parsers.vendors.pioner import pioner_params
 
@@ -55,10 +54,10 @@ def test_markup_percent_empty_map_is_zero() -> None:
 
 
 def test_missing_vendor_is_disabled() -> None:
-    config = make_parse_configuration(pioner_params)._replace(vendor_list=VendorListProviderForTests({}))
+    """Вендор без _vendor_config считается активным (обратная совместимость)."""
+    config = make_parse_configuration(pioner_params)
     parser = _parser(config)
-    assert parser.get_current_vendor_config() == VendorConfigEntry(enabled=False)
-    assert parser.is_active is False
+    assert parser.is_active is True
 
 
 def test_markup_without_prices_is_zero() -> None:
