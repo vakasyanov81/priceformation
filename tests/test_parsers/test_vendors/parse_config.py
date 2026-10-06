@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from test_parsers.test_vendors.test_parse_poshk import (
+from test_parsers.test_vendors._test_providers import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
     MarkupRulesProviderForTests,

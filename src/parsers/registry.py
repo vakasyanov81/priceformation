@@ -8,9 +8,6 @@ Usage::
         ...
 """
 
-from collections.abc import Callable
-from typing import Any
-
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -20,13 +17,7 @@ from parsers.base_parser.config_driven_parser import (
     parser_params_from_section,
     vendor_markup_policy_from_config,
 )
-from parsers.base_parser.markup_policy import (
-    IdentityMarkupPolicy,
-    MarkupPolicy,
-    RecommendedOrMapMarkupPolicy,
-    make_map_on_opt_markup_policy,
-    make_markup_policy,
-)
+from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.vendor_config.models import VendorConfig, VendorSection
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
 
@@ -51,7 +42,6 @@ def all_vendors_from_registry() -> list[VendorEntry]:
             continue
         for section in config.sections:
             parse_config = _build_parse_config(section, config.folder)
-            # Сохраняем метаданные для config-driven parser
             parse_config._vendor_section = section
             parse_config._vendor_config = config
             entries.append((BaseParser, parse_config))
@@ -78,24 +68,14 @@ def vendor_markup_policy_for(
     vendor_cls: type[BaseParser],
     vendor_config: ParseConfiguration,
 ) -> MarkupPolicy | None:
-    """Построить политику наценки по конфигу поставщика.
+    """Построить политику наценки из конфига секции поставщика.
 
-    В config-driven режиме читает ``pricing`` из секции конфига.
-    Для обратной совместимости (легаси-вендоры) читает ``_markup_policy_type``
-    атрибут класса вендора.
+    Всегда читает ``pricing`` из ``_vendor_section`` конфига.
     """
     section: VendorSection | None = getattr(vendor_config, '_vendor_section', None)
     if isinstance(section, VendorSection):
         return vendor_markup_policy_from_config(section)
-    # Fallback для легаси-вендоров: политика из атрибута класса
-    policy_type = getattr(vendor_cls, '_markup_policy_type', None)
-    if policy_type == 'identity':
-        return IdentityMarkupPolicy.create()
-    if policy_type == 'map_on_opt':
-        return make_map_on_opt_markup_policy(vendor_config)
-    if policy_type == 'recommended_or_map':
-        return RecommendedOrMapMarkupPolicy.from_config(vendor_config)
-    return make_markup_policy(vendor_config)
+    return None
 
 
 def make_vendor_entry(
@@ -120,33 +100,9 @@ def make_vendor_entry(
     return (BaseParser, parse_config)
 
 
-# --------------------------------------------------------------------------
-# Backward compat: register_vendor — no-op для легаси-вендоров
-# (удаляется вместе с src/parsers/vendors/ в этапе 6).
-# --------------------------------------------------------------------------
-
-_registry_legacy: dict[str, type] = {}  # noqa: WPS110
-
-
-def register_vendor(
-    code: str,
-    *,
-    markup_policy: object = None,
-) -> Callable[[type[Any]], type[Any]]:
-    """No-op decorator для легаси-вендоров (обратная совместимость до сноса)."""
-
-    def wrapper(cls: type[Any]) -> type[Any]:
-        cls._markup_policy_type = markup_policy
-        _registry_legacy[code] = cls
-        return cls
-
-    return wrapper
-
-
 def clear_registry() -> None:
-    """Сбросить кэш конфигов поставщиков и легаси-реестр (для тестов)."""
+    """Сбросить кэш конфигов поставщиков (для тестов)."""
     clear_vendor_configs_cache()
-    _registry_legacy.clear()
 
 
 def vendor_config_is_enabled(config: ParseConfiguration) -> bool:

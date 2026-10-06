@@ -1,4 +1,11 @@
-"""Разбор размера и модели из title Автоснабжения."""
+"""
+Парсинг размера и модели из title Автоснабжения.
+
+Вынесено из ``src/parsers/vendors/autosnab_title.py`` — чистый перенос без
+изменений, чтобы удалить легаси-модуль.
+"""
+
+from __future__ import annotations
 
 import re
 from typing import NamedTuple

@@ -17,7 +17,6 @@ from .models import (
     VendorConfigEntry,
 )
 from .title_aliases import TitleAliasesProviderBase, TitleAliasesProviderFromUserConfig
-from .vendor_list import VendorListProviderBase, VendorListProviderFromUserConfig
 
 __all__ = [
     'ABSOLUTE_MODE_DELTA',
@@ -34,6 +33,4 @@ __all__ = [
     'TitleAliasesProviderBase',
     'TitleAliasesProviderFromUserConfig',
     'VendorConfigEntry',
-    'VendorListProviderBase',
-    'VendorListProviderFromUserConfig',
 ]

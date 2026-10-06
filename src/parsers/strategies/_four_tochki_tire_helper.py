@@ -1,10 +1,17 @@
-"""Title builders for four_tochki sheet 1 tires."""
+# flake8: noqa: WPS202
+"""
+Title builders for four_tochki sheet 1 tires.
+
+Вынесено из ``src/parsers/vendors/four_tochki/four_tochki_title.py`` и
+``four_tochki_title_parts.py`` — чистый перенос без изменений, чтобы удалить
+легаси-модули.
+"""
+
+from __future__ import annotations
 
 from domain.row_item.row_item import RowItem
 from domain.row_item.row_item_casts import get_try_to_int_or_str
-from parsers.nomenclature_title import join_size_parts
-
-from .four_tochki_title_parts import default_tire_title, ext_diameter_title, truck_title
+from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
 
 _PROFILE_L = 'L'
 _DASH = '-'
@@ -106,3 +113,57 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
     if not is_truck_tire(row_item) or skip_truck_dot:
         return ''
     return '.00'
+
+
+# ---------------------------------------------------------------------------
+# Title size format variants (ex-four_tochki_title_parts.py)
+# ---------------------------------------------------------------------------
+
+_RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
+
+
+def _extra_labels(row_item: RowItem) -> tuple[str, str]:
+    """Боковина и RunFlat для title."""
+    sidewall = str(row_item.tire.inscription_on_the_side or '').strip()
+    raw = str(row_item.tire.run_flat or '').strip().lower()
+    runflat = 'RunFlat' if raw in _RUNFLAT_YES else ''
+    return sidewall, runflat
+
+
+def truck_title(row_item: RowItem, size: str) -> str:
+    """Title для грузовой шины."""
+    return compose_tire_title(
+        row_item,
+        size,
+        row_item.tire.layering,
+        row_item.tire.camera_type,
+        _extra_labels(row_item)[0],
+        load_velocity(row_item),
+    )
+
+
+def ext_diameter_title(row_item: RowItem, size: str) -> str:
+    """Title с внешним диаметром."""
+    sidewall, runflat = _extra_labels(row_item)
+    return compose_tire_title(
+        row_item,
+        size,
+        row_item.tire.index_load,
+        row_item.tire.us_aff_designation,
+        sidewall,
+        runflat,
+    )
+
+
+def default_tire_title(row_item: RowItem, size: str) -> str:
+    """Обычный title легковой/спец."""
+    sidewall, runflat = _extra_labels(row_item)
+    return compose_tire_title(
+        row_item,
+        size,
+        row_item.tire.layering,
+        row_item.tire.camera_type,
+        sidewall,
+        load_velocity(row_item),
+        runflat,
+    )

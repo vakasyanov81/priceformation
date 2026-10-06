@@ -1,19 +1,47 @@
 """tests for TitleFilter: стоп-слова, чёрный список и подготовка title."""
 
 import pytest
-from test_parsers.test_vendors.parse_config import make_parse_configuration
+from test_parsers.test_vendors._test_providers import (
+    BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
+    MarkupRulesProviderForTests,
+)
 
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
-from parsers.base_parser.base_parser_config import ParseConfigNotSetError, ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfigNotSetError,
+    ParseConfiguration,
+    ParseParamsSupplier,
+    ParserParams,
+)
 from parsers.base_parser.title_filter import TitleFilter, strip_words_in_title
-from parsers.vendors.pioner import pioner_params
 
+_SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'Michelin 185/65 R15 88H'
 
 
+def _base_params() -> BasePriceParseConfigurationParams:
+    return BasePriceParseConfigurationParams(
+        black_list_provider=BlackListProviderForTests(),
+        markup_rules_provider=MarkupRulesProviderForTests(),
+        manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+        parser_params=ParserParams(
+            supplier=_SUPPLIER,
+            start_row=1,
+            sheet_info='',
+            columns={},
+            stop_words=(),
+            file_templates=(),
+            sheet_indexes=(),
+            row_item_adaptor=RowItem,
+        ),
+    )
+
+
 def _title_filter() -> TitleFilter:
-    return TitleFilter(ParseConfiguration(make_parse_configuration(pioner_params)))
+    return TitleFilter(ParseConfiguration(_base_params()))
 
 
 def test_strip_words_in_title_collapses_spaces() -> None:
@@ -89,6 +117,6 @@ class _BlackListProvider(data_provider.BlackListProviderBase):
 
 
 def _title_filter_with(entries: list[str], masks: list[str]) -> TitleFilter:
-    base_params = make_parse_configuration(pioner_params)
+    base_params = _base_params()
     config_params = base_params._replace(black_list_provider=_BlackListProvider(entries, masks))
     return TitleFilter(ParseConfiguration(config_params))

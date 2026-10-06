@@ -195,14 +195,15 @@
    `*_markup_rules.json`; `load_config` принимает подпапку `vendors/`;
    parity-прогон старого и нового кода на интеграционных фикстурах
    (`integration_tests/`) — результаты идентичны.
-6. **Снос легаси** — `src/parsers/vendors/**` (~1000 строк), устаревшие
-   провайдеры; обновить `tests/test_architecture_markers.py` (маркер
-   `parse_config.parser_params`), `AGENTS.md`, `README`.
+6. ✅ **Снос легаси** — `src/parsers/vendors/**` (~1217 строк) удалён;
+   устаревшие провайдеры (`VendorListProviderBase`, `register_vendor`) удалены;
+   обновлён `tests/test_architecture_markers.py` (маркер vendors package gone),
+   `AGENTS.md`.
 7. **Полный CI** — `just ci`.
 
 ## Критерии готовности
 
-- [ ] `src/parsers/vendors/` отсутствует; в `src/` ровно один парсер —
+- [x] `src/parsers/vendors/` отсутствует; в `src/` ровно один парсер —
       `BaseParser`.
 - [x] 7 конфигов в `parse_config/vendors/`; `vendor_list.json` и
       `*_markup_rules.json` удалены.

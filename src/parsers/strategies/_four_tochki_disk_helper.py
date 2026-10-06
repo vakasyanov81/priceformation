@@ -1,4 +1,11 @@
-"""Title extras for four_tochki sheet 2 disks."""
+"""
+Title extras for four_tochki sheet 2 disks.
+
+Вынесено из ``src/parsers/vendors/four_tochki/four_tochki_disk_title.py`` —
+чистый перенос без изменений, чтобы удалить легаси-модуль.
+"""
+
+from __future__ import annotations
 
 import re
 from typing import Any

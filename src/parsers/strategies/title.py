@@ -16,15 +16,15 @@ from parsers.nomenclature_title import (
     join_title_parts,
     load_velocity,
 )
-from parsers.strategies.protocols import TitleStrategy
-from parsers.vendors.autosnab_title import fill_from_title
-from parsers.vendors.four_tochki.four_tochki_disk_title import (
+from parsers.strategies._autosnab_helper import fill_from_title
+from parsers.strategies._four_tochki_disk_helper import (
     disk_diameter,
     disk_name_suffix,
     et_label,
     fill_disk_thickness,
 )
-from parsers.vendors.four_tochki.four_tochki_title import get_prepared_title as compose_four_tochki
+from parsers.strategies._four_tochki_tire_helper import get_prepared_title as compose_four_tochki
+from parsers.strategies.protocols import TitleStrategy
 
 _SIZE_MARK = 'x'
 

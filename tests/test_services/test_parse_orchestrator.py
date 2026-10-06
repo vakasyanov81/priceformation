@@ -6,19 +6,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from log_watch import LoggerWatcher, texts_at
-from test_parsers.test_vendors import parse_config as vendor_parse_config
 
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
-from parsers.data_provider import (
-    MarkupRulesConfig,
-    MarkupRulesProviderBase,
-)
-from parsers.registry import UnknownVendorError
-from parsers.vendors.stk import STKParser, stk_params
+from parsers.registry import UnknownVendorError, make_vendor_entry
+from parsers.vendor_config.models import VendorConfig, VendorSection
 from services.parse_orchestrator import ParseOrchestrator, ParseResult
 
 _MOD = 'services.parse_orchestrator'
@@ -248,29 +243,32 @@ def test_suppliers_info() -> None:
     assert not set(enabled) & set(disabled)
 
 
-class _BoomMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> MarkupRulesConfig:
-        raise AssertionError('must not read markup rules')
+def _disabled_vendor_entry() -> tuple[type[BaseParser], ParseConfiguration]:
+    """Создать запись отключённого поставщика."""
+    vendor_cfg = VendorConfig(
+        folder='test_disabled',
+        enabled=False,
+        code='99',
+        name='TestDisable',
+        start_row=1,
+    )
+    section = VendorSection(
+        id='99',
+        name='TestDisable',
+        start_row=1,
+        file_templates=('price*.xls',),
+        columns={0: 'title'},
+        sheet_indexes=(0,),
+    )
+    return make_vendor_entry(section, vendor_cfg)
 
 
 def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
-    config = vendor_parse_config.make_parse_configuration(stk_params, markup_rules=_BoomMarkupRules())
-    parse_config = ParseConfiguration(config)
-    # Симулируем отключённого поставщика через _vendor_config
-    from parsers.vendor_config.models import VendorConfig
-
-    disabled_cfg = VendorConfig(
-        folder='stk',
-        enabled=False,
-        code='7',
-        name='STK',
-        start_row=14,
-    )
-    parse_config._vendor_config = disabled_cfg
+    vendor_entry = _disabled_vendor_entry()
     orchestrator = ParseOrchestrator()
     entries = watch_logger(_ROW_LOGGER, logging.WARNING)
 
-    parsed = orchestrator.parse_all([(STKParser, parse_config)])
+    parsed = orchestrator.parse_all([vendor_entry])
 
     assert not parsed.parsed_items
-    assert texts_at(entries(), logging.WARNING) == ['поставщик STKParser: STK не активен']
+    assert texts_at(entries(), logging.WARNING) == ['поставщик BaseParser: TestDisable не активен']

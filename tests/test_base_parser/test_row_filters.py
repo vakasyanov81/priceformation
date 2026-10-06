@@ -1,21 +1,48 @@
 """tests for category correction, title strip and purchase-price filter."""
 
-from test_parsers.test_vendors.parse_config import make_parse_configuration
+from test_parsers.test_vendors._test_providers import (
+    BlackListProviderForTests,
+    ManufacturerAliasesProviderForTests,
+    MarkupRulesProviderForTests,
+)
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
-from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    BasePriceParseConfigurationParams,
+    ParseConfiguration,
+    ParseParamsSupplier,
+    ParserParams,
+)
 from parsers.base_parser.base_parser_row import drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
-from parsers.vendors.pioner import pioner_params
 
+_SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
 _REST = 5
 _PRICE = 100
 
 
+def _base_params() -> BasePriceParseConfigurationParams:
+    return BasePriceParseConfigurationParams(
+        black_list_provider=BlackListProviderForTests(),
+        markup_rules_provider=MarkupRulesProviderForTests(),
+        manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+        parser_params=ParserParams(
+            supplier=_SUPPLIER,
+            start_row=1,
+            sheet_info='',
+            columns={},
+            stop_words=(),
+            file_templates=(),
+            sheet_indexes=(),
+            row_item_adaptor=RowItem,
+        ),
+    )
+
+
 def _parser() -> BaseParser:
-    return BaseParser(parse_config=ParseConfiguration(make_parse_configuration(pioner_params)))
+    return BaseParser(parse_config=ParseConfiguration(_base_params()))
 
 
 def _parser_with_finder() -> BaseParser:

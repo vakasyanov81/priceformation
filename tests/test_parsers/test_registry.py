@@ -12,7 +12,6 @@ from parsers.registry import (
     UnknownVendorError,
     all_vendors_from_registry,
     clear_registry,
-    register_vendor,
     vendor_config_is_enabled,
     vendor_entry_for,
     vendor_markup_policy_for,
@@ -95,13 +94,11 @@ def test_supplier_info_in_config() -> None:
     assert config.supplier.folder_name == 'zapaska'
 
 
-def test_register_vendor_is_noop() -> None:
-    """register_vendor — no-op для обратной совместимости."""
-    fake_vendor_type: object = type('FakeVendor', (), {})
+def test_register_vendor_is_removed() -> None:
+    """register_vendor больше не существует — легаси-вендоры удалены."""
+    import parsers.registry as registry_mod
 
-    decorated = register_vendor('test_vendor', markup_policy='identity')(fake_vendor_type)
-    assert decorated is fake_vendor_type
-    assert decorated._markup_policy_type == 'identity'  # type: ignore[attr-defined]
+    assert not hasattr(registry_mod, 'register_vendor')
 
 
 def test_clear_registry_clears_cache() -> None:

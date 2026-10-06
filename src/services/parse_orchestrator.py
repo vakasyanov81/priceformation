@@ -24,7 +24,7 @@ from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
-from parsers.registry import vendor_config_is_enabled, vendor_entry_for, vendor_markup_policy_for
+from parsers.registry import vendor_config_is_enabled, vendor_entry_for
 from parsers.vendor_config.models import VendorConfig as _VendorConfig
 from parsers.vendor_config.models import VendorSection as _VendorSection
 from services.service_provider import ServiceProvider
@@ -135,26 +135,16 @@ def _parser_for_vendor(
     vendor_cls: type[BaseParser],
     vendor_config: ParseConfiguration | None,
 ) -> BaseParser:
-    """Собрать парсер поставщика с учётом активности и политики наценки.
-
-    Для config-driven вендоров (с ``_vendor_section`` и ``_vendor_config``
-    на ParseConfiguration) строит парсер через ``make_config_driven_parser``.
-    """
+    """Собрать config-driven парсер поставщика."""
     if vendor_config is None:
         return vendor_cls(vendor_config)
     if not vendor_config_is_enabled(vendor_config):
         return vendor_cls(parse_config=vendor_config)
-    # Config-driven parser — section и config хранятся на ParseConfiguration
     section = getattr(vendor_config, '_vendor_section', None)
     vendor_cfg = getattr(vendor_config, '_vendor_config', None)
     if isinstance(section, _VendorSection) and isinstance(vendor_cfg, _VendorConfig):
         return make_config_driven_parser(section, vendor_cfg, vendor_config)
-    # Legacy-вендор (обратная совместимость до сноса легаси)
-    return parser_factory(
-        vendor_cls,
-        vendor_config,
-        markup_policy=vendor_markup_policy_for(vendor_cls, vendor_config),
-    )
+    return vendor_cls(parse_config=vendor_config)
 
 
 def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
