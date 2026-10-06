@@ -174,13 +174,20 @@
    с кэшем. Тесты валидации. Существующие парсеры не трогаем.
    Готово: `src/parsers/vendor_config/`, `tests/test_parsers/test_vendor_config/`,
    сброс кэша в `tests/conftest.py`.
-2. **Библиотека стратегий** — перенести поведение вендоров из `vendors/` в
+2. ✅ **Библиотека стратегий** — перенести поведение вендоров из `vendors/` в
    именованные стратегии порциями (category → title → pricing → rest/pipeline),
    юнит-тест на каждую; старые парсеры временно делегируют стратегиям —
    существующие тесты фиксируют поведение.
-3. **BaseParser → config-driven** — хуки резолвятся в стратегии;
+   Готово: `src/parsers/strategies/` (12 модулей, 6 category + 7 title + 5 pricing
+   + 2 rest + pipeline), `tests/test_parsers/test_strategies/` (8 файлов, 75 тестов),
+   демо интеграции `src/parsers/base_parser/strategies_integration.py`.
+3. ✅ **BaseParser → config-driven** — хуки резолвятся в стратегии;
    `ParserParams` собирается из `VendorConfig`; `vendor_markup_policy_for`
    читает policy из конфига.
+   Готово: `StrategyHooks` (стратегии → хуки BaseParser),
+   `parser_params_from_section()`, `vendor_markup_policy_from_config()`,
+   `strategy_hooks_from_section()`, `make_config_driven_parser()`;
+   9 тестов на делегирование хуков и pipeline.
 4. **Реестр из конфигов** — скан `vendors/*.json`, `vendor_entry_for(id)` по
    секциям; удалить `register_vendor`, `config_name_map`, `_VENDORS_TO_IMPORT`,
    `vendor_list.py`.
