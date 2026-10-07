@@ -4,6 +4,8 @@
 поставщиков, собирает статистику пропусков и группирует результат.
 """
 
+# flake8: noqa: WPS201
+
 from __future__ import annotations
 
 import logging
@@ -13,16 +15,18 @@ from dataclasses import dataclass, field
 from typing import Protocol, cast
 
 from domain.row_item.row_item import RowItem
-from parsers.all_vendors import all_vendors, vendor_config_is_enabled
+from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
+from parsers.base_parser.config_driven_parser import make_config_driven_parser
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
 from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
-from parsers.data_provider.vendor_list import VendorListConfigFileError
-from parsers.registry import vendor_entry_for, vendor_markup_policy_for
+from parsers.registry import vendor_config_is_enabled, vendor_entry_for
+from parsers.vendor_config.models import VendorConfig as _VendorConfig
+from parsers.vendor_config.models import VendorSection as _VendorSection
 from services.service_provider import ServiceProvider
 
 logger = logging.getLogger(__name__)
@@ -108,8 +112,6 @@ class ParseOrchestrator:
         """Парсит прайс одного поставщика и добавляет записи к результату."""
         try:
             parsed = parser.parse()
-        except VendorListConfigFileError:
-            logger.warning('Отсутствует файл конфигурации parse_config/vendor_list.json')
         except Exception as exc:
             logger.error(f'Ошибка разбора прайса поставщика {parser!r} // {exc}')
             raise
@@ -133,16 +135,16 @@ def _parser_for_vendor(
     vendor_cls: type[BaseParser],
     vendor_config: ParseConfiguration | None,
 ) -> BaseParser:
-    """Собрать парсер поставщика с учётом активности и политики наценки."""
+    """Собрать config-driven парсер поставщика."""
     if vendor_config is None:
         return vendor_cls(vendor_config)
     if not vendor_config_is_enabled(vendor_config):
         return vendor_cls(parse_config=vendor_config)
-    return parser_factory(
-        vendor_cls,
-        vendor_config,
-        markup_policy=vendor_markup_policy_for(vendor_cls, vendor_config),
-    )
+    section = getattr(vendor_config, '_vendor_section', None)
+    vendor_cfg = getattr(vendor_config, '_vendor_config', None)
+    if isinstance(section, _VendorSection) and isinstance(vendor_cfg, _VendorConfig):
+        return make_config_driven_parser(section, vendor_cfg, vendor_config)
+    return vendor_cls(parse_config=vendor_config)
 
 
 def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:

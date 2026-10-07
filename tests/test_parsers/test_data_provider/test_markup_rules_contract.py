@@ -33,7 +33,6 @@ def _configuration_from_example(config_name: str) -> ParseConfiguration:
     parse_config = BasePriceParseConfigurationParams(
         markup_rules_provider=markup_provider,
         black_list_provider=stub,
-        vendor_list=stub,
         manufacturer_aliases=stub,
         parser_params=ParserParams(
             supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),

@@ -13,7 +13,6 @@ from parsers.data_provider.title_aliases import (
     invert_title_aliases,
     load_title_aliases,
 )
-from parsers.vendors import zapaska_disk_json
 
 _ALIASES_FILE = 'title_aliases.json'
 _DISK_SUPPLIER = 'Запаска (диски)'
@@ -58,9 +57,3 @@ def test_provider_reads_config_file(fake_config_provider: FakeConfigProvider) ->
     with patch('parsers.data_provider.title_aliases.read_file', return_value='{}') as mock_read:
         assert TitleAliasesProviderFromUserConfig(_DISK_SUPPLIER).get_aliases() == {}
         mock_read.assert_called_once_with(fake_config_provider.config_file(_ALIASES_FILE))
-
-
-def test_zapaska_disk_json_does_not_import_cfg() -> None:
-    source = Path(zapaska_disk_json.__file__).read_text(encoding='utf-8')
-    assert 'from cfg' not in source
-    assert 'import cfg' not in source

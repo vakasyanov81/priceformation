@@ -5,14 +5,12 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.vendors.four_tochki.four_tochki_title import (
+from parsers.strategies._four_tochki_tire_helper import (
+    default_tire_title,
+    ext_diameter_title,
     get_prepared_title,
     is_special_tire,
     is_truck_tire,
-)
-from parsers.vendors.four_tochki.four_tochki_title_parts import (
-    default_tire_title,
-    ext_diameter_title,
     truck_title,
 )
 

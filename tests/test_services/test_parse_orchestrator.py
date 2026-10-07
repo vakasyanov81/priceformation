@@ -6,23 +6,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from log_watch import LoggerWatcher, texts_at
-from test_parsers.test_vendors import parse_config as vendor_parse_config
-from test_parsers.test_vendors import test_parse_poshk
 
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
-from parsers.data_provider import (
-    MarkupRulesConfig,
-    MarkupRulesProviderBase,
-    VendorConfigEntry,
-    VendorListProviderBase,
-)
-from parsers.data_provider.vendor_list import VendorListConfigFileError
-from parsers.registry import UnknownVendorError
-from parsers.vendors.stk import STKParser, stk_params
+from parsers.registry import UnknownVendorError, make_vendor_entry
+from parsers.vendor_config.models import VendorConfig, VendorSection
 from services.parse_orchestrator import ParseOrchestrator, ParseResult
 
 _MOD = 'services.parse_orchestrator'
@@ -167,19 +158,18 @@ def test_parse_all_passes_config() -> None:
     assert parser.parse_config is vendor_config
 
 
-def test_parse_vendor_config_error(watch_logger: LoggerWatcher) -> None:
-    """VendorListConfigFileError не валит общий разбор"""
+def test_parse_vendor_parse_error_is_logged(watch_logger: LoggerWatcher) -> None:
+    """ошибка parse логируется и пробрасывается"""
     parser = MagicMock()
-    with patch.object(VendorListConfigFileError, 'to_log'):
-        parser.parse.side_effect = VendorListConfigFileError('missing')
+    parser.parse.side_effect = RuntimeError('boom')
     parsed = ParseResult()
     orchestrator = ParseOrchestrator()
-    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
+    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.ERROR)
 
-    orchestrator._parse_supplier(parsed, parser)
+    with pytest.raises(RuntimeError, match='boom'):
+        orchestrator._parse_supplier(parsed, parser)
 
-    assert texts_at(entries(), logging.WARNING) == ['Отсутствует файл конфигурации parse_config/vendor_list.json']
-    assert not parsed.parsed_items
+    assert texts_at(entries(), logging.ERROR) == [f'Ошибка разбора прайса поставщика {parser!r} // boom']
 
 
 def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
@@ -244,6 +234,7 @@ def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
     assert parsed.black_list_skips == 3
 
 
+@pytest.mark.usefixtures('example_vendors_provider')
 def test_suppliers_info() -> None:
     """supplier maps cover vendor codes and do not overlap."""
     enabled, disabled = split_vendor_supplier_info()
@@ -253,43 +244,32 @@ def test_suppliers_info() -> None:
     assert not set(enabled) & set(disabled)
 
 
-class _BoomMarkupRules(MarkupRulesProviderBase):
-    def get_markup_data(self) -> MarkupRulesConfig:
-        raise AssertionError('must not read markup rules')
+def _disabled_vendor_entry() -> tuple[type[BaseParser], ParseConfiguration]:
+    """Создать запись отключённого поставщика."""
+    vendor_cfg = VendorConfig(
+        folder='test_disabled',
+        enabled=False,
+        code='99',
+        name='TestDisable',
+        start_row=1,
+    )
+    section = VendorSection(
+        id='99',
+        name='TestDisable',
+        start_row=1,
+        file_templates=('price*.xls',),
+        columns={0: 'title'},
+        sheet_indexes=(0,),
+    )
+    return make_vendor_entry(section, vendor_cfg)
 
 
 def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
-    parse_config = ParseConfiguration(
-        vendor_parse_config.make_parse_configuration(stk_params, markup_rules=_BoomMarkupRules())._replace(
-            vendor_list=test_parse_poshk.VendorListProviderForTests({'stk': {'enabled': 0}}),
-        ),
-    )
+    vendor_entry = _disabled_vendor_entry()
     orchestrator = ParseOrchestrator()
     entries = watch_logger(_ROW_LOGGER, logging.WARNING)
 
-    parsed = orchestrator.parse_all([(STKParser, parse_config)])
+    parsed = orchestrator.parse_all([vendor_entry])
 
     assert not parsed.parsed_items
-    assert texts_at(entries(), logging.WARNING) == ['поставщик STKParser: STK не активен']
-
-
-class _MissingVendorList(VendorListProviderBase):
-    def get_config_vendor_list(self) -> dict[str, VendorConfigEntry]:
-        raise VendorListConfigFileError('missing')
-
-
-def test_missing_vendor_list_skips_markup(watch_logger: LoggerWatcher) -> None:
-    parse_config = ParseConfiguration(
-        vendor_parse_config.make_parse_configuration(stk_params, markup_rules=_BoomMarkupRules())._replace(
-            vendor_list=_MissingVendorList(),
-        ),
-    )
-    orchestrator = ParseOrchestrator()
-    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
-    with patch.object(VendorListConfigFileError, 'to_log'):
-        parsed = orchestrator.parse_all([(STKParser, parse_config)])
-
-    assert not parsed.parsed_items
-    warnings = texts_at(entries(), logging.WARNING)
-    assert warnings
-    assert 'vendor_list.json' in warnings[0]
+    assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable не активен']

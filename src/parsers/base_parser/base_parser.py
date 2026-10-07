@@ -5,7 +5,7 @@ from re import sub as _re_sub
 from typing import Any, Protocol
 
 from domain.exceptions import SupplierNotHavePricesError
-from parsers import data_provider
+from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.base_parser_config import ParseConfigNotSetError, ParseConfiguration, ParserParams
 from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
@@ -56,6 +56,13 @@ class BaseParser:
     find_manufacturer_on_enrich: bool = True
     _markup_policy_type: MarkupPolicySpec | None = None
 
+    @property
+    def _effective_find_manufacturer(self) -> bool:
+        """``find_manufacturer_on_enrich`` с учётом стратегий."""
+        if self._strategy_hooks is not None:
+            return self._strategy_hooks.find_manufacturer_on_enrich
+        return self.find_manufacturer_on_enrich
+
     def __init__(
         self,
         parse_config: ParseConfiguration | None = None,
@@ -64,9 +71,11 @@ class BaseParser:
         data_reader: type[Any] | None = None,
         row_processor: RowProcessorProtocol | None = None,
         title_filter: TitleFilterProtocol | None = None,
+        strategy_hooks: StrategyHooks | None = None,
     ) -> None:
         self.parsed_items: list[RowItem] = []
         self._parse_config = parse_config
+        self._strategy_hooks = strategy_hooks
         self.type_production: str | None = None
         self.data_reader = data_reader or XlsReader
         self.files: list[str] | None = None
@@ -102,23 +111,21 @@ class BaseParser:
             self._manufacturer_finder = ManufacturerFinder(aliases)
         return self._manufacturer_finder
 
-    def get_current_vendor_config(self) -> data_provider.VendorConfigEntry:
-        folder_name = self.parser_params().supplier.folder_name
-        vendor = self.parse_config().all_vendor_config().get(folder_name)
-        return vendor or data_provider.VendorConfigEntry(enabled=False)
-
     @property
     def is_active(self) -> bool:
-        return self.get_current_vendor_config().enabled
+        vendor_cfg = getattr(self._parse_config, '_vendor_config', None)
+        if vendor_cfg is not None:
+            return bool(vendor_cfg.enabled)
+        # Fallback для легаси-вендоров
+        return True
 
     def __repr__(self) -> str:
-        class_name = self.__class__.__name__
+        """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
         supplier_name = self.parser_params().supplier.name
-        sup_name = f'{class_name}: {supplier_name}'
         sheet_info = self.parser_params().sheet_info
         if sheet_info:
-            sup_name = f'{sup_name} ({sheet_info})'
-        return sup_name
+            return f'{supplier_name} ({sheet_info})'
+        return supplier_name
 
     # ------------------------------------------------------------------
     # Main pipeline
@@ -200,17 +207,53 @@ class BaseParser:
     # ------------------------------------------------------------------
 
     def process_parsed_row(self, row_item: RowItem) -> None:
-        """После enrich: уникальное, min rest, категория, наценка."""
+        """После enrich: pipeline из конфига или дефолтный порядок шагов.
+
+        Производителя применяем ещё раз после pipeline: шаг ``title`` может
+        собрать название заново из полей, и правку регистра бренда, сделанную
+        в enrich, нужно наложить на финальный title (иначе ``TopTrust`` → ``Toptrust``).
+        """
+        hooks = self._strategy_hooks
+        if hooks is not None:
+            self._run_pipeline(hooks, row_item)
+            self.apply_manufacturer(row_item)
+            return
+        # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
         self.skip_by_min_rest(row_item)
         self.apply_category(row_item)
         self.add_price_markup(row_item)
 
+    def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Выполнить шаги pipeline по порядку."""
+        for step in hooks.pipeline:
+            if step == 'title':
+                self.set_prepared_title(row_item)
+            elif step == 'min_rest':
+                self.skip_by_min_rest(row_item)
+            elif step == 'category':
+                self.apply_category(row_item)
+            elif step == 'markup':
+                self.add_price_markup(row_item)
+
     def after_row_mapped(self, row_item: RowItem) -> None:
         """Редкое уникальное после enrich (title, fill_from_title). По умолчанию ничего."""
 
     def category_for(self, row_item: RowItem) -> str | None:
-        """Категория строки. None — не менять type_production."""
+        """Категория строки. Стратегия или None. Контекст — сам парсер."""
+        if self._strategy_hooks and self._strategy_hooks.category is not None:
+            return self._strategy_hooks.category.resolve(row_item, self)
+        return None
+
+    def find_canonical_category(self, raw_type: str | None) -> str | None:
+        """Сопоставить категорию поставщика известному типу (CategoryContext)."""
+        if self._category_finder is None:
+            self._category_finder = CategoryFinder()
+        return self._category_finder.find_canonical(raw_type)
+
+    def record_unknown_category(self, raw_label: str) -> None:
+        """Зафиксировать неизвестную категорию в статистике разбора (CategoryContext)."""
+        self.stats.unknown_category_skips.append(raw_label)
 
     def apply_category(self, row_item: RowItem) -> None:
         category = self.category_for(row_item)
@@ -218,7 +261,14 @@ class BaseParser:
             row_item.set_field('type_production', category)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
-        apply_min_rest(row_item, self.get_item_rest(row_item), self.get_min_rest_count())
+        """Отсечь по мин. остатку: стратегия или дефолт."""
+        if self._strategy_hooks and self._strategy_hooks.rest is not None:
+            rest = self._strategy_hooks.rest.item_rest(row_item)
+            min_rest = self._strategy_hooks.min_rest
+        else:
+            rest = self.get_item_rest(row_item)
+            min_rest = self.get_min_rest_count()
+        apply_min_rest(row_item, rest, min_rest)
 
     @classmethod
     def get_item_rest(cls, row_item: RowItem) -> int | None:
@@ -233,7 +283,7 @@ class BaseParser:
         return bool(row_item.identity.title and not row_item.pricing.price_opt)
 
     def apply_manufacturer(self, row_item: RowItem) -> None:
-        apply_row_manufacturer(row_item, self.find_manufacturer_on_enrich, self.manufacturer_finder())
+        apply_row_manufacturer(row_item, self._effective_find_manufacturer, self.manufacturer_finder())
 
     def correction_category(self, row_item: RowItem) -> None:
         correction_category(row_item, self._category_finder)
@@ -260,6 +310,9 @@ class BaseParser:
     # ------------------------------------------------------------------
 
     def get_prepared_title(self, row_item: RowItem) -> str | None:
+        """Подготовить title: стратегия или дефолт."""
+        if self._strategy_hooks and self._strategy_hooks.title is not None:
+            return self._strategy_hooks.title.prepare(row_item)
         return self._title_filter.get_prepared_title(row_item)
 
     def set_prepared_title(self, row_item: RowItem) -> bool:

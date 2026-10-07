@@ -29,6 +29,12 @@
 | 9 | [Разделение core/ на domain/ и infrastructure/](./task-09-domain-infrastructure.md) | IO-операции (файлы, JSON) — в `infrastructure/`. Чистые сущности и исключения — в `domain/`. | ✅ |
 | 10 | [Абстрактный ConfigProvider](./task-10-config-provider.md) | Вынести управление путями и env в интерфейс `ConfigProvider`. Текущий `MainConfig` — одна из реализаций. | ✅ |
 
+## P3 — Расширяемость (конфигурация вместо кода)
+
+| # | Задача | Кратко | Статус |
+|---|--------|--------|--------|
+| 11 | [Поставщики целиком в конфигурации](./task-11-vendor-config.md) | Один `BaseParser`: колонки, листы, наценки и поведение поставщика — в `parse_config/vendors/<folder>.json`; реестр из конфигов; `src/parsers/vendors/` удаляется. | 🟡 этап 1/7 |
+
 ---
 
 ## Диаграмма зависимостей (целевая)

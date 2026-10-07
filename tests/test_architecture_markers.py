@@ -17,6 +17,7 @@ _LEGACY_CORE_ROOT = _SRC_ROOT / 'core'
 _DEMETER_CHAIN = 'parse_config.parser_params'
 _MAIN_CONFIG_MARKERS = ('MainConfig', 'MainCfg', 'cfg.main', 'get_parse_paths')
 _LEGACY_LOGGING_MARKERS = ('log_msg(', 'err_msg(', 'warn_msg(', 'print_log(', 'need_print_log')
+_VENDORS_ROOT = _SRC_ROOT / 'parsers' / 'vendors'
 _WRITER_TEMPLATES_ROOT = _PARSERS_ROOT / 'writer' / 'templates'
 
 
@@ -51,6 +52,11 @@ def test_legacy_core_package_is_gone() -> None:
 def test_no_module_calls_legacy_log_functions() -> None:
     """логирование идёт через logging.getLogger(__name__), глобальных log-функций нет."""
     assert not _offenders(_SRC_ROOT, _LEGACY_LOGGING_MARKERS)
+
+
+def test_vendors_package_is_gone() -> None:
+    """src/parsers/vendors/ удалён — все вендоры читаются из конфигов."""
+    assert not _VENDORS_ROOT.exists(), f'{_VENDORS_ROOT} должен быть удалён'
 
 
 def test_writer_templates_avoid_hasattr() -> None:

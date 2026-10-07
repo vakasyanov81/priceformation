@@ -45,7 +45,6 @@ def _configuration(markup_data: MarkupRulesConfig) -> tuple[ParseConfiguration, 
         BasePriceParseConfigurationParams(
             markup_rules_provider=provider,
             black_list_provider=stub,
-            vendor_list=stub,
             manufacturer_aliases=stub,
             parser_params=_parser_params(),
         )

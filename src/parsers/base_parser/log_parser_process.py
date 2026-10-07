@@ -41,5 +41,5 @@ class LoggerParseProcess:
 
     def log_disable_status(self) -> None:
         """logging disabled"""
-        logger.warning(f'поставщик {self.parser_repr} не активен')
+        logger.warning(f'Поставщик {self.parser_repr} не активен')
         self.log_finish()

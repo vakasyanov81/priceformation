@@ -14,6 +14,7 @@ from parsers.writer.templates.iwrite_template import DEFAULT_TEMPLATE_FILE, IWri
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
+from parsers.writer.xlsx_driver import solid_fill
 
 
 def test_all_writer_templates_order() -> None:
@@ -79,3 +80,10 @@ def test_misspelled_template_setting_is_not_silently_ignored() -> None:
     # Настоящая настройка видна на любом подклассе без hasattr/getattr.
     assert IWriteTemplate.__COLUMNS__ == []
     assert _Misspelled().get_file_name() == DEFAULT_TEMPLATE_FILE
+
+
+@pytest.mark.parametrize('template', [ForInner, ForDrom, ForFull])
+def test_template_colors_are_valid_hex(template: type[IWriteTemplate]) -> None:
+    """Цвета шаблонов — валидный #RRGGBB; именованные (blue) роняют запись xlsx."""
+    for color in template().colors().get('with_map', {}).values():
+        solid_fill(color)  # недопустимый цвет бросит ValueError

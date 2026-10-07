@@ -12,7 +12,7 @@ from tests.fakes.fake_driver import FakeXlwtDriver
 from .fixtures import ColorsWithoutMapTemplate, FixtureTemplate, write_data
 
 _MIM_COLOR = '#f7d5d2'
-_POSHK_COLOR = 'blue'
+_POSHK_COLOR = '#d9e2f3'
 _COLOR_COLUMN = 0
 
 

@@ -50,6 +50,11 @@ def _files_in_folder(folder: Path) -> list[Path]:
 
 def _destination(source: Path) -> Path:
     name = source.stem + source.suffix.lower()
+    # Preserve vendors/ subfolder: если source внутри папки vendors,
+    # кладём в parse_config/vendors/<filename>.
+    for parent in source.parents:
+        if parent.name == 'vendors':
+            return Path(get_config_provider().config_file(f'vendors/{name}'))
     return Path(get_config_provider().config_file(name))
 
 

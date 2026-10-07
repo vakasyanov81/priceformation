@@ -8,6 +8,9 @@ from typing import Any, NamedTuple
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
 
+# Динамические атрибуты, устанавливаемые registry для config-driven вендоров:
+# Эти атрибуты устанавливаются registry динамически
+
 
 class ParseConfigNotSetError(RuntimeError):
     """Raised when parse_config is not set on parser instance."""
@@ -44,13 +47,16 @@ class BasePriceParseConfigurationParams(NamedTuple):
 
     markup_rules_provider: data_provider.MarkupRulesProviderBase
     black_list_provider: data_provider.BlackListProviderBase
-    vendor_list: data_provider.VendorListProviderBase
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase
     parser_params: ParserParams
 
 
 class ParseConfiguration:
     """base price parser configuration"""
+
+    # Динамические атрибуты для config-driven вендоров (устанавливаются registry).
+    _vendor_section: Any = None
+    _vendor_config: Any = None
 
     def __init__(self, parse_config: BasePriceParseConfigurationParams):
         """init"""
@@ -59,7 +65,6 @@ class ParseConfiguration:
         self.supplier = self.parser_params.supplier
         self._markup_rules: data_provider.MarkupRulesConfig | None = None
         self._price_markup_map: tuple[data_provider.MarkUpRule, ...] | None = None
-        self._all_vendor_config: dict[str, data_provider.VendorConfigEntry] | None = None
         self._manufacturer_aliases: dict[str, Any] | None = None
 
     def get_markup_rules(self) -> data_provider.MarkupRulesConfig:
@@ -88,19 +93,12 @@ class ParseConfiguration:
             self._manufacturer_aliases = self.parse_config.manufacturer_aliases.get_aliases()
         return self._manufacturer_aliases
 
-    def all_vendor_config(self) -> dict[str, data_provider.VendorConfigEntry]:
-        """config for all vendors"""
-        if self._all_vendor_config is None:
-            self._all_vendor_config = self.parse_config.vendor_list.get_config_vendor_list()
-        return self._all_vendor_config
-
 
 def make_parse_config(
     parser_params: ParserParams,
     *,
     markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    vendor_list: data_provider.VendorListProviderBase | None = None,
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
 ) -> ParseConfiguration:
     """ParseConfiguration with default FromUserConfig providers."""
@@ -109,7 +107,6 @@ def make_parse_config(
         BasePriceParseConfigurationParams(
             markup_rules_provider=markup_rules_provider or data_provider.MarkupRulesProviderFromUserConfig(folder_name),
             black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(),
-            vendor_list=vendor_list or data_provider.VendorListProviderFromUserConfig(),
             manufacturer_aliases=manufacturer_aliases or data_provider.ManufacturerAliasesProviderFromUserConfig(),
             parser_params=parser_params,
         )

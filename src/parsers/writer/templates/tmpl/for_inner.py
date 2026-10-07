@@ -58,7 +58,7 @@ class ForInner(IWriteTemplate):
     __COLOR__: ClassVar[WriteColors] = {
         'by_column': RowItem.supplier_name.name,
         'with_map': {
-            'Пошк': 'blue',
+            'Пошк': '#d9e2f3',
             'Мим': '#f7d5d2',
             'Запаска (остатки)': '#99706d',
             'Форточки': '#658c68',
