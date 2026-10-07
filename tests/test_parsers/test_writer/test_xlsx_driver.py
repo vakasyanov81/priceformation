@@ -88,6 +88,12 @@ def test_solid_fill_strips_hash_and_is_solid() -> None:
     assert str(hashed.fgColor.rgb).endswith(_FILL_HEX)
 
 
+def test_solid_fill_rejects_named_color() -> None:
+    """Именованный цвет недопустим — только #RRGGBB / AARRGGBB (openpyxl)."""
+    with pytest.raises(ValueError, match='aRGB'):
+        solid_fill('blue')
+
+
 def test_add_sheet_requires_workbook() -> None:
     with pytest.raises(WorkbookNotInitializedError):
         XlsxWriterDriver().add_sheet(_SHEET)

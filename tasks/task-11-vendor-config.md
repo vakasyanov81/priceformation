@@ -57,7 +57,6 @@
   },
   "sections": [
     {
-      "id": "4",
       "name": "Мим",
       "sheet_info": "Вкладка #1",
       "sheet_indexes": [0],
@@ -66,7 +65,6 @@
       "title": { "strategy": "tire_compose", "variant": "mim_simple" }
     },
     {
-      "id": "4",
       "sheet_indexes": [1],
       "pricing": {
         "policy": "percent_by_threshold",
@@ -82,8 +80,9 @@
 - **supplier** — `enabled`, `code`/`name` (дефолт для секций), `start_row`,
   `file_templates`, `reader` (`xls` | `json`), `pricing` и `behavior` по
   умолчанию.
-- **section** — лист/файл: `sheet_indexes`, `columns`, свои `id`/`name`,
-  `category`, `title` и переопределение `pricing`.
+- **section** — лист/файл: `sheet_indexes`, `sheet_info` (метка листа),
+  `columns`, необязательные свои `id`/`name`/`file_templates`, `category`,
+  `title` и переопределение `pricing`.
 
 Ключевые решения:
 
@@ -92,8 +91,10 @@
 - **`pricing.rules`** — содержимое `<supplier>_markup_rules.json` переносится
   внутрь; **`enabled`** переезжает из `vendor_list.json`. Оба старых файла
   удаляются.
-- **`id`/`name` на уровне секции** — сохраняет все 8 внешних ИД каталога
-  (`1, 2, 22, 3, 4, 5, 6, 7`) и имена «Запаска (диски)/(шины)»:
+- **`id`/`name` на уровне секции** — необязательны: по умолчанию секция берёт
+  `code`/`name` поставщика. Явные `id`/`name` нужны там, где у одного поставщика
+  несколько внешних ИД каталога (Запаска → `2`/`22`, имена «Запаска
+  (диски)/(шины)»). Итого сохраняются все 8 внешних ИД (`1, 2, 22, 3, 4, 5, 6, 7`):
   `get_supliers`/`load_supplier_prices` продолжают отдавать те же записи.
   Реестровые коды вида `mim-1sheet` исчезают (используются только в тестах и
   `parse_vendor`, который не завязан на CLI).
@@ -112,7 +113,7 @@
 | Слот | Стратегии | Откуда взято |
 |---|---|---|
 | `category.strategy` | `none` — не менять; `fixed` (+`value`); `title_keywords` (+`map`, +`default`); `field_map` (+`field`, +`map`, +`default`); `column_canonical` (+`unknown_skip`); `header_rows` (+`zero_rest_categories`) | base; mim, four_tochki-2, zapaska-disk; poshk; four_tochki-1; zapaska-tire; pioner |
-| `title.strategy` | `default`; `normalize_size_chunks`; `fill_fields_from_title`; `tire_compose` (variants: `mim_simple`, `mim_truck`, `four_tochki`); `disk_compose_four_tochki`; `manufacturer_from_category`; флаг `aliases` (читает `title_aliases.json`) | base; poshk; autosnab; mim-1/2, four_tochki-1; four_tochki-2; pioner; zapaska |
+| `title.strategy` | `default`; `normalize_size_chunks`; `fill_fields_from_title`; `tire_compose` (variants: `mim_simple`, `mim_truck`, `four_tochki`); `disk_compose` (variant `four_tochki`); `manufacturer_from_category`; флаг `aliases` (читает `title_aliases.json`) | base; poshk; autosnab; mim-1/2, four_tochki-1; four_tochki-2; pioner; zapaska |
 | `pricing.policy` | `base`; `identity`; `map_on_opt`; `recommended_or_map`; **`percent_by_threshold`** (+`threshold`/`low`/`high` — новый, снимает TODO в `mim_2sheet`) | `markup_policy.py` + mim-2sheet |
 | `behavior.rest` | `count` (остаток как есть); `minus_reserve` (`rest - reserve`) | base; pioner |
 | `behavior.pipeline` | упорядоченный список шагов `title / min_rest / category / markup` | переопределение `process_parsed_row` у pioner |
@@ -163,7 +164,7 @@
 | `pioner` | `pipeline: ["category","min_rest","markup","title"]`, category `header_rows` (+`zero_rest_categories: ["прочие"]`), rest `minus_reserve`, title `manufacturer_from_category`, `find_manufacturer_on_enrich: false` |
 | `autosnab54` | title `fill_fields_from_title`, `min_rest: 0`, `identity` |
 | `mim-1/2/3sheet` | 3 секции в одном конфиге; у секции 2 свой `pricing` (`percent_by_threshold`) |
-| `four_tochki-1/2sheet` | 2 секции; category `field_map`/`fixed`, title `tire_compose(four_tochki)`/`disk_compose_four_tochki`, `recommended_or_map` |
+| `four_tochki-1/2sheet` | 2 секции; category `field_map`/`fixed`, title `tire_compose(four_tochki)`/`disk_compose(four_tochki)`, `recommended_or_map` |
 | `zapaska-disk/tire` | `reader: "json"`, 2 секции (файлы `disk.json`/`tire.json`, id 2/22), category `fixed`/`column_canonical`, `aliases: true`, флаги пропусков |
 
 ## План миграции (этапы)
@@ -172,14 +173,17 @@
    dataclass, `from_dict` с путём до ключа, примитивы из
    `parsers/vendor_config/fields.py`), провайдер `parse_config/vendors/*.json`
    с кэшем. Тесты валидации. Существующие парсеры не трогаем.
-   Готово: `src/parsers/vendor_config/`, `tests/test_parsers/test_vendor_config/`,
+   Готово: `src/parsers/vendor_config/` (`models.py`, `slot_configs.py` — слоты
+   `category`/`title`/`pricing`/`behavior`, `fields.py`, `provider.py`),
+   `tests/test_parsers/test_vendor_config/` (3 файла, 47 тестов),
    сброс кэша в `tests/conftest.py`.
 2. ✅ **Библиотека стратегий** — перенести поведение вендоров из `vendors/` в
    именованные стратегии порциями (category → title → pricing → rest/pipeline),
    юнит-тест на каждую; старые парсеры временно делегируют стратегиям —
    существующие тесты фиксируют поведение.
-   Готово: `src/parsers/strategies/` (12 модулей, 6 category + 7 title + 5 pricing
-   + 2 rest + pipeline), `tests/test_parsers/test_strategies/` (8 файлов, 75 тестов),
+   Готово: `src/parsers/strategies/` (13 модулей: 6 category, 7 title,
+   `pricing` + `percent_by_threshold`, 2 rest, `pipeline`, реестры имён и
+   протоколы), `tests/test_parsers/test_strategies/` (9 файлов, 84 теста),
    демо интеграции `src/parsers/base_parser/strategies_integration.py`.
 3. ✅ **BaseParser → config-driven** — хуки резолвятся в стратегии;
    `ParserParams` собирается из `VendorConfig`; `vendor_markup_policy_for`
@@ -188,9 +192,11 @@
    `parser_params_from_section()`, `vendor_markup_policy_from_config()`,
    `strategy_hooks_from_section()`, `make_config_driven_parser()`;
    9 тестов на делегирование хуков и pipeline.
-4. ✅ **Реестр из конфигов** — скан `vendors/*.json`, `vendor_entry_for(id)` по
-   секциям; удалить `register_vendor`, `config_name_map`, `_VENDORS_TO_IMPORT`,
-   `vendor_list.py`.
+4. ✅ **Реестр из конфигов** — скан `vendors/*.json`: `all_vendors_from_registry()`
+   (по секциям активных конфигов), `vendor_entry_for(id)` (по `id`/коду секции,
+   `UnknownVendorError` при промахе), `make_vendor_entry()`,
+   `vendor_markup_policy_for()`; удалены `register_vendor`, `config_name_map`,
+   `_VENDORS_TO_IMPORT`, `vendor_list.py`.
 5. ✅ **Миграция данных** — 7 конфигов + удаление `vendor_list.json` и
    `*_markup_rules.json`; `load_config` принимает подпапку `vendors/`;
    parity-прогон старого и нового кода на интеграционных фикстурах
@@ -199,7 +205,7 @@
    устаревшие провайдеры (`VendorListProviderBase`, `register_vendor`) удалены;
    обновлён `tests/test_architecture_markers.py` (маркер vendors package gone),
    `AGENTS.md`.
-7. ✅ **Полный CI** — `just ci` зелёный (1297 тестов, 97.61 %, все линтеры).
+7. ✅ **Полный CI** — `just ci` зелёный (1299 тестов, 98.80 %, все линтеры).
 
 ## Критерии готовности
 
@@ -209,10 +215,10 @@
       `*_markup_rules.json` удалены.
 - [x] Новый поставщик = 1 JSON без правки Python: подтверждается тестом
       (фиктивный конфиг поднимается и парсит фикстуру).
-- [x] Текущие этапы 1-7 завершены; `just ci` зелёный (1297 тестов, 97.61 %,
+- [x] Текущие этапы 1-7 завершены; `just ci` зелёный (1299 тестов, 98.80 %,
       black/ruff/flake8/mypy/lint-imports/vulture/bandit/pip-audit).
-- [x] Внешние ИД каталога не изменились: 8 записей, zapaska → `2`/`22`,
-      `get_supliers` отдаёт те же данные.
+- [x] Внешние ИД каталога не изменились: 8 уникальных ИД из 11 секций 7
+      конфигов, zapaska → `2`/`22`, `get_supliers` отдаёт те же данные.
 - [x] Грузовые наценки Мим заданы конфигом (`percent_by_threshold`), TODO в
       `mim_2sheet` исчез вместе с файлом.
 - [x] Существующие тесты вендоров зелёные; parity-тест на интеграционных

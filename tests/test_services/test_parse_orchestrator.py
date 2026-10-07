@@ -234,6 +234,7 @@ def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
     assert parsed.black_list_skips == 3
 
 
+@pytest.mark.usefixtures('example_vendors_provider')
 def test_suppliers_info() -> None:
     """supplier maps cover vendor codes and do not overlap."""
     enabled, disabled = split_vendor_supplier_info()

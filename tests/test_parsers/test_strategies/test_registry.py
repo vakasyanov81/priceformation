@@ -12,6 +12,7 @@ from parsers.strategies.category import (
     TitleKeywordsCategory,
 )
 from parsers.strategies.registry import make_category_strategy
+from parsers.strategies.tire_category import TireSizeCategory
 from parsers.vendor_config.slot_configs import CategoryConfig
 
 WHERE = 'mim.json → category'
@@ -23,6 +24,7 @@ _KNOWN = [
     ('field_map', FieldMapCategory),
     ('column_canonical', ColumnCanonicalCategory),
     ('header_rows', HeaderRowsCategory),
+    ('tire_size_category', TireSizeCategory),
 ]
 
 

@@ -51,6 +51,19 @@ def fake_config_provider(tmp_path: Path) -> FakeConfigProvider:
     return provider
 
 
+@pytest.fixture
+def example_vendors_provider(tmp_path: Path) -> FakeConfigProvider:
+    """Провайдер на дубликате конфигов поставщиков из tests/parse_config_example/vendors.
+
+    Тесты, проверяющие наполнение реестра/каталога, читают копию, а не боевой
+    `parse_config/vendors/`, и не ломаются при правке реальных настроек.
+    """
+    provider = FakeConfigProvider(tmp_path, config_folder=_ROOT / 'parse_config_example')
+    set_config_provider(provider)
+    clear_vendor_configs_cache()
+    return provider
+
+
 @pytest.fixture(autouse=True)
 def _config_provider_restored() -> Iterator[None]:
     """Провайдер путей, какой был до теста, возвращается после."""

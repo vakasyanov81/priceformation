@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import pytest
+
 from domain.row_item.row_item import RowItem
 from parsers.strategies.category import (
     ColumnCanonicalCategory,
@@ -11,6 +13,7 @@ from parsers.strategies.category import (
     NoCategory,
     TitleKeywordsCategory,
 )
+from parsers.strategies.tire_category import TireSizeCategory
 from parsers.vendor_config.slot_configs import CategoryConfig
 
 
@@ -132,3 +135,39 @@ def test_header_rows_zero_rest_flag() -> None:
 
     strategy.resolve(RowItem({'title': 'автошины'}))
     assert strategy.is_zero_rest_category() is False
+
+
+@pytest.mark.parametrize(
+    ('title', 'expected'),
+    [
+        ('Камера СВК 18.4-26 ТК', 'Автокамера'),
+        ('Литые диски R16 Replay', 'Диск'),
+        ('130-12 об/лента', 'Ободная лента'),
+        ('12.5/80-18 NEXT R-4 спецпокрышка', 'Спецшина'),
+        ('16.9-28 NEXT R-4', 'Спецшина'),
+        ('33х12.5-15 FORWARD Safari', 'Спецшина'),
+        ('28LR26 NORTEC H-23', 'Спецшина'),
+        ('10.00 R20 DOUBLEROAD унив.ось', 'Грузовая шина'),
+        ('11 R22.5 TAITONG руль.ось', 'Грузовая шина'),
+        ('12.00-18 К-70 ОШЗ', 'Грузовая шина'),
+        ('Кама-310 16PR', 'Грузовая шина'),
+        ('Nortec прицепная', 'Грузовая шина'),
+        ('195/75 R16C TRIANGLE TRIN', 'Легкогрузовая шина'),
+        ('265/80-16 NORTEC ET-500', 'Легкогрузовая шина'),
+        ('285/75 R16LT Rapid Mud', 'Легкогрузовая шина'),
+        ('185 R14C Rapid EffiVan', 'Легкогрузовая шина'),
+        ('175/70 R13 Rapid P309', 'Легковая шина'),
+        ('Шина 165-13 АИ-168У', 'Легковая шина'),
+        ('Nortec без размера', 'Автошина'),
+    ],
+)
+def test_tire_size_category(title: str, expected: str) -> None:
+    strategy = TireSizeCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({'title': title})) == expected
+
+
+def test_tire_size_category_without_title_is_default() -> None:
+    strategy = TireSizeCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({})) == 'Автошина'

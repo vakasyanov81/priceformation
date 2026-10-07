@@ -1,0 +1,124 @@
+{
+  "enabled": 1,
+  "code": "5",
+  "name": "Форточки",
+  "start_row": 2,
+  "file_templates": ["price*.xls", "price*.xlsx"],
+  "sections": [
+    {
+      "name": "Форточки",
+      "sheet_info": "Вкладка (шины) #1",
+      "sheet_indexes": [0],
+      "columns": {
+        "0": "code",
+        "2": "manufacturer",
+        "3": "model",
+        "4": "width",
+        "5": "height_percent",
+        "6": "diameter",
+        "7": "index_load",
+        "8": "index_velocity",
+        "9": "season",
+        "10": "tire_type",
+        "11": "ext_diameter",
+        "12": "spike",
+        "13": "inscription_on_the_side",
+        "14": "run_flat",
+        "15": "us_aff_designation",
+        "16": "camera_type",
+        "17": "axis",
+        "18": "layering",
+        "19": "construction_type",
+        "20": "rest_count",
+        "21": "price_recommended",
+        "22": "price_opt"
+      },
+      "category": {
+        "strategy": "field_map",
+        "field": "tire_type",
+        "map": {
+          "грузовая": "Грузовая шина",
+          "легковая": "Легковая шина",
+          "спецтехника": "Спецшина",
+          "мото": "Мотошина"
+        },
+        "default": "Автошина"
+      },
+      "title": {
+        "strategy": "tire_compose",
+        "variant": "four_tochki"
+      },
+      "pricing": {
+        "policy": "recommended_or_map",
+        "rules": {
+          "markup_rules": {
+            "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
+            "rule_22_1": { "min": 5000, "max": 10001, "percent": 0.19 },
+            "rule_22_2": { "min": 10000, "max": 15001, "percent": 0.18 },
+            "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
+            "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
+          },
+          "min_recommended_percent_markup": 0.15,
+          "max_recommended_percent_markup": 0,
+          "absolute_markup_rules": {
+            "min_absolute_markup": 300,
+            "markup_percent": 1.3
+          }
+        }
+      }
+    },
+    {
+      "name": "Форточки",
+      "sheet_info": "Вкладка (диски) #2",
+      "sheet_indexes": [1],
+      "columns": {
+        "0": "code",
+        "1": "title",
+        "2": "manufacturer",
+        "3": "model",
+        "4": "color",
+        "5": "width",
+        "6": "diameter",
+        "7": "slot_count",
+        "8": "pcd1",
+        "9": "pcd2",
+        "10": "eet",
+        "11": "central_diameter",
+        "12": "fastener",
+        "13": "disk_type",
+        "14": "disk_type_1",
+        "15": "main_color",
+        "16": "disk_thickness",
+        "18": "rest_count",
+        "19": "price_recommended",
+        "20": "price_opt"
+      },
+      "category": {
+        "strategy": "fixed",
+        "value": "Диск"
+      },
+      "title": {
+        "strategy": "disk_compose",
+        "variant": "four_tochki"
+      },
+      "pricing": {
+        "policy": "recommended_or_map",
+        "rules": {
+          "markup_rules": {
+            "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
+            "rule_22_1": { "min": 5000, "max": 10001, "percent": 0.19 },
+            "rule_22_2": { "min": 10000, "max": 15001, "percent": 0.18 },
+            "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
+            "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
+          },
+          "min_recommended_percent_markup": 0.15,
+          "max_recommended_percent_markup": 0,
+          "absolute_markup_rules": {
+            "min_absolute_markup": 300,
+            "markup_percent": 1.3
+          }
+        }
+      }
+    }
+  ]
+}

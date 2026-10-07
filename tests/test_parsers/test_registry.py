@@ -1,7 +1,8 @@
 """tests for the config-driven vendor registry
 
-Tests use real configs from ``parse_config/vendors/`` with ``clear_vendor_configs_cache()``
-to guarantee fresh reads.
+Tests use the duplicated configs from ``tests/parse_config_example/vendors/``
+(``example_vendors_provider``) with ``clear_vendor_configs_cache()`` to
+guarantee fresh reads and independence from the real ``parse_config/vendors/``.
 """
 
 import pytest
@@ -16,6 +17,8 @@ from parsers.registry import (
     vendor_entry_for,
     vendor_markup_policy_for,
 )
+
+pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 
 
 def test_all_vendors_returns_entries() -> None:
@@ -64,9 +67,9 @@ def test_vendor_entry_for_unknown_code_raises() -> None:
 
 
 def test_vendor_config_is_enabled_for_disabled() -> None:
-    """Выключенный поставщик (poshk) — enabled=False."""
+    """Выключенный поставщик (stk) — enabled=False."""
     clear_registry()
-    _, config = vendor_entry_for('1')
+    _, config = vendor_entry_for('7')
     assert not vendor_config_is_enabled(config)
 
 
@@ -114,7 +117,7 @@ def test_all_vendors_returns_all_enabled() -> None:
     """all_vendors_from_registry возвращает только enabled вендоров."""
     clear_registry()
     entries = all_vendors_from_registry()
-    # autosnab (1 секция) + four_tochki (2) + mim (3) + zapaska (2) = 8
-    assert len(entries) == 8
+    # autosnab (1 секция) + poshk (1) + four_tochki (2) + mim (3) + zapaska (2) = 9
+    assert len(entries) == 9
     ids = {config._vendor_section.id for _, config in entries}
-    assert ids == {'6', '5', '4', '2', '22'}
+    assert ids == {'6', '1', '5', '4', '2', '22'}

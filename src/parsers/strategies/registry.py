@@ -16,6 +16,7 @@ from parsers.strategies.category import (
     TitleKeywordsCategory,
 )
 from parsers.strategies.protocols import CategoryStrategy
+from parsers.strategies.tire_category import TireSizeCategory
 from parsers.vendor_config.slot_configs import CategoryConfig
 
 _CATEGORY_FACTORIES: dict[str, Callable[[CategoryConfig], CategoryStrategy]] = {
@@ -25,6 +26,7 @@ _CATEGORY_FACTORIES: dict[str, Callable[[CategoryConfig], CategoryStrategy]] = {
     'field_map': FieldMapCategory.from_config,
     'column_canonical': ColumnCanonicalCategory.from_config,
     'header_rows': HeaderRowsCategory.from_config,
+    'tire_size_category': TireSizeCategory.from_config,
 }
 
 
