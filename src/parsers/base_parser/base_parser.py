@@ -120,13 +120,12 @@ class BaseParser:
         return True
 
     def __repr__(self) -> str:
-        class_name = self.__class__.__name__
+        """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
         supplier_name = self.parser_params().supplier.name
-        sup_name = f'{class_name}: {supplier_name}'
         sheet_info = self.parser_params().sheet_info
         if sheet_info:
-            sup_name = f'{sup_name} ({sheet_info})'
-        return sup_name
+            return f'{supplier_name} ({sheet_info})'
+        return supplier_name
 
     # ------------------------------------------------------------------
     # Main pipeline
@@ -208,10 +207,16 @@ class BaseParser:
     # ------------------------------------------------------------------
 
     def process_parsed_row(self, row_item: RowItem) -> None:
-        """После enrich: pipeline из конфига или дефолтный порядок шагов."""
+        """После enrich: pipeline из конфига или дефолтный порядок шагов.
+
+        Производителя применяем ещё раз после pipeline: шаг ``title`` может
+        собрать название заново из полей, и правку регистра бренда, сделанную
+        в enrich, нужно наложить на финальный title (иначе ``TopTrust`` → ``Toptrust``).
+        """
         hooks = self._strategy_hooks
         if hooks is not None:
             self._run_pipeline(hooks, row_item)
+            self.apply_manufacturer(row_item)
             return
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
@@ -235,10 +240,20 @@ class BaseParser:
         """Редкое уникальное после enrich (title, fill_from_title). По умолчанию ничего."""
 
     def category_for(self, row_item: RowItem) -> str | None:
-        """Категория строки. Стратегия или None."""
+        """Категория строки. Стратегия или None. Контекст — сам парсер."""
         if self._strategy_hooks and self._strategy_hooks.category is not None:
-            return self._strategy_hooks.category.resolve(row_item)
+            return self._strategy_hooks.category.resolve(row_item, self)
         return None
+
+    def find_canonical_category(self, raw_type: str | None) -> str | None:
+        """Сопоставить категорию поставщика известному типу (CategoryContext)."""
+        if self._category_finder is None:
+            self._category_finder = CategoryFinder()
+        return self._category_finder.find_canonical(raw_type)
+
+    def record_unknown_category(self, raw_label: str) -> None:
+        """Зафиксировать неизвестную категорию в статистике разбора (CategoryContext)."""
+        self.stats.unknown_category_skips.append(raw_label)
 
     def apply_category(self, row_item: RowItem) -> None:
         category = self.category_for(row_item)

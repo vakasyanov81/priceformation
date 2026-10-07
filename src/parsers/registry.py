@@ -30,15 +30,29 @@ class UnknownVendorError(KeyError):
 
 
 def all_vendors_from_registry() -> list[VendorEntry]:
-    """Собрать список (BaseParser, config) из конфигов поставщиков (vendors/*.json).
+    """Собрать список (BaseParser, config) только включённых поставщиков (vendors/*.json).
 
     Каждая секция каждого конфига даёт одну запись.
     Класс парсера — ``BaseParser`` во всех записях; поведение определяется
     стратегиями из конфига, которые хранятся в атрибутах ``ParseConfiguration``.
     """
+    return _vendor_entries(include_disabled=False)
+
+
+def all_vendors_including_disabled() -> list[VendorEntry]:
+    """Собрать список (BaseParser, config) всех поставщиков, включая отключённых.
+
+    Отключённые нужны оркестратору: ``BaseParser.parse`` у них вернёт пустой
+    список и залогирует предупреждение «поставщик не активен» вместо чтения прайса.
+    """
+    return _vendor_entries(include_disabled=True)
+
+
+def _vendor_entries(*, include_disabled: bool) -> list[VendorEntry]:
+    """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
     for config in load_vendor_configs().values():
-        if not config.enabled:
+        if not include_disabled and not config.enabled:
             continue
         for section in config.sections:
             parse_config = _build_parse_config(section, config.folder)

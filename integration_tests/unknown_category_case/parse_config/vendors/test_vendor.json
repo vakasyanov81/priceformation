@@ -1,0 +1,24 @@
+{
+  "enabled": 1,
+  "code": "9",
+  "name": "Тест",
+  "start_row": 0,
+  "reader": "json",
+  "file_templates": ["tire.json"],
+  "pricing": {"policy": "identity"},
+  "sections": [
+    {
+      "id": "9",
+      "name": "Тест (шины)",
+      "file_templates": ["tire.json"],
+      "columns": {
+        "name": "title",
+        "price": "price_opt",
+        "rest": "rest_count",
+        "category": "type_production"
+      },
+      "category": {"strategy": "column_canonical", "unknown_skip": true},
+      "title": {"strategy": "default"}
+    }
+  ]
+}

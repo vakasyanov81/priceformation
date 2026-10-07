@@ -70,6 +70,28 @@ class TestFourTochkiConfigDriven:
         # 4-мим, 5-форточки, 6-автоснабжение, 7-STK
         assert set(supplier_info) == {'1', '2', '22', '3', '4', '5', '6', '7'}
 
+    def test_parse_all_warns_about_disabled_vendors(
+        self,
+        _four_tochki_provider: None,
+        watch_logger: LoggerWatcher,
+    ) -> None:
+        """parse_all логирует предупреждение о каждом отключённом поставщике.
+
+        В фикстурах включён только four_tochki, остальные (pioner, stk, mim,
+        poshk, zapaska, autosnab) — отключены и должны попасть в лог как «не активен».
+        """
+        entries = watch_logger('parsers.base_parser.log_parser_process', logging.WARNING)
+
+        ParseOrchestrator().parse_all()
+
+        warnings = [message for _level, message in entries() if 'не активен' in message]
+        assert warnings, 'Нет предупреждений об отключённых поставщиках'
+        assert any('Пионер' in message for message in warnings)
+        assert any('STK' in message for message in warnings)
+        assert all(
+            'Форточки' not in message for message in warnings
+        ), 'four_tochki включён, предупреждения быть не должно'
+
 
 class TestSupplierCatalog:
     """Проверка that внешние ИД каталога не изменились."""

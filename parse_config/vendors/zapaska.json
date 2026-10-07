@@ -34,6 +34,7 @@
       "name": "Запаска (диски)",
       "file_templates": ["disk.json"],
       "title": {
+        "strategy": "normalize_title",
         "aliases": true
       },
       "category": {
@@ -49,7 +50,7 @@
         "holes": "slot_count",
         "diam_holes": "pcd1",
         "ET": "eet",
-        "brand": "manufacturer",
+        "brand": "manufacturer_name",
         "name": "title",
         "category": "type_production"
       }
@@ -59,6 +60,7 @@
       "name": "Запаска (шины)",
       "file_templates": ["tire.json"],
       "title": {
+        "strategy": "normalize_title",
         "aliases": true
       },
       "category": {
@@ -74,7 +76,7 @@
         "holes": "slot_count",
         "diam_holes": "pcd1",
         "ET": "eet",
-        "brand": "manufacturer",
+        "brand": "manufacturer_name",
         "name": "title",
         "category": "type_production",
         "height": "height_percent",

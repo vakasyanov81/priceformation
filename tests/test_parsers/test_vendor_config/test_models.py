@@ -18,7 +18,7 @@ MINIMAL: dict[str, Any] = {
     'name': 'Мим',
     'start_row': 2,
     'file_templates': ['*.xls'],
-    'sections': [{'columns': {'1': 'Бренд'}}],
+    'sections': [{'columns': {'1': 'manufacturer_name'}}],
 }
 
 
@@ -46,26 +46,26 @@ def test_section_inherits_vendor_fields() -> None:
     assert section.name == 'Мим'
     assert section.start_row == 2
     assert section.file_templates == ('*.xls',)
-    assert section.columns == {1: 'Бренд'}
+    assert section.columns == {1: 'manufacturer_name'}
 
 
 def test_xls_columns_get_integer_keys() -> None:
-    sections = [{'columns': {'1': 'Бренд'}}]
-    config = _config(columns={'2': 'Размер'}, sections=sections)
+    sections = [{'columns': {'1': 'manufacturer_name'}}]
+    config = _config(columns={'2': 'title'}, sections=sections)
 
-    assert config.columns == {2: 'Размер'}
-    assert config.sections[0].columns == {1: 'Бренд'}
+    assert config.columns == {2: 'title'}
+    assert config.sections[0].columns == {1: 'manufacturer_name'}
 
 
 def test_json_reader_keeps_text_column_keys() -> None:
     config = _config(
         reader='json',
-        columns={'article': 'Артикул'},
-        sections=[{'columns': {'name': 'Название'}}],
+        columns={'article': 'code_art'},
+        sections=[{'columns': {'name': 'title'}}],
     )
 
-    assert config.columns == {'article': 'Артикул'}
-    assert config.sections[0].columns == {'name': 'Название'}
+    assert config.columns == {'article': 'code_art'}
+    assert config.sections[0].columns == {'name': 'title'}
 
 
 def test_behaviour_defaults() -> None:
@@ -103,7 +103,7 @@ def test_section_slots_and_overrides_parsed() -> None:
                 'name': 'Мим 2',
                 'start_row': 5,
                 'file_templates': ['a.xls'],
-                'columns': {'0': 'Код'},
+                'columns': {'0': 'code'},
                 'sheet_info': 'диск',
                 'sheet_indexes': [0, 1],
                 'category': {'strategy': 'field', 'field': 'type'},
@@ -118,7 +118,7 @@ def test_section_slots_and_overrides_parsed() -> None:
     assert section.name == 'Мим 2'
     assert section.start_row == 5
     assert section.file_templates == ('a.xls',)
-    assert section.columns == {0: 'Код'}
+    assert section.columns == {0: 'code'}
     assert section.sheet_info == 'диск'
     assert section.sheet_indexes == (0, 1)
     assert section.category.field_name == 'type'
@@ -173,12 +173,28 @@ def test_section_requires_columns() -> None:
 
 def test_section_rejects_empty_templates_override() -> None:
     with pytest.raises(ConfigValidationError, match='не задан «file_templates»'):
-        _config(sections=[{'file_templates': [], 'columns': {'0': 'Код'}}])
+        _config(sections=[{'file_templates': [], 'columns': {'0': 'code'}}])
 
 
 def test_xls_column_key_must_be_integer() -> None:
     with pytest.raises(ConfigValidationError, match='должен быть целым'):
-        _config(sections=[{'columns': {'brand': 'Бренд'}}])
+        _config(sections=[{'columns': {'brand': 'manufacturer_name'}}])
+
+
+def test_unknown_column_field_rejected() -> None:
+    with pytest.raises(ConfigValidationError, match='неизвестное поле «manufacturer»'):
+        _config(sections=[{'columns': {'0': 'manufacturer'}}])
+
+
+def test_unknown_column_field_rejected_for_json_reader() -> None:
+    with pytest.raises(ConfigValidationError, match='неизвестное поле «manufacturer»'):
+        _config(reader='json', columns={'brand': 'manufacturer'})
+
+
+def test_known_column_field_accepted() -> None:
+    config = _config(reader='json', columns={'brand': 'manufacturer_name'})
+
+    assert config.columns == {'brand': 'manufacturer_name'}
 
 
 def test_slot_must_be_object() -> None:

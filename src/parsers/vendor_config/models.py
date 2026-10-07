@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.exceptions import ConfigValidationError
+from domain.row_item.field_registry import spec_of
 from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object, read_zero_one_flag
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_str_map, read_text
 from parsers.vendor_config.slot_configs import (
@@ -19,6 +20,7 @@ READER_JSON = 'json'
 _READERS = (READER_XLS, READER_JSON)
 _MSG_COLUMNS = 'не заданы «columns»: ни в секции, ни у поставщика'
 _MSG_TEMPLATES = 'не задан «file_templates»: ни в секции, ни у поставщика'
+_COLUMNS_HINT = 'ожидается ключ из реестра полей RowItem'
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,11 +134,22 @@ def _read_columns(payload: RawConfig, where: str, reader: str) -> dict[int | str
     """Колонки: для xls ключи — индексы колонок, для json — ключи исходной записи."""
     raw_columns = read_str_map(payload, 'columns', where)
     if reader == READER_JSON:
-        return {key: name for key, name in raw_columns.items()}
-    parsed: dict[int | str, str] = {}
-    for key, name in raw_columns.items():
-        parsed[_column_index(key, f'{where} → {key}')] = name
+        parsed: dict[int | str, str] = {key: name for key, name in raw_columns.items()}
+    else:
+        parsed = {}
+        for key, name in raw_columns.items():
+            parsed[_column_index(key, f'{where} → {key}')] = name
+    _ensure_known_fields(parsed, where)
     return parsed
+
+
+def _ensure_known_fields(columns: dict[int | str, str], where: str) -> None:
+    """Проверить, что колонка указывает на известное плоское поле позиции (реестр RowItem)."""
+    for source, name in columns.items():
+        if spec_of(name) is None:
+            raise ConfigValidationError(
+                f'{where} → columns[{source}]: неизвестное поле «{name}»; {_COLUMNS_HINT}',
+            )
 
 
 def _column_index(column_key: str, where: str) -> int:

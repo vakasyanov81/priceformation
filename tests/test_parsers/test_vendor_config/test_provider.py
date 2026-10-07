@@ -11,7 +11,7 @@ from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vend
 FOLDER = 'vendors'
 MIM_JSON = (
     '{"enabled": 1, "code": "mim", "name": "Мим", "start_row": 2, '
-    '"file_templates": ["*.xls"], "sections": [{"columns": {"1": "Бренд"}}]}'
+    '"file_templates": ["*.xls"], "sections": [{"columns": {"1": "manufacturer_name"}}]}'
 )
 
 

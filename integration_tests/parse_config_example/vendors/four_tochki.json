@@ -16,7 +16,7 @@
       ],
       "columns": {
         "0": "code",
-        "2": "manufacturer",
+        "2": "manufacturer_name",
         "3": "model",
         "4": "width",
         "5": "height_percent",
@@ -101,7 +101,7 @@
       "columns": {
         "0": "code",
         "1": "title",
-        "2": "manufacturer",
+        "2": "manufacturer_name",
         "3": "model",
         "4": "color",
         "5": "width",

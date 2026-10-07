@@ -18,7 +18,7 @@
         "0": "code",
         "1": "title",
         "3": "season",
-        "4": "manufacturer",
+        "4": "manufacturer_name",
         "5": "model",
         "6": "diameter",
         "7": "width",
@@ -86,7 +86,7 @@
       "columns": {
         "0": "code",
         "1": "title",
-        "3": "manufacturer",
+        "3": "manufacturer_name",
         "4": "model",
         "6": "width",
         "7": "height_percent",
@@ -127,7 +127,7 @@
       "columns": {
         "0": "code",
         "1": "title",
-        "3": "manufacturer",
+        "3": "manufacturer_name",
         "4": "model",
         "6": "diameter",
         "7": "width",

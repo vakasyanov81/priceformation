@@ -22,7 +22,7 @@
       ],
       "columns": {
         "0": "type_production",
-        "1": "manufacturer",
+        "1": "manufacturer_name",
         "2": "title",
         "3": "season",
         "4": "spike",

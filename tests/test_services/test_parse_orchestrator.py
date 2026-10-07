@@ -272,4 +272,4 @@ def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
     parsed = orchestrator.parse_all([vendor_entry])
 
     assert not parsed.parsed_items
-    assert texts_at(entries(), logging.WARNING) == ['поставщик BaseParser: TestDisable не активен']
+    assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable не активен']

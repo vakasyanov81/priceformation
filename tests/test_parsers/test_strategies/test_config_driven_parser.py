@@ -9,6 +9,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
 
 _TEST_PARAMS = ParserParams(
@@ -42,7 +43,26 @@ def test_category_strategy_is_called() -> None:
     row = RowItem({'title': 'Шина'})
     category = parser.category_for(row)
     assert category == 'Автошина'
-    strategy.resolve.assert_called_once_with(row)
+    strategy.resolve.assert_called_once_with(row, parser)
+
+
+def test_manufacturer_correction_survives_title_recompose() -> None:
+    """Бренд правится после финальной сборки title (иначе регистр затирается).
+
+    Регресс: шаг ``title`` повторно собирает название из полей и затирал правку
+    регистра, сделанную ``ManufacturerFinder`` в enrich (``TopTrust`` → ``Toptrust``).
+    """
+    strategy = MagicMock()
+    strategy.prepare.return_value = '10-16.5 Toptrust L-2 10 TL'
+    hooks = StrategyHooks(title=strategy, pipeline=('title',))
+    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser._manufacturer_finder = ManufacturerFinder({'TopTrust': ()})
+
+    row = RowItem({'title': '10-16.5 Toptrust L-2 10 TL', 'manufacturer_name': 'TopTrust'})
+    parser.process_parsed_row(row)
+
+    assert row.identity.title == '10-16.5 TopTrust L-2 10 TL'
+    assert row.identity.manufacturer == 'TopTrust'
 
 
 def test_title_strategy_is_called() -> None:
@@ -109,6 +129,7 @@ def test_pipeline_default_order() -> None:
 
     hooks = StrategyHooks(
         category=cat_strategy,
+        find_manufacturer_on_enrich=False,
         pipeline=('title', 'min_rest', 'category', 'markup'),
     )
 
@@ -133,6 +154,7 @@ def test_pipeline_custom_order() -> None:
 
     hooks = StrategyHooks(
         category=cat_strategy,
+        find_manufacturer_on_enrich=False,
         pipeline=('category', 'min_rest', 'markup', 'title'),
     )
 
@@ -157,6 +179,7 @@ def test_pipeline_skips_missing_step() -> None:
 
     hooks = StrategyHooks(
         category=cat_strategy,
+        find_manufacturer_on_enrich=False,
         pipeline=('category', 'unknown_step', 'markup'),
     )
 

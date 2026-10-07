@@ -44,7 +44,7 @@ type _Layout = tuple[tuple[int, str, str], ...]
 
 _TYRE_LAYOUT: _Layout = (
     (0, 'code', 'CAI'),
-    (2, 'manufacturer', 'Производитель'),
+    (2, 'manufacturer_name', 'Производитель'),
     (3, 'model', 'Модель'),
     (4, 'width', 'Ширина'),
     (5, 'height_percent', 'Высота'),
@@ -69,7 +69,7 @@ _TYRE_LAYOUT: _Layout = (
 _DISK_LAYOUT: _Layout = (
     (0, 'code', 'CAI'),
     (1, 'title', 'Наименование'),
-    (2, 'manufacturer', 'Производитель'),
+    (2, 'manufacturer_name', 'Производитель'),
     (3, 'model', 'Модель'),
     (4, 'color', 'Цвет'),
     (5, 'width', 'Ширина'),
@@ -137,3 +137,12 @@ def test_real_price_rows_have_no_parse_errors(
     orchestrator.parse_all([vendor_entry_for('5')])
     errors = [message for _level, message in watch() if 'Не удалось разобрать строку' in message]
     assert not errors, f'Обнаружены ошибки разбора: {errors}'
+
+
+def test_real_price_rows_keep_manufacturer(_four_tochki_provider: None) -> None:
+    """бренд не теряется: у строк заполнен производитель (регресс на ключ `manufacturer_name`)."""
+    parsed = ParseOrchestrator().parse_all([vendor_entry_for('5')])
+    parsed_rows = parsed.parsed_items
+    assert parsed_rows, 'Нет разобранных строк'
+    missing = [parsed_row for parsed_row in parsed_rows if not parsed_row.identity.manufacturer]
+    assert not missing, f'Потерян бренд у {len(missing)} строк из {len(parsed_rows)}'

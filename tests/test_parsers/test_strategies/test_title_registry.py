@@ -3,6 +3,7 @@
 import pytest
 
 from domain.exceptions import ConfigValidationError
+from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -19,6 +20,7 @@ WHERE = 'mim.json → sections[0] → title'
 
 _KNOWN = [
     ('default', DefaultTitle),
+    ('normalize_title', NormalizeTitle),
     ('normalize_size_chunks', NormalizeSizeChunks),
     ('fill_fields_from_title', FillFieldsFromTitle),
 ]

@@ -3,6 +3,7 @@
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -16,6 +17,20 @@ from parsers.strategies.title import (
 
 def test_default_returns_original_title() -> None:
     assert DefaultTitle().prepare(RowItem({'title': 'Шина'})) == 'Шина'
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('14 iFree Майами лайт 5.5*14 4*98 ET40 D58,5 Хай вэй', '14 iFree Майами лайт 5.5*14 4*98 ET40 D58.5 Хай вэй'),
+        ('22 FF 8124 10,0*22 5*130 ET30 D84.1 BMF', '22 FF 8124 10.0*22 5*130 ET30 D84.1 BMF'),
+        ('10.00R20 И-281, У-4 TT', '10.00R20 И-281, У-4 TT'),
+        ('Nortec   ER-218', 'Nortec ER-218'),
+    ],
+)
+def test_normalize_title_decimal_commas(raw: str, expected: str) -> None:
+    """Десятичная запятая становится точкой; запятая не между цифрами не трогается."""
+    assert NormalizeTitle().prepare(RowItem({'title': raw})) == expected
 
 
 @pytest.mark.parametrize(
