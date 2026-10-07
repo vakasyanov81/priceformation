@@ -18,9 +18,6 @@ from parsers.base_parser.category_finder import (
 @pytest.mark.parametrize(
     'title, category',
     [
-        ('bla bla автошина bla', 'Автошина'),
-        ('bla bla шина bla', 'Автошина'),
-        ('bla bla шины bla', 'Автошина'),
         ('bla bla диски bla', 'Диск'),
         ('bla bla диск bla', 'Диск'),
         ('bla bla автодиск bla', 'Диск'),

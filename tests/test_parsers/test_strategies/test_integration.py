@@ -31,8 +31,8 @@ class TestStrategiesIntegration:
                             'strategy': 'title_keywords',
                             'map': {
                                 'ободная лента': 'Ободная лента',
-                                'шина': 'Автошина',
-                                'покрышка': 'Автошина',
+                                'шина': 'Легковая шина',
+                                'покрышка': 'Легковая шина',
                                 'камера': 'Автокамера',
                                 'диск': 'Диск',
                             },
@@ -57,7 +57,7 @@ class TestStrategiesIntegration:
         # Тест title_keywords category
         row = RowItem({'title': 'Шина Nortec'})
         category = integration.category_for(row)
-        assert category == 'Автошина'
+        assert category == 'Легковая шина'
 
     def test_integration_with_pioner_behavior(self) -> None:
         """Интеграция с поведением Пионера: header_rows + manufacturer_from_category + minus_reserve."""

@@ -19,7 +19,6 @@ SPECIAL = 'Спецшина'
 TRUCK = 'Грузовая шина'
 LIGHT_TRUCK = 'Легкогрузовая шина'
 PASSENGER = 'Легковая шина'
-DEFAULT = 'Автошина'
 
 _LIGHT_TRUCK_WIDTH = 245
 _SPEC_WORDS = ('сельхоз', 'спец', 'клюшка', 'индустр', 'flotation')
@@ -38,7 +37,6 @@ _TRUCK_PATTERNS = (
 _LIGHT_TRUCK_SUFFIX = re.compile(r'(?:\blt\b|r\s*\d{2}\s*lt\b)')  # R16LT
 _METRIC_SIZE = re.compile(r'\b(\d{3})\s*/\s*(\d{2})\s*r?\s*-?\s*(\d{2})\s*([cс])?\b')  # 205/55R16
 _INCH_SIZE = re.compile(r'\b(\d{3})\s*r\s*(\d{2})\s*([cс])?\b')  # 165 R13
-_DIAGONAL_PASSENGER = re.compile(r'\b(\d{3})\s*-\s*(\d{2})\b')  # 165-13
 
 
 class TireSizeCategory:
@@ -88,9 +86,7 @@ def _metric_or_passenger(title: str) -> str:
     inch = _INCH_SIZE.search(title)
     if inch is not None:
         return LIGHT_TRUCK if inch.group(3) else PASSENGER
-    if _DIAGONAL_PASSENGER.search(title):
-        return PASSENGER
-    return DEFAULT
+    return PASSENGER
 
 
 def _is_special(title: str) -> bool:

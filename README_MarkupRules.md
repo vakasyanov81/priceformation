@@ -30,7 +30,7 @@ parse_config/vendors/zapaska.json ↔   file_prices/zapaska/{disk.json,tire.json
   "start_row": 14,
   "file_templates": ["price*.xls", "price*.xlsx"],
   "reader": "xls",
-  "category": { "strategy": "title_keywords", "map": { "шина": "Автошина" }, "default": "Разное" },
+  "category": { "strategy": "title_keywords", "map": { "шина": "Легковая шина" }, "default": "Разное" },
   "title": { "strategy": "normalize_size_chunks" },
   "pricing": { "policy": "map_on_opt", "rules": { "markup_rules": { "rule_70": { "min": 0, "max": 201, "percent": 0.7 } } } },
   "behavior": { "min_rest": 0 },

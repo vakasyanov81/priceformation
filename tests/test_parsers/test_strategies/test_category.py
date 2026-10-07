@@ -49,7 +49,7 @@ def test_fixed_category_returns_value() -> None:
 
 def test_title_keywords_matches_first_in_order() -> None:
     strategy = TitleKeywordsCategory.from_config(
-        _config(mapping={'ободная лента': 'Ободная лента', 'шина': 'Автошина'}),
+        _config(mapping={'ободная лента': 'Ободная лента', 'шина': 'Легковая шина'}),
     )
 
     assert strategy.resolve(RowItem({'title': 'Шина ободная лента'})) == 'Ободная лента'
@@ -71,7 +71,7 @@ def test_title_keywords_is_case_insensitive() -> None:
 
 def test_field_map_reads_normalized_field() -> None:
     strategy = FieldMapCategory.from_config(
-        _config(field_name='tire_type', mapping={'грузовая': 'Грузовая шина'}, default_value='Автошина'),
+        _config(field_name='tire_type', mapping={'грузовая': 'Грузовая шина'}, default_value='Легковая шина'),
     )
 
     assert strategy.resolve(RowItem({'tire_type': '  Грузовая '})) == 'Грузовая шина'
@@ -79,10 +79,10 @@ def test_field_map_reads_normalized_field() -> None:
 
 def test_field_map_falls_back_to_default() -> None:
     strategy = FieldMapCategory.from_config(
-        _config(field_name='tire_type', mapping={'грузовая': 'Грузовая шина'}, default_value='Автошина'),
+        _config(field_name='tire_type', mapping={'грузовая': 'Грузовая шина'}, default_value='Легковая шина'),
     )
 
-    assert strategy.resolve(RowItem({})) == 'Автошина'
+    assert strategy.resolve(RowItem({})) == 'Легковая шина'
 
 
 def test_column_canonical_uses_context() -> None:
@@ -158,7 +158,7 @@ def test_header_rows_zero_rest_flag() -> None:
         ('185 R14C Rapid EffiVan', 'Легкогрузовая шина'),
         ('175/70 R13 Rapid P309', 'Легковая шина'),
         ('Шина 165-13 АИ-168У', 'Легковая шина'),
-        ('Nortec без размера', 'Автошина'),
+        ('Nortec без размера', 'Легковая шина'),
     ],
 )
 def test_tire_size_category(title: str, expected: str) -> None:
@@ -170,4 +170,4 @@ def test_tire_size_category(title: str, expected: str) -> None:
 def test_tire_size_category_without_title_is_default() -> None:
     strategy = TireSizeCategory.from_config(_config())
 
-    assert strategy.resolve(RowItem({})) == 'Автошина'
+    assert strategy.resolve(RowItem({})) == 'Легковая шина'
