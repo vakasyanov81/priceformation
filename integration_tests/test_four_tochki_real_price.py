@@ -16,7 +16,7 @@ from services.parse_orchestrator import ParseOrchestrator
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
-_PROJECT_ROOT = _INTEGRATION_ROOT.parent
+_CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
 _ROW_LOGGER = 'parsers.base_parser.base_parser_row'
 
 
@@ -26,11 +26,11 @@ def _four_tochki_file() -> str:
 
 @pytest.fixture
 def _four_tochki_provider() -> Iterator[None]:
-    """Провайдер путей: parse_config — из проекта (vendors/*.json), цены — из фикстур."""
+    """Провайдер путей: и конфиги, и цены — из фикстур (без боевого parse_config)."""
     init_cfg(
         FakeConfigProvider(
             _INTEGRATION_ROOT,
-            config_folder=_PROJECT_ROOT / 'parse_config',
+            config_folder=_CONFIG_DIR,
             prices_folder=_PRICES_DIR,
             result_folder=_INTEGRATION_ROOT / 'result_for_test',
         ),

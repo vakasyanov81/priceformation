@@ -1,7 +1,8 @@
 """Интеграционный тест: полный цикл ``uv run pf parse``.
 
-Проверяет, что config-driven парсеры разбирают ВСЕХ включённых поставщиков
-с реальными прайсами через штатный ParseOrchestrator — без ошибок.
+Проверяет, что config-driven парсеры разбирают включённых поставщиков на
+эталонных конфигах и прайсах-фикстурах через штатный ParseOrchestrator —
+без ошибок и без опоры на боевой ``parse_config/``.
 """
 
 from __future__ import annotations
@@ -19,19 +20,20 @@ from parsers.registry import clear_registry
 from services.parse_orchestrator import ParseOrchestrator
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
-_PROJECT_ROOT = _INTEGRATION_ROOT.parent
+_CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
+_PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
 _ROW_LOGGER = 'parsers.base_parser.base_parser_row'
 
 
 @pytest.fixture
-def _real_config_provider() -> Iterator[None]:
-    """Провайдер путей: и конфиги, и цены — из настоящего репозитория."""
+def _fixture_config_provider() -> Iterator[None]:
+    """Провайдер путей: конфиги и цены — из фикстур (без боевого parse_config/file_prices)."""
     init_cfg(
         FakeConfigProvider(
-            _PROJECT_ROOT,
-            config_folder=_PROJECT_ROOT / 'parse_config',
-            prices_folder=_PROJECT_ROOT / 'file_prices',
-            result_folder=_PROJECT_ROOT / 'file_prices' / 'result',
+            _INTEGRATION_ROOT,
+            config_folder=_CONFIG_DIR,
+            prices_folder=_PRICES_DIR,
+            result_folder=_INTEGRATION_ROOT / 'result_for_test',
         ),
     )
     clear_registry()
@@ -45,7 +47,7 @@ class TestFullParsePipeline:
 
     def test_all_enabled_vendors_parse_without_errors(
         self,
-        _real_config_provider: None,
+        _fixture_config_provider: None,
         watch_logger: LoggerWatcher,
     ) -> None:
         """Все включённые поставщики разбираются без ошибок строк.
@@ -63,7 +65,7 @@ class TestFullParsePipeline:
 
     def test_json_vendor_uses_json_reader(
         self,
-        _real_config_provider: None,
+        _fixture_config_provider: None,
     ) -> None:
         """Zapaska (reader: json) разбирается через JsonPriceReader, а не XlsReader."""
         from parsers.base_parser.config_driven_parser import make_config_driven_parser

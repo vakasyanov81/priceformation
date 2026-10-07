@@ -37,7 +37,7 @@
 - Параметры из `pyproject.toml [tool.pytest.ini_options]`: `-n=2` (xdist), branch-покрытие, html/xml отчёты. `pytest-testmon` доступен, но активируется только флагом `--testmon`.
 - `src/parsers/registry.py` — реестр вендоров из `vendors/*.json` конфигов; кэш сбрасывается `clear_registry()`.
 - Пути окружения в тестах подменяются фикстурой `fake_config_provider` (временная папка), а автофикстура `_config_provider_restored` возвращает боевой провайдер после теста.
-- Интеграционные тесты (`integration_tests/`) и модульные делят общий `parse_config/`; эталонные конфиги — в `tests/parse_config_example/`. Конфиги поставщиков — `parse_config/vendors/*.json`; STK самодостаточен (отдельного `stk_markup_rules.json` больше нет).
+- Интеграционные тесты (`integration_tests/`) и модульные не читают боевой `parse_config/`: эталонные конфиги — `tests/parse_config_example/` и `integration_tests/parse_config_example/` (копия `vendors/*.json` + глобальные файлы), прайсы — `integration_tests/file_prices_for_test/`. Конфиги поставщиков — `parse_config/vendors/*.json`; STK самодостаточен (отдельного `stk_markup_rules.json` больше нет).
 
 ## Данные (не код)
 - `parse_config/` — пользовательские настройки: `vendors/*.json`, `black_list`, `manufacturer_aliases.json`, `title_aliases.json`, `correct-nomenclature.xlsx`.
