@@ -54,3 +54,27 @@ def test_find_alias_no_whitespace_wrap() -> None:
     correct, found = finder.find_word_in_title('ABC')
     assert correct is None
     assert found is None
+
+
+def test_find_alias_glued_with_hyphen() -> None:
+    """Бренд через дефис находится: NORTEC-16 → Nortec."""
+    finder = BaseFinder(AliasContainer({'Nortec': ()}))
+    correct, found = finder.find_word_in_title('Диск штамп nortec-16 11.75x22.5')
+    assert correct == 'Nortec'
+    assert found == 'nortec'
+
+
+def test_find_alias_glued_with_cyrillic_hyphen() -> None:
+    """Аля-Алтайшина-111 → Алтайшина (границы — не буквы и не цифры)."""
+    finder = BaseFinder(AliasContainer({'Алтайшина': ()}))
+    correct, found = finder.find_word_in_title('8.25R20 алтайшина-111 10PR')
+    assert correct == 'Алтайшина'
+    assert found == 'алтайшина'
+
+
+def test_find_alias_inside_word_is_not_found() -> None:
+    """Алиас внутри другого слова (без границ) не находится."""
+    finder = BaseFinder(AliasContainer({'Nortec': ()}))
+    correct, found = finder.find_word_in_title('nortecx')
+    assert correct is None
+    assert found is None

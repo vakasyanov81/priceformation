@@ -154,6 +154,25 @@ def test_header_rows_uses_default_when_no_map_key() -> None:
     assert strategy.resolve(RowItem({'title': 'Шипы колёсные'})) == 'Прочее'
 
 
+@pytest.mark.parametrize(
+    ('title', 'expected'),
+    [
+        ('автошины triangle', 'triangle'),
+        ('автошина ecotech', 'ecotech'),
+        ('автошины рокбастер на спецтехнику', 'рокбастер'),
+        ('автошины', None),
+        ('прочие автошины', None),
+        ('автокамеры/ободная лента', None),
+    ],
+)
+def test_header_rows_current_manufacturer(title: str, expected: str | None) -> None:
+    """Производитель берётся из подписи раздела после слова «автошин...»."""
+    strategy = HeaderRowsCategory()
+    strategy.resolve(RowItem({'title': title}))
+
+    assert strategy.current_manufacturer() == expected
+
+
 def test_header_rows_zero_rest_flag() -> None:
     strategy = HeaderRowsCategory.from_config(_config(zero_rest_categories=('прочие',)))
     strategy.resolve(RowItem({'title': 'прочие товары'}))

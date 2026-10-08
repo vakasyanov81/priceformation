@@ -12,6 +12,8 @@ from parsers.strategies.protocols import CategoryContext
 from parsers.vendor_config.slot_configs import CategoryConfig
 
 _CATEGORY_FIELD = 'type_production'
+_MANUFACTURER_CHUNK_INDEX = 1
+_MANUFACTURER_HEAD_PREFIX = 'автошин'
 
 # Канонизация первого слова строки-заголовка (падеж/число/регистр) к типу товара.
 _HEADER_CATEGORIES: Mapping[str, str] = {
@@ -156,6 +158,13 @@ class HeaderRowsCategory:
         """Относится ли текущий раздел к категориям с обнулённым остатком."""
         lowered = (self.current_category or '').lower()
         return any(name in lowered for name in self._zero_rest_categories)
+
+    def current_manufacturer(self) -> str | None:
+        """Производитель из подписи текущего раздела: «автошины triangle» → «triangle»."""
+        chunks = (self.current_category or '').split()
+        if len(chunks) <= _MANUFACTURER_CHUNK_INDEX or not chunks[0].startswith(_MANUFACTURER_HEAD_PREFIX):
+            return None
+        return chunks[_MANUFACTURER_CHUNK_INDEX]
 
     def _first_chunk(self) -> str:
         current = self.current_category or ''

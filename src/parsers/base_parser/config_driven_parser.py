@@ -59,12 +59,14 @@ def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig
         section: Секция поставщика.
         behavior: Поведение поставщика (из ``VendorConfig.behavior``).
     """
+    category_strategy = make_category_strategy(section.category, f'section {section.id} category')
+    manufacturer_reader = getattr(category_strategy, 'current_manufacturer', None)
     return StrategyHooks(
-        category=make_category_strategy(section.category, f'section {section.id} category'),
+        category=category_strategy,
         title=make_title_strategy(
             section.title,
             f'section {section.id} title',
-            manufacturer_reader=lambda: None,
+            manufacturer_reader=manufacturer_reader,
         ),
         rest=make_rest_strategy(behavior, f'section {section.id} rest'),
         min_rest=behavior.min_rest,

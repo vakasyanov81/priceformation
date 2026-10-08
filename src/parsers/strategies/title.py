@@ -38,13 +38,14 @@ class DefaultTitle:
 
 
 class NormalizeSizeChunks:
-    """Пошк: срезать обёртки «Шина»/«, шт», заменить `*` на `x`, склеить размер с R-диаметром, «н.с.N» → «PRN»."""
+    """Пошк: срезать обёртки «Шина»/«а/п»/«автошина»/«автопокрышка»/«, шт», `*`→`x`, «н.с.N»→«PRN»."""
 
     _PART_SIZE = re.compile(r'^\d+\.*\d*')
     _R_DIAMETER = re.compile(r'R\d+.')
     _COMMA = re.compile(r'(\d),(\d)')
     _LEADING_SHIP = re.compile(r'^\s*Шина\b\s*', re.IGNORECASE)
     _TRAILING_PIECE = re.compile(r'\s*,\s*,?\s*шт\s*$', re.IGNORECASE)
+    _DROP_WORD = re.compile(r'\s*,?\s*(?:а/п|автошина|автопокрышка)\b\s*,?', re.IGNORECASE)
     _LAYER_NORM = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
 
     def prepare(self, row_item: RowItem) -> str | None:
@@ -56,7 +57,8 @@ class NormalizeSizeChunks:
 
     def _trim_wrappers(self, title: str) -> str:
         title = self._LEADING_SHIP.sub('', title)
-        return self._TRAILING_PIECE.sub('', title).strip()
+        title = self._TRAILING_PIECE.sub('', title)
+        return self._DROP_WORD.sub(' ', title).strip()
 
     def _normalize_chunks(self, chunks: list[str]) -> list[str]:
         for index, chunk in enumerate(chunks):
