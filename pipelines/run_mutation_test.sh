@@ -12,7 +12,7 @@ find src -name __pycache__ -type d -print0 | xargs -0 -r rm -rf
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPATH=./
 
-uv run mutmut run
+uv run mutmut run "$@"
 
 find src -name __pycache__ -type d -print0 | xargs -0 -r rm -rf
 

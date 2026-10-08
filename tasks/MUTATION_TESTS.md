@@ -1,33 +1,45 @@
 # План усиления тестов по данным mutmut
 
-План закрывает дыры, найденные прогоном `mutmut` (`reports/mutmut/mutmut-analysis.json`).
+Актуальный срез — прогон от 2026-10-08: `mutants/mutmut-analysis.json`
+(сгенерирован `uv run python -m pipelines.mutmut_stats`).
+Предыдущая кампания описана в разделе [История](#история-предыдущей-кампании);
+её отчёт лежит в `reports/mutmut/`.
+
 Задачи из [архитектурного плана](./PLAN.md) выполняются независимо от этого документа.
 
 ---
 
 ## Контекст
 
-Ниже — состояние **до** работ (срез, на котором писался план), и итог **после**:
-
-| | было | стало |
+| | 2026-09-28 (прошлая кампания) | 2026-10-08 (текущий срез) |
 | --- | ---: | ---: |
-| мутантов | 4515 | 4269 |
-| killed | 3969 | 3977 |
-| survived | 543 | 292 |
-| timeout | 3 | 0 |
-| **mutation score** | **88.0 %** | **93.2 %** |
+| мутантов | 4269 | 5651 |
+| killed | 3977 | 5013 |
+| survived | 292 | 627 |
+| timeout | 0 | 11 |
+| **mutation score** | **93.2 %** | **88.9 %** |
 
-Score считается как `killed / (killed + survived)`, `timeout` и прочие статусы в
-знаменатель не входят.
+Score считается как `killed / (killed + survived)`; `timeout` и прочие статусы
+в знаменатель не входят.
 
-`mutate_only_covered_lines=true`, поэтому все выжившие мутанты **покрыты** строками — проблема
-не в покрытии, а в силе assertions. Это ключевой вывод: добивать покрытие кода бесполезно,
-нужно менять характер проверок.
+**Почему score упал.** После прошлой кампании в код добавились новые модули —
+типизированные конфиги (`parsers/vendor_config/`), стратегии
+(`parsers/strategies/`), DI-обвязка (`base_parser/strategies_integration.py`,
+`config_driven_parser.py`, `services/parse_orchestrator.py`). Мутантов стало
+больше на 1382, а тесты на новый код слабее: они проверяют, что разбор
+«прошёл успешно», но не закрепляют ни путь ошибки, ни каждое прокачиваемое
+поле. Поэтому план ниже целится прежде всего в новый код, а не в уже
+закрытые кластеры прошлой кампании.
+
+`mutate_only_covered_lines=true`, поэтому все 627 выживших лежат на строках,
+которые тесты **исполняют**. Вывод тот же, что и в прошлой кампании: дело
+не в покрытии, а в силе assertions. Добивать строки бесполезно, надо менять
+характер проверок.
 
 Прогон:
 
 ```bash
-./pipelines/run_mutation_test.sh
+just mutate                                                   # pipelines/run_mutation_test.sh
 uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 ```
 
@@ -35,658 +47,564 @@ uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 
 ## Классификация выживших
 
-| Корзина | Шт. | Доля | Суть |
-| --- | ---: | ---: | --- |
-| **G. Реальные дыры в тестах** | 325 | 60 % | assertions проверяют не то поведение |
-| **F. Схема отчёта без точного сравнения** | 83 | 15 % | `parse_report.py`, `parse_report_build.py` |
-| **C. Тексты argparse `help`/`description`** | 41 | 8 % | косметика, тестировать не нужно |
-| **B. `encoding='utf-8'`** | 30 | 6 % | эквивалентно, пока локаль UTF-8 |
-| **A. `cast(...)`** | 23 | 4 % | аннотация, рантайм-шум |
-| **D. Тексты исключений** | 16 | 3 % | сообщения не ассертятся |
-| **E. `fake_*` тест-дубли** | 13 | 2 % | мутируются сами фейки |
+### По коду
 
-Классы A, B, C, E — **не дыры**, их правильно убрать из мутации (фаза 1, 107 шт.).
-Классы D, F, G — **работы** (фазы 2–9, 436 шт.).
+| Кластер | Шт. | Файлы |
+| --- | ---: | --- |
+| Типизированные конфиги | 129 | `parsers/vendor_config/`, `parsers/data_provider/` |
+| Хелперы шин и дисков | 90 | `strategies/_four_tochki_*_helper.py`, `_autosnab_helper.py` |
+| `base_parser` + строка + интеграция стратегий | 136 | `base_parser/` |
+| Прочие стратегии | 55 | `strategies/title.py`, `category.py`, `pricing_registry.py`, `title_registry.py`, `markup_policy.py` |
+| DI, оркестратор, реестр | 32 | `services/parse_orchestrator.py`, `parsers/registry.py` |
+| CLI и интерактив | 68 | `run.py`, `run_argv.py`, `run_machine.py`, `run_dialog/` |
+| Writer и отчёт | 33 | `parsers/writer/`, `parse_report.py` |
+| Группировка и диспуты | 34 | `common_price_group_*`, `common_price_size.py`, `common_price_dispute.py` |
+| XLS-ридер | 14 | `parsers/xls_reader*.py` |
+| Домен/инфраструктура/загрузчики | 22 | `domain/`, `infrastructure/`, `parsers/load*` |
+| Прочее | 14 | `common_price_grouper.py`, `json_reader.py`, `cfg/__init__.py`, … |
+
+### По причине
+
+Классификация ниже — сквозная (каждый выживший ровно в одной строке), поэтому
+сумма ровно 627; она не совпадает с разбивкой по файлам выше, но покрывает её.
+
+| Класс | Шт. | Суть | Что делать |
+| --- | ---: | --- | --- |
+| **A. Путь ошибки (`where`) в конфигах** | 80 | `where` попадает только в текст `ConfigValidationError`; тесты матчат подстроку без пути | ✅ фаза 1: ассерт пути (в паре с B убито 120, 2 экв. → фаза 7) |
+| **B. Поля слотов конфига** | 47 | `read_flag(...) → None`, имя ключа → `'XX...'`; значение не проверяется вниз по потоку | ✅ фаза 1: полное равенство dataclass |
+| **C. Канонизация строк** | 109 | `.replace(',', '.')`, `'—'`, `'усил'`, `'RZ'`, `or '' → 'XXXX'` | тест: неканонический вход |
+| **D. Прокачка аргументов/хуков** | 237 | `StrategiesIntegration`, `config_driven_parser`, `_enrich_row_item`, `make_*_strategy`, `set_field(...)` | тест: ассертить поля/хуки |
+| **E. Операторы и границы** | 85 | `operator` 43, `number` 18, `keyword` 17, `method_swap` 11 | тест: таблица истинности |
+| **F. UI/платформенный текст** | 37 | `_attach_commands` (описания позиционно), `run_dialog/readers.py` | подавить (фаза 0 закрыла 31, остаток readers — фаза 6) |
+| **H. Тексты исключений** | 16 | `WorkbookNotInitializedError`, `JsonPriceNotListError`, … | тест текста |
+| **I. Эквивалентные** | 16 | диспуты шипа/сезона, `ensure_ascii`, `_extend_meta` | задокументировать |
+
+Итого 627. Классы A–E и H — работы (≈574 шт.), F и I (≈53) — ненаблюдаемы
+или эквивалентны. Класс D — самый крупный и самый «размазанный»: он
+распределён по фазам 2–4.
 
 ---
 
 ## Сводка фаз
 
-| # | Фаза | Что делаем | Убитых мутантов | Приоритет |
+| # | Фаза | Класс | Убитых (оценка) | Приоритет |
 | --- | --- | --- | ---: | --- |
-| 1 | [Чистка конфига](#фаза-1-чистка-конфига-mutmut) | `do_not_mutate` для `cast`, `encoding`, `help`, `fake_*` | — (убрать 107) | P0 |
-| 2 | [Схема отчёта целиком](#фаза-2-схема-отчёта-сравнивать-словарь-целиком) | точное сравнение `empty_stats` / `ok_payload` / `error_payload` / `stats_from_result` | ~60 | P0 |
-| 3 | [Байтовый формат jsonl](#фаза-3-байтовый-формат-jsonl) | ассертить сырой текст файла, не `json.loads` | ~35 | P0 |
-| 4 | [Диспуты шипа и сезона](#фаза-4-диспуты-шипа-и-сезона) | модуль `common_price_dispute.py` без тестов | ~15 | P0 |
-| 5 | [Золотые значения ключа группировки](#фаза-5-золотые-значения-ключа-группировки) | буквальный `group_key`, а не только «равны / не равны» | ~25 | P1 |
-| 6 | [Значения листа xlsx](#фаза-6-значения-листа-и-ячеек-xlsx) | имя листа, цвета, `exclude` вместо `call_count` | ~12 | P1 |
-| 7 | [Поведение CLI](#фаза-7-поведение-cli-вместо-текстов-help) | `required=True`, inline-форма + флаги, help из реестра | ~8 | P1 |
-| 8 | [Вложенные папки и `continue`](#фаза-8-вложенные-папки-и-continue-в-циклах) | `mkdir(parents=True)`, два нечисловых ключа подряд | ~14 | P2 |
-| 9 | [Тексты исключений и таймауты](#фаза-9-тексты-исключений-и-таймауты) | 16 мутантов + разбор 3 `timeout` | ~10 | P2 |
+| 0 | [Чистка конфига mutmut](#фаза-0-чистка-конфига-mutmut) | F | −31 выживший ✅ | P0 |
+| 1 | [Путь ошибки и полное сравнение слотов](#фаза-1-конфиг-путь-ошибки-и-полное-сравнение-слотов) | A, B | 120 убито ✅ | P0 |
+| 2 | [Канонизация размеров и хвостов](#фаза-2-канонизация-размеров-и-хвостов) | C | ~90 | P0 |
+| 3 | [Прокачка аргументов и DI](#фаза-3-прокачка-аргументов-и-di) | D | ~120 | P1 |
+| 4 | [Логика и границы предикатов](#фаза-4-логика-и-границы-предикатов) | E | ~85 | P1 |
+| 5 | [Контракт отчёта и writer](#фаза-5-контракт-отчёта-и-writer) | D, E | ~25 | P2 |
+| 6 | [CLI, интерактив, тексты исключений](#фаза-6-cli-интерактив-тексты-исключений) | H | ~35 | P2 |
+| 7 | [Эквивалентные мутанты](#фаза-7-эквивалентные-мутанты) | I | — | P2 |
 
-**Прогноз (на момент плана):** 4515 → 4408 мутантов, ~169 дополнительно убитых → **~94 %**.
-
-**Факт реализации:** все девять фаз выполнены, контрольный прогон сделан.
-Итог: 4269 мутантов, 3977 убито, 292 выжило, 0 `timeout`, score **93.2 %**
-(было 88.0 %). Мутантов стало меньше на 246 сильнее, чем ждали (паттерны
-`help=`, `encoding=`, `cast\(` подавляют мутации целой строки, а не одну).
-
-Ключевая поправка к прогнозу: часть «выживших» мутантов эквивалентна, и тест
-на неё написать нельзя (см. «Эквивалентные мутанты»).
-
+**Прогноз:** 5651 → ~5575 мутантов (фаза 0 уже убрала 76 из генерации),
+~500 убитых → **~96 %**.
 
 ---
 
-## Результаты реализации
-
-Все фазы выполнены. Ниже — что реально дала каждая, по ручной проверке мутаций
-скриптом `check_mut.sh` (патч одного мутанта → чистка `__pycache__` → pytest → откат).
-
-| Фаза | Проверено вручную | Итог |
-| --- | ---: | --- |
-| 1 | — | конфиг изменён: 4515 → 4269 мутантов (−246) |
-| 2 | 14 | 14 убиты |
-| 3 | 16 | 13 убиты, 3 эквивалентны |
-| 4 | 17 | 3 убиты, 14 эквивалентны |
-| 5 | 15 | 13 убиты, 2 эквивалентны/нестабильны |
-| 6 | 11 | 10 убиты, 1 эквивалентен |
-| 7 | 5 | 5 убиты |
-| 8 | 5 | 5 убиты |
-| 9 | 9 | 9 убиты, 3 `timeout` закрыты |
-
-### Находки, которых не было в плане
-
-**Stale `__pycache__` — главная находка.** mutmut 3.8.0 правит файл в `src/`
-и не чистит `.pyc`. Если кэш от предыдущего прогона лежит рядом, тесты
-импортируют мутированный модуль уже после отката source: размер файла и
-секунда mtime совпадают, выглядит как «мутация не применилась».
-Следствия, зафиксированные в репозитории:
-
-- `pipelines/run_mutation_test.sh` чистит `src/**/__pycache__` до и после
-  прогона и выставляет `PYTHONDONTWRITEBYTECODE=1`;
-- то же описано в `pipelines/mutmut_stats/README.md`;
-- `uv run mutmut run` нельзя запускать параллельно с `uv run pytest`.
-
-**`help=` подавляет мутантов, а не «съедает 4 мутанта».** Паттерн `help=`
-совпадает со строкой целиком, поэтому подавляет все мутации на ней, а не
-только текстовые. Аналогично `encoding=` и `cast\(`. Ровно поэтому ожидаемые
-4408 мутантов — оценка, а не факт.
-
-**Мутация `to_none` убирает вызов `input()` целиком.** Из-за этого
-`ask_action` с `answer = None` крутит `while True` вообще без ввода: подсказка
-логируется бесконечно. Лечится заглушкой `input` в тесте — `_dialog_input`
-падает с `AssertionError`, когда ответы кончились, поэтому диалог не виснет.
-
-**Тест на импорт вендора ломается в clean-прогоне mutmut.** `test_registry.py`
-импортирует стаб-модуль `tests.test_parsers._registry_import_vendor` ради
-проверки `_ensure_vendors_imported()`. В обычном прогоне модуль ещё не импортирован,
-и всё в порядке; mutmut же сначала прогоняет `--collect-only`, после чего модуль
-лежит в `sys.modules`, повторный импорт не выполняется, регистрация не происходит —
-и clean-тесты падают с `Failed to run clean test`. Лечится вычисткой модуля из
-`sys.modules` перед импортом и сверкой по имени класса, а не по идентичности
-объекта: при повторном импорте это разные объекты.
-
-**`mkdir(parents=True)` не проверяется «папкой, которой ещё нет».** Первый
-написанный тест на вложенный путь использовал `tmp_path / 'nested' / 'zapaska'`,
-а мутант `exist_ok=False` на нём выживал: `parents=True` и создаёт
-промежуточные папки, и `exist_ok` касается только конечной. Нужны два разных
-теста — вложенный путь и повторный вызов в уже существующую папку.
-
-### Эквивалентные мутанты
-
-Эти нельзя убить тестом, тест на них невозможен:
-
-- **`_extend_meta` / `ensure_ascii=True`** в `jsonl_writer.py`: финальный файл
-  перезаписывает `_save_values`, поэтому промежуточная запись метаданных
-  в экранированном виде не наблюдаема.
-- **14 мутантов `common_price_dispute.py`**: внутренние каноны используются
-  только для подсчёта числа различных значений и нигде не сравниваются с
-  литералами, поэтому смена регистра или неинъективная перенумерация
-  не меняют результат.
-- **`sorted(unique, key=None, reverse=True)`** в `group_key`: порядок обхода
-  `set` зависит от hash seed, поведение мутанта нестабильно между прогонами.
-- **`intimacy.upper() → .lower()`** в `group_key`: значение тут же приводится
-  к верхнему регистру в `camera_key`.
-- **`if not column_name and column_name not in product`** в `_get_color`:
-  чтобы различить ветви, нужен шаблон, у которого `by_column` — пустая строка,
-  а продукт содержит ключ `''`.
-- **`_get_color` для неизвестного поставщика**: `or '' → 'XXXX'` даёт тот же
-  результат, потому что неизвестный поставщик и так отображается в `''`.
-
-Итог по критерию фазы 4 «выживших ≤ 2» был неверен: модуль содержит 14
-эквивалентных мутантов, и добивать их не нужно.
-
----
-
-## Фаза 1: Чистка конфига mutmut
+## Фаза 0: Чистка конфига mutmut ✅ (2026-10-08)
 
 ### Проблема
 
-107 выживших — не эквивалентные мутации, а мутации кода, который не меняет поведение:
+31 выживший (класс F) — не дыры в тестах, а мутации ненаблюдаемого текста:
 
-- `cast(X, y)` — аннотация для mypy, в рантайме ничего не делает. Мутировать нечего.
-  23 шт.: `common_price_output.py`, `parse_orchestrator.py`, `xls_reader.py`, `column_helper.py`, `run_argv.py`.
-- `encoding='utf-8'` → `None` / `'UTF-8'` — при `locale.getpreferredencoding() == 'UTF-8'`
-  результат идентичен. 30 шт. в 9 файлах.
-- `help=`, `description=`, `metavar=` — тексты argparse. 41 шт. в `run_argv.py`,
-  `run_dialog.py`.
-- `fake_xls_reader.py`, `fake_json_reader.py`, `writer/fake_driver.py` — тест-дубли.
-  13 шт. мутаций внутреннего состояния фейков.
+- **`run_argv._attach_commands` (24 шт.)**: описания подкоманд передаются
+  **позиционно** в `_json_parser(subparsers, json_flag, PARSE, 'Разобрать …')`,
+  поэтому существующий паттерн `help=` их не ловит. Это тот же случай, что
+  закрытые в прошлой кампании `help=`/`description=`: текст виден только в
+  `--help`, поведение разбора от него не зависит.
+- **`run_dialog/readers.py` (7 шт.)**: `'ignore'`, `utf-8`, `'msvcrt'` —
+  константы терминального ввода; тесты подменяют источник символов
+  (`read_char` / `getwch` приходят параметрами). Ещё 6 выживших readers
+  (`\x1b`, `\x00`, обёртки `KeyPress`) — в `read_unix_key` /
+  `read_windows_key`, их добивает фаза 6.
 
 ### Решение
 
-`pyproject.toml`, секция `[tool.mutmut]`:
+`pyproject.toml`, секция `[tool.mutmut]` — четыре построчных паттерна:
 
 ```toml
-do_not_mutate = [
-    "src/infrastructure/logging/wrappers.py",
-    "src/services/async_utils.py",
-    "src/infrastructure/logging/console.py",
-    "src/infrastructure/logging/exception_logging.py",
-    "src/infrastructure/logging/file_logging.py",
-    "src/infrastructure/logging/json_mode.py",
-    "src/infrastructure/logging/log_resolve.py",
-    "src/infrastructure/logging/log_setup.py",
-    "src/parsers/base_parser/log_parser_process.py",
-    # Фейки: мутируем их внутреннее состояние, а не тесты, которые их проверяют.
-    "src/parsers/fake_xls_reader.py",
-    "src/parsers/fake_json_reader.py",
-    "src/parsers/writer/fake_driver.py",
-]
 do_not_mutate_patterns = [
-    'logger\.\w+',              # тексты логов проверяются снаружи
-    'cast\(',                    # аннотация, не рантайм
-    'encoding=',                 # эквивалентно при locale == UTF-8
-    'help=',
-    'description=',
-    'metavar=',
+    # ... существующие строки (cast(, encoding=, help=, description=, metavar=) ...
+    # Описания подкоманд в run_argv._attach_commands передаются позиционно,
+    # поэтому help= их не ловит: текст виден только в --help, разбор от него
+    # не зависит. Паттерн построчный — покрывает однострочные вызовы.
+    '_json_parser\(subparsers, json_flag,',
+    # Те же описания в многострочных вызовах: строка-аргумент целиком состоит
+    # из help-предложения. Сегодня в src только две такие строки (run_argv).
+    '''^\s*'.+\.\',$''',
+    # Платформенные константы чтения терминала: тесты подменяют источник
+    # символов, эти две строки в тестовом окружении не исполняются.
+    '''\.decode\('utf-8', 'ignore'\)''',
+    '''import_module\('msvcrt'\)''',
 ]
 ```
 
-### Критерии готовности
+Паттерн построчный, поэтому readers-паттерны сделаны точечными: широкий
+вариант из первоначального проекта (`'ignore'|\bmsvcrt\b|\butf-8\b`) совпал бы
+с посторонними строками в других файлах src. Проверено: под новыми паттернами
+лежат ровно 8 строк — 6 в `run_argv` и 2 в `readers`, больше нигде.
 
-- [x] `mutmut run` даёт 4269 мутантов (ожидалось 4408) и score 93.2 % при 3977 killed
-      (было 3969 при 4515).
-- [x] Комментарии в `pyproject.toml` объясняют, почему каждая строка подавлена.
-- [x] `help=` не съел ничего поведенческого: мутанты `_result_template_help`
-      добиты тестом фазы 7 (4 из 4 убиты).
+`where`, `help`-подобные строки исключений и `or 'XXXX'` **не подавлять** —
+они проверяемы (фазы 1, 2, 6).
 
----
+### Что подавляется и что это даёт (замерено, не оценка)
 
-## Фаза 2: Схема отчёта — сравнивать словарь целиком
+Сравнение генерации `create_mutations` с 6 старыми паттернами и со всеми 10:
 
-### Проблема
+| Файл | без новых | с новыми | Δ |
+| --- | ---: | ---: | ---: |
+| `src/run_argv.py` | 160 | 101 | −59 |
+| `src/run_dialog/readers.py` | 71 | 54 | −17 |
+| **Итого** | **231** | **155** | **−76** |
 
-83 выживших в `src/parse_report.py` (67) и `src/parse_report_build.py` (16):
+Из 76: ровно 31 — выжившие (всё, что и было целью), 45 — уже убитые.
+Подавление построчное, поэтому под строкой исчезают и тривиально убитые
+мутанты на ней же (`parse_cmd = None`, `arg → None`, удаление аргументов).
+Прогноз эффекта: killed 5013 → 4968, survived 627 → 596,
+score **88,9 % → 89,3 %** (точный замер — после следующего `just mutate`).
 
-| Функция | Выживших |
-| --- | ---: |
-| `empty_stats` (`parse_report.py:55`) | 37 |
-| `stats_from_result` (`parse_report_build.py:14`) | 14 |
-| `error_payload` (`parse_report.py:93`) | 13 |
-| `emit_json` | 8 |
-| `dump_json` | 5 |
-| `ok_payload` (`parse_report.py:69`) | 4 |
-| прочие | 2 |
-
-`tests/test_cli/test_parse_report.py:124-151` проверяет **по одному ключу**:
-
-```python
-assert stats['items'] == 1
-assert stats['doubles'] == 1
-```
-
-Поэтому не видно ни переименования ключа (`'items' → 'ITEMS'` / `'XXitemsXX'`), ни мутации
-значения (`0 → 1`), ни вложенных словарей (`percent_markup`, `absolute_markup`).
-`error_payload` проверяется на 4 ключа из 9.
-
-Модуль сам декларирует контракт — `JsonReport` TypedDict в `parse_report.py:22` и docstring
-«Стабильная схема ответа CLI». Схема, на которую опирается Django, и должна быть закреплена
-точным сравнением.
-
-### Решение
-
-Один тест на функцию, полное сравнение словаря:
-
-```python
-def test_empty_stats_exact() -> None:
-    """все ключи и значения нулевой статистики — контракт для внешних скриптов."""
-    assert empty_stats(1.234) == {
-        'items': 0,
-        'priced_items': 0,
-        'doubles': 0,
-        'unknown_category_skips': 0,
-        'black_list_skips': 0,
-        'elapsed_seconds': 1.23,
-        'percent_markup': {'min': 0, 'max': 0},
-        'absolute_markup': {'min': 0, 'max': 0},
-    }
-```
-
-Аналогично:
-
-- `test_ok_payload_exact` — все 9 ключей `ok_payload`;
-- `test_error_payload_exact` — все 9 ключей не-compact ветки (существующий
-  `test_error_payload_stable_keys` оставить как пример для читателя, либо заменить);
-- `test_stats_from_result_exact` — полный словарь на непустом `ParseResult`, включая
-  `percent_markup` / `absolute_markup`;
-- `test_dump_json_keeps_cyrillic` — `dump_json({'a': 'шина'})` содержит `шина`, а не `\u0448`.
-
-### Проверено
-
-Ручная мутация, тест падает в обоих случаях:
-
-| Мутация | Результат |
-| --- | --- |
-| `'items': 0` → `'items': 1` | KILLED |
-| `'percent_markup': {'min': 0, …}` → `{'min': 1, …}` | KILLED |
-| `dump_json`: `ensure_ascii=False` → `True` | KILLED |
+**Отклонённая альтернатива** — вынести описания в константы уровня модуля
+(в стиле существующих `_PRICES_HELP`): mutmut код уровня модуля не мутирует,
+но `operator_arg_removal` генерирует `arg → None` для каждого аргумента, и
+новый вызов `_json_parser(subparsers, json_flag, PARSE, _CMD_PARSE_HELP)`
+получил бы мутанта `help=None`, который выживает (argparse допускает None).
+Снялось бы 18 из 24, а не все 24, коллатерал в readers — тот же. Форма
+данных здесь не даёт выигрыша, поэтому остаёмся на конфиге.
 
 ### Критерии готовности
 
-- [x] На каждый из 4 конструкторов отчёта есть тест с полным `==` словаря.
-- [x] `test_dump_json_keeps_cyrillic` присутствует (убивает 3 мутанта `ensure_ascii`).
-- [x] 14 из 14 проверенных вручную мутантов убиты.
+- [x] Генерация теряет 31 выжившего (76 мутантов), score не падает:
+      31/76 — замерено на `create_mutations`, выжившие придут в `interesting`
+      ровно 596; контрольный прогон `just mutate` — при следующем замере.
+- [x] Каждый паттерн снабжён комментарием «почему ненаблюдаемо».
+- [x] Поведенческие мутанты `run_argv` на неподавленных строках:
+      `required=True` (60), `*argv[1:]` (106), `_result_template_help` (110–112) —
+      генерируются и остаются убитыми; тексты help-ов закрываются в фазе 6.
 
 ---
 
-## Фаза 3: Байтовый формат jsonl
+## Фаза 1: Конфиг — путь ошибки и полное сравнение слотов ✅ (2026-10-08)
 
 ### Проблема
 
-49 выживших в `jsonl_writer.py` (29), `jsonl_codes.py` (16), `jsonl_codeable.py` (4).
+129 выживших в конфигах, два независимых корня.
 
-`tests/test_parsers/test_writer/test_jsonl_writer.py` **везде** читает файл через
-`json.loads(...)` и проверяет распарсенный объект. Формат файла при этом ничем не закреплен:
+**A. `where` — 68 шт.** `where` (`'vendors/poshk.json → sections[0] → pricing'`)
+используется только в тексте `ConfigValidationError`. Тесты проверяют
+подстроку без пути:
 
-| Что не видно | Мутантов |
-| --- | ---: |
-| `separators=_SEPARATORS` (`jsonl_writer.py:50`) — компактность строки | 7 |
-| `ensure_ascii=False` — кириллица уедет в `\uXXXX` | 21 (3 файла) |
-| `strftime('%Y-%m-%d') → '%y-%m-%d'` (`jsonl_writer.py:38`) — имя файла | 3 |
-| `read_value_codes`: `loaded.get(VALUES_KEY)` (`jsonl_codes.py:42`) | 2 |
-| `_save_values`: `loaded.pop(VALUES_KEY, None)` (`jsonl_codes.py:105`) | 2 |
-| `_assign_keys` / `_read_meta` / `_title_keys`: `continue → break` | 3 |
-| `_count_cells`: `or → and` (`jsonl_codes.py:62`) | 1 |
-| `usable_codes` — переиспользование кодов | 4 |
-| прочее | 7 |
+```python
+with pytest.raises(ConfigValidationError, match='«reader»'):
+    VendorConfig.from_dict(bad, 'poshk', 'poshk')
+```
 
-Файл `.jsonl` — внешний контракт (его читает Django), имя файла с датой — тоже.
+Мутант `payload = as_config_object(raw, where)` → `as_config_object(raw, None)`
+проходит: `'ожидается объект'` в сообщении остаётся.
+
+**B. Поля и имена ключей — 61 шт.** `BehaviorConfig.from_dict` собирает
+`skip_markup_without_opt=read_flag(payload, 'skip_markup_without_opt', where)`
+; мутант `read_flag(...) → None` или ключ `'skip_markup_with…' → 'XX…XX'`
+не виден, потому что тест парсит конфиг с **дефолтами** (все флаги falsy) и
+не проверяет итоговый объект целиком. На дефолтах `None` и `False` неразличимы,
+поэтому часть мутантов эквивалентна именно для текущих данных.
 
 ### Решение
 
-```python
-def test_jsonl_raw_bytes(tmp_path: Path) -> None:
-    """jsonl: компактный JSON, кириллица литералом, вложенная папка создаётся."""
-    row = {'title': '225/40R18', 'type_production': 'Автошина', 'price_markup': 3980.0}
-    path = write_template_jsonl([row], ForInner, str(tmp_path / 'nested' / 'deeper'))
-    text = Path(path).read_text(encoding='utf-8')
-    assert 'Автошина' in text       # ensure_ascii=False
-    assert '\\u' not in text
-    assert '": ' not in text        # компактные separators
-    assert text.endswith('\n')
-```
-
-Плюс отдельными тестами:
-
-- `test_jsonl_file_name_has_full_year` — имя файла через `monkeypatch` на `datetime`
-  или `freezegun`-подобной подмене; проверяем `%Y` (четыре цифры), не `%y`;
-- `test_value_codes_survive_second_write` — после второго `write_template_jsonl`
-  словарь `values` в `result_meta.json` **не теряется** (убивает `read_value_codes` → `None`);
-- `test_meta_without_codes_drops_values` — если кодов нет, ключ `values` удаляется
-  (убивает `_save_values` → `pop(None, None)`);
-- `test_meta_ignores_two_non_numeric_keys` — в `result_meta.json` лежат **два**
-  нечисловых ключа; оба пропускаются, а не прерывают разбор (убивает `continue → break`).
-
-### Проверено
-
-| Мутация | Результат |
-| --- | --- |
-| убрать `separators=_SEPARATORS` | KILLED |
-| `ensure_ascii=False` → `True` | KILLED |
-| `folder.mkdir(parents=True, exist_ok=True)` → `mkdir(exist_ok=True)` | KILLED |
-
-### Критерии готовности
-
-- [x] Есть хотя бы один тест, читающий `.jsonl` **как текст**, а не через `json.loads`.
-- [x] Имя jsonl-файла проверяется с зафиксированной датой.
-- [x] 13 из 16 проверенных вручную мутантов убиты; 3 эквивалентны.
-
----
-
-## Фаза 4: Диспуты шипа и сезона
-
-### Проблема
-
-`src/parsers/common_price_dispute.py` — **17 выживших и ноль тестов**: модуль не
-упоминается ни в одном файле `tests/`, но покрыт по линиям (вызывается из
-`CommonPriceOut` при полном разборе).
-
-Внутри — словари синонимов и канонические метки:
-
-```python
-if text in {'да', 'yes', 'ш.'}:   return 'да'
-if text in {'нет', 'no'}:        return 'нет'
-if text in {'зима', 'зимняя'}:   return 'зимняя'
-if text in {'лето', 'летняя'}:   return 'летняя'
-```
-
-Ни одна мутация не видна: `'ЗИМНЯЯ'`, `'ш.' → 'Ш.'`, `', ' → 'XX, XX'` в `dispute_note`.
-
-### Решение
-
-Один параметризованный тест на модуль:
+**A.** Параметризованный тест, который триггерит ошибку в каждом слоте и
+проверяет путь:
 
 ```python
 @pytest.mark.parametrize(
-    ('fields', 'expected'),
+    ('raw', 'path_part'),
     [
-        ({'spike': 'да'}, {'spike': 'нет'}, 'шип'),
-        ({'spike': 'да'}, {'spike': 'Ш.'}, ''),            # синонимы схлопываются
-        ({'season': 'зимняя'}, {'season': 'лето'}, 'сезон'),
-        ({'season': 'ЗИМНЯЯ'}, {'season': 'зима'}, ''),     # регистр не конфликт
-        ({'spike': 'да'}, {'spike': 'да'}, ''),            # одинаковые — не конфликт
+        ({'pricing': {'mode': 'нет'}}, 'pricing'),
+        ({'sections': [{'pricing': 'нет'}]}, 'sections[0] → pricing'),
+        ({'columns': {'x': 'unknown_field'}}, 'columns → x'),
     ],
 )
-def test_dispute_note(...): ...
+def test_config_error_message_has_path(raw: dict, path_part: str) -> None:
+    """Сообщение об ошибке содержит путь до ключа — по нему правят конфиг."""
+    with pytest.raises(ConfigValidationError, match=re.escape(path_part)):
+        VendorConfig.from_dict(raw, 'poshk', 'poshk')
 ```
 
-Плюс тест на объединение меток: `spike да/нет` + `season зима/лето` → `'шип, сезон'`
-(убивает мутацию разделителя в `dispute_note`).
-
-### Критерии готовности
-
-- [x] `common_price_dispute` покрыт параметризованным тестом.
-- [x] Поведенческие мутанты убиты (3 из 17). Остальные 14 эквивалентны —
-      исходный критерий «выживших осталось 2» был неверен, см. «Эквивалентные мутанты».
-
----
-
-## Фаза 5: Золотые значения ключа группировки
-
-### Проблема
-
-40 выживших: `common_price_group_key.py` (16), `common_price_group_fields.py` (18),
-`common_price_size.py` (6).
-
-`tests/test_parsers/test_common_price_group_key.py` — 39 тестов, и они **реляционные**:
-«X группируется с Y», «Z — нет». Для таких утверждений принципиально невидимы:
-
-- `mark = (row_item.manufacturer or '').lower()` → `or 'XXXX'` (25 мутантов `or '' → or 'XXXX'`);
-- `.lower()` → `.upper()` (25 мутантов `method_swap`);
-- `clear_model(row_item.model, mark, brand)` (`common_price_group_key.py:89`) —
-  **перестановка аргументов** `mark` / `brand` даёт тот же результат в тестах;
-- `canon_number(row_item.height_percent)` → `canon_number(None)`;
-- `_model_prefixes`: `sorted(unique, key=len, reverse=True)` — порядок не проверяется,
-  хотя именно он решает, какой префикс срежется первым;
-- `canon_diameter`: `count=1` → `count=2` (`re.sub` заменяет только первое вхождение).
-
-### Решение
-
-1–2 теста с **буквальным** ключом на канонической строке:
+**B.** На каждый слот — тест с конфигом, где заданы **все** ключи, и полным
+равенством dataclass:
 
 ```python
-def test_group_key_exact() -> None:
-    row = RowItem({
-        'title': '225/40R18 KAMA PRO 205 TL', 'manufacturer': 'KAMA', 'brand': 'KAMA',
-        'model': 'KAMA PRO 205', 'width': '225', 'height_percent': '40',
-        'diameter': '18', 'type_production': 'Автошина',
-    })
-    assert group_key(row, {}) == (
-        'автошина', '225', '18', '', '40', '', '', 'pro205',
-        '', '', 'kama', '', '', '', '', '',
+def test_behavior_config_all_fields() -> None:
+    """Все ключи behavior читаются и попадают в объект без потерь."""
+    config = BehaviorConfig.from_dict(
+        {
+            'min_rest': 3,
+            'rest': 'остаток',
+            'skip_markup_without_opt': True,
+            'zero_rest_without_category': True,
+            'collect_missing_recommended': True,
+            'find_manufacturer_on_enrich': False,
+            'pipeline': ['manufacturer', 'category'],
+        },
+        'behavior',
+    )
+    assert config == BehaviorConfig(
+        min_rest=3, rest='остаток', skip_markup_without_opt=True,
+        zero_rest_without_category=True, collect_missing_recommended=True,
+        find_manufacturer_on_enrich=False, pipeline=('manufacturer', 'category'),
     )
 ```
 
-Плюс:
+Аналогично для `CategoryConfig`, `PricingConfig`, `TitleConfig`,
+`VendorSection`, `VendorConfig`, `MarkupRulesConfig`, `MarkUpRule`,
+`AbsoluteMarkUpRules`, `VendorConfigEntry`.
 
-- `test_clear_model_strips_longest_prefix_first` — `manufacturer='KAMA PRO'`,
-  `model='KAMA PRO 205'` → `'205'`; если бы сортировка исчезла, результат отличается;
-- `test_canon_diameter_replaces_only_first_prefix` — title с двумя `R`
-  (`'225/40R18 R17'`): меняется только первое вхождение;
-- `test_group_key_drops_manufacturer_but_keeps_brand` — строка, где `manufacturer`
-  и `brand` различаются и оба попадают в модель; ловит перестановку аргументов
-  в `clear_model`.
+### Что сделано и что замерено
+
+В `interesting` под фазу 1 попали **122 выживших** (119 в `vendor_config/*`,
+`data_provider/models.py` + 3 в `json_fields.read_mode`):
+
+- `tests/test_parsers/test_vendor_config/test_error_path.py` — ~90 параметров:
+  корень, все ключи верхнего уровня, каждый слот, `sections[i]`;
+  ассерт — `path in str(exc)`, поэтому мутант `where → None` меняет
+  `mim.json → pricing` на `None → pricing` и падает;
+- `tests/test_parsers/test_data_provider/test_error_path.py` — корневые тесты
+  4 моделей + 10 кейсов пути через `MarkupRulesConfig` + `multiplier или delta`
+  (убивает 3 мутанта `read_mode`);
+- в `test_models.py` (vendor_config) — полное `==` для всех ключей
+  `BehaviorConfig`/`CategoryConfig`/`TitleConfig`/`PricingConfig`, равенство
+  пустого слота дефолту, полное `==` для `VendorSection` и `VendorConfig`.
+
+Все 122 прогнаны точечно `mutmut run <имена>` (пакеты 6 + 116 + 3 доработка):
+**120 убито, 2 эквивалентных** (`VendorConfig.from_dict`: `sections=()` → `None`
+и удаление `sections=` — оба перезаписываются `replace(config, sections=…)`,
+класс I, фаза 7). Промежуточная итерация: первые 116 оставили 5 выживших —
+не хватало корневых кейсов `{'pricing': 'x'}` / `{'category': 'x'}` /
+`{'title': 'x'}`: только ошибка типа в `read_object` показывает передаваемый
+туда `where`, добавлены — 3/3 убиты.
+
+Счётчик mutmut после фазы: **killed 5133, survived 507, timeout 11** —
+score **91,0 %** (было 88,9 %); ещё 76 мутантов уйдёт из генерации
+по фазе 0 при следующем полном `just mutate`.
 
 ### Критерии готовности
 
-- [x] Есть тест с буквальным `group_key` на полной строке.
-- [x] `clear_model` различает `manufacturer` и `brand` (тест, где они не равны).
-- [x] 13 из 15 проверенных вручную мутантов убиты; 2 эквивалентны/нестабильны.
+- [x] Тест на путь ошибки для каждого слота (`pricing`, `behavior`, `category`,
+  `title`, `sections[i]`, `columns`) — и для корней слотов.
+- [x] На каждый `from_dict` — тест с полным `==` dataclass и всеми ключами
+      (класс B `data_provider` был покрыт существующими тестами).
+- [x] Вручную проверено ≥20 мутантов класса A/B: прогнаны все 122 через
+      `mutmut run` (скрипта `check_mut.sh` в репо нет — использован
+      `pipelines/run_mutation_test.sh` с явным списком имён).
 
 ---
 
-## Фаза 6: Значения листа и ячеек xlsx
+## Фаза 2: Канонизация размеров и хвостов
 
 ### Проблема
 
-19 выживших в `xls_writer.py`. `tests/test_parsers/test_writer/test_writer.py:17-38`
-проверяет **только `call_count`** заглушенных методов драйвера:
+~90 выживших в `_four_tochki_tire_helper.py` (36), `_four_tochki_disk_helper.py`
+(29), `_autosnab_helper.py` (25). Мутанты `string_wrap` вида:
+
+- `.replace(',', '.')` / `.replace('.', ',')` (шина `_prepare_dimensions:7`,
+  `_parse_size:as_size`);
+- `.replace('RZ', 'ZR')`, `.replace('—', _DASH)`, `_resolve_width_postfix`
+  (`'10'`, `'20'`);
+- `'усил.'`, `'под камеру'`, `'б/к'` в `_tube_label`/`disk_name_suffix`;
+- `or '' → 'XXXX'` у `width`/`height`/`diameter`/`run_flat`.
+
+Все они выживают по одной причине: тесты подают уже канонический вход
+(`'225'`, `'40'`, `'R18'`), где `replace` — no-op, а ветка пустого поля не
+задействована.
+
+### Решение
+
+Тесты на **неканонический** вход и на полную строку:
 
 ```python
-with patch(method) as mock_method:
+@pytest.mark.parametrize(
+    ('width', 'height', 'diameter', 'expected'),
+    [
+        ('225', '40', 'R18', '225/40R18'),
+        ('225', '40', 'RZ18', '225/40ZR18'),   # replace RZ → ZR
+        ('225', '—', '18', '225/18'),          # _DASH
+    ],
+)
+def test_compose_disk_full(width: str, height: str, diameter: str, expected: str) -> None:
     ...
-    XlsWriter(...).write()
-assert mock_method.call_count == call_count
 ```
 
-Отсюда живут:
+Плюс отдельно:
 
-- `self.driver.add_sheet('price')` (`xls_writer.py:72`) → `'PRICE'` — **имя листа**;
-- `self.exclude = self.template.exclude()` (`xls_writer.py:63`) → `None`;
-- `cell_color = color[0] if color and color[1] == col_index else None`
-  (`xls_writer.py:122`) — `color[0]` → `color[1]`, `==` → `!=`, `or` → `and`;
-- `_get_color`: `or → and`.
-
-Имя листа — пользовательский контракт: файл открывают в Excel.
-
-### Решение
-
-Тест, который читает состояние `FakeXlwtDriver` после `write()`:
-
-```python
-def test_write_sheet_name_and_cells(tmp_path: Path) -> None:
-    driver = FakeXlwtDriver()
-    XlsWriter(driver, write_data, template=FixtureTemplate, result_folder=str(tmp_path)).write()
-    assert driver.sheet_name == 'price'
-    assert driver.body == result_body_fixture
-```
-
-`result_body_*` уже есть в `tests/test_parsers/test_writer/fixtures.py:31-50` — данные
-посчитаны вручную, осталось их зафиксировать в ассерте. Отдельно:
-
-- `test_write_applies_column_colors` — `ColorsWithoutMapTemplate` и шаблон с непустой
-  картой: цвет ставится в нужную колонку;
-- `test_write_respects_template_exclude` — колонка из `exclude()` не попадает в лист.
+- `test_separator_dot_is_replaced` — `_prepare_dimensions` на `width='22,5'`
+  даёт `'22.5'` (не `'22,5'`);
+- `test_disk_suffix_thickness_and_tube` — `disk_name_suffix('… 16мм усил. б/к')`
+  содержит `'(16 мм)'`, `'усил.'`, `'б/к'`;
+- `test_default_title_includes_runflat` — `ext_diameter_title` с непустыми
+  `index_load` / `us_aff_designation` / `sidewall` / `runflat` проверяется
+  **всей** строкой (закрывает `ext_diameter_title` и `default_tire_title`, 36 шт.);
+- `test_apply_size_fills_empty_only` — `_apply_size` на строке с уже
+  заполненным `width` не перезаписывает (закрывает `and → or`, `not → ∅`).
 
 ### Критерии готовности
 
-- [x] Есть тест, ассертящий `driver.sheet_name` и `driver.body`.
-- [x] 10 из 11 проверенных вручную мутантов убиты; 1 эквивалентен.
+- [ ] Есть входы с `,`, `RZ`, `—`, `усил`, `под камеру`, `б/к`.
+- [ ] Композиция title/disk проверяется полной строкой, а не `in`.
+- [ ] ~70 из 90 убито; остальное разобрано как эквивалентное.
 
 ---
 
-## Фаза 7: Поведение CLI вместо текстов help
+## Фаза 3: Прокачка аргументов и DI
 
 ### Проблема
 
-57 выживших в `run_argv.py`, из них 41 — тексты `help` (закрываются фазой 1) и
-**16 поведенческих**:
+~120 выживших класса D — значения, которые «протекают» через фабрики и хуки,
+но не проверяются на выходе:
 
-| Что | Мутантов | Где |
+| Функция | Шт. | Пример мутанта |
 | --- | ---: | --- |
-| `add_subparsers(..., required=True)` → `False` / `None` / убрано | 3 | `run_argv.py:60` |
-| `*argv[1:]` → `*argv[2:]` | 1 | `run_argv.py:106` |
-| `_result_template_help`: `available` / `defaults` → `None` | 4 | `run_argv.py:110-113` |
-| тексты `help=` у `load_supplier_prices` / `load_config` | 8 | `run_argv.py:71-84` |
+| `StrategiesIntegration.__init__` | 14 | `self._section = None`, `section.category → 'XX…'` |
+| `strategy_hooks_from_section` | 11 | `rest=make_rest_strategy(...) → ∅` |
+| `_enrich_row_item` | 12 | `set_field('supplier_name', …) → None` |
+| `config_driven_parser` | 26 | `strategy_hooks=hooks → ∅`, `data_reader → None` |
+| `_parser_for_vendor` | 15 | `if vendor_config is None` → `is not`, `getattr(..., None) → None` |
+| `make_pricing_strategy` / `make_title_strategy` | 12 | `rules → None`, `price_map → None` |
+| `_read_columns` / `parser_params_from_section` | 9 | `() → None`, аргумент `section → None` |
 
-`tests/test_cli/test_run_argv.py` покрывает сценарии с флагами, но не проверяет
-обязательность подкоманды и не комбинирует inline-форму с флагами.
+Тесты вызывают фабрики, но результат связывается со сквозным разбором, а не
+с конкретным полем.
+
+### Решение
+
+1. Ассертить сохранённое состояние и полный хук:
+
+```python
+def test_strategies_integration_keeps_section_and_behavior() -> None:
+    section, behavior = _fixture_section(), _fixture_behavior()
+    integration = StrategiesIntegration(section, behavior)
+    assert integration._section is section
+    assert integration._behavior is behavior
+
+def test_strategy_hooks_full() -> None:
+    hooks = strategy_hooks_from_section(section, behavior)
+    assert hooks == StrategyHooks(
+        category=..., title=..., rest=...,
+        min_rest=behavior.min_rest,
+        find_manufacturer_on_enrich=behavior.find_manufacturer_on_enrich,
+        zero_rest_without_category=behavior.zero_rest_without_category,
+        pipeline=behavior.pipeline,
+    )
+```
+
+2. `_enrich_row_item` проверять через `RowItem`: все три ключа
+   (`supplier_name`, `spike`, `season`) присутствуют со значениями.
+
+3. `_parser_for_vendor` — три ветки таблицей: `None` → `vendor_cls(None)`;
+   выключенный конфиг → `vendor_cls(parse_config=...)`; включённый с
+   `_vendor_section`/`_vendor_config` → `make_config_driven_parser(...)`.
+
+4. `make_pricing_strategy` / `make_title_strategy` — фабрики возвращают объект,
+   собранный из переданных `rules`/`price_map`/`strategy`.
+
+### Критерии готовности
+
+- [ ] Есть тест на полное равенство `StrategyHooks` и на сохранённые
+  `StrategiesIntegration._section`/`._behavior`.
+- [ ] Каждая ветка `_parser_for_vendor` покрыта отдельным кейсом.
+- [ ] `_enrich_row_item` ассертит все три поля `RowItem`.
+
+---
+
+## Фаза 4: Логика и границы предикатов
+
+### Проблема
+
+85 выживших класса E (`operator`/`number`/`keyword`/`method_swap`) — непокрытые ветви:
+
+- `_special_inch_dot`: `or → and`, `not → ∅`, `== → !=`, `< → <=` (7);
+- `_lstrip_name`: пустое/`None` имя (`not prefix → prefix`) (3);
+- `fill_from_title`: `model and not row_item.identity.model` (2);
+- `brand_key_parts`: `.lower() → .upper()`, `'' → None` (6);
+- `MarkupPolicy.apply` / `markup_percent_for_opt` / `stored_percent_markup`:
+  `0 → 1`, `<= → <`, `opt → None` (12);
+- `apply_min_rest`: `< → <=`, `0 → None`;
+- `XlsReader.next_row_values`: `<= → <`, `[None] → None`, `is_end_row(None, …)`;
+- `_type_production_from_filename`: `maxsplit=1`, `1 → 2`, `- → +`.
+
+### Решение
+
+Таблицы истинности на минимальных входах. Пример:
+
+```python
+@pytest.mark.parametrize(
+    ('special', 'height', 'width', 'expected'),
+    [
+        (True, '55', '225', False),   # не спецшина
+        (False, '', '225', False),    # нет профиля
+        (False, 'L', '225', False),   # профиль L
+        (False, '55', '140', False),  # метрика 140/55
+        (False, '55', '15', True),    # дюймовая спецшина
+    ],
+)
+def test_special_inch_dot(special, height, width, expected): ...
+```
+
+Для `_lstrip_name` — обязательный кейс `name=None` и `name=''`; для
+`brand_key_parts` — строка, где регистр `manufacturer`/`brand` различается.
+
+**Таймауты.** 11 статусов `timeout`: `BaseFinder._find` (5 — бесконечный цикл
+при мутации индекса) и `run_dialog` (6 — снятый `input()` крутит `while True`).
+Разобрать каждый вручную, как в прошлой кампании: либо убить тестом, либо
+зафиксировать через заглушку `input`/лимит итераций.
+
+### Критерии готовности
+
+- [ ] Таблица истинности на каждый из перечисленных предикатов.
+- [ ] `apply_min_rest` проверяет границу `0` и `<`/`<=`.
+- [ ] Все 11 `timeout` разобраны: убиты или объяснены.
+
+---
+
+## Фаза 5: Контракт отчёта и writer
+
+### Проблема
+
+33 выживших в `parse_report.py` (11), `jsonl_writer.py` (7),
+`xlsx_driver.py` (6), `xls_writer.py`, `templates/all_templates.py`.
+
+- `emit_json`: `round(…, 2)` (`2 → None/3`, `- → +`) и `flush=True`
+  выживают, потому что `test_emit_json_adds_elapsed` проверяет
+  `payload['elapsed_seconds'] >= 0`.
+- `dump_json`: `ensure_ascii=False → None` (эквивалент, `None` falsy),
+  `default=str → ∅` (заметно только на несериализуемом объекте).
+- `_extend_meta` `ensure_ascii` — эквивалент (см. фазу 7).
+- `xlsx_driver`/`all_templates`: `'#' → 'XX#XX'`, `,  → XX, XX`.
 
 ### Решение
 
 ```python
-def test_no_command_is_error() -> None:
-    """пустой argv — ошибка argparse, а не молчаливый Namespace(command=None)."""
-    with pytest.raises(SystemExit) as exit_info:
-        parse_machine_args([])
-    assert exit_info.value.code == 2
+def test_emit_json_exact_elapsed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """elapsed_seconds округляется до сотых от переданного started."""
+    monkeypatch.setattr(parse_report.time, 'monotonic', lambda: 101.234)
+    stream = StringIO()
+    emit_json({'ok': True}, stream, started=100.0)
+    assert json.loads(stream.getvalue())['elapsed_seconds'] == 1.23
 
 
-def test_inline_keeps_extra_flags() -> None:
-    """load_config=path разворачивается в команду, хвост argv не теряется."""
-    args = parse_machine_args(['load_config=/p/black_list', '--json'])
-    assert args.command == 'load_config'
-    assert args.config == '/p/black_list'
-    assert args.json is True
+class _FlushSpy(StringIO):
+    def __init__(self) -> None:
+        super().__init__()
+        self.flushed = 0
+    def flush(self) -> None:
+        self.flushed += 1
 
 
-def test_help_lists_all_writer_templates() -> None:
-    """--help перечисляет все зарегистрированные шаблоны записи."""
-    text = parser_help(PARSE)
-    for name in writer_templates_by_name():
-        assert name in text
+def test_emit_json_flushes() -> None:
+    stream = _FlushSpy()
+    emit_json({'ok': True}, stream)
+    assert stream.flushed == 1
 ```
 
-Последний тест ловит дрейф реестра шаблонов — единственная причина считать
-`_result_template_help` не-косметикой: текст строится из `writer_templates_by_name()`.
-
-### Проверено
-
-| Мутация | Результат |
-| --- | --- |
-| `required=True` → `required=False` | KILLED |
-| `*argv[1:]]` → `*argv[2:]]` | KILLED |
+`xlsx_driver`/`all_templates` — ассертить текст исключения с разделителем
+(см. фазу 6).
 
 ### Критерии готовности
 
-- [x] Есть тест на пустой argv (`SystemExit(2)`).
-- [x] Есть тест на inline-форму **с флагом** после неё.
-- [x] 5 из 5 проверенных вручную мутантов убиты.
+- [ ] `elapsed_seconds` проверяется точным значением, не `>= 0`.
+- [ ] `flush=True` проверяется через поток-шпион.
+- [ ] ``,  → XX, XX`` в сообщении `UnknownWriterTemplateError` закреплено.
 
 ---
 
-## Фаза 8: Вложенные папки и `continue` в циклах
+## Фаза 6: CLI, интерактив, тексты исключений
 
 ### Проблема
 
-**15 одинаковых мутантов** `mkdir(parents=True, exist_ok=True)`: во всех существующих
-тестах родительская папка уже есть, поэтому `parents=True → False` эквивалентно.
+- `run_machine._emit_command`: `command in _COMPACT_ERROR_COMMANDS` удалён,
+  `in → not in`, `command → None`; `_json_parse`/`_json_doubles`: `- → +`.
+- `run._run_machine`: `getattr(args, 'prices', …)`, `command → None`.
+- `run_dialog/readers.py`: `read_unix_key`/`read_windows_key`,
+  `else 'XXXX'`, `\x00`/`\x1b` — проверяемые при подмене источника символов.
+- Тексты исключений (17): `WorkbookNotInitializedError`,
+  `WorksheetNotInitializedError`, `JsonPriceNotListError`,
+  `MarkupPolicyNotSetError`, `MaxRowsReachedError`, `CoreExceptionError.to_log`.
 
-| Файл | Строка |
-| --- | --- |
-| `src/parsers/load_config.py` | 74 (`_move_config`) |
-| `src/parsers/load_supplier_prices.py` | 88 (`_move_price`) |
-| `src/parsers/remote/zapaska_client.py` | 57 (`download_catalogs`) |
-| `src/parsers/writer/jsonl_writer.py` | 31 (`write_template_jsonl`) |
-| `src/parsers/writer/xls_writer.py` | 70 (`XlsWriter.write`) |
-
-Плюс 5 мутантов `continue → break` в циклах, которые должны **пропускать** плохие записи
-и идти дальше: `_assign_keys`, `_read_meta` (`jsonl_writer.py`),
-`_filled_aliases`, `drop_blank_aliases` (`manufacturer_aliases.py`). Выживают, потому что
-тестам хватает **одной** плохой записи — `break` и `continue` дают тот же результат.
+Тексты исключений в проекте значимы (коммит `7753afc`): пользователь их
+читает, значит их стоит закреплять.
 
 ### Решение
-
-1. В одном тесте на каждый `mkdir` использовать путь на два уровня глубже `tmp_path`
-   (`tmp_path / 'a' / 'b'`). Для jsonl это уже сделано в фазе 3.
-2. В тестах на парсер алиасов и на чтение `result_meta.json` — **две** невалидные записи
-   подряд, а не одна.
-
-### Критерии готовности
-
-- [x] Есть отдельные тесты на вложенный путь и на повторный вызов в готовую
-      папку: одного теста на вложенный путь недостаточно (см. «Находки»).
-- [x] Есть тест с двумя невалидными записями подряд для алиасов и для `result_meta.json`.
-
----
-
-## Фаза 9: Тексты исключений и таймауты
-
-### Проблема
-
-**16 выживших** — тексты в конструкторах исключений:
-
-- `WorkbookNotInitializedError`, `WorksheetNotInitializedError` (`xwlt_driver.py`);
-- `JsonPriceNotListError`, `MarkupPolicyNotSetError`, `MaxRowsReached`, `CoreExceptionError.to_log`;
-- `ParsePathsNotConfiguredError`;
-- `ConfigFileNotFoundError` / `InvalidConfigJsonError` (`load_config.py`).
-
-Тексты исключений в этом проекте **значимы**: коммит `7753afc` —
-«fix: понятное сообщение при битом correct-nomenclature.xlsx вместо сырого стектрейса».
-Пользователь читает эти сообщения, значит их стоит закреплять.
-
-**3 мутанта в статусе `timeout`** — не `survived`. Это отдельная проблема: mutmut не
-различает «тест упал» и «тест не успел за лимит». Нужно найти их номера в
-`mutants/mutmut-stats.json` и проверить вручную.
-
-### Решение
-
-Точечные проверки сообщений там, где текст меняли намеренно:
 
 ```python
-def test_max_rows_message_includes_limit() -> None:
-    assert '500' in str(MaxRowsReached(500))
+def test_emit_command_compact_error() -> None:
+    """ошибочные команды пишутся компактно (без полного каталога)."""
+    ...
+
+def test_json_parse_counts_errors() -> None:
+    """битые строки снижают успешные, а не увеличивают."""
+    ...
+
+@pytest.mark.parametrize('exc, fragment', [
+    (WorkbookNotInitializedError(), 'workbook is not initialized'),
+    (JsonPriceNotListError(), 'JSON price must be a list of objects'),
+])
+def test_exception_message(exc: Exception, fragment: str) -> None:
+    assert fragment in str(exc)
 ```
 
-Остальное (`workbook is not initialized`, `Parse paths are not configured`) — либо
-закрепить, либо осознанно оставить выжившим как эквивалентные.
+Интерактивные `read_unix_key`/`read_windows_key` — подменить функцию чтения
+символов, проверить `KeyPress` для стрелок и `OTHER`; платформенные константы
+подавлены фазой 0.
 
 ### Критерии готовности
 
-- [x] Тексты изменённых намеренно исключений закреплены тестами.
-- [x] Каждый из 3 `timeout` разобран вручную: убит тестом или признан ложным.
+- [ ] `_emit_command` различает компактные (`compact=`) и полные команды.
+- [ ] Тексты намеренно изменённых исключений закреплены.
+- [ ] `_result_template_help` строится из реестра шаблонов и его формат
+  (разделитель `', '`) проверен.
 
 ---
 
-## Прогон после задачи 5: value objects позиции (2026-10-03)
+## Фаза 7: Эквивалентные мутанты
 
-Полный прогон на коммите `852fcdf` + правках реестра: **4650 мутантов, 4344 убито,
-304 выжило, 2 timeout, score 93.5 %**. В новом пакете `src/domain/row_item/`
-выжило 5 — все разобраны, ниже что оказалось важнее самих мутантов.
+Эти нельзя убить тестом — их либо подавляем, либо оставляем с обоснованием
+в отчёте:
 
-| Выживший | Почему | Решение |
-| --- | --- | --- |
-| `raise KeyError(key)` → `KeyError(None)` | тест проверял только сам факт `KeyError` | ассертим `err.value.args == ('hash_title',)` |
-| `partition('.')` → `rpartition('.')` в `get_field` и `_write_spec` | эквивалентно: в путях всегда одна точка | реестр хранит `group` и `attribute` отдельно, `path` склеивается для подсказок и тестов |
-| `entry.default if factory is MISSING else factory()` | ветка `default` недостижима: у всех полей `default_factory` | `RowItem.__init__` присваивает пустые объекты явно — без рефлексии и мёртвой ветки |
-| `self._set_keys[key] = ""` | значения никто не читает | тест закрепляет `_set_keys` как упорядоченное множество: `{'title': None, 'width': None}` |
+- **`common_price_dispute._season_label` / `_spike_label` (~13)**: канон
+  используется только для подсчёта числа различных значений
+  (`len(filled) > 1`), а наружу возвращается имя поля (`'шип'`/`'сезон'`).
+  Смена регистра канона или `return 'да' → 'XXдаXX'` результат не меняет.
+  Мутация множества-литерала `{'да', …}` — **не** эквивалентна и уже убита
+  тестами.
+- **`jsonl_writer._extend_meta` `ensure_ascii` (3)**: промежуточная запись
+  метаданных перезаписывается `_save_values`, наблюдать нечего.
+- **`emit_json` `ensure_ascii=False → None` / `dump_json`**: `None` falsy,
+  поведение идентично. `,  → XX, XX` в `_result_template_help` **не**
+  эквивалентен — закрывается тестом формата (фаза 6).
 
-Два вывода, которые стоят дороже этих четырёх мутантов:
-
-- **Эквивалентный мутант — это сигнал о форме данных, а не только о тесте.**
-  `path` строкой означал, что каждый потребитель заново её разбирает; разделив
-  группу и атрибут, мы убрали разбор из рантайма, а вместе с ним и класс
-  эквивалентных мутантов. Подавлять их в `do_not_mutate_patterns` было бы
-  дешевле, но оставило бы источник шума на месте.
-- **mutmut раскладывает `src/` в `mutants/`, поэтому тест не должен зависеть от
-  папок рядом с репозиторием.** `test_file_provider_detects_project_root` проверял
-  `parse_config` рядом с корнем — под мутациями его нет, и прогон падал на сборе
-  статистики до единого мутанта. Тест теперь проверяет структуру (корень — родитель
-  папки `src`), а не окружение. Таких тестов в репозитории больше нет: остальные
-  работают через `FakeConfigProvider` с временной папкой.
-
-Побочно тот же прогон убил по одному выжившему в `file_config_provider.py` (это следствие
-правки теста выше), `xls_reader.py` и `run_dialog.py` — а эти модули не менялись, значит
-выжившие в них нестабильны между прогонами (`14 → 13` и `5 → 4`, счётчик `timeout`
-`4 → 2`).
+Правило: подавлять паттерном только после ручной проверки, что мутант
+действительно эквивалентен, с комментарием в `pyproject.toml`.
 
 ---
 
-Мелочи, которые видно рядом с прогоном:
+## История предыдущей кампании
 
-| Проблема | Файл |
-| --- | --- |
-| Скрипт заканчивается на закомментированной `# mutmut run` — ничего не запускает | `pipelines/run_mutation_test.sh` |
-| `reports/` не в `.gitignore` (в отличие от `mutants`), артефакты попадут в git | `.gitignore` |
-| `pipeline` выводит score как `killed / (killed + survived)`, `timeout` в знаменатель не входит | `pipelines/mutmut_stats/aggregate.py` |
+Кампания 2026-09-28 подняла score с 88.0 % (4515 мутантов) до **93.2 %**
+(4269 мутантов, 3977 killed, 292 survived). Отчёт — `reports/mutmut/`,
+детали фаз — в git-истории этого файла. Что переносится в текущий план:
 
-Правки: раскомментировать `mutmut run` (со `set -euo pipefail`), добавить `reports/`
-в `.gitignore`, задокументировать формулу score в `pipelines/mutmut_stats/README.md`.
-
-Дополнительно, по итогам контрольного прогона: чистка `__pycache__` в
-`pipelines/run_mutation_test.sh` до и после запуска, `PYTHONDONTWRITEBYTECODE=1` и
-изоляция `test_registry.py` от `sys.modules` (см. «Находки, которых не было в плане»).
+1. **Stale `__pycache__`** — главная ловушка. `pipelines/run_mutation_test.sh`
+   чистит `src/**/__pycache__` до и после и ставит `PYTHONDONTWRITEBYTECODE=1`;
+   `mutmut run` нельзя запускать параллельно с `pytest`.
+2. **`test_registry.py` и `sys.modules`** — clean-прогон падал; тест вычищает
+   модуль из `sys.modules` и сравнивает классы по имени.
+3. **`help=` подавляет всю строку**, а не «один мутант»: паттерн влияет на
+   число мутантов сильнее, чем кажется по точечной оценке.
+4. **`mkdir(parents=True)`** нельзя проверить тестом «создать вложенную папку»:
+   нужны два кейса — вложенный путь и повторный вызов в готовую папку.
+5. **Эквивалентный мутант — сигнал о форме данных.** Если `path` хранится
+   строкой, потребители заново её разбирают; разделение `group`/`attribute`
+   убирает и разбор, и класс эквивалентных мутантов. Сначала менять форму
+   данных, потом подавлять.
 
 ---
 
@@ -695,36 +613,38 @@ def test_max_rows_message_includes_limit() -> None:
 Полный набор из корня, порядок — из `.github/workflows/python-app.yml`:
 
 ```bash
-uv run pytest                                     # порог покрытия 95 %
+uv run pytest
 uv run black --check --diff .
 uv run ruff check .
 uv run flake8 .
 uv run mypy .
+uv run lint-imports
 uv run vulture
 uv run bandit -r src -c pyproject.toml
 uv run pip-audit
 ```
 
-Плюс после фаз 1, 2–8 — контрольный прогон мутаций (только когда pytest не запущен):
+Плюс контрольный прогон мутаций (только когда `pytest` не запущен):
 
 ```bash
-./pipelines/run_mutation_test.sh
+just mutate
 uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 ```
 
-Комментарии и docstring в новых тестах — на русском, кавычки одинарные, line-length 120
-(`.pi/AGENTS.md`).
+Комментарии и docstring в новых тестах — на русском, кавычки одинарные,
+line-length 120.
 
 ---
 
 ## Чего сознательно не делаем
 
-- **Не добирать покрытие строк.** `mutate_only_covered_lines=true`; все выжившие уже
-  покрыты. Проблема в силе assertions, а не в покрытии.
-- **Не тестировать тексты `help` / `description` argparse** (41 мутант) — они не влияют
-  на поведение; подавляются в фазе 1.
-- **Не тестировать `cast()`** — аннотация, не рантайм.
-- **Не бороться с `encoding=None`.** Пока локаль UTF-8, это эквивалентно; менять поведение
-  через `monkeypatch` локали дороже, чем честно подавить паттерн с комментарием.
-- **Не гнаться за 100 %.** Потолок ~97 %; дальше — тексты исключений и мутации
-  `rsplit(..., maxsplit=N)` при фиксированной глубине модулей.
+- **Не добирать покрытие строк.** `mutate_only_covered_lines=true`; все
+  выжившие уже покрыты. Проблема в силе assertions.
+- **Не тестировать `--help` / описания подкоманд** — не влияют на разбор
+  (фаза 0).
+- **Не тестировать `cast()` / `encoding='utf-8'`** — аннотация и эквивалент
+  при локали UTF-8 (закрыто прошлой кампанией).
+- **Не подавлять `where`.** Путь до ключа — часть пользовательского сообщения,
+  его надо проверять, а не прятать (фаза 1).
+- **Не гнаться за 100 %.** Потолок ~97 %; дальше — тексты исключений и
+  мутации `rsplit(..., maxsplit=N)` при фиксированной глубине модулей.
