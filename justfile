@@ -29,6 +29,22 @@ test *ARGS:
 load *ARGS:
     uv run pytest load_tests -n0 {{ARGS}} --no-cov
 
+# --- Мутационное тестирование (mutmut) ---
+
+# Полный прогон mutmut. Чистит __pycache__ до и после и запрещает bytecode
+# (см. pipelines/run_mutation_test.sh). Не запускать параллельно с pytest.
+# Аргументы уходят в `mutmut run`: just mutate --paths-to-mutate src/parsers
+mutate *ARGS:
+    bash pipelines/run_mutation_test.sh {{ARGS}}
+
+# Отчёт по выжившим мутантам из mutants/ → mutmut-analysis.md/.json
+mutate-stats *ARGS:
+    uv run python -m pipelines.mutmut_stats {{ARGS}}
+
+# Краткая сводка статусов последнего прогона mutmut
+mutate-results *ARGS:
+    uv run mutmut results {{ARGS}}
+
 # --- Приложение ---
 
 # Интерактивное меню: just run. С аргументами — подкоманда CLI: just run parse --json
