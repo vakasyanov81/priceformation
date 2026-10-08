@@ -212,11 +212,13 @@ class BaseParser:
         Производителя применяем ещё раз после pipeline: шаг ``title`` может
         собрать название заново из полей, и правку регистра бренда, сделанную
         в enrich, нужно наложить на финальный title (иначе ``TopTrust`` → ``Toptrust``).
+        Поиск идёт всегда, даже если ``find_manufacturer_on_enrich`` выключен:
+        так бренд из раздела-категории (Пионер) попадает в «Бренд».
         """
         hooks = self._strategy_hooks
         if hooks is not None:
             self._run_pipeline(hooks, row_item)
-            self.apply_manufacturer(row_item)
+            self.apply_manufacturer_after_pipeline(row_item)
             return
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
@@ -291,6 +293,10 @@ class BaseParser:
 
     def apply_manufacturer(self, row_item: RowItem) -> None:
         apply_row_manufacturer(row_item, self._effective_find_manufacturer, self.manufacturer_finder())
+
+    def apply_manufacturer_after_pipeline(self, row_item: RowItem) -> None:
+        """Найти производителя по финальному title, независимо от ``find_manufacturer_on_enrich``."""
+        apply_row_manufacturer(row_item, True, self.manufacturer_finder())
 
     def correction_category(self, row_item: RowItem) -> None:
         correction_category(row_item, self._category_finder)

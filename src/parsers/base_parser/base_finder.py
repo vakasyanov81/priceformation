@@ -22,6 +22,14 @@ def replace_alias_in_title(row_item: RowItem, old_man: str, new_man: str) -> Non
         row_item.set_field('title', title.replace(old_man, new_man))
 
 
+def _has_word_boundaries(title_lower: str, position: int, alias_len: int) -> bool:
+    """Слева и справа от алиаса — не буква и не цифра."""
+    before = title_lower[position - 1] if position > 0 else ''
+    after_index = position + alias_len
+    after = title_lower[after_index] if after_index < len(title_lower) else ''
+    return not (before.isalnum() or after.isalnum())
+
+
 class BaseFinder:
     """
     find word in title
@@ -83,22 +91,21 @@ class BaseFinder:
         return None
 
     def _find(self, lower_alias: str) -> int:
-        """find alias wrapped whitespace in title, and find in start title, and find in end title"""
-        white_space = ' '
+        """Найти алиас как отдельное слово: границы — не буква и не цифра.
+
+        Раньше алиас искался только между пробелами/на краях title, поэтому
+        бренды, склеенные с дефисом или скобками (``NORTEC-16``, ``АЛТАЙШИНА-111``),
+        не находились, хотя есть в списке производителей.
+        """
         title_lower = self.title_lower
-        if not title_lower:
+        if not title_lower or not lower_alias:
             return -1
-        position = title_lower.find(white_space + lower_alias + white_space)
-        if position != -1:
-            return position + 1
-
         alias_len = len(lower_alias)
-        if title_lower[:alias_len] == lower_alias:
-            return 0
-
-        suffix = white_space + lower_alias
-        if len(title_lower) > alias_len and title_lower.endswith(suffix):
-            return len(title_lower) - alias_len
+        position = title_lower.find(lower_alias)
+        while position != -1:
+            if _has_word_boundaries(title_lower, position, alias_len):
+                return position
+            position = title_lower.find(lower_alias, position + 1)
         return -1
 
     def correction_field(self, rec: RowItem, field_key: str, aliases: AliasContainer) -> None:

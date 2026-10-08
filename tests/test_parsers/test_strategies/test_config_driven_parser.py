@@ -9,8 +9,10 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.config_driven_parser import strategy_hooks_from_section
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.vendor_config.models import VendorConfig
 
 _TEST_PARAMS = ParserParams(
     supplier=ParseParamsSupplier(folder_name='test', name='Test', code='99'),
@@ -29,6 +31,7 @@ def _mock_parse_config() -> ParseConfiguration:
     mock = MagicMock(spec=ParseConfiguration)
     mock.parser_params = _TEST_PARAMS
     mock.supplier = _TEST_PARAMS.supplier
+    mock.manufacturer_aliases.return_value = {}
     return mock
 
 
@@ -63,6 +66,60 @@ def test_manufacturer_correction_survives_title_recompose() -> None:
 
     assert row.identity.title == '10-16.5 TopTrust L-2 10 TL'
     assert row.identity.manufacturer == 'TopTrust'
+
+
+def test_manufacturer_found_after_pipeline_when_enrich_disabled() -> None:
+    """Поиск производителя после title идёт даже при find_manufacturer_on_enrich=False (Пионер)."""
+    strategy = MagicMock()
+    strategy.prepare.return_value = '195/75R16 Triangle TR652'
+    hooks = StrategyHooks(title=strategy, find_manufacturer_on_enrich=False, pipeline=('title',))
+    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser._manufacturer_finder = ManufacturerFinder({'Triangle': ()})
+
+    row = RowItem({'title': '195/75R16 TR652'})
+    parser.process_parsed_row(row)
+
+    assert row.identity.manufacturer == 'Triangle'
+
+
+def test_manufacturer_from_category_reader_is_wired() -> None:
+    """Пионер: производитель из раздела попадает в brand и в title."""
+    config = VendorConfig.from_dict(
+        {
+            'enabled': 1,
+            'code': '3',
+            'name': 'Пионер',
+            'start_row': 12,
+            'file_templates': ['price*.xls'],
+            'behavior': {
+                'pipeline': ['category', 'min_rest', 'markup', 'title'],
+                'find_manufacturer_on_enrich': False,
+                'rest': 'minus_reserve',
+            },
+            'sections': [
+                {
+                    'id': '3',
+                    'name': 'Пионер',
+                    'columns': {'1': 'title', '2': 'price_opt', '4': 'rest_count', '5': 'reserve_count'},
+                    'category': {'strategy': 'header_rows', 'zero_rest_categories': ['прочие']},
+                    'title': {'strategy': 'manufacturer_from_category'},
+                    'pricing': {'policy': 'map_on_opt'},
+                }
+            ],
+        },
+        'pioner',
+        'pioner.json',
+    )
+    hooks = strategy_hooks_from_section(config.sections[0], config.behavior)
+    assert hooks.category is not None
+    assert hooks.title is not None
+
+    hooks.category.resolve(RowItem({'title': 'Автошины TRIANGLE'}))
+    row = RowItem({'title': 'Nortec ER-218', 'price_opt': 1000})
+    prepared = hooks.title.prepare(row)
+
+    assert row.identity.brand == 'triangle'
+    assert prepared == 'Nortec triangle ER-218'
 
 
 def test_title_strategy_is_called() -> None:

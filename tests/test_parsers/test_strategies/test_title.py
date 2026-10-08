@@ -45,6 +45,20 @@ def test_normalize_title_decimal_commas(raw: str, expected: str) -> None:
         ('Шина Nortec', 'Nortec'),
         ('10.00R20 И-281 н.с.8', '10.00R20 И-281 PR8'),
         ('10.00R20 И-281 Н. С. 16', '10.00R20 И-281 PR16'),
+        ('а/п 425/85R21 NORTEC TR-184-1 18PR 156J TT, шт', '425/85R21 NORTEC TR-184-1 18PR 156J TT'),
+        (
+            '10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт',
+            '10.00R20 DOUBLEROAD DR-801 PR18 149/146K унив.ось с об/л',
+        ),
+        ('175/70 R13 КАМА ALGA НК-531 шипы НКШЗ автопокрышка, шт', '175/70R13 КАМА ALGA НК-531 шипы НКШЗ'),
+        (
+            '185/75 R16С Sonix Winter X Pro Studs 77 104/102R шип.автопокрышка, шт',
+            '185/75R16С Sonix Winter X Pro Studs 77 104/102R шип.',
+        ),
+        (
+            '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, (1 шт)',
+            '11R22.5 TAITONG HS103 PR16 146/143M вед.ось (1 шт)',
+        ),
     ],
 )
 def test_normalize_size_chunks(raw: str, expected: str) -> None:
