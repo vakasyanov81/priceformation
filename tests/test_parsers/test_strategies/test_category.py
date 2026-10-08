@@ -117,14 +117,41 @@ def test_column_canonical_without_context_uses_default_finder() -> None:
 def test_header_rows_updates_state_on_category_row() -> None:
     strategy = HeaderRowsCategory()
 
-    assert strategy.resolve(RowItem({'title': 'автошины TRIANGLE'})) == 'автошины'
-    assert strategy.resolve(RowItem({'title': 'Tigar', 'price_opt': 1200})) == 'автошины'
+    assert strategy.resolve(RowItem({'title': 'автошины TRIANGLE'})) == 'Автошина'
+    assert strategy.resolve(RowItem({'title': 'Tigar', 'price_opt': 1200})) == 'Автошина'
 
 
 def test_header_rows_splits_slash_and_space() -> None:
     strategy = HeaderRowsCategory()
 
-    assert strategy.resolve(RowItem({'title': 'диски r16/шины'})) == 'диски'
+    assert strategy.resolve(RowItem({'title': 'диски r16/шины'})) == 'Диск'
+
+
+def test_header_rows_canonicalizes_via_builtin_map() -> None:
+    """Встроенная карта приводит падеж/число/регистр к типу товара."""
+    strategy = HeaderRowsCategory()
+
+    assert strategy.resolve(RowItem({'title': 'Автошины TAITONG'})) == 'Автошина'
+    assert strategy.resolve(RowItem({'title': 'Автошина ECOTECH'})) == 'Автошина'
+    assert strategy.resolve(RowItem({'title': 'Автокамеры/Ободная лента'})) == 'Автокамера'
+
+
+def test_header_rows_config_map_overrides_builtin() -> None:
+    strategy = HeaderRowsCategory.from_config(_config(mapping={'автошины': 'Шина'}))
+
+    assert strategy.resolve(RowItem({'title': 'автошины TRIANGLE'})) == 'Шина'
+
+
+def test_header_rows_falls_back_to_raw_chunk_without_map_key() -> None:
+    strategy = HeaderRowsCategory()
+
+    assert strategy.resolve(RowItem({'title': 'Шипы колёсные'})) == 'шипы'
+
+
+def test_header_rows_uses_default_when_no_map_key() -> None:
+    strategy = HeaderRowsCategory.from_config(_config(default_value='Прочее'))
+
+    assert strategy.resolve(RowItem({'title': 'Шипы колёсные'})) == 'Прочее'
 
 
 def test_header_rows_zero_rest_flag() -> None:
