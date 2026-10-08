@@ -23,4 +23,5 @@ class StrategyHooks:
     rest: RestStrategy | None = None
     min_rest: int = 4
     find_manufacturer_on_enrich: bool = True
+    zero_rest_without_category: bool = False
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE

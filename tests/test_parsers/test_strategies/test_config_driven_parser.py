@@ -172,6 +172,41 @@ def test_pipeline_custom_order() -> None:
     parser._row_processor.add_price_markup.assert_called_once_with(row)
 
 
+def test_zero_rest_when_category_unknown() -> None:
+    """zero_rest_without_category обнуляет остаток строки без категории."""
+    cat_strategy = MagicMock()
+    cat_strategy.resolve.return_value = ''
+    hooks = StrategyHooks(
+        category=cat_strategy,
+        find_manufacturer_on_enrich=False,
+        zero_rest_without_category=True,
+        pipeline=('category',),
+    )
+    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+
+    row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
+    parser.process_parsed_row(row)
+
+    assert row.stock.rest_count == 0
+
+
+def test_rest_kept_without_category_when_flag_disabled() -> None:
+    """Без флага остаток строки без категории сохраняется."""
+    cat_strategy = MagicMock()
+    cat_strategy.resolve.return_value = ''
+    hooks = StrategyHooks(
+        category=cat_strategy,
+        find_manufacturer_on_enrich=False,
+        pipeline=('category',),
+    )
+    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+
+    row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
+    parser.process_parsed_row(row)
+
+    assert row.stock.rest_count == 5
+
+
 def test_pipeline_skips_missing_step() -> None:
     """Неизвестный шаг pipeline игнорируется."""
     cat_strategy = MagicMock()

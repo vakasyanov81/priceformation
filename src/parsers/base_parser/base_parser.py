@@ -233,6 +233,7 @@ class BaseParser:
                 self.skip_by_min_rest(row_item)
             elif step == 'category':
                 self.apply_category(row_item)
+                self.zero_rest_without_category(hooks, row_item)
             elif step == 'markup':
                 self.add_price_markup(row_item)
 
@@ -259,6 +260,12 @@ class BaseParser:
         category = self.category_for(row_item)
         if category is not None:
             row_item.set_field('type_production', category)
+
+    @classmethod
+    def zero_rest_without_category(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Обнулить остаток строки без категории, чтобы она не попала в прайс."""
+        if hooks.zero_rest_without_category and not row_item.vendor.type_production:
+            row_item.set_field('rest_count', 0)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """Отсечь по мин. остатку: стратегия или дефолт."""

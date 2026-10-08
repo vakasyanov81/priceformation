@@ -40,6 +40,11 @@ def test_normalize_title_decimal_commas(raw: str, expected: str) -> None:
         ('6.00*17.5 , , шт', '6.00x17.5'),
         ('Nortec   ER-218', 'Nortec ER-218'),
         ('31x10,50R15', '31x10.50R15'),
+        ('Шина 155/65R13 Armstrong 73T, шт', '155/65R13 Armstrong 73T'),
+        ('шина 155/65R13 Armstrong 73T , шт', '155/65R13 Armstrong 73T'),
+        ('Шина Nortec', 'Nortec'),
+        ('10.00R20 И-281 н.с.8', '10.00R20 И-281 PR8'),
+        ('10.00R20 И-281 Н. С. 16', '10.00R20 И-281 PR16'),
     ],
 )
 def test_normalize_size_chunks(raw: str, expected: str) -> None:
