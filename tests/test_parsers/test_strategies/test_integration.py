@@ -98,10 +98,10 @@ class TestStrategiesIntegration:
         section = config.sections[0]
         integration = StrategiesIntegration(section, config.behavior)
 
-        # Тест header_rows (category из заголовков)
+        # Тест header_rows (category из заголовков, канонизация через map)
         row = RowItem({'title': 'автошины TRIANGLE'})
         category = integration.category_for(row)
-        assert category == 'автошины'
+        assert category == 'Автошина'
 
         # Тест manufacturer_from_category
         row = RowItem({'title': 'Nortec ER-218', 'price_opt': 1000})

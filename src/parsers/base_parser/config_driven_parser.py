@@ -69,6 +69,7 @@ def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig
         rest=make_rest_strategy(behavior, f'section {section.id} rest'),
         min_rest=behavior.min_rest,
         find_manufacturer_on_enrich=behavior.find_manufacturer_on_enrich,
+        zero_rest_without_category=behavior.zero_rest_without_category,
         pipeline=behavior.pipeline,
     )
 

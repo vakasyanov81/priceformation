@@ -13,6 +13,18 @@ from parsers.vendor_config.slot_configs import CategoryConfig
 
 _CATEGORY_FIELD = 'type_production'
 
+# Канонизация первого слова строки-заголовка (падеж/число/регистр) к типу товара.
+_HEADER_CATEGORIES: Mapping[str, str] = {
+    'автошина': 'Автошина',
+    'автошины': 'Автошина',
+    'автокамера': 'Автокамера',
+    'автокамеры': 'Автокамера',
+    'диск': 'Диск',
+    'диски': 'Диск',
+    'ободная': 'Ободная лента',
+    'прочие': 'Прочие',
+}
+
 
 class NoCategory:
     """Не менять категорию, пришедшую из прайса."""
@@ -110,20 +122,32 @@ class ColumnCanonicalCategory:
 
 
 class HeaderRowsCategory:
-    """Категория из строк-заголовков: состояние сохраняется между строками."""
+    """Категория из строк-заголовков: состояние сохраняется между строками.
 
-    def __init__(self, zero_rest_categories: tuple[str, ...] = ()) -> None:
-        """Запомнить категории, у которых остаток обнуляется."""
+    Первый кусок заголовка канонизируется встроенной картой `_HEADER_CATEGORIES`
+    (ключи в нижнем регистре), поверх неё ложится `map` из конфига;
+    без совпадения возвращается `default`, иначе сырой кусок.
+    """
+
+    def __init__(
+        self,
+        zero_rest_categories: tuple[str, ...] = (),
+        mapping: Mapping[str, str] | None = None,
+        default: str = '',
+    ) -> None:
+        """Запомнить категории с нулевым остатком и карту канонизации."""
         self._zero_rest_categories = zero_rest_categories
+        self._mapping = {**_HEADER_CATEGORIES, **(mapping or {})}
+        self._default = default
         self.current_category: str | None = None
 
     @classmethod
     def from_config(cls, config: CategoryConfig) -> HeaderRowsCategory:
-        """Взять список категорий с нулевым остатком из конфига."""
-        return cls(config.zero_rest_categories)
+        """Взять список категорий с нулевым остатком и карту из конфига."""
+        return cls(config.zero_rest_categories, config.mapping, config.default_value)
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str | None:
-        """Обновить раздел на строке-заголовке и вернуть первый кусок категории."""
+        """Обновить раздел на строке-заголовке и вернуть канонизированный кусок категории."""
         if self._is_header_row(row_item):
             self.current_category = (row_item.identity.title or '').lower().strip()
         return self._first_chunk()
@@ -136,7 +160,8 @@ class HeaderRowsCategory:
     def _first_chunk(self) -> str:
         current = self.current_category or ''
         head = current.split('/')[0]
-        return head.split(' ')[0]
+        chunk = head.split(' ')[0]
+        return self._mapping.get(chunk, self._default or chunk)
 
     def _is_header_row(self, row_item: RowItem) -> bool:
         return bool(row_item.identity.title and not row_item.pricing.price_opt)
