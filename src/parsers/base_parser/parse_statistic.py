@@ -6,6 +6,13 @@ from dataclasses import dataclass, field
 
 from domain.row_item.row_item import RowItem
 
+_ROUND_DIGITS = 1
+
+
+def _rounded(number: float) -> float:
+    """Округлить статистику до одного знака после запятой (убрать плавающий хвост)."""
+    return round(number, _ROUND_DIGITS)
+
 
 @dataclass
 class ParserStats:
@@ -29,14 +36,14 @@ class ParseResultStatistic:
         if not self._parse_result:
             return 0, 0
         percents = [row_item.pricing.percent_markup or 0 for row_item in self._parse_result]
-        return min(percents), max(percents)
+        return _rounded(min(percents)), _rounded(max(percents))
 
     def real_absolute_markup(self) -> tuple[float, float]:
         """real absolute min / max markup for parse result"""
         if not self._parse_result:
             return 0, 0
         margins = [row_item.pricing.price_markup - row_item.pricing.price_opt for row_item in self._parse_result]
-        return min(margins), max(margins)
+        return _rounded(min(margins)), _rounded(max(margins))
 
     def count_items(self) -> int:
         """count parse result items"""

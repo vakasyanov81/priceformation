@@ -60,6 +60,24 @@ def test_absolute_markup_min_max() -> None:
     assert max_margin == _MARGIN_HIGH
 
 
+def test_percent_markup_rounded_to_one_decimal() -> None:
+    """Плавающий хвост процента в статистике округляется до одного знака."""
+    row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': 7.000000000000001})
+    assert ParseResultStatistic([row]).real_percents_markup() == (7.0, 7.0)
+
+
+def test_percent_markup_rounds_hundredths_down() -> None:
+    """Проценты округляются и в дробной части (15.13 → 15.1)."""
+    row = RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW, 'percent_markup': 15.13})
+    assert ParseResultStatistic([row]).real_percents_markup() == (15.1, 15.1)
+
+
+def test_absolute_markup_rounded_to_one_decimal() -> None:
+    """Абсолютная наценка тоже без плавающего хвоста."""
+    row = RowItem({'price_opt': 100, 'price_markup': 107.00000000000001})
+    assert ParseResultStatistic([row]).real_absolute_markup() == (7.0, 7.0)
+
+
 def test_count_items_with_purchase_price() -> None:
     rows = [RowItem({'price_opt': _OPT, 'price_markup': _MARKUP_LOW})]
     assert ParseResultStatistic(rows).count_items() == 1

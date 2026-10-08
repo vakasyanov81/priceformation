@@ -6,7 +6,11 @@ import pytest
 
 from domain.exceptions import ConfigValidationError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
+from parsers.vendor_config.provider import (
+    clear_vendor_configs_cache,
+    load_vendor_configs,
+    set_vendor_enabled,
+)
 
 FOLDER = 'vendors'
 MIM_JSON = (
@@ -57,3 +61,34 @@ def test_result_is_cached_until_cleared(fake_config_provider: FakeConfigProvider
 
     clear_vendor_configs_cache()
     assert set(load_vendor_configs()) == {'mim'}
+
+
+def test_set_vendor_enabled_writes_flag(fake_config_provider: FakeConfigProvider) -> None:
+    """Переключение флага пишет 0/1 и сбрасывает кэш."""
+    path = _vendors_dir(fake_config_provider).joinpath('mim.json')
+    path.write_text(MIM_JSON, encoding='utf-8')
+    assert load_vendor_configs()['mim'].enabled is True
+
+    set_vendor_enabled('mim', False)
+
+    assert '"enabled": 0' in path.read_text(encoding='utf-8')
+    assert load_vendor_configs()['mim'].enabled is False
+
+
+def test_set_vendor_enabled_preserves_other_fields(fake_config_provider: FakeConfigProvider) -> None:
+    """Меняется только токен enabled, остальное форматирование сохраняется."""
+    source = '{\n  "enabled": 0,\n  "code": "mim",\n  "name": "Мим"\n}\n'
+    path = _vendors_dir(fake_config_provider).joinpath('mim.json')
+    path.write_text(source, encoding='utf-8')
+
+    set_vendor_enabled('mim', True)
+
+    assert path.read_text(encoding='utf-8') == '{\n  "enabled": 1,\n  "code": "mim",\n  "name": "Мим"\n}\n'
+
+
+def test_set_vendor_enabled_without_flag_fails(fake_config_provider: FakeConfigProvider) -> None:
+    """Нет поля enabled — понятная ошибка с именем файла."""
+    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text('{"code": "mim"}', encoding='utf-8')
+
+    with pytest.raises(ConfigValidationError, match='enabled'):
+        set_vendor_enabled('mim', True)

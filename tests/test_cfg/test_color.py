@@ -20,3 +20,4 @@ def test_warning_fail_and_style_colors() -> None:
     assert Colors.END_COLOR == '\033[0m'
     assert Colors.BOLD == '\033[1m'
     assert Colors.UNDERLINE == '\033[4m'
+    assert Colors.REVERSE == '\033[7m'

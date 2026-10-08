@@ -20,4 +20,4 @@ def init_cfg(provider: ConfigProvider | None = None) -> ConfigProvider:
     return config_provider
 
 
-__ALL__ = [init_cfg]
+__all__ = ['init_cfg']

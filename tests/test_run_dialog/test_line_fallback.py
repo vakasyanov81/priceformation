@@ -1,4 +1,4 @@
-"""tests for console menu"""
+"""tests for line-based menu fallback"""
 
 import logging
 from typing import Any
@@ -6,10 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from run_dialog import ANSWER_MAP, AnswerResult, ask_action
+from run_dialog.items import ANSWER_MAP, AnswerResult
+from run_dialog.line_fallback import ask_by_line
 
 _INPUT = 'builtins.input'
-_DIALOG_LOGGER = 'run_dialog'
+_DIALOG_LOGGER = 'run_dialog.line_fallback'
 _RETRY_MSG = 'Не понял'
 _ACTION_ONE = '1'
 
@@ -35,17 +36,9 @@ def _retry_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
 def _ask(caplog: pytest.LogCaptureFixture, *answers: str) -> tuple[AnswerResult, int, list[str]]:
     """Один прогон диалога: ответы, число запросов ввода и подсказки."""
     with patch(_INPUT, side_effect=_dialog_input(*answers)) as mock_input:
-        action = ask_action()
+        action = ask_by_line()
         calls = mock_input.call_count
     return action, calls, _retry_messages(caplog)
-
-
-def test_answer_map_keys() -> None:
-    """пункты меню соответствуют ожидаемым действиям"""
-    assert ANSWER_MAP['1'] == AnswerResult.MAKE_PRICE_BY_SUPPLIER
-    assert ANSWER_MAP['2'] == AnswerResult.UPDATE_ZAPASKA_DATA
-    assert ANSWER_MAP['3'] == AnswerResult.REPORT_DOUBLES
-    assert ANSWER_MAP['q'] == AnswerResult.EXIT
 
 
 @pytest.mark.parametrize(
@@ -59,7 +52,7 @@ def test_answer_map_keys() -> None:
         (' q ', AnswerResult.EXIT),
     ],
 )
-def test_ask_action_returns_action(
+def test_ask_by_line_returns_action(
     caplog: pytest.LogCaptureFixture,
     answer: str,
     expected: AnswerResult,
@@ -71,7 +64,7 @@ def test_ask_action_returns_action(
     assert not retries
 
 
-def test_ask_action_retries_then_answers(caplog: pytest.LogCaptureFixture) -> None:
+def test_ask_by_line_retries_then_answers(caplog: pytest.LogCaptureFixture) -> None:
     """неверный ввод повторяется, затем возвращается действие."""
     action, calls, retries = _ask(caplog, 'x', 'y', f'  {_ACTION_ONE} ')
     assert action == AnswerResult.MAKE_PRICE_BY_SUPPLIER
@@ -80,8 +73,8 @@ def test_ask_action_retries_then_answers(caplog: pytest.LogCaptureFixture) -> No
     assert all(_RETRY_MSG in message for message in retries)
 
 
-def test_ask_action_menu_lists_every_answer() -> None:
-    """В меню перечислены все действия из ANSWER_MAP."""
+def test_ask_by_line_menu_lists_every_answer() -> None:
+    """В подсказке перечислены все действия из ANSWER_MAP."""
     seen: list[str] = []
 
     def _capture(msg: str = '') -> str:
@@ -89,6 +82,6 @@ def test_ask_action_menu_lists_every_answer() -> None:
         return 'q'
 
     with patch(_INPUT, side_effect=_capture):
-        assert ask_action() == AnswerResult.EXIT
+        assert ask_by_line() == AnswerResult.EXIT
     for key in ANSWER_MAP:
         assert key in seen[0]
