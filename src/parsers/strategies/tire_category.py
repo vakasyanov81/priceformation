@@ -15,6 +15,7 @@ from parsers.vendor_config.slot_configs import CategoryConfig
 CAMERA = 'Автокамера'
 DISK = 'Диск'
 RIM_TAPE = 'Ободная лента'
+O_RING = 'Уплотнительное кольцо'
 SPECIAL = 'Спецшина'
 TRUCK = 'Грузовая шина'
 LIGHT_TRUCK = 'Легкогрузовая шина'
@@ -58,6 +59,8 @@ def _category_by_title(raw_title: str | None) -> str:
 
 
 def _non_tire_category(title: str) -> str | None:
+    if 'уплотнительн' in title and 'кольц' in title:
+        return O_RING
     if 'камер' in title:
         return CAMERA
     if 'диск' in title:
