@@ -115,6 +115,7 @@ def _headers_mismatch(sheet_index: int, layout: _Layout) -> dict[int, tuple[str,
     ],
 )
 def test_columns_match_price_headers(
+    _four_tochki_provider: None,
     section_index: int,
     sheet_index: int,
     layout: _Layout,
