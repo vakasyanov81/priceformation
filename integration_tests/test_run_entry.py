@@ -20,7 +20,7 @@ _PARSED_ROW = 'item'
 _RESOLVE = 'run.ServiceProvider.resolve'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
 _RUN_LOGGER = 'run'
-_DIALOG_LOGGER = 'run_dialog'
+_DIALOG_LOGGER = 'run_dialog.line_fallback'
 
 
 def test_main_exits_on_quit() -> None:

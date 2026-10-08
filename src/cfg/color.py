@@ -16,3 +16,4 @@ class Colors:
     END_COLOR = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+    REVERSE = '\033[7m'
