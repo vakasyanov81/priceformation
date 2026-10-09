@@ -14,7 +14,7 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.registry import UnknownVendorError, make_vendor_entry
 from parsers.vendor_config.models import VendorConfig, VendorSection
-from services.parse_orchestrator import ParseOrchestrator, ParseResult
+from services.parse_orchestrator import ParseOrchestrator, ParseResult, _parser_for_vendor
 
 _MOD = 'services.parse_orchestrator'
 _ORCHESTRATOR_LOGGER = 'services.parse_orchestrator'
@@ -273,3 +273,122 @@ def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
 
     assert not parsed.parsed_items
     assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable не активен']
+
+
+def _config_driven_vendor_entry(
+    *,
+    enabled: bool = True,
+    with_section: bool = True,
+    with_config: bool = True,
+) -> tuple[VendorSection, VendorConfig, ParseConfiguration]:
+    """Запись вендора с возможностью снять ``_vendor_section``/``_vendor_config``."""
+    vendor_cfg = VendorConfig(folder='test_folder', enabled=enabled, code='99', name='Test', start_row=1)
+    section = VendorSection(
+        id='99',
+        name='Test',
+        start_row=1,
+        file_templates=('price*.xls',),
+        columns={0: 'title'},
+    )
+    _, config = make_vendor_entry(section, vendor_cfg)
+    if not with_section:
+        config._vendor_section = None
+    if not with_config:
+        config._vendor_config = None
+    return section, vendor_cfg, config
+
+
+def test_parser_for_vendor_without_config() -> None:
+    """Без vendor_config класс получает None (легаси-парсер)."""
+    vendor_cls = MagicMock()
+
+    _parser_for_vendor(MagicMock(), vendor_cls, None)
+
+    vendor_cls.assert_called_once_with(None)
+
+
+def test_parser_for_vendor_disabled_uses_parse_config() -> None:
+    """Отключённый поставщик строится классом с parse_config."""
+    _, _, config = _config_driven_vendor_entry(enabled=False)
+    vendor_cls = MagicMock()
+    make_cd = MagicMock()
+
+    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
+        _parser_for_vendor(MagicMock(), vendor_cls, config)
+
+    vendor_cls.assert_called_once_with(parse_config=config)
+    make_cd.assert_not_called()
+
+
+def test_parser_for_vendor_enabled_with_metadata_builds_config_driven() -> None:
+    """Включённый конфиг с секцией и VendorConfig идёт в config-driven фабрику."""
+    section, vendor_cfg, config = _config_driven_vendor_entry(enabled=True)
+    make_cd = MagicMock(return_value='parser')
+
+    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
+        _parser_for_vendor(MagicMock(), MagicMock(), config)
+
+    make_cd.assert_called_once_with(section, vendor_cfg, config)
+
+
+def test_parser_for_vendor_enabled_without_vendor_config_falls_back() -> None:
+    """Без ``_vendor_config`` (не VendorConfig) парсер строится классом."""
+    _, _, config = _config_driven_vendor_entry(enabled=True, with_config=False)
+    vendor_cls = MagicMock()
+    make_cd = MagicMock()
+
+    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
+        _parser_for_vendor(MagicMock(), vendor_cls, config)
+
+    vendor_cls.assert_called_once_with(parse_config=config)
+    make_cd.assert_not_called()
+
+
+def test_parser_for_vendor_enabled_without_metadata_falls_back() -> None:
+    """Без секции и VendorConfig парсер строится классом."""
+    _, _, config = _config_driven_vendor_entry(enabled=True, with_section=False, with_config=False)
+    vendor_cls = MagicMock()
+    make_cd = MagicMock()
+
+    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
+        _parser_for_vendor(MagicMock(), vendor_cls, config)
+
+    vendor_cls.assert_called_once_with(parse_config=config)
+    make_cd.assert_not_called()
+
+
+def test_black_list_skips_accumulate_across_vendors() -> None:
+    """Пропуски black_list суммируются по всем поставщикам."""
+    orchestrator = ParseOrchestrator()
+
+    parsed = orchestrator.parse_all(
+        [
+            (cast(type[BaseParser], FakeParserWithBlackListSkips), None),
+            (cast(type[BaseParser], FakeParserWithBlackListSkips), None),
+        ]
+    )
+
+    assert parsed.black_list_skips == 6
+
+
+def test_parse_vendor_passes_code_to_registry() -> None:
+    """parse_vendor передаёт код поставщика в реестр без изменений."""
+    orchestrator = ParseOrchestrator()
+    entry = (cast(type[BaseParser], FakeParser), None)
+
+    with patch(f'{_MOD}.vendor_entry_for', return_value=entry) as mock_entry:
+        orchestrator.parse_vendor('poshk')
+
+    mock_entry.assert_called_once_with('poshk')
+
+
+def test_parse_vendors_logs_elapsed(watch_logger: LoggerWatcher) -> None:
+    """Длительность разбора считается как разность времени старта и конца."""
+    orchestrator = ParseOrchestrator()
+    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.INFO)
+    ticks = iter([100.0, 101.23])
+
+    with patch(f'{_MOD}.time.monotonic', lambda: next(ticks, 101.23)):
+        orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
+
+    assert any('(1.23 сек)' in message for message in texts_at(entries(), logging.INFO))

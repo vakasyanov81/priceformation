@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -59,6 +60,20 @@ class _EmptyDefaultTemplate(IWriteTemplate):
         {'Сезон': {'field': RowItem.season.name, 'default_value': ''}},
     ]
     __FILE__ = 'empty_default_{now}.xlsx'
+
+
+class _RawValue:
+    """Значение без нативной JSON-сериализации."""
+
+    def __str__(self) -> str:
+        return 'raw-value'
+
+
+class _RawValueTemplate(IWriteTemplate):
+    """колонка с несериализуемым значением."""
+
+    __COLUMNS__: ClassVar[WriteColumns] = [{'Сырое': {'field': 'raw'}}]
+    __FILE__ = 'raw_{now}.xlsx'
 
 
 def _load_meta(folder: Path) -> dict[str, str]:
@@ -275,6 +290,18 @@ def test_jsonl_file_name_has_four_digit_year(tmp_path: Path) -> None:
     """В имени файла — четырёхзначный год, а не %y."""
     path = write_template_jsonl(write_data, ForInner, str(tmp_path))
     assert str(datetime.datetime.now().year) in Path(path).name
+
+
+def test_jsonl_file_name_is_exact_date(tmp_path: Path) -> None:
+    """Дата в имени файла — ровно YYYY-MM-DD, без обрамляющих символов."""
+    path = write_template_jsonl(write_data, ForInner, str(tmp_path))
+    assert re.fullmatch(r'price_\d{4}-\d{2}-\d{2}\.jsonl', Path(path).name)
+
+
+def test_jsonl_stringifies_unknown_value(tmp_path: Path) -> None:
+    """Несериализуемое значение колонки пишется через default=str, а не роняет запись."""
+    path = write_template_jsonl([{'raw': _RawValue()}], _RawValueTemplate, str(tmp_path))
+    assert Path(path).read_text(encoding='utf-8') == '{"1":"raw-value"}\n'
 
 
 def test_meta_json_keeps_cyrillic(tmp_path: Path) -> None:

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from cfg import init_cfg
+from domain.config_context import set_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.file_config_provider import FileConfigProvider
 from parsers.load_config import load_config
@@ -324,3 +325,34 @@ def test_flat_json_stays_flat(tmp_path: Path, config_root: Path) -> None:
     source = _write_source(tmp_path, 'markup_rules.json', _JSON_TEXT.encode())
     dest = _loaded(source)
     assert dest == config_root / 'markup_rules.json'
+
+
+def test_load_folder_empty_message_has_folder(tmp_path: Path, config_root: Path) -> None:
+    """Сообщение о пустой папке называет саму папку, а не None."""
+    folder = tmp_path / 'incoming'
+    folder.mkdir()
+
+    with pytest.raises(ConfigFileNotFoundError, match=str(folder)):
+        load_config(str(folder))
+
+
+def test_invalid_json_message_has_cause(tmp_path: Path, config_root: Path) -> None:
+    """Сообщение о битом JSON содержит причину разбора, а не None."""
+    source = _write_source(tmp_path, 'vendor_list.json', b'not-json')
+
+    with pytest.raises(InvalidConfigJsonError, match='Expecting value'):
+        load_config(str(source))
+
+
+def test_move_config_creates_missing_parent_dirs(tmp_path: Path) -> None:
+    """parse_config создаётся вместе с промежуточными папками, которых ещё нет."""
+    deep_root = tmp_path / 'deeply' / 'nested'
+    assert not deep_root.exists()
+    set_config_provider(FileConfigProvider(str(deep_root)))
+    source = _write_source(tmp_path, 'vendor_list.json', _JSON_TEXT.encode())
+
+    found = load_config(str(source))
+
+    dest = deep_root / 'parse_config' / 'vendor_list.json'
+    assert found == [str(dest)]
+    assert dest.is_file()

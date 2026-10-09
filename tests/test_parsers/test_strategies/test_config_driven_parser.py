@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
+from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -9,10 +12,24 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.base_parser.config_driven_parser import strategy_hooks_from_section
+from parsers.base_parser.config_driven_parser import (
+    _reader_for_config,
+    make_config_driven_parser,
+    parser_params_from_section,
+    strategy_hooks_from_section,
+    vendor_markup_policy_from_config,
+)
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
-from parsers.vendor_config.models import VendorConfig
+from parsers.json_reader import JsonPriceReader
+from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.slot_configs import (
+    BehaviorConfig,
+    CategoryConfig,
+    PricingConfig,
+    TitleConfig,
+)
+from parsers.xls_reader import XlsReader
 
 _TEST_PARAMS = ParserParams(
     supplier=ParseParamsSupplier(folder_name='test', name='Test', code='99'),
@@ -33,6 +50,124 @@ def _mock_parse_config() -> ParseConfiguration:
     mock.supplier = _TEST_PARAMS.supplier
     mock.manufacturer_aliases.return_value = {}
     return mock
+
+
+def _section(
+    *,
+    category: CategoryConfig | None = None,
+    title: TitleConfig | None = None,
+    pricing: PricingConfig | None = None,
+) -> VendorSection:
+    """Минимальная секция поставщика для проверки сборки парсера."""
+    return VendorSection(
+        id='sec1',
+        name='Секция',
+        start_row=5,
+        file_templates=('price*.xls',),
+        columns={0: 'title'},
+        sheet_info='Лист1',
+        sheet_indexes=(0,),
+        category=category or CategoryConfig(),
+        title=title or TitleConfig(),
+        pricing=pricing or PricingConfig(),
+    )
+
+
+def test_parser_params_from_section_full() -> None:
+    """Все поля секции переходят в ParserParams без потерь."""
+    parser_params = parser_params_from_section(_section(), 'folder')
+
+    assert parser_params == ParserParams(
+        supplier=ParseParamsSupplier(folder_name='folder', name='Секция', code='sec1'),
+        start_row=5,
+        sheet_info='Лист1',
+        columns={0: 'title'},
+        stop_words=(),
+        file_templates=('price*.xls',),
+        sheet_indexes=(0,),
+        row_item_adaptor=RowItem,
+    )
+
+
+@pytest.mark.parametrize(
+    ('reader', 'expected'),
+    [
+        ('json', JsonPriceReader),
+        ('xls', XlsReader),
+        ('other', XlsReader),
+    ],
+)
+def test_reader_for_config(reader: str, expected: type) -> None:
+    """Тип ридера выбирается по значению reader конфига."""
+    assert _reader_for_config(reader) is expected
+
+
+def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
+    """Парсер получает хуки из секции и ридер из reader конфига."""
+    section = _section(pricing=PricingConfig(policy='identity'))
+    vendor_config = VendorConfig(
+        folder='f',
+        enabled=True,
+        code='c',
+        name='n',
+        start_row=1,
+        reader='json',
+        sections=(section,),
+    )
+
+    parser = make_config_driven_parser(section, vendor_config, _mock_parse_config())
+
+    assert parser._strategy_hooks is not None
+    assert parser._strategy_hooks.min_rest == vendor_config.behavior.min_rest
+    assert parser.data_reader is JsonPriceReader
+
+
+def test_strategy_hooks_from_section_keeps_all_fields() -> None:
+    """Все поведенческие поля behavior попадают в StrategyHooks."""
+    behavior = BehaviorConfig(
+        min_rest=7,
+        zero_rest_without_category=True,
+        find_manufacturer_on_enrich=False,
+        pipeline=('category', 'markup'),
+    )
+
+    hooks = strategy_hooks_from_section(_section(), behavior)
+
+    assert hooks.category is not None
+    assert hooks.title is not None
+    assert hooks.rest is not None
+    assert hooks.min_rest == 7
+    assert hooks.find_manufacturer_on_enrich is False
+    assert hooks.zero_rest_without_category is True
+    assert hooks.pipeline == ('category', 'markup')
+
+
+@pytest.mark.parametrize(
+    ('section', 'behavior', 'fragment'),
+    [
+        (_section(category=CategoryConfig(strategy='nope')), BehaviorConfig(), 'section sec1 category'),
+        (_section(title=TitleConfig(strategy='nope')), BehaviorConfig(), 'section sec1 title'),
+        (_section(), BehaviorConfig(rest='nope'), 'section sec1 rest'),
+    ],
+)
+def test_strategy_hooks_error_carries_section_path(
+    section: VendorSection,
+    behavior: BehaviorConfig,
+    fragment: str,
+) -> None:
+    """Ошибка стратегии несёт путь с id секции — по нему правят конфиг."""
+    with pytest.raises(ConfigValidationError) as exc_info:
+        strategy_hooks_from_section(section, behavior)
+
+    assert str(exc_info.value).startswith(f'{fragment}:')
+
+
+def test_vendor_markup_policy_error_carries_location() -> None:
+    """Неизвестная политика наценки сообщает путь section.pricing."""
+    with pytest.raises(ConfigValidationError) as exc_info:
+        vendor_markup_policy_from_config(_section(pricing=PricingConfig(policy='nope')))
+
+    assert str(exc_info.value).startswith('section.pricing:')
 
 
 def test_category_strategy_is_called() -> None:

@@ -7,16 +7,24 @@ guarantee fresh reads and independence from the real ``parse_config/vendors/``.
 
 import pytest
 
+from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
-from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.base_parser_config import (
+    ParseConfiguration,
+    ParseParamsSupplier,
+    ParserParams,
+    make_parse_config,
+)
 from parsers.registry import (
     UnknownVendorError,
     all_vendors_from_registry,
     clear_registry,
+    make_vendor_entry,
     vendor_config_is_enabled,
     vendor_entry_for,
     vendor_markup_policy_for,
 )
+from parsers.vendor_config.models import VendorConfig, VendorSection
 
 pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 
@@ -60,10 +68,52 @@ def test_vendor_entry_for_mim_returns_first_section() -> None:
 
 
 def test_vendor_entry_for_unknown_code_raises() -> None:
-    """неизвестный код — UnknownVendorError."""
+    """неизвестный код — UnknownVendorError с переданным кодом."""
     clear_registry()
-    with pytest.raises(UnknownVendorError):
+    with pytest.raises(UnknownVendorError, match='nonexistent'):
         vendor_entry_for('nonexistent')
+
+
+def test_entries_carry_folder_and_vendor_config() -> None:
+    """Записи несут папку поставщика и сам VendorConfig (не None)."""
+    clear_registry()
+    for _, config in all_vendors_from_registry():
+        assert isinstance(config._vendor_config, VendorConfig)
+        assert config.parser_params.supplier.folder_name == config._vendor_config.folder
+
+
+def test_make_vendor_entry_attaches_section_and_config() -> None:
+    """make_vendor_entry привязывает секцию и конфиг и берёт папку из folder."""
+    vendor_cfg = VendorConfig(folder='my_folder', enabled=True, code='c', name='n', start_row=1)
+    section = VendorSection(
+        id='c',
+        name='n',
+        start_row=1,
+        file_templates=('p.xls',),
+        columns={0: 'title'},
+    )
+
+    _, config = make_vendor_entry(section, vendor_cfg)
+
+    assert config._vendor_section is section
+    assert config._vendor_config is vendor_cfg
+    assert config.parser_params.supplier.folder_name == 'my_folder'
+
+
+def test_vendor_config_is_enabled_without_vendor_config() -> None:
+    """Без привязанного VendorConfig поставщик считается включённым."""
+    parser_params = ParserParams(
+        supplier=ParseParamsSupplier(folder_name='f', name='n', code='c'),
+        start_row=1,
+        sheet_info='',
+        columns={},
+        stop_words=(),
+        file_templates=(),
+        sheet_indexes=(),
+        row_item_adaptor=RowItem,
+    )
+
+    assert vendor_config_is_enabled(make_parse_config(parser_params))
 
 
 def test_vendor_config_is_enabled_for_disabled() -> None:

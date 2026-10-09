@@ -142,3 +142,10 @@ def test_drop_blank_aliases_keeps_brands_after_dict_entry() -> None:
         'Kama': ['Кама'],
         'Aeolus': '',
     }
+
+
+def test_drop_blank_aliases_missing_key_gets_empty_list() -> None:
+    """У словаря без ключа aliases появляется пустой список, а не None."""
+    cleaned = drop_blank_aliases({'Brand': {'group': 'brand'}})
+
+    assert cleaned == {'Brand': {'aliases': [], 'group': 'brand'}}

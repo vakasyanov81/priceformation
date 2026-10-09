@@ -125,6 +125,7 @@ PATH_CASES = [
     ({**_raw(), 'title': {'strategy': 5}}, f'{WHERE} → title → strategy'),
     ({**_raw(), 'title': {'variant': 5}}, f'{WHERE} → title → variant'),
     ({**_raw(), 'title': {'aliases': 'x'}}, f'{WHERE} → title: «aliases»'),
+    ({**_raw(), 'title': {'fallback_brand': 5}}, f'{WHERE} → title → fallback_brand'),
     # секции: путь обязан доходить до sections[i]
     ({**_raw(), 'sections': [[]]}, f'{WHERE} → sections[0]'),
     ({**_raw(), 'sections': [{'id': 5}]}, f'{WHERE} → sections[0] → id'),

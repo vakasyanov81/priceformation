@@ -265,6 +265,16 @@ def test_filled_identity_still_duplicates() -> None:
     _assert_flags(cheap, expensive)
 
 
+def test_model_only_identity_is_double() -> None:
+    """Без размера, но с моделью (не совпавшей с брендом) позиция ищется среди дублей."""
+    first = _empty_identity(model='NU701')
+    second = _empty_identity(model='NU701', price_markup=_PRICE_HIGH)
+
+    assert _doubles(first, second) == [first, second]
+    assert _has_double_marker(first)
+    assert _has_double_marker(second)
+
+
 def test_nkshz_and_kama_same_size_are_doubles() -> None:
     zapaska = _row(title='315/80R22.5 Кама NU701 156/150K TL НкШЗ', supplier_name='Запаска (шины)')
     mim = _high(manufacturer_name='Кама', model='NU 701', title='315/80R22.5 Кама NU 701', supplier_name='Мим')

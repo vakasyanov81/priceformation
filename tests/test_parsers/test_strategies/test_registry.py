@@ -44,3 +44,13 @@ def test_fixed_strategy_gets_value_from_config() -> None:
 def test_unknown_strategy_raises_with_location() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестная стратегия'):
         make_category_strategy(CategoryConfig(strategy='nope'), WHERE)
+
+
+def test_unknown_strategy_lists_available_in_message() -> None:
+    """Сообщение перечисляет доступные стратегии через ', ', а не подставляет None."""
+    with pytest.raises(ConfigValidationError) as exc_info:
+        make_category_strategy(CategoryConfig(strategy='nope'), WHERE)
+
+    message = str(exc_info.value)
+    assert 'column_canonical, field_map' in message
+    assert 'XX' not in message

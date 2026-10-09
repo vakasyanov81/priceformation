@@ -11,6 +11,7 @@ from domain.exceptions import (
 )
 
 _TO_LOG = 'to_log'
+_STACK_LIMIT = 10
 
 
 class _CustomError(CoreExceptionError):
@@ -70,3 +71,17 @@ def test_to_log_without_message() -> None:
 
     mock_log.assert_called_once()
     assert 'None' in mock_log.call_args.args[0]
+
+
+def test_to_log_limits_stack_depth(monkeypatch: pytest.MonkeyPatch) -> None:
+    """to_log ограничивает стек константой глубины, а не всем стеком."""
+    recorded: dict[str, int | None] = {}
+
+    def _extract_stack(*, limit: int | None = None) -> list[object]:
+        recorded['limit'] = limit
+        return []
+
+    monkeypatch.setattr('domain.exceptions.traceback.extract_stack', _extract_stack)
+    with patch('domain.exceptions.log_exception'):
+        CoreExceptionError.to_log('trace-me')
+    assert recorded['limit'] == _STACK_LIMIT

@@ -95,24 +95,25 @@ def test_solid_fill_rejects_named_color() -> None:
 
 
 def test_add_sheet_requires_workbook() -> None:
-    with pytest.raises(WorkbookNotInitializedError):
+    """Текст ошибки — контракт для пользователя, его читают в логе."""
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         XlsxWriterDriver().add_sheet(_SHEET)
 
 
 def test_write_requires_sheet() -> None:
-    with pytest.raises(WorksheetNotInitializedError):
+    with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         XlsxWriterDriver().write(0, 0, _BODY_TEXT)
 
 
 def test_set_column_format_requires_sheet() -> None:
-    with pytest.raises(WorksheetNotInitializedError):
+    with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         XlsxWriterDriver().set_column_format({_COL_A: _TEXT_FORMAT})
 
 
 def test_save_requires_sheet(tmp_path: Any) -> None:
     driver = XlsxWriterDriver()
     driver.init_workbook(f'{tmp_path}/', _FILE_NAME)
-    with pytest.raises(WorkbookNotInitializedError):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         driver.save()
 
 
@@ -121,7 +122,7 @@ def test_save_requires_file_name(tmp_path: Any) -> None:
     driver.init_workbook(f'{tmp_path}/', _FILE_NAME)
     driver.add_sheet(_SHEET)
     driver._file_name = None
-    with pytest.raises(WorkbookNotInitializedError):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         driver.save()
 
 
@@ -132,7 +133,7 @@ def test_add_sheet_raises_when_active_is_none(tmp_path: Any) -> None:
     # Удаляем все листы — тогда workbook.active вернёт None
     for sheet_name in driver.work_book.sheetnames:  # type: ignore[union-attr]
         del driver.work_book[sheet_name]  # type: ignore[union-attr]
-    with pytest.raises(WorksheetNotInitializedError, match='worksheet is not initialized'):
+    with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         driver.add_sheet(_SHEET)
 
 

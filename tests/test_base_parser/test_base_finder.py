@@ -1,7 +1,7 @@
 """tests for BaseFinder alias search."""
 
 from parsers.base_parser.alias_container import AliasContainer
-from parsers.base_parser.base_finder import BaseFinder
+from parsers.base_parser.base_finder import BaseFinder, _has_word_boundaries
 
 
 def test_find_uses_first_alias_occurrence() -> None:
@@ -78,3 +78,30 @@ def test_find_alias_inside_word_is_not_found() -> None:
     correct, found = finder.find_word_in_title('nortecx')
     assert correct is None
     assert found is None
+
+
+def test_find_alias_at_position_one() -> None:
+    """Алиас, начинающийся со второй позиции, находится (цикл входит и выходит)."""
+    finder = BaseFinder(AliasContainer({'Brand': ()}))
+    correct, found = finder.find_word_in_title(' Brand')
+    assert correct == 'Brand'
+    assert found == 'Brand'
+
+
+def test_find_empty_alias_returns_minus_one() -> None:
+    """Пустой алиас не ищется: guard возвращает -1, а не позицию нуля."""
+    finder = BaseFinder(AliasContainer({'Brand': ()}))
+    finder._title = ' abc'  # noqa: WPS437
+    assert finder._find('') == -1  # noqa: WPS437
+
+
+def test_find_returns_first_bounded_occurrence() -> None:
+    """Следующее совпадение ищется вперёд от позиции, а не с конца строки."""
+    finder = BaseFinder(AliasContainer({'Brand': ()}))
+    finder._title = 'xbrand brand brand'  # noqa: WPS437
+    assert finder._find('brand') == 7  # noqa: WPS437
+
+
+def test_has_word_boundaries_rejects_alnum_before() -> None:
+    """Буква/цифра перед алиасом — не граница слова."""
+    assert _has_word_boundaries('ab', 1, 1) is False

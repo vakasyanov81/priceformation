@@ -37,3 +37,10 @@ def test_correct_words_lower() -> None:
     assert 'alpha' in lower
     assert 'gamma' in lower
     assert len(lower) == 2
+
+
+def test_reversed_map_allows_correct_name_as_its_own_alias() -> None:
+    """Свой канон в нижнем регистре исключается из blocked, а не в верхнем."""
+    container = AliasContainer({'Kama': ('Kama',)})
+
+    assert container.reversed_map['kama'] == 'Kama'

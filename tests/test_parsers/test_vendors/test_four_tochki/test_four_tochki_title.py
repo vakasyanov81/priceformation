@@ -17,6 +17,8 @@ from parsers.strategies._four_tochki_tire_helper import (
 _SIZE = '205/55R16'
 _WRAP = 'XXXX'
 _TRUCK = 'грузовая'
+_SPECIAL = 'спецтехника'
+_EM_DASH = '—'
 
 
 def test_truck_tire_by_type() -> None:
@@ -112,7 +114,72 @@ def test_ext_diameter_title_skips_empty_optional() -> None:
             },
             '140/55-9',
         ),
+        # Канонизация десятичной запятой: ширина и диаметр через запятую.
+        ({'width': '22,5', 'height_percent': '40', 'diameter': 'R18'}, '22.5/40R18'),
+        ({'width': '205', 'height_percent': '55', 'diameter': 'R22,5'}, '205/55R22.5'),
+        # RZ в диаметре → ZR в размере.
+        ({'width': '205', 'height_percent': '55', 'diameter': 'RZ18'}, '205/55ZR18'),
+        # Тире в диаметре → конструкция '-' (не 'R').
+        ({'width': '205', 'height_percent': '55', 'diameter': f'{_EM_DASH}32'}, '205/55-32'),
+        # Пустой диаметр не подменяется заглушкой.
+        ({'width': '205'}, '205R'),
+        # Спецшина: суффикс .0 только для дюймового профиля шириной < 100.
+        (
+            {'width': '15', 'height_percent': '55', 'diameter': 'R15', 'tire_type': _SPECIAL},
+            '15.0/55R15',
+        ),
+        # Та же ширина, но не спецтехника — точка не добавляется.
+        ({'width': '15', 'height_percent': '55', 'diameter': 'R15'}, '15/55R15'),
+        # Спецшина без профиля — точка не добавляется.
+        ({'width': '15', 'diameter': 'R15', 'tire_type': _SPECIAL}, '15R15'),
+        # Метрическая ширина 100 — граница, точка не добавляется.
+        (
+            {'width': '100', 'height_percent': '55', 'diameter': 'R15', 'tire_type': _SPECIAL},
+            '100/55R15',
+        ),
+        # Дробная ширина у спецшины — не digit, точка не добавляется.
+        (
+            {'width': 30.5, 'height_percent': 55.0, 'diameter': 'R15', 'tire_type': _SPECIAL},
+            '30.5/55R15',
+        ),
+        # Дюймовая пара 10/20 получает суффикс .00.
+        ({'width': '10', 'diameter': 'R20'}, '10.00R20'),
     ],
 )
 def test_prepared_title_width_postfix(fields: dict[str, Any], expected: str) -> None:
     assert get_prepared_title(RowItem(fields)) == expected
+
+
+def test_default_title_all_parts() -> None:
+    """Все поля обычного title попадают в строку целиком."""
+    row = RowItem(
+        {
+            'manufacturer_name': 'Pirelli',
+            'model': 'Scorpion',
+            'layering': '20',
+            'camera_type': 'TL',
+            'inscription_on_the_side': '3PMSF',
+            'index_load': '103',
+            'index_velocity': 'H',
+            'run_flat': 'Да',
+        }
+    )
+
+    assert default_tire_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 20 TL 3PMSF 103H RunFlat'
+
+
+def test_ext_diameter_title_all_parts() -> None:
+    """Title с внешним диаметром заполнен всеми необязательными полями."""
+    row = RowItem(
+        {
+            'manufacturer_name': 'Pirelli',
+            'model': 'Scorpion',
+            'ext_diameter': 31,
+            'index_load': '103',
+            'us_aff_designation': 'EU',
+            'inscription_on_the_side': '3PMSF',
+            'run_flat': 'Да',
+        }
+    )
+
+    assert ext_diameter_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103 EU 3PMSF RunFlat'

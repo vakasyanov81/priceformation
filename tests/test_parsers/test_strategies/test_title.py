@@ -199,3 +199,95 @@ def test_title_with_aliases_none_stays_none() -> None:
     strategy = TitleWithAliases(DefaultTitle(), {})
 
     assert strategy.prepare(RowItem({})) is None
+
+
+def test_tire_compose_mim_simple_decimal_profile_uses_x() -> None:
+    """Дробный профиль склеивается через `x`, а не через `/`."""
+    strategy = TireCompose('mim_simple')
+    row = RowItem({'width': '31', 'height_percent': '10.5', 'diameter': '15'})
+
+    assert strategy.prepare(row) == '31x10.5R15'
+
+
+def test_tire_compose_mim_simple_without_profile() -> None:
+    """Пустой профиль не подменяется заглушкой: размер — ширина/R/диаметр."""
+    strategy = TireCompose('mim_simple')
+    row = RowItem({'width': '205', 'diameter': '16'})
+
+    assert strategy.prepare(row) == '205/R16'
+
+
+def test_tire_compose_mim_simple_includes_load_velocity() -> None:
+    """Индекс нагрузки и скорости попадает в собранный title."""
+    strategy = TireCompose('mim_simple')
+    row = RowItem(
+        {
+            'width': '205',
+            'height_percent': '55',
+            'diameter': '16',
+            'index_load': '91',
+            'index_velocity': 'V',
+        },
+    )
+
+    assert strategy.prepare(row) == '205/55R16 91V'
+
+
+def test_tire_compose_mim_truck_without_optional_parts() -> None:
+    """Без профиля и диаметра truck-сборка не подставляет заглушек."""
+    strategy = TireCompose('mim_truck')
+    row = RowItem({'width': '295'})
+
+    assert strategy.prepare(row) == '295'
+
+
+def test_tire_compose_mim_truck_includes_load_velocity() -> None:
+    """Индекс нагрузки и скорости попадает в truck-title."""
+    strategy = TireCompose('mim_truck')
+    row = RowItem(
+        {
+            'width': '295',
+            'height_percent': '75',
+            'diameter': '22.5',
+            'index_load': '152',
+            'index_velocity': 'M',
+        },
+    )
+
+    assert strategy.prepare(row) == '295/75R22.5 152M'
+
+
+def test_normalize_size_chunks_empty_title_stays_empty() -> None:
+    """Пустой title не превращается в заглушку."""
+    assert NormalizeSizeChunks().prepare(RowItem({})) == ''
+
+
+def test_normalize_size_chunks_replaces_star_only_for_size_chunk() -> None:
+    """`*` → `x` только в куске, начинающемся с числа."""
+    assert NormalizeSizeChunks().prepare(RowItem({'title': 'a*b'})) == 'a*b'
+
+
+def test_normalize_size_chunks_pops_radius_into_width_chunk() -> None:
+    """Диаметр `R…` приклеивается ко второму куску только при двух кусках."""
+    assert NormalizeSizeChunks().prepare(RowItem({'title': '385/65 R22.5'})) == '385/65R22.5'
+
+
+def test_disk_compose_keeps_suffix_from_original_name() -> None:
+    """Хвост исходного наименования (усил.) дописывается к собранному title."""
+    strategy = DiskComposeTochki()
+    row = RowItem(
+        {
+            'title': 'Replay HND369 усил.',
+            'manufacturer_name': 'Replay',
+            'model': 'HND369',
+            'width': '7.5',
+            'diameter': '20',
+            'slot_count': '5',
+            'pcd1': '114.3',
+            'eet': '49.5',
+            'central_diameter': '67.1',
+            'color': 'MGMF',
+        },
+    )
+
+    assert strategy.prepare(row) == '7.5x20 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'

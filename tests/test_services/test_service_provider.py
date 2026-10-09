@@ -77,6 +77,12 @@ def test_unregistered_interface_raises() -> None:
         ServiceProvider.create(_SERVICE_KEY)
 
 
+def test_unregistered_interface_error_names_interface() -> None:
+    """Ошибка называет незарегистрированный интерфейс, а не None."""
+    with pytest.raises(ServiceNotRegisteredError, match=_SampleService.__name__):
+        ServiceProvider.resolve(_SERVICE_KEY)
+
+
 def test_reset_drops_instances_keeps_factories() -> None:
     """reset сбрасывает экземпляры, но оставляет регистрации."""
     ServiceProvider.register(_SERVICE_KEY, _SampleService)

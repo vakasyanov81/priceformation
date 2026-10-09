@@ -1,8 +1,60 @@
 """Тесты интеграции стратегий в BaseParser (демонстрация этапа 2)."""
 
+import pytest
+
+from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.strategies_integration import StrategiesIntegration
-from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, TitleConfig
+
+
+def _section(
+    *,
+    category: CategoryConfig | None = None,
+    title: TitleConfig | None = None,
+) -> VendorSection:
+    """Минимальная секция поставщика для StrategiesIntegration."""
+    return VendorSection(
+        id='s',
+        name='Секция',
+        start_row=1,
+        file_templates=('p.xls',),
+        columns={0: 'title'},
+        category=category or CategoryConfig(),
+        title=title or TitleConfig(),
+    )
+
+
+def test_integration_keeps_section_and_behavior() -> None:
+    """StrategiesIntegration хранит переданные секцию и behavior."""
+    section = _section()
+    behavior = BehaviorConfig(min_rest=7)
+
+    integration = StrategiesIntegration(section, behavior)
+
+    assert integration._section is section
+    assert integration._behavior is behavior
+
+
+@pytest.mark.parametrize(
+    ('section', 'behavior', 'fragment'),
+    [
+        (_section(category=CategoryConfig(strategy='nope')), BehaviorConfig(), 'section.category'),
+        (_section(title=TitleConfig(strategy='nope')), BehaviorConfig(), 'section.title'),
+        (_section(), BehaviorConfig(rest='nope'), 'behavior.rest'),
+    ],
+)
+def test_integration_error_carries_where(
+    section: VendorSection,
+    behavior: BehaviorConfig,
+    fragment: str,
+) -> None:
+    """Ошибка стратегии несёт путь до слота конфига."""
+    with pytest.raises(ConfigValidationError) as exc_info:
+        StrategiesIntegration(section, behavior)
+
+    assert str(exc_info.value).startswith(f'{fragment}:')
 
 
 class TestStrategiesIntegration:

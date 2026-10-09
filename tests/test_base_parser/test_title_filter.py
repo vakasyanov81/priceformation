@@ -54,6 +54,11 @@ def test_strip_words_in_title_keeps_blank_as_is() -> None:
     assert strip_words_in_title('   ') == '   '
 
 
+def test_strip_words_in_title_none_stays_none() -> None:
+    """None-заголовок возвращается как есть, а не превращается в заглушку."""
+    assert strip_words_in_title(None) is None  # type: ignore[arg-type]
+
+
 def test_without_config_any_read_raises() -> None:
     """TitleFilter без конфига: любое чтение данных — ParseConfigNotSetError."""
     title_filter = TitleFilter(None)
@@ -72,6 +77,26 @@ def test_reset_caches_forces_re_read() -> None:
     assert title_filter.get_black_list() is black_list
     title_filter.reset_caches()
     assert title_filter.get_black_list() is not black_list
+
+
+def test_reset_caches_reloads_black_list_from_config() -> None:
+    """После сброса чёрный список снова читается из конфига, а не остаётся пустой строкой."""
+    title_filter = _title_filter_with(['некондиция'], [])
+    title_filter.get_black_list()
+
+    title_filter.reset_caches()
+
+    assert not title_filter.is_valid_title('некондиция')
+
+
+def test_reset_caches_reloads_stop_words_from_config() -> None:
+    """После сброса стоп-слова снова читаются из конфига, а не остаются пустой строкой."""
+    title_filter = _title_filter_with([], ['*2 сорт*'])
+    title_filter.get_stop_words()
+
+    title_filter.reset_caches()
+
+    assert not title_filter.is_valid_title('Шина 185/65 R15 2 сорт')
 
 
 def test_prepare_black_list_strips_entries() -> None:

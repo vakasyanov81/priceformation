@@ -59,3 +59,11 @@ def test_process_sums_rows_from_two_files() -> None:
     assert parser.process() == _TOTAL_COUNT
     assert parser.parsed_items == first_rows + second_rows
     assert parser.type_production == 'disks.xls'
+
+
+def test_process_accumulates_across_calls() -> None:
+    """Повторный process() добавляет строки, а не перезаписывает результат."""
+    parser = _ProcessParser({_FIRST_FILE: [RowItem({}), RowItem({})]})
+    parser.process()
+    parser.process()
+    assert len(parser.parsed_items) == 4

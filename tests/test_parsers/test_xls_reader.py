@@ -7,7 +7,8 @@ from typing import Any
 import pytest
 
 from domain.config_context import get_config_provider
-from parsers.xls_reader import MaxRowsReachedError, XlsReader
+from domain.exceptions import CoreExceptionError
+from parsers.xls_reader import MaxRowsReachedError, ParamsHelper, XlsReader
 from parsers.xls_reader_row import __SKIPPED_EMPTY_ROW__
 
 _PROJECT_ROOT = get_config_provider().project_root
@@ -20,6 +21,14 @@ _PIONER_PARSE_PARAMS = {
     'start_row': 12,
     'columns': {1: 'c1', 2: 'c2', 4: 'c4', 5: 'c5'},
 }
+
+
+class _EmptyBook:
+    """Книга без вкладок для проверки ошибки sheets()."""
+
+    def __init__(self) -> None:
+        self.sheet_names: list[str] = []
+
 
 SHEET_1 = [
     {'col_0': 87674341266.0, 'col_1': 'CROSSLEADER  225/40/18  Y 92 DSU02'},
@@ -123,8 +132,9 @@ def test_next_row_values_allows_exactly_max_rows() -> None:
     sheet = [['a'], ['b'], ['c']]
     assert reader.next_row_values(sheet) == ['a']
     assert reader.next_row_values(sheet) == ['b']
-    with pytest.raises(MaxRowsReachedError):
+    with pytest.raises(MaxRowsReachedError) as exc:
         reader.next_row_values(sheet)
+    assert str(exc.value) == 'maximum rows (2) reached'
 
 
 def _read_until_end(reader: XlsReader, sheet: list[Any]) -> list[Any]:
@@ -175,3 +185,43 @@ def test_get_instance_raises_on_missing_file() -> None:
     """get_instance с несуществующим файлом — FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         XlsReader.get_instance('/nonexistent/file.xlsx', {})
+
+
+def test_params_helper_cur_row_falls_back_to_start_row() -> None:
+    """Пустой cur_row берётся из start_row, заданный — сохраняется."""
+    assert ParamsHelper(start_row=5).cur_row == 5
+    assert ParamsHelper(start_row=5, cur_row=2).cur_row == 2
+
+
+def test_reader_cur_row_values_is_none_before_first_read() -> None:
+    """До первого чтения буфер строки пуст (`None`, а не пустая строка)."""
+    assert make_reader().cur_row_values is None
+
+
+def test_next_row_values_end_row_guard_uses_current_values() -> None:
+    """Счётчик пустых строк не обрывает чтение, пока текущая строка не пуста."""
+    reader = _row_reader()
+    reader.cur_row_values = ['row']
+    reader.skipped_empty_rows = __SKIPPED_EMPTY_ROW__
+    assert reader.next_row_values([['a'], ['b']]) == ['a']
+
+
+def test_next_row_values_truncates_to_header_width() -> None:
+    """Ширина берётся из шапки, если она уже лимита колонок."""
+    reader = _row_reader(max_columns=5)
+    reader.cur_row = 1
+    assert reader.next_row_values([['h'], ['a', 'b', 'c']]) == ['a']
+
+
+def test_parse_defaults_to_all_sheets() -> None:
+    """parse() без индексов читает все вкладки."""
+    assert len(make_reader().parse()) == 6
+
+
+def test_sheets_raises_on_empty_book() -> None:
+    """Книга без вкладок — ошибка с текстом, а не пустой список."""
+    reader = make_reader()
+    reader.book = _EmptyBook()  # type: ignore[assignment]
+    with pytest.raises(CoreExceptionError) as exc_info:
+        reader.sheets()
+    assert str(exc_info.value) == 'В прайсе отсутствуют вкладки!'

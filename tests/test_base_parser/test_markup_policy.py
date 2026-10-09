@@ -360,3 +360,99 @@ def test_apply_keeps_small_rrc_without_replace() -> None:
 def test_apply_delta_absolute_floor() -> None:
     policy = _zapaska_like_policy(min_absolute=_DELTA_FLOOR, absolute_mode=ABSOLUTE_MODE_DELTA)
     assert policy.apply(_OPT, _RRC_HITS_DELTA) == _DELTA_PRICE
+
+
+_RULE_ZERO = MarkUpRule(min=0, max=0, percent_markup=0.2)
+_RULE_ONE = MarkUpRule(min=1, max=10, percent_markup=0.5)
+_RULE_BIG = MarkUpRule(min=11, max=30, percent_markup=0.6)
+_THREE_RULE_MAP = (_RULE_ZERO, _RULE_ONE, _RULE_BIG)
+_DEFAULT_PERCENT = _RULE_ZERO.percent_markup
+
+
+def _three_rule_policy(
+    *,
+    min_recommended: float = 0,
+    max_recommended: float = 0,
+    policy_cls: type[MarkupPolicy] = MarkupPolicy,
+) -> MarkupPolicy:
+    return _policy(
+        _THREE_RULE_MAP,
+        min_recommended=min_recommended,
+        max_recommended=max_recommended,
+        policy_cls=policy_cls,
+    )
+
+
+def _three_rule_map_on_opt() -> MapOnOptMarkupPolicy:
+    return cast(MapOnOptMarkupPolicy, _three_rule_policy(policy_cls=MapOnOptMarkupPolicy))
+
+
+def test_identity_create_builds_empty_rules_and_map() -> None:
+    """«Без наценки» создаётся с пустыми правилами и пустой картой, а не с None."""
+    policy = IdentityMarkupPolicy.create()
+    assert policy._rules == MarkupRulesConfig()  # noqa: WPS437
+    assert policy._price_map == ()  # noqa: WPS437
+
+
+def test_markup_percent_rule_min_included() -> None:
+    """Нижняя граница правила включается (`min <= opt`)."""
+    assert _three_rule_policy().markup_percent_for_opt(_RULE_ONE.min) == _RULE_ONE.percent_markup
+
+
+def test_markup_percent_rule_max_included() -> None:
+    """Верхняя граница правила включается (`opt <= max`)."""
+    assert _three_rule_policy().markup_percent_for_opt(_RULE_ONE.max) == _RULE_ONE.percent_markup
+
+
+def test_map_on_opt_apply_uses_opt_in_percent() -> None:
+    """apply считает процент по самой оптовой цене, а не по пустому значению."""
+    assert _three_rule_map_on_opt().apply(5, None) == get_markup(5, _RULE_ONE.percent_markup)
+
+
+def test_map_on_opt_stored_percent_uses_opt() -> None:
+    """stored_percent_markup не подменяет цену нулём или единицей."""
+    policy = _three_rule_map_on_opt()
+    assert policy.stored_percent_markup(5) == _RULE_ONE.percent_markup * 100
+    assert policy.stored_percent_markup(0) == _DEFAULT_PERCENT * 100
+    assert policy.stored_percent_markup(10) == _RULE_ONE.percent_markup * 100
+
+
+def test_markup_apply_zero_opt_keeps_zero() -> None:
+    """Нулевой закуп не превращается в единицу при подборе процента."""
+    policy = _three_rule_policy(min_recommended=_MIN_RECOMMENDED)
+    assert policy.apply(0, None) == 0
+
+
+def test_markup_apply_uses_opt_for_map() -> None:
+    """Процент карты берётся по оптовой цене, а не по None."""
+    policy = _three_rule_policy(min_recommended=_MIN_RECOMMENDED)
+    assert policy.apply(5, None) == get_markup(5, _RULE_ONE.percent_markup)
+
+
+def test_markup_apply_keeps_big_rrc_over_map() -> None:
+    """Если РРЦ задан, ветка «большой процент» его не перезаписывает."""
+    policy = _three_rule_policy(min_recommended=_MIN_RECOMMENDED, max_recommended=0.1)
+    assert policy.apply(_OPT, _RRC_OK) == _RRC_OK  # recommended_percent = 1.0 > max
+
+
+def test_recommended_or_map_zero_opt_uses_map() -> None:
+    """Нулевой закуп в «РРЦ или карта» считается картой от нуля."""
+    policy = _three_rule_policy(policy_cls=RecommendedOrMapMarkupPolicy)
+    assert policy.apply(0, None) == 0
+
+
+def test_recommended_or_map_uses_opt_for_map() -> None:
+    """«РРЦ или карта» без РРЦ берёт процент по оптовой цене."""
+    policy = _three_rule_policy(policy_cls=RecommendedOrMapMarkupPolicy)
+    assert policy.apply(5, None) == get_markup(5, _RULE_ONE.percent_markup)
+
+
+def test_percent_to_store_uses_opt() -> None:
+    """percent_to_store передаёт в stored_percent_markup реальную оптовую цену."""
+    assert percent_to_store(_three_rule_map_on_opt(), 5) == _RULE_ONE.percent_markup * 100
+
+
+def test_small_absolute_delta_at_floor_is_small() -> None:
+    """В delta-режиме маржа, равная полу, считается малой (`<=`)."""
+    policy = _zapaska_like_policy(min_absolute=_DELTA_FLOOR, absolute_mode=ABSOLUTE_MODE_DELTA)
+    assert policy._is_small_absolute_markup(_OPT + _DELTA_FLOOR, _OPT) is True  # noqa: WPS437

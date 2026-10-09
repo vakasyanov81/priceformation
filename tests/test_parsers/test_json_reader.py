@@ -75,6 +75,11 @@ def test_json_price_reader_rejects_object_root(tmp_path: Path) -> None:
         reader.parse()
 
 
+def test_json_price_not_list_error_message() -> None:
+    """Текст читает пользователь: он закреплён дословно."""
+    assert str(JsonPriceNotListError()) == 'JSON price must be a list of objects'
+
+
 def test_json_price_reader_missing_file_raises() -> None:
     with pytest.raises(FileNotFoundError):
         JsonPriceReader.get_instance(_MISSING_FILE, {'columns': _DISK_COLUMNS})
