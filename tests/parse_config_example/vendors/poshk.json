@@ -8,7 +8,8 @@
     "strategy": "tire_size_category"
   },
   "title": {
-    "strategy": "normalize_size_chunks"
+    "strategy": "normalize_size_chunks",
+    "fallback_brand": "Алтайшина"
   },
   "pricing": {
     "policy": "map_on_opt",

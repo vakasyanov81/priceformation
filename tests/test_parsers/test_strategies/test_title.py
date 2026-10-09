@@ -65,6 +65,29 @@ def test_normalize_size_chunks(raw: str, expected: str) -> None:
     assert NormalizeSizeChunks().prepare(RowItem({'title': raw})) == expected
 
 
+@pytest.mark.parametrize(
+    ('raw', 'has_brand', 'expected'),
+    [
+        ('Шина 155/65R13 Armstrong 73T', False, 'Алтайшина 155/65R13 Armstrong 73T'),
+        ('Шина Nortec', True, 'Nortec'),
+        ('Шина', False, 'Алтайшина'),
+        ('155/65R13 Armstrong', False, '155/65R13 Armstrong'),
+    ],
+)
+def test_normalize_size_chunks_fallback_brand(raw: str, has_brand: bool, expected: str) -> None:
+    """Без бренда ведущая «Шина» → fallback_brand; с брендом — срезается как раньше."""
+    strategy = NormalizeSizeChunks('Алтайшина', brand_probe=lambda _title: has_brand)
+
+    assert strategy.prepare(RowItem({'title': raw})) == expected
+
+
+def test_normalize_size_chunks_without_fallback_strips_ship() -> None:
+    """Без fallback_brand поведение прежнее даже при отсутствии бренда."""
+    strategy = NormalizeSizeChunks(brand_probe=lambda _title: False)
+
+    assert strategy.prepare(RowItem({'title': 'Шина 155/65R13 Armstrong 73T'})) == '155/65R13 Armstrong 73T'
+
+
 def test_tire_compose_mim_simple_size() -> None:
     strategy = TireCompose('mim_simple')
     row = RowItem({'width': '205', 'height_percent': '55', 'diameter': '16'})

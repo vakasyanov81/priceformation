@@ -264,12 +264,13 @@ def test_category_reads_all_fields() -> None:
 
 def test_title_reads_all_fields() -> None:
     """Все ключи title читаются в объект без потерь и подмен."""
-    raw = {'strategy': 'title_keywords', 'variant': 'v1', 'aliases': True}
+    raw = {'strategy': 'title_keywords', 'variant': 'v1', 'aliases': True, 'fallback_brand': 'Алтайшина'}
 
     assert TitleConfig.from_dict(raw, WHERE) == TitleConfig(
         strategy='title_keywords',
         variant='v1',
         aliases=True,
+        fallback_brand='Алтайшина',
     )
 
 

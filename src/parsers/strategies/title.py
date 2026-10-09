@@ -24,7 +24,7 @@ from parsers.strategies._four_tochki_disk_helper import (
     fill_disk_thickness,
 )
 from parsers.strategies._four_tochki_tire_helper import get_prepared_title as compose_four_tochki
-from parsers.strategies.protocols import TitleStrategy
+from parsers.strategies.protocols import BrandProbe, TitleStrategy
 
 _SIZE_MARK = 'x'
 
@@ -38,7 +38,12 @@ class DefaultTitle:
 
 
 class NormalizeSizeChunks:
-    """Пошк: срезать обёртки «Шина»/«а/п»/«автошина»/«автопокрышка»/«, шт», `*`→`x`, «н.с.N»→«PRN»."""
+    """Пошк: срезать обёртки «Шина»/«а/п»/«автошина»/«автопокрышка»/«, шт», `*`→`x`, «н.с.N»→«PRN».
+
+    Ведущее «Шина» срезается, если в title есть бренд; если бренда нет,
+    оно заменяется на ``fallback_brand`` (``title.fallback_brand`` конфига),
+    чтобы позиция получила производителя (у Пошка бардак в названиях).
+    """
 
     _PART_SIZE = re.compile(r'^\d+\.*\d*')
     _R_DIAMETER = re.compile(r'R\d+.')
@@ -48,6 +53,11 @@ class NormalizeSizeChunks:
     _DROP_WORD = re.compile(r'\s*,?\s*(?:а/п|автошина|автопокрышка)\b\s*,?', re.IGNORECASE)
     _LAYER_NORM = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
 
+    def __init__(self, fallback_brand: str = '', brand_probe: BrandProbe | None = None) -> None:
+        """Запомнить бренд-заглушку и детектор бренда в title."""
+        self._fallback_brand = fallback_brand
+        self._brand_probe = brand_probe
+
     def prepare(self, row_item: RowItem) -> str | None:
         """Нормализовать title по правилам Пошка."""
         title = self._trim_wrappers(row_item.identity.title or '')
@@ -56,9 +66,20 @@ class NormalizeSizeChunks:
         return self._LAYER_NORM.sub(r'PR\1', normalized)
 
     def _trim_wrappers(self, title: str) -> str:
-        title = self._LEADING_SHIP.sub('', title)
+        title = self._replace_leading_ship(title)
         title = self._TRAILING_PIECE.sub('', title)
         return self._DROP_WORD.sub(' ', title).strip()
+
+    def _replace_leading_ship(self, title: str) -> str:
+        """Срезать ведущее «Шина»; без бренда — подставить ``fallback_brand``."""
+        match = self._LEADING_SHIP.match(title)
+        if match is None:
+            return title
+        remainder = title[match.end() :]
+        has_brand = self._brand_probe is not None and self._brand_probe(title)
+        if not self._fallback_brand or has_brand:
+            return remainder
+        return f'{self._fallback_brand} {remainder}' if remainder else self._fallback_brand
 
     def _normalize_chunks(self, chunks: list[str]) -> list[str]:
         for index, chunk in enumerate(chunks):

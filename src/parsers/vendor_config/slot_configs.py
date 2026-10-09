@@ -49,6 +49,7 @@ class TitleConfig:
     strategy: str = DEFAULT_TITLE_STRATEGY
     variant: str = ''
     aliases: bool = False
+    fallback_brand: str = ''
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> TitleConfig:
@@ -58,6 +59,7 @@ class TitleConfig:
             strategy=read_text(payload, 'strategy', where, DEFAULT_TITLE_STRATEGY),
             variant=read_text(payload, 'variant', where, ''),
             aliases=read_flag(payload, 'aliases', where),
+            fallback_brand=read_text(payload, 'fallback_brand', where, ''),
         )
 
 
