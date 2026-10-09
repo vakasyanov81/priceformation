@@ -5,6 +5,8 @@ import time
 from io import StringIO
 from unittest.mock import patch
 
+import pytest
+
 from domain.row_item.row_item import RowItem
 from parse_report import (
     REPORT_VERSION,
@@ -27,6 +29,8 @@ _OPT = 100
 _MARKUP = 120
 _ELAPSED = 1.234
 _ROUNDED = 1.23
+_STARTED = 100.0
+_MONOTONIC = 101.234
 _RESULT_A = 'file_prices/result/a.xlsx'
 _RESULT_D = 'file_prices/result/d.xlsx'
 _SUV = 'SUV'
@@ -58,6 +62,18 @@ def test_dump_json_keeps_cyrillic() -> None:
     assert 'Автошина' in text
     assert '\\u' not in text
     assert json.loads(text) == {'type_production': 'Автошина'}
+
+
+class _RawValue:
+    """Объект без нативной JSON-сериализации — проверяет default=str."""
+
+    def __str__(self) -> str:
+        return 'raw'
+
+
+def test_dump_json_stringifies_unknown_object() -> None:
+    """Несериализуемый объект приводится к строке через default=str, а не роняет отчёт."""
+    assert json.loads(dump_json({'raw': _RawValue()})) == {'raw': 'raw'}
 
 
 def test_empty_stats_exact() -> None:
@@ -151,11 +167,40 @@ def test_emit_json_skips_elapsed_without_ok() -> None:
     assert json.loads(stream.getvalue()) == catalog
 
 
+def test_emit_json_exact_elapsed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """elapsed_seconds округляется до сотых от переданного started."""
+    monkeypatch.setattr('parse_report.time.monotonic', lambda: _MONOTONIC)
+    stream = StringIO()
+    emit_json({'ok': True}, stream, started=_STARTED)
+    assert json.loads(stream.getvalue())['elapsed_seconds'] == _ROUNDED
+
+
+class _FlushSpy(StringIO):
+    """Поток, считающий вызовы flush: print(..., flush=True) обязан его позвать."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.flush_calls = 0
+
+    def flush(self) -> None:
+        """Считать сброс и выполнить обычный flush."""
+        self.flush_calls += 1
+        super().flush()
+
+
+def test_emit_json_flushes_stream() -> None:
+    """print вызывается с flush=True: поток сбрасывается ровно один раз."""
+    stream = _FlushSpy()
+    emit_json({'ok': True}, stream)
+    assert stream.flush_calls == 1
+
+
 def test_row_items_include_parse_errors() -> None:
-    """битое поле попадает в parse_errors."""
+    """битое поле попадает в parse_errors со словарём ошибок строки."""
     row = RowItem({'price_opt': 'not-a-number'})
     payload = row_items_to_json([row])[0]
-    assert 'parse_errors' in payload
+    assert payload['parse_errors'] == row.parse_errors
+    assert payload['parse_errors']
 
 
 def test_row_items_without_errors() -> None:
@@ -280,6 +325,14 @@ def test_report_stats_only() -> None:
     assert report['stats']['items'] == 1
     assert report['stats']['elapsed_seconds'] == 0.4
     assert report['files'] == [_RESULT_A]
+
+
+def test_report_keeps_warnings() -> None:
+    """предупреждения разбора попадают в отчёт списком, а не теряются."""
+    parsed = _result_with_skips()
+    report = report_from_result('parse', parsed, [_RESULT_A], 0)
+    assert report['warnings'] == warnings_from_result(parsed)
+    assert report['warnings']
 
 
 def test_report_splits_disabled_suppliers() -> None:

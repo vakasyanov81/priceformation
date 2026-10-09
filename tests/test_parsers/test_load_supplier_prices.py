@@ -233,3 +233,20 @@ def test_load_supplier_prices_creates_nested_supplier_folder(tmp_path: Path) -> 
     price_file = root / 'file_prices' / 'poshk' / 'price.xlsx'
     assert found == [str(price_file)]
     assert price_file.read_bytes() == _XLSX_BYTES
+
+
+def test_parse_prices_json_invalid_message_has_cause() -> None:
+    """Сообщение о битом JSON содержит причину разбора, а не None."""
+    with pytest.raises(SupplierPricesMappingError, match='Expecting value'):
+        parse_prices_json('not-json')
+
+
+def test_load_missing_file_message_has_path(tmp_path: Path, prices_root: Path) -> None:
+    """Сообщение об отсутствующем прайсе называет сам файл, а не None."""
+    missing = tmp_path / 'incoming' / 'gone.xls'
+
+    with (
+        patch(_CATALOG_PATCH, return_value=_CATALOG),
+        pytest.raises(SupplierPriceFileNotFoundError, match=r'gone\.xls'),
+    ):
+        load_supplier_prices({'1': str(missing)})

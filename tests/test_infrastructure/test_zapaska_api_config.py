@@ -111,6 +111,8 @@ def test_config_password_without_login(tmp_path: Any, monkeypatch: Any) -> None:
         (f'{_DOTENV_KEY}="quoted"', 'quoted'),
         (f"{_DOTENV_KEY}='quoted'", 'quoted'),
         (f'{_DOTENV_KEY}=a=b', 'a=b'),
+        (f'{_DOTENV_KEY}="XvalueX"', 'XvalueX'),
+        (f"{_DOTENV_KEY}='XvalueX'", 'XvalueX'),
     ],
 )
 def test_dotenv_parses_value(tmp_path: Any, monkeypatch: Any, line: str, expected: str) -> None:

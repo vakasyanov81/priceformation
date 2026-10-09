@@ -111,6 +111,11 @@ def test_markup_without_policy_raises() -> None:
         parser.get_markup_percent(_SOME_PRICE)
 
 
+def test_markup_policy_error_message() -> None:
+    """Текст ошибки читает пользователь: он закреплён дословно."""
+    assert str(MarkupPolicyNotSetError()) == 'markup_policy is not set'
+
+
 def test_mim_skips_stored_percent() -> None:
     parser = _parser(_base_params())
     row = RowItem({'price_opt': _SOME_PRICE})
@@ -127,8 +132,11 @@ def test_map_on_opt_stores_percent() -> None:
 
 
 def test_make_map_on_opt_markup_policy() -> None:
-    policy = make_map_on_opt_markup_policy(ParseConfiguration(_base_params()))
+    config = ParseConfiguration(_base_params())
+    policy = make_map_on_opt_markup_policy(config)
     assert isinstance(policy, MapOnOptMarkupPolicy)
+    assert policy._rules == config.get_markup_rules()  # noqa: WPS437
+    assert policy._price_map == config.get_price_markup_map()  # noqa: WPS437
 
 
 def test_identity_add_price_markup_keeps_opt() -> None:
@@ -137,3 +145,38 @@ def test_identity_add_price_markup_keeps_opt() -> None:
     parser.add_price_markup(row)
     assert row.pricing.price_markup == _IDENTITY_OPT
     assert row.pricing.percent_markup is None
+
+
+_GET_MARKUP_POLICY = MapOnOptMarkupPolicy(
+    MarkupRulesConfig(absolute_markup_rules=AbsoluteMarkUpRules()),
+    (
+        MarkUpRule(min=0, max=0, percent_markup=0.2),
+        MarkUpRule(min=1, max=10, percent_markup=0.5),
+    ),
+)
+
+
+def test_get_markup_percent_uses_price_argument() -> None:
+    """BaseParser.get_markup_percent передаёт цену дальше, а не None."""
+    parser = _parser(_base_params(), markup_policy=_GET_MARKUP_POLICY)
+    assert parser.get_markup_percent(5) == 0.5
+
+
+class _FakeReader:
+    """Заглушка читателя данных для make_parser."""
+
+
+def test_make_parser_passes_data_reader_when_given() -> None:
+    """Явный data_reader попадает в парсер, а не подменяется дефолтом."""
+    parser = make_parser(
+        BaseParser,
+        ParseConfiguration(_base_params()),
+        data_reader=_FakeReader,
+    )
+    assert parser.data_reader is _FakeReader
+
+
+def test_make_parser_passes_file_prices() -> None:
+    """file_prices доезжает до parser.files как есть."""
+    parser = make_parser(BaseParser, ParseConfiguration(_base_params()), file_prices=['a.xls'])
+    assert parser.files == ['a.xls']

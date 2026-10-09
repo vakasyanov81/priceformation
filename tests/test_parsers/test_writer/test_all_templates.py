@@ -43,12 +43,10 @@ def test_get_writer_template_known() -> None:
 
 
 def test_get_writer_template_unknown() -> None:
-    """неизвестное имя — ошибка со списком доступных."""
+    """неизвестное имя — точный текст ошибки со списком через ', '."""
     with pytest.raises(UnknownWriterTemplateError, match='nope') as error:
         get_writer_template('nope')
-    assert 'for_drom' in str(error.value)
-    assert 'for_inner' in str(error.value)
-    assert 'for_full' in str(error.value)
+    assert str(error.value) == "Шаблон 'nope' не существует. Доступны: for_inner, for_drom, for_full"
 
 
 def test_get_columns_format_empty_without_format() -> None:

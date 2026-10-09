@@ -11,6 +11,7 @@ def test_run_machine_json_dispatch() -> None:
     with (
         patch('run.sys.argv', ['run.py', 'parse', '--json']),
         patch('run.init_cfg'),
+        patch('run.fail_unknown_result_template', return_value=None) as mock_fail,
         patch('run.machine_json', return_value=0) as mock_json,
         patch('run.sys.exit', side_effect=SystemExit(0)) as mock_exit,
     ):
@@ -19,6 +20,7 @@ def test_run_machine_json_dispatch() -> None:
         with pytest.raises(SystemExit):
             main()
 
+        mock_fail.assert_called_once_with('parse', None, json_mode=True)
         mock_json.assert_called_once_with(
             'parse', all_result=False, result_template=None, supplier_prices=None, config_path=None
         )

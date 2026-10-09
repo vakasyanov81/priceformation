@@ -2,6 +2,7 @@
 
 import json
 import logging
+import types
 from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
@@ -23,6 +24,11 @@ _PRICE_FIELDS = {'title': _TITLE, 'price_opt': 10, 'price_markup': 12}
 _RESOLVE = 'run_machine.ServiceProvider.resolve'
 _LOG_NOISE = 'NOISE-ON-STDOUT'
 _NOISY_LOGGER = 'tests.noisy'
+
+
+def _fake_time(started: float, parse_start: float, parse_end: float) -> types.SimpleNamespace:
+    """Модуль-заглушка вместо ``run_machine.time``: monotonic отдаёт значения по очереди."""
+    return types.SimpleNamespace(monotonic=iter((started, parse_start, parse_end)).__next__)
 
 
 def _assert_elapsed(payload: dict[str, object]) -> None:
@@ -179,7 +185,7 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
-    """KeyboardInterrupt → JSON-ошибка, код 1."""
+    """KeyboardInterrupt → JSON-ошибка, код 1: полный ответ с действием и текстом."""
     orchestrator = MagicMock()
     orchestrator.parse_all.side_effect = KeyboardInterrupt
     with patch(
@@ -190,7 +196,63 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     _assert_elapsed(payload)
-    assert payload['error']['kind'] == 'KeyboardInterrupt'
+    assert payload['action'] == PARSE
+    assert payload['error'] == {'kind': 'KeyboardInterrupt', 'message': 'interrupted'}
+    assert 'version' in payload
+
+
+def test_json_keyboard_interrupt_compact_command(capsys: pytest.CaptureFixture[str]) -> None:
+    """Прерывание компактной команды: ответ без полей разбора, только ошибка."""
+    with patch('run_machine.load_config', side_effect=KeyboardInterrupt):
+        code = machine_json(LOAD_CONFIG, config_path='/incoming/settings')
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': False,
+        'action': LOAD_CONFIG,
+        'error': {'kind': 'KeyboardInterrupt', 'message': 'interrupted'},
+    }
+
+
+def test_json_parse_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixture[str]) -> None:
+    """elapsed_seconds — разность monotonic, а не сумма со стартом."""
+    parsed = _result_with_row()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
+    reporter.write_prices.return_value = [_PATH]
+    with (
+        patch('run_machine.time', _fake_time(100.0, 50.0, 52.5)),
+        patch(
+            _RESOLVE,
+            side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
+        ),
+    ):
+        code = machine_json(PARSE)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload['stats']['elapsed_seconds'] == 2.5
+
+
+def test_json_doubles_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixture[str]) -> None:
+    """Отчёт о дублях: elapsed_seconds — разность monotonic, а не сумма."""
+    double_row = RowItem({'title': 'dup', 'price_opt': 1, 'price_markup': 2})
+    parsed = _mark_result([double_row])
+    doubles_service = MagicMock()
+    doubles_service.make_report.return_value = MagicMock(
+        parse_result=parsed,
+        doubles=[double_row],
+        path=_DOUBLE_PATH,
+    )
+    with (
+        patch('run_machine.time', _fake_time(100.0, 50.0, 52.5)),
+        patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
+    ):
+        code = machine_json(DOUBLES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload['stats']['elapsed_seconds'] == 2.5
 
 
 def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
@@ -383,6 +445,30 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
     mock_load.assert_called_once_with(raw)
 
 
+def test_json_load_config_without_path_is_empty(capsys: pytest.CaptureFixture[str]) -> None:
+    """без пути load_config получает пустую строку, а не подстановку."""
+    with patch('run_machine.load_config', return_value=[]) as mock_load:
+        code = machine_json(LOAD_CONFIG)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    mock_load.assert_called_once_with('')
+
+
+def test_json_load_supplier_prices_without_raw_is_empty(capsys: pytest.CaptureFixture[str]) -> None:
+    """без карты parse_prices_json получает пустую строку, а не подстановку."""
+    with (
+        patch('run_machine.parse_prices_json', return_value={}) as mock_parse,
+        patch('run_machine.load_supplier_prices', return_value=[]),
+        patch('run_machine.all_vendor_supplier_catalog', return_value={}),
+    ):
+        code = machine_json(LOAD_SUPPLIER_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    mock_parse.assert_called_once_with('')
+
+
 def test_json_load_config_error(capsys: pytest.CaptureFixture[str]) -> None:
     """ошибка load_config → compact JSON."""
     code = machine_json(LOAD_CONFIG, config_path='')
@@ -436,6 +522,7 @@ def test_fail_unknown_json(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 1
     _assert_elapsed(payload)
     assert payload['ok'] is False
+    assert payload['action'] == PARSE
     assert payload['error']['kind'] == 'UnknownWriterTemplateError'
     assert 'nope' in payload['error']['message']
 
@@ -445,3 +532,41 @@ def test_fail_unknown_human(capsys: pytest.CaptureFixture[str]) -> None:
     code = fail_unknown_result_template(PARSE, 'nope', json_mode=False)
     assert code == 1
     assert 'nope' in capsys.readouterr().out
+
+
+def test_run_machine_human_exit_code_zero() -> None:
+    """Человекочитаемая команда завершает процесс кодом 0."""
+    with (
+        patch('run.sys.argv', ['run.py', 'parse']),
+        patch('run.init_cfg'),
+        patch('run.try_call'),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit) as exit_info:
+            main()
+
+        assert exit_info.value.code == 0
+
+
+def test_run_machine_json_passes_supplier_prices() -> None:
+    """load_supplier_prices передаёт JSON-карту из args.prices, а не None."""
+    raw = '{"1": "/incoming/any.xls"}'
+    with (
+        patch('run.sys.argv', ['run.py', 'load_supplier_prices', raw]),
+        patch('run.init_cfg'),
+        patch('run.machine_json', return_value=0) as mock_json,
+        patch('run.sys.exit', side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_json.assert_called_once_with(
+            'load_supplier_prices',
+            all_result=False,
+            result_template=None,
+            supplier_prices=raw,
+            config_path=None,
+        )

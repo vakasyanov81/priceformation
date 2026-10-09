@@ -3,6 +3,7 @@
 import contextlib
 import sys
 from collections.abc import Callable
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,7 +12,7 @@ from run_dialog import AnswerResult, ask_action, menu, navigation
 from run_dialog.items import MENU_ITEMS
 from run_dialog.key_codes import Key, KeyPress
 from run_dialog.rows import build_rows
-from services.vendor_activation import VendorState
+from services.vendor_activation import VendorActivationService, VendorState
 
 
 class _Tty:
@@ -257,6 +258,42 @@ def test_enter_on_header_collapses_list(
     out = capsys.readouterr().out
     assert 'Активация поставщиков ▼' in out
     assert 'Активация поставщиков ▶' in out
+
+
+def test_menu_view_finish_passes_current_height(monkeypatch: pytest.MonkeyPatch) -> None:
+    """finish стирает кадр по высоте текущего кадра, а не по None."""
+    recorded: dict[str, int] = {}
+
+    def _record(_rows: object, _active: int, *, previous: int) -> None:
+        recorded['previous'] = previous
+
+    monkeypatch.setattr(navigation, 'settle', _record)
+    view = navigation.MenuView(service=MagicMock(), rows=[], active=2, height=7)
+    view.finish()
+    assert recorded == {'previous': 7}
+
+
+def test_ask_with_arrows_builds_collapsed_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Меню берёт сервис активации и строит свёрнутый список поставщиков."""
+    service = _FakeVendorService((VendorState('stk', 'STK', True),))
+    provider = MagicMock()
+    provider.resolve.return_value = service
+    built: dict[str, object] = {}
+
+    def _build(vendors: object, *, expanded: bool) -> list[object]:
+        built['vendors'] = vendors
+        built['expanded'] = expanded
+        return []
+
+    monkeypatch.setattr(sys, 'stdin', _Tty())
+    monkeypatch.setattr(menu, 'raw_terminal', contextlib.nullcontext)
+    monkeypatch.setattr(menu, 'ServiceProvider', provider)
+    monkeypatch.setattr(menu, 'build_rows', _build)
+    monkeypatch.setattr(menu, 'navigate', lambda _view: AnswerResult.EXIT)
+
+    assert menu._ask_with_arrows() is AnswerResult.EXIT
+    provider.resolve.assert_called_once_with(VendorActivationService)
+    assert built == {'vendors': service.list_vendors(), 'expanded': False}
 
 
 def test_collapse_uses_expanded_frame_height(

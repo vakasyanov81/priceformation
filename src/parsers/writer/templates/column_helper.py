@@ -23,7 +23,6 @@ class ColumnHelper:
             }
         }
         """
-        self._col = col
         first_col = next(iter(col.values()))
         self.column: dict[str, Any] = cast(dict[str, Any], first_col)
         self.name: str = next(iter(col.keys()))

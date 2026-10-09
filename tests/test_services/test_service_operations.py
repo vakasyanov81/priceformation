@@ -52,6 +52,44 @@ def test_write_doubles() -> None:
     writer.write_doubles_report.assert_called_once_with(as_jsonl=True)
 
 
+def test_write_doubles_defaults_to_xlsx() -> None:
+    """Без флага write_doubles просит xlsx (as_jsonl=False), а не jsonl."""
+    row_items = [_row_item('dup')]
+    writer = MagicMock()
+    writer.write_doubles_report.return_value = _REPORT_PATH
+    service = PriceReportService(writer_factory=lambda rows: writer)
+
+    service.write_doubles(row_items)
+
+    writer.write_doubles_report.assert_called_once_with(as_jsonl=False)
+
+
+def test_write_doubles_factory_receives_items() -> None:
+    """writer_factory для дублей получает те же записи, а не None."""
+    row_items = [_row_item('dup')]
+    factory = MagicMock()
+    factory.return_value = MagicMock()
+
+    PriceReportService(writer_factory=factory).write_doubles(row_items)
+
+    factory.assert_called_once_with(row_items)
+
+
+def test_make_report_defaults_to_xlsx() -> None:
+    """Без флага make_report просит xlsx (as_jsonl=False), а не jsonl."""
+    parsed = MagicMock()
+    parsed.parsed_items = []
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = parsed
+    reporter = MagicMock()
+    reporter.write_doubles.return_value = _REPORT_PATH
+    service = DoublesService(orchestrator=orchestrator, report_service=reporter)
+
+    service.make_report()
+
+    reporter.write_doubles.assert_called_once_with([], as_jsonl=False)
+
+
 def test_writer_factory_receives_items() -> None:
     """writer_factory создаёт writer для тех же записей."""
     row_items = [_row_item('t1')]

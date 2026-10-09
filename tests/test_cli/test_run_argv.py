@@ -232,6 +232,10 @@ def test_result_template_help_lists_all_templates(
     available = writer_templates_by_name()
     for name in available:
         assert name in help_text
+    expected_available = ', '.join(available)
+    expected_defaults = ', '.join(writer_template_name(template) for template in all_writer_templates())
+    assert f'({expected_available})' in help_text
+    assert f'Без флага — {expected_defaults}.' in help_text
     defaults_part = help_text.split('Без флага — ')[1]
     default_names = [writer_template_name(template) for template in all_writer_templates()]
     for name in default_names:

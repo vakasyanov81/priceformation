@@ -81,22 +81,37 @@ def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
 
 
 def test_unknown_strategy_raises_with_location() -> None:
-    with pytest.raises(ConfigValidationError, match='неизвестная стратегия title'):
+    with pytest.raises(ConfigValidationError, match='неизвестная стратегия title') as exc_info:
         make_title_strategy(TitleConfig(strategy='nope'), WHERE)
+
+    assert WHERE in str(exc_info.value)
 
 
 def test_unknown_tire_variant_raises() -> None:
-    with pytest.raises(ConfigValidationError, match='неизвестный вариант'):
+    with pytest.raises(ConfigValidationError, match='неизвестный вариант') as exc_info:
         make_title_strategy(TitleConfig(strategy='tire_compose', variant='nope'), WHERE)
+
+    assert WHERE in str(exc_info.value)
 
 
 def test_unknown_disk_variant_raises() -> None:
-    with pytest.raises(ConfigValidationError, match='неизвестный вариант'):
+    with pytest.raises(ConfigValidationError, match='неизвестный вариант') as exc_info:
         make_title_strategy(TitleConfig(strategy='disk_compose', variant='nope'), WHERE)
+
+    assert WHERE in str(exc_info.value)
 
 
 def test_aliases_wraps_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr('parsers.strategies.title_registry.load_title_aliases', lambda _name: {'A': 'B'})
+    """Обёртка aliases читает таблицу поставщика и применяет её к title."""
+    seen: dict[str, str] = {}
+
+    def _aliases(supplier_name: str) -> dict[str, str]:
+        seen['supplier_name'] = supplier_name
+        return {'Старый': 'Новый'}
+
+    monkeypatch.setattr('parsers.strategies.title_registry.load_title_aliases', _aliases)
     strategy = make_title_strategy(TitleConfig(strategy='default', aliases=True), WHERE, supplier_name='s')
 
     assert isinstance(strategy, TitleWithAliases)
+    assert strategy.prepare(RowItem({'title': 'Старый'})) == 'Новый'
+    assert seen['supplier_name'] == 's'

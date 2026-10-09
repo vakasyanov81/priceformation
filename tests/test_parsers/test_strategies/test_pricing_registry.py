@@ -64,6 +64,39 @@ def test_threshold_without_opt_uses_low() -> None:
     assert policy.apply(0, None) == pytest.approx(0)
 
 
+@pytest.mark.parametrize(
+    ('name', 'expected_type'),
+    [
+        ('base', MarkupPolicy),
+        ('map_on_opt', MapOnOptMarkupPolicy),
+        ('recommended_or_map', RecommendedOrMapMarkupPolicy),
+    ],
+)
+def test_policy_keeps_rules_and_price_map(name: str, expected_type: type) -> None:
+    """Фабрика передаёт rules и price_map в политику без потерь."""
+    rule = MarkUpRule(min=0, max=5000, percent_markup=0.2)
+    rules = MarkupRulesConfig(markup_rules={'r': rule})
+
+    policy = make_pricing_strategy(PricingConfig(policy=name, rules=rules), WHERE)
+
+    assert isinstance(policy, expected_type)
+    assert policy._rules is rules
+    assert policy._price_map == (rule,)
+
+
+def test_threshold_policy_keeps_params() -> None:
+    """Политика порога получает threshold/low/high из конфига."""
+    policy = make_pricing_strategy(
+        PricingConfig(policy='percent_by_threshold', threshold=13000, low=0.07, high=0.05),
+        WHERE,
+    )
+
+    assert isinstance(policy, PercentByThresholdMarkupPolicy)
+    assert policy._threshold == 13000
+    assert policy._low == 0.07
+    assert policy._high == 0.05
+
+
 def test_unknown_policy_raises_with_location() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестная политика наценки'):
         make_pricing_strategy(PricingConfig(policy='nope'), WHERE)

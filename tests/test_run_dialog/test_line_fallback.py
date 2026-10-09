@@ -6,8 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-from run_dialog.items import ANSWER_MAP, AnswerResult
-from run_dialog.line_fallback import ask_by_line
+from cfg.color import Colors
+from run_dialog import line_fallback
+from run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult
 
 _INPUT = 'builtins.input'
 _DIALOG_LOGGER = 'run_dialog.line_fallback'
@@ -36,7 +37,7 @@ def _retry_messages(caplog: pytest.LogCaptureFixture) -> list[str]:
 def _ask(caplog: pytest.LogCaptureFixture, *answers: str) -> tuple[AnswerResult, int, list[str]]:
     """Один прогон диалога: ответы, число запросов ввода и подсказки."""
     with patch(_INPUT, side_effect=_dialog_input(*answers)) as mock_input:
-        action = ask_by_line()
+        action = line_fallback.ask_by_line()
         calls = mock_input.call_count
     return action, calls, _retry_messages(caplog)
 
@@ -79,9 +80,17 @@ def test_ask_by_line_menu_lists_every_answer() -> None:
 
     def _capture(msg: str = '') -> str:
         seen.append(msg)
+        if len(seen) > 1:
+            raise AssertionError('диалог запросил ответ больше раз, чем их есть в тесте')
         return 'q'
 
     with patch(_INPUT, side_effect=_capture):
-        assert ask_by_line() == AnswerResult.EXIT
+        assert line_fallback.ask_by_line() == AnswerResult.EXIT
     for key in ANSWER_MAP:
         assert key in seen[0]
+
+
+def test_menu_text_exact() -> None:
+    """Подсказка — полный текст из MENU_ITEMS, пункты разделены переводом строки."""
+    lines = '\n'.join(f'{menu_item.key} — {menu_item.label}' for menu_item in MENU_ITEMS)
+    assert line_fallback._menu_text() == f'{Colors.BOLD}{lines}{Colors.END_COLOR}\n'

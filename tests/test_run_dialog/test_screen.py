@@ -34,3 +34,10 @@ def test_settle_keeps_only_selected(capsys: pytest.CaptureFixture[str]) -> None:
     assert out.startswith('\x1b[3F')
     assert 'two' in out
     assert 'one' not in out
+
+
+def test_rewrite_writes_exact_control_sequence(capsys: pytest.CaptureFixture[str]) -> None:
+    """Кадр — стирание хвоста, строки через \\n и завершающий \\n, без посторонних символов."""
+    screen.draw(_ROWS, 0, previous=0)
+    expected = '\x1b[J' + '\n'.join(screen.render(_ROWS, 0)) + '\n'
+    assert capsys.readouterr().out == expected

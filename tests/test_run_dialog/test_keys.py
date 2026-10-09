@@ -2,6 +2,7 @@
 
 import importlib
 import os
+import select
 import sys
 import types
 from collections.abc import Callable, Iterator
@@ -133,6 +134,22 @@ def test_read_windows_key_keeps_char_for_shortcut() -> None:
     assert press.char == '3'
 
 
+@pytest.mark.parametrize('char', ['\r', 'q'])
+def test_read_unix_key_clears_char_for_recognized_keys(char: str) -> None:
+    """Для распознанных клавиш исходный символ не сохраняется (пусто, а не 'XXXX')."""
+    press = readers.read_unix_key(_sequence(char), _never_pending)
+    assert press.key is not key_codes.Key.OTHER
+    assert press.char == ''
+
+
+@pytest.mark.parametrize('char', ['\r', 'q'])
+def test_read_windows_key_clears_char_for_recognized_keys(char: str) -> None:
+    """Windows: для распознанных клавиш исходный символ тоже не сохраняется."""
+    press = readers.read_windows_key(_sequence(char))
+    assert press.key is not key_codes.Key.OTHER
+    assert press.char == ''
+
+
 def test_read_unix_key_reads_pipe(stdin_pipe: Callable[[bytes], None]) -> None:
     """Стрелка из реального fd читается целиком: байты не съедает буфер Python."""
     stdin_pipe(b'\x1b[A')
@@ -143,6 +160,20 @@ def test_read_unix_key_esc_alone_is_exit(stdin_pipe: Callable[[bytes], None]) ->
     """Одиночный ESC без продолжения — выход."""
     stdin_pipe(b'\x1b')
     assert readers.read_unix_key().key is key_codes.Key.EXIT
+
+
+def test_unix_has_pending_passes_escape_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """select вызывается с конечным таймаутом ожидания продолжения ESC."""
+    recorded: dict[str, Any] = {}
+
+    def _select(*args: Any) -> Any:
+        recorded['timeout'] = args[3]
+        return ([1], [], [])
+
+    monkeypatch.setattr(select, 'select', _select)
+    monkeypatch.setattr(sys, 'stdin', _StdinDescriptor(3))
+    assert readers._unix_has_pending() is True  # noqa: WPS437
+    assert recorded['timeout'] == readers._ESCAPE_TIMEOUT  # noqa: WPS437
 
 
 def test_windows_getch(monkeypatch: pytest.MonkeyPatch) -> None:

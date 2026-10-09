@@ -23,8 +23,10 @@ class _FakeContext:
     def __init__(self, resolved: str | None = None) -> None:
         self._resolved = resolved
         self.skips: list[str] = []
+        self.seen: list[str | None] = []
 
     def find_canonical_category(self, raw_type: str | None) -> str | None:
+        self.seen.append(raw_type)
         return self._resolved
 
     def record_unknown_category(self, raw_label: str) -> None:
@@ -218,3 +220,40 @@ def test_tire_size_category_without_title_is_default() -> None:
     strategy = TireSizeCategory.from_config(_config())
 
     assert strategy.resolve(RowItem({})) == 'Легковая шина'
+
+
+def test_column_canonical_passes_raw_type_to_context() -> None:
+    """Канон категории ищется по исходному типу, а не по None."""
+    context = _FakeContext(resolved='Диск')
+    strategy = ColumnCanonicalCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({'type_production': 'Грузовая'}), context) == 'Диск'
+    assert context.seen == ['Грузовая']
+
+
+def test_header_rows_before_any_header_returns_default() -> None:
+    """До первого заголовка и без default категория пустая, а не заглушка."""
+    strategy = HeaderRowsCategory()
+
+    assert strategy.resolve(RowItem({'title': 'x', 'price_opt': 10})) == ''
+
+
+def test_ring_word_alone_is_not_ring_category() -> None:
+    """«кольцо» без «уплотнительн» не делает категорию уплотнительным кольцом."""
+    strategy = TireSizeCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({'title': 'кольцо стопорное'})) == 'Легковая шина'
+
+
+def test_metric_width_at_light_truck_boundary() -> None:
+    """Ширина ровно 245 (без C) — уже легкогрузовая, граница включительна."""
+    strategy = TireSizeCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({'title': '245/40R16'})) == 'Легкогрузовая шина'
+
+
+def test_inch_size_without_c_is_passenger() -> None:
+    """Дюймовый размер без `C` — легковая, а не легкогрузовая."""
+    strategy = TireSizeCategory.from_config(_config())
+
+    assert strategy.resolve(RowItem({'title': '165 R13'})) == 'Легковая шина'

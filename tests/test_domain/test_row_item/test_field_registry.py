@@ -72,6 +72,13 @@ def test_spec_path_matches_group_and_attribute() -> None:
         assert spec.path == f'{spec.group}.{spec.attribute}'
 
 
+def test_fresh_spec_computes_path_in_post_init() -> None:
+    """Новый FieldSpec (не из реестра) сам вычисляет path в __post_init__."""
+    spec = registry.FieldSpec('width', registry.TIRE, 'width', row_format.text)
+
+    assert spec.path == 'tire.width'
+
+
 def test_every_spec_points_to_existing_vo_field() -> None:
     """у каждого описания есть настоящее поле в value object его группы."""
     vo_classes = get_type_hints(RowItem)

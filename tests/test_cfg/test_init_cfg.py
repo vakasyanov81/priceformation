@@ -3,11 +3,14 @@
 import datetime
 from pathlib import Path
 
+import pytest
+
 from cfg import init_cfg
 from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from infrastructure.logging.exception_logging import write_exception_log
 from infrastructure.logging.json_mode import json_mode_active
-from infrastructure.logging.log_paths import get_log_paths
+from infrastructure.logging.log_paths import LogPaths, get_log_paths
 
 
 def test_init_cfg_configures_log_paths() -> None:
@@ -38,3 +41,23 @@ def test_init_cfg_configures_logging() -> None:
     """init_cfg поднимает логирование, JSON-режим остаётся выключен."""
     init_cfg()
     assert not json_mode_active()
+
+
+def test_init_cfg_passes_log_paths_to_setup_logging(monkeypatch: pytest.MonkeyPatch) -> None:
+    """setup_logging получает вычисленные пути логов, а не None."""
+    captured: list[LogPaths] = []
+    monkeypatch.setattr('cfg.setup_logging', captured.append)
+
+    provider = init_cfg()
+
+    assert captured == [LogPaths.for_folder(provider.log_folder())]
+
+
+def test_init_cfg_registers_exception_log_sink(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Приёмник сообщений об исключениях — боевая запись в лог, а не None."""
+    captured: list[object] = []
+    monkeypatch.setattr('cfg.set_exception_log_sink', captured.append)
+
+    init_cfg()
+
+    assert captured == [write_exception_log]
