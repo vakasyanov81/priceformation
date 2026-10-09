@@ -7,9 +7,12 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from domain.exceptions import ConfigValidationError
+from parsers.base_parser.alias_container import AliasContainer
+from parsers.base_parser.base_finder import BaseFinder
+from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_aliases_map
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.strategies.normalize import NormalizeTitle
-from parsers.strategies.protocols import TitleStrategy
+from parsers.strategies.protocols import BrandProbe, TitleStrategy
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -30,7 +33,6 @@ _AVAILABLE = (
 _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'default': DefaultTitle,
     'normalize_title': NormalizeTitle,
-    'normalize_size_chunks': NormalizeSizeChunks,
     'fill_fields_from_title': FillFieldsFromTitle,
 }
 
@@ -62,6 +64,9 @@ def _build_strategy(
         return DiskComposeTochki()
     if config.strategy == 'manufacturer_from_category':
         return ManufacturerFromCategory(manufacturer_reader or _no_manufacturer)
+    if config.strategy == 'normalize_size_chunks':
+        probe = _brand_probe() if config.fallback_brand else None
+        return NormalizeSizeChunks(config.fallback_brand, probe)
     factory = _SIMPLE_STRATEGIES.get(config.strategy)
     if factory is None:
         raise ConfigValidationError(
@@ -80,3 +85,9 @@ def _require_variant(variant: str, allowed: tuple[str, ...], where: str) -> str:
 
 def _no_manufacturer() -> str | None:
     """Заглушка: производитель раздела ещё не прочитан."""
+
+
+def _brand_probe() -> BrandProbe:
+    """Детектор бренда в title по алиасам производителей (границы как у BaseFinder)."""
+    finder = BaseFinder(AliasContainer(aliases_for_finder(load_aliases_map())))
+    return lambda title: finder.find_word_in_title(title)[0] is not None

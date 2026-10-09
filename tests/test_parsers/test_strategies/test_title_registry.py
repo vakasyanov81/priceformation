@@ -3,6 +3,7 @@
 import pytest
 
 from domain.exceptions import ConfigValidationError
+from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title import (
     DefaultTitle,
@@ -49,6 +50,34 @@ def test_manufacturer_from_category_built() -> None:
     strategy = make_title_strategy(TitleConfig(strategy='manufacturer_from_category'), WHERE)
 
     assert isinstance(strategy, ManufacturerFromCategory)
+
+
+def test_normalize_size_chunks_fallback_brand_wired(monkeypatch: pytest.MonkeyPatch) -> None:
+    """fallback_brand конфига подменяет ведущую «Шина», когда бренда в title нет."""
+    monkeypatch.setattr(
+        'parsers.strategies.title_registry.load_aliases_map',
+        lambda: {'Nortec': [], 'Алтайшина': ['АШК']},
+    )
+    strategy = make_title_strategy(
+        TitleConfig(strategy='normalize_size_chunks', fallback_brand='Алтайшина'),
+        WHERE,
+    )
+
+    assert strategy.prepare(RowItem({'title': 'Шина 155/65R13'})) == 'Алтайшина 155/65R13'
+    assert strategy.prepare(RowItem({'title': 'Шина Nortec'})) == 'Nortec'
+
+
+def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Без fallback_brand алиасы производителей не читаются."""
+    monkeypatch.setattr(
+        'parsers.strategies.title_registry.load_aliases_map',
+        lambda: pytest.fail('aliases must not be loaded'),
+    )
+    strategy = make_title_strategy(TitleConfig(strategy='normalize_size_chunks'), WHERE)
+
+    assert strategy.prepare(RowItem({'title': 'Шина 155/65R13'})) == '155/65R13'
 
 
 def test_unknown_strategy_raises_with_location() -> None:

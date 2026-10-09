@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Protocol
 
 from domain.row_item.row_item import RowItem
+
+type BrandProbe = Callable[[str | None], bool]
+"""Детектор бренда в title: True, если название содержит известный бренд."""
 
 
 class CategoryContext(Protocol):
