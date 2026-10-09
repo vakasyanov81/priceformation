@@ -31,7 +31,7 @@ parse_config/vendors/zapaska.json ↔   file_prices/zapaska/{disk.json,tire.json
   "file_templates": ["price*.xls", "price*.xlsx"],
   "reader": "xls",
   "category": { "strategy": "title_keywords", "map": { "шина": "Легковая шина" }, "default": "Разное" },
-  "title": { "strategy": "normalize_size_chunks" },
+  "title": { "strategy": "normalize_size_chunks", "fallback_brand": "Алтайшина" },
   "pricing": { "policy": "map_on_opt", "rules": { "markup_rules": { "rule_70": { "min": 0, "max": 201, "percent": 0.7 } } } },
   "behavior": { "min_rest": 0 },
   "sections": [
@@ -124,7 +124,7 @@ condition  available
 | Стратегия | Параметры | Что делает |
 |---|---|---|
 | `default` | — | оставить название как есть (по умолчанию) |
-| `normalize_size_chunks` | — | нормализация названия (Пошк): `*`→`x`, склейка размера с `R`-диаметром |
+| `normalize_size_chunks` | `fallback_brand` | нормализация названия (Пошк): `*`→`x`, склейка размера с `R`-диаметром; ведущее «Шина» срезается, если в названии есть бренд, иначе заменяется на `fallback_brand` |
 | `tire_compose` | `variant` | собрать название шины: `mim_simple`, `mim_truck`, `four_tochki` |
 | `disk_compose` | `variant` | собрать название диска: `four_tochki` |
 | `fill_fields_from_title` | — | разобрать размер/модель из названия, само название не менять (Автоснабжение) |
@@ -132,6 +132,13 @@ condition  available
 
 Флаг `aliases: true` дополнительно заменяет подготовленное название по
 `title_aliases.json`.
+
+`fallback_brand` (у `normalize_size_chunks`) — бренд-заглушка для названий без
+бренда. У Пошка часть позиций идёт как «Шина ...» без бренда: если бренд в
+названии найден по `manufacturer_aliases.json`, ведущее «Шина» срезается, как
+раньше; если бренда нет — оно заменяется на `fallback_brand` (например,
+`"Алтайшина"`), чтобы позиция получила производителя. Без `fallback_brand`
+поведение прежнее — «Шина» просто срезается.
 
 ### `pricing` — наценка
 
@@ -291,7 +298,9 @@ condition  available
 ## Примеры поставщиков
 
 - **Пошк** — `policy: map_on_opt`, карта от 70 % на дешёвые позиции, `min_rest: 0`,
-  категория `tire_size_category` (грузовые, легкогрузовые и легковые по размеру).
+  категория `tire_size_category` (грузовые, легкогрузовые и легковые по размеру),
+  title `normalize_size_chunks` с `fallback_brand: "Алтайшина"` — у позиций без
+  бренда ведущее «Шина» заменяется на «Алтайшина».
 - **Мим** — три секции; легковые (1) и диски (3) — `policy: base`, грузовая
   вкладка 2 — `percent_by_threshold` (`threshold: 13000`, `low: 0.07`, `high: 0.05`).
 - **Форточки** — `policy: recommended_or_map`, title `tire_compose(four_tochki)` и
