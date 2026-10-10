@@ -2,7 +2,7 @@
   "enabled": 0,
   "code": "7",
   "name": "STK",
-  "start_row": 14,
+  "start_row": 12,
   "file_templates": [
     "price.xlsx"
   ],
@@ -12,16 +12,23 @@
       "markup_rules": {}
     }
   },
+  "category": {
+    "strategy": "tire_size_category"
+  },
+  "title": {
+    "strategy": "stk_tire_compose"
+  },
   "sections": [
     {
       "sheet_indexes": [
         0
       ],
       "columns": {
-        "1": "code",
-        "2": "title",
-        "3": "price_opt",
-        "4": "rest_count"
+        "0": "code",
+        "1": "title",
+        "2": "price_opt",
+        "4": "price_recommended",
+        "5": "rest_count"
       }
     }
   ]
