@@ -54,11 +54,16 @@ class TireSizeCategory:
 
 
 def _category_by_title(raw_title: str | None) -> str:
+    return non_tire_product_type(raw_title) or _tire_category((raw_title or '').lower())
+
+
+def non_tire_product_type(raw_title: str | None) -> str | None:
+    """Тип нешинной позиции по названию строки: камера, диск, лента, кольцо.
+
+    Публично, чтобы раздел из нескольких видов товаров (заголовок
+    ``Автокамеры/Ободная лента``) уточнялся по названию строки.
+    """
     title = (raw_title or '').lower()
-    return _non_tire_category(title) or _tire_category(title)
-
-
-def _non_tire_category(title: str) -> str | None:
     if 'уплотнительн' in title and 'кольц' in title:
         return O_RING
     if 'камер' in title:
