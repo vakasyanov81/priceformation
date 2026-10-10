@@ -5,6 +5,7 @@ import pytest
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import NormalizeTitle
+from parsers.strategies.stk_title import StkTireCompose
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -23,6 +24,7 @@ _KNOWN = [
     ('default', DefaultTitle),
     ('normalize_title', NormalizeTitle),
     ('normalize_size_chunks', NormalizeSizeChunks),
+    ('stk_tire_compose', StkTireCompose),
     ('fill_fields_from_title', FillFieldsFromTitle),
 ]
 
