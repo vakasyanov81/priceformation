@@ -138,6 +138,27 @@ def test_header_rows_canonicalizes_via_builtin_map() -> None:
     assert strategy.resolve(RowItem({'title': 'Автокамеры/Ободная лента'})) == 'Автокамера'
 
 
+def test_header_rows_refines_mixed_section_by_title() -> None:
+    """Смешанный раздел «Автокамеры/Ободная лента» уточняется по названию строки."""
+    strategy = HeaderRowsCategory()
+    strategy.resolve(RowItem({'title': 'Автокамеры/Ободная лента'}))
+
+    assert strategy.resolve(RowItem({'title': 'Автокамера 11.2-20', 'price_opt': 2000})) == 'Автокамера'
+    assert strategy.resolve(RowItem({'title': 'Ободная лента 17.5-25', 'price_opt': 2300})) == 'Ободная лента'
+    assert (
+        strategy.resolve(RowItem({'title': 'Уплотнительное кольцо R25 d=6.6мм', 'price_opt': 800}))
+        == 'Уплотнительное кольцо'
+    )
+
+
+def test_header_rows_single_section_keeps_section_type() -> None:
+    """Однозначный раздел не переопределяется ключевыми словами строки."""
+    strategy = HeaderRowsCategory()
+    strategy.resolve(RowItem({'title': 'Автошины TAITONG'}))
+
+    assert strategy.resolve(RowItem({'title': '11.00R20 Taitong HS801Q', 'price_opt': 24000})) == 'Автошина'
+
+
 def test_header_rows_config_map_overrides_builtin() -> None:
     strategy = HeaderRowsCategory.from_config(_config(mapping={'автошины': 'Шина'}))
 

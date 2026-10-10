@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.category_finder import canonical_product_type, raw_category_label
 from parsers.strategies.protocols import CategoryContext
+from parsers.strategies.tire_category import non_tire_product_type
 from parsers.vendor_config.slot_configs import CategoryConfig
 
 _CATEGORY_FIELD = 'type_production'
@@ -129,6 +130,10 @@ class HeaderRowsCategory:
     Первый кусок заголовка канонизируется встроенной картой `_HEADER_CATEGORIES`
     (ключи в нижнем регистре), поверх неё ложится `map` из конфига;
     без совпадения возвращается `default`, иначе сырой кусок.
+
+    Если заголовок перечисляет несколько видов товара через `/`
+    (``Автокамеры/Ободная лента``), он неоднозначен: тип уточняется по названию
+    строки (камера, лента, кольцо), а первый кусок остаётся запасным вариантом.
     """
 
     def __init__(
@@ -149,9 +154,13 @@ class HeaderRowsCategory:
         return cls(config.zero_rest_categories, config.mapping, config.default_value)
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str | None:
-        """Обновить раздел на строке-заголовке и вернуть канонизированный кусок категории."""
+        """Обновить раздел на строке-заголовке и вернуть тип товара строки."""
         if self._is_header_row(row_item):
             self.current_category = (row_item.identity.title or '').lower().strip()
+        if '/' in (self.current_category or ''):
+            refined = non_tire_product_type(row_item.identity.title)
+            if refined:
+                return refined
         return self._first_chunk()
 
     def is_zero_rest_category(self) -> bool:
