@@ -129,3 +129,10 @@ def declared_matches(declared: str | None, own: str) -> bool:
     if canonical is None:
         return True
     return canonical == own
+
+
+def type_corrections_message(count: int) -> str:
+    """Сводка по расхождениям типа с поставщиком; пустая строка — расхождений нет."""
+    if not count:
+        return ''
+    return f'Тип товара скорректирован по названию строки, расхождений с поставщиком: {count}'

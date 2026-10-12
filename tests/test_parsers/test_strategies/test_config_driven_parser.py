@@ -1,8 +1,10 @@
 """Тесты config-driven парсера (этап 3): хуки делегируют стратегиям."""
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
+from log_watch import LoggerWatcher
 
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
@@ -521,3 +523,35 @@ def test_apply_category_generic_declared_not_marked() -> None:
 
     assert row.vendor.type_production == PASSENGER
     assert row.vendor.type_corrected is False
+
+
+def test_apply_category_counts_and_logs_correction(watch_logger: LoggerWatcher) -> None:
+    """Расхождение попадает в счётчик и в debug-лог с заявленным/вычисленным типом."""
+    parser = _classifier_parser(LIGHT_TRUCK)
+    watch = watch_logger('parsers.base_parser.base_parser', logging.DEBUG)
+
+    parser.process_parsed_row(RowItem({'title': '275/65R20 112T'}))
+
+    assert parser.stats.type_corrections == 1
+    assert any('Тип товара изменён' in message for _level, message in watch())
+
+
+def test_apply_category_matching_does_not_count() -> None:
+    """Совпавший тип счётчик не увеличивает."""
+    parser = _classifier_parser(TRUCK)
+
+    parser.process_parsed_row(RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'}))
+
+    assert parser.stats.type_corrections == 0
+
+
+def test_apply_category_falls_back_to_declared_when_unknown() -> None:
+    """Не определённый независимо тип — берём заявленный, без пометки расхождения."""
+    parser = _classifier_parser(LIGHT_TRUCK)
+    row = RowItem({'title': 'Nortec без размера'})
+
+    parser.process_parsed_row(row)
+
+    assert row.vendor.type_production == LIGHT_TRUCK
+    assert row.vendor.type_corrected is False
+    assert parser.stats.type_corrections == 0

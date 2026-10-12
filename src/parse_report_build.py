@@ -8,6 +8,7 @@ from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.data_provider.black_list import skipped_black_list_message
+from parsers.strategies.product_types import type_corrections_message
 from services.parse_orchestrator import ParseResult
 
 
@@ -22,6 +23,7 @@ def stats_from_result(parse_result: ParseResult, elapsed: float) -> dict[str, An
         'doubles': _double_count(parse_result.parsed_items),
         'unknown_category_skips': len(parse_result.unknown_category_skips),
         'black_list_skips': parse_result.black_list_skips,
+        'type_corrections': parse_result.type_corrections,
         'elapsed_seconds': round(elapsed, 2),
         'percent_markup': {'min': percent[0], 'max': percent[1]},
         'absolute_markup': {'min': absolute[0], 'max': absolute[1]},
@@ -37,6 +39,9 @@ def warnings_from_result(parse_result: ParseResult) -> list[str]:
     black_list = skipped_black_list_message(parse_result.black_list_skips)
     if black_list:
         collected.append(black_list.strip())
+    corrections = type_corrections_message(parse_result.type_corrections)
+    if corrections:
+        collected.append(corrections.strip())
     return collected
 
 

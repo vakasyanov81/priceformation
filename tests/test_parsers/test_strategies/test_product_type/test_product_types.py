@@ -87,3 +87,15 @@ def test_canonical_types_contains_no_duplicates() -> None:
     """Список канонических типов без повторов и непустой."""
     assert len(CANONICAL_TYPES) == len(set(CANONICAL_TYPES))
     assert all(CANONICAL_TYPES)
+
+
+def test_type_corrections_message_empty() -> None:
+    """Без расхождений сводка пустая."""
+    assert pt.type_corrections_message(0) == ''
+
+
+def test_type_corrections_message_has_count() -> None:
+    """Сводка содержит число расхождений."""
+    message = pt.type_corrections_message(3)
+    assert message
+    assert '3' in message

@@ -1,6 +1,7 @@
 # flake8: noqa: WPS201
 """base parser logic — composition of FileReader, RowProcessor, TitleFilter."""
 
+import logging
 from re import sub as _re_sub
 from typing import Any, Protocol
 
@@ -30,6 +31,8 @@ from parsers.base_parser.title_filter import TitleFilter
 from domain.row_item.row_item import RowItem
 from parsers.strategies.product_types import declared_matches
 from parsers.xls_reader import IXlsReader, XlsReader
+
+logger = logging.getLogger(__name__)
 
 # Konstanta для get_spike_title (прототип была в base_parser_title).
 _SPIKE_YES_VALUES = {'ш.', 'да'}
@@ -265,12 +268,22 @@ class BaseParser:
 
         При включённом `product_type` в `type_production` идёт вычисленный тип,
         а `type_corrected` помечает расхождение с заявленным (конкретным) типом.
+        Если свой тип не определён (`''`), остаётся заявленный — позицию без
+        независимого ответа не оставляем без типа и не помечаем расхождением
+        (README §7 п.4: нераспознанный тип — не повод потерять категорию).
         """
         declared = self.category_for(row_item)
         if self._strategy_hooks is not None and self._strategy_hooks.product_type is not None:
             own = self._strategy_hooks.product_type.classify(row_item)
-            row_item.set_field('type_production', own)
-            row_item.set_field('type_corrected', not declared_matches(declared, own))
+            chosen = own or declared
+            if chosen is not None:
+                row_item.set_field('type_production', chosen)
+            corrected = bool(own) and not declared_matches(declared, own)
+            row_item.set_field('type_corrected', corrected)
+            if corrected:
+                self.stats.type_corrections += 1
+                title = row_item.identity.title
+                logger.debug(f'Тип товара изменён: заявлено «{declared}», вычислено «{own}» // {title}')
         elif declared is not None:
             row_item.set_field('type_production', declared)
 
