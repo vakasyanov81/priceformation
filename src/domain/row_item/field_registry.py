@@ -112,6 +112,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     # ==== Поставщик и тип товара
     FieldSpec('supplier_name', VENDOR, 'supplier_name', row_format.text),
     FieldSpec('type_production', VENDOR, 'type_production', row_format.text),
+    FieldSpec('type_corrected', VENDOR, 'type_corrected', row_format.boolean),
 )
 
 FIELD_KEYS: Final[tuple[str, ...]] = tuple(spec.key for spec in FIELD_SPECS)

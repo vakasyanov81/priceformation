@@ -109,3 +109,4 @@ class VendorMeta:
 
     supplier_name: str | None = None
     type_production: str | None = None
+    type_corrected: bool | None = None

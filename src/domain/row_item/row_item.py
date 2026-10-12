@@ -102,6 +102,7 @@ class RowItem:
 
     supplier_name = RowField('supplier_name')
     type_production = RowField('type_production')
+    type_corrected = RowField('type_corrected')
 
     rest_count = RowField('rest_count')
     reserve_count = RowField('reserve_count')
