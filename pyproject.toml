@@ -142,7 +142,9 @@ norecursedirs = [
 [tool.mutmut]
 source_paths = [ "src/" ]
 backup="False"
-pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
+# --no-cov: прогон мутанта идёт по подмножеству тестов, порог покрытия
+# (--cov-fail-under=95 из addopts) роняет pytest ещё до мутаций.
+pytest_add_cli_args = [ "--no-cov", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
 # Logging modules and call sites: tests do not assert log text.
