@@ -25,6 +25,30 @@ from parsers.strategies.stk_title import StkTireCompose
             'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер',
             '12.00R24 DRC D931 160/157F 20PR TTF карьер',
         ),
+        (
+            'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, шт',
+            '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        ),
+        (
+            'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер, , шт',
+            '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        ),
+        (
+            'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, (1 шт)',
+            '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        ),
+        (
+            'Автопокрышка 12.00R24 DRC D931 20PR 160/157F TTF карьер',
+            '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        ),
+        (
+            'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка автопокрышка',
+            '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        ),
+        (
+            'Автошина 11.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л',
+            '11.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+        ),
     ],
 )
 def test_stk_tire_compose_glues_in_pioner_order(raw: str, expected: str) -> None:

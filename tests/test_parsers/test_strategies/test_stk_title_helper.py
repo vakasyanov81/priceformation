@@ -38,6 +38,30 @@ _GLUE_EXAMPLES = (
         'Автошина 315/80 R22.5 22PR 167/164D TRANSMATE TMD18 карьер',
         '315/80R22.5 TRANSMATE TMD18 167/164D 22PR карьер',
     ),
+    (
+        'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, шт',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+    ),
+    (
+        'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер, , шт',
+        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+    ),
+    (
+        'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, (1 шт)',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+    ),
+    (
+        'Автопокрышка 12.00R24 DRC D931 20PR 160/157F TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+    ),
+    (
+        'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка автопокрышка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+    ),
+    (
+        'Автошина 11.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л',
+        '11.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+    ),
 )
 
 
@@ -96,6 +120,39 @@ def test_parse_without_kind_prefix() -> None:
     assert parts.brand == 'GREENSTONE'
     assert parts.model == 'DR668'
     assert parts.usage == ('шашка',)
+
+
+def test_parse_strips_trailing_piece_marker() -> None:
+    """Хвостовой маркер «, шт» срезается и не попадает в назначение."""
+    parts = parse_stk_title('Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, шт')
+
+    assert parts is not None
+    assert parts.usage == ('шашка',)
+
+
+def test_parse_strips_paren_piece_marker() -> None:
+    """Хвостовой маркер «, (1 шт)» с целым числом срезается."""
+    parts = parse_stk_title('Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, (12 шт)')
+
+    assert parts is not None
+    assert parts.usage == ('шашка',)
+
+
+def test_parse_drops_kind_words() -> None:
+    """Слова «автошина»/«автопокрышка» вырезаются из названия."""
+    parts = parse_stk_title('Автопокрышка 11R22.5 16PR 146/143L GREENSTONE DR668 шашка автошина')
+
+    assert parts is not None
+    assert parts.brand == 'GREENSTONE'
+    assert parts.usage == ('шашка',)
+
+
+def test_parse_normalizes_layer_source() -> None:
+    """``н.с.16`` превращается в ``16PR`` и уезжает в слоистость."""
+    parts = parse_stk_title('Автошина 11.00 R20 DOUBLEROAD DR-801 н.с.16 149/146K унив.ось')
+
+    assert parts is not None
+    assert parts.layering == '16PR'
 
 
 def test_parse_returns_none_for_disk() -> None:

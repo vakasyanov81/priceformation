@@ -27,7 +27,10 @@ from typing import NamedTuple
 
 from domain.row_item.row_item import RowItem
 
-_LEADING_KIND = re.compile(r'^\s*(?:автошина|автошины)\b\.?\s*', re.IGNORECASE)
+_LEADING_KIND = re.compile(r'^\s*(?:автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
+_LAYER_SOURCE = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
+_TRAILING_PIECE = re.compile(r'\s*,\s*,?\s*\(?\s*\d*\s*шт\)?\s*$', re.IGNORECASE)
+_KIND_WORDS = frozenset(('автошина', 'автошины', 'автопокрышка'))
 _SIZE = re.compile(
     r'(?P<width>\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)?)'
     r'\s*(?P<construct>[Rr]|[-–—])\s*(?P<diameter>\d+(?:[.,]\d+)?)\s*(?P<suffix>LT|[CС])?',
@@ -70,6 +73,7 @@ class _Marks(NamedTuple):
     @classmethod
     def from_tokens(cls, tokens: list[str]) -> _Marks:
         """Вырезать PR, камерность и индекс нагрузки/скорости из токенов."""
+        tokens = [token for token in tokens if token.lower() not in _KIND_WORDS]
         layering, rest = _take_token(tokens, _PR.match)
         intimacy, rest = _take_token(rest, _CAMERA.match)
         speed, rest = _take_token(rest, _LOAD_SPEED.match)
@@ -131,7 +135,9 @@ class StkTitleParts:
 
 def parse_stk_title(raw: str) -> StkTitleParts | None:
     """Разобрать название STK на параметры; None, если это не размер шины."""
-    text = _LEADING_KIND.sub('', (raw or '').strip())
+    text = _TRAILING_PIECE.sub('', (raw or '').strip())
+    text = _LEADING_KIND.sub('', text)
+    text = _LAYER_SOURCE.sub(r'\1PR', text)
     size_match = _SIZE.match(text)
     if size_match is None:
         return None
