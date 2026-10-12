@@ -156,7 +156,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Состояние', 'Новое'),
     ],
     'ForInner': [
-        ('Тип товара', 'Автошина'),
+        ('Тип товара', 'Автошина*'),
         ('Бренд', 'crossleader'),
         ('Номенклатура', '225/40R18 Crossleader 92Y'),
         ('Сезон', 'Зима'),
@@ -221,7 +221,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Состояние', 'Новое'),
     ],
     'ForDoubles': [
-        ('Тип товара', 'Автошина'),
+        ('Тип товара', 'Автошина*'),
         ('Бренд', 'crossleader'),
         ('Номенклатура', '225/40R18 Crossleader 92Y'),
         ('Сезон', 'Зима'),
@@ -332,3 +332,35 @@ def test_drom_meta_matches_golden(tmp_path: Path) -> None:
     loaded = json.loads(meta_path.read_text(encoding='utf-8'))
     numbers = map(str, range(1, len(GOLDEN_DROM_HEAD) + 1))
     assert loaded == dict(zip(numbers, GOLDEN_DROM_HEAD, strict=True))
+
+
+def _inner_row(type_corrected: bool) -> dict[str, Any]:
+    """Плоская строка для шаблона ForInner с заданным признаком расхождения типа."""
+    return RowItem(
+        {'title': '10.00 R20 ...', 'type_production': 'Грузовая шина', 'type_corrected': type_corrected},
+    ).to_dict()
+
+
+def test_for_inner_xlsx_marks_corrected_type(tmp_path: Path) -> None:
+    """xlsx шаблона for_inner: у изменённого типа суффикс `*`."""
+    driver = FakeXlwtDriver()
+    writer = XlsWriter(driver, [_inner_row(True)], ForInner, result_folder=str(tmp_path))
+    writer.write()
+
+    assert driver.body['cell(1,0)'] == 'Грузовая шина*'
+
+
+def test_for_inner_xlsx_keeps_plain_type(tmp_path: Path) -> None:
+    """Без расхождения типа суффикса нет."""
+    driver = FakeXlwtDriver()
+    writer = XlsWriter(driver, [_inner_row(False)], ForInner, result_folder=str(tmp_path))
+    writer.write()
+
+    assert driver.body['cell(1,0)'] == 'Грузовая шина'
+
+
+def test_for_inner_jsonl_marks_corrected_type(tmp_path: Path) -> None:
+    """jsonl шаблона for_inner собирается тем же get_value — суффикс `*` попадает."""
+    path = write_template_jsonl([_inner_row(True)], ForInner, str(tmp_path))
+
+    assert 'Грузовая шина*' in Path(path).read_text(encoding='utf-8')

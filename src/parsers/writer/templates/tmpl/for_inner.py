@@ -16,6 +16,8 @@ class ForInner(IWriteTemplate):
             'Тип товара': {
                 'style': {'width': 256 * 10},
                 'field': RowItem.type_production.name,
+                'suffix': '*',
+                'suffix_when': RowItem.type_corrected.name,
             }
         },
         {
