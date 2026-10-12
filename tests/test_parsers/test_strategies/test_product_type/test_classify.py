@@ -106,11 +106,34 @@ def test_truck(title: str, expected: str) -> None:
         ('185 R14C Rapid EffiVan', LIGHT_TRUCK),
         ('225/75 R16 C', LIGHT_TRUCK),
         ('285/75 R16LT Rapid Mud', LIGHT_TRUCK),
+        ('225/75R16 Sailun RXQuest Van TL', LIGHT_TRUCK),
+        ('225/75R16 EffiVan TL', LIGHT_TRUCK),
+        ('225/75R16 Tracvan TL', LIGHT_TRUCK),
+        ('225/75R16 Connex Van TL', LIGHT_TRUCK),
+        ('225/75R16 LCV TL', LIGHT_TRUCK),
+        ('225/75R16 Cargo TL', LIGHT_TRUCK),
     ],
 )
 def test_light_truck(title: str, expected: str) -> None:
     """Легкогрузовые: суффиксы C/LT/CP и коммерческие модели (README §5.4)."""
     assert ProductTypeClassifier().classify(RowItem({'title': title})) == expected
+
+
+@pytest.mark.parametrize(
+    'title',
+    [
+        '225/70R15 Triangle AdvanteX SUV TR259 TL M+S 100H',
+        '225/55R18 Sailun RXQuest SU01 TL 102W',
+        '235/65R17 Sailun RXQuest H/T02 TL 104H',
+    ],
+)
+def test_commercial_words_do_not_match_inside_other_words(title: str) -> None:
+    """`van`/`rxquest` внутри слов (`AdvanteX`, SUV-линейка `RXQuest SU01`) — не коммерция.
+
+    `AdvanteX` содержит `van`, а `RXQuest SU01` — SUV-линейка: оба легковые,
+    а не легкогрузовые (границы слова в `_is_commercial`).
+    """
+    assert ProductTypeClassifier().classify(RowItem({'title': title})) == PASSENGER
 
 
 @pytest.mark.parametrize(
@@ -123,6 +146,7 @@ def test_light_truck(title: str, expected: str) -> None:
         ('265/50R20 111V', PASSENGER),
         ('175/70 R13 КАМА ALGA НК-531', PASSENGER),
         ('165 R13', PASSENGER),
+        ('245/45ZR18 Tracmax X-Privilo TX3 TL 100Y', PASSENGER),
     ],
 )
 def test_passenger(title: str, expected: str) -> None:

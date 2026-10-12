@@ -1,0 +1,348 @@
+{
+  "_note": "Снапшот реальных строк прайсов: независимый тип и сверка с категорией поставщика (README §11). Сгенерирован из file_prices/, в git не коммитится.",
+  "rows": [
+    {
+      "supplier": "STK",
+      "title": "315/80R22.5 GreenStone GMD80 158/156J 22PR карьер",
+      "declared": "Грузовая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Автоснабжение",
+      "title": "155R13C Maxxis Presa Spike MA-SLW 85/83Q шип",
+      "declared": "Легковая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "155/60R15 Sonix Ecopro 99 74T",
+      "declared": "Легковая шина",
+      "own": "Легковая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Запаска",
+      "title": "165-13/6.45-13 АИ-168У 78P TT Алтайшина",
+      "declared": "Легковая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "18 КиК Вудроф 7.0*18 5*108 ET45 D67.1 алмаз черный",
+      "declared": "Диск",
+      "own": "Диск",
+      "corrected": false
+    },
+    {
+      "supplier": "Запаска",
+      "title": "185R15 Maxxis Bravo UE-168N 103/102Q 8PR",
+      "declared": "Легкогрузовая шина",
+      "own": "Легковая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "215/75R16C Viatti Vettore Brina V-525 116/114R",
+      "declared": "Легкогрузовая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Запаска",
+      "title": "245/75R16LT Massimo Roccia AT 120/116R 10PR",
+      "declared": "Легковая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "265/70R17 Ikon Autograph Ice LT4 119/116Q шип",
+      "declared": "Легкогрузовая шина",
+      "own": "Легковая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "295/65R20 Maxxis Razr AT-811 129/126S",
+      "declared": "Легковая шина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "315/70R22.5 Amberstone 366 156/150L 18PR TL",
+      "declared": "Грузовая шина",
+      "own": "Грузовая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Запаска",
+      "title": "33X12.50R20 Maxxis Razr AT-811 119Q 12PR",
+      "declared": "Легковая шина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "40X13.50R20 Maxxis Razr AT-811 128Q",
+      "declared": "Легковая шина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "7.00R16LT Maxxis Crawler M8090 103K",
+      "declared": "Легковая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "7.50R16 Sonix Glorytour 52 122/118N",
+      "declared": "Легкогрузовая шина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Запаска",
+      "title": "7.50R16 Кама НК-312 121/120N",
+      "declared": "Легкогрузовая шина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Мим",
+      "title": "11.2R20 Белшина Ф-35-1 8 114A6 TT",
+      "declared": "Грузовая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Мим",
+      "title": "225/60R17 Landsail ice STAR iS37 103T",
+      "declared": "Легковая шина",
+      "own": "Легковая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Мим",
+      "title": "9.00R16 Nortec Nortec IM-14 14 150/136A2/А6 TT",
+      "declared": "Грузовая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пионер",
+      "title": "8.25R16LT Triangle TR668 132/128L 18PR TT универсальная",
+      "declared": "Прочие",
+      "own": "Легкогрузовая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Пионер",
+      "title": "9.5R17.5 Triangle TR656 143/141J 18PR TL рулевая",
+      "declared": "Прочие",
+      "own": "Грузовая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Пионер",
+      "title": "Ободная лента 16/70-20 (300-508)",
+      "declared": "Прочие",
+      "own": "Ободная лента",
+      "corrected": false
+    },
+    {
+      "supplier": "Пионер",
+      "title": "Уплотнительное кольцо R25 d=6.6мм",
+      "declared": "Прочие",
+      "own": "Уплотнительное кольцо",
+      "corrected": false
+    },
+    {
+      "supplier": "Пионер",
+      "title": "Уплотнительное кольцо R25 d=9.8мм",
+      "declared": "Прочие",
+      "own": "Уплотнительное кольцо",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "10.00-20 Nortec ER-109 146B 16PR TT",
+      "declared": "Грузовая шина",
+      "own": "Грузовая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "130-10 об/лента",
+      "declared": "Ободная лента",
+      "own": "Ободная лента",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "16.5/70-18 КФ-97 149A6 10PR TT с камерой 15.5-18/16.5-18 ГК-115 (60)",
+      "declared": "Автокамера",
+      "own": "Автокамера",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "185/75R16C Next 16W 104/102Q 8PR",
+      "declared": "Грузовая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пошк",
+      "title": "185/75R16C Triangle TR646 104/102Q 8PR IMP б/к",
+      "declared": "Грузовая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пошк",
+      "title": "215/75R16С Triangle TRIN 113/111Q 8PR LL01",
+      "declared": "Грузовая шина",
+      "own": "Легкогрузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пошк",
+      "title": "290/85-16 Nortec Nortec 120N TL ET-500",
+      "declared": "Легкогрузовая шина",
+      "own": "Легковая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пошк",
+      "title": "600/65R28 Nortec FL-31 154D TL",
+      "declared": "Легкогрузовая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Пошк",
+      "title": "Forward Professional 153 а/ш 225/75R16 кам зимняя шип",
+      "declared": "Легковая шина",
+      "own": "Легковая шина",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "Диск штамп Тольятти 5.5x16 5x139.7 ET52 d98 НИВА (серебристый) ТЗСК",
+      "declared": "Диск",
+      "own": "Диск",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "Камера СВК 1200х500-508 РК-5А-145 (65)",
+      "declared": "Автокамера",
+      "own": "Автокамера",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "Камера УК-16-1 ВолШЗ",
+      "declared": "Автокамера",
+      "own": "Автокамера",
+      "corrected": false
+    },
+    {
+      "supplier": "Пошк",
+      "title": "Ободная лента 340-533 (1220*400-533) Nortec",
+      "declared": "Ободная лента",
+      "own": "Ободная лента",
+      "corrected": false
+    },
+    {
+      "supplier": "Форточки",
+      "title": "10-16.5 Armour L-5A 12 TL",
+      "declared": "Спецшина",
+      "own": "Спецшина",
+      "corrected": false
+    },
+    {
+      "supplier": "Форточки",
+      "title": "10.00-20 Nortec ER-109 16 TT 146B",
+      "declared": "Спецшина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "11.75x22.5 10x335 ET0 281 Sil ZEPP 10/335/281/0 (16 мм) (HAP) alive",
+      "declared": "Диск",
+      "own": "Диск",
+      "corrected": false
+    },
+    {
+      "supplier": "Форточки",
+      "title": "23.5-25 Nortec ER-612 20 TT (только шина) 177B",
+      "declared": "Спецшина",
+      "own": "Спецшина",
+      "corrected": false
+    },
+    {
+      "supplier": "Форточки",
+      "title": "24x10-11 Forerunner Mars-B 48",
+      "declared": "Мотошина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "26x9-14 Forerunner Victory 48",
+      "declared": "Мотошина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "30x10-14 Кама Quadro ATM (НК-437) 59 POR",
+      "declared": "Мотошина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "31x10.5-15 Roadcruza Thruster 110 LT",
+      "declared": "Легковая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "340/80R20 Advance AR410 TL Steel Belted 144B",
+      "declared": "Спецшина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "35x12.5R17 Roadcruza RA1100 121 LT M+S",
+      "declared": "Легковая шина",
+      "own": "Спецшина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "550/60-22.5 Forerunner QH643 18 TL",
+      "declared": "Спецшина",
+      "own": "Грузовая шина",
+      "corrected": true
+    },
+    {
+      "supplier": "Форточки",
+      "title": "9R20 Белшина ФБел-311 6 TT 112A8",
+      "declared": "Спецшина",
+      "own": "Спецшина",
+      "corrected": false
+    }
+  ]
+}

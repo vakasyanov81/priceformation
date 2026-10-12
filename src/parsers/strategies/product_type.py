@@ -29,9 +29,9 @@ from parsers.strategies.product_types import (
 
 _SUFFIX = r'(?:\s*(c|lt|cp)\b)?'
 _METRIC2 = re.compile(r'\b(\d{3})\s*/\s*(\d{2})\s*/\s*(\d{2}(?:\.\d)?)')
-_METRIC = re.compile(rf'\b(\d{{3}})\s*/\s*(\d{{2,3}})\s*r?\s*-?\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
-_INCH = re.compile(rf'\b(\d{{1,2}}(?:\.\d{{1,2}})?)\s*r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
-_WIDTH_ONLY = re.compile(rf'\b(\d{{3}})\s*r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
+_METRIC = re.compile(rf'\b(\d{{3}})\s*/\s*(\d{{2,3}})\s*z?r?\s*-?\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
+_INCH = re.compile(rf'\b(\d{{1,2}}(?:\.\d{{1,2}})?)\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
+_WIDTH_ONLY = re.compile(rf'\b(\d{{3}})\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
 _MULT = re.compile(r'\b(\d{2,3})\s*[*x]\s*(\d{1,2}(?:\.\d+)?)\s*-\s*(\d{1,2})\b')
 _SLASH_DASH = re.compile(r'\b(\d{1,3}(?:\.\d{1,2})?)\s*/\s*(\d{1,3}(?:\.\d{1,2})?)\s*-\s*(\d{1,2}(?:\.\d)?)\b')
 _AGRO_LR = re.compile(r'\b(\d{1,2}(?:\.\d)?)\s*l\s*r\s*(\d{2})\b')
@@ -42,7 +42,8 @@ _AGRO_AI = re.compile(r'\b\d{2,3}\s*a[1-8]\b')
 _PR_BEFORE = re.compile(r'\b(\d{1,2})\s*pr\b')
 _PR_AFTER = re.compile(r'\bpr\s*(\d{1,2})\b')
 _TRA = re.compile(r'\b(?:e3/l3|g2/l2|e4/l4|r-?4|r1|l5)\b')
-_DISK_FITTING = re.compile(r'et\d|\d[*x]\d+/\d')
+_DISK_PAIR = re.compile(r'\d+(?:[.,]\d+)?\s*[*x]\s*\d+(?:[.,]\d+)?')
+_DISK_PAIR_SLASH = re.compile(r'\d+(?:[.,]\d+)?\s*[*x]\s*\d+(?:[.,]\d+)?\s*/')
 
 _SPEC_WORDS = (
     'сельхоз',
@@ -63,9 +64,9 @@ _SPEC_WORDS = (
 )
 _MOTO_WORDS = ('мото', 'квадро', 'мотокарт', 'скутер')
 _AXLE_WORDS = ('рул', 'вед', 'прицеп', 'трал', 'унив')
-_COMMERCIAL_WORDS = ('van', 'vettore', 'effivan', 'tracvan', 'connex', 'rxquest', 'cargo', 'lcv')
+_COMMERCIAL_WORDS = ('van', 'vettore', 'effivan', 'tracvan', 'connex', 'cargo', 'lcv')
 
-_TRUCK_DIAMETERS = frozenset((17.5, 19.5, 22.5))
+_TRUCK_DIAMETERS = frozenset((17.5, 19.5, 22.5, 24.5))
 _TRUCK_DIAMETER_MIN = 20
 _TRUCK_PROFILE_HIGH = 80
 _TRUCK_PROFILE_MIN = 65
@@ -91,7 +92,6 @@ class _Size:
     diameter: float | None = None
     suffix: str | None = None
     first_raw: str = ''
-    diameter_raw: str = ''
 
 
 class ProductTypeClassifier:
@@ -122,7 +122,7 @@ def _non_tire_product(text: str, tech: str) -> str | None:
     """Тип нешинной позиции по слову названия (кольцо → камера → лента → диск)."""
     if 'уплотнительн' in text and 'кольц' in text:
         return O_RING
-    if 'камер' in text:
+    if _is_camera(text):
         return CAMERA
     if 'лент' in text:
         return RIM_TAPE
@@ -130,9 +130,28 @@ def _non_tire_product(text: str, tech: str) -> str | None:
         return DISK
     if 'кольц' in text and re.search(r'r\d|d\s*=|\d+\s*-\s*\d+', tech):
         return O_RING
-    if _DISK_FITTING.search(tech):
+    if _looks_like_disk(tech):
         return DISK
     return None
+
+
+def _is_camera(text: str) -> bool:
+    """Слово `камер` как товар; `под камеру` — признак бескамерности диска, не камера."""
+    if 'под камер' in text:
+        return False
+    return 'камер' in text
+
+
+def _looks_like_disk(tech: str) -> bool:
+    """Диск по посадочному месту: `ширина×диаметр` вместе с разболтовкой/слэшем.
+
+    Одной пары `NxM` мало: у штемпелеванных дисков их две (`8.5x20 10x335`),
+    либо за шириной идёт `/` (`5,5x16/6x170`). Иначе модель вида `ET500`
+    у шины принималась бы за вылет диска.
+    """
+    if _DISK_PAIR_SLASH.search(tech):
+        return True
+    return len(_DISK_PAIR.findall(tech)) >= 2
 
 
 def _parse_size(tech: str, row_item: RowItem) -> _Size | None:
@@ -152,8 +171,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             width=_number(match.group(1)),
             profile=_number(match.group(2)),
             diameter=_number(match.group(3)),
-            first_raw=match.group(1),
-            diameter_raw=match.group(3),
         )
     match = _METRIC.search(tech)
     if match is not None:
@@ -163,8 +180,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             profile=_number(match.group(2)),
             diameter=_number(match.group(3)),
             suffix=match.group(4),
-            first_raw=match.group(1),
-            diameter_raw=match.group(3),
         )
     match = _MULT.search(tech)
     if match is not None:
@@ -172,8 +187,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             'mult',
             width=_number(match.group(2)),
             diameter=_number(match.group(3)),
-            first_raw=match.group(1),
-            diameter_raw=match.group(3),
         )
     match = _WIDTH_ONLY.search(tech)
     if match is not None:
@@ -182,8 +195,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             width=_number(match.group(1)),
             diameter=_number(match.group(2)),
             suffix=match.group(3),
-            first_raw=match.group(1),
-            diameter_raw=match.group(2),
         )
     match = _INCH.search(tech)
     if match is not None:
@@ -192,8 +203,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             width=_number(match.group(1)),
             diameter=_number(match.group(2)),
             suffix=match.group(3),
-            first_raw=match.group(1),
-            diameter_raw=match.group(2),
         )
     match = _SLASH_DASH.search(tech)
     if match is not None:
@@ -201,8 +210,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             'slash_dash',
             width=_number(match.group(1)),
             diameter=_number(match.group(3)),
-            first_raw=match.group(1),
-            diameter_raw=match.group(3),
         )
     match = _AGRO_LR.search(tech)
     if match is not None:
@@ -214,7 +221,6 @@ def _parse_title_size(tech: str) -> _Size | None:
             width=_number(match.group(1)),
             diameter=_number(match.group(2)),
             first_raw=match.group(1),
-            diameter_raw=match.group(2),
         )
     return None
 
@@ -354,8 +360,12 @@ def _pr(tech: str) -> int:
 
 
 def _is_commercial(tech: str) -> bool:
-    """Фургонные/коммерческие маркеры модели (README §5.4)."""
-    return _has_any(tech, _COMMERCIAL_WORDS)
+    """Фургонные/коммерческие маркеры модели (README §5.4).
+
+    Латиница ищется по границам слова: иначе ``AdvanteX`` (содержит ``van``)
+    и ``RXQuest`` ошибочно помечались бы коммерческими.
+    """
+    return any(re.search(rf'(?<![a-z]){re.escape(word)}(?![a-z])', tech) for word in _COMMERCIAL_WORDS)
 
 
 def _has_any(text: str, words: tuple[str, ...]) -> bool:
