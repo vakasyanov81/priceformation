@@ -32,5 +32,13 @@ class ColumnHelper:
         self.field: str | None = self.column.get('field')
         self.skip: bool = bool(self.column.get('skip'))
         self.format: str | None = self.column.get('format')
-        self.suffix: str | None = self.column.get('suffix')
-        self.suffix_when: str | None = self.column.get('suffix_when')
+
+    @property
+    def suffix(self) -> str | None:
+        """Суффикс-маркер колонки (например ``*`` у изменённого типа)."""
+        return self.column.get('suffix')
+
+    @property
+    def suffix_when(self) -> str | None:
+        """Поле-условие для суффикса (например ``type_corrected``)."""
+        return self.column.get('suffix_when')

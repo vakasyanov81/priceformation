@@ -52,7 +52,7 @@ CATEGORY_ALIASES: dict[str, tuple[str, ...]] = {
 
 # Общие/неспецифичные ярлыки: сверять нельзя (README §7 п.4).
 _GENERIC_LABELS = frozenset(
-    {
+    (
         '',
         'шина',
         'шины',
@@ -63,22 +63,50 @@ _GENERIC_LABELS = frozenset(
         GENERIC_TIRE.lower(),
         OTHER.lower(),
         'прочее',
-    },
+    ),
 )
 
 # Конкретные ярлыки поставщиков → канонический тип (README §7, таблица).
-_DECLARED_GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (PASSENGER, ('легковая', 'легковая шина', 'suv', 'cuv', 'грязевая')),
-    (LIGHT_TRUCK, ('легкогрузовая', 'легкогрузовая шина', 'c', 'lt', 'cp', 'van', 'коммерческая')),
-    (TRUCK, ('грузовая', 'грузовая шина', 'груз', 'груз.')),
-    (SPECIAL, ('спецшина', 'спецтехника', 'сельхоз', 'сельхозшина', 'индустриальная', 'спецпокрышка')),
-    (MOTO, ('мото', 'мотошина')),
-    (CAMERA, ('автокамера', 'камера', 'камеры')),
-    (DISK, ('диск', 'автодиск', 'колесо')),
-    (RIM_TAPE, ('ободная лента', 'о/лента', 'об/лента', 'об/л', 'флиппер', 'лента')),
-    (O_RING, ('уплотнительное кольцо', 'кольцо')),
-)
-_DECLARED_ALIASES: dict[str, str] = {alias: canonical for canonical, aliases in _DECLARED_GROUPS for alias in aliases}
+_DECLARED_ALIASES: dict[str, str] = {
+    'легковая': PASSENGER,
+    'легковая шина': PASSENGER,
+    'suv': PASSENGER,
+    'cuv': PASSENGER,
+    'грязевая': PASSENGER,
+    'легкогрузовая': LIGHT_TRUCK,
+    'легкогрузовая шина': LIGHT_TRUCK,
+    'c': LIGHT_TRUCK,
+    'lt': LIGHT_TRUCK,
+    'cp': LIGHT_TRUCK,
+    'van': LIGHT_TRUCK,
+    'коммерческая': LIGHT_TRUCK,
+    'грузовая': TRUCK,
+    'грузовая шина': TRUCK,
+    'груз': TRUCK,
+    'груз.': TRUCK,
+    'спецшина': SPECIAL,
+    'спецтехника': SPECIAL,
+    'сельхоз': SPECIAL,
+    'сельхозшина': SPECIAL,
+    'индустриальная': SPECIAL,
+    'спецпокрышка': SPECIAL,
+    'мото': MOTO,
+    'мотошина': MOTO,
+    'автокамера': CAMERA,
+    'камера': CAMERA,
+    'камеры': CAMERA,
+    'диск': DISK,
+    'автодиск': DISK,
+    'колесо': DISK,
+    'ободная лента': RIM_TAPE,
+    'о/лента': RIM_TAPE,
+    'об/лента': RIM_TAPE,
+    'об/л': RIM_TAPE,
+    'флиппер': RIM_TAPE,
+    'лента': RIM_TAPE,
+    'уплотнительное кольцо': O_RING,
+    'кольцо': O_RING,
+}
 
 
 def canonical_declared(declared: str | None) -> str | None:

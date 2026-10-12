@@ -4,20 +4,20 @@ from __future__ import annotations
 
 import pytest
 
-from parsers.strategies.product_types import (
-    CAMERA,
-    CANONICAL_TYPES,
-    DISK,
-    LIGHT_TRUCK,
-    MOTO,
-    O_RING,
-    PASSENGER,
-    RIM_TAPE,
-    SPECIAL,
-    TRUCK,
-    canonical_declared,
-    declared_matches,
-)
+from parsers.strategies import product_types as pt
+
+CAMERA = pt.CAMERA
+DISK = pt.DISK
+LIGHT_TRUCK = pt.LIGHT_TRUCK
+MOTO = pt.MOTO
+O_RING = pt.O_RING
+PASSENGER = pt.PASSENGER
+RIM_TAPE = pt.RIM_TAPE
+SPECIAL = pt.SPECIAL
+TRUCK = pt.TRUCK
+CANONICAL_TYPES = pt.CANONICAL_TYPES
+canonical_declared = pt.canonical_declared
+declared_matches = pt.declared_matches
 
 
 @pytest.mark.parametrize(

@@ -5,18 +5,18 @@ from __future__ import annotations
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies import product_types as pt
 from parsers.strategies.product_type import ProductTypeClassifier
-from parsers.strategies.product_types import (
-    CAMERA,
-    DISK,
-    LIGHT_TRUCK,
-    MOTO,
-    O_RING,
-    PASSENGER,
-    RIM_TAPE,
-    SPECIAL,
-    TRUCK,
-)
+
+CAMERA = pt.CAMERA
+DISK = pt.DISK
+LIGHT_TRUCK = pt.LIGHT_TRUCK
+MOTO = pt.MOTO
+O_RING = pt.O_RING
+PASSENGER = pt.PASSENGER
+RIM_TAPE = pt.RIM_TAPE
+SPECIAL = pt.SPECIAL
+TRUCK = pt.TRUCK
 
 
 @pytest.mark.parametrize(

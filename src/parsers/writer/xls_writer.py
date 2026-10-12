@@ -23,10 +23,11 @@ def get_value(column: dict[str, Any], row_item: PriceRow) -> str | None:
     field_name = col.field
     raw_value = row_item.get(field_name) if field_name else None
     raw_value = raw_value or col.def_value
-    value = _to_str(raw_value)
+    cell_value = _to_str(raw_value)
     if col.suffix and col.suffix_when and row_item.get(col.suffix_when):
-        return f'{value or ""}{col.suffix}'
-    return value
+        prefix = cell_value or ''
+        return f'{prefix}{col.suffix}'
+    return cell_value
 
 
 def _to_str(raw_value: object) -> str:
