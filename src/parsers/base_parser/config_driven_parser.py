@@ -19,7 +19,9 @@ from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.json_reader import JsonPriceReader
+from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.pricing_registry import make_pricing_strategy
+from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.registry import make_category_strategy
 from parsers.strategies.rest_registry import make_rest_strategy
 from parsers.strategies.title_registry import make_title_strategy
@@ -69,11 +71,27 @@ def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig
             manufacturer_reader=manufacturer_reader,
         ),
         rest=make_rest_strategy(behavior, f'section {section.id} rest'),
+        category_fields=_category_fields(section),
+        product_type=_product_type(section),
         min_rest=behavior.min_rest,
         find_manufacturer_on_enrich=behavior.find_manufacturer_on_enrich,
         zero_rest_without_category=behavior.zero_rest_without_category,
         pipeline=behavior.pipeline,
     )
+
+
+def _category_fields(section: VendorSection) -> CategoryFields | None:
+    """Стратегия полей по категории-размеру из слота `category`, если задана."""
+    if not section.category.size_fields:
+        return None
+    return CategoryFields(section.category.size_fields)
+
+
+def _product_type(section: VendorSection) -> ProductTypeClassifier | None:
+    """Независимый классификатор типа, если включён `category.independent_type`."""
+    if not section.category.independent_type:
+        return None
+    return ProductTypeClassifier()
 
 
 def make_config_driven_parser(

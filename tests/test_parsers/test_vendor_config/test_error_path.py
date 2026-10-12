@@ -120,12 +120,43 @@ PATH_CASES = [
         {**_raw(), 'category': {'zero_rest_categories': 'x'}},
         f'{WHERE} → category → zero_rest_categories',
     ),
+    # size_fields категории: путь доходит до категории и поля
+    ({**_raw(), 'category': {'size_fields': 'x'}}, f'{WHERE} → category → size_fields'),
+    (
+        {**_raw(), 'category': {'size_fields': {'Грузовая шина': 'x'}}},
+        f'{WHERE} → category → size_fields → Грузовая шина',
+    ),
+    (
+        {**_raw(), 'category': {'size_fields': {'': {'season': 'Всесезонная'}}}},
+        f'{WHERE} → category → size_fields',
+    ),
+    (
+        {**_raw(), 'category': {'size_fields': {'Спецшина': {'nope': 'x'}}}},
+        f'{WHERE} → category → size_fields → Спецшина',
+    ),
+    (
+        {**_raw(), 'category': {'size_fields': {'Спецшина': {'season': 5}}}},
+        f'{WHERE} → category → size_fields → Спецшина → season',
+    ),
+    ({**_raw(), 'category': {'independent_type': 'x'}}, f'{WHERE} → category'),
     # title
     ({**_raw(), 'title': 'x'}, f'{WHERE} → title'),
     ({**_raw(), 'title': {'strategy': 5}}, f'{WHERE} → title → strategy'),
     ({**_raw(), 'title': {'variant': 5}}, f'{WHERE} → title → variant'),
     ({**_raw(), 'title': {'aliases': 'x'}}, f'{WHERE} → title: «aliases»'),
     ({**_raw(), 'title': {'fallback_brand': 5}}, f'{WHERE} → title → fallback_brand'),
+    # маркеры title: путь доходит до маркера и поля
+    ({**_raw(), 'title': {'markers': 'x'}}, f'{WHERE} → title → markers'),
+    ({**_raw(), 'title': {'markers': {'шип': 'x'}}}, f'{WHERE} → title → markers → шип'),
+    ({**_raw(), 'title': {'markers': {'': {'season': 'зима'}}}}, f'{WHERE} → title → markers'),
+    (
+        {**_raw(), 'title': {'markers': {'шип': {'nope': 'x'}}}},
+        f'{WHERE} → title → markers → шип',
+    ),
+    (
+        {**_raw(), 'title': {'markers': {'шип': {'season': 5}}}},
+        f'{WHERE} → title → markers → шип → season',
+    ),
     # секции: путь обязан доходить до sections[i]
     ({**_raw(), 'sections': [[]]}, f'{WHERE} → sections[0]'),
     ({**_raw(), 'sections': [{'id': 5}]}, f'{WHERE} → sections[0] → id'),

@@ -28,6 +28,7 @@ from parsers.base_parser.row_processor import (
 )
 from parsers.base_parser.title_filter import TitleFilter
 from domain.row_item.row_item import RowItem
+from parsers.strategies.product_types import declared_matches
 from parsers.xls_reader import IXlsReader, XlsReader
 
 # Konstanta для get_spike_title (прототип была в base_parser_title).
@@ -236,6 +237,7 @@ class BaseParser:
             elif step == 'category':
                 self.apply_category(row_item)
                 self.zero_rest_without_category(hooks, row_item)
+                self.apply_category_fields(hooks, row_item)
             elif step == 'markup':
                 self.add_price_markup(row_item)
 
@@ -259,15 +261,30 @@ class BaseParser:
         self.stats.unknown_category_skips.append(raw_label)
 
     def apply_category(self, row_item: RowItem) -> None:
-        category = self.category_for(row_item)
-        if category is not None:
-            row_item.set_field('type_production', category)
+        """Назначить `type_production`: независимый тип или заявленный стратегией.
+
+        При включённом `product_type` в `type_production` идёт вычисленный тип,
+        а `type_corrected` помечает расхождение с заявленным (конкретным) типом.
+        """
+        declared = self.category_for(row_item)
+        if self._strategy_hooks is not None and self._strategy_hooks.product_type is not None:
+            own = self._strategy_hooks.product_type.classify(row_item)
+            row_item.set_field('type_production', own)
+            row_item.set_field('type_corrected', not declared_matches(declared, own))
+        elif declared is not None:
+            row_item.set_field('type_production', declared)
 
     @classmethod
     def zero_rest_without_category(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Обнулить остаток строки без категории, чтобы она не попала в прайс."""
         if hooks.zero_rest_without_category and not row_item.vendor.type_production:
             row_item.set_field('rest_count', 0)
+
+    @classmethod
+    def apply_category_fields(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Дописать поля по категории-размеру названия (`category.size_fields`)."""
+        if hooks.category_fields is not None:
+            hooks.category_fields.apply(row_item)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """Отсечь по мин. остатку: стратегия или дефолт."""

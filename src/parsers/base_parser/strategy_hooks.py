@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from parsers.strategies.category_fields import CategoryFields
+from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.protocols import CategoryStrategy, RestStrategy, TitleStrategy
 from parsers.vendor_config.slot_configs import DEFAULT_PIPELINE
 
@@ -21,6 +23,8 @@ class StrategyHooks:
     category: CategoryStrategy | None = None
     title: TitleStrategy | None = None
     rest: RestStrategy | None = None
+    category_fields: CategoryFields | None = None
+    product_type: ProductTypeClassifier | None = None
     min_rest: int = 4
     find_manufacturer_on_enrich: bool = True
     zero_rest_without_category: bool = False

@@ -22,6 +22,9 @@ from parsers.base_parser.config_driven_parser import (
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.json_reader import JsonPriceReader
+from parsers.strategies.category_fields import CategoryFields
+from parsers.strategies.product_type import ProductTypeClassifier
+from parsers.strategies.product_types import LIGHT_TRUCK, PASSENGER, TRUCK
 from parsers.vendor_config.models import VendorConfig, VendorSection
 from parsers.vendor_config.slot_configs import (
     BehaviorConfig,
@@ -420,3 +423,101 @@ def test_pipeline_skips_missing_step() -> None:
     cat_strategy.resolve.assert_called_once()
     # markup вызван
     parser._row_processor.add_price_markup.assert_called_once()
+
+
+def test_strategy_hooks_build_category_fields_from_size_fields() -> None:
+    """size_fields слота category превращаются в стратегию полей."""
+    section = _section(category=CategoryConfig(size_fields={'Грузовая шина': {'season': 'Всесезонная'}}))
+
+    hooks = strategy_hooks_from_section(section, BehaviorConfig())
+
+    assert hooks.category_fields is not None
+    row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
+    hooks.category_fields.apply(row)
+    assert row.tire.season == 'Всесезонная'
+
+
+def test_strategy_hooks_without_size_fields_has_no_category_fields() -> None:
+    """Без size_fields стратегия полей не создаётся."""
+    hooks = strategy_hooks_from_section(_section(), BehaviorConfig())
+
+    assert hooks.category_fields is None
+
+
+def test_pipeline_applies_category_fields() -> None:
+    """Шаг category применяет size_fields независимо от категории поставщика."""
+    cat_strategy = MagicMock()
+    cat_strategy.resolve.return_value = 'Автошина'
+    hooks = StrategyHooks(
+        category=cat_strategy,
+        category_fields=CategoryFields({'Грузовая шина': {'season': 'Всесезонная'}}),
+        pipeline=('category',),
+    )
+    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+
+    row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
+    parser.process_parsed_row(row)
+
+    assert row.vendor.type_production == 'Автошина'
+    assert row.tire.season == 'Всесезонная'
+
+
+def test_strategy_hooks_builds_product_type_when_independent() -> None:
+    """`independent_type` в конфиге включает независимый классификатор."""
+    section = _section(category=CategoryConfig(strategy='header_rows', independent_type=True))
+
+    hooks = strategy_hooks_from_section(section, BehaviorConfig())
+
+    assert isinstance(hooks.product_type, ProductTypeClassifier)
+
+
+def test_strategy_hooks_without_independent_type_has_no_product_type() -> None:
+    """По умолчанию слой независимого типа выключен."""
+    hooks = strategy_hooks_from_section(_section(), BehaviorConfig())
+
+    assert hooks.product_type is None
+
+
+def _classifier_parser(declared: str) -> BaseParser:
+    """Парсер с включённым независимым типом и заданным заявленным типом."""
+    cat_strategy = MagicMock()
+    cat_strategy.resolve.return_value = declared
+    hooks = StrategyHooks(
+        category=cat_strategy,
+        product_type=ProductTypeClassifier(),
+        pipeline=('category',),
+    )
+    return BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+
+
+def test_apply_category_marks_concrete_mismatch() -> None:
+    """Конкретное расхождение заявленного и своего типа помечается `type_corrected`."""
+    parser = _classifier_parser(LIGHT_TRUCK)
+    row = RowItem({'title': '275/65R20 112T'})
+
+    parser.process_parsed_row(row)
+
+    assert row.vendor.type_production == PASSENGER
+    assert row.vendor.type_corrected is True
+
+
+def test_apply_category_matching_declared_not_marked() -> None:
+    """Совпадение своего типа с заявленным расхождением не считается."""
+    parser = _classifier_parser(TRUCK)
+    row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
+
+    parser.process_parsed_row(row)
+
+    assert row.vendor.type_production == TRUCK
+    assert row.vendor.type_corrected is False
+
+
+def test_apply_category_generic_declared_not_marked() -> None:
+    """Общий заявленный ярлык не считается расхождением (README §7 п.4)."""
+    parser = _classifier_parser('Автошина')
+    row = RowItem({'title': '275/65R20 112T'})
+
+    parser.process_parsed_row(row)
+
+    assert row.vendor.type_production == PASSENGER
+    assert row.vendor.type_corrected is False

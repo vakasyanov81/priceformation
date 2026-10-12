@@ -66,6 +66,10 @@ _AXLE_WORDS = ('рул', 'вед', 'прицеп', 'трал', 'унив')
 _COMMERCIAL_WORDS = ('van', 'vettore', 'effivan', 'tracvan', 'connex', 'rxquest', 'cargo', 'lcv')
 
 _TRUCK_DIAMETERS = frozenset((17.5, 19.5, 22.5))
+_TRUCK_DIAMETER_MIN = 20
+_TRUCK_PROFILE_HIGH = 80
+_TRUCK_PROFILE_MIN = 65
+_TRUCK_WIDTH_WIDE = 295
 _AGRO_MIN_DIAMETER = 25
 _AGRO_WIDE_DIAMETER = 24
 _AGRO_WIDE_WIDTH = 340
@@ -280,9 +284,11 @@ def _metric_family(size: _Size, text: str, tech: str) -> str:
         return SPECIAL
     if diameter in _TRUCK_DIAMETERS or diameter == _AGRO_WIDE_DIAMETER:
         return TRUCK
-    if _double_load(tech) and diameter >= 20:
+    if _double_load(tech) and diameter >= _TRUCK_DIAMETER_MIN:
         return TRUCK
-    if profile >= 65 and diameter >= 20:
+    if diameter >= _TRUCK_DIAMETER_MIN and profile >= _TRUCK_PROFILE_HIGH:
+        return TRUCK
+    if diameter >= _TRUCK_DIAMETER_MIN and width >= _TRUCK_WIDTH_WIDE and profile >= _TRUCK_PROFILE_MIN:
         return TRUCK
     if _double_load(tech) and 13 <= diameter <= 17:
         return LIGHT_TRUCK

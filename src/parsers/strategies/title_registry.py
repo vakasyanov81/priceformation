@@ -23,6 +23,7 @@ from parsers.strategies.title import (
     TireCompose,
     TitleWithAliases,
 )
+from parsers.strategies.title_markers import TitleWithMarkers
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
@@ -51,7 +52,9 @@ def make_title_strategy(
     """Собрать стратегию title по слоту конфига; при `aliases` — обернуть картой."""
     strategy = _build_strategy(config, where, manufacturer_reader)
     if config.aliases:
-        return TitleWithAliases(strategy, load_title_aliases(supplier_name))
+        strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name))
+    if config.markers:
+        strategy = TitleWithMarkers(strategy, config.markers)
     return strategy
 
 
