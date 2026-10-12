@@ -90,6 +90,9 @@ max-positional-args = 6
 "load_tests/test_make_price_by_supplier.py" = ["S101", "S603", "PLR2004"]
 # I001 — keep merged from X import a, b as c to stay under flake8 WPS201 (18 imports).
 "src/parsers/base_parser/base_parser.py" = ["I001"]
+# Классификатор типа товара: таблица правил README §2–§9 — пороги-литералы,
+# много ветвлений и возвратов по формам размеров.
+"src/parsers/strategies/product_type.py" = ["PLR2004", "PLR0911", "C901", "SIM103"]
 "src/parse_report.py" = ["T201"]
 "src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
