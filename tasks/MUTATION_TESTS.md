@@ -59,6 +59,17 @@ uv run python -m pipelines.mutmut_stats --output-dir reports/mutmut
 `mutmut run <filter>` в нём остаются результаты только части мутантов, и
 следующий прогон берёт неполный снимок (занижает знаменатель).
 
+**Две ловушки harness (обе починены 2026-10-13).** Пока их не закрыть,
+`just mutate` падает до мутаций:
+
+- `[tool.mutmut] pytest_add_cli_args` обязан снимать `--cov-fail-under=95` из
+  `addopts` (`--no-cov`): мутант исполняется на подмножестве тестов, и порог
+  покрытия роняет pytest ещё на clean-прогоне;
+- идентификаторы параметризованных тестов должны быть ASCII. mutmut 3.8 хранит
+  nodeid с не-ASCII (pytest кодирует их как `\uXXXX`) и при выборе тестов
+  передаёт их без `[...]` — pytest отвечает «not found». Golden-кейсы типа
+  товара поэтому нумеруются `golden-NN` (`test_product_type/test_golden.py`).
+
 ---
 
 ## Классификация выживших
