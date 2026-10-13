@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from run_dialog.items import MENU_ITEMS, AnswerResult, MenuItem
 from services.vendor_activation import VendorState
 
-ACTIVATION_KEY = '5'
+ACTIVATION_KEY = '4'
 
 
 @dataclass(frozen=True)
@@ -20,10 +20,10 @@ class MenuRow:
 
 
 def build_rows(vendors: list[VendorState], *, expanded: bool) -> list[MenuRow]:
-    """Строки меню: действия, пункт активации, при развороте — поставщики, затем выход."""
+    """Строки меню: действия, пункт активации перед справкой, при развороте — поставщики, затем выход."""
     rows: list[MenuRow] = []
     for menu_item in MENU_ITEMS:
-        if menu_item.action is AnswerResult.EXIT:
+        if menu_item.action is AnswerResult.SHOW_HELP:
             rows.append(_activation_row(expanded))
             if expanded:
                 rows.extend(_vendor_row(vendor) for vendor in vendors)

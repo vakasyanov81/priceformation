@@ -66,14 +66,14 @@ def test_main_make_price_then_exit() -> None:
 
 
 def test_main_report_doubles_then_exit() -> None:
-    """выбор 3 вызывает отчёт о дублях, затем выход."""
+    """выбор 6 вызывает отчёт о дублях, затем выход."""
     report = MagicMock()
     report.path = _REPORT_PATH
     doubles_service = MagicMock()
     doubles_service.make_report.return_value = report
 
     with (
-        patch(_INPUT, side_effect=['3', _QUIT]),
+        patch(_INPUT, side_effect=['6', _QUIT]),
         patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
