@@ -79,3 +79,21 @@ def test_structured_fields_used(fields: dict[str, str], expected: str) -> None:
     """Профиль, ширина и десятичные запятые в полях доходят до семейства; без диаметра — нет."""
     row = RowItem({'title': 'Nortec без формы', **fields})
     assert _CLASSIFIER.classify(row) == expected
+
+
+@pytest.mark.parametrize(
+    ('tire_type', 'expected'),
+    [
+        ('C', LIGHT_TRUCK),
+        ('LT', LIGHT_TRUCK),
+        ('CP', LIGHT_TRUCK),
+        ('c', LIGHT_TRUCK),
+        ('', PASSENGER),
+        ('легковая', PASSENGER),
+    ],
+)
+def test_declared_commercial_marker(tire_type: str, expected: str) -> None:
+    """`Тип авто` C/LT/CP в поле tire_type — признак легкогрузовой (mim, README §5.4)."""
+    row = RowItem({'title': '165/80/13 94/92', 'tire_type': tire_type})
+
+    assert _CLASSIFIER.classify(row) == expected

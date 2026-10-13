@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import normalize_text, replace_homoglyphs
@@ -68,6 +68,8 @@ _SPEC_WORDS = (
 _MOTO_WORDS = ('мото', 'квадро', 'мотокарт', 'скутер')
 _AXLE_WORDS = ('рул', 'вед', 'прицеп', 'трал', 'унив')
 _COMMERCIAL_WORDS = ('van', 'vettore', 'effivan', 'tracvan', 'connex', 'cargo', 'lcv')
+# Структурный маркер коммерческой шины в поле поставщика (`Тип авто` у mim).
+_COMMERCIAL_MARKERS = frozenset(('c', 'lt', 'cp'))
 
 _TRUCK_DIAMETERS = frozenset((17.5, 19.5, 22.5, 24.5))
 _TRUCK_DIAMETER_MIN = 20
@@ -115,6 +117,8 @@ class ProductTypeClassifier:
         size = _parse_size(tech, row_item)
         if size is None:
             return ''
+        if _declared_commercial(row_item):
+            size = replace(size, suffix='c')
         if _is_special(text, tech, size):
             return SPECIAL
         if _is_moto(text, size):
@@ -391,6 +395,18 @@ def _is_commercial(tech: str) -> bool:
     и ``RXQuest`` ошибочно помечались бы коммерческими.
     """
     return any(re.search(rf'(?<![a-z]){re.escape(word)}(?![a-z])', tech) for word in _COMMERCIAL_WORDS)
+
+
+def _declared_commercial(row_item: RowItem) -> bool:
+    """Поставщик пометил легкогрузовую: `C`/`LT`/`CP` в поле `tire_type`.
+
+    У mim в колонке «Тип авто» стоят `C` (commercial) и `LT` (light truck) —
+    это признак легкогрузовой шины, даже если суффикса нет в названии (README §5.4).
+    """
+    raw = row_item.tire.tire_type
+    if not raw:
+        return False
+    return raw.strip().lower() in _COMMERCIAL_MARKERS
 
 
 def _has_any(text: str, words: tuple[str, ...]) -> bool:
