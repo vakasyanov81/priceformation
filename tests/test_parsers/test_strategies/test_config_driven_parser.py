@@ -525,22 +525,40 @@ def test_apply_category_generic_declared_not_marked() -> None:
     assert row.vendor.type_corrected is False
 
 
-def test_apply_category_counts_and_logs_correction(watch_logger: LoggerWatcher) -> None:
-    """Расхождение попадает в счётчик и в debug-лог с заявленным/вычисленным типом."""
+def test_apply_category_logs_correction(watch_logger: LoggerWatcher) -> None:
+    """Расхождение попадает в debug-лог с заявленным/вычисленным типом."""
     parser = _classifier_parser(LIGHT_TRUCK)
     watch = watch_logger('parsers.base_parser.base_parser', logging.DEBUG)
 
     parser.process_parsed_row(RowItem({'title': '275/65R20 112T'}))
 
-    assert parser.stats.type_corrections == 1
     assert any('Тип товара изменён' in message for _level, message in watch())
 
 
-def test_apply_category_matching_does_not_count() -> None:
-    """Совпавший тип счётчик не увеличивает."""
-    parser = _classifier_parser(TRUCK)
+def test_type_corrections_counts_only_rows_kept_in_price() -> None:
+    """Счётчик расхождений не считает позиции, отброшенные без цены/остатка."""
+    parser = _classifier_parser(LIGHT_TRUCK)
+    kept = RowItem({'title': '275/65R20 112T', 'price_opt': 100, 'rest_count': 4})
+    dropped = RowItem({'title': '275/65R20 112T', 'price_opt': 0, 'rest_count': 0})
+    for row_item in (kept, dropped):
+        parser.process_parsed_row(row_item)
+    parser.parsed_items = [kept, dropped]
 
-    parser.process_parsed_row(RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'}))
+    parser.after_process()
+
+    assert kept.vendor.type_corrected is True
+    assert dropped.vendor.type_corrected is True
+    assert parser.stats.type_corrections == 1
+
+
+def test_apply_category_matching_does_not_count() -> None:
+    """Совпавший тип расхождением не помечается и счётчик не увеличивает."""
+    parser = _classifier_parser(TRUCK)
+    row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось', 'price_opt': 100, 'rest_count': 4})
+    parser.process_parsed_row(row)
+    parser.parsed_items = [row]
+
+    parser.after_process()
 
     assert parser.stats.type_corrections == 0
 

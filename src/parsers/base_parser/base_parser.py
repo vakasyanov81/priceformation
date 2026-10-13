@@ -163,6 +163,15 @@ class BaseParser:
     def after_process(self) -> None:
         self.parsed_items = drop_empty_rest(self.parsed_items)
         fill_percent_markup(self.parsed_items)
+        self.stats.type_corrections = self.count_type_corrections()
+
+    def count_type_corrections(self) -> int:
+        """Число позиций итогового результата с исправленным типом.
+
+        Считается после ``drop_empty_rest``: расхождения у позиций, отброшенных
+        без цены закупки или остатка, в прайс не попадают и в счётчик не входят.
+        """
+        return sum(1 for row_item in self.parsed_items if row_item.vendor.type_corrected)
 
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return enrich_items(self, row_items)
@@ -281,7 +290,6 @@ class BaseParser:
             corrected = bool(own) and not declared_matches(declared, own)
             row_item.set_field('type_corrected', corrected)
             if corrected:
-                self.stats.type_corrections += 1
                 title = row_item.identity.title
                 logger.debug(f'Тип товара изменён: заявлено «{declared}», вычислено «{own}» // {title}')
         elif declared is not None:
