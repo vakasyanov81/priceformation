@@ -25,7 +25,7 @@ class CategoryConfig:
     → поля позиции. Независимо от стратегии слота: Пошк/СТК/Пионер получают
     сезон «Всесезонная» у грузовых и спецшин.
 
-    `independent_type` включает слой независимого типа (`ProductTypeClassifier`):
+    `calculate_type` включает слой независимого типа (`ProductTypeClassifier`):
     заявленный стратегией тип сохраняется для сверки, а в `type_production`
     пишется вычисленный; расхождение помечается `type_corrected`.
     """
@@ -38,7 +38,7 @@ class CategoryConfig:
     unknown_skip: bool = False
     zero_rest_categories: tuple[str, ...] = ()
     size_fields: dict[str, dict[str, str]] = field(default_factory=dict)
-    independent_type: bool = False
+    calculate_type: bool = False
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> CategoryConfig:
@@ -53,7 +53,7 @@ class CategoryConfig:
             unknown_skip=read_flag(payload, 'unknown_skip', where),
             zero_rest_categories=read_str_list(payload, 'zero_rest_categories', where, ()),
             size_fields=read_field_map(payload, 'size_fields', where),
-            independent_type=read_flag(payload, 'independent_type', where),
+            calculate_type=read_flag(payload, 'calculate_type', where),
         )
 
 

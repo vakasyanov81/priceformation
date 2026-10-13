@@ -39,7 +39,7 @@
 | Единый словарь типов и синонимов | `src/parsers/strategies/product_types.py` — каноничные имена + карта синонимов поставщиков; `category_finder.map_categories` и `_HEADER_CATEGORIES` берут имена оттуда |
 | Признак расхождения | Новое булево поле `type_corrected` (group `VENDOR`) в `field_registry`/`VendorMeta`; `type_production` остаётся **чистым** |
 | Маркер `*` | Опция шаблона колонки: `'suffix': '*'` + `'suffix_when': 'type_corrected'`; рендерится в `get_value` (`xls_writer.py:17`) |
-| Где включается | Секция конфига: `category: { "strategy": ..., "independent_type": true }`; по умолчанию **выключено** (включаем по поставщику после сверки) |
+| Где включается | Секция конфига: `category: { "strategy": ..., "calculate_type": true }`; по умолчанию **выключено** (включаем по поставщику после сверки) |
 | Судьба `tires_by_size` | Удаляется: режим становится частным случаем нового слоя (заявленный = заголовок раздела, свой = размер) |
 | Нераспознанный тип поставщика | Не расхождение: `type_corrected` не ставится, только инфо-заметка в статистике (README §7) |
 
@@ -130,7 +130,7 @@ declared_canonical == own        → расхождения нет
 
 `StrategyHooks` (`strategy_hooks.py:15`) получает поле
 `product_type: ProductTypeClassifier | None = None`; `CategoryConfig`
-(`slot_configs.py:20`) — флаг `independent_type: bool = False`.
+(`slot_configs.py:20`) — флаг `calculate_type: bool = False`.
 
 Шаг `category` (`base_parser.py:236`) после `apply_category`:
 
@@ -150,11 +150,11 @@ def apply_category(self, row_item: RowItem) -> None:
   (единый расчёт), поле `size_fields` не меняется.
 - `zero_rest_without_category` (`base_parser.py:268`) смотрит на
   `type_production`: при включённом слое тип почти всегда будет, это меняет
-  поведение zapaska — **проверить тестами** до включения `independent_type` у
+  поведение zapaska — **проверить тестами** до включения `calculate_type` у
   неё.
 - `tires_by_size` (`category.py:154`) удаляется вместе с `_tire_size` внутри
   `HeaderRowsCategory`; ветка `tires_by_size` в конфигах переезжает в
-  `independent_type`.
+  `calculate_type`.
 
 ## Поле `type_corrected`
 
@@ -202,9 +202,9 @@ xlsx — переносить добавление суффикса в `XlsWrite
 | Ф0 | Golden-датасет: перенести аналитический скрипт README §11 в регрессионный прогон по `integration_tests/file_prices_for_test/`; зафиксировать ожидаемые типы и расхождения. Скелет `product_types.py` + `normalize.py` с тестами нормализации | `tests/test_parsers/test_strategies/test_product_type/`, `tasks/` |
 | Ф1 | `ProductTypeClassifier` по README §2–§9 (нешинные → формы размеров → спец → мото → грузовая/легкогрузовая/легковая); юнит-кейсы из README §3–§5 и §8 | `src/parsers/strategies/product_type.py`, `normalize.py`, `product_types.py` |
 | Ф2 | Флаг `type_corrected`: VO, реестр, `RowField`; golden `to_dict()` обновить | `src/domain/row_item/*` |
-| Ф3 | Интеграция слоя: `StrategyHooks.product_type`, `CategoryConfig.independent_type`, `apply_category`, реестр стратегий; удаление `tires_by_size` | `strategy_hooks.py`, `slot_configs.py`, `base_parser.py`, `category.py` |
+| Ф3 | Интеграция слоя: `StrategyHooks.product_type`, `CategoryConfig.calculate_type`, `apply_category`, реестр стратегий; удаление `tires_by_size` | `strategy_hooks.py`, `slot_configs.py`, `base_parser.py`, `category.py` |
 | Ф4 | Маркер `*`: `ColumnHelper` + `get_value` + `for_inner`; тест xlsx и jsonl | `column_helper.py`, `xls_writer.py`, `for_inner.py` |
-| Ф5 | Включение по поставщикам: сверить прогон, включить `independent_type` в `parse_config/vendors/*.json` (начать с `mim`, `zapaska`, `four_tochki`); логирование расхождений и счётчик в `ParserStats` | `parse_config/vendors/*.json`, `parse_statistic.py`, логи |
+| Ф5 | Включение по поставщикам: сверить прогон, включить `calculate_type` в `parse_config/vendors/*.json` (начать с `mim`, `zapaska`, `four_tochki`); логирование расхождений и счётчик в `ParserStats` | `parse_config/vendors/*.json`, `parse_statistic.py`, логи |
 | Ф6 | Полный CI + `mutmut` по новым модулям; закрыть выживших мутантов | — |
 
 ## Критерии готовности
@@ -256,7 +256,7 @@ Golden-прогон по реальным `file_prices/` вскрыл четыр
 - Если независимый тип не определён (`''`) — остаётся заявленный: позиция без
   типа не теряется, `zero_rest_without_category` (zapaska) не срабатывает, а
   расхождением это не считается (README §7 п.4).
-- `independent_type: true` включён локально в `parse_config/vendors/{mim,
+- `calculate_type: true` включён локально в `parse_config/vendors/{mim,
   zapaska,four_tochki}.json` (шины; дисковые секции — нет). `parse_config/`
   в `.gitignore` — это пользовательские данные, в git не попадает.
 

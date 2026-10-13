@@ -280,16 +280,16 @@ def test_category_without_size_fields_is_empty() -> None:
     assert CategoryConfig.from_dict({}, WHERE).size_fields == {}
 
 
-def test_category_reads_independent_type_flag() -> None:
-    """Флаг `independent_type` включается из конфига."""
-    raw = {'strategy': 'header_rows', 'independent_type': True}
+def test_category_reads_calculate_type_flag() -> None:
+    """Флаг `calculate_type` включается из конфига."""
+    raw = {'strategy': 'header_rows', 'calculate_type': True}
 
-    assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(strategy='header_rows', independent_type=True)
+    assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(strategy='header_rows', calculate_type=True)
 
 
-def test_category_independent_type_defaults_off() -> None:
-    """Без ключа `independent_type` флаг выключен."""
-    assert CategoryConfig.from_dict({}, WHERE).independent_type is False
+def test_category_calculate_type_defaults_off() -> None:
+    """Без ключа `calculate_type` флаг выключен."""
+    assert CategoryConfig.from_dict({}, WHERE).calculate_type is False
 
 
 def test_title_reads_all_fields() -> None:

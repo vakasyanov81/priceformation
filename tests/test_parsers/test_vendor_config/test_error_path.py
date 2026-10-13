@@ -138,7 +138,7 @@ PATH_CASES = [
         {**_raw(), 'category': {'size_fields': {'Спецшина': {'season': 5}}}},
         f'{WHERE} → category → size_fields → Спецшина → season',
     ),
-    ({**_raw(), 'category': {'independent_type': 'x'}}, f'{WHERE} → category'),
+    ({**_raw(), 'category': {'calculate_type': 'x'}}, f'{WHERE} → category'),
     # title
     ({**_raw(), 'title': 'x'}, f'{WHERE} → title'),
     ({**_raw(), 'title': {'strategy': 5}}, f'{WHERE} → title → strategy'),

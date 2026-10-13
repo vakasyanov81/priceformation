@@ -465,15 +465,15 @@ def test_pipeline_applies_category_fields() -> None:
 
 
 def test_strategy_hooks_builds_product_type_when_independent() -> None:
-    """`independent_type` в конфиге включает независимый классификатор."""
-    section = _section(category=CategoryConfig(strategy='header_rows', independent_type=True))
+    """`calculate_type` в конфиге включает независимый классификатор."""
+    section = _section(category=CategoryConfig(strategy='header_rows', calculate_type=True))
 
     hooks = strategy_hooks_from_section(section, BehaviorConfig())
 
     assert isinstance(hooks.product_type, ProductTypeClassifier)
 
 
-def test_strategy_hooks_without_independent_type_has_no_product_type() -> None:
+def test_strategy_hooks_without_calculate_type_has_no_product_type() -> None:
     """По умолчанию слой независимого типа выключен."""
     hooks = strategy_hooks_from_section(_section(), BehaviorConfig())
 

@@ -88,8 +88,8 @@ def _category_fields(section: VendorSection) -> CategoryFields | None:
 
 
 def _product_type(section: VendorSection) -> ProductTypeClassifier | None:
-    """Независимый классификатор типа, если включён `category.independent_type`."""
-    if not section.category.independent_type:
+    """Независимый классификатор типа, если включён `category.calculate_type`."""
+    if not section.category.calculate_type:
         return None
     return ProductTypeClassifier()
 
