@@ -8,7 +8,7 @@ from pathlib import Path
 
 from domain.config_context import get_config_provider
 from infrastructure.config.mail_credentials import get_mail_credentials
-from parsers.mail.client import connect, find_latest_price, save_price
+from parsers.mail.client import connect, find_latest_price, list_price_folders, save_price
 from parsers.mail.models import MailConfig
 from parsers.mail.protocols import ImapClient
 from parsers.mail.provider import load_mail_config
@@ -52,14 +52,15 @@ class MailService:
         config = load_mail_config()
         client = connect(config.account, get_mail_credentials())
         with _MailSession(client) as inbox:
-            return _collect(inbox, config)
+            folders = list_price_folders(inbox, config.account.folder)
+            return _collect(inbox, config, folders)
 
 
-def _collect(client: ImapClient, config: MailConfig) -> list[MailFetchResult]:
+def _collect(client: ImapClient, config: MailConfig, folders: list[str]) -> list[MailFetchResult]:
     """Обойти активные профили: найти письмо, записать вложение, собрать итог."""
     fetched: list[MailFetchResult] = []
     for folder, profile in config.enabled_profiles().items():
-        found = find_latest_price(client, profile=profile)
+        found = find_latest_price(client, folders, profile=profile)
         if found is None:
             logger.warning(f'Для поставщика «{folder}» подходящее письмо не найдено.')
             continue
