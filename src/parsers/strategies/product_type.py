@@ -30,9 +30,12 @@ from parsers.strategies.product_types import (
 _SUFFIX = r'(?:\s*(c|lt|cp)\b)?'
 _METRIC2 = re.compile(r'\b(\d{3})\s*/\s*(\d{2})\s*/\s*(\d{2}(?:\.\d)?)')
 _METRIC = re.compile(rf'\b(\d{{3}})\s*/\s*(\d{{2,3}})\s*z?r?\s*-?\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
-_INCH = re.compile(rf'\b(\d{{1,2}}(?:\.\d{{1,2}})?)\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
+_INCH = re.compile(rf'(?<![\w.,])(\d{{1,2}}(?:\.\d{{1,2}})?)\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
 _WIDTH_ONLY = re.compile(rf'\b(\d{{3}})\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
-_MULT = re.compile(r'\b(\d{2,3})\s*[*x]\s*(\d{1,2}(?:\.\d+)?)\s*-\s*(\d{1,2})\b')
+# Флотация `наружный_диаметр × ширина R/- посадочный` (`31x10.5R15`, `18*7-8`).
+_FLOTATION = re.compile(
+    rf'\b(\d{{2,3}})\s*[*xх×]\s*(\d{{1,2}}(?:[.,]\d{{1,2}})?)\s*(?:-\s*|z?r\s*)(\d{{2}}(?:[.,]\d)?){_SUFFIX}',
+)
 _SLASH_DASH = re.compile(r'\b(\d{1,3}(?:\.\d{1,2})?)\s*/\s*(\d{1,3}(?:\.\d{1,2})?)\s*-\s*(\d{1,2}(?:\.\d)?)\b')
 _AGRO_LR = re.compile(r'\b(\d{1,2}(?:\.\d)?)\s*l\s*r\s*(\d{2})\b')
 _DASH = re.compile(r'\b(\d{1,2}(?:\.\d{1,2})?)\s*l?\s*-\s*(\d{1,2}(?:\.\d{1,2})?)\b')
@@ -77,6 +80,7 @@ _AGRO_WIDE_WIDTH = 340
 _MOTO_MAX_WIDTH = 130
 _MOTO_MAX_DIAMETER = 17
 _MOTO_MIN_PROFILE = 70
+_SUV_FLOTATION_RIM = 15
 _TRUCK_PR = 14
 _LOAD_INDEX_SCALE = 100
 _TWO_DECIMALS = 2
@@ -181,12 +185,13 @@ def _parse_title_size(tech: str) -> _Size | None:
             diameter=_number(match.group(3)),
             suffix=match.group(4),
         )
-    match = _MULT.search(tech)
+    match = _FLOTATION.search(tech)
     if match is not None:
         return _Size(
-            'mult',
+            'flotation',
             width=_number(match.group(2)),
             diameter=_number(match.group(3)),
+            suffix=match.group(4),
         )
     match = _WIDTH_ONLY.search(tech)
     if match is not None:
@@ -241,7 +246,7 @@ def _is_special(text: str, tech: str, size: _Size) -> bool:
         return True
     if _AGRO_AI.search(tech) and not _has_any(text, _AXLE_WORDS) and _pr(tech) < _TRUCK_PR:
         return True
-    if size.kind in ('mult', 'slash_dash', 'agro'):
+    if size.kind in ('slash_dash', 'agro'):
         return True
     if size.kind == 'dash':
         return not _is_truck_dash(size)
@@ -272,8 +277,23 @@ def _family(size: _Size, text: str, tech: str) -> str:
         return _width_only_family(size, tech)
     if size.kind == 'inch':
         return _inch_family(size, text, tech)
+    if size.kind == 'flotation':
+        return _flotation_family(size)
     if size.kind == 'dash':
         return TRUCK if _is_truck_dash(size) else SPECIAL
+    return SPECIAL
+
+
+def _flotation_family(size: _Size) -> str:
+    """Флотация `NNxNN R NN`: посадочный ≥ 15 — SUV-шина, меньше — индустрия.
+
+    `31x10.5R15`/`35x12.5R17` — легковые грязевые для внедорожников и пикапов;
+    `18*7-8`/`24x10-11` — индустриальные/квадро с малым посадочным (README §4е).
+    """
+    if size.suffix:
+        return LIGHT_TRUCK
+    if (size.diameter or 0) >= _SUV_FLOTATION_RIM:
+        return PASSENGER
     return SPECIAL
 
 

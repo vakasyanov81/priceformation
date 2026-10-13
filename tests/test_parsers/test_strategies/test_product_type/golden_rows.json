@@ -82,15 +82,15 @@
       "supplier": "Запаска",
       "title": "33X12.50R20 Maxxis Razr AT-811 119Q 12PR",
       "declared": "Легковая шина",
-      "own": "Грузовая шина",
-      "corrected": true
+      "own": "Легковая шина",
+      "corrected": false
     },
     {
       "supplier": "Запаска",
       "title": "40X13.50R20 Maxxis Razr AT-811 128Q",
       "declared": "Легковая шина",
-      "own": "Грузовая шина",
-      "corrected": true
+      "own": "Легковая шина",
+      "corrected": false
     },
     {
       "supplier": "Запаска",
@@ -313,8 +313,8 @@
       "supplier": "Форточки",
       "title": "31x10.5-15 Roadcruza Thruster 110 LT",
       "declared": "Легковая шина",
-      "own": "Спецшина",
-      "corrected": true
+      "own": "Легковая шина",
+      "corrected": false
     },
     {
       "supplier": "Форточки",
@@ -327,8 +327,8 @@
       "supplier": "Форточки",
       "title": "35x12.5R17 Roadcruza RA1100 121 LT M+S",
       "declared": "Легковая шина",
-      "own": "Спецшина",
-      "corrected": true
+      "own": "Легковая шина",
+      "corrected": false
     },
     {
       "supplier": "Форточки",
