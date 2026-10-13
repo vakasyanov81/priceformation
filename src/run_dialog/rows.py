@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from run_dialog.items import MENU_ITEMS, AnswerResult, MenuItem
 from services.vendor_activation import VendorState
 
-ACTIVATION_KEY = '4'
+ACTIVATION_KEY = '5'
 
 
 @dataclass(frozen=True)

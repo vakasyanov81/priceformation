@@ -40,9 +40,9 @@
 - Интеграционные тесты (`integration_tests/`) и модульные не читают боевой `parse_config/`: эталонные конфиги — `tests/parse_config_example/` и `integration_tests/parse_config_example/` (копия `vendors/*.json` + глобальные файлы), прайсы — `integration_tests/file_prices_for_test/`. Конфиги поставщиков — `parse_config/vendors/*.json`; STK самодостаточен (отдельного `stk_markup_rules.json` больше нет).
 
 ## Данные (не код)
-- `parse_config/` — пользовательские настройки: `vendors/*.json`, `black_list`, `manufacturer_aliases.json`, `title_aliases.json`, `correct-nomenclature.xlsx`.
+- `parse_config/` — пользовательские настройки: `vendors/*.json`, `mail.json` (IMAP и профили получения прайсов из почты), `black_list`, `manufacturer_aliases.json`, `title_aliases.json`, `correct-nomenclature.xlsx`.
 - `file_prices/<sup_code>/` — входные прайсы поставщиков; результат — `file_prices/result/`. `--json`-режим CLI пишет `.jsonl` рядом с `result_meta.json`.
-- `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски.
+- `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски; `MAIL_LOGIN` / `MAIL_PASSWORD` для получения прайсов из почты (общий загрузчик — `infrastructure/config/dotenv.py`).
 
 ## Архитектура
 - Слои: `src/domain/` (чистое: сущности, value objects, порты, исключения, конфиг-контекст — без IO), `src/infrastructure/` (адаптеры: `config/`, `data/`, `logging/`), `src/parsers/`, `src/services/`, `src/cfg/` (композиционный корень). Пакета `src/core/` больше нет; правила слоёв проверяет `uv run lint-imports` (контракты в `pyproject.toml [tool.importlinter]`: `cfg`/`services` → `parsers` → `infrastructure` → `domain`, только вниз), не-импортные маркеры — `tests/test_architecture_markers.py`.

@@ -96,6 +96,10 @@ max-positional-args = 6
 "src/parse_report.py" = ["T201"]
 "src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
+"src/infrastructure/config/mail_credentials.py" = ["S105"]
+"tests/test_infrastructure/test_mail_credentials.py" = ["S105", "S106"]
+"tests/test_parsers/test_mail/*.py" = ["S105", "S106"]
+"tests/test_services/test_mail_service.py" = ["S105", "S106"]
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"

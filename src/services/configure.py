@@ -6,6 +6,8 @@ from parsers.common_price_output import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.doubles_service import DoublesService
+from services.help_service import HelpService
+from services.mail_service import MailService
 from services.parse_orchestrator import GrouperFactory, ParseOrchestrator, ParserFactory
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -33,6 +35,8 @@ def _register_services() -> None:
     ServiceProvider.register(PriceReportService, PriceReportService)
     ServiceProvider.register(DoublesService, DoublesService)
     ServiceProvider.register(ZapaskaService, ZapaskaService)
+    ServiceProvider.register(MailService, MailService)
+    ServiceProvider.register(HelpService, HelpService)
     ServiceProvider.register(VendorActivationService, VendorActivationService)
 
 

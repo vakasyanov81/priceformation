@@ -95,6 +95,22 @@ def test_run_machine_human_zapaska() -> None:
         assert mock_try.call_args.args[0].__name__ == 'run_upload_zapaska_data'
 
 
+def test_run_machine_human_fetch_mail() -> None:
+    """fetch_mail_prices без --json вызывает выгрузку из почты."""
+    with (
+        patch('run.sys.argv', ['run.py', 'fetch_mail_prices']),
+        patch('run.init_cfg'),
+        patch('run.try_call') as mock_try,
+        patch('run.sys.exit', side_effect=SystemExit(0)),
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        assert mock_try.call_args.args[0].__name__ == 'run_fetch_mail_prices'
+
+
 def test_run_machine_json_get_supliers() -> None:
     """get_supliers без --json всё равно уходит в JSON-режим."""
     with (

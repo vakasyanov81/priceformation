@@ -131,7 +131,7 @@ def test_exit_key_returns_exit(_interactive: _FakeVendorService, monkeypatch: py
 
 @pytest.mark.parametrize(
     ('shortcut', 'expected_index'),
-    [('1', 0), ('2', 1), ('3', 2)],
+    [('1', 0), ('2', 1), ('3', 2), ('4', 3)],
 )
 def test_shortcut_key_selects_item(
     _interactive: _FakeVendorService,
@@ -179,7 +179,7 @@ def test_activation_shortcut_expands_vendor_list(
 ) -> None:
     """Клавиша 4 разворачивает список поставщиков с маркером [] / [*]."""
     _interactive.vendors = [VendorState('stk', 'STK', False), VendorState('mim', 'Мим', True)]
-    keys = [KeyPress(Key.OTHER, '4'), KeyPress(Key.EXIT)]
+    keys = [KeyPress(Key.OTHER, '5'), KeyPress(Key.EXIT)]
     monkeypatch.setattr(navigation, 'read_key', _presses(*keys))
 
     assert ask_action() is AnswerResult.EXIT
@@ -197,7 +197,7 @@ def test_enter_on_vendor_toggles_it(
     """Enter на строке поставщика активирует его; список перерисовывается."""
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     keys = [
-        KeyPress(Key.OTHER, '4'),
+        KeyPress(Key.OTHER, '5'),
         KeyPress(Key.DOWN),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
@@ -228,7 +228,7 @@ def test_toggle_failure_keeps_menu_alive(
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     monkeypatch.setattr(_interactive, 'toggle', _raise_os_error)
     keys = [
-        KeyPress(Key.OTHER, '4'),
+        KeyPress(Key.OTHER, '5'),
         KeyPress(Key.DOWN),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
@@ -247,7 +247,7 @@ def test_enter_on_header_collapses_list(
     """Повторный Enter на заголовке сворачивает список."""
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     keys = [
-        KeyPress(Key.OTHER, '4'),
+        KeyPress(Key.OTHER, '5'),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
     ]
@@ -304,7 +304,7 @@ def test_collapse_uses_expanded_frame_height(
     """Кадр сворачивания очищается по высоте развёрнутого — без дублей строк."""
     _interactive.vendors = [VendorState('stk', 'STK', True)]
     keys = [
-        KeyPress(Key.OTHER, '4'),
+        KeyPress(Key.OTHER, '5'),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
     ]

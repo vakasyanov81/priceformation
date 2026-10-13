@@ -7,11 +7,11 @@ from unittest.mock import patch
 import pytest
 
 from domain.exceptions import CoreExceptionError
+from infrastructure.config.dotenv import load_dotenv
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.zapaska_api_config import (
     ZapaskaApiConfigError,
     get_zapaska_api_config,
-    load_dotenv,
 )
 
 _LOGIN = 'ZAPASKA_API_LOGIN'
@@ -63,9 +63,7 @@ def test_config_custom_host(monkeypatch: Any) -> None:
 
 
 def test_config_missing_env_file(tmp_path: Any, monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        'infrastructure.config.zapaska_api_config.get_config_provider', lambda: FakeConfigProvider(tmp_path)
-    )
+    monkeypatch.setattr('infrastructure.config.dotenv.get_config_provider', lambda: FakeConfigProvider(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
     with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(ZapaskaApiConfigError, match=r'Не найден файл \.env'):
@@ -73,9 +71,7 @@ def test_config_missing_env_file(tmp_path: Any, monkeypatch: Any) -> None:
 
 
 def test_config_env_file_without_credentials(tmp_path: Any, monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        'infrastructure.config.zapaska_api_config.get_config_provider', lambda: FakeConfigProvider(tmp_path)
-    )
+    monkeypatch.setattr('infrastructure.config.dotenv.get_config_provider', lambda: FakeConfigProvider(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
     (tmp_path / '.env').write_text('# no credentials\n', encoding='utf-8')
@@ -84,9 +80,7 @@ def test_config_env_file_without_credentials(tmp_path: Any, monkeypatch: Any) ->
 
 
 def test_config_login_without_password(tmp_path: Any, monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        'infrastructure.config.zapaska_api_config.get_config_provider', lambda: FakeConfigProvider(tmp_path)
-    )
+    monkeypatch.setattr('infrastructure.config.dotenv.get_config_provider', lambda: FakeConfigProvider(tmp_path))
     monkeypatch.setenv(_LOGIN, _TEST_USER)
     monkeypatch.delenv(_PASSWORD_ENV, raising=False)
     (tmp_path / '.env').write_text(f'{_LOGIN}={_TEST_USER}\n', encoding='utf-8')
@@ -95,9 +89,7 @@ def test_config_login_without_password(tmp_path: Any, monkeypatch: Any) -> None:
 
 
 def test_config_password_without_login(tmp_path: Any, monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        'infrastructure.config.zapaska_api_config.get_config_provider', lambda: FakeConfigProvider(tmp_path)
-    )
+    monkeypatch.setattr('infrastructure.config.dotenv.get_config_provider', lambda: FakeConfigProvider(tmp_path))
     monkeypatch.delenv(_LOGIN, raising=False)
     monkeypatch.setenv(_PASSWORD_ENV, _TEST_SECRET)
     (tmp_path / '.env').write_text(f'{_PASSWORD_ENV}={_TEST_SECRET}\n', encoding='utf-8')
@@ -146,9 +138,7 @@ def test_dotenv_skips_invalid_lines(tmp_path: Any, monkeypatch: Any) -> None:
 
 
 def test_load_dotenv_default_filename(tmp_path: Any, monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        'infrastructure.config.zapaska_api_config.get_config_provider', lambda: FakeConfigProvider(tmp_path)
-    )
+    monkeypatch.setattr('infrastructure.config.dotenv.get_config_provider', lambda: FakeConfigProvider(tmp_path))
     monkeypatch.delenv(_DOTENV_KEY, raising=False)
     (tmp_path / '.ENV').write_text(f'{_DOTENV_KEY}=from-upper\n', encoding='utf-8')
     (tmp_path / '.env').write_text(f'{_DOTENV_KEY}=from-lower\n', encoding='utf-8')

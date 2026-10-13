@@ -2,10 +2,9 @@
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
-from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
+from infrastructure.config.dotenv import load_dotenv
 
 _DEFAULT_HOST = 'ka2.sibzapaska.ru:16500'
 _ENV_LOGIN = 'ZAPASKA_API_LOGIN'
@@ -31,33 +30,6 @@ class ZapaskaApiConfig:
     host: str
     login: str
     password: str
-
-
-def _parse_dotenv_line(raw_line: str) -> tuple[str, str] | None:
-    line = raw_line.strip()
-    if not line or line.startswith('#') or '=' not in line:
-        return None
-    key, _, raw_value = line.partition('=')
-    key = key.strip()
-    if not key:
-        return None
-    return key, raw_value.strip().strip("'").strip('"')
-
-
-def load_dotenv(env_path: Path | None = None) -> bool:
-    """Load .env into os.environ (does not override existing keys)."""
-    path = env_path or Path(get_config_provider().project_root) / '.env'
-    if not path.is_file():
-        return False
-
-    for raw_line in path.read_text(encoding='utf-8').splitlines():
-        parsed = _parse_dotenv_line(raw_line)
-        if parsed is None:
-            continue
-        key, env_value = parsed
-        if key not in os.environ:
-            os.environ[key] = env_value
-    return True
 
 
 def get_zapaska_api_config() -> ZapaskaApiConfig:

@@ -13,9 +13,18 @@ from parsers.common_price_output import jsonl_output_files
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
-from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
+from run_argv import (
+    DOUBLES,
+    FETCH_MAIL_PRICES,
+    GET_SUPLIERS,
+    LOAD_CONFIG,
+    LOAD_SUPPLIER_PRICES,
+    PARSE,
+    ZAPASKA_LOAD_API_DATA,
+)
 from services import doubles_service, zapaska_service
 from services.configure import ensure_services_configured
+from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -23,7 +32,10 @@ from services.service_provider import ServiceProvider
 logger = logging.getLogger(__name__)
 
 _INTERRUPT = 'interrupted'
-_COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA))
+_JSON_OK = 'ok'
+_JSON_ACTION = 'action'
+_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FETCH_MAIL_PRICES))
+_COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA, FETCH_MAIL_PRICES))
 
 
 def fail_unknown_result_template(
@@ -115,17 +127,26 @@ def _command_payload(
         return _json_load_prices(payload_arg)
     if command == LOAD_CONFIG:
         return {
-            'ok': True,
-            'action': LOAD_CONFIG,
+            _JSON_OK: True,
+            _JSON_ACTION: LOAD_CONFIG,
             'files': load_config(payload_arg or ''),
         }
+    if command in _DOWNLOAD_COMMANDS:
+        return _json_download(command)
+    return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
+
+
+def _json_download(command: str) -> Mapping[str, Any]:
+    """Выгрузить удалённые прайсы (API запаски или почта) и вернуть ответ."""
     if command == ZAPASKA_LOAD_API_DATA:
         ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
-        return {
-            'ok': True,
-            'action': ZAPASKA_LOAD_API_DATA,
-        }
-    return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
+        return {_JSON_OK: True, _JSON_ACTION: ZAPASKA_LOAD_API_DATA}
+    fetched = ServiceProvider.resolve(MailService).fetch_prices()
+    return {
+        _JSON_OK: True,
+        _JSON_ACTION: FETCH_MAIL_PRICES,
+        'files': [entry.path for entry in fetched],
+    }
 
 
 def _json_load_prices(raw: str | None) -> dict[str, object]:

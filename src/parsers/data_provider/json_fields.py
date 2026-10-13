@@ -32,9 +32,14 @@ def read_flag(raw: RawConfig, key: str, where: str, default: bool = False) -> bo
     return raw_value
 
 
-def read_zero_one_flag(raw: RawConfig, key: str, where: str) -> bool:
-    """Прочитать флаг, который в JSON записан как 0 или 1."""
+def read_zero_one_flag(raw: RawConfig, key: str, where: str, default: bool | None = None) -> bool:
+    """Прочитать флаг, который в JSON записан как 0 или 1.
+
+    ``default=None`` — ключ обязателен; иначе отсутствующий ключ даёт ``default``.
+    """
     raw_value = raw.get(key)
+    if raw_value is None and default is not None:
+        return default
     if isinstance(raw_value, bool):
         return raw_value
     if not isinstance(raw_value, int) or raw_value not in (0, 1):

@@ -10,9 +10,18 @@ import pytest
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from parsers.common_price_output import jsonl_output_files
-from run_argv import DOUBLES, GET_SUPLIERS, LOAD_CONFIG, LOAD_SUPPLIER_PRICES, PARSE, ZAPASKA_LOAD_API_DATA
+from run_argv import (
+    DOUBLES,
+    FETCH_MAIL_PRICES,
+    GET_SUPLIERS,
+    LOAD_CONFIG,
+    LOAD_SUPPLIER_PRICES,
+    PARSE,
+    ZAPASKA_LOAD_API_DATA,
+)
 from run_machine import fail_unknown_result_template, machine_json
 from services.doubles_service import DoublesService
+from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
@@ -339,6 +348,42 @@ def test_json_zapaska_error(capsys: pytest.CaptureFixture[str]) -> None:
     _assert_elapsed(payload)
     assert payload['ok'] is False
     assert payload['action'] == ZAPASKA_LOAD_API_DATA
+    assert payload['error']['kind'] == 'RuntimeError'
+    assert 'positions' not in payload
+    assert 'stats' not in payload
+
+
+def test_json_fetch_mail(capsys: pytest.CaptureFixture[str]) -> None:
+    """fetch_mail_prices: compact ok и пути записанных файлов."""
+    mail_service = MagicMock()
+    mail_service.fetch_prices.return_value = [
+        types.SimpleNamespace(path='file_prices/pioner/price.xlsx'),
+        types.SimpleNamespace(path='file_prices/stk/price.xlsx'),
+    ]
+    with patch(_RESOLVE, side_effect={MailService: mail_service}.__getitem__):
+        code = machine_json(FETCH_MAIL_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': FETCH_MAIL_PRICES,
+        'files': ['file_prices/pioner/price.xlsx', 'file_prices/stk/price.xlsx'],
+    }
+    mail_service.fetch_prices.assert_called_once_with()
+
+
+def test_json_fetch_mail_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """ошибка fetch_mail_prices → compact JSON."""
+    mail_service = MagicMock()
+    mail_service.fetch_prices.side_effect = RuntimeError('no imap')
+    with patch(_RESOLVE, side_effect={MailService: mail_service}.__getitem__):
+        code = machine_json(FETCH_MAIL_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    _assert_elapsed(payload)
+    assert payload['ok'] is False
+    assert payload['action'] == FETCH_MAIL_PRICES
     assert payload['error']['kind'] == 'RuntimeError'
     assert 'positions' not in payload
     assert 'stats' not in payload

@@ -7,6 +7,7 @@ from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.configure import configure_services, ensure_services_configured
 from services.doubles_service import DoublesService
+from services.mail_service import MailService
 from services.parse_orchestrator import GrouperFactory, ParseOrchestrator, ParserFactory
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -33,6 +34,7 @@ def test_configure_registers_services() -> None:
     assert isinstance(ServiceProvider.resolve(PriceReportService), PriceReportService)
     assert isinstance(ServiceProvider.resolve(DoublesService), DoublesService)
     assert isinstance(ServiceProvider.resolve(ZapaskaService), ZapaskaService)
+    assert isinstance(ServiceProvider.resolve(MailService), MailService)
     assert isinstance(ServiceProvider.resolve(VendorActivationService), VendorActivationService)
 
 

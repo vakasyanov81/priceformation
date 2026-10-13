@@ -12,6 +12,7 @@
     python src/run.py parse --json --result-template for_drom
     python src/run.py doubles --json
     python src/run.py zapaska_load_api_data --json
+    python src/run.py fetch_mail_prices --json
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_config=/full/path/settings_dir
@@ -21,16 +22,28 @@ JSON печатается в stdout, логи в этом режиме не вы
 """
 
 import logging
+import pydoc
 import sys
 
 from cfg import init_cfg
 from infrastructure.config.result_folder import clear_result_folder
-from run_argv import DOUBLES, JSON_ONLY_COMMANDS, PARSE, ZAPASKA_LOAD_API_DATA, is_machine_argv, parse_machine_args
+from run_argv import (
+    DOUBLES,
+    FETCH_MAIL_PRICES,
+    JSON_ONLY_COMMANDS,
+    PARSE,
+    ZAPASKA_LOAD_API_DATA,
+    is_machine_argv,
+    parse_machine_args,
+)
 from run_dialog import AnswerResult, ask_action
+from run_dialog.help_format import colorize_markdown
 from run_machine import fail_unknown_result_template, machine_json
 from services.async_utils import try_call
 from services.configure import configure_services
 from services.doubles_service import DoublesService
+from services.help_service import HelpService
+from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -82,6 +95,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
         PARSE: run_make_price_by_supplier,
         DOUBLES: run_report_doubles,
         ZAPASKA_LOAD_API_DATA: run_upload_zapaska_data,
+        FETCH_MAIL_PRICES: run_fetch_mail_prices,
     }
     extra: dict[str, str | None] = {}
     if command == PARSE:
@@ -92,15 +106,17 @@ def _machine_human(command: str, result_template: str | None) -> int:
 
 def response_processing() -> bool:
     """Ask questions"""
-    match ask_action():
-        case AnswerResult.MAKE_PRICE_BY_SUPPLIER:
-            try_call(run_make_price_by_supplier)
-        case AnswerResult.UPDATE_ZAPASKA_DATA:
-            try_call(run_upload_zapaska_data)
-        case AnswerResult.REPORT_DOUBLES:
-            try_call(run_report_doubles)
-        case AnswerResult.EXIT:
-            return False
+    action = ask_action()
+    if action is AnswerResult.EXIT:
+        return False
+    handlers = {
+        AnswerResult.MAKE_PRICE_BY_SUPPLIER: run_make_price_by_supplier,
+        AnswerResult.UPDATE_ZAPASKA_DATA: run_upload_zapaska_data,
+        AnswerResult.REPORT_DOUBLES: run_report_doubles,
+        AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
+        AnswerResult.SHOW_HELP: run_show_help,
+    }
+    try_call(handlers[action])
     return True
 
 
@@ -120,6 +136,21 @@ def run_report_doubles() -> None:
     """Parse supplier prices and write duplicates report."""
     report = ServiceProvider.resolve(DoublesService).make_report()
     logger.info(f'*** Отчёт о дублях сформирован. ***\n{report.path}\n')
+
+
+def run_fetch_mail_prices() -> None:
+    """Download supplier prices from the mail box."""
+    fetched = ServiceProvider.resolve(MailService).fetch_prices()
+    logger.info(f'*** Прайсы из почты получены: {len(fetched)}. ***\n')
+
+
+def run_show_help() -> None:
+    """Show user documentation (README.md) on screen, paged in a terminal."""
+    text = ServiceProvider.resolve(HelpService).readme()
+    if sys.stdout.isatty():
+        pydoc.pager(colorize_markdown(text))
+    else:
+        sys.stdout.write(text)
 
 
 if __name__ == '__main__':

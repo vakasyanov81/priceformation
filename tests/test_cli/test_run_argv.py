@@ -4,6 +4,7 @@ import pytest
 
 from run_argv import (
     DOUBLES,
+    FETCH_MAIL_PRICES,
     GET_SUPLIERS,
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
@@ -31,6 +32,8 @@ def test_is_machine_argv_commands() -> None:
     """подкоманды и --help включают машинный режим."""
     assert is_machine_argv([PARSE]) is True
     assert is_machine_argv([DOUBLES, '--json']) is True
+    assert is_machine_argv([ZAPASKA_LOAD_API_DATA]) is True
+    assert is_machine_argv([FETCH_MAIL_PRICES]) is True
     assert is_machine_argv([GET_SUPLIERS]) is True
     assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
     assert is_machine_argv([f'{LOAD_SUPPLIER_PRICES}={{"1": "a.xls"}}']) is True
@@ -104,6 +107,14 @@ def test_parse_doubles() -> None:
     """команда doubles."""
     args = parse_machine_args([DOUBLES, '--json'])
     assert args.command == DOUBLES
+    assert args.json is True
+    assert args.all_result is False
+
+
+def test_parse_fetch_mail_prices() -> None:
+    """команда fetch_mail_prices."""
+    args = parse_machine_args([FETCH_MAIL_PRICES, '--json'])
+    assert args.command == FETCH_MAIL_PRICES
     assert args.json is True
     assert args.all_result is False
 
