@@ -97,6 +97,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('price_recommended', PRICING, 'price_recommended', row_format.money, _PRICE_DEFAULT),
     FieldSpec('price_markup', PRICING, 'price_markup', row_format.money, _PRICE_DEFAULT),
     FieldSpec('percent_markup', PRICING, 'percent_markup', row_format.floated),
+    FieldSpec('absolute_markup', PRICING, 'absolute_markup', row_format.money, _PRICE_DEFAULT),
     # ==== Остатки и сроки
     FieldSpec('rest_count', STOCK, 'rest_count', row_format.integer),
     FieldSpec('reserve_count', STOCK, 'reserve_count', row_format.integer),

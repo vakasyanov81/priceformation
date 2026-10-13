@@ -3,7 +3,13 @@
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.base_parser.price_markup import calc_percent, fill_percent_markup, get_markup, recommended_percent
+from parsers.base_parser.price_markup import (
+    calc_percent,
+    fill_absolute_markup,
+    fill_percent_markup,
+    get_markup,
+    recommended_percent,
+)
 
 _PURCHASE = 1000
 _SALE = 1120
@@ -32,3 +38,21 @@ def test_fill_percent_markup_rounds_to_hundredths() -> None:
     fill_percent_markup([row])
 
     assert row.pricing.percent_markup == 33.33
+
+
+def test_fill_absolute_markup_subtracts_purchase() -> None:
+    """Абсолютная наценка — отпускная минус закуп."""
+    row = RowItem({'price_opt': 1000, 'price_markup': 1120})
+
+    fill_absolute_markup([row])
+
+    assert row.pricing.absolute_markup == 120
+
+
+def test_fill_absolute_markup_skips_without_markup_price() -> None:
+    """Без цены с наценкой абсолютная наценка не считается."""
+    row = RowItem({'price_opt': 1000})
+
+    fill_absolute_markup([row])
+
+    assert row.pricing.absolute_markup == 0

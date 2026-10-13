@@ -99,6 +99,7 @@ class RowItem:
     price_recommended = RowField('price_recommended')
     price_markup = RowField('price_markup')
     percent_markup = RowField('percent_markup')
+    absolute_markup = RowField('absolute_markup')
 
     supplier_name = RowField('supplier_name')
     type_production = RowField('type_production')

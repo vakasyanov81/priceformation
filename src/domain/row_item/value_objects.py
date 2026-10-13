@@ -79,6 +79,7 @@ class Pricing:
     price_recommended: float = _PRICE_DEFAULT
     price_markup: float = _PRICE_DEFAULT
     percent_markup: float | None = None
+    absolute_markup: float = _PRICE_DEFAULT
 
 
 @dataclass(frozen=True, slots=True)

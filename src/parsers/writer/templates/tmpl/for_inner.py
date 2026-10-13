@@ -45,6 +45,7 @@ class ForInner(IWriteTemplate):
             }
         },
         {'Наценка %': {'style': {'width': 256 * 15}, 'field': RowItem.percent_markup.name}},
+        {'Наценка руб.': {'style': {'width': 256 * 15}, 'field': RowItem.absolute_markup.name}},
         {'Остаток': {'field': RowItem.rest_count.name}},
         {
             'Поставщик': {

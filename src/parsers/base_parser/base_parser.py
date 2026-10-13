@@ -19,7 +19,7 @@ from parsers.base_parser.markup_policy import (
     make_markup_policy,
 )
 from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatistic
-from parsers.base_parser.price_markup import fill_percent_markup, get_markup as price_get_markup
+from parsers.base_parser.price_markup import fill_absolute_markup, fill_percent_markup, get_markup as price_get_markup
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
 from parsers.base_parser.row_processor import (
     RowProcessor,
@@ -163,6 +163,7 @@ class BaseParser:
     def after_process(self) -> None:
         self.parsed_items = drop_empty_rest(self.parsed_items)
         fill_percent_markup(self.parsed_items)
+        fill_absolute_markup(self.parsed_items)
         self.stats.type_corrections = self.count_type_corrections()
 
     def count_type_corrections(self) -> int:

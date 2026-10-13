@@ -27,3 +27,12 @@ def fill_percent_markup(row_items: list[RowItem]) -> None:
             continue
         fraction = calc_percent(row_item.pricing.price_markup, row_item.pricing.price_opt)
         row_item.set_field('percent_markup', round(fraction * 100, 2))
+
+
+def fill_absolute_markup(row_items: list[RowItem]) -> None:
+    """Записать absolute_markup (отпускная − закуп), если цена наценки известна."""
+    for row_item in row_items:
+        if not row_item.pricing.price_markup:
+            continue
+        margin = row_item.pricing.price_markup - row_item.pricing.price_opt
+        row_item.set_field('absolute_markup', round(margin, 2))

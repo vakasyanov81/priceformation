@@ -30,6 +30,7 @@ write_data = [
         'price_markup': 3980.0,
         'type_production': 'Автошина',
         'percent_markup': 15.13,
+        'absolute_markup': 523.0,
     }
 ]
 
@@ -44,14 +45,15 @@ result_body_drom = {
 
 result_body_inner = {
     'cell(1,0)': 'Автошина',
-    'cell(1,10)': 'Мим',
-    'cell(1,11)': 'В наличии',
-    'cell(1,13)': 'Новое',
     'cell(1,2)': '225/40R18 Crossleader 92Y',
     'cell(1,5)': 3457.0,
     'cell(1,6)': 3980.0,
     'cell(1,8)': 15.13,
-    'cell(1,9)': 4.0,
+    'cell(1,9)': 523.0,
+    'cell(1,10)': 4.0,
+    'cell(1,11)': 'Мим',
+    'cell(1,12)': 'В наличии',
+    'cell(1,14)': 'Новое',
 }
 
 
