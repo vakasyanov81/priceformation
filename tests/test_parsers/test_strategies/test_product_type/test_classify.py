@@ -48,6 +48,8 @@ def test_non_tire_and_disk(title: str, expected: str) -> None:
         ('11.2-20 Ф-35 н.с.8 инд.114 НКШЗ сельхозшина', SPECIAL),
         ('16.9-28 Rockbuster H658 R-4', SPECIAL),
         ('17.5-25 RockBuster H108A E3/L3 н.с.28 спецшина', SPECIAL),
+        ('17.5-25 Rockbuster H108A Е3/L3 28PR TL (волна бескамерная)', SPECIAL),
+        ('23.1-26 Rockbuster H178А 16PR TT (ромбик камерная)', SPECIAL),
         ('10-16.5 RockBuster SKS-1 12PR TL (клюшка)', SPECIAL),
         ('18*7-8 (180/70-8) Haulking S-301 цельнолит. спецшина', SPECIAL),
         ('11.2-20 Ф-35 114A6', SPECIAL),
