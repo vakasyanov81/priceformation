@@ -11,10 +11,10 @@ from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import result_body_inner, write_data
 
-_GROUP_COL = 14
-_IS_DOUBLE_COL = 15
-_CANDIDATE_COL = 16
-_DISPUTED_COL = 17
+_GROUP_COL = 15
+_IS_DOUBLE_COL = 16
+_CANDIDATE_COL = 17
+_DISPUTED_COL = 18
 _DOUBLE_HEAD = ['Группа по параметрам', 'Дубль', 'Главный дубль', 'Спорная']
 
 

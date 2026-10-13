@@ -14,6 +14,7 @@ from .models import (
     AbsoluteMarkUpRules,
     MarkUpRule,
     MarkupRulesConfig,
+    PercentRange,
     VendorConfigEntry,
 )
 from .title_aliases import TitleAliasesProviderBase, TitleAliasesProviderFromUserConfig
@@ -30,6 +31,7 @@ __all__ = [
     'MarkupRulesConfig',
     'MarkupRulesProviderBase',
     'MarkupRulesProviderFromUserConfig',
+    'PercentRange',
     'TitleAliasesProviderBase',
     'TitleAliasesProviderFromUserConfig',
     'VendorConfigEntry',

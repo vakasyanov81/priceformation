@@ -90,6 +90,9 @@ max-positional-args = 6
 "load_tests/test_make_price_by_supplier.py" = ["S101", "S603", "PLR2004"]
 # I001 — keep merged from X import a, b as c to stay under flake8 WPS201 (18 imports).
 "src/parsers/base_parser/base_parser.py" = ["I001"]
+# Классификатор типа товара: таблица правил README §2–§9 — пороги-литералы,
+# много ветвлений и возвратов по формам размеров.
+"src/parsers/strategies/product_type.py" = ["PLR2004", "PLR0911", "C901", "SIM103"]
 "src/parse_report.py" = ["T201"]
 "src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
@@ -139,7 +142,9 @@ norecursedirs = [
 [tool.mutmut]
 source_paths = [ "src/" ]
 backup="False"
-pytest_add_cli_args = [ "--cov-reset", "-n=0" ]
+# --no-cov: прогон мутанта идёт по подмножеству тестов, порог покрытия
+# (--cov-fail-under=95 из addopts) роняет pytest ещё до мутаций.
+pytest_add_cli_args = [ "--no-cov", "-n=0" ]
 tests_dir= [ "tests/" ]
 mutate_only_covered_lines=true
 # Logging modules and call sites: tests do not assert log text.

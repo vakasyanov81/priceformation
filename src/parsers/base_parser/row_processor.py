@@ -62,7 +62,7 @@ class RowProcessor:  # noqa: WPS214
     def add_price_markup(self, row_item: RowItem) -> None:
         policy = self.require_markup_policy()
         opt = row_item.pricing.price_opt or 0
-        price = policy.apply(opt, row_item.pricing.price_recommended)
+        price = policy.apply(opt, row_item.pricing.price_recommended, row_item.vendor.type_production)
         if isinstance(policy, IdentityMarkupPolicy):
             row_item.set_field('price_markup', price)
         else:

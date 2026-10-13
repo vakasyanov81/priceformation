@@ -32,7 +32,7 @@ class MarkupPolicy:
 
         return default_percent
 
-    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+    def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
         """Отпускная цена до округления (шаги 1–4 базового алгоритма)."""
         price = price_recommended or 0
         opt = price_opt or 0
@@ -83,13 +83,13 @@ class IdentityMarkupPolicy(MarkupPolicy):
         """Политика «без наценки». JSON не читает."""
         return cls(MarkupRulesConfig(), ())
 
-    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+    def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
         """Отпускная = закуп. Внутренний склад: цена уже с наценкой, JSON не нужен."""
         return price_opt or 0
 
 
 class MapOnOptMarkupPolicy(MarkupPolicy):
-    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+    def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
         """Отпускная до округления: только карта % на закуп. РРЦ и absolute игнорируются."""
         opt = price_opt or 0
         return get_markup(opt, self.markup_percent_for_opt(opt))
@@ -108,7 +108,7 @@ class RecommendedOrMapMarkupPolicy(MarkupPolicy):
             price_map=parse_config.get_price_markup_map(),
         )
 
-    def apply(self, price_opt: float, price_recommended: float | None) -> float:
+    def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
         """РРЦ если есть, иначе карта % на закуп. Без absolute и min/max Mim."""
         if price_recommended:
             return price_recommended

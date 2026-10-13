@@ -13,6 +13,7 @@ from parsers.strategies.title import (
     TireCompose,
     TitleWithAliases,
 )
+from parsers.strategies.title_markers import TitleWithMarkers
 
 
 def test_default_returns_original_title() -> None:
@@ -291,3 +292,53 @@ def test_disk_compose_keeps_suffix_from_original_name() -> None:
     )
 
     assert strategy.prepare(row) == '7.5x20 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'
+
+
+def test_title_with_markers_sets_fields_on_match() -> None:
+    """Маркер в исходном названии проставляет незаполненные поля позиции."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'шип': {'season': 'зима', 'spike': 'да'}})
+    row = RowItem({'title': '175/70 R13 КАМА ALGA НК-531 шипы НКШЗ, шт'})
+
+    assert strategy.prepare(row) == '175/70 R13 КАМА ALGA НК-531 шипы НКШЗ, шт'
+    assert row.tire.season == 'зима'
+    assert row.tire.spike == 'да'
+
+
+def test_title_with_markers_ignores_absent_marker() -> None:
+    """Без маркера в названии поля не трогаются."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'шип': {'season': 'зима', 'spike': 'да'}})
+    row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801, шт'})
+
+    strategy.prepare(row)
+
+    assert row.tire.season is None
+    assert row.tire.spike is None
+
+
+def test_title_with_markers_case_insensitive() -> None:
+    """Маркер сравнивается без учёта регистра."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'ШИП': {'spike': 'да'}})
+    row = RowItem({'title': '205/55 R16 Torero MP30 шипы 94T XL'})
+
+    strategy.prepare(row)
+
+    assert row.tire.spike == 'да'
+
+
+def test_title_with_markers_keeps_existing_fields() -> None:
+    """Уже заполненные поля маркер не перетирает."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'шип': {'season': 'зима', 'spike': 'да'}})
+    row = RowItem({'title': 'шип', 'season': 'лето', 'spike': 'нет'})
+
+    strategy.prepare(row)
+
+    assert row.tire.season == 'лето'
+    assert row.tire.spike == 'нет'
+
+
+def test_title_with_markers_delegates_title() -> None:
+    """Собранное название возвращает вложенная стратегия, а не обёртка."""
+    strategy = TitleWithMarkers(NormalizeSizeChunks(), {})
+    row = RowItem({'title': '10.00R20 И-281 н.с.8'})
+
+    assert strategy.prepare(row) == '10.00R20 И-281 PR8'

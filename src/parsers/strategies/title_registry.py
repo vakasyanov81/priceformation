@@ -13,6 +13,7 @@ from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.protocols import BrandProbe, TitleStrategy
+from parsers.strategies.stk_title import StkTireCompose
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -22,17 +23,20 @@ from parsers.strategies.title import (
     TireCompose,
     TitleWithAliases,
 )
+from parsers.strategies.title_markers import TitleWithMarkers
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
 _DISK_VARIANTS = ('four_tochki',)
 _AVAILABLE = (
-    'default, normalize_title, normalize_size_chunks, tire_compose, disk_compose, '
-    'fill_fields_from_title, manufacturer_from_category'
+    'default, normalize_title, normalize_size_chunks, stk_tire_compose, tire_compose, '
+    'disk_compose, fill_fields_from_title, manufacturer_from_category'
 )
 _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'default': DefaultTitle,
     'normalize_title': NormalizeTitle,
+    'normalize_size_chunks': NormalizeSizeChunks,
+    'stk_tire_compose': StkTireCompose,
     'fill_fields_from_title': FillFieldsFromTitle,
 }
 
@@ -48,7 +52,9 @@ def make_title_strategy(
     """Собрать стратегию title по слоту конфига; при `aliases` — обернуть картой."""
     strategy = _build_strategy(config, where, manufacturer_reader)
     if config.aliases:
-        return TitleWithAliases(strategy, load_title_aliases(supplier_name))
+        strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name))
+    if config.markers:
+        strategy = TitleWithMarkers(strategy, config.markers)
     return strategy
 
 

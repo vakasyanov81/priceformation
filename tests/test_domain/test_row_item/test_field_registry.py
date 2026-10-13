@@ -9,7 +9,7 @@ from domain.row_item import field_registry as registry
 from domain.row_item import row_item_formatter as row_format
 from domain.row_item.row_item import RowItem
 
-_PRICE_KEYS = ('price_opt', 'price_recommended', 'price_markup')
+_PRICE_KEYS = ('price_opt', 'price_recommended', 'price_markup', 'absolute_markup')
 _VO_GROUPS = (
     registry.IDENTITY,
     registry.TIRE,

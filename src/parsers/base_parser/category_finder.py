@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
+from parsers.strategies.product_types import CATEGORY_ALIASES
 
 _UNKNOWN_TYPE_LABEL = 'не указан'
 _MSG_SKIPPED_CATEGORIES = (
@@ -44,16 +45,7 @@ class CategoryFinder:
         return category
 
 
-map_categories: dict[str, tuple[str, ...] | str] = {
-    'Грузовая шина': 'грузовая',
-    'Легкогрузовая шина': 'легкогрузовая',
-    'Легковая шина': ('легковая', 'грязевая'),
-    'Спецшина': ('спецшина', 'сельхоз'),
-    'Мотошина': ('мотошина', 'квадроциклы'),
-    'Автокамера': ('камеры', 'камера', 'автокамеры'),
-    'Диск': ('диски', 'автодиск', 'автодиски'),
-    'Ободная лента': ('о/лента', 'лента', 'ленты'),
-}
+map_categories: dict[str, tuple[str, ...] | str] = dict(CATEGORY_ALIASES)
 
 
 def canonical_product_type(

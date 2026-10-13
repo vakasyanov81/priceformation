@@ -36,8 +36,10 @@ RAW_ROW: dict[str, Any] = {
     'price_recommended': '',
     'price_markup': 3980,
     'percent_markup': '15,13',
+    'absolute_markup': 522.5,
     'supplier_name': 'Мим',
     'type_production': 'Автошина',
+    'type_corrected': True,
     'rest_count': 4.0,
     'reserve_count': '2',
     'delivery_period': 3,
@@ -94,8 +96,10 @@ GOLDEN_TO_DICT: list[CellValue] = [
     ('price_recommended', 0.0),
     ('price_markup', 3980.0),
     ('percent_markup', 15.13),
+    ('absolute_markup', 522.5),
     ('supplier_name', 'Мим'),
     ('type_production', 'Автошина'),
+    ('type_corrected', True),
     ('rest_count', 4),
     ('reserve_count', 2),
     ('delivery_period', 3),
@@ -154,7 +158,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Состояние', 'Новое'),
     ],
     'ForInner': [
-        ('Тип товара', 'Автошина'),
+        ('Тип товара', 'Автошина*'),
         ('Бренд', 'crossleader'),
         ('Номенклатура', '225/40R18 Crossleader 92Y'),
         ('Сезон', 'Зима'),
@@ -163,6 +167,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Цена', 3980.0),
         ('Рекомендуемая Цена', None),
         ('Наценка %', 15.13),
+        ('Наценка руб.', 522.5),
         ('Остаток', 4),
         ('Поставщик', 'Мим'),
         ('Наличие', 'В наличии'),
@@ -219,7 +224,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Состояние', 'Новое'),
     ],
     'ForDoubles': [
-        ('Тип товара', 'Автошина'),
+        ('Тип товара', 'Автошина*'),
         ('Бренд', 'crossleader'),
         ('Номенклатура', '225/40R18 Crossleader 92Y'),
         ('Сезон', 'Зима'),
@@ -228,6 +233,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Цена', 3980.0),
         ('Рекомендуемая Цена', None),
         ('Наценка %', 15.13),
+        ('Наценка руб.', 522.5),
         ('Остаток', 4),
         ('Поставщик', 'Мим'),
         ('Наличие', 'В наличии'),
@@ -330,3 +336,35 @@ def test_drom_meta_matches_golden(tmp_path: Path) -> None:
     loaded = json.loads(meta_path.read_text(encoding='utf-8'))
     numbers = map(str, range(1, len(GOLDEN_DROM_HEAD) + 1))
     assert loaded == dict(zip(numbers, GOLDEN_DROM_HEAD, strict=True))
+
+
+def _inner_row(type_corrected: bool) -> dict[str, Any]:
+    """Плоская строка для шаблона ForInner с заданным признаком расхождения типа."""
+    return RowItem(
+        {'title': '10.00 R20 ...', 'type_production': 'Грузовая шина', 'type_corrected': type_corrected},
+    ).to_dict()
+
+
+def test_for_inner_xlsx_marks_corrected_type(tmp_path: Path) -> None:
+    """xlsx шаблона for_inner: у изменённого типа суффикс `*`."""
+    driver = FakeXlwtDriver()
+    writer = XlsWriter(driver, [_inner_row(True)], ForInner, result_folder=str(tmp_path))
+    writer.write()
+
+    assert driver.body['cell(1,0)'] == 'Грузовая шина*'
+
+
+def test_for_inner_xlsx_keeps_plain_type(tmp_path: Path) -> None:
+    """Без расхождения типа суффикса нет."""
+    driver = FakeXlwtDriver()
+    writer = XlsWriter(driver, [_inner_row(False)], ForInner, result_folder=str(tmp_path))
+    writer.write()
+
+    assert driver.body['cell(1,0)'] == 'Грузовая шина'
+
+
+def test_for_inner_jsonl_marks_corrected_type(tmp_path: Path) -> None:
+    """jsonl шаблона for_inner собирается тем же get_value — суффикс `*` попадает."""
+    path = write_template_jsonl([_inner_row(True)], ForInner, str(tmp_path))
+
+    assert 'Грузовая шина*' in Path(path).read_text(encoding='utf-8')

@@ -159,6 +159,16 @@ def test_header_rows_single_section_keeps_section_type() -> None:
     assert strategy.resolve(RowItem({'title': '11.00R20 Taitong HS801Q', 'price_opt': 24000})) == 'Автошина'
 
 
+def test_header_rows_keeps_manufacturer_and_zero_rest() -> None:
+    """Производитель раздела и признак нулевого остатка сохраняются."""
+    strategy = HeaderRowsCategory(zero_rest_categories=('прочие',))
+    strategy.resolve(RowItem({'title': 'Автошины РОКБАСТЕР на СПЕЦТЕХНИКУ'}))
+
+    assert strategy.current_manufacturer() == 'рокбастер'
+    strategy.resolve(RowItem({'title': 'Прочие автошины'}))
+    assert strategy.is_zero_rest_category() is True
+
+
 def test_header_rows_config_map_overrides_builtin() -> None:
     strategy = HeaderRowsCategory.from_config(_config(mapping={'автошины': 'Шина'}))
 
@@ -217,6 +227,9 @@ def test_header_rows_zero_rest_flag() -> None:
         ('16.9-28 NEXT R-4', 'Спецшина'),
         ('33х12.5-15 FORWARD Safari', 'Спецшина'),
         ('28LR26 NORTEC H-23', 'Спецшина'),
+        ('30.5L-32 Nortec H-04 16PR 169A8 TT', 'Спецшина'),
+        ('12.4L-16 Бел-160М 8PR', 'Спецшина'),
+        ('520/70 R38 169A8', 'Спецшина'),
         ('10.00 R20 DOUBLEROAD унив.ось', 'Грузовая шина'),
         ('11 R22.5 TAITONG руль.ось', 'Грузовая шина'),
         ('12.00-18 К-70 ОШЗ', 'Грузовая шина'),

@@ -5,6 +5,7 @@ import pytest
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import NormalizeTitle
+from parsers.strategies.stk_title import StkTireCompose
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -14,6 +15,7 @@ from parsers.strategies.title import (
     TireCompose,
     TitleWithAliases,
 )
+from parsers.strategies.title_markers import TitleWithMarkers
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
@@ -23,6 +25,7 @@ _KNOWN = [
     ('default', DefaultTitle),
     ('normalize_title', NormalizeTitle),
     ('normalize_size_chunks', NormalizeSizeChunks),
+    ('stk_tire_compose', StkTireCompose),
     ('fill_fields_from_title', FillFieldsFromTitle),
 ]
 
@@ -115,3 +118,24 @@ def test_aliases_wraps_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
     assert isinstance(strategy, TitleWithAliases)
     assert strategy.prepare(RowItem({'title': 'Старый'})) == 'Новый'
     assert seen['supplier_name'] == 's'
+
+
+def test_markers_wrap_strategy_and_set_fields() -> None:
+    """markers конфига оборачивают стратегию и проставляют поля по названию."""
+    strategy = make_title_strategy(
+        TitleConfig(strategy='default', markers={'шип': {'season': 'зима', 'spike': 'да'}}),
+        WHERE,
+    )
+    row = RowItem({'title': '205/55 R16 Torero MP30 шипы'})
+
+    assert isinstance(strategy, TitleWithMarkers)
+    assert strategy.prepare(row) == '205/55 R16 Torero MP30 шипы'
+    assert row.tire.season == 'зима'
+    assert row.tire.spike == 'да'
+
+
+def test_without_markers_strategy_is_not_wrapped() -> None:
+    """Без markers обёртка не создаётся."""
+    strategy = make_title_strategy(TitleConfig(strategy='default'), WHERE)
+
+    assert isinstance(strategy, DefaultTitle)

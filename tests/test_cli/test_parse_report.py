@@ -84,6 +84,7 @@ def test_empty_stats_exact() -> None:
         'doubles': 0,
         'unknown_category_skips': 0,
         'black_list_skips': 0,
+        'type_corrections': 0,
         'elapsed_seconds': _ROUNDED,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},
@@ -217,6 +218,7 @@ def _result_with_skips() -> ParseResult:
     parsed.parsed_items = [row]
     parsed.unknown_category_skips.append(('МИМ', _SUV))
     parsed.black_list_skips = 3
+    parsed.type_corrections = 2
     return parsed
 
 
@@ -229,6 +231,7 @@ def test_stats_and_warnings_from_result() -> None:
         'doubles': 1,
         'unknown_category_skips': 1,
         'black_list_skips': 3,
+        'type_corrections': 2,
         'elapsed_seconds': _ROUNDED,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 20.0, 'max': 20.0},
@@ -236,6 +239,7 @@ def test_stats_and_warnings_from_result() -> None:
     warnings = warnings_from_result(parsed)
     assert any(_SUV in message for message in warnings)
     assert any('black_list' in message for message in warnings)
+    assert any('скорректирован' in message for message in warnings)
 
 
 def test_stats_markup_range_across_rows() -> None:
@@ -251,6 +255,7 @@ def test_stats_markup_range_across_rows() -> None:
         'doubles': 0,
         'unknown_category_skips': 0,
         'black_list_skips': 0,
+        'type_corrections': 0,
         'elapsed_seconds': 0.0,
         'percent_markup': {'min': 20.0, 'max': 50.0},
         'absolute_markup': {'min': 20.0, 'max': 100.0},
@@ -267,6 +272,7 @@ def test_stats_skip_unpriced_rows() -> None:
         'doubles': 0,
         'unknown_category_skips': 0,
         'black_list_skips': 0,
+        'type_corrections': 0,
         'elapsed_seconds': 0.0,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},

@@ -1,6 +1,7 @@
 # flake8: noqa: WPS201
 """base parser logic — composition of FileReader, RowProcessor, TitleFilter."""
 
+import logging
 from re import sub as _re_sub
 from typing import Any, Protocol
 
@@ -18,7 +19,7 @@ from parsers.base_parser.markup_policy import (
     make_markup_policy,
 )
 from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatistic
-from parsers.base_parser.price_markup import fill_percent_markup, get_markup as price_get_markup
+from parsers.base_parser.price_markup import fill_absolute_markup, fill_percent_markup, get_markup as price_get_markup
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
 from parsers.base_parser.row_processor import (
     RowProcessor,
@@ -28,7 +29,10 @@ from parsers.base_parser.row_processor import (
 )
 from parsers.base_parser.title_filter import TitleFilter
 from domain.row_item.row_item import RowItem
+from parsers.strategies.product_types import declared_matches
 from parsers.xls_reader import IXlsReader, XlsReader
+
+logger = logging.getLogger(__name__)
 
 # Konstanta для get_spike_title (прототип была в base_parser_title).
 _SPIKE_YES_VALUES = {'ш.', 'да'}
@@ -159,6 +163,16 @@ class BaseParser:
     def after_process(self) -> None:
         self.parsed_items = drop_empty_rest(self.parsed_items)
         fill_percent_markup(self.parsed_items)
+        fill_absolute_markup(self.parsed_items)
+        self.stats.type_corrections = self.count_type_corrections()
+
+    def count_type_corrections(self) -> int:
+        """Число позиций итогового результата с исправленным типом.
+
+        Считается после ``drop_empty_rest``: расхождения у позиций, отброшенных
+        без цены закупки или остатка, в прайс не попадают и в счётчик не входят.
+        """
+        return sum(1 for row_item in self.parsed_items if row_item.vendor.type_corrected)
 
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return enrich_items(self, row_items)
@@ -236,6 +250,7 @@ class BaseParser:
             elif step == 'category':
                 self.apply_category(row_item)
                 self.zero_rest_without_category(hooks, row_item)
+                self.apply_category_fields(hooks, row_item)
             elif step == 'markup':
                 self.add_price_markup(row_item)
 
@@ -259,15 +274,39 @@ class BaseParser:
         self.stats.unknown_category_skips.append(raw_label)
 
     def apply_category(self, row_item: RowItem) -> None:
-        category = self.category_for(row_item)
-        if category is not None:
-            row_item.set_field('type_production', category)
+        """Назначить `type_production`: независимый тип или заявленный стратегией.
+
+        При включённом `product_type` в `type_production` идёт вычисленный тип,
+        а `type_corrected` помечает расхождение с заявленным (конкретным) типом.
+        Если свой тип не определён (`''`), остаётся заявленный — позицию без
+        независимого ответа не оставляем без типа и не помечаем расхождением
+        (README §7 п.4: нераспознанный тип — не повод потерять категорию).
+        """
+        declared = self.category_for(row_item)
+        if self._strategy_hooks is not None and self._strategy_hooks.product_type is not None:
+            own = self._strategy_hooks.product_type.classify(row_item)
+            chosen = own or declared
+            if chosen is not None:
+                row_item.set_field('type_production', chosen)
+            corrected = bool(own) and not declared_matches(declared, own)
+            row_item.set_field('type_corrected', corrected)
+            if corrected:
+                title = row_item.identity.title
+                logger.debug(f'Тип товара изменён: заявлено «{declared}», вычислено «{own}» // {title}')
+        elif declared is not None:
+            row_item.set_field('type_production', declared)
 
     @classmethod
     def zero_rest_without_category(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Обнулить остаток строки без категории, чтобы она не попала в прайс."""
         if hooks.zero_rest_without_category and not row_item.vendor.type_production:
             row_item.set_field('rest_count', 0)
+
+    @classmethod
+    def apply_category_fields(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Дописать поля по категории-размеру названия (`category.size_fields`)."""
+        if hooks.category_fields is not None:
+            hooks.category_fields.apply(row_item)
 
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         """Отсечь по мин. остатку: стратегия или дефолт."""

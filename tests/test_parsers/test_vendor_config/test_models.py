@@ -262,6 +262,36 @@ def test_category_reads_all_fields() -> None:
     )
 
 
+def test_category_reads_size_fields() -> None:
+    """`size_fields` читается: категория по размеру → поля позиции."""
+    raw = {
+        'strategy': 'tire_size_category',
+        'size_fields': {'Грузовая шина': {'season': 'Всесезонная'}, 'Спецшина': {'season': 'Всесезонная'}},
+    }
+
+    assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(
+        strategy='tire_size_category',
+        size_fields={'Грузовая шина': {'season': 'Всесезонная'}, 'Спецшина': {'season': 'Всесезонная'}},
+    )
+
+
+def test_category_without_size_fields_is_empty() -> None:
+    """Без ключа `size_fields` карта пустая, не None."""
+    assert CategoryConfig.from_dict({}, WHERE).size_fields == {}
+
+
+def test_category_reads_calculate_type_flag() -> None:
+    """Флаг `calculate_type` включается из конфига."""
+    raw = {'strategy': 'header_rows', 'calculate_type': True}
+
+    assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(strategy='header_rows', calculate_type=True)
+
+
+def test_category_calculate_type_defaults_off() -> None:
+    """Без ключа `calculate_type` флаг выключен."""
+    assert CategoryConfig.from_dict({}, WHERE).calculate_type is False
+
+
 def test_title_reads_all_fields() -> None:
     """Все ключи title читаются в объект без потерь и подмен."""
     raw = {'strategy': 'title_keywords', 'variant': 'v1', 'aliases': True, 'fallback_brand': 'Алтайшина'}
@@ -272,6 +302,24 @@ def test_title_reads_all_fields() -> None:
         aliases=True,
         fallback_brand='Алтайшина',
     )
+
+
+def test_title_reads_markers() -> None:
+    """Маркеры title читаются: подстрока → поля позиции со значениями."""
+    raw = {
+        'strategy': 'stk_tire_compose',
+        'markers': {'шип': {'season': 'зима', 'spike': 'да'}},
+    }
+
+    assert TitleConfig.from_dict(raw, WHERE) == TitleConfig(
+        strategy='stk_tire_compose',
+        markers={'шип': {'season': 'зима', 'spike': 'да'}},
+    )
+
+
+def test_title_without_markers_is_empty() -> None:
+    """Без ключа `markers` карта пустая, не None."""
+    assert TitleConfig.from_dict({}, WHERE).markers == {}
 
 
 def test_pricing_reads_all_fields() -> None:

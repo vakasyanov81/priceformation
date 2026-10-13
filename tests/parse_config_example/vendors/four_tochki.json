@@ -49,7 +49,7 @@
         "variant": "four_tochki"
       },
       "pricing": {
-        "policy": "recommended_or_map",
+        "policy": "recommended_range",
         "rules": {
           "markup_rules": {
             "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
@@ -58,11 +58,14 @@
             "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
             "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
           },
-          "min_recommended_percent_markup": 0.15,
-          "max_recommended_percent_markup": 0,
+          "category_markup_ranges": {
+            "Грузовая шина": { "min": 0.07, "max": 0.12 },
+            "Легкогрузовая шина": { "min": 0.09, "max": 0.12 },
+            "Диск": { "min": 0.07, "max": 0.15 }
+          },
           "absolute_markup_rules": {
-            "min_absolute_markup": 300,
-            "markup_percent": 1.3
+            "min_absolute_markup": 500,
+            "mode": "delta"
           }
         }
       }
@@ -102,7 +105,7 @@
         "variant": "four_tochki"
       },
       "pricing": {
-        "policy": "recommended_or_map",
+        "policy": "recommended_range",
         "rules": {
           "markup_rules": {
             "rule_22": { "min": 0, "max": 5001, "percent": 0.20 },
@@ -111,11 +114,14 @@
             "rule_14": { "min": 15000, "max": 20001, "percent": 0.17 },
             "rule_12": { "min": 20000, "max": 25001, "percent": 0.15 }
           },
-          "min_recommended_percent_markup": 0.15,
-          "max_recommended_percent_markup": 0,
+          "category_markup_ranges": {
+            "Грузовая шина": { "min": 0.07, "max": 0.12 },
+            "Легкогрузовая шина": { "min": 0.09, "max": 0.12 },
+            "Диск": { "min": 0.07, "max": 0.15 }
+          },
           "absolute_markup_rules": {
-            "min_absolute_markup": 300,
-            "markup_percent": 1.3
+            "min_absolute_markup": 500,
+            "mode": "delta"
           }
         }
       }

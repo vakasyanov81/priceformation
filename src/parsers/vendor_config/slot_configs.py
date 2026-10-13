@@ -5,6 +5,7 @@ from typing import Any
 
 from parsers.data_provider.json_fields import as_config_object, read_flag, read_number, read_object
 from parsers.data_provider.models import MarkupRulesConfig
+from parsers.vendor_config.field_map import read_field_map
 from parsers.vendor_config.fields import read_int, read_str_list, read_str_map, read_text
 
 DEFAULT_MIN_REST = 4
@@ -17,7 +18,17 @@ DEFAULT_PIPELINE = ('title', 'min_rest', 'category', 'markup')
 
 @dataclass(frozen=True, slots=True)
 class CategoryConfig:
-    """Стратегия категории строки (слот `category`)."""
+    """Стратегия категории строки (слот `category`).
+
+    `size_fields` дополняет категорию: категория, определённая по размеру
+    названия (теми же правилами, что независимый `ProductTypeClassifier`),
+    → поля позиции. Независимо от стратегии слота: Пошк/СТК/Пионер получают
+    сезон «Всесезонная» у грузовых и спецшин.
+
+    `calculate_type` включает слой независимого типа (`ProductTypeClassifier`):
+    заявленный стратегией тип сохраняется для сверки, а в `type_production`
+    пишется вычисленный; расхождение помечается `type_corrected`.
+    """
 
     strategy: str = DEFAULT_CATEGORY_STRATEGY
     fixed_value: str = ''
@@ -26,6 +37,8 @@ class CategoryConfig:
     default_value: str = ''
     unknown_skip: bool = False
     zero_rest_categories: tuple[str, ...] = ()
+    size_fields: dict[str, dict[str, str]] = field(default_factory=dict)
+    calculate_type: bool = False
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> CategoryConfig:
@@ -39,17 +52,25 @@ class CategoryConfig:
             default_value=read_text(payload, 'default', where, ''),
             unknown_skip=read_flag(payload, 'unknown_skip', where),
             zero_rest_categories=read_str_list(payload, 'zero_rest_categories', where, ()),
+            size_fields=read_field_map(payload, 'size_fields', where),
+            calculate_type=read_flag(payload, 'calculate_type', where),
         )
 
 
 @dataclass(frozen=True, slots=True)
 class TitleConfig:
-    """Стратегия заголовка строки (слот `title`)."""
+    """Стратегия заголовка строки (слот `title`).
+
+    `markers` дополняет стратегию: подстрока исходного названия → поля позиции.
+    Название содержит маркер — незаполненные поля получают заданные значения
+    (Пошк: ``шип`` → ``season: зима``, ``spike: да``).
+    """
 
     strategy: str = DEFAULT_TITLE_STRATEGY
     variant: str = ''
     aliases: bool = False
     fallback_brand: str = ''
+    markers: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> TitleConfig:
@@ -60,6 +81,7 @@ class TitleConfig:
             variant=read_text(payload, 'variant', where, ''),
             aliases=read_flag(payload, 'aliases', where),
             fallback_brand=read_text(payload, 'fallback_brand', where, ''),
+            markers=read_field_map(payload, 'markers', where),
         )
 
 

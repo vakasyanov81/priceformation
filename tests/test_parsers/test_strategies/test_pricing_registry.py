@@ -10,7 +10,7 @@ from parsers.base_parser.markup_policy import (
     RecommendedOrMapMarkupPolicy,
 )
 from parsers.data_provider.models import MarkUpRule, MarkupRulesConfig
-from parsers.strategies.pricing import PercentByThresholdMarkupPolicy
+from parsers.strategies.pricing import PercentByThresholdMarkupPolicy, RecommendedRangeMarkupPolicy
 from parsers.strategies.pricing_registry import make_pricing_strategy
 from parsers.vendor_config.slot_configs import PricingConfig
 
@@ -21,6 +21,7 @@ _KNOWN = [
     ('identity', IdentityMarkupPolicy),
     ('map_on_opt', MapOnOptMarkupPolicy),
     ('recommended_or_map', RecommendedOrMapMarkupPolicy),
+    ('recommended_range', RecommendedRangeMarkupPolicy),
     ('percent_by_threshold', PercentByThresholdMarkupPolicy),
 ]
 
@@ -70,6 +71,7 @@ def test_threshold_without_opt_uses_low() -> None:
         ('base', MarkupPolicy),
         ('map_on_opt', MapOnOptMarkupPolicy),
         ('recommended_or_map', RecommendedOrMapMarkupPolicy),
+        ('recommended_range', RecommendedRangeMarkupPolicy),
     ],
 )
 def test_policy_keeps_rules_and_price_map(name: str, expected_type: type) -> None:

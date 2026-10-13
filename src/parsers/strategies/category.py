@@ -8,6 +8,7 @@ from collections.abc import Mapping
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.category_finder import canonical_product_type, raw_category_label
+from parsers.strategies.product_types import CAMERA, DISK, GENERIC_TIRE, OTHER, RIM_TAPE
 from parsers.strategies.protocols import CategoryContext
 from parsers.strategies.tire_category import non_tire_product_type
 from parsers.vendor_config.slot_configs import CategoryConfig
@@ -18,14 +19,14 @@ _MANUFACTURER_HEAD_PREFIX = 'автошин'
 
 # Канонизация первого слова строки-заголовка (падеж/число/регистр) к типу товара.
 _HEADER_CATEGORIES: Mapping[str, str] = {
-    'автошина': 'Автошина',
-    'автошины': 'Автошина',
-    'автокамера': 'Автокамера',
-    'автокамеры': 'Автокамера',
-    'диск': 'Диск',
-    'диски': 'Диск',
-    'ободная': 'Ободная лента',
-    'прочие': 'Прочие',
+    'автошина': GENERIC_TIRE,
+    'автошины': GENERIC_TIRE,
+    'автокамера': CAMERA,
+    'автокамеры': CAMERA,
+    'диск': DISK,
+    'диски': DISK,
+    'ободная': RIM_TAPE,
+    'прочие': OTHER,
 }
 
 
