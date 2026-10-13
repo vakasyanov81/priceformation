@@ -2,6 +2,8 @@
 
 from typing import cast
 
+import pytest
+
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
@@ -16,7 +18,9 @@ from parsers.data_provider import (
     AbsoluteMarkUpRules,
     MarkUpRule,
     MarkupRulesConfig,
+    PercentRange,
 )
+from parsers.strategies.pricing import RecommendedRangeMarkupPolicy
 
 _OPT = 1000
 _OVERLAP_OPT = 5000
@@ -456,3 +460,100 @@ def test_small_absolute_delta_at_floor_is_small() -> None:
     """В delta-режиме маржа, равная полу, считается малой (`<=`)."""
     policy = _zapaska_like_policy(min_absolute=_DELTA_FLOOR, absolute_mode=ABSOLUTE_MODE_DELTA)
     assert policy._is_small_absolute_markup(_OPT + _DELTA_FLOOR, _OPT) is True  # noqa: WPS437
+
+
+_TRUCK_CATEGORY = 'Грузовая шина'
+_TRUCK_RANGE = PercentRange(min=0.07, max=0.12)
+_TRUCK_MIN_PRICE = 1070
+_TRUCK_MAX_PRICE = 1120
+_RRC_BELOW_TRUCK_MIN = 1050
+_RRC_IN_TRUCK_RANGE = 1100
+_CHEAP_RULE = MarkUpRule(min=0, max=5001, percent_markup=0.05)
+_DISK_CATEGORY = 'Диск'
+_RANGE_FLOOR = 500
+
+
+def _range_policy(
+    *,
+    ranges: dict[str, PercentRange] | None = None,
+    price_map: tuple[MarkUpRule, ...] = (_FIRST_RULE,),
+    min_absolute: float = 0,
+    absolute_mode: str = 'multiplier',
+) -> RecommendedRangeMarkupPolicy:
+    rules = MarkupRulesConfig(
+        markup_rules={},
+        category_markup_ranges={} if ranges is None else ranges,
+        absolute_markup_rules=AbsoluteMarkUpRules(
+            min_absolute_markup=min_absolute,
+            mode=absolute_mode,
+        ),
+    )
+    return RecommendedRangeMarkupPolicy(rules, price_map)
+
+
+def test_range_policy_raises_low_rrc_to_min() -> None:
+    """РРЦ ниже минимума диапазона поднимается до нижней границы."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, _RRC_BELOW_TRUCK_MIN, _TRUCK_CATEGORY) == pytest.approx(_TRUCK_MIN_PRICE)
+
+
+def test_range_policy_keeps_rrc_in_range() -> None:
+    """РРЦ внутри диапазона остаётся как у поставщика."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, _RRC_IN_TRUCK_RANGE, _TRUCK_CATEGORY) == _RRC_IN_TRUCK_RANGE
+
+
+def test_range_policy_keeps_rrc_above_max() -> None:
+    """РРЦ выше максимума не понижается (диапазон ограничивает только снизу)."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, _TRUCK_MAX_PRICE, _TRUCK_CATEGORY) == _TRUCK_MAX_PRICE
+
+
+def test_range_policy_without_rrc_clamps_map_to_max() -> None:
+    """Без РРЦ процент карты зажимается сверху максимумом категории."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, None, _TRUCK_CATEGORY) == pytest.approx(_TRUCK_MAX_PRICE)
+
+
+def test_range_policy_without_rrc_clamps_map_to_min() -> None:
+    """Без РРЦ процент карты зажимается снизу минимумом категории."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE}, price_map=(_CHEAP_RULE,))
+    assert policy.apply(_OPT, None, _TRUCK_CATEGORY) == pytest.approx(_TRUCK_MIN_PRICE)
+
+
+def test_range_policy_unknown_category_keeps_rrc() -> None:
+    """Категория вне карты диапазонов считается как `recommended_or_map`."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, _RRC_BELOW_TRUCK_MIN, _DISK_CATEGORY) == _RRC_BELOW_TRUCK_MIN
+
+
+def test_range_policy_unknown_category_uses_map() -> None:
+    """Категория вне карты без РРЦ берёт карту без клампа."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, None, _DISK_CATEGORY) == get_markup(_OPT, _PERCENT)
+
+
+def test_range_policy_without_category_uses_map() -> None:
+    """Пустая категория обрабатывается как категория вне карты."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE})
+    assert policy.apply(_OPT, None, None) == get_markup(_OPT, _PERCENT)
+
+
+def test_range_policy_applies_absolute_floor() -> None:
+    """Маржа меньше абсолютного пола заменяется ценой `закуп + пол`."""
+    policy = _range_policy(
+        ranges={_TRUCK_CATEGORY: _TRUCK_RANGE},
+        min_absolute=_RANGE_FLOOR,
+        absolute_mode=ABSOLUTE_MODE_DELTA,
+    )
+    assert policy.apply(_OPT, _RRC_BELOW_TRUCK_MIN, _TRUCK_CATEGORY) == _OPT + _RANGE_FLOOR
+
+
+def test_range_policy_no_floor_when_margin_above() -> None:
+    """Маржа не меньше пола — цена не меняется."""
+    policy = _range_policy(
+        ranges={_TRUCK_CATEGORY: _TRUCK_RANGE},
+        min_absolute=_RANGE_FLOOR,
+        absolute_mode=ABSOLUTE_MODE_DELTA,
+    )
+    assert policy.apply(_OPT, _TRUCK_MAX_PRICE + _RANGE_FLOOR, _TRUCK_CATEGORY) == _TRUCK_MAX_PRICE + _RANGE_FLOOR

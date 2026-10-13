@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
@@ -13,7 +14,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.data_provider import MarkUpRule, MarkupRulesConfig
+from parsers.data_provider import MarkUpRule, MarkupRulesConfig, PercentRange
 
 _MIM_FIRST = 0.2
 _POSHK_FIRST = 0.7
@@ -84,3 +85,31 @@ def test_percent_keys_yield_same_params() -> None:
 
 def test_both_keys_prefer_percent_markup() -> None:
     assert _rule(percent_markup=_BOTH_KEYS_PREFERRED).percent_markup == pytest.approx(_BOTH_KEYS_PREFERRED)
+
+
+_RANGE_WHERE = 'four_tochki.json → sections[0] → pricing → rules'
+_RANGE_CATEGORY = 'Грузовая шина'
+_RANGE_MIN = 0.07
+_RANGE_MAX = 0.12
+
+
+def test_category_markup_ranges_parsed() -> None:
+    """Секция `category_markup_ranges`: категория → диапазон процента."""
+    raw = {'category_markup_ranges': {_RANGE_CATEGORY: {'min': _RANGE_MIN, 'max': _RANGE_MAX}}}
+    config = MarkupRulesConfig.from_dict(raw, _RANGE_WHERE)
+    assert config.category_markup_ranges == {_RANGE_CATEGORY: PercentRange(min=_RANGE_MIN, max=_RANGE_MAX)}
+
+
+def test_category_markup_ranges_default_empty() -> None:
+    """Без секции `category_markup_ranges` карта диапазонов пуста."""
+    assert MarkupRulesConfig.from_dict({}, _RANGE_WHERE).category_markup_ranges == {}
+
+
+def test_category_markup_ranges_error_reports_path() -> None:
+    """Ошибка в диапазоне несёт путь до категории и ключа."""
+    raw = {'category_markup_ranges': {'Диск': {'min': 'abc'}}}
+    with pytest.raises(ConfigValidationError) as exc_info:
+        MarkupRulesConfig.from_dict(raw, _RANGE_WHERE)
+    message = str(exc_info.value)
+    assert 'category_markup_ranges.Диск' in message
+    assert '«min» должно быть числом' in message

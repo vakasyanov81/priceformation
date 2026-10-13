@@ -20,6 +20,7 @@ ABSOLUTE_MODE_DELTA = 'delta'
 _ABSOLUTE_MODES = (ABSOLUTE_MODE_MULTIPLIER, ABSOLUTE_MODE_DELTA)
 _MARKUP_RULES_KEY = 'markup_rules'
 _ABSOLUTE_RULES_KEY = 'absolute_markup_rules'
+_CATEGORY_RANGES_KEY = 'category_markup_ranges'
 _PERCENT_KEY = 'percent_markup'
 _PERCENT_ALIAS_KEY = 'percent'
 
@@ -51,6 +52,23 @@ class MarkUpRule:
 
 
 @dataclass(frozen=True, slots=True)
+class PercentRange:
+    """Допустимый диапазон процента наценки для категории товара."""
+
+    min: float
+    max: float
+
+    @classmethod
+    def from_dict(cls, raw: Any, where: str) -> PercentRange:
+        """Разобрать диапазон `{min, max}`."""
+        rule = as_config_object(raw, where)
+        return cls(
+            min=read_number(rule, 'min', where),
+            max=read_number(rule, 'max', where),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class AbsoluteMarkUpRules:
     """Абсолютные правила наценки."""
 
@@ -77,6 +95,7 @@ class MarkupRulesConfig:
     min_recommended_percent_markup: float = 0
     max_recommended_percent_markup: float = 0
     absolute_markup_rules: AbsoluteMarkUpRules = field(default_factory=AbsoluteMarkUpRules)
+    category_markup_ranges: dict[str, PercentRange] = field(default_factory=dict)
     replace_small_recommended: bool = False
 
     @classmethod
@@ -91,6 +110,7 @@ class MarkupRulesConfig:
                 read_object(rules, _ABSOLUTE_RULES_KEY, where),
                 f'{where} → {_ABSOLUTE_RULES_KEY}',
             ),
+            category_markup_ranges=cls._read_ranges(read_object(rules, _CATEGORY_RANGES_KEY, where), where),
             replace_small_recommended=read_flag(rules, 'replace_small_recommended', where),
         )
 
@@ -100,6 +120,14 @@ class MarkupRulesConfig:
         parsed: dict[str, MarkUpRule] = {}
         for name, rule_raw in rules_raw.items():
             parsed[name] = MarkUpRule.from_dict(rule_raw, f'{where} → {_MARKUP_RULES_KEY}.{name}')
+        return parsed
+
+    @classmethod
+    def _read_ranges(cls, ranges_raw: RawConfig, where: str) -> dict[str, PercentRange]:
+        """Разобрать секцию `category_markup_ranges`: категория → диапазон процента."""
+        parsed: dict[str, PercentRange] = {}
+        for category, range_raw in ranges_raw.items():
+            parsed[category] = PercentRange.from_dict(range_raw, f'{where} → {_CATEGORY_RANGES_KEY}.{category}')
         return parsed
 
     def should_replace_with_map(self, price_recommended: float | None, recommended_is_small: bool) -> bool:

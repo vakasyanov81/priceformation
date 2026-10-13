@@ -273,7 +273,9 @@ condition  available
 - `base` — наценка по карте `rules` (по умолчанию);
 - `identity` — без наценки (цена из прайса уже отпускная, например Автоснабжение);
 - `map_on_opt` — наценка по карте `%` от опта;
-- `recommended_or_map` — РРЦ, если она есть, иначе карта `%` (Форточки);
+- `recommended_or_map` — РРЦ, если она есть, иначе карта `%`;
+- `recommended_range` — как `recommended_or_map`, но с диапазоном процента по
+  категории (`category_markup_ranges`) и абсолютным полом (Форточки);
 - `percent_by_threshold` — фиксированный процент в зависимости от закупа:
   `rules.threshold`, `rules.low`, `rules.high` (наценка Мим, грузовая вкладка).
 
@@ -317,6 +319,24 @@ condition  available
 - `multiplier` (по умолчанию) — цена = `закуп * markup_percent`;
 - `delta` — цена = `закуп + min_absolute_markup` (поле `markup_percent` не используется).
 
+`category_markup_ranges` — допустимый диапазон процента наценки по категории
+товара (политика `recommended_range`). Ключ — имя категории (`type_production`:
+`Грузовая шина`, `Легкогрузовая шина`, `Диск`, …), значение — `{min, max}`:
+```
+"category_markup_ranges": {
+  "Грузовая шина": { "min": 0.07, "max": 0.12 },
+  "Легкогрузовая шина": { "min": 0.09, "max": 0.12 },
+  "Диск": { "min": 0.07, "max": 0.15 }
+}
+```
+Для категории из карты:
+- РРЦ есть — цена не опускается ниже `закуп * (1 + min)`; РРЦ с наценкой выше
+  `max` сохраняется как у поставщика (диапазон ограничивает только снизу);
+- РРЦ нет — процент карты зажимается в `[min, max]`.
+
+Категории вне карты считаются как `recommended_or_map`. Затем применяется
+абсолютный пол (`absolute_markup_rules`).
+
 ## Примеры поставщиков
 
 - **Пошк** — `policy: map_on_opt`, карта от 70 % на дешёвые позиции, `min_rest: 0`,
@@ -325,7 +345,9 @@ condition  available
   бренда ведущее «Шина» заменяется на «Алтайшина».
 - **Мим** — три секции; легковые (1) и диски (3) — `policy: base`, грузовая
   вкладка 2 — `percent_by_threshold` (`threshold: 13000`, `low: 0.07`, `high: 0.05`).
-- **Форточки** — `policy: recommended_or_map`, title `tire_compose(four_tochki)` и
+- **Форточки** — `policy: recommended_range`: диапазоны по категориям
+  (`Грузовая шина` 7–12 %, `Легкогрузовая шина` 9–12 %, `Диск` 7–15 %),
+  абсолютный пол `mode: delta`, `+500` ₽; title `tire_compose(four_tochki)` и
   `disk_compose(four_tochki)`.
 - **Запаска (диски и шины)** — `reader: json`, `policy: base` с порогом РРЦ 8 %,
   `replace_small_recommended: true` и абсолютным полом `mode: delta`, `+150` ₽.
