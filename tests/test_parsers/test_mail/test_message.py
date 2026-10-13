@@ -2,12 +2,10 @@
 
 from email import message_from_string
 from email.message import EmailMessage, Message
-from email.utils import parsedate_to_datetime
 
 from parsers.mail.message import (
     attachment_content,
     decode_header_value,
-    format_date,
     matching_attachments,
     message_body,
     sender_matches,
@@ -44,23 +42,6 @@ def test_decode_header_value_unknown_charset_returns_raw() -> None:
     """Неизвестная кодировка не роняет разбор: возвращается исходная строка."""
     raw = '=?unknown-charset?B?dGVzdA==?='
     assert decode_header_value(raw) == raw
-
-
-def test_format_date_valid() -> None:
-    """Валидная дата приводится к локальному времени формата ДД.ММ.ГГГГ ЧЧ:ММ."""
-    raw = 'Wed, 01 Jan 2025 12:00:00 +0300'
-    expected = parsedate_to_datetime(raw).astimezone().strftime('%d.%m.%Y %H:%M')
-    assert format_date(_message(f'Date: {raw}\n')) == expected
-
-
-def test_format_date_invalid_returns_raw() -> None:
-    """Неразбираемая дата возвращается как есть."""
-    assert format_date(_message('Date: not-a-date\n')) == 'not-a-date'
-
-
-def test_format_date_missing() -> None:
-    """Без заголовка Date — понятная подпись."""
-    assert format_date(_message('Subject: x\n')) == 'дата неизвестна'
 
 
 def test_matching_attachments_single() -> None:

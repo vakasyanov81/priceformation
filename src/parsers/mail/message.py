@@ -1,15 +1,14 @@
-"""Разбор письма: отправитель, тема, дата и подходящие вложения.
+"""Разбор письма: отправитель, тема и подходящие вложения.
 
 Чистые функции над ``email.message.Message``: без сети и файлового IO.
 """
 
 from email.header import decode_header, make_header
 from email.message import Message
-from email.utils import parseaddr, parsedate_to_datetime
+from email.utils import parseaddr
 from fnmatch import fnmatchcase
 from typing import Any
 
-_DATE_FORMAT = '%d.%m.%Y %H:%M'
 _MULTIPART = 'multipart'
 
 
@@ -21,16 +20,6 @@ def decode_header_value(raw: str | None) -> str:
         return str(make_header(decode_header(raw)))
     except (ValueError, LookupError):
         return raw
-
-
-def format_date(message: Message) -> str:
-    """Дата письма (заголовок Date) в локальном времени, ``ДД.ММ.ГГГГ ЧЧ:ММ``."""
-    raw = message.get('Date', '')
-    try:
-        moment = parsedate_to_datetime(raw)
-    except (TypeError, ValueError):
-        return raw or 'дата неизвестна'
-    return moment.astimezone().strftime(_DATE_FORMAT)
 
 
 def matching_attachments(message: Message, glob_pattern: str) -> list[tuple[str, Message]]:

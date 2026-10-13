@@ -1,5 +1,7 @@
 """IMAP-клиент: поиск письма, сохранение прайса, подключение и DoH."""
 
+from __future__ import annotations
+
 import imaplib
 import io
 import json
@@ -36,47 +38,77 @@ def _profile(**overrides: Any) -> MailProfile:
     return MailProfile(**base)
 
 
-def _email(sender: str, subject: str, filename: str, payload: bytes = b'payload') -> bytes:
+def _email(
+    sender: str,
+    subject: str,
+    filename: str,
+    payload: bytes = b'payload',
+    *,
+    date: str | None = None,
+) -> bytes:
     message = EmailMessage()
     message['From'] = sender
     message['Subject'] = subject
+    if date is not None:
+        message['Date'] = date
     message.set_content('тело')
     message.add_attachment(payload, maintype='application', subtype='octet-stream', filename=filename)
     return message.as_bytes()
 
 
+_ImapResult = tuple[str, list[Any]]
+
+
 class _FakeClient:
-    """IMAP-клиент с заранее заданными письмами по UID."""
+    """IMAP-клиент с папками, письмами по UID и заданным ответом LIST."""
 
     def __init__(
         self,
-        messages: dict[bytes, bytes],
+        folders: dict[str, dict[bytes, bytes]] | None = None,
         *,
+        list_status: str = 'OK',
+        list_lines: list[bytes] | None = None,
         search_status: str = 'OK',
         search_uids: list[bytes] | None = None,
     ) -> None:
-        self.messages = messages
+        self.folders = {} if folders is None else folders
+        self.list_status = list_status
+        self.list_lines = list_lines
         self.search_status = search_status
         self.search_uids = search_uids
+        self.selected: str | None = None
+        self.selected_folders: list[str] = []
         self.logged_out = False
 
-    def uid(self, command: str, *args: Any) -> tuple[str, list[Any]]:
+    def list(self, _directory: str, _pattern: str) -> _ImapResult:
+        if self.list_lines is not None:
+            return self.list_status, list(self.list_lines)
+        lines = [f'(\\HasNoChildren) "." "{name}"'.encode() for name in self.folders]
+        return self.list_status, lines
+
+    def select(self, mailbox: str, _readonly: bool = False) -> _ImapResult:
+        name = mailbox.strip('"')
+        if name not in self.folders:
+            return 'NO', [b'']
+        self.selected = name
+        self.selected_folders.append(name)
+        return 'OK', [b'']
+
+    def uid(self, command: str, *args: Any) -> _ImapResult:
+        messages = self.folders.get(self.selected or '', {})
         if command == 'SEARCH':
             uids = self.search_uids
             if uids is None:
-                uids = list(self.messages)
+                uids = list(messages)
             return self.search_status, [b' '.join(uids)]
-        if args[0] not in self.messages:
+        if args[0] not in messages:
             return 'OK', [b'garbage']
-        return 'OK', [(b'1 (RFC822)', self.messages[args[0]])]
+        return 'OK', [(b'1 (RFC822)', messages[args[0]])]
 
-    def login(self, _user: str, password: str) -> tuple[str, list[Any]]:
+    def login(self, _user: str, password: str) -> _ImapResult:
         return 'OK', [b'']
 
-    def select(self, _mailbox: str, _readonly: bool = False) -> tuple[str, list[Any]]:
-        return 'OK', [b'']
-
-    def logout(self) -> tuple[str, list[Any]]:
+    def logout(self) -> _ImapResult:
         self.logged_out = True
         return 'BYE', [b'']
 
@@ -85,11 +117,13 @@ def test_find_latest_price_returns_newest_match() -> None:
     """Из нескольких подходящих писем берётся последнее по UID."""
     fake = _FakeClient(
         {
-            b'1': _email('a@b.ru', 'старый прайс', 'price.xlsx'),
-            b'2': _email('a@b.ru', 'новый прайс', 'price.xlsx', payload=b'fresh'),
+            'INBOX': {
+                b'1': _email('a@b.ru', 'старый прайс', 'price.xlsx'),
+                b'2': _email('a@b.ru', 'новый прайс', 'price.xlsx', payload=b'fresh'),
+            },
         },
     )
-    found = find_latest_price(fake, profile=_profile())
+    found = find_latest_price(fake, ['INBOX'], profile=_profile())
     assert found is not None
     assert found.subject == 'новый прайс'
     assert found.payload == b'fresh'
@@ -98,22 +132,102 @@ def test_find_latest_price_returns_newest_match() -> None:
 
 def test_find_latest_price_none_when_no_match() -> None:
     """Если ни одно письмо не подходит, ничего не найдено."""
-    fake = _FakeClient({b'1': _email('other@x.ru', 'прайс', 'price.xlsx')})
-    assert find_latest_price(fake, profile=_profile()) is None
+    fake = _FakeClient({'INBOX': {b'1': _email('other@x.ru', 'прайс', 'price.xlsx')}})
+    assert find_latest_price(fake, ['INBOX'], profile=_profile()) is None
 
 
 def test_find_latest_price_skips_broken_fetch() -> None:
     """Письмо, которое не удалось разобрать, пропускается ради следующего."""
     messages = {b'1': _email('a@b.ru', 'валидный', 'price.xlsx')}
-    fake = _FakeClient(messages, search_uids=[b'1', b'9'])
-    found = find_latest_price(fake, profile=_profile())
+    fake = _FakeClient({'INBOX': messages}, search_uids=[b'1', b'9'])
+    found = find_latest_price(fake, ['INBOX'], profile=_profile())
     assert found is not None
     assert found.subject == 'валидный'
 
 
+def test_find_latest_price_prefers_newest_across_folders() -> None:
+    """Более свежее письмо из подпапки важнее старого письма из INBOX."""
+    fake = _FakeClient(
+        {
+            'INBOX': {b'1': _email('a@b.ru', 'старый', 'price.xlsx', date='Mon, 01 Jan 2024 10:00:00 +0300')},
+            'INBOX.Prices': {
+                b'1': _email(
+                    'a@b.ru', 'свежий', 'price.xlsx', payload=b'fresh', date='Tue, 02 Jan 2024 10:00:00 +0300'
+                ),
+            },
+        },
+    )
+    found = find_latest_price(fake, ['INBOX', 'INBOX.Prices'], profile=_profile())
+    assert found is not None
+    assert found.subject == 'свежий'
+
+
+def test_find_latest_price_skips_unselectable_folder() -> None:
+    """Недоступная папка пропускается, поиск продолжается в следующей."""
+    fake = _FakeClient({'INBOX.Prices': {b'1': _email('a@b.ru', 'прайс', 'price.xlsx')}})
+    found = find_latest_price(fake, ['INBOX', 'INBOX.Prices'], profile=_profile())
+    assert found is not None
+    assert fake.selected_folders == ['INBOX.Prices']
+
+
+def test_find_latest_price_quotes_folder_with_space() -> None:
+    """Папка с пробелом передаётся в SELECT в кавычках."""
+    fake = _FakeClient({'INBOX.My Prices': {b'1': _email('a@b.ru', 'прайс', 'price.xlsx')}})
+    found = find_latest_price(fake, ['INBOX.My Prices'], profile=_profile())
+    assert found is not None
+    assert fake.selected_folders == ['INBOX.My Prices']
+
+
+def test_list_price_folders_filters_subtree() -> None:
+    """Из ответа LIST берутся INBOX и его подпапки, кроме \\Noselect и чужих."""
+    lines = [
+        b'(\\HasNoChildren) "." "INBOX"',
+        b'(\\HasChildren) "." "INBOX.Prices"',
+        b'(\\HasNoChildren) "." "INBOX.Prices.2024"',
+        b'(\\HasNoChildren) "." "Sent"',
+        b'(\\Noselect) "." "INBOX.Container"',
+    ]
+    fake = _FakeClient({}, list_lines=lines)
+    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices', 'INBOX.Prices.2024']
+
+
+def test_list_price_folders_adds_root_when_absent() -> None:
+    """Если сервер не вернул саму INBOX, она добавляется первой."""
+    fake = _FakeClient({}, list_lines=[b'(\\HasNoChildren) "." "INBOX.Prices"'])
+    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
+
+
+def test_list_price_folders_keeps_root_on_error() -> None:
+    """Сбой LIST не мешает искать хотя бы в корневой папке."""
+    fake = _FakeClient({'INBOX': {}}, list_status='NO')
+    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX']
+
+
+def test_list_price_folders_nil_delimiter() -> None:
+    """Без разделителя иерархии в поддерево попадает только сам корень."""
+    lines = [b'(\\HasNoChildren) NIL "INBOX"', b'(\\HasNoChildren) NIL "Other"']
+    fake = _FakeClient({}, list_lines=lines)
+    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX']
+
+
+def test_parse_list_entry_ignores_garbage() -> None:
+    """Строки, не похожие на LIST, и не-bytes не разбираются."""
+    assert mail_client._parse_list_entry(b'garbage') is None
+    assert mail_client._parse_list_entry(None) is None
+
+
+def test_parse_list_entry_unquotes_name() -> None:
+    """Кавычки и обратные слэши в имени папки снимаются."""
+    parsed = mail_client._parse_list_entry(b'(\\HasNoChildren) "." "INBOX.My \\"Prices\\""')
+    assert parsed is not None
+    _flags, delimiter, name = parsed
+    assert delimiter == '.'
+    assert name == 'INBOX.My "Prices"'
+
+
 def test_search_uids_bad_status() -> None:
     """Неуспешный SEARCH не даёт UID."""
-    fake = _FakeClient({}, search_status='NO')
+    fake = _FakeClient({'INBOX': {}}, search_status='NO')
     assert not mail_client._search_uids(fake, 'a@b.ru')
 
 
@@ -146,7 +260,7 @@ def test_connect_ok(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert client is fake
     fake.login.assert_called_once_with('user', 'secret')
-    fake.select.assert_called_once_with('INBOX', readonly=True)
+    fake.select.assert_called_once_with('INBOX', True)
 
 
 def test_connect_login_error_logs_out(monkeypatch: pytest.MonkeyPatch) -> None:
