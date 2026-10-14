@@ -1,6 +1,6 @@
 # Task-13: Усиление тестов нового кода по данным mutmut (2026-10-14)
 
-Статус: 🔄 в работе — M1 ✅, M3 ✅. Продолжение [плана по mutmut](./MUTATION_TESTS.md):
+Статус: 🔄 в работе — M1 ✅, M3 ✅, M4 ✅. Продолжение [плана по mutmut](./MUTATION_TESTS.md):
 классы выживших (A–I) и приёмы фаз 1–7 — оттуда.
 
 ## Контекст
@@ -264,6 +264,26 @@ survived 304 → 241, score 96.1 % → 96.9 %. Почти все выживши�
 5. `PoshkTireCompose`: фейковый `brand_probe` с записью вызовов; таблица
    для `_ship_without_brand`.
 
+### Итог (2026-10-14)
+
+`PoshkTireCompose` оказался «сиротой» (не в реестре, `poshk.json` ссылался на
+`stk_tire_compose`), а в `tasks/merge-poshk-stk-tire-compose.md` ждало слияние.
+Сначала выполнено слияние → `PoshkStkTireCompose` / `_poshk_stk_title_helper`
+(итоги и сверка на боевых прайсах — в файле плана), тесты M4 написаны уже на
+общий код. Правки по выжившим:
+
+- `raw or ''` (×4) → `parse_poshk_stk_title(raw: str | None)` с ранним `None`.
+- `_merge_pr` → регулярка `_SPLIT_PR` в `_prepare_text`.
+- `_strip_kind_suffix`: проверка длины мертва — токен-обёртку целиком уже
+  отбросил `_KIND_WORDS`.
+- `_size_label`: `'R' if upper == 'R' else construct` → `construct.upper()`.
+- `fill_*_fields`: `model = '' if model else …` дублировал общую проверку
+  «не перетирать готовое».
+- Попутно найдена ошибка суффикса `C`/`LT` (съедал первую букву бренда).
+
+56 → 3 выживших (2 эквивалентных — в таблице; 1 — `title_registry._brand_probe`
+`[0] → [1]`, вне M4). Полный прогон: survived 241 → 187, score 96.9 % → 97.5 %.
+
 ---
 
 ## M5: Наценка и тип в конвейере (18)
@@ -337,3 +357,4 @@ mutmut параллельно с `pytest`.
 | `mail/client._unquote` | `'utf-8' → 'UTF-8'` | имя кодека нечувствительно к регистру |
 | `mail/client._epoch` | `'-inf' → '-INF'` | `float()` разбирает `inf` без учёта регистра |
 | `mail/doh._doh_addresses` | `'Accept'` → другой регистр | `urllib.request.Request` хранит заголовок как `key.capitalize()` |
+| `_poshk_stk_title_helper._prepare_text` | `r'\1PR' → r'\1pr'` (×2) | `_PR` без учёта регистра, слойность приводится `.upper()` |

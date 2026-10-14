@@ -1,13 +1,14 @@
 # flake8: noqa: WPS202
-"""Разбор и сборка названия номенклатуры Пошка.
+"""Разбор и сборка названия номенклатуры Пошка и STK.
 
-Пошк пишет параметры шины вперемешку: ``н.с.N`` вместо ``NPR``, индекс
+Пошк и STK пишут параметры шины вперемешку: ``н.с.N`` вместо ``NPR``, индекс
 нагрузки/скорости стоит то до модели, то после неё, а производитель
-(``НКШЗ``/``БШК``/``ОШЗ``/``ЯШЗ``/``ВолШЗ``) спрятан в хвосте названия.
-Разбираем название на параметры и собираем заново в порядке Пионера:
+(``НКШЗ``/``БШК``/``ОШЗ``/``ЯШЗ``/``ВолШЗ``) спрятан в хвосте названия,
+а ``PR`` слипается с размером (``7.00 R16LT14PR``) или отрывается от числа
+(``8 PR``). Разбираем название на параметры и собираем заново в порядке Пионера:
 ``размер бренд модель нагрузка/скорость PR камера назначение``.
 
-Примеры склейки Пошк → Пионер:
+Примеры склейки → Пионер:
 
 - ``10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт``
   → ``10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л``
@@ -22,6 +23,10 @@
   → ``12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина``
 - ``17.5-25 Rockbuster H108A E3/L3 н.с.28 спецшина, шт``
   → ``17.5-25 Rockbuster H108A E3/L3 28PR спецшина``
+- ``Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал`` (STK)
+  → ``235/75R17.5 LingLong LLA78 143/141J 18PR TL трал``
+- ``Автошина 7.00 R16LT14PR 118/114L GREENSTONE ST896 змейка`` (STK)
+  → ``7.00R16LT GREENSTONE ST896 118/114L 14PR змейка``
 """
 
 from __future__ import annotations
@@ -36,11 +41,13 @@ from domain.row_item.row_item import RowItem
 _LEADING_KIND = re.compile(r'^\s*(?:а/п|автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
 _LEADING_SHIP = re.compile(r'^\s*Шина\b\s*', re.IGNORECASE)
 _LAYER_SOURCE = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
+_SPLIT_PR = re.compile(r'(?<!\S)(\d+)\s+PR(?![^\s,])', re.IGNORECASE)
 _TRAILING_PIECE = re.compile(r'\s*,?\s*,?\s*\(?\d*\s*шт\)?\s*$', re.IGNORECASE)
+# Суффикс C/LT — только отдельной буквой: иначе `R16 Cordiant` дал бы `R16C ordiant`.
 _SIZE = re.compile(
     r'(?P<width>\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)?)'
     r'\s*(?P<lowpro>l)?\s*(?P<construct>[Rr]|[-–—])\s*'
-    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?P<suffix>lt|[cс])?',
+    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
 _PR = re.compile(r'^\d+\s*PR$', re.IGNORECASE)
@@ -59,14 +66,11 @@ _USAGE_WORDS = frozenset(
         'шип',
         'шип.',
         'б/к',
-        'прицеп',
-        'руль/прицеп',
         '(карьер)',
         '(шашка)',
         '(волна)',
         '(клюшка)',
         'с',
-        'карьер',
         'трал',
         'шашка',
         'волна',
@@ -75,9 +79,13 @@ _USAGE_WORDS = frozenset(
         'спецпокрышка',
         'сельхозшина',
         'цельнолит',
+        'змейка',
+        'стройка',
     ),
 )
-_USAGE_PREFIXES = ('инд.', 'ось', 'вед.', 'рул.', 'руль.', 'унив.', 'приц.', 'прицеп')
+# Начала токенов назначения: оси (`вед.ось`, `вед`, `руль/прицеп`, `приц.`),
+# индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
+_USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив.', 'приц', 'карьер')
 _DOT = '.'
 _TokenMatcher = Callable[[str], object]
 
@@ -127,8 +135,8 @@ class _Service(NamedTuple):
 
 
 @dataclass(frozen=True, slots=True)
-class PoshkTitleParts:
-    """Разобранные параметры названия Пошка."""
+class PoshkStkTitleParts:
+    """Разобранные параметры названия Пошка/STK."""
 
     size: _SizeParts
     brand: str
@@ -146,7 +154,7 @@ class PoshkTitleParts:
         size_match: re.Match[str],
         tokens: list[str],
         from_ship: bool,
-    ) -> PoshkTitleParts | None:
+    ) -> PoshkStkTitleParts | None:
         """Собрать параметры из размера и остатка токенов; None без бренда с моделью."""
         service = _Service.from_tokens(tokens)
         fields = _resolve_fields(service.rest)
@@ -168,7 +176,7 @@ class PoshkTitleParts:
         """Склеить название в порядке Пионера; brand перекрывает разобранный."""
         chunks = (
             self.size.label,
-            brand or self.brand,
+            _canonical_brand(self.brand, brand),
             self.model,
             f'{self.load}{self.velocity}',
             self.layering,
@@ -178,8 +186,23 @@ class PoshkTitleParts:
         return ' '.join(chunk for chunk in chunks if chunk)
 
 
-def parse_poshk_title(raw: str) -> PoshkTitleParts | None:
-    """Разобрать название Пошка на параметры; None, если это не размер шины."""
+def _canonical_brand(parsed: str, canonical: str | None) -> str:
+    """Канонический бренд вместо разобранного; приклеенную модель сохранить.
+
+    ``GREENSTONE`` → ``GreenStone``, но ``Алтайшина-421``/``КАМА-310`` — бренд
+    со слитной моделью: заменяется только начало, хвост ``-421`` остаётся.
+    """
+    if not canonical:
+        return parsed
+    if parsed.lower().startswith(canonical.lower()):
+        return canonical + parsed[len(canonical) :]
+    return canonical
+
+
+def parse_poshk_stk_title(raw: str | None) -> PoshkStkTitleParts | None:
+    """Разобрать название Пошка/STK на параметры; None, если это не размер шины."""
+    if not raw:
+        return None
     text = _prepare_text(raw)
     size_match = _SIZE.match(text)
     if size_match is None:
@@ -187,12 +210,11 @@ def parse_poshk_title(raw: str) -> PoshkTitleParts | None:
     tail = text[size_match.end() :].lstrip()
     if not tail or tail[0] in '(/':
         return None
-    return PoshkTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
+    return PoshkStkTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
 
 
-def fill_poshk_fields(row_item: RowItem, parts: PoshkTitleParts) -> None:
+def fill_poshk_stk_fields(row_item: RowItem, parts: PoshkStkTitleParts) -> None:
     """Записать разобранные параметры в поля позиции, не перетирая готовые."""
-    model = '' if row_item.identity.model else parts.model
     fields = {
         'width': parts.size.width,
         'height_percent': parts.size.height_percent,
@@ -201,7 +223,7 @@ def fill_poshk_fields(row_item: RowItem, parts: PoshkTitleParts) -> None:
         'index_load': parts.load,
         'index_velocity': parts.velocity,
         'intimacy': parts.intimacy,
-        'model': model,
+        'model': parts.model,
     }
     for key, parsed_value in fields.items():
         if parsed_value and not row_item.get_field(key):
@@ -209,37 +231,28 @@ def fill_poshk_fields(row_item: RowItem, parts: PoshkTitleParts) -> None:
 
 
 def _prepare_text(raw: str) -> str:
-    """Срезать обёртки и привести ``н.с.N`` к ``NPR``."""
-    text = _TRAILING_PIECE.sub('', (raw or '').strip())
+    """Срезать обёртки и привести ``н.с.N`` и разорванный ``N PR`` к ``NPR``."""
+    text = _TRAILING_PIECE.sub('', raw.strip())
     text = _LEADING_KIND.sub('', text)
     text = _LEADING_SHIP.sub('', text)
-    return _LAYER_SOURCE.sub(r'\1PR', text)
+    text = _LAYER_SOURCE.sub(r'\1PR', text)
+    return _SPLIT_PR.sub(r'\1PR', text)
 
 
 def _clean_tokens(tail: str) -> list[str]:
-    """Убрать запятые и слова-обёртки, склеить ``N PR`` и обрезать суффиксы ``*шина``."""
+    """Убрать запятые и слова-обёртки, обрезать суффиксы ``*шина``."""
     tokens = [token.strip(',') for token in tail.split()]
-    tokens = [token for token in tokens if token.lower() not in _KIND_WORDS]
-    return [_strip_kind_suffix(token) for token in _merge_pr(tokens)]
-
-
-def _merge_pr(tokens: list[str]) -> list[str]:
-    """Склеить разорванный ``8 PR`` в ``8PR``."""
-    merged: list[str] = []
-    for token in tokens:
-        previous = merged[-1] if merged else ''
-        if token.upper() == 'PR' and previous.isdigit():
-            merged[-1] = f'{previous}PR'
-        else:
-            merged.append(token)
-    return merged
+    return [_strip_kind_suffix(token) for token in tokens if token.lower() not in _KIND_WORDS]
 
 
 def _strip_kind_suffix(token: str) -> str:
-    """Срезать суффикс-обёртку: ``шип.автопокрышка`` → ``шип.``."""
+    """Срезать суффикс-обёртку: ``шип.автопокрышка`` → ``шип.``.
+
+    Токен целиком из обёртки сюда не доходит — его отбрасывает ``_KIND_WORDS``.
+    """
     lower = token.lower()
     for suffix in _KIND_SUFFIXES:
-        if lower.endswith(suffix) and len(lower) > len(suffix):
+        if lower.endswith(suffix):
             return token[: -len(suffix)]
     return token
 
@@ -288,7 +301,7 @@ def _is_usage(token: str) -> bool:
 
 def _from_ship(raw: str) -> bool:
     """Название начиналось с обёртки «Шина» (нужно для бренд-заглушки)."""
-    return _LEADING_SHIP.match(raw or '') is not None
+    return _LEADING_SHIP.match(raw) is not None
 
 
 def _take_token(tokens: list[str], matches: _TokenMatcher) -> tuple[str, list[str]]:
@@ -312,6 +325,6 @@ def _size_label(width: str, height: str, diameter: str, match: re.Match[str]) ->
     """Склеить размер: ``10.00R20``, ``12.4L-16``, ``425/85R21LT``."""
     lowpro = (match['lowpro'] or '').upper()
     suffix = (match['suffix'] or '').upper()
-    construct = 'R' if match['construct'].upper() == 'R' else match['construct']
+    construct = match['construct'].upper()
     profile = f'/{height}' if height else ''
     return f'{width}{profile}{lowpro}{construct}{diameter}{suffix}'

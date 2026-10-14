@@ -307,12 +307,12 @@ def test_title_reads_all_fields() -> None:
 def test_title_reads_markers() -> None:
     """Маркеры title читаются: подстрока → поля позиции со значениями."""
     raw = {
-        'strategy': 'stk_tire_compose',
+        'strategy': 'poshk_stk_tire_compose',
         'markers': {'шип': {'season': 'зима', 'spike': 'да'}},
     }
 
     assert TitleConfig.from_dict(raw, WHERE) == TitleConfig(
-        strategy='stk_tire_compose',
+        strategy='poshk_stk_tire_compose',
         markers={'шип': {'season': 'зима', 'spike': 'да'}},
     )
 

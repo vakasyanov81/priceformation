@@ -323,7 +323,7 @@ condition  available  type_production
 | `default` | — | оставить название как есть (по умолчанию) |
 | `normalize_title` | — | схлопнуть пробелы, десятичную запятую привести к точке |
 | `normalize_size_chunks` | `fallback_brand` | нормализация названий Пошка: срезать обёртки «Шина»/«а/п», `*`→`x`, «н.с.N»→`PRN` |
-| `stk_tire_compose` | — | собрать название STK/Пошка: размер, бренд, модель, нагрузка/скорость, PR, камера, назначение |
+| `poshk_stk_tire_compose` | `fallback_brand` | собрать название STK/Пошка: размер, бренд, модель, нагрузка/скорость, PR, камера, назначение; «Шина» без бренда — как `normalize_size_chunks` |
 | `tire_compose` | `variant` | собрать название шины: `mim_simple`, `mim_truck`, `four_tochki` |
 | `disk_compose` | `variant` | собрать название диска: `four_tochki` |
 | `fill_fields_from_title` | — | разобрать размер и модель из названия, само название не менять (Автоснабжение) |
@@ -394,7 +394,7 @@ condition  available  type_production
 ### Примеры поставщиков
 
 - **Пошк** — `map_on_opt`, `min_rest: 0`, категория `tire_size_category`,
-  название `stk_tire_compose` с маркером «шип»;
+  название `poshk_stk_tire_compose` с маркером «шип»;
 - **Мим** — три секции; легковые и диски — `base`, грузовая вкладка —
   `percent_by_threshold`;
 - **Форточки** — `recommended_range`: диапазоны по категориям и абсолютный пол

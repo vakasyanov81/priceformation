@@ -12,8 +12,8 @@ from parsers.base_parser.base_finder import BaseFinder
 from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_aliases_map
 from parsers.data_provider.title_aliases import load_title_aliases
 from parsers.strategies.normalize import NormalizeTitle
+from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
 from parsers.strategies.protocols import BrandProbe, TitleStrategy
-from parsers.strategies.stk_title import StkTireCompose
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -29,15 +29,19 @@ from parsers.vendor_config.slot_configs import TitleConfig
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
 _DISK_VARIANTS = ('four_tochki',)
 _AVAILABLE = (
-    'default, normalize_title, normalize_size_chunks, stk_tire_compose, tire_compose, '
+    'default, normalize_title, normalize_size_chunks, poshk_stk_tire_compose, tire_compose, '
     'disk_compose, fill_fields_from_title, manufacturer_from_category'
 )
 _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'default': DefaultTitle,
     'normalize_title': NormalizeTitle,
     'normalize_size_chunks': NormalizeSizeChunks,
-    'stk_tire_compose': StkTireCompose,
     'fill_fields_from_title': FillFieldsFromTitle,
+}
+# Стратегии с бренд-заглушкой «Шина» без бренда: (fallback_brand, детектор бренда).
+_FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[str, BrandProbe | None], TitleStrategy]] = {
+    'normalize_size_chunks': NormalizeSizeChunks,
+    'poshk_stk_tire_compose': PoshkStkTireCompose,
 }
 
 ManufacturerReader = Callable[[], str | None]
@@ -70,9 +74,9 @@ def _build_strategy(
         return DiskComposeTochki()
     if config.strategy == 'manufacturer_from_category':
         return ManufacturerFromCategory(manufacturer_reader or _no_manufacturer)
-    if config.strategy == 'normalize_size_chunks':
-        probe = _brand_probe() if config.fallback_brand else None
-        return NormalizeSizeChunks(config.fallback_brand, probe)
+    fallback_brand_factory = _FALLBACK_BRAND_STRATEGIES.get(config.strategy)
+    if fallback_brand_factory is not None:
+        return fallback_brand_factory(config.fallback_brand, _fallback_probe(config))
     factory = _SIMPLE_STRATEGIES.get(config.strategy)
     if factory is None:
         raise ConfigValidationError(
@@ -91,6 +95,11 @@ def _require_variant(variant: str, allowed: tuple[str, ...], where: str) -> str:
 
 def _no_manufacturer() -> str | None:
     """Заглушка: производитель раздела ещё не прочитан."""
+
+
+def _fallback_probe(config: TitleConfig) -> BrandProbe | None:
+    """Детектор бренда нужен только при заданном ``fallback_brand``."""
+    return _brand_probe() if config.fallback_brand else None
 
 
 def _brand_probe() -> BrandProbe:
