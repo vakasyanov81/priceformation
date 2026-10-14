@@ -103,3 +103,29 @@ def test_fetch_prices_reports_missing_letter(
     warnings = texts_at(entries(), logging.WARNING)
     assert len(warnings) == 1
     assert 'stk' in warnings[0]
+
+
+def test_fetch_prices_continues_after_missing_letter(
+    fake_config_provider: FakeConfigProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Профиль без письма в середине списка не останавливает остальные; итог — все поля письма."""
+    config = MailConfig(
+        account=_ACCOUNT,
+        profiles={'pioner': _profile('a@b.ru'), 'stk': _profile('c@d.ru'), 'poshk': _profile('e@f.ru')},
+    )
+    wired = _wire(monkeypatch, config, _FOUND)
+    wired.find.side_effect = [_FOUND, None, _FOUND]
+
+    fetched = mail_service.MailService().fetch_prices()
+
+    assert fetched == [
+        mail_service.MailFetchResult(
+            folder=folder,
+            subject='Прайс',
+            date='01.01.2025 10:00',
+            filename='price.xlsx',
+            path=str(Path(fake_config_provider.price_folder(folder)) / 'price.xlsx'),
+        )
+        for folder in ('pioner', 'poshk')
+    ]

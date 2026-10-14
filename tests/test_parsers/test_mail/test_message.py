@@ -3,6 +3,8 @@
 from email import message_from_string
 from email.message import EmailMessage, Message
 
+import pytest
+
 from parsers.mail.message import (
     attachment_content,
     decode_header_value,
@@ -108,3 +110,32 @@ def test_message_body_rejects_short_tuple() -> None:
 def test_message_body_rejects_non_bytes() -> None:
     """Тело письма должно быть байтами."""
     assert message_body((b'header', 'body')) is None
+
+
+_NO_HEADERS = 'X-Mailer: test\n\nbody'
+
+
+@pytest.mark.parametrize(
+    ('sender', 'sender_is_domain'),
+    [('a@b.ru', False), ('b.ru', True)],
+    ids=['address', 'domain'],
+)
+def test_sender_matches_without_from(sender: str, sender_is_domain: bool) -> None:
+    """Письмо без From не подходит ни по адресу, ни по домену."""
+    assert sender_matches(_message(_NO_HEADERS), sender, sender_is_domain=sender_is_domain) is False
+
+
+@pytest.mark.parametrize(
+    ('raw', 'keyword', 'expected'),
+    [
+        ('Subject: ПРАЙС шины\n\nbody', 'прайс', True),
+        ('Subject: Счёт\n\nbody', 'прайс', False),
+        (f'Subject: {_ENCODED_PRICE}\n\nbody', 'ПРАЙС', True),
+        (_NO_HEADERS, 'x', False),
+        (_NO_HEADERS, '', True),
+    ],
+    ids=['case', 'absent-word', 'encoded', 'no-subject', 'empty-keyword'],
+)
+def test_subject_matches_table(raw: str, keyword: str, expected: bool) -> None:
+    """Слово ищется в теме без учёта регистра; письма без темы содержат только пустое слово."""
+    assert subject_matches(_message(raw), keyword) is expected
