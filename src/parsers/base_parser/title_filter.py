@@ -20,7 +20,11 @@ def _strip_chunks_title(chunks: list[str]) -> list[str]:
     return [chunk.strip() for chunk in chunks if chunk.strip()]
 
 
-class TitleFilter:  # noqa: WPS214
+def prepare_black_list(black_list: list[str]) -> list[str]:
+    return [strip_words_in_title(black_title) for black_title in black_list]
+
+
+class TitleFilter:
     """Title preparation and stop/black-list checks by config."""
 
     def __init__(self, config: Any) -> None:
@@ -39,11 +43,8 @@ class TitleFilter:  # noqa: WPS214
 
     def get_black_list(self) -> list[str]:
         if self._black_list is None:
-            self._black_list = self.prepare_black_list(self._parse_config().black_list())
+            self._black_list = prepare_black_list(self._parse_config().black_list())
         return self._black_list
-
-    def prepare_black_list(self, black_list: list[str]) -> list[str]:
-        return [strip_words_in_title(black_title) for black_title in black_list]
 
     def get_stop_words(self) -> list[str]:
         if self._stop_words is None:
@@ -56,10 +57,6 @@ class TitleFilter:  # noqa: WPS214
     def is_valid_title(self, title: str | None) -> bool:
         if not title:
             return False
-        return not self.has_stop_word(title) and not self.check_title_in_black_list(title)
-
-    def has_stop_word(self, title: str) -> bool:
-        return any(title_matches_mask(title, mask) for mask in self.get_stop_words())
-
-    def check_title_in_black_list(self, title: str) -> bool:
-        return title in self.get_black_list()
+        if title in self.get_black_list():
+            return False
+        return not any(title_matches_mask(title, mask) for mask in self.get_stop_words())

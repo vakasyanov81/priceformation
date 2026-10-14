@@ -16,7 +16,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.base_parser.title_filter import TitleFilter, strip_words_in_title
+from parsers.base_parser.title_filter import TitleFilter, prepare_black_list, strip_words_in_title
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'Michelin 185/65 R15 88H'
@@ -100,7 +100,7 @@ def test_reset_caches_reloads_stop_words_from_config() -> None:
 
 
 def test_prepare_black_list_strips_entries() -> None:
-    prepared = _title_filter().prepare_black_list(['  некондиция  ', ''])
+    prepared = prepare_black_list(['  некондиция  ', ''])
     assert prepared == ['некондиция', '']
 
 
