@@ -39,7 +39,7 @@ _ALLOWED_EXTENSIONS = ('.xls', '.xlsx')
 _PRICE_STEM = 'price'
 _STATUS_OK = 'OK'
 _MSG_FOLDER_FAILED = 'Не удалось открыть папку {folder!r}'
-_LIST_LINE = re.compile(rb'^\((?P<flags>[^)]*)\)\s+(?P<delimiter>NIL|"(?:\\.|[^"])*")\s+(?P<name>.+)$')
+_LIST_LINE = re.compile(rb'^\((?P<flags>[^)]*)\)\s+(?P<delimiter>(?i:NIL)|"(?:\\.|[^"])*")\s+(?P<name>.+)$')
 _MAILBOX_SPECIALS = frozenset('(){ %*"\\')
 _NOSELECT = b'\x5cNoselect'
 
@@ -63,7 +63,7 @@ def connect(account: MailAccount, credentials: MailCredentials) -> ImapClient:
     except imaplib.IMAP4.error:
         client.logout()
         raise
-    status, _ = client.select(account.folder, True)
+    status, _ = client.select(_mailbox_arg(account.folder), True)
     if status != _STATUS_OK:
         client.logout()
         raise MailConnectionError(_MSG_FOLDER_FAILED.format(folder=account.folder))
@@ -102,11 +102,10 @@ def save_price(dest: Path, payload: bytes) -> None:
 
 
 def _subtree_folders(raw: list[Any], root: str) -> list[str]:
-    """Имена папок поддерева root из строк ответа LIST."""
+    """Корень root первым, затем его подпапки из строк ответа LIST."""
     entries = _parsed_entries(raw)
     delimiter = _first_delimiter(entries)
-    names = _names_in_subtree(entries, root, delimiter)
-    return _with_root(names, root)
+    return [root, *_names_in_subtree(entries, root, delimiter)]
 
 
 def _parsed_entries(raw: list[Any]) -> list[_ListEntry]:
@@ -124,7 +123,7 @@ def _first_delimiter(entries: list[_ListEntry]) -> str | None:
 
 
 def _names_in_subtree(entries: list[_ListEntry], root: str, delimiter: str | None) -> list[str]:
-    """Имена папок поддерева root (без служебных)."""
+    """Имена вложенных папок root (без служебных и без самого root)."""
     names: list[str] = []
     for flags, _delim, name in entries:
         if _keep_mailbox(flags, name, root, delimiter):
@@ -132,18 +131,11 @@ def _names_in_subtree(entries: list[_ListEntry], root: str, delimiter: str | Non
     return names
 
 
-def _with_root(names: list[str], root: str) -> list[str]:
-    """Список папок с гарантированным корнем в начале."""
-    if root in names:
-        return names
-    return [root, *names]
-
-
 def _keep_mailbox(flags: frozenset[bytes], name: str, root: str, delimiter: str | None) -> bool:
-    """Папка не служебная и лежит в поддереве root."""
+    """Папка не служебная и вложена в root."""
     if _NOSELECT in flags:
         return False
-    return _in_subtree(name, root, delimiter)
+    return _is_descendant(name, root, delimiter)
 
 
 def _newer_of(best: FoundPrice | None, candidate: FoundPrice | None) -> FoundPrice | None:
@@ -178,10 +170,8 @@ def _latest_in_selected(client: ImapClient, profile: MailProfile) -> FoundPrice 
     return None
 
 
-def _in_subtree(name: str, root: str, delimiter: str | None) -> bool:
-    """Входит ли папка в поддерево root по разделителю иерархии."""
-    if name == root:
-        return True
+def _is_descendant(name: str, root: str, delimiter: str | None) -> bool:
+    """Вложена ли папка в root по разделителю иерархии (сам root — нет)."""
     if delimiter is None:
         return False
     return name.startswith(root + delimiter)
@@ -249,7 +239,7 @@ def _price_from_message(message: Message, profile: MailProfile) -> FoundPrice | 
         return None
     filename, part = attachments[0]
     return FoundPrice(
-        subject=decode_header_value(message.get('Subject', '')),
+        subject=decode_header_value(message.get('Subject')),
         date=format_date(message),
         filename=filename,
         payload=attachment_content(part),

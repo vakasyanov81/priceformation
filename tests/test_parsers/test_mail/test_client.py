@@ -1,12 +1,11 @@
-"""IMAP-клиент: поиск письма, сохранение прайса, подключение и DoH."""
+"""IMAP-клиент: поиск письма, сохранение прайса и подключение."""
 
 from __future__ import annotations
 
 import imaplib
-import io
-import json
-import socket
-import urllib.request
+import re
+from datetime import UTC, datetime
+from email import message_from_bytes
 from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
@@ -16,9 +15,7 @@ import pytest
 
 from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail import client as mail_client
-from parsers.mail import doh as mail_doh
-from parsers.mail.client import connect, find_latest_price, save_price
-from parsers.mail.doh import _ImapSslByAddress
+from parsers.mail.client import FoundPrice, connect, find_latest_price, save_price
 from parsers.mail.errors import MailConnectionError
 from parsers.mail.models import MailAccount, MailProfile
 
@@ -40,7 +37,7 @@ def _profile(**overrides: Any) -> MailProfile:
 
 def _email(
     sender: str,
-    subject: str,
+    subject: str | None,
     filename: str,
     payload: bytes = b'payload',
     *,
@@ -48,7 +45,8 @@ def _email(
 ) -> bytes:
     message = EmailMessage()
     message['From'] = sender
-    message['Subject'] = subject
+    if subject is not None:
+        message['Subject'] = subject
     if date is not None:
         message['Date'] = date
     message.set_content('тело')
@@ -57,10 +55,30 @@ def _email(
 
 
 _ImapResult = tuple[str, list[Any]]
+_MAILBOX_SPECIALS = frozenset('(){ %*"\\')
+_QUOTED = re.compile(r'"(.*)"', re.DOTALL)
+_BAD: _ImapResult = ('BAD', [b''])
+_Args = tuple[Any, ...]
+_Messages = dict[bytes, bytes]
+_Call = tuple[str, _Args]
+
+
+def _server_mailbox(arg: str) -> str | None:
+    """Имя папки так, как его разберёт сервер: атом или строка в кавычках; иначе None."""
+    quoted = _QUOTED.fullmatch(arg)
+    if quoted is not None:
+        return re.sub(r'\\(.)', r'\1', quoted.group(1))
+    if not arg or any(char in _MAILBOX_SPECIALS for char in arg):
+        return None
+    return arg
 
 
 class _FakeClient:
-    """IMAP-клиент с папками, письмами по UID и заданным ответом LIST."""
+    """IMAP-сервер в памяти: папки, письма по UID, ответ LIST и журнал вызовов.
+
+    Аргументы не нормализуются: ``calls`` хранит их как есть, а SELECT, SEARCH и
+    FETCH разбираются строго по протоколу — неверные аргументы дают ``BAD``.
+    """
 
     def __init__(
         self,
@@ -68,49 +86,86 @@ class _FakeClient:
         *,
         list_status: str = 'OK',
         list_lines: list[bytes] | None = None,
-        search_status: str = 'OK',
         search_uids: list[bytes] | None = None,
     ) -> None:
         self.folders = {} if folders is None else folders
         self.list_status = list_status
         self.list_lines = list_lines
-        self.search_status = search_status
         self.search_uids = search_uids
         self.selected: str | None = None
         self.selected_folders: list[str] = []
-        self.logged_out = False
+        self.calls: list[_Call] = []
 
-    def list(self, _directory: str, _pattern: str) -> _ImapResult:
+    def list(self, directory: str, pattern: str) -> _ImapResult:
+        self.calls.append(('list', (directory, pattern)))
         if self.list_lines is not None:
             return self.list_status, list(self.list_lines)
         lines = [f'(\\HasNoChildren) "." "{name}"'.encode() for name in self.folders]
         return self.list_status, lines
 
-    def select(self, mailbox: str, _readonly: bool = False) -> _ImapResult:
-        name = mailbox.strip('"')
-        if name not in self.folders:
+    def select(self, mailbox: str, readonly: bool = False) -> _ImapResult:
+        self.calls.append(('select', (mailbox, readonly)))
+        name = _server_mailbox(mailbox)
+        if name is None or name not in self.folders:
+            # RFC 3501: неудачный SELECT снимает выбор и с прежней папки
+            self.selected = None
             return 'NO', [b'']
         self.selected = name
         self.selected_folders.append(name)
         return 'OK', [b'']
 
     def uid(self, command: str, *args: Any) -> _ImapResult:
+        self.calls.append(('uid', (command, *args)))
         messages = self.folders.get(self.selected or '', {})
-        if command == 'SEARCH':
-            uids = self.search_uids
-            if uids is None:
-                uids = list(messages)
-            return self.search_status, [b' '.join(uids)]
-        if args[0] not in messages:
-            return 'OK', [b'garbage']
-        return 'OK', [(b'1 (RFC822)', messages[args[0]])]
+        # imaplib.IMAP4.uid сам приводит команду к верхнему регистру
+        if command.upper() == 'SEARCH':
+            return _search_response(messages, args, self.search_uids)
+        return _fetch_response(messages, args)
 
     def login(self, _user: str, password: str) -> _ImapResult:
         return 'OK', [b'']
 
     def logout(self) -> _ImapResult:
-        self.logged_out = True
         return 'BYE', [b'']
+
+
+def _search_response(messages: _Messages, args: _Args, uids: list[bytes] | None) -> _ImapResult:
+    """Ответ на ``UID SEARCH None FROM sender``: UID писем, где From содержит sender."""
+    sender = _search_sender(args)
+    if sender is None:
+        return _BAD
+    if uids is None:
+        uids = _uids_from(messages, sender)
+    return 'OK', [b' '.join(uids)]
+
+
+def _search_sender(args: _Args) -> str | None:
+    """Отправитель из критериев SEARCH; другие критерии — None."""
+    if args[:-1] != (None, 'FROM'):
+        return None
+    sender = args[-1]
+    return sender.lower() if isinstance(sender, str) else None
+
+
+def _uids_from(messages: _Messages, sender: str) -> list[bytes]:
+    found: list[bytes] = []
+    for uid, raw in messages.items():
+        if sender in _from_header(raw):
+            found.append(uid)
+    return found
+
+
+def _fetch_response(messages: _Messages, args: _Args) -> _ImapResult:
+    """Ответ на ``UID FETCH uid (RFC822)``; неизвестный UID — мусор без тела."""
+    if args[1:] != ('(RFC822)',):
+        return _BAD
+    if args[0] not in messages:
+        return 'OK', [b'garbage']
+    return 'OK', [(b'1 (RFC822)', messages[args[0]])]
+
+
+def _from_header(raw: bytes) -> str:
+    return str(message_from_bytes(raw).get('From', '')).lower()
 
 
 def test_find_latest_price_returns_newest_match() -> None:
@@ -170,6 +225,16 @@ def test_find_latest_price_skips_unselectable_folder() -> None:
     assert fake.selected_folders == ['INBOX.Prices']
 
 
+def test_find_latest_price_no_search_in_unselected_folder() -> None:
+    """После неудачного SELECT письма в этой папке не ищутся."""
+    fake = _FakeClient({'INBOX': {b'1': _email('a@b.ru', 'прайс', 'price.xlsx')}})
+    found = find_latest_price(fake, ['INBOX', 'INBOX.Missing'], profile=_profile())
+    assert found is not None
+    commands = [args[0] for _name, args in fake.calls]
+    assert commands.count('SEARCH') == 1
+    assert fake.calls[-1] == ('select', ('INBOX.Missing', True))
+
+
 def test_find_latest_price_quotes_folder_with_space() -> None:
     """Папка с пробелом передаётся в SELECT в кавычках."""
     fake = _FakeClient({'INBOX.My Prices': {b'1': _email('a@b.ru', 'прайс', 'price.xlsx')}})
@@ -223,12 +288,6 @@ def test_parse_list_entry_unquotes_name() -> None:
     _flags, delimiter, name = parsed
     assert delimiter == '.'
     assert name == 'INBOX.My "Prices"'
-
-
-def test_search_uids_bad_status() -> None:
-    """Неуспешный SEARCH не даёт UID."""
-    fake = _FakeClient({'INBOX': {}}, search_status='NO')
-    assert not mail_client._search_uids(fake, 'a@b.ru')
 
 
 def test_search_uids_non_bytes_response() -> None:
@@ -288,93 +347,219 @@ def test_connect_folder_error(monkeypatch: pytest.MonkeyPatch) -> None:
     fake.logout.assert_called_once()
 
 
-def test_open_client_doh_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Сбой системного DNS переводит открытие на адреса из DoH."""
-    monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(side_effect=socket.gaierror))
-    monkeypatch.setattr(mail_doh, '_doh_addresses', lambda host: [])
-    with pytest.raises(MailConnectionError, match='разрешить'):
-        mail_doh.open_client(_ACCOUNT)
+def test_find_latest_price_imap_protocol() -> None:
+    """SELECT только для чтения с квотингом, SEARCH по FROM и FETCH целого письма."""
+    fake = _FakeClient({'INBOX.My Prices': {b'7': _email('a@b.ru', 'прайс', 'price.xlsx')}})
+    find_latest_price(fake, ['INBOX.My Prices'], profile=_profile())
+    assert fake.calls == [
+        ('select', ('"INBOX.My Prices"', True)),
+        ('uid', ('SEARCH', None, 'FROM', 'a@b.ru')),
+        ('uid', ('FETCH', b'7', '(RFC822)')),
+    ]
 
 
-def test_open_client_via_doh_success(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Первый разрешённый адрес из DoH используется для подключения."""
-    sentinel = MagicMock()
-    monkeypatch.setattr(mail_doh, '_doh_addresses', lambda host: ['1.2.3.4'])
-    monkeypatch.setattr(mail_doh, '_ImapSslByAddress', MagicMock(return_value=sentinel))
-
-    assert mail_doh._open_client_via_doh(_ACCOUNT, MagicMock()) is sentinel
-
-
-def test_open_client_via_doh_all_fail(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Если ни один адрес из DoH не подошёл — MailConnectionError."""
-    monkeypatch.setattr(mail_doh, '_doh_addresses', lambda host: ['1.2.3.4', '5.6.7.8'])
-    monkeypatch.setattr(mail_doh, '_ImapSslByAddress', MagicMock(side_effect=OSError('refused')))
-
-    with pytest.raises(MailConnectionError, match='подключиться'):
-        mail_doh._open_client_via_doh(_ACCOUNT, MagicMock())
+def test_find_latest_price_keeps_newer_from_first_folder() -> None:
+    """Более старое письмо из следующей папки не вытесняет свежее из первой."""
+    fake = _FakeClient(
+        {
+            'INBOX': {b'1': _email('a@b.ru', 'свежий', 'price.xlsx', date='Tue, 02 Jan 2024 10:00:00 +0300')},
+            'INBOX.Prices': {b'1': _email('a@b.ru', 'старый', 'price.xlsx', date='Mon, 01 Jan 2024 10:00:00 +0300')},
+        },
+    )
+    found = find_latest_price(fake, ['INBOX', 'INBOX.Prices'], profile=_profile())
+    assert found is not None
+    assert found.subject == 'свежий'
 
 
-def test_doh_addresses_first_provider(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Первый успешный провайдер DoH отдаёт адреса."""
-    payload = {'Answer': [{'type': 1, 'data': '10.0.0.1'}]}
-    _patch_urlopen(monkeypatch, [io.BytesIO(json.dumps(payload).encode())])
-    assert mail_doh._doh_addresses('imap.example.ru') == ['10.0.0.1']
+def test_find_latest_price_sender_domain() -> None:
+    """Профиль с доменом отправителя принимает любой адрес этого домена."""
+    fake = _FakeClient({'INBOX': {b'1': _email('Price <sales@b.ru>', 'прайс', 'price.xlsx')}})
+    found = find_latest_price(fake, ['INBOX'], profile=_profile(sender='b.ru', sender_is_domain=True))
+    assert found is not None
+    assert found.subject == 'прайс'
 
 
-def test_doh_addresses_fallback_provider(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Сбой первого провайдера переводит запрос на второй."""
-    payload = {'Answer': [{'type': 1, 'data': '10.0.0.2'}]}
-    response = io.BytesIO(json.dumps(payload).encode())
-    _patch_urlopen(monkeypatch, [OSError('cloudflare down'), response])
-    assert mail_doh._doh_addresses('imap.example.ru') == ['10.0.0.2']
+def test_find_latest_price_subject_keyword() -> None:
+    """Ключевое слово темы отсекает свежее письмо без него — берётся старое с ним."""
+    fake = _FakeClient(
+        {
+            'INBOX': {
+                b'1': _email('a@b.ru', 'Прайс шины', 'price.xlsx', payload=b'old'),
+                b'2': _email('a@b.ru', 'счёт', 'price.xlsx', payload=b'new'),
+            },
+        },
+    )
+    found = find_latest_price(fake, ['INBOX'], profile=_profile(subject_keyword='прайс'))
+    assert found is not None
+    assert found.payload == b'old'
 
 
-def test_doh_addresses_both_fail(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Если DoH недоступен и ответ не JSON — адресов нет."""
-    _patch_urlopen(monkeypatch, [io.BytesIO(b'{'), OSError('google down')])
-    assert not mail_doh._doh_addresses('imap.example.ru')
+def test_find_latest_price_message_without_headers() -> None:
+    """Письмо без темы и даты: пустая тема, дата неизвестна."""
+    fake = _FakeClient({'INBOX': {b'1': _email('a@b.ru', None, 'price.xlsx')}})
+    found = find_latest_price(fake, ['INBOX'], profile=_profile())
+    assert found == FoundPrice(subject='', date='дата неизвестна', filename='price.xlsx', payload=b'payload')
 
 
-def test_doh_answers_filters_entries() -> None:
-    """Из ответа DoH берутся только строковые IPv4-адреса."""
-    payload = {
-        'Answer': [
-            {'type': 1, 'data': '10.0.0.1'},
-            {'type': 5, 'data': 'alias'},
-            {'type': 1, 'data': 123},
-            'garbage',
-        ],
-    }
-    assert mail_doh._doh_answers(payload) == ['10.0.0.1']
+def test_list_price_folders_requests_all_mailboxes() -> None:
+    """LIST запрашивает все папки от корня иерархии."""
+    fake = _FakeClient({'INBOX': {}})
+    mail_client.list_price_folders(fake, 'INBOX')
+    assert fake.calls == [('list', ('""', '*'))]
 
 
-def test_doh_answers_non_mapping() -> None:
-    """Не объект — пустой список адресов."""
-    assert not mail_doh._doh_answers([])
+def test_list_price_folders_root_first() -> None:
+    """Корень всегда первым, даже если сервер вернул его после подпапок."""
+    lines = [b'(\\HasNoChildren) "." "INBOX.Prices"', b'(\\HasChildren) "." "INBOX"']
+    fake = _FakeClient({}, list_lines=lines)
+    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
 
 
-def test_imap_ssl_by_address_uses_expected_socket(monkeypatch: pytest.MonkeyPatch) -> None:
-    """_create_socket соединяется по заранее разрешённому адресу с SNI хоста."""
-    client = object.__new__(_ImapSslByAddress)
-    client._address = '1.2.3.4'
-    client.port = 993
-    client.host = 'imap.example.ru'
-    ssl_context = MagicMock()
-    wrapped = MagicMock()
-    ssl_context.wrap_socket.return_value = wrapped
-    client._ssl_context = ssl_context
-    monkeypatch.setattr(socket, 'create_connection', MagicMock(return_value='raw'))
-
-    assert client._create_socket(5.0) is wrapped
-    ssl_context.wrap_socket.assert_called_once_with('raw', server_hostname='imap.example.ru')
+def test_parse_list_entry_lowercase_nil() -> None:
+    """NIL — атом IMAP, регистр не важен: разделителя нет."""
+    assert mail_client._parse_list_entry(b'(\\HasNoChildren) nil "INBOX"') == (
+        frozenset((b'\\HasNoChildren',)),
+        None,
+        'INBOX',
+    )
 
 
-def test_imap_ssl_by_address_rejects_non_blocking() -> None:
-    """timeout=0 (неблокирующий сокет) не поддерживается."""
-    client = object.__new__(_ImapSslByAddress)
-    with pytest.raises(ValueError, match='Non-blocking'):
-        client._create_socket(0)
+@pytest.mark.parametrize(
+    ('token', 'expected'),
+    [
+        (b'NIL', None),
+        (b'nil', None),
+        (b'Nil', None),
+        (b'"."', '.'),
+        (b'"/"', '/'),
+        (b'""', None),
+    ],
+    ids=['nil-upper', 'nil-lower', 'nil-mixed', 'dot', 'slash', 'empty'],
+)
+def test_delimiter(token: bytes, expected: str | None) -> None:
+    """Разделитель иерархии: NIL в любом регистре и пустая строка — нет разделителя."""
+    assert mail_client._delimiter(token) == expected
 
 
-def _patch_urlopen(monkeypatch: pytest.MonkeyPatch, responses: list[Any]) -> None:
-    monkeypatch.setattr(urllib.request, 'urlopen', MagicMock(side_effect=responses))
+@pytest.mark.parametrize(
+    ('token', 'expected'),
+    [
+        (b'INBOX', 'INBOX'),
+        (b'  "INBOX"  ', 'INBOX'),
+        (b'"', '"'),
+        (b'""', ''),
+        (b'"abc', '"abc'),
+        (b'abc"', 'abc"'),
+        (b'"a\\"b\\\\c"', 'a"b\\c'),
+        (b'"\xff"', '\ufffd'),
+    ],
+    ids=['atom', 'spaces', 'one-quote', 'empty-quoted', 'open-only', 'close-only', 'escapes', 'bad-utf8'],
+)
+def test_unquote(token: bytes, expected: str) -> None:
+    """Кавычки снимаются только с полной IMAP-строки; битый UTF-8 не роняет разбор."""
+    assert mail_client._unquote(token) == expected
+
+
+@pytest.mark.parametrize(
+    ('name', 'expected'),
+    [
+        ('INBOX', 'INBOX'),
+        ('INBOX.Prices', 'INBOX.Prices'),
+        ('', '""'),
+        ('My Prices', '"My Prices"'),
+        ('a\\b"c', '"a\\\\b\\"c"'),
+    ],
+    ids=['atom', 'dotted', 'empty', 'space', 'escapes'],
+)
+def test_mailbox_arg(name: str, expected: str) -> None:
+    """Атом передаётся как есть; пустое имя и спецсимволы — в кавычках с экранированием."""
+    assert mail_client._mailbox_arg(name) == expected
+
+
+class _StubClient(_FakeClient):
+    """Клиент с фиксированным ответом uid."""
+
+    def __init__(self, response: _ImapResult) -> None:
+        super().__init__()
+        self.response = response
+
+    def uid(self, command: str, *args: Any) -> _ImapResult:
+        self.calls.append(('uid', (command, *args)))
+        return self.response
+
+
+@pytest.mark.parametrize(
+    ('response', 'expected'),
+    [
+        (('OK', [b'1 2']), [b'1', b'2']),
+        (('NO', [b'1 2']), []),
+        (('OK', []), []),
+    ],
+    ids=['ok', 'bad-status-with-data', 'ok-without-data'],
+)
+def test_search_uids_status(response: tuple[str, list[Any]], expected: list[bytes]) -> None:
+    """UID берутся только из успешного непустого ответа SEARCH."""
+    stub = _StubClient(response)
+    assert mail_client._search_uids(stub, 'a@b.ru') == expected
+
+
+@pytest.mark.parametrize(
+    'response',
+    [('NO', [(b'1 (RFC822)', b'Subject: x\r\n\r\nbody')]), ('OK', [])],
+    ids=['bad-status-with-body', 'ok-without-data'],
+)
+def test_fetch_message_rejects(response: tuple[str, list[Any]]) -> None:
+    """Неуспешный или пустой ответ FETCH не даёт письма."""
+    assert mail_client._fetch_message(_StubClient(response), b'1') is None
+
+
+def _found(when: datetime | None) -> FoundPrice:
+    return FoundPrice(subject='', date='', filename='price.xlsx', payload=b'', when=when)
+
+
+_EARLY = datetime(2024, 1, 1, tzinfo=UTC)
+_LATE = datetime(2024, 1, 2, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ('best_when', 'candidate_when', 'expect_candidate'),
+    [
+        (_EARLY, _LATE, True),
+        (_LATE, _EARLY, False),
+        (_EARLY, _EARLY, False),
+        (None, _EARLY, True),
+        (_EARLY, None, False),
+    ],
+    ids=['newer', 'older', 'equal', 'best-undated', 'candidate-undated'],
+)
+def test_newer_of(best_when: datetime | None, candidate_when: datetime | None, expect_candidate: bool) -> None:
+    """Кандидат вытесняет лучшее только строго более свежей датой; без даты — самое старое."""
+    best, candidate = _found(best_when), _found(candidate_when)
+    assert (mail_client._newer_of(best, candidate) is candidate) is expect_candidate
+
+
+def test_newer_of_missing() -> None:
+    """Отсутствующее письмо с любой стороны не вытесняет имеющееся."""
+    found = _found(_EARLY)
+    assert mail_client._newer_of(None, found) is found
+    assert mail_client._newer_of(found, None) is found
+    assert mail_client._newer_of(None, None) is None
+
+
+def test_save_price_creates_nested_folder(tmp_path: Path) -> None:
+    """Прайс пишется в несуществующую вложенную папку, повторная запись перезаписывает."""
+    dest = tmp_path / 'file_prices' / 'pioner' / 'price.xlsx'
+    save_price(dest, b'first')
+    save_price(dest, b'second')
+    assert dest.read_bytes() == b'second'
+    assert sorted(path.name for path in dest.parent.iterdir()) == ['price.xlsx']
+
+
+def test_connect_quotes_folder(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Папка со спецсимволами открывается в кавычках, как и при поиске."""
+    fake = _FakeClient({'INBOX.My Prices': {}})
+    monkeypatch.setattr(mail_client, 'open_client', lambda account: fake)
+    account = MailAccount(host='imap.example.ru', port=993, folder='INBOX.My Prices')
+
+    assert connect(account, _CREDENTIALS) is fake
+    assert fake.calls == [('select', ('"INBOX.My Prices"', True))]
