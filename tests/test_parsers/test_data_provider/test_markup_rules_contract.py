@@ -113,3 +113,23 @@ def test_category_markup_ranges_error_reports_path() -> None:
     message = str(exc_info.value)
     assert 'category_markup_ranges.Диск' in message
     assert '«min» должно быть числом' in message
+
+
+@pytest.mark.parametrize(
+    ('ranges', 'message'),
+    [
+        ([], f'{_RANGE_WHERE} → category_markup_ranges: ожидается объект, получено []'),
+        ({'Диск': []}, f'{_RANGE_WHERE} → category_markup_ranges.Диск: ожидается объект, получено []'),
+        (
+            {'Диск': {'min': 0.1, 'max': 'abc'}},
+            f"{_RANGE_WHERE} → category_markup_ranges.Диск: «max» должно быть числом, получено 'abc'",
+        ),
+    ],
+    ids=['section', 'range-object', 'range-max'],
+)
+def test_category_markup_ranges_error_full_path(ranges: object, message: str) -> None:
+    """Ошибка секции или диапазона — полный путь до ключа."""
+    with pytest.raises(ConfigValidationError) as exc_info:
+        MarkupRulesConfig.from_dict({'category_markup_ranges': ranges}, _RANGE_WHERE)
+
+    assert str(exc_info.value) == message

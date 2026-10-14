@@ -95,3 +95,25 @@ def test_apply_min_rest_zeroes_none() -> None:
     row = RowItem({'rest_count': 10})
     apply_min_rest(row, None, _MIN_REST)
     assert row.stock.rest_count == 0
+
+
+class _RecordingPolicy(MapOnOptMarkupPolicy):
+    """Политика, запоминающая аргументы apply."""
+
+    def __init__(self) -> None:
+        super().__init__(_rules(), ())
+        self.calls: list[tuple[float, float | None, str | None]] = []
+
+    def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
+        self.calls.append((price_opt, price_recommended, type_production))
+        return price_opt
+
+
+def test_add_price_markup_passes_type_production() -> None:
+    """Политика получает закуп, РРЦ и тип товара позиции."""
+    policy = _RecordingPolicy()
+    row = RowItem({'price_opt': 1000, 'price_recommended': 1500, 'type_production': 'Грузовая шина'})
+
+    RowProcessor(markup_policy=policy).add_price_markup(row)
+
+    assert policy.calls == [(1000, 1500, 'Грузовая шина')]

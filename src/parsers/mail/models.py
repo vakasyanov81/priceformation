@@ -53,9 +53,8 @@ class MailAccount:
     folder: str
 
     @classmethod
-    def from_dict(cls, raw: Any, where: str) -> MailAccount:
-        """Разобрать секцию ``imap`` из объекта JSON."""
-        payload = as_config_object(raw, where)
+    def from_dict(cls, payload: RawConfig, where: str) -> MailAccount:
+        """Разобрать секцию ``imap``, уже проверенную как объект (``read_object``)."""
         return cls(
             host=read_text(payload, 'host', where, DEFAULT_IMAP_HOST),
             port=read_int(payload, 'port', where, DEFAULT_IMAP_PORT),

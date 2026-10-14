@@ -37,15 +37,14 @@ class RecommendedRangeMarkupPolicy(RecommendedOrMapMarkupPolicy):
 
     def apply(self, price_opt: float, price_recommended: float | None, type_production: str | None = None) -> float:
         """Отпускная до округления с учётом диапазона категории и абсолютного пола."""
-        opt = price_opt or 0
         price_range = self._rules.category_markup_ranges.get(type_production or '')
         if price_range is None:
-            price = super().apply(opt, price_recommended)
+            price = super().apply(price_opt, price_recommended)
         elif price_recommended:
-            price = max(price_recommended, get_markup(opt, price_range.min))
+            price = max(price_recommended, get_markup(price_opt, price_range.min))
         else:
-            percent = min(max(self.markup_percent_for_opt(opt), price_range.min), price_range.max)
-            price = get_markup(opt, percent)
-        if self._is_small_absolute_markup(price, opt):
-            price = self._price_with_absolute_rule(opt)
+            percent = min(max(self.markup_percent_for_opt(price_opt), price_range.min), price_range.max)
+            price = get_markup(price_opt, percent)
+        if self._is_small_absolute_markup(price, price_opt):
+            price = self._price_with_absolute_rule(price_opt)
         return price

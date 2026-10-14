@@ -36,7 +36,7 @@ def matching_attachments(message: Message, glob_pattern: str) -> list[tuple[str,
 
 def sender_matches(message: Message, sender: str, *, sender_is_domain: bool) -> bool:
     """Совпадает ли From письма с адресом или доменом отправителя (без учёта регистра)."""
-    _, address = parseaddr(decode_header_value(message.get('From', '')))
+    _, address = parseaddr(decode_header_value(message.get('From')))
     address = address.lower()
     if sender_is_domain:
         return address.endswith(f'@{sender.lower()}')
@@ -45,7 +45,7 @@ def sender_matches(message: Message, sender: str, *, sender_is_domain: bool) -> 
 
 def subject_matches(message: Message, keyword: str) -> bool:
     """Есть ли слово (подстрока) в теме письма без учёта регистра."""
-    subject = decode_header_value(message.get('Subject', ''))
+    subject = decode_header_value(message.get('Subject'))
     return keyword.casefold() in subject.casefold()
 
 

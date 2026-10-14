@@ -142,9 +142,7 @@ def _parser_for_vendor(
     vendor_config: ParseConfiguration | None,
 ) -> BaseParser:
     """Собрать config-driven парсер поставщика."""
-    if vendor_config is None:
-        return vendor_cls(vendor_config)
-    if not vendor_config_is_enabled(vendor_config):
+    if vendor_config is None or not vendor_config_is_enabled(vendor_config):
         return vendor_cls(parse_config=vendor_config)
     section = getattr(vendor_config, '_vendor_section', None)
     vendor_cfg = getattr(vendor_config, '_vendor_config', None)

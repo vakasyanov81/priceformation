@@ -20,7 +20,7 @@ from parsers.data_provider import (
     MarkupRulesConfig,
     PercentRange,
 )
-from parsers.strategies.pricing import RecommendedRangeMarkupPolicy
+from parsers.strategies.pricing import PercentByThresholdMarkupPolicy, RecommendedRangeMarkupPolicy
 
 _OPT = 1000
 _OVERLAP_OPT = 5000
@@ -557,3 +557,23 @@ def test_range_policy_no_floor_when_margin_above() -> None:
         absolute_mode=ABSOLUTE_MODE_DELTA,
     )
     assert policy.apply(_OPT, _TRUCK_MAX_PRICE + _RANGE_FLOOR, _TRUCK_CATEGORY) == _TRUCK_MAX_PRICE + _RANGE_FLOOR
+
+
+_MAP_PERCENT = 0.10
+_RANGE_MAP = (
+    MarkUpRule(min=0, max=5001, percent_markup=_MAP_PERCENT),
+    MarkUpRule(min=5001, max=10000, percent_markup=0.08),
+)
+
+
+def test_range_policy_without_rrc_keeps_map_inside_range() -> None:
+    """Без РРЦ процент карты для этого закупа (не минимальный в карте) внутри диапазона не меняется."""
+    policy = _range_policy(ranges={_TRUCK_CATEGORY: _TRUCK_RANGE}, price_map=_RANGE_MAP)
+    expected = get_markup(_OPT, _MAP_PERCENT)
+    assert policy.apply(_OPT, None, _TRUCK_CATEGORY) == pytest.approx(expected)
+
+
+def test_percent_by_threshold_has_empty_price_map() -> None:
+    """Порог грузовых не использует карту %: процент по карте — 0."""
+    policy = PercentByThresholdMarkupPolicy(threshold=13000, low=0.07, high=0.05)
+    assert policy.markup_percent_for_opt(_OPT) == 0

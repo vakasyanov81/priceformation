@@ -358,3 +358,13 @@ def test_write_creates_nested_result_folder(tmp_path: Any) -> None:
         result_folder=str(result_folder),
     ).write()
     assert result_folder.is_dir()
+
+
+def test_get_value_suffix_on_empty_cell() -> None:
+    """Суффикс по признаку строки ставится и к пустой ячейке — без заглушки перед ним."""
+    from parsers.writer.xls_writer import get_value
+
+    column = {'Тип': {'field': 'type_production', 'suffix': '*', 'suffix_when': 'type_corrected'}}
+
+    assert get_value(column, {'type_corrected': True}) == '*'
+    assert get_value(column, {'type_production': 'Спецшина', 'type_corrected': True}) == 'Спецшина*'

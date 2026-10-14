@@ -532,7 +532,10 @@ def test_apply_category_logs_correction(watch_logger: LoggerWatcher) -> None:
 
     parser.process_parsed_row(RowItem({'title': '275/65R20 112T'}))
 
-    assert any('Тип товара изменён' in message for _level, message in watch())
+    corrections = [message for _level, message in watch() if 'Тип товара изменён' in message]
+    assert corrections == [
+        f'Тип товара изменён: заявлено «{LIGHT_TRUCK}», вычислено «{PASSENGER}» // 275/65R20 112T',
+    ]
 
 
 def test_type_corrections_counts_only_rows_kept_in_price() -> None:

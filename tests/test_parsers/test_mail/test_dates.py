@@ -37,3 +37,8 @@ def test_format_date_invalid_returns_raw() -> None:
 def test_format_date_missing() -> None:
     """Без заголовка Date — понятная подпись."""
     assert format_date(_message('Subject: x\n')) == 'дата неизвестна'
+
+
+def test_message_datetime_missing() -> None:
+    """Без заголовка Date момента отправки нет."""
+    assert message_datetime(_message('Subject: x\n')) is None

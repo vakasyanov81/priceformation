@@ -109,3 +109,60 @@ def test_config_not_object() -> None:
     """Корень файла должен быть объектом."""
     with pytest.raises(ConfigValidationError):
         MailConfig.from_dict([], 'mail.json')
+
+
+_PROFILE_WHERE = 'mail.json → profiles.pioner'
+
+
+@pytest.mark.parametrize(
+    ('raw', 'message'),
+    [
+        ([], 'mail.json: ожидается объект, получено []'),
+        ({'imap': []}, 'mail.json → imap: ожидается объект, получено []'),
+        ({'imap': {'host': 5}}, 'mail.json → imap → host: ожидается строка, получено 5'),
+        ({'imap': {'port': 'imap'}}, "mail.json → imap → port: ожидается целое, получено 'imap'"),
+        ({'imap': {'folder': 5}}, 'mail.json → imap → folder: ожидается строка, получено 5'),
+        ({'profiles': []}, 'mail.json → profiles: ожидается объект, получено []'),
+        ({'profiles': {'pioner': []}}, f'{_PROFILE_WHERE}: ожидается объект, получено []'),
+        (
+            {'profiles': {'pioner': {'attachment_glob': '*.xlsx'}}},
+            f'{_PROFILE_WHERE}: отсутствует обязательный ключ «sender»',
+        ),
+        (
+            {'profiles': {'pioner': {**_MINIMAL_PROFILE, 'sender_is_domain': 2}}},
+            f'{_PROFILE_WHERE}: «sender_is_domain» должен быть 0 или 1, получено 2',
+        ),
+        (
+            {'profiles': {'pioner': {**_MINIMAL_PROFILE, 'subject_keyword': ''}}},
+            f"{_PROFILE_WHERE} → subject_keyword: ожидается непустая строка, получено ''",
+        ),
+        (
+            {'profiles': {'pioner': {'sender': 'a@b.ru', 'attachment_glob': 5}}},
+            f'{_PROFILE_WHERE} → attachment_glob: ожидается строка, получено 5',
+        ),
+        (
+            {'profiles': {'pioner': {**_MINIMAL_PROFILE, 'enabled': 2}}},
+            f'{_PROFILE_WHERE}: «enabled» должен быть 0 или 1, получено 2',
+        ),
+    ],
+    ids=[
+        'root',
+        'imap-section',
+        'imap-host',
+        'imap-port',
+        'imap-folder',
+        'profiles-section',
+        'profile-object',
+        'profile-sender',
+        'profile-sender-is-domain',
+        'profile-subject-keyword',
+        'profile-attachment-glob',
+        'profile-enabled',
+    ],
+)
+def test_error_names_path_to_key(raw: object, message: str) -> None:
+    """Ошибка конфига называет файл и полный путь до ключа."""
+    with pytest.raises(ConfigValidationError) as error:
+        MailConfig.from_dict(raw, 'mail.json')
+
+    assert str(error.value) == message

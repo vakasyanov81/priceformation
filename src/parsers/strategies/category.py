@@ -147,7 +147,7 @@ class HeaderRowsCategory:
         self._zero_rest_categories = zero_rest_categories
         self._mapping = {**_HEADER_CATEGORIES, **(mapping or {})}
         self._default = default
-        self.current_category: str | None = None
+        self.current_category = ''
 
     @classmethod
     def from_config(cls, config: CategoryConfig) -> HeaderRowsCategory:
@@ -156,9 +156,10 @@ class HeaderRowsCategory:
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str | None:
         """Обновить раздел на строке-заголовке и вернуть тип товара строки."""
-        if self._is_header_row(row_item):
-            self.current_category = (row_item.identity.title or '').lower().strip()
-        if '/' in (self.current_category or ''):
+        header = self._header_title(row_item)
+        if header is not None:
+            self.current_category = header.lower().strip()
+        if '/' in self.current_category:
             refined = non_tire_product_type(row_item.identity.title)
             if refined:
                 return refined
@@ -166,24 +167,27 @@ class HeaderRowsCategory:
 
     def is_zero_rest_category(self) -> bool:
         """Относится ли текущий раздел к категориям с обнулённым остатком."""
-        lowered = (self.current_category or '').lower()
+        lowered = self.current_category.lower()
         return any(name in lowered for name in self._zero_rest_categories)
 
     def current_manufacturer(self) -> str | None:
         """Производитель из подписи текущего раздела: «автошины triangle» → «triangle»."""
-        chunks = (self.current_category or '').split()
+        chunks = self.current_category.split()
         if len(chunks) <= _MANUFACTURER_CHUNK_INDEX or not chunks[0].startswith(_MANUFACTURER_HEAD_PREFIX):
             return None
         return chunks[_MANUFACTURER_CHUNK_INDEX]
 
     def _first_chunk(self) -> str:
-        current = self.current_category or ''
-        head = current.split('/')[0]
+        head = self.current_category.split('/')[0]
         chunk = head.split(' ')[0]
         return self._mapping.get(chunk, self._default or chunk)
 
-    def _is_header_row(self, row_item: RowItem) -> bool:
-        return bool(row_item.identity.title and not row_item.pricing.price_opt)
+    def _header_title(self, row_item: RowItem) -> str | None:
+        """Название строки-заголовка раздела (есть title, нет цены); иначе None."""
+        title = row_item.identity.title
+        if title and not row_item.pricing.price_opt:
+            return title
+        return None
 
 
 def _canonical(raw_type: str | None, context: CategoryContext | None) -> str | None:

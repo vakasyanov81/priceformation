@@ -5,7 +5,7 @@ import pytest
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import NormalizeTitle
-from parsers.strategies.stk_title import StkTireCompose
+from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
 from parsers.strategies.title import (
     DefaultTitle,
     DiskComposeTochki,
@@ -25,7 +25,7 @@ _KNOWN = [
     ('default', DefaultTitle),
     ('normalize_title', NormalizeTitle),
     ('normalize_size_chunks', NormalizeSizeChunks),
-    ('stk_tire_compose', StkTireCompose),
+    ('poshk_stk_tire_compose', PoshkStkTireCompose),
     ('fill_fields_from_title', FillFieldsFromTitle),
 ]
 
@@ -68,6 +68,24 @@ def test_normalize_size_chunks_fallback_brand_wired(monkeypatch: pytest.MonkeyPa
 
     assert strategy.prepare(RowItem({'title': 'Шина 155/65R13'})) == 'Алтайшина 155/65R13'
     assert strategy.prepare(RowItem({'title': 'Шина Nortec'})) == 'Nortec'
+
+
+def test_poshk_stk_tire_compose_fallback_brand_wired(monkeypatch: pytest.MonkeyPatch) -> None:
+    """fallback_brand и детектор бренда доходят до сборки Пошка/STK."""
+    monkeypatch.setattr(
+        'parsers.strategies.title_registry.load_aliases_map',
+        lambda: {'FORWARD': [], 'Алтайшина': ['АШК']},
+    )
+    strategy = make_title_strategy(
+        TitleConfig(strategy='poshk_stk_tire_compose', fallback_brand='Алтайшина'),
+        WHERE,
+    )
+
+    without_brand = strategy.prepare(RowItem({'title': 'Шина 11.00R20 И-111А 16PR 150/146K TT, шт'}))
+    with_brand = strategy.prepare(RowItem({'title': 'Шина 10.00R20 FORWARD Traction-310 16PR 146/143K TT, шт'}))
+
+    assert without_brand == 'Алтайшина 11.00R20 И-111А 16PR 150/146K TT'
+    assert with_brand == '10.00R20 FORWARD Traction-310 146/143K 16PR TT'
 
 
 def test_normalize_size_chunks_without_fallback_does_not_read_aliases(

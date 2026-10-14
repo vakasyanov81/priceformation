@@ -50,22 +50,6 @@ CATEGORY_ALIASES: dict[str, tuple[str, ...]] = {
     RIM_TAPE: ('о/лента', 'лента', 'ленты'),
 }
 
-# Общие/неспецифичные ярлыки: сверять нельзя (README §7 п.4).
-_GENERIC_LABELS = frozenset(
-    (
-        '',
-        'шина',
-        'шины',
-        'автошина',
-        'автошины',
-        'автопокрышка',
-        'автопокрышки',
-        GENERIC_TIRE.lower(),
-        OTHER.lower(),
-        'прочее',
-    ),
-)
-
 # Конкретные ярлыки поставщиков → канонический тип (README §7, таблица).
 _DECLARED_ALIASES: dict[str, str] = {
     'легковая': PASSENGER,
@@ -110,11 +94,12 @@ _DECLARED_ALIASES: dict[str, str] = {
 
 
 def canonical_declared(declared: str | None) -> str | None:
-    """Канонизировать заявленный поставщиком тип; None — общий/пустой/неизвестный."""
-    label = normalize_text(declared)
-    if not label or label in _GENERIC_LABELS:
-        return None
-    return _DECLARED_ALIASES.get(label)
+    """Канонизировать заявленный поставщиком тип; None — общий/пустой/неизвестный.
+
+    Общие ярлыки (`шина`, `автошина`, `прочие`…) не сверяются (README §7 п.4):
+    их нет в карте синонимов, как и пустой строки, поэтому они дают None.
+    """
+    return _DECLARED_ALIASES.get(normalize_text(declared))
 
 
 def declared_matches(declared: str | None, own: str) -> bool:

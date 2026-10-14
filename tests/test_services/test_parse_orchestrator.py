@@ -304,7 +304,7 @@ def test_parser_for_vendor_without_config() -> None:
 
     _parser_for_vendor(MagicMock(), vendor_cls, None)
 
-    vendor_cls.assert_called_once_with(None)
+    vendor_cls.assert_called_once_with(parse_config=None)
 
 
 def test_parser_for_vendor_disabled_uses_parse_config() -> None:
@@ -392,3 +392,30 @@ def test_parse_vendors_logs_elapsed(watch_logger: LoggerWatcher) -> None:
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
     assert any('(1.23 сек)' in message for message in texts_at(entries(), logging.INFO))
+
+
+class FakeParserWithTypeCorrections(FakeParser):
+    """parser that corrected product type in two rows"""
+
+    def __init__(self, parse_config: Any = None, **kwargs: Any) -> None:
+        """init"""
+        super().__init__(parse_config, **kwargs)
+        self.stats = ParserStats(type_corrections=2)
+
+    def parse(self) -> list[RowItem]:
+        """fake parse"""
+        return []
+
+
+def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> None:
+    """Расхождения типа суммируются по поставщикам и попадают в сводку лога."""
+    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.INFO)
+    vendor = (cast(type[BaseParser], FakeParserWithTypeCorrections), None)
+
+    parsed = ParseOrchestrator().parse_all([vendor, vendor])
+
+    assert parsed.type_corrections == 4
+    assert 'Тип товара скорректирован по названию строки, расхождений с поставщиком: 4' in texts_at(
+        entries(),
+        logging.INFO,
+    )
