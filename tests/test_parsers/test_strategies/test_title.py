@@ -342,3 +342,14 @@ def test_title_with_markers_delegates_title() -> None:
     row = RowItem({'title': '10.00R20 И-281 н.с.8'})
 
     assert strategy.prepare(row) == '10.00R20 И-281 PR8'
+
+
+def test_title_with_markers_checks_every_marker() -> None:
+    """Несовпавший первый маркер не мешает следующим."""
+    markers = {'липучка': {'spike': 'нет'}, 'шип': {'spike': 'да'}}
+    strategy = TitleWithMarkers(DefaultTitle(), markers)
+    row = RowItem({'title': '205/55 R16 Torero MP30 шипы 94T XL'})
+
+    strategy.prepare(row)
+
+    assert row.tire.spike == 'да'

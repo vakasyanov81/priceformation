@@ -408,7 +408,7 @@ class BaseParser:
 
 def _type_production_from_filename(price_file: str) -> str:
     """Последний суффикс имени файла после `_` (например disks.xls)."""
-    return price_file.rsplit('_', maxsplit=1)[-1]
+    return price_file.rpartition('_')[2]
 
 
 def make_parser[TParser: BaseParser](

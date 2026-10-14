@@ -56,3 +56,22 @@ def test_fill_absolute_markup_skips_without_markup_price() -> None:
     fill_absolute_markup([row])
 
     assert row.pricing.absolute_markup == 0
+
+
+def test_fill_absolute_markup_continues_after_row_without_markup() -> None:
+    """Строка без цены с наценкой не прерывает обход: следующая считается."""
+    without_markup = RowItem({'price_opt': 1000})
+    rows = [without_markup, RowItem({'price_opt': 1000, 'price_markup': 1120})]
+
+    fill_absolute_markup(rows)
+
+    assert [row.pricing.absolute_markup for row in rows] == [0, 120]
+
+
+def test_fill_absolute_markup_rounds_to_cents() -> None:
+    """Абсолютная наценка округляется до копеек."""
+    row = RowItem({'price_opt': 33.333, 'price_markup': 100})
+
+    fill_absolute_markup([row])
+
+    assert row.pricing.absolute_markup == 66.67

@@ -291,3 +291,21 @@ def test_inch_size_without_c_is_passenger() -> None:
     strategy = TireSizeCategory.from_config(_config())
 
     assert strategy.resolve(RowItem({'title': '165 R13'})) == 'Легковая шина'
+
+
+def test_header_rows_mixed_section_falls_back_to_first_chunk() -> None:
+    """Смешанный раздел без уточнения по строке — тип по первому куску до `/`."""
+    strategy = HeaderRowsCategory()
+    strategy.resolve(RowItem({'title': 'Автошины/Прочее'}))
+
+    assert strategy.resolve(RowItem({'title': '11.00R20 Taitong HS801Q', 'price_opt': 24000})) == 'Автошина'
+
+
+def test_header_rows_initial_state_is_empty() -> None:
+    """До первого заголовка раздела нет: ни производителя, ни нулевого остатка, тип по умолчанию."""
+    strategy = HeaderRowsCategory(zero_rest_categories=('прочие',), default='Прочие')
+
+    assert strategy.current_category == ''
+    assert strategy.current_manufacturer() is None
+    assert strategy.is_zero_rest_category() is False
+    assert strategy.resolve(RowItem({'title': '11.00R20 Taitong', 'price_opt': 24000})) == 'Прочие'

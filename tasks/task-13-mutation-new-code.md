@@ -1,6 +1,6 @@
 # Task-13: Усиление тестов нового кода по данным mutmut (2026-10-14)
 
-Статус: 🔄 в работе — M1 ✅, M2 ✅, M3 ✅, M4 ✅. Продолжение [плана по mutmut](./MUTATION_TESTS.md):
+Статус: ✅ выполнено 2026-10-14 — M1–M6, score 94.9 % → 98.5 %. Продолжение [плана по mutmut](./MUTATION_TESTS.md):
 классы выживших (A–I) и приёмы фаз 1–7 — оттуда.
 
 ## Контекст
@@ -321,6 +321,24 @@ survived 304 → 241, score 96.1 % → 96.9 %. Почти все выживши�
   поставщика, счётчик суммируется), `_log_skips` (сообщение о
   `type_corrections`), `_parser_for_vendor` (прокидка `vendor_config`).
 
+### Итог M5 (2026-10-14)
+
+18 → 7 выживших: 6 эквивалентных (таблица ниже) и 1 открытый вопрос
+(`ParserFactory`, ниже). Правки кода: `RecommendedRangeMarkupPolicy.apply` без
+мёртвого `price_opt or 0` (закуп уже `float`), `_type_production_from_filename`
+через `rpartition` (`maxsplit` у `rsplit(...)[-1]` ненаблюдаем), ветки
+`vendor_config is None` и «выключен» в `_parser_for_vendor` слиты. Тесты:
+процент карты внутри диапазона, `markup_percent_for_opt` порога, обход и
+округление `fill_absolute_markup`, прокидка `type_production` в политику,
+полный текст debug-лога расхождения, пути ошибок `category_markup_ranges`,
+сумма `type_corrections` и её сводка.
+
+**Открытый вопрос.** `_parser_for_vendor` не использует параметр
+`parser_factory`: зарегистрированная в DI `ParserFactory` (`make_parser`) нигде
+не строит парсеры (включённые — `make_config_driven_parser`, остальные —
+`vendor_cls(...)`). Удалить фабрику из DI или начать её использовать — решение
+по архитектуре, не по тестам.
+
 ## M6: Мелочь (9)
 
 - `services/configure._register_services`: `HelpService → None` выживает
@@ -333,6 +351,14 @@ survived 304 → 241, score 96.1 % → 96.9 %. Почти все выживши�
   наблюдаем; иначе эквивалентный.
 - `xls_writer.get_value` / `tire_category`: пустой `cell_value` / `raw_title`
   (класс C).
+
+### Итог M6 (2026-10-14)
+
+`HeaderRowsCategory.current_category` стал `str` (начально `''`) вместо
+`str | None` — ушли четыре мёртвых `or ''`; `_is_header_row` → `_header_title`.
+Тесты: `HelpService` из контейнера, несовпавший первый маркер, суффикс к
+пустой ячейке, смешанный раздел без уточнения, начальное состояние раздела.
+Остаток — эквивалентные (таблица ниже).
 
 ---
 
@@ -355,13 +381,14 @@ mutmut параллельно с `pytest`.
 
 ## Критерии готовности
 
-- [ ] Полный прогон: score **≥ 98 %**.
-- [ ] В файлах из таблицы фаз каждый оставшийся выживший разобран:
-      эквивалентный / ненаблюдаемый — с причиной в разделе ниже.
-- [ ] Мёртвые поля `_Size` (M3, п. 1) удалены или обоснованно оставлены.
-- [ ] Таблица «Контекст» в [MUTATION_TESTS.md](./MUTATION_TESTS.md)
+- [x] Полный прогон: score **≥ 98 %** — 98.5 % (7322 / 112).
+- [x] В файлах из таблицы фаз каждый оставшийся выживший разобран:
+      эквивалентный / ненаблюдаемый — с причиной в разделе ниже
+      (кроме открытого вопроса `ParserFactory` в M5).
+- [x] Мёртвые поля `_Size` (M3, п. 1) удалены.
+- [x] Таблица «Контекст» в [MUTATION_TESTS.md](./MUTATION_TESTS.md)
       дополнена колонкой с итогом этой задачи.
-- [ ] `just ci` зелёный.
+- [x] `just ci` зелёный.
 
 ## Эквивалентные (заполнять по ходу)
 
@@ -372,4 +399,11 @@ mutmut параллельно с `pytest`.
 | `mail/client._unquote` | `'utf-8' → 'UTF-8'` | имя кодека нечувствительно к регистру |
 | `mail/client._epoch` | `'-inf' → '-INF'` | `float()` разбирает `inf` без учёта регистра |
 | `mail/doh._doh_addresses` | `'Accept'` → другой регистр | `urllib.request.Request` хранит заголовок как `key.capitalize()` |
+| `base_parser.zero_rest_without_category`, `row_processor.apply_min_rest` | `0 → None` в `rest_count` | `RowItem` приводит `rest_count=None` к `0` |
+| `pricing.RecommendedRangeMarkupPolicy.apply` | `type_production or '' → 'XXXX'` | ни `''`, ни `'XXXX'` не ключ `category_markup_ranges` |
+| `pricing.PercentByThresholdMarkupPolicy.__init__` | `MarkupRulesConfig() → None` | собственный `apply` не читает `_rules`; карту % проверяет тест |
+| `parse_orchestrator._parser_for_vendor` | `getattr(..., None)` без дефолта | `_vendor_section`/`_vendor_config` объявлены в `ParseConfiguration` |
+| `category.TitleKeywordsCategory`, `FieldMapCategory`, `tire_category`, `title_markers` | `x or '' → 'XXXX'` | заглушка не совпадает ни с ключом карты, ни с маркером, ни с размером |
+| `xls_writer.get_value` | `field_name or True` | `PriceRow` — `dict`, `get('')` даёт `None` |
+| `help_format.colorize_markdown` | `in_code = False → None` | флаг только инвертируется `not`: `not None == not False` |
 | `_poshk_stk_title_helper._prepare_text` | `r'\1PR' → r'\1pr'` (×2) | `_PR` без учёта регистра, слойность приводится `.upper()` |
