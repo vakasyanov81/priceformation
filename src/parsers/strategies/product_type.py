@@ -32,9 +32,10 @@ _METRIC2 = re.compile(r'\b(\d{3})\s*/\s*(\d{2})\s*/\s*(\d{2}(?:\.\d)?)')
 _METRIC = re.compile(rf'\b(\d{{3}})\s*/\s*(\d{{2,3}})\s*z?r?\s*-?\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
 _INCH = re.compile(rf'(?<![\w.,])(\d{{1,2}}(?:\.\d{{1,2}})?)\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
 _WIDTH_ONLY = re.compile(rf'\b(\d{{3}})\s*z?r\s*(\d{{2}}(?:\.\d)?){_SUFFIX}')
-# Флотация `наружный_диаметр × ширина R/- посадочный` (`31x10.5R15`, `18*7-8`).
+# Флотация `наружный_диаметр × ширина R/- посадочный` (`31x10.5R15`, `24x10-11`).
+# Однозначный посадочный (`18*7-8`) сюда не попадает — это диагональ `7-8`.
 _FLOTATION = re.compile(
-    rf'\b(\d{{2,3}})\s*[*xх×]\s*(\d{{1,2}}(?:[.,]\d{{1,2}})?)\s*(?:-\s*|z?r\s*)(\d{{2}}(?:[.,]\d)?){_SUFFIX}',
+    rf'\b(\d{{2,3}})\s*[*xх×]\s*(\d{{1,2}}(?:\.\d{{1,2}})?)\s*(?:-\s*|z?r\s*)(\d{{2}}(?:\.\d)?){_SUFFIX}',
 )
 _SLASH_DASH = re.compile(r'\b(\d{1,3}(?:\.\d{1,2})?)\s*/\s*(\d{1,3}(?:\.\d{1,2})?)\s*-\s*(\d{1,2}(?:\.\d)?)\b')
 _AGRO_LR = re.compile(r'\b(\d{1,2}(?:\.\d)?)\s*l\s*r\s*(\d{2})\b')
@@ -47,6 +48,8 @@ _PR_AFTER = re.compile(r'\bpr\s*(\d{1,2})\b')
 _TRA = re.compile(r'\b(?:e3/l3|g2/l2|e4/l4|r-?4|r1|l5)\b')
 _DISK_PAIR = re.compile(r'\d+(?:[.,]\d+)?\s*[*x]\s*\d+(?:[.,]\d+)?')
 _DISK_PAIR_SLASH = re.compile(r'\d+(?:[.,]\d+)?\s*[*x]\s*\d+(?:[.,]\d+)?\s*/')
+# Дюймовая ширина грузовой диагонали: две цифры от 10 и два знака (`11.00`, `12.00`).
+_TRUCK_DASH_WIDTH = re.compile(r'[1-9]\d\.\d{2}')
 
 _SPEC_WORDS = (
     'сельхоз',
@@ -73,6 +76,8 @@ _COMMERCIAL_MARKERS = frozenset(('c', 'lt', 'cp'))
 
 _TRUCK_DIAMETERS = frozenset((17.5, 19.5, 22.5, 24.5))
 _TRUCK_DIAMETER_MIN = 20
+_TRUCK_DASH_DIAMETER_MIN = 17.5
+_TRUCK_DASH_DIAMETER_MAX = 24
 _TRUCK_PROFILE_HIGH = 80
 _TRUCK_PROFILE_MIN = 65
 _TRUCK_WIDTH_WIDE = 295
@@ -85,19 +90,63 @@ _MOTO_MIN_PROFILE = 70
 _SUV_FLOTATION_RIM = 15
 _TRUCK_PR = 14
 _LOAD_INDEX_SCALE = 100
-_TWO_DECIMALS = 2
+
+
+# Формы размера (README §4). Каждая хранит только то, что читают решения о
+# семействе: ширина и диаметр из названия есть всегда, профиль — только у
+# метрического размера и может быть неизвестен (размер из полей позиции).
 
 
 @dataclass(frozen=True, slots=True)
-class _Size:
-    """Разобранный размер: форма, числа и суффикс коммерческой шины."""
+class _Metric:
+    """Метрический размер `205/55 R16`, `205/55/16` или из полей позиции."""
 
-    kind: str
-    width: float | None = None
+    width: float
+    diameter: float
     profile: float | None = None
-    diameter: float | None = None
-    suffix: str | None = None
-    first_raw: str = ''
+    commercial: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _Inch:
+    """Дюймовый/десятичный размер `7.50 R16`."""
+
+    width: float
+    diameter: float
+    commercial: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _Flotation:
+    """Флотация `31x10.5R15`: решает посадочный диаметр."""
+
+    diameter: float
+    commercial: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _WidthOnly:
+    """Трёхзначная ширина без профиля `165 R13`: решают диаметр и PR."""
+
+    diameter: float
+    commercial: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _Dash:
+    """Диагональ `11.00-20`: грузовая или индустрия по исходной ширине и диаметру."""
+
+    width_raw: str
+    diameter: float
+
+
+@dataclass(frozen=True, slots=True)
+class _SpecialForm:
+    """Форма, которая сама по себе означает спецшину: `16.9/14-30`, `9.5LR15`."""
+
+
+type _TireSize = _Metric | _Inch | _Flotation | _WidthOnly | _Dash
+type _Size = _TireSize | _SpecialForm
 
 
 class ProductTypeClassifier:
@@ -117,11 +166,11 @@ class ProductTypeClassifier:
         size = _parse_size(tech, row_item)
         if size is None:
             return ''
-        if _declared_commercial(row_item):
-            size = replace(size, suffix='c')
-        if _is_special(text, tech, size):
+        if isinstance(size, _SpecialForm) or _is_special(text, tech, size):
             return SPECIAL
-        if _is_moto(text, size):
+        if _declared_commercial(row_item):
+            size = _as_commercial(size)
+        if _is_moto(size):
             return MOTO
         return _family(size, text, tech)
 
@@ -179,151 +228,122 @@ def _parse_title_size(tech: str) -> _Size | None:
     """Найти форму размера в нормализованном названии (README §4)."""
     match = _METRIC2.search(tech)
     if match is not None:
-        return _Size(
-            'metric',
-            width=_number(match.group(1)),
-            profile=_number(match.group(2)),
-            diameter=_number(match.group(3)),
+        return _Metric(
+            width=_dimension(match.group(1)),
+            profile=_dimension(match.group(2)),
+            diameter=_dimension(match.group(3)),
         )
     match = _METRIC.search(tech)
     if match is not None:
-        return _Size(
-            'metric',
-            width=_number(match.group(1)),
-            profile=_number(match.group(2)),
-            diameter=_number(match.group(3)),
-            suffix=match.group(4),
+        return _Metric(
+            width=_dimension(match.group(1)),
+            profile=_dimension(match.group(2)),
+            diameter=_dimension(match.group(3)),
+            commercial=match.group(4) is not None,
         )
     match = _FLOTATION.search(tech)
     if match is not None:
-        return _Size(
-            'flotation',
-            width=_number(match.group(2)),
-            diameter=_number(match.group(3)),
-            suffix=match.group(4),
-        )
+        return _Flotation(diameter=_dimension(match.group(3)), commercial=match.group(4) is not None)
     match = _WIDTH_ONLY.search(tech)
     if match is not None:
-        return _Size(
-            'width_only',
-            width=_number(match.group(1)),
-            diameter=_number(match.group(2)),
-            suffix=match.group(3),
-        )
+        return _WidthOnly(diameter=_dimension(match.group(2)), commercial=match.group(3) is not None)
     match = _INCH.search(tech)
     if match is not None:
-        return _Size(
-            'inch',
-            width=_number(match.group(1)),
-            diameter=_number(match.group(2)),
-            suffix=match.group(3),
+        return _Inch(
+            width=_dimension(match.group(1)),
+            diameter=_dimension(match.group(2)),
+            commercial=match.group(3) is not None,
         )
-    match = _SLASH_DASH.search(tech)
-    if match is not None:
-        return _Size(
-            'slash_dash',
-            width=_number(match.group(1)),
-            diameter=_number(match.group(3)),
-        )
-    match = _AGRO_LR.search(tech)
-    if match is not None:
-        return _Size('agro', width=_number(match.group(1)), diameter=_number(match.group(2)))
+    if _SLASH_DASH.search(tech) or _AGRO_LR.search(tech):
+        return _SpecialForm()
     match = _DASH.search(tech)
     if match is not None:
-        return _Size(
-            'dash',
-            width=_number(match.group(1)),
-            diameter=_number(match.group(2)),
-            first_raw=match.group(1),
-        )
+        return _Dash(width_raw=match.group(1), diameter=_dimension(match.group(2)))
     return None
 
 
-def _size_from_fields(row_item: RowItem) -> _Size | None:
+def _size_from_fields(row_item: RowItem) -> _Metric | None:
     """Собрать размер из разобранных полей, если название не дало формы."""
     width = _number(row_item.tire.width)
-    height = _number(row_item.tire.height_percent)
     diameter = _number(row_item.tire.diameter)
     if width is None or diameter is None:
         return None
-    return _Size('metric', width=width, profile=height, diameter=diameter)
+    return _Metric(width=width, diameter=diameter, profile=_number(row_item.tire.height_percent))
 
 
-def _is_special(text: str, tech: str, size: _Size) -> bool:
-    """Спецшина: код TRA, агро-индекс или спец-форма размера (без слов-маркеров)."""
+def _as_commercial(size: _TireSize) -> _TireSize:
+    """Размер с признаком коммерческой шины; у диагонали признака нет."""
+    if isinstance(size, _Dash):
+        return size
+    return replace(size, commercial=True)
+
+
+def _is_special(text: str, tech: str, size: _TireSize) -> bool:
+    """Спецшина: код TRA, агро-индекс или большой посадочный диаметр (без слов-маркеров)."""
     if _TRA.search(tech):
         return True
-    if _AGRO_AI.search(tech) and not _has_any(text, _AXLE_WORDS) and _pr(tech) < _TRUCK_PR:
+    if _AGRO_AI.search(tech) and not _has_any(text, _AXLE_WORDS) and not _has_truck_pr(tech):
         return True
-    if size.kind in ('slash_dash', 'agro'):
-        return True
-    if size.kind == 'dash':
-        return not _is_truck_dash(size)
-    if (size.diameter or 0) >= _AGRO_MIN_DIAMETER:
-        return True
-    return False
+    return size.diameter >= _AGRO_MIN_DIAMETER
 
 
-def _is_moto(text: str, size: _Size) -> bool:
-    """Мотошина: явный маркер или малый метрический размер без коммерческих признаков."""
-    if _has_any(text, _MOTO_WORDS):
-        return True
-    if size.kind != 'metric' or size.suffix:
+def _is_moto(size: _TireSize) -> bool:
+    """Мотошина по размеру: малый метрический без коммерческих признаков.
+
+    Слова-маркеры (`мото`, `скутер`…) проверяет `classify` раньше разбора размера.
+    """
+    if not isinstance(size, _Metric) or size.commercial:
         return False
-    width = size.width or 0
     return (
-        width <= _MOTO_MAX_WIDTH
-        and (size.diameter or 0) <= _MOTO_MAX_DIAMETER
-        and (size.profile or 0) >= _MOTO_MIN_PROFILE
+        size.width <= _MOTO_MAX_WIDTH
+        and size.diameter <= _MOTO_MAX_DIAMETER
+        and _at_least(size.profile, _MOTO_MIN_PROFILE)
     )
 
 
-def _family(size: _Size, text: str, tech: str) -> str:
+def _family(size: _TireSize, text: str, tech: str) -> str:
     """Семья шины по форме размера, диаметру, PR, индексу нагрузки и оси."""
-    if size.kind == 'metric':
+    if isinstance(size, _Metric):
         return _metric_family(size, text, tech)
-    if size.kind == 'width_only':
+    if isinstance(size, _WidthOnly):
         return _width_only_family(size, tech)
-    if size.kind == 'inch':
+    if isinstance(size, _Inch):
         return _inch_family(size, text, tech)
-    if size.kind == 'flotation':
+    if isinstance(size, _Flotation):
         return _flotation_family(size)
-    if size.kind == 'dash':
-        return TRUCK if _is_truck_dash(size) else SPECIAL
-    return SPECIAL
+    return TRUCK if _is_truck_dash(size) else SPECIAL
 
 
-def _flotation_family(size: _Size) -> str:
+def _flotation_family(size: _Flotation) -> str:
     """Флотация `NNxNN R NN`: посадочный ≥ 15 — SUV-шина, меньше — индустрия.
 
     `31x10.5R15`/`35x12.5R17` — легковые грязевые для внедорожников и пикапов;
-    `18*7-8`/`24x10-11` — индустриальные/квадро с малым посадочным (README §4е).
+    `24x10-11` — индустриальные/квадро с малым посадочным (README §4е).
     """
-    if size.suffix:
+    if size.commercial:
         return LIGHT_TRUCK
-    if (size.diameter or 0) >= _SUV_FLOTATION_RIM:
+    if size.diameter >= _SUV_FLOTATION_RIM:
         return PASSENGER
     return SPECIAL
 
 
-def _metric_family(size: _Size, text: str, tech: str) -> str:
+def _metric_family(size: _Metric, text: str, tech: str) -> str:
     """Легковая / легкогрузовая / грузовая по метрическому размеру (README §5.3–§5.5)."""
-    if size.suffix:
+    if size.commercial:
         return LIGHT_TRUCK
     if _has_any(text, _AXLE_WORDS):
         return TRUCK
-    diameter = size.diameter or 0
-    width = size.width or 0
-    profile = size.profile or 0
+    diameter = size.diameter
+    width = size.width
     if diameter == _AGRO_WIDE_DIAMETER and width >= _AGRO_WIDE_WIDTH:
         return SPECIAL
     if diameter in _TRUCK_DIAMETERS or diameter == _AGRO_WIDE_DIAMETER:
         return TRUCK
     if _double_load(tech) and diameter >= _TRUCK_DIAMETER_MIN:
         return TRUCK
-    if diameter >= _TRUCK_DIAMETER_MIN and profile >= _TRUCK_PROFILE_HIGH:
+    if diameter >= _TRUCK_DIAMETER_MIN and _at_least(size.profile, _TRUCK_PROFILE_HIGH):
         return TRUCK
-    if diameter >= _TRUCK_DIAMETER_MIN and width >= _TRUCK_WIDTH_WIDE and profile >= _TRUCK_PROFILE_MIN:
+    if diameter >= _TRUCK_DIAMETER_MIN and width >= _TRUCK_WIDTH_WIDE and _at_least(size.profile, _TRUCK_PROFILE_MIN):
         return TRUCK
     if _double_load(tech) and 13 <= diameter <= 17:
         return LIGHT_TRUCK
@@ -332,28 +352,28 @@ def _metric_family(size: _Size, text: str, tech: str) -> str:
     return PASSENGER
 
 
-def _width_only_family(size: _Size, tech: str) -> str:
+def _width_only_family(size: _WidthOnly, tech: str) -> str:
     """Трёхзначная ширина без профиля (`165 R13`): грузовая только по большому диаметру."""
-    if size.suffix:
+    if size.commercial:
         return LIGHT_TRUCK
-    if (size.diameter or 0) >= 17.5:
+    if size.diameter >= 17.5:
         return TRUCK
-    if _pr(tech) >= _TRUCK_PR:
+    if _has_truck_pr(tech):
         return TRUCK
     return PASSENGER
 
 
-def _inch_family(size: _Size, text: str, tech: str) -> str:
+def _inch_family(size: _Inch, text: str, tech: str) -> str:
     """Дюймовый / десятичный размер (README §4б, §5.3)."""
-    if size.suffix:
+    if size.commercial:
         return LIGHT_TRUCK
     if _has_any(text, _AXLE_WORDS):
         return TRUCK
-    diameter = size.diameter or 0
-    first = size.width or 0
+    diameter = size.diameter
+    first = size.width
     if diameter in _TRUCK_DIAMETERS or diameter == 20:
         return TRUCK
-    if _pr(tech) >= _TRUCK_PR:
+    if _has_truck_pr(tech):
         return TRUCK
     if first >= 10:
         return TRUCK
@@ -364,13 +384,11 @@ def _inch_family(size: _Size, text: str, tech: str) -> str:
     return SPECIAL
 
 
-def _is_truck_dash(size: _Size) -> bool:
+def _is_truck_dash(size: _Dash) -> bool:
     """Дюймовая диагональ (`11.00-20`) — грузовая; иначе индустрия/сельхоз."""
-    diameter = size.diameter or 0
-    first = size.width or 0
-    if first < 10 or not 17.5 <= diameter <= 24:
+    if not _TRUCK_DASH_DIAMETER_MIN <= size.diameter <= _TRUCK_DASH_DIAMETER_MAX:
         return False
-    return _decimals(size.first_raw) == _TWO_DECIMALS
+    return _TRUCK_DASH_WIDTH.fullmatch(size.width_raw) is not None
 
 
 def _double_load(tech: str) -> bool:
@@ -381,11 +399,10 @@ def _double_load(tech: str) -> bool:
     return False
 
 
-def _pr(tech: str) -> int:
-    """Наибольшая слойность PR из названия; 0 — маркеров нет."""
-    numbers = [int(token) for token in _PR_BEFORE.findall(tech)]
-    numbers += [int(token) for token in _PR_AFTER.findall(tech)]
-    return max(numbers, default=0)
+def _has_truck_pr(tech: str) -> bool:
+    """Слойность PR в названии (`14PR`, `PR16`) не ниже грузовой."""
+    tokens = _PR_BEFORE.findall(tech) + _PR_AFTER.findall(tech)
+    return any(int(token) >= _TRUCK_PR for token in tokens)
 
 
 def _is_commercial(tech: str) -> bool:
@@ -414,7 +431,7 @@ def _has_any(text: str, words: tuple[str, ...]) -> bool:
 
 
 def _number(raw: str | None) -> float | None:
-    """Число из строки размера (`'22,5'` → ``22.5``); None — пусто/не число."""
+    """Число из поля позиции (`'22,5'` → ``22.5``); None — пусто/не число."""
     if not raw:
         return None
     try:
@@ -423,7 +440,11 @@ def _number(raw: str | None) -> float | None:
         return None
 
 
-def _decimals(raw: str) -> int:
-    """Число знаков после точки в исходном токене размера."""
-    _, _, fraction = raw.partition('.')
-    return len(fraction)
+def _dimension(raw: str) -> float:
+    """Число из группы регулярки размера: цифры и точка (запятую убрал `normalize_text`)."""
+    return float(raw)
+
+
+def _at_least(measure: float | None, bound: float) -> bool:
+    """Известное значение не меньше границы; неизвестное — нет."""
+    return measure is not None and measure >= bound
