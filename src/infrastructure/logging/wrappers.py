@@ -65,7 +65,7 @@ def _decorator[RT](
             raise
         finally:
             _log_call_end(method_name, start_time, call_output)
-        return call_output  # pyright: ignore[reportReturnType]
+        return call_output
 
     return wrapped
 
