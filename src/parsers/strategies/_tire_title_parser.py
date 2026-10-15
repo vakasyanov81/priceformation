@@ -355,13 +355,20 @@ def _resolve_fields(rest: tuple[str, ...]) -> _TitleFields | None:
     if not tokens:
         return None
     if not producer:
-        if _FACTORY_CODE.match(tokens[0]):
-            return _compose_model('', tokens)
-        return _compose_model(tokens[0], tokens[1:])
+        return _without_producer(tokens)
     if _looks_like_brand(tokens[0]):
         fields = _compose_model(tokens[0], tokens[1:])
         return fields._replace(usage=(*fields.usage, producer))
     return _compose_model(producer, tokens)
+
+
+def _without_producer(tokens: list[str]) -> _TitleFields | None:
+    """Бренд и модель, когда завода в хвосте нет; None, если первое слово — назначение (``об/лента``)."""
+    if _is_usage(tokens[0]):
+        return None
+    if _FACTORY_CODE.match(tokens[0]):
+        return _compose_model('', tokens)
+    return _compose_model(tokens[0], tokens[1:])
 
 
 def _compose_model(brand: str, model_tokens: list[str]) -> _TitleFields:

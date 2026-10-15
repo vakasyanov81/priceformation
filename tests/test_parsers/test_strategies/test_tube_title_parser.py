@@ -28,6 +28,9 @@ from parsers.strategies._tube_title_parser import fill_tube_fields, parse_tube_t
         ('Ободная лента 300-508А', '300', '', '508', ''),
         ('Ободная лента 340-533 (1220*400-533) Nortec', '340', '', '533', ''),
         ('камера 175/185-16 Ecotech', '175', '', '16', ''),
+        ('130-10 об/лента', '130', '', '10', ''),
+        ('16.00-24 об/лента', '16.00', '', '24', ''),
+        ('205-457 (12.00-18) об/лента', '205', '', '457', ''),
     ],
 )
 def test_parse_size(raw: str, width: str, height: str, diameter: str, ext: str) -> None:
@@ -62,3 +65,9 @@ def test_fill_keeps_existing_values() -> None:
     fill_tube_fields(row, parts)
 
     assert (row.tire.width, row.tire.diameter) == ('175', '14')
+
+
+@pytest.mark.parametrize('raw', ['130-10 об/лента', '205-457 (12.00-18) об/лента'])
+def test_tire_parser_ignores_tape_without_prefix(raw: str) -> None:
+    """Лента без префикса — не шина: `об/лента` не становится брендом, конструкция не заполняется."""
+    assert parse_tire_title(raw) is None

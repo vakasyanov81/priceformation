@@ -20,6 +20,8 @@ from parsers.strategies._tire_title_parser import TUBE_PREFIX, parse_leading_siz
 
 # До размера допустимы слова без цифр: `СВК` или вставленный производитель раздела (`камера Triangle 11.2-20`).
 _LEADING_WORDS = re.compile(r'^(?:[^\d\s]+\s+){0,2}')
+# Лента без префикса: размер и `об/лента` в хвосте (`205-457 (12.00-18) об/лента`).
+_TRAILING_TAPE = re.compile(r'\s+(?:\([^)]*\)\s*)?об/лента\s*$', re.IGNORECASE)
 _SIZE_SEPARATOR = re.compile(r'(?<=\d)\s*[хХ*]\s*(?=\d)')
 # `1200-500-508` — тот же дюймовый размер, где вместо `x` стоит дефис.
 _THREE_DASH = re.compile(r'^(\d+)-(\d+)-(\d+)')
@@ -41,16 +43,27 @@ def parse_tube_title(raw: str | None) -> TubeTitleParts | None:
     """Разобрать название камеры/ободной ленты; None, если это не они или размер не читается."""
     if not raw:
         return None
-    prefix = TUBE_PREFIX.match(raw)
-    if prefix is None:
+    body = _tube_body(raw)
+    if body is None:
         return None
-    text = _SIZE_SEPARATOR.sub('x', raw[prefix.end() :].lstrip())
+    text = _SIZE_SEPARATOR.sub('x', body)
     text = _THREE_DASH.sub(r'\1x\2-\3', _LEADING_WORDS.sub('', text))
     size = parse_leading_size(text)
     if size is None:
         return None
     height = size.height_percent if _is_profile(size.height_percent) else ''
     return TubeTitleParts(size.width, height, size.diameter, size.ext_diameter)
+
+
+def _tube_body(raw: str) -> str | None:
+    """Часть названия с размером: после префикса ``Камера``/``Лента`` или перед хвостом ``об/лента``."""
+    prefix = TUBE_PREFIX.match(raw)
+    if prefix is not None:
+        return raw[prefix.end() :].lstrip()
+    tape = _TRAILING_TAPE.search(raw)
+    if tape is None:
+        return None
+    return raw[: tape.start()]
 
 
 def fill_tube_fields(row_item: RowItem, parts: TubeTitleParts) -> None:
