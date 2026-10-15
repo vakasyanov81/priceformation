@@ -39,6 +39,8 @@ from typing import NamedTuple
 from domain.row_item.row_item import RowItem
 
 _LEADING_KIND = re.compile(r'^\s*(?:а/п|автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
+# Камера и ободная лента — не шина, их размер разбирает `_tube_title_parser`.
+TUBE_PREFIX = re.compile(r'^\s*(?:авто)?камера\b|^\s*(?:ободная\s+)?лента\b', re.IGNORECASE)
 _LEADING_SHIP = re.compile(r'^\s*Шина\b\s*', re.IGNORECASE)
 _LAYER_SOURCE = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
 _SPLIT_PR = re.compile(r'(?<!\S)(\d+)\s+PR(?![^\s,])', re.IGNORECASE)
@@ -235,7 +237,7 @@ def _canonical_brand(parsed: str, canonical: str | None) -> str:
 
 def parse_tire_title(raw: str | None) -> TireTitleParts | None:
     """Разобрать название Пошка/STK на параметры; None, если это не размер шины."""
-    if not raw:
+    if not raw or TUBE_PREFIX.match(raw):
         return None
     text = _prepare_text(raw)
     found = _find_size(text)
@@ -249,6 +251,15 @@ def parse_tire_title(raw: str | None) -> TireTitleParts | None:
         return None
     size = _SizeParts.from_match(size_match, alt[0].strip() if alt else '')
     return TireTitleParts.from_raw(size, _clean_tokens(f'{head} {tail}'), _from_ship(raw))
+
+
+def parse_leading_size(text: str) -> _SizeParts | None:
+    """Размер в самом начале строки (дюймовый ``33x12.5-15`` или ``12.5/80-18``, ``215R16``); иначе None."""
+    for pattern in (_INCH_SIZE, _SIZE):
+        match = pattern.match(text)
+        if match is not None:
+            return _SizeParts.from_match(match)
+    return None
 
 
 def _find_size(text: str) -> tuple[re.Match[str], str, str] | None:

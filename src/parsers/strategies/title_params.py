@@ -8,6 +8,7 @@ from typing import Any, NamedTuple
 from domain.row_item.row_item import RowItem
 from parsers.strategies._disk_title_parser import fill_disk_fields, parse_disk_title
 from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
+from parsers.strategies._tube_title_parser import fill_tube_fields, parse_tube_title
 from parsers.strategies.protocols import TitleStrategy
 
 
@@ -22,6 +23,7 @@ class _Extractor(NamedTuple):
 _EXTRACTORS = (
     _Extractor(parse_tire_title, fill_tire_fields),
     _Extractor(parse_disk_title, fill_disk_fields),
+    _Extractor(parse_tube_title, fill_tube_fields),
 )
 
 

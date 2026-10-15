@@ -65,10 +65,17 @@ def test_keeps_existing_values() -> None:
 
 
 def test_ignores_unparsable_title() -> None:
-    row = RowItem({'title': 'Камера 12.5/80-18'})
+    row = RowItem({'title': 'Камера УК-14М ОШЗ'})
 
-    assert ParamsFromTitle(DefaultTitle()).prepare(row) == 'Камера 12.5/80-18'
+    assert ParamsFromTitle(DefaultTitle()).prepare(row) == 'Камера УК-14М ОШЗ'
     assert row.tire.width is None
+
+
+def test_fills_tube_size_and_keeps_title() -> None:
+    row = RowItem({'title': 'Камера СВК 20.5-25 ГК-260 (0)'})
+
+    assert ParamsFromTitle(DefaultTitle()).prepare(row) == 'Камера СВК 20.5-25 ГК-260 (0)'
+    assert (row.tire.width, row.tire.diameter) == ('20.5', '25')
 
 
 def test_keeps_none_title() -> None:
