@@ -353,3 +353,42 @@ def test_title_with_markers_checks_every_marker() -> None:
     strategy.prepare(row)
 
     assert row.tire.spike == 'да'
+
+
+_WINTER_MARKERS = {
+    'шип': {'season': 'зима', 'spike': 'да'},
+    'зимняя': {'season': 'зима'},
+    'arctic': {'season': 'зима'},
+    'ice knight': {'season': 'зима'},
+    'winter': {'season': 'зима'},
+    '(snow)': {'season': 'зима'},
+}
+
+
+@pytest.mark.parametrize(
+    'title',
+    [
+        '175/80R16 Forward Arctic-511 88Q TT',
+        '215/65R16 Rapid ICE KNIGHT 98T',
+        '7.00R16LT Rapid Winter Defender 111/107M',
+        '225/75R16 Forward Professional-153 (snow) 108R TT',
+        'Forward Professional 153 а/ш 225/75R16 кам зимняя',
+    ],
+)
+def test_winter_markers_set_season_without_spike(title: str) -> None:
+    """Зимние слова (набор из `poshk.json`) дают сезон, но не шип."""
+    row = RowItem({'title': title})
+
+    TitleWithMarkers(DefaultTitle(), _WINTER_MARKERS).prepare(row)
+
+    assert row.tire.season == 'зима'
+    assert row.tire.spike is None
+
+
+def test_winter_markers_keep_season_empty_for_plain_model() -> None:
+    """Модель без зимнего слова остаётся без сезона: по отсутствию маркера сезон не угадываем."""
+    row = RowItem({'title': '175/70R13 Rapid P309 82T'})
+
+    TitleWithMarkers(DefaultTitle(), _WINTER_MARKERS).prepare(row)
+
+    assert row.tire.season is None
