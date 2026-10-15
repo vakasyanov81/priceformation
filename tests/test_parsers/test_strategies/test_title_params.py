@@ -1,5 +1,9 @@
 """Обёртка `params_from_title`: параметры шин и дисков из названия в поля позиции."""
 
+import logging
+
+from log_watch import LoggerWatcher, texts_at
+
 from domain.row_item.row_item import RowItem
 from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
 from parsers.strategies.title import DefaultTitle, ManufacturerFromCategory
@@ -80,3 +84,56 @@ def test_fills_tube_size_and_keeps_title() -> None:
 
 def test_keeps_none_title() -> None:
     assert ParamsFromTitle(DefaultTitle()).prepare(RowItem({})) is None
+
+
+_KHOMEN = '15 Khomen KHW1501 ZV Vesta/Almera 6.0*15 4*100 ET50 D60.1 GRAY'
+_PARAMS_LOGGER = 'parsers.strategies.title_conflicts'
+
+
+def test_title_et_overrides_column_and_is_logged(watch_logger: LoggerWatcher) -> None:
+    """Колонка ET=40 при ET50 в названии: берём название и пишем расхождение в лог."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN, 'eet': 40})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.disk.eet == 50
+    messages = texts_at(entries(), logging.WARNING)
+    assert len(messages) == 1
+    assert 'eet 40' in messages[0]
+    assert '50' in messages[0]
+    assert _KHOMEN in messages[0]
+
+
+def test_tire_index_conflict_is_logged(watch_logger: LoggerWatcher) -> None:
+    """Колонка speed_index=H при 86T в названии: индексы берём из названия и пишем в лог."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': '185/65R14 Hankook Kinergy Eco 2 K435 86T', 'index_load': '86', 'index_velocity': 'H'})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert (row.tire.index_load, row.tire.index_velocity) == ('86', 'T')
+    messages = texts_at(entries(), logging.WARNING)
+    assert len(messages) == 1
+    assert 'index_velocity' in messages[0]
+
+
+def test_same_value_in_column_and_title_is_not_logged(watch_logger: LoggerWatcher) -> None:
+    """40 в колонке и ET40 в названии (число и строка) — не расхождение."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN.replace('ET50', 'ET40'), 'eet': 40})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert texts_at(entries(), logging.WARNING) == []
+
+
+def test_empty_column_is_filled_without_log(watch_logger: LoggerWatcher) -> None:
+    """Колонки нет — вылет берём из названия, расхождения нет."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.disk.eet == 50
+    assert texts_at(entries(), logging.WARNING) == []

@@ -117,8 +117,36 @@ def test_fill_disk_fields_sets_row_fields() -> None:
 
 def test_fill_disk_fields_keeps_existing_values() -> None:
     raw = 'Диск штамп SRW 5.5x16 6x170 ET106 d130 Silver'
-    row = RowItem({'title': raw, 'color': 'Чёрный', 'eet': 40})
+    row = RowItem({'title': raw, 'color': 'Чёрный'})
 
     fill_disk_fields(row, _parsed(raw))
 
-    assert (row.disk.color, row.disk.eet) == ('Чёрный', 40)
+    assert row.disk.color == 'Чёрный'
+
+
+def test_fill_disk_fields_title_overrides_eet_column() -> None:
+    """Вылет из названия главнее колонки: у колонки Запаски одно значение на модель."""
+    raw = 'Диск штамп SRW 5.5x16 6x170 ET106 d130 Silver'
+    row = RowItem({'title': raw, 'eet': 40})
+
+    fill_disk_fields(row, _parsed(raw))
+
+    assert row.disk.eet == 106
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('15 Khomen KHW1501 ZV Vesta/Almera 6.0*15 4*100 ET50 D60.1 GRAY', '50'),
+        ('16 Trebl 5.5*16 6*170 ЕТ105 130.1 S 1000 кг. паллета', '105'),
+        ('6.0x15 4x100 ET-10 60.1 Black', '-10'),
+        ('14 TREBL 5.5*14 4*108 ET37.5 63.3 S', '37.5'),
+        ('5.5x16 6x180 ET109.5 138.8 Серебро Тзск Ford Transit', '109.5'),
+        ('33x10.50-16 Nortec ET-500 111N TL', None),
+        ('15 Khomen KHW1501 6.0*15 GRAY', None),
+        (None, None),
+    ],
+)
+def test_et_from_name_needs_fasteners(raw: str | None, expected: str | None) -> None:
+    """ET берём только из названия с крепежом `4*100`: `ET-500` у шины — не вылет."""
+    assert DiskTitleParts.et_from_name(raw) == expected

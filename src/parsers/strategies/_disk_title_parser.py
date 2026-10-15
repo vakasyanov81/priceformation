@@ -16,6 +16,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies._title_wins import DISK_TITLE_WINS
 
 _LEADING_DISK = re.compile(r'^\s*Диск\b\s*', re.IGNORECASE)
 _DISK_TYPES = {'штамп': 'штамп', 'стальной': 'стальной'}
@@ -23,7 +24,7 @@ _SEPARATOR = re.compile(r'(?<=\d)\s*[хХ*]\s*(?=\d)')
 _DECIMAL_COMMA = re.compile(r'(?<=\d),(?=\d)')
 _NUMBER = r'\d+(?:\.\d+)?'
 _PAIR = re.compile(rf'(?<![\w.])({_NUMBER})x({_NUMBER})(?![\w.])')
-_ET = re.compile(r'(?<!\w)[EЕ][TТ]\s*(-?\d+)', re.IGNORECASE)
+_ET = re.compile(rf'(?<!\w)[EЕ][TТ]\s*(-?{_NUMBER})', re.IGNORECASE)
 _CENTRAL = re.compile(rf'(?<!\w)[dDдД]\s?({_NUMBER})(?![\w.])')
 _HOLES_HOLE_SIZE = re.compile(r'(?<![\w.])(\d{1,2})\s+\d+\s*мм(?!\w)')
 _HOLES_WORD = re.compile(r'(?<![\w.])(\d{1,2})\s*отв')
@@ -73,6 +74,19 @@ class DiskTitleParts:
             disk_type=_first_known(text, _DISK_TYPES),
         )
 
+    @classmethod
+    def et_from_name(cls, raw: str | None) -> str | None:
+        """Вылет ET из названия диска без префикса «Диск» (Запаска, Форточки); None, если это не диск.
+
+        Диском считаем название, где есть и ET, и крепёж «отверстия x PCD» (`4*100`): иначе
+        `ET-500` из названия шины приняли бы за вылет.
+        """
+        if not raw:
+            return None
+        text = _DECIMAL_COMMA.sub('.', _SEPARATOR.sub('x', raw))
+        slots, pcd = _fasteners(text)
+        return _first_group(_ET, text) or None if slots and pcd else None
+
 
 def parse_disk_title(raw: str | None) -> DiskTitleParts | None:
     """Разобрать название диска; None, если это не диск с размером."""
@@ -100,7 +114,7 @@ def fill_disk_fields(row_item: RowItem, parts: DiskTitleParts) -> None:
         'disk_type': parts.disk_type,
     }
     for key, parsed_value in fields.items():
-        if parsed_value and not row_item.get_field(key):
+        if parsed_value and (key in DISK_TITLE_WINS or not row_item.get_field(key)):
             row_item.set_field(key, parsed_value)
 
 

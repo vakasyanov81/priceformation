@@ -287,6 +287,36 @@ def test_fill_tire_fields_keeps_existing_values() -> None:
     assert row.identity.model == 'Old'
 
 
+def test_fill_tire_fields_title_overrides_load_and_speed_index() -> None:
+    """Индекс нагрузки/скорости из названия главнее колонки: колонка Запаски дана по модели, а не по артикулу."""
+    row = RowItem(
+        {
+            'title': '185/65R14 Hankook Kinergy Eco 2 K435 86T',
+            'index_load': '82',
+            'index_velocity': 'H',
+        },
+    )
+    parts = parse_tire_title(row.identity.title)
+
+    assert parts is not None
+    fill_tire_fields(row, parts)
+
+    assert row.tire.index_load == '86'
+    assert row.tire.index_velocity == 'T'
+
+
+def test_fill_tire_fields_keeps_column_index_when_title_has_none() -> None:
+    """Нет индекса в названии — колонка остаётся."""
+    row = RowItem({'title': '185/65R14 Hankook Kinergy Eco 2 K435', 'index_load': '86', 'index_velocity': 'H'})
+    parts = parse_tire_title(row.identity.title)
+
+    if parts is not None:
+        fill_tire_fields(row, parts)
+
+    assert row.tire.index_load == '86'
+    assert row.tire.index_velocity == 'H'
+
+
 _FILLED_FIELDS = (
     'width',
     'height_percent',

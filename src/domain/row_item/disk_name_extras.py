@@ -10,6 +10,8 @@ _HUB_ADAPTER = 'под футорку'
 _WITH_VALVE_MARK = 'с вент'
 _WITH_VALVE = 'с вент.'
 _RING = '(кольцо)'
+# Нагрузка «1000 кг», «1200кг», «1 350 кг»: у диска одной модели бывает несколько исполнений.
+_LOAD_KG_RE = re.compile(r'(?<![\d.,])(\d{1,2}\s\d{3}|\d{3,5})\s*кг')
 _DISK_MARKERS = (
     (_ALIVE, _ALIVE),
     (_OUTER_VALVE, _OUTER_VALVE),
@@ -20,11 +22,16 @@ _DISK_MARKERS = (
 )
 
 
+def _load_labels(lowered_title: str) -> list[str]:
+    """Нагрузка в кг в каноне «1350 кг»: «1 350 кг» и «1350кг» — одно и то же."""
+    return [f'{code.replace(" ", "")} кг' for code in _LOAD_KG_RE.findall(lowered_title)]
+
+
 def disk_name_extras(title: str) -> str:
-    """Завод, alive, вентиль и хвосты диска; без толщины и складского кода."""
+    """Завод, alive, вентиль, нагрузка в кг и хвосты диска; без толщины и складского кода."""
     if not title:
         return ''
     lowered = title.lower()
     factories = (f'({code})' for code in _FACTORY_RE.findall(title))
     extras = (label for needle, label in _DISK_MARKERS if needle in lowered)
-    return ' '.join((*factories, *extras))
+    return ' '.join((*factories, *extras, *_load_labels(lowered)))

@@ -37,6 +37,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies._title_wins import TIRE_TITLE_WINS
 
 _LEADING_KIND = re.compile(r'^\s*(?:а/п|автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
 # Камера и ободная лента — не шина, их размер разбирает `_tube_title_parser`.
@@ -305,7 +306,7 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
         'model': parts.model_name,
     }
     for key, parsed_value in fields.items():
-        if parsed_value and not row_item.get_field(key):
+        if parsed_value and (key in TIRE_TITLE_WINS or not row_item.get_field(key)):
             row_item.set_field(key, parsed_value)
 
 
