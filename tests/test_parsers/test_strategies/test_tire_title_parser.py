@@ -178,9 +178,68 @@ def test_parse_returns_none_for_disk() -> None:
     assert parse_tire_title('Диск штамп NORTEC-16 11.75*22.5 10*335 ET0 d281 , шт') is None
 
 
-def test_parse_returns_none_for_dual_size_tail() -> None:
-    """Сдвоенная запись размера (``165-13/6.45-13``) не разбирается."""
-    assert parse_tire_title('Шина 165-13/6.45-13 АИ-168У 6PR 78P TT, шт') is None
+_NONSTANDARD = (
+    ('500/70-508(1200х500-508) Forward Traction 500 TT', '500/70-508', '(1200x500-508)', 'Forward', 'Traction 500'),
+    ('265/80-16(33х10.5-16) Nortec AT-100 TL', '265/80-16', '(33x10.5-16)', 'Nortec', 'AT-100'),
+    ('18x7-8 (180/70-8) Haulking HK-100 TT', '18x7-8', '(180/70-8)', 'Haulking', 'HK-100'),
+    ('8.15-15 (28х9-15) Rockbuster H107 14PR TT', '8.15-15', '(28x9-15)', 'Rockbuster', 'H107'),
+    ('16/70-20 (405/70-20) Rockbuster H100 TT', '16/70-20', '(405/70-20)', 'Rockbuster', 'H100'),
+    ('165-13/6.45-13 Forward М-145 78P TT', '165-13', '/6.45-13', 'Forward', 'М-145'),
+)
+
+
+@pytest.mark.parametrize(('raw', 'label', 'alt', 'brand', 'model'), _NONSTANDARD)
+def test_parse_alternative_size_does_not_cut_tail(raw: str, label: str, alt: str, brand: str, model: str) -> None:
+    """Размер в скобках или через ``/`` — альтернативная запись: разбор идёт дальше и не теряет её."""
+    parts = _parsed(raw)
+
+    assert (parts.size.label, parts.size.alt) == (label, alt)
+    assert (parts.brand, parts.model) == (brand, model)
+    glue = '' if alt.startswith('/') else ' '
+    assert parts.compose().startswith(f'{label}{glue}{alt} {brand}')
+
+
+@pytest.mark.parametrize(
+    ('raw', 'label', 'ext', 'width', 'diameter'),
+    [
+        ('33х12.5-15 Forward Safari-500 108L TL', '33x12.5-15', '33', '12.5', '15'),
+        ('31х10.5-15LT Forward Safari 500 TL', '31x10.5-15LT', '31', '10.5', '15'),
+        ('1220х400-533 Forward Traction 500', '1220x400-533', '1220', '400', '533'),
+        ('16*6-8 Rockbuster H100 TT', '16x6-8', '16', '6', '8'),
+        ('18x7-8 Haulking HK-100 TT', '18x7-8', '18', '7', '8'),
+    ],
+)
+def test_parse_inch_size_has_ext_diameter(raw: str, label: str, ext: str, width: str, diameter: str) -> None:
+    """Размер «внешний x ширина - посадочный»: внешний диаметр отдельным полем."""
+    size = _parsed(raw).size
+
+    assert (size.label, size.ext_diameter) == (label, ext)
+    assert (size.width, size.diameter) == (width, diameter)
+    assert size.height_percent == ''
+
+
+def test_parse_finds_size_inside_title() -> None:
+    """Размер не в начале: слова до него уходят в бренд/модель, слова после — в назначение."""
+    parts = _parsed('Forward Professional 153 а/ш 225/75R16 кам зимняя шип')
+
+    assert parts.size.label == '225/75R16'
+    assert (parts.brand, parts.model) == ('Forward', 'Professional 153')
+    assert parts.usage == ('кам', 'зимняя', 'шип')
+
+
+def test_parse_ignores_inner_size_after_other_size() -> None:
+    """Если до радиального размера уже стоит другой размер, основным он не считается."""
+    assert parse_tire_title('Forward 12x5-8 TT 225/75R16') is None
+
+
+def test_fill_tire_fields_sets_ext_diameter() -> None:
+    raw = '33х12.5-15 Forward Safari-500 108L TL'
+    row = RowItem({'title': raw})
+
+    fill_tire_fields(row, _parsed(raw))
+
+    assert row.tire.ext_diameter == 33
+    assert row.tire.width == '12.5'
 
 
 def test_parse_returns_none_without_brand_model() -> None:

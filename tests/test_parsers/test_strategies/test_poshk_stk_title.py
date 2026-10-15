@@ -168,6 +168,6 @@ def test_fallback_normalize_gets_probe() -> None:
     """Нормализация (не размер шины) тоже видит детектор: с брендом заглушка не нужна."""
     strategy = _strategy(_FALLBACK_BRAND, _Probe(has_brand=True))
 
-    prepared = strategy.prepare(RowItem({'title': 'Шина 165-13/6.45-13 АИ-168У 6PR 78P TT, шт'}))
+    prepared = strategy.prepare(RowItem({'title': 'Шина Камера 12.5/80-18 TT, шт'}))
 
-    assert prepared == '165-13/6.45-13 АИ-168У 6PR 78P TT'
+    assert prepared == 'Камера 12.5/80-18 TT'

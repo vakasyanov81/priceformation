@@ -50,12 +50,28 @@ _SIZE = re.compile(
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
+# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`.
+_INCH_SIZE = re.compile(
+    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*-\s*'
+    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
+    re.IGNORECASE,
+)
+# Размер не в начале строки ищем только по радиальному написанию: иначе поймаем модель вроде `153`.
+_INNER_SIZE = re.compile(
+    r'(?<!\S)(?P<width>\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)?)\s*(?P<lowpro>l)?\s*(?P<construct>R)\s*'
+    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
+)
+# Другой размер перед найденным: тогда основной размер — не он.
+_OTHER_SIZE = re.compile(r'\d\s*[x/\-]\s*\d')
+# Альтернативная запись размера сразу за основным: `(1200x500-508)`, `/6.45-13`.
+_ALT_SIZE = re.compile(r'^(?:\([^)]*\d[^)]*[x/\-][^)]*\)|/\d+(?:[.,]\d+)?-\d+(?:[.,]\d+)?)\s*')
+_SIZE_SEPARATOR = re.compile(r'(?<=\d)\s*[хХ*]\s*(?=\d)')
 _PR = re.compile(r'^\d+\s*PR$', re.IGNORECASE)
 _LOAD_SPEED = re.compile(
     r'^(?P<load>(?:[4-9]\d|\d{3})(?:/\d{2,3})?)(?P<velocity>[A-Za-z]\d?)$',
 )
 _CAMERA = re.compile(r'^(?:TT|TL|TTF|TT/TL|TL/TT)$', re.IGNORECASE)
-_KIND_WORDS = frozenset(('а/п', 'автошина', 'автошины', 'автопокрышка'))
+_KIND_WORDS = frozenset(('а/п', 'а/ш', 'автошина', 'автошины', 'автопокрышка'))
 _KIND_SUFFIXES = ('автошина', 'автошины', 'автопокрышка')
 _PRODUCERS = frozenset(('НКШЗ', 'БШК', 'ОШЗ', 'ЯШЗ', 'ВОЛШЗ'))
 _USAGE_WORDS = frozenset(
@@ -81,6 +97,8 @@ _USAGE_WORDS = frozenset(
         'цельнолит',
         'змейка',
         'стройка',
+        'кам',
+        'зимняя',
     ),
 )
 # Начала токенов назначения: оси (`вед.ось`, `вед`, `руль/прицеп`, `приц.`),
@@ -97,15 +115,26 @@ class _SizeParts(NamedTuple):
     width: str
     height_percent: str
     diameter: str
+    ext_diameter: str = ''
+    alt: str = ''
 
     @classmethod
-    def from_match(cls, match: re.Match[str]) -> _SizeParts:
-        """Собрать канонический размер из совпадения регулярки."""
+    def from_match(cls, match: re.Match[str], alt: str = '') -> _SizeParts:
+        """Собрать канонический размер из совпадения регулярки; ``alt`` — размер в скобках."""
+        diameter = match['diameter'].replace(',', _DOT)
+        if 'ext' in match.re.groupindex:
+            return cls._inch(match, diameter, alt)
         raw_width = match['width'].replace(',', _DOT)
         width, _, height = raw_width.partition('/')
-        diameter = match['diameter'].replace(',', _DOT)
         label = _size_label(width, height, diameter, match)
-        return cls(label, width, height, diameter)
+        return cls(label, width, height, diameter, '', alt)
+
+    @classmethod
+    def _inch(cls, match: re.Match[str], diameter: str, alt: str) -> _SizeParts:
+        ext = match['ext'].replace(',', _DOT)
+        width = match['width'].replace(',', _DOT)
+        label = f'{ext}x{width}-{diameter}{(match["suffix"] or "").upper()}'
+        return cls(label, width, '', diameter, ext, alt)
 
 
 class _TitleFields(NamedTuple):
@@ -151,7 +180,7 @@ class TireTitleParts:
     @classmethod
     def from_raw(
         cls,
-        size_match: re.Match[str],
+        size: _SizeParts,
         tokens: list[str],
         from_ship: bool,
     ) -> TireTitleParts | None:
@@ -161,7 +190,7 @@ class TireTitleParts:
         if fields is None:
             return None
         return cls(
-            size=_SizeParts.from_match(size_match),
+            size=size,
             brand=fields.brand,
             model=fields.model,
             load=service.load,
@@ -172,10 +201,15 @@ class TireTitleParts:
             from_ship=from_ship,
         )
 
+    def _size_with_alt(self) -> str:
+        """Размер и альтернативная запись: ``/6.45-13`` клеится к размеру, ``(...)`` — через пробел."""
+        glue = '' if self.size.alt.startswith('/') else ' '
+        return f'{self.size.label}{glue}{self.size.alt}'.strip()
+
     def compose(self, brand: str | None = None) -> str:
         """Склеить название в порядке Пионера; brand перекрывает разобранный."""
         chunks = (
-            self.size.label,
+            self._size_with_alt(),
             _canonical_brand(self.brand, brand),
             self.model,
             f'{self.load}{self.velocity}',
@@ -204,13 +238,29 @@ def parse_tire_title(raw: str | None) -> TireTitleParts | None:
     if not raw:
         return None
     text = _prepare_text(raw)
-    size_match = _SIZE.match(text)
-    if size_match is None:
+    found = _find_size(text)
+    if found is None:
         return None
-    tail = text[size_match.end() :].lstrip()
+    size_match, head, tail = found
+    alt = _ALT_SIZE.match(tail)
+    if alt is not None:
+        tail = tail[alt.end() :]
     if not tail or tail[0] in '(/':
         return None
-    return TireTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
+    size = _SizeParts.from_match(size_match, alt[0].strip() if alt else '')
+    return TireTitleParts.from_raw(size, _clean_tokens(f'{head} {tail}'), _from_ship(raw))
+
+
+def _find_size(text: str) -> tuple[re.Match[str], str, str] | None:
+    """Размер, слова до него и остаток названия: сначала в начале строки, затем внутри."""
+    for pattern in (_INCH_SIZE, _SIZE):
+        match = pattern.match(text)
+        if match is not None:
+            return match, '', text[match.end() :].lstrip()
+    inner = _INNER_SIZE.search(text)
+    if inner is None or _OTHER_SIZE.search(text[: inner.start()]):
+        return None
+    return inner, text[: inner.start()].strip(), text[inner.end() :].lstrip()
 
 
 def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
@@ -219,6 +269,7 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
         'width': parts.size.width,
         'height_percent': parts.size.height_percent,
         'diameter': parts.size.diameter,
+        'ext_diameter': parts.size.ext_diameter,
         'layering': parts.layering,
         'index_load': parts.load,
         'index_velocity': parts.velocity,
@@ -236,6 +287,7 @@ def _prepare_text(raw: str) -> str:
     text = _LEADING_KIND.sub('', text)
     text = _LEADING_SHIP.sub('', text)
     text = _LAYER_SOURCE.sub(r'\1PR', text)
+    text = _SIZE_SEPARATOR.sub('x', text)
     return _SPLIT_PR.sub(r'\1PR', text)
 
 
