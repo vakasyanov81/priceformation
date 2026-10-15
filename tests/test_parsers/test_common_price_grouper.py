@@ -178,6 +178,25 @@ def test_cheapest_of_three_is_double_candidate() -> None:
     _assert_orders(expensive, cheap, mid)
 
 
+def test_markdown_item_is_not_main_double() -> None:
+    """Уценка дешевле обычного товара, но главным дублем становится обычный."""
+    markdown = _row(price_markup=_PRICE_LOW, marked_down=True)
+    regular = _row(price_markup=_PRICE_HIGH)
+    _assert_grouped(markdown, regular)
+    assert regular.duplicate.double_candidate is True
+    assert markdown.duplicate.is_double is True
+    assert not markdown.duplicate.double_candidate
+
+
+def test_all_markdown_group_keeps_cheapest_as_main() -> None:
+    """Если в группе одна уценка — главным остаётся самый дешёвый, товар не пропадает."""
+    cheap = _row(price_markup=_PRICE_LOW, marked_down=True)
+    dear = _row(price_markup=_PRICE_HIGH, marked_down=True)
+    _assert_grouped(cheap, dear)
+    assert cheap.duplicate.double_candidate is True
+    assert dear.duplicate.is_double is True
+
+
 def test_distinct_keys_get_separate_groups() -> None:
     wide = _row()
     narrow = _row(width='205')

@@ -55,6 +55,7 @@ _SPECS: tuple[tuple[str, str], ...] = (
     ('Наличие', RowItem.available.name),
     ('Срок доставки', RowItem.delivery_period.name),
     ('Состояние', RowItem.condition.name),
+    ('Уценка', RowItem.marked_down.name),
 )
 
 

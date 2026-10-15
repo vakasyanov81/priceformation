@@ -109,6 +109,7 @@ class RowItem:
     reserve_count = RowField('reserve_count')
     delivery_period = RowField('delivery_period')
     condition = RowField('condition')
+    marked_down = RowField('marked_down')
     available = RowField('available')
 
     season = RowField('season')

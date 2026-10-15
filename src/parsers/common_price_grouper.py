@@ -27,7 +27,9 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
     if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
-    min_price_item = min(row_items, key=lambda row_item: row_item.pricing.price_markup)
+    # Уценка не становится главным дублем, пока в группе есть обычный товар.
+    regular = [row_item for row_item in row_items if not row_item.stock.marked_down]
+    min_price_item = min(regular or row_items, key=lambda row_item: row_item.pricing.price_markup)
     dispute = dispute_note(row_items)
 
     for row_item in row_items:

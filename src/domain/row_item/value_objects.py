@@ -91,6 +91,7 @@ class Stock:
     delivery_period: int | None = None
     available: str | None = None
     condition: str | None = None
+    marked_down: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
