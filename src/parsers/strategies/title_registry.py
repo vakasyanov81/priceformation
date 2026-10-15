@@ -24,6 +24,7 @@ from parsers.strategies.title import (
     TitleWithAliases,
 )
 from parsers.strategies.title_markers import TitleWithMarkers
+from parsers.strategies.title_params import ParamsFromTitle
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
@@ -57,6 +58,8 @@ def make_title_strategy(
     strategy = _build_strategy(config, where, manufacturer_reader)
     if config.aliases:
         strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name))
+    if config.params_from_title:
+        strategy = ParamsFromTitle(strategy)
     if config.markers:
         strategy = TitleWithMarkers(strategy, config.markers)
     return strategy

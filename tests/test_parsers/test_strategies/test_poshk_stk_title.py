@@ -63,16 +63,6 @@ def test_glues_in_pioner_order(raw: str, expected: str) -> None:
     assert _strategy().prepare(RowItem({'title': raw})) == expected
 
 
-def test_fills_fields_from_title() -> None:
-    """Сборка заодно заполняет пустые поля позиции разобранными параметрами."""
-    row = RowItem({'title': 'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'})
-
-    _strategy().prepare(row)
-
-    filled = (row.tire.width, row.tire.height_percent, row.identity.model)
-    assert filled == ('235', '75', 'LLA78')
-
-
 def test_uses_manufacturer_for_brand() -> None:
     """Канонический производитель подставляется на место разобранного бренда."""
     row = RowItem(

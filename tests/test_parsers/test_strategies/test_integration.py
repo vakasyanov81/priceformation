@@ -139,7 +139,7 @@ class TestStrategiesIntegration:
                             'strategy': 'header_rows',
                             'zero_rest_categories': ['прочие'],
                         },
-                        'title': {'strategy': 'manufacturer_from_category', 'variant': ''},
+                        'title': {'strategy': 'manufacturer_from_category', 'variant': '', 'params_from_title': True},
                         'pricing': {'policy': 'map_on_opt'},
                     }
                 ],
