@@ -283,11 +283,11 @@ survived 304 → 241, score 96.1 % → 96.9 %. Почти все выживши�
 
 `PoshkTireCompose` оказался «сиротой» (не в реестре, `poshk.json` ссылался на
 `stk_tire_compose`), а в `tasks/merge-poshk-stk-tire-compose.md` ждало слияние.
-Сначала выполнено слияние → `PoshkStkTireCompose` / `_poshk_stk_title_helper`
+Сначала выполнено слияние → `PoshkStkTireCompose` / `_tire_title_parser`
 (итоги и сверка на боевых прайсах — в файле плана), тесты M4 написаны уже на
 общий код. Правки по выжившим:
 
-- `raw or ''` (×4) → `parse_poshk_stk_title(raw: str | None)` с ранним `None`.
+- `raw or ''` (×4) → `parse_tire_title(raw: str | None)` с ранним `None`.
 - `_merge_pr` → регулярка `_SPLIT_PR` в `_prepare_text`.
 - `_strip_kind_suffix`: проверка длины мертва — токен-обёртку целиком уже
   отбросил `_KIND_WORDS`.
@@ -406,4 +406,4 @@ mutmut параллельно с `pytest`.
 | `category.TitleKeywordsCategory`, `FieldMapCategory`, `tire_category`, `title_markers` | `x or '' → 'XXXX'` | заглушка не совпадает ни с ключом карты, ни с маркером, ни с размером |
 | `xls_writer.get_value` | `field_name or True` | `PriceRow` — `dict`, `get('')` даёт `None` |
 | `help_format.colorize_markdown` | `in_code = False → None` | флаг только инвертируется `not`: `not None == not False` |
-| `_poshk_stk_title_helper._prepare_text` | `r'\1PR' → r'\1pr'` (×2) | `_PR` без учёта регистра, слойность приводится `.upper()` |
+| `_tire_title_parser._prepare_text` | `r'\1PR' → r'\1pr'` (×2) | `_PR` без учёта регистра, слойность приводится `.upper()` |

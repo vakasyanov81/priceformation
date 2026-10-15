@@ -1,5 +1,5 @@
 # flake8: noqa: WPS202
-"""Разбор и сборка названия номенклатуры Пошка и STK.
+"""Разбор и сборка названия шины (Пошк, STK, Пионер).
 
 Пошк и STK пишут параметры шины вперемешку: ``н.с.N`` вместо ``NPR``, индекс
 нагрузки/скорости стоит то до модели, то после неё, а производитель
@@ -135,7 +135,7 @@ class _Service(NamedTuple):
 
 
 @dataclass(frozen=True, slots=True)
-class PoshkStkTitleParts:
+class TireTitleParts:
     """Разобранные параметры названия Пошка/STK."""
 
     size: _SizeParts
@@ -154,7 +154,7 @@ class PoshkStkTitleParts:
         size_match: re.Match[str],
         tokens: list[str],
         from_ship: bool,
-    ) -> PoshkStkTitleParts | None:
+    ) -> TireTitleParts | None:
         """Собрать параметры из размера и остатка токенов; None без бренда с моделью."""
         service = _Service.from_tokens(tokens)
         fields = _resolve_fields(service.rest)
@@ -199,7 +199,7 @@ def _canonical_brand(parsed: str, canonical: str | None) -> str:
     return canonical
 
 
-def parse_poshk_stk_title(raw: str | None) -> PoshkStkTitleParts | None:
+def parse_tire_title(raw: str | None) -> TireTitleParts | None:
     """Разобрать название Пошка/STK на параметры; None, если это не размер шины."""
     if not raw:
         return None
@@ -210,10 +210,10 @@ def parse_poshk_stk_title(raw: str | None) -> PoshkStkTitleParts | None:
     tail = text[size_match.end() :].lstrip()
     if not tail or tail[0] in '(/':
         return None
-    return PoshkStkTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
+    return TireTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
 
 
-def fill_poshk_stk_fields(row_item: RowItem, parts: PoshkStkTitleParts) -> None:
+def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
     """Записать разобранные параметры в поля позиции, не перетирая готовые."""
     fields = {
         'width': parts.size.width,

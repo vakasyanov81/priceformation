@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from domain.row_item.row_item import RowItem
-from parsers.strategies._poshk_stk_title_helper import fill_poshk_stk_fields, parse_poshk_stk_title
+from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
 from parsers.strategies.protocols import BrandProbe
 from parsers.strategies.title import NormalizeSizeChunks
 
@@ -18,7 +18,7 @@ class PoshkStkTireCompose:
     на размер шины (например диск) или ведущая «Шина» не имеет бренда, работает
     обычная нормализация ``normalize_size_chunks``.
 
-    Примеры склейки — в ``_poshk_stk_title_helper``.
+    Примеры склейки — в ``_tire_title_parser``.
     """
 
     def __init__(self, fallback_brand: str, brand_probe: BrandProbe | None) -> None:
@@ -30,10 +30,10 @@ class PoshkStkTireCompose:
     def prepare(self, row_item: RowItem) -> str | None:
         """Собрать название из разобранных параметров."""
         title = row_item.identity.title
-        parts = parse_poshk_stk_title(title)
+        parts = parse_tire_title(title)
         if parts is None or self._ship_without_brand(title, parts.from_ship):
             return self._fallback.prepare(row_item)
-        fill_poshk_stk_fields(row_item, parts)
+        fill_tire_fields(row_item, parts)
         return parts.compose(row_item.identity.manufacturer)
 
     def _ship_without_brand(self, title: str | None, from_ship: bool) -> bool:

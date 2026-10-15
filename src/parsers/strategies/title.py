@@ -24,6 +24,7 @@ from parsers.strategies._four_tochki_disk_helper import (
     fill_disk_thickness,
 )
 from parsers.strategies._four_tochki_tire_helper import get_prepared_title as compose_four_tochki
+from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
 from parsers.strategies.protocols import BrandProbe, TitleStrategy
 
 _SIZE_MARK = 'x'
@@ -166,7 +167,7 @@ class FillFieldsFromTitle:
 
 
 class ManufacturerFromCategory:
-    """Производитель из раздела-категории: в brand и, при закупе, в title."""
+    """Производитель из раздела-категории: в brand и, при закупе, в title; параметры шины — из title."""
 
     _MANUFACTURER_MAP: ClassVar[Mapping[str, str]] = {'рокбастер': 'RockBuster'}
 
@@ -175,11 +176,14 @@ class ManufacturerFromCategory:
         self._manufacturer_reader = manufacturer_reader
 
     def prepare(self, row_item: RowItem) -> str | None:
-        """Записать brand и, при наличии закупа, вставить производителя в title."""
+        """Записать brand, при закупе вставить производителя в title, затем разобрать параметры шины."""
         manufacturer = self._manufacturer_reader()
         row_item.set_field('brand', manufacturer)
         if manufacturer and row_item.pricing.price_opt:
             self._prepend_manufacturer(row_item, manufacturer)
+        parts = parse_tire_title(row_item.identity.title)
+        if parts is not None:
+            fill_tire_fields(row_item, parts)
         return row_item.identity.title
 
     def _prepend_manufacturer(self, row_item: RowItem, manufacturer: str) -> None:

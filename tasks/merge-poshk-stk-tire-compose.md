@@ -53,10 +53,10 @@
 ### Шаг 1. Общий хелпер
 
 Слить `_stk_title_helper.py` + `_poshk_title_helper.py` →
-`src/parsers/strategies/_poshk_stk_title_helper.py`:
+`src/parsers/strategies/_tire_title_parser.py`:
 
-- dataclass `PoshkStkTitleParts`, функции `parse_poshk_stk_title`,
-  `fill_poshk_stk_fields`;
+- dataclass `TireTitleParts`, функции `parse_tire_title`,
+  `fill_tire_fields`;
 - базовый разбор и сборка — из Пошка (`PoshkTitleParts.compose`, `_resolve_fields`,
   `_compose_model`, `_prepare_text`, `_clean_tokens`, `_merge_pr`,
   `_strip_kind_suffix`, `_size_label` с low-profile);
@@ -72,8 +72,8 @@
 класс `PoshkStkTireCompose`:
 
 - `__init__(fallback_brand='', brand_probe=None)` — как у Пошка;
-- `prepare`: разбор `parse_poshk_stk_title`; при `None` или «Шина без бренда» —
-  `NormalizeSizeChunks` (fallback); иначе `fill_poshk_stk_fields` и
+- `prepare`: разбор `parse_tire_title`; при `None` или «Шина без бренда» —
+  `NormalizeSizeChunks` (fallback); иначе `fill_tire_fields` и
   `parts.compose(row_item.identity.manufacturer)` (бренд — как у STK);
 - удалить `stk_title.py` и `poshk_title.py`.
 
@@ -100,7 +100,7 @@
 ### Шаг 5. Тесты
 
 - Слить `test_stk_title_helper.py` + `test_poshk_title_helper.py` →
-  `test_poshk_stk_title_helper.py` (импорт новых имён, те же кейсы).
+  `test_tire_title_parser.py` (импорт новых имён, те же кейсы).
 - Слить `test_stk_title.py` + `test_poshk_title.py` →
   `test_poshk_stk_title.py` (класс `PoshkStkTireCompose`).
 - `test_title_registry.py`: заменить `('stk_tire_compose', StkTireCompose)` на

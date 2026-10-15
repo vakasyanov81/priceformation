@@ -184,6 +184,36 @@ def test_manufacturer_from_category_without_price_keeps_title() -> None:
     assert row.identity.title == 'Nortec ER-218'
 
 
+def test_manufacturer_from_category_fills_tire_fields_from_title() -> None:
+    strategy = ManufacturerFromCategory(lambda: 'Triangle')
+    row = RowItem({'title': '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая', 'price_opt': 1000})
+
+    assert strategy.prepare(row) == '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая'
+    tire = row.tire
+    assert (tire.width, tire.height_percent, tire.diameter) == ('215', '75', '17.5')
+    assert (tire.index_load, tire.index_velocity) == ('135/133', 'L')
+    assert (tire.layering, tire.intimacy) == ('16PR', 'TL')
+    assert row.identity.model == 'TR685'
+
+
+def test_manufacturer_from_category_fills_fields_without_price() -> None:
+    strategy = ManufacturerFromCategory(lambda: 'Triangle')
+    row = RowItem({'title': '215/75R17.5 Triangle TR685 135/133L 16PR TL'})
+
+    strategy.prepare(row)
+
+    assert row.tire.width == '215'
+
+
+def test_manufacturer_from_category_keeps_title_when_not_tire() -> None:
+    strategy = ManufacturerFromCategory(lambda: 'Triangle')
+    row = RowItem({'title': 'Камера 12.5/80-18', 'price_opt': 1000})
+
+    strategy.prepare(row)
+
+    assert row.tire.width is None
+
+
 def test_title_with_aliases_replaces() -> None:
     strategy = TitleWithAliases(DefaultTitle(), {'Replay HND': 'Replay Honda'})
 

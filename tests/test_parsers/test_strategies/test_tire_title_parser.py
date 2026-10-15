@@ -3,10 +3,10 @@
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.strategies._poshk_stk_title_helper import (
-    PoshkStkTitleParts,
-    fill_poshk_stk_fields,
-    parse_poshk_stk_title,
+from parsers.strategies._tire_title_parser import (
+    TireTitleParts,
+    fill_tire_fields,
+    parse_tire_title,
 )
 
 # Примеры склейки → Пионер (порядок: размер бренд модель нагрузка/скорость PR камера назначение).
@@ -94,7 +94,7 @@ _GLUE_EXAMPLES = (
 @pytest.mark.parametrize(('raw', 'expected'), _GLUE_EXAMPLES)
 def test_parse_and_compose_examples(raw: str, expected: str) -> None:
     """Склейка примера даёт порядок Пионера."""
-    parts = parse_poshk_stk_title(raw)
+    parts = parse_tire_title(raw)
 
     assert parts is not None
     assert parts.compose() == expected
@@ -103,7 +103,7 @@ def test_parse_and_compose_examples(raw: str, expected: str) -> None:
 @pytest.mark.parametrize(('raw', 'expected'), _GLUE_EXAMPLES)
 def test_compose_uses_brand_over_parsed(raw: str, expected: str) -> None:
     """Канонический бренд из поля перекрывает разобранный токен."""
-    parts = parse_poshk_stk_title(raw)
+    parts = parse_tire_title(raw)
 
     assert parts is not None
     assert parts.compose('Brand') == expected.replace(parts.brand, 'Brand', 1)
@@ -111,7 +111,7 @@ def test_compose_uses_brand_over_parsed(raw: str, expected: str) -> None:
 
 def test_parse_splits_size_and_parameters() -> None:
     """Размер и параметры разобраны по отдельным полям."""
-    parts = parse_poshk_stk_title('10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт')
+    parts = parse_tire_title('10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт')
 
     assert parts is not None
     assert parts.size.label == '10.00R20'
@@ -126,7 +126,7 @@ def test_parse_splits_size_and_parameters() -> None:
 
 def test_parse_makes_producer_the_brand() -> None:
     """Производитель из хвоста становится брендом, если бренда в начале нет."""
-    parts = parse_poshk_stk_title('11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт')
+    parts = parse_tire_title('11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт')
 
     assert parts is not None
     assert parts.brand == 'НКШЗ'
@@ -136,7 +136,7 @@ def test_parse_makes_producer_the_brand() -> None:
 
 def test_parse_joins_split_size_and_low_marker() -> None:
     """Маркер низкого профиля ``L`` сохраняется, ``, шт`` срезается."""
-    parts = parse_poshk_stk_title('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт')
+    parts = parse_tire_title('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт')
 
     assert parts is not None
     assert parts.size.label == '12.4L-16'
@@ -150,8 +150,8 @@ def test_parse_joins_split_size_and_low_marker() -> None:
 
 def test_parse_brand_keeps_producer_in_tail() -> None:
     """Латинский бренд/«Кама» в начале перекрывает производителя, тот едет в хвост."""
-    tyrex = parse_poshk_stk_title('11.00 R20 Tyrex CRG VM-310 н.с.16 150/146K ОШЗ автошина, (1 шт)')
-    kama = parse_poshk_stk_title('10.00 R20 КАМА-310 146/143K 16PR НКШЗ автошина, шт')
+    tyrex = parse_tire_title('11.00 R20 Tyrex CRG VM-310 н.с.16 150/146K ОШЗ автошина, (1 шт)')
+    kama = parse_tire_title('10.00 R20 КАМА-310 146/143K 16PR НКШЗ автошина, шт')
 
     assert tyrex is not None
     assert (tyrex.brand, tyrex.model) == ('Tyrex', 'CRG VM-310')
@@ -163,8 +163,8 @@ def test_parse_brand_keeps_producer_in_tail() -> None:
 
 def test_parse_joins_split_pr_and_strips_kind_suffix() -> None:
     """Разорванный ``8 PR`` склеивается, суффикс ``*автопокрышка`` срезается."""
-    split_pr = parse_poshk_stk_title('185/75 R16C THREE-A TRACVAN IMP 104/102R 8 PR б/к автопокрышка, шт')
-    suffix = parse_poshk_stk_title('185/75 R16С Sonix Winter X Pro Studs 77 104/102R шип.автопокрышка, шт')
+    split_pr = parse_tire_title('185/75 R16C THREE-A TRACVAN IMP 104/102R 8 PR б/к автопокрышка, шт')
+    suffix = parse_tire_title('185/75 R16С Sonix Winter X Pro Studs 77 104/102R шип.автопокрышка, шт')
 
     assert split_pr is not None
     assert split_pr.layering == '8PR'
@@ -175,31 +175,31 @@ def test_parse_joins_split_pr_and_strips_kind_suffix() -> None:
 
 def test_parse_returns_none_for_disk() -> None:
     """Диск — не размер шины: разбор не срабатывает."""
-    assert parse_poshk_stk_title('Диск штамп NORTEC-16 11.75*22.5 10*335 ET0 d281 , шт') is None
+    assert parse_tire_title('Диск штамп NORTEC-16 11.75*22.5 10*335 ET0 d281 , шт') is None
 
 
 def test_parse_returns_none_for_dual_size_tail() -> None:
     """Сдвоенная запись размера (``165-13/6.45-13``) не разбирается."""
-    assert parse_poshk_stk_title('Шина 165-13/6.45-13 АИ-168У 6PR 78P TT, шт') is None
+    assert parse_tire_title('Шина 165-13/6.45-13 АИ-168У 6PR 78P TT, шт') is None
 
 
 def test_parse_returns_none_without_brand_model() -> None:
     """Только размер и служебные токены — модели нет, разбор пуст."""
-    assert parse_poshk_stk_title('Автошина 11R22.5 16PR 146/143L') is None
+    assert parse_tire_title('Автошина 11R22.5 16PR 146/143L') is None
 
 
 def test_parse_returns_none_for_producer_without_model() -> None:
     """Один производитель без бренда с моделью — разбор пуст."""
-    assert parse_poshk_stk_title('Автошина 12.00R20 16PR 150/146K НКШЗ') is None
+    assert parse_tire_title('Автошина 12.00R20 16PR 150/146K НКШЗ') is None
 
 
-def test_fill_poshk_stk_fields_sets_parameters() -> None:
+def test_fill_tire_fields_sets_parameters() -> None:
     """Разобранные параметры попадают в поля позиции."""
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт'})
-    parts = parse_poshk_stk_title(row.identity.title)
+    parts = parse_tire_title(row.identity.title)
 
     assert parts is not None
-    fill_poshk_stk_fields(row, parts)
+    fill_tire_fields(row, parts)
 
     assert row.tire.width == '10.00'
     assert row.tire.height_percent is None
@@ -210,7 +210,7 @@ def test_fill_poshk_stk_fields_sets_parameters() -> None:
     assert row.identity.model == 'DR-801'
 
 
-def test_fill_poshk_stk_fields_keeps_existing_values() -> None:
+def test_fill_tire_fields_keeps_existing_values() -> None:
     """Уже заполненные поля разбор не перетирает."""
     row = RowItem(
         {
@@ -219,10 +219,10 @@ def test_fill_poshk_stk_fields_keeps_existing_values() -> None:
             'model': 'Old',
         },
     )
-    parts = parse_poshk_stk_title(row.identity.title)
+    parts = parse_tire_title(row.identity.title)
 
     assert parts is not None
-    fill_poshk_stk_fields(row, parts)
+    fill_tire_fields(row, parts)
 
     assert row.tire.width == '999'
     assert row.identity.model == 'Old'
@@ -240,8 +240,8 @@ _FILLED_FIELDS = (
 )
 
 
-def _parsed(raw: str) -> PoshkStkTitleParts:
-    parts = parse_poshk_stk_title(raw)
+def _parsed(raw: str) -> TireTitleParts:
+    parts = parse_tire_title(raw)
     assert parts is not None
     return parts
 
@@ -250,11 +250,11 @@ def _filled(row: RowItem) -> dict[str, object]:
     return {key: row.get_field(key) for key in _FILLED_FIELDS}
 
 
-def test_fill_poshk_stk_fields_sets_every_field() -> None:
+def test_fill_tire_fields_sets_every_field() -> None:
     """Все разобранные параметры, включая профиль и камерность, попадают в свои поля."""
     row = RowItem({'title': 'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'})
 
-    fill_poshk_stk_fields(row, _parsed('Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'))
+    fill_tire_fields(row, _parsed('Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'))
 
     assert _filled(row) == {
         'width': '235',
@@ -271,7 +271,7 @@ def test_fill_poshk_stk_fields_sets_every_field() -> None:
 @pytest.mark.parametrize('raw', [None, ''], ids=['none', 'empty'])
 def test_parse_empty_title(raw: str | None) -> None:
     """Пустое название не разбирается."""
-    assert parse_poshk_stk_title(raw) is None
+    assert parse_tire_title(raw) is None
 
 
 @pytest.mark.parametrize(
@@ -308,7 +308,7 @@ def test_parse_strips_commas_only_at_token_edges() -> None:
 )
 def test_parse_rejects_bracket_or_slash_after_size(raw: str) -> None:
     """Скобка или слэш сразу после размера (через пробелы) — это не название шины."""
-    assert parse_poshk_stk_title(raw) is None
+    assert parse_tire_title(raw) is None
 
 
 def test_parse_brand_starting_with_x() -> None:
@@ -388,4 +388,4 @@ def test_suffix_does_not_bite_brand(raw: str, label: str, brand: str) -> None:
 
 def test_parse_rejects_bracket_after_suffix() -> None:
     """Скобка после суффикса и пробела — тоже не название шины."""
-    assert parse_poshk_stk_title('185/75R16C (Китай) Cordiant Business') is None
+    assert parse_tire_title('185/75R16C (Китай) Cordiant Business') is None
