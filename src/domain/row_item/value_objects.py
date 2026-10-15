@@ -92,6 +92,7 @@ class Stock:
     available: str | None = None
     condition: str | None = None
     marked_down: bool | None = None
+    production_year: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

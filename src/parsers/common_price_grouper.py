@@ -8,6 +8,7 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
+from parsers.common_price_main_double import main_double
 from parsers.common_price_size import canon_number, size_fields
 from parsers.common_price_title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
@@ -28,9 +29,7 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
     if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
-    # Уценка не становится главным дублем, пока в группе есть обычный товар.
-    regular = [row_item for row_item in row_items if not row_item.stock.marked_down]
-    min_price_item = min(regular or row_items, key=lambda row_item: row_item.pricing.price_markup)
+    min_price_item = main_double(row_items)
     dispute = dispute_note(row_items)
 
     for row_item in row_items:

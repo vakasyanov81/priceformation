@@ -110,6 +110,7 @@ class RowItem:
     delivery_period = RowField('delivery_period')
     condition = RowField('condition')
     marked_down = RowField('marked_down')
+    production_year = RowField('production_year')
     available = RowField('available')
 
     season = RowField('season')

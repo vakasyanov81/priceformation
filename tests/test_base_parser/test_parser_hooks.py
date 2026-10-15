@@ -135,6 +135,19 @@ def test_markdown_title_marks_row_down() -> None:
     assert regular.stock.marked_down is None
 
 
+def test_production_year_is_taken_from_title() -> None:
+    """Год выпуска из названия попадает в поле, без года поле пустое."""
+    parser = _make_parser()
+    dated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T 2023г.в.', 'price_opt': _OPT})
+    undated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T', 'price_opt': _OPT})
+
+    parser.set_prepared_title(dated)
+    parser.set_prepared_title(undated)
+
+    assert dated.stock.production_year == 2023
+    assert undated.stock.production_year is None
+
+
 def test_deprecated_vendor_config_fallback_active() -> None:
     """ParseConfiguration без _vendor_config не падает (обратная совместимость)."""
     parser = _make_parser()

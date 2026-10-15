@@ -104,6 +104,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('delivery_period', STOCK, 'delivery_period', row_format.integer),
     FieldSpec('condition', STOCK, 'condition', row_format.text),
     FieldSpec('marked_down', STOCK, 'marked_down', row_format.boolean),
+    FieldSpec('production_year', STOCK, 'production_year', row_format.integer),
     FieldSpec('available', STOCK, 'available', row_format.text),
     # ==== Служебные поля и группировка
     FieldSpec('order', DUPLICATE, 'order', row_format.text),
