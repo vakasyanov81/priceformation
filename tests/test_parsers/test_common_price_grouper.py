@@ -197,6 +197,27 @@ def test_all_markdown_group_keeps_cheapest_as_main() -> None:
     assert dear.duplicate.is_double is True
 
 
+def _camera(title: str, **fields: Any) -> RowItem:
+    fields = {'type_production': 'Автокамера', 'width': '11', 'diameter': '20', 'height_percent': '', **fields}
+    return _row(title=title, **fields)
+
+
+def test_cameras_with_different_models_are_not_doubles() -> None:
+    """УК-13М и УК-13Я — разные камеры одного размера."""
+    left = _camera('Камера 6.45-13 УК-13М ОШЗ')
+    right = _camera('Камера 6.45-13 УК-13Я ОШЗ')
+    CommonPriceGrouper([left, right]).group_by_params()
+    assert left.duplicate.group_by_params != right.duplicate.group_by_params
+
+
+def test_camera_without_model_stays_with_modeled_one() -> None:
+    """Пионер не пишет модель камеры: пустая модель — wildcard, дубль остаётся."""
+    pioner = _camera('Автокамера 20.5-25')
+    poshk = _camera('Камера СВК 20.5-25 ГК-260 (0)', price_markup=_PRICE_HIGH)
+    CommonPriceGrouper([pioner, poshk]).group_by_params()
+    assert pioner.duplicate.group_by_params == poshk.duplicate.group_by_params
+
+
 def test_distinct_keys_get_separate_groups() -> None:
     wide = _row()
     narrow = _row(width='205')

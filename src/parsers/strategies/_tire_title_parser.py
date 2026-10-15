@@ -116,6 +116,8 @@ _CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная
 # Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
 _AXES = (('вед', 'ведущая'), ('рул', 'рулевая'), ('унив', 'универсальная'), ('приц', 'прицепная'))
 _TokenMatcher = Callable[[str], object]
+_SPIKE_TOKENS = frozenset(('шип', 'шипы'))
+_SPIKE_YES = 'Да'
 
 
 class _SizeParts(NamedTuple):
@@ -302,12 +304,19 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
         'layering': parts.layering,
         'index_load': parts.load,
         'index_velocity': parts.velocity,
+        'spike': _SPIKE_YES if any(token.lower().strip(_DOT) in _SPIKE_TOKENS for token in parts.usage) else '',
         'intimacy': parts.intimacy,
         'model': parts.model_name,
     }
     for key, parsed_value in fields.items():
-        if parsed_value and (key in TIRE_TITLE_WINS or not row_item.get_field(key)):
+        current = row_item.get_field(key)
+        if parsed_value and (not current or (key in TIRE_TITLE_WINS and _differs(current, parsed_value))):
             row_item.set_field(key, parsed_value)
+
+
+def _differs(current: object, parsed: str) -> bool:
+    """Значения разные без учёта регистра: `да` из конфига и `Да` из названия — одно и то же."""
+    return str(current).strip().lower() != parsed.lower()
 
 
 def _axis(usage: tuple[str, ...]) -> str:

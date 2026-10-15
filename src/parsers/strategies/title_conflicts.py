@@ -32,7 +32,7 @@ def log_title_conflicts(row_item: RowItem, from_columns: dict[str, Any], title: 
     """Для полей, где название перебило колонку, записать «было → стало»."""
     for key, column_value in from_columns.items():
         title_value = row_item.get_field(key)
-        if column_value in {None, ''} or _canon(column_value) == _canon(title_value):
+        if column_value is None or _canon(column_value) == _canon(title_value):
             continue
         change = f'{key} {column_value!r} → {title_value!r}'
         logger.warning(f'Колонка поставщика расходится с названием: {change} (верим названию) // {title}')

@@ -317,6 +317,36 @@ def test_fill_tire_fields_keeps_column_index_when_title_has_none() -> None:
     assert row.tire.index_velocity == 'H'
 
 
+_SPIKE_CASES = (
+    ('', 'Да'),
+    (None, 'Да'),
+    ('Нет', 'Да'),
+    ('да', 'да'),
+    ('Да', 'Да'),
+)
+
+
+@pytest.mark.parametrize(('column', 'expected'), _SPIKE_CASES)
+def test_fill_tire_fields_spike_in_title_wins(column: str | None, expected: str) -> None:
+    """«шип» в названии главнее колонки «Нет»; готовое `да` другого регистра не переписывается."""
+    raw = '235/45R17 Kumho WinterCraft Ice WI32 97T XL шип'
+    row = RowItem({'title': raw, 'spike': column})
+
+    fill_tire_fields(row, _parsed(raw))
+
+    assert row.tire.spike == expected
+
+
+def test_fill_tire_fields_no_spike_in_title_keeps_column() -> None:
+    """Нет «шип» в названии — колонка остаётся: название без шипа не опровергает шипованную шину."""
+    raw = '265/40R22 Sailun Ice Blazer WST3 106T'
+    row = RowItem({'title': raw, 'spike': 'Да'})
+
+    fill_tire_fields(row, _parsed(raw))
+
+    assert row.tire.spike == 'Да'
+
+
 _FILLED_FIELDS = (
     'width',
     'height_percent',
