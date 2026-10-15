@@ -448,3 +448,45 @@ def test_suffix_does_not_bite_brand(raw: str, label: str, brand: str) -> None:
 def test_parse_rejects_bracket_after_suffix() -> None:
     """Скобка после суффикса и пробела — тоже не название шины."""
     assert parse_tire_title('185/75R16C (Китай) Cordiant Business') is None
+
+
+@pytest.mark.parametrize(
+    ('raw', 'construction'),
+    [
+        ('215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая', 'радиальная'),
+        ('12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина', 'диагональная'),
+        ('165-13/6.45-13 Forward М-145 78P TT', 'диагональная'),
+        ('33х12.5-15 Forward Safari-500 108L TL', 'диагональная'),
+    ],
+)
+def test_fill_sets_construction_type(raw: str, construction: str) -> None:
+    """`R` в размере — радиальная, дефис и дюймовая запись — диагональная."""
+    row = RowItem({'title': raw})
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    fill_tire_fields(row, parts)
+
+    assert row.tire.construction_type == construction
+
+
+@pytest.mark.parametrize(
+    ('raw', 'axis'),
+    [
+        ('215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая', 'рулевая'),
+        ('10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л', 'универсальная'),
+        ('11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось', 'ведущая'),
+        ('385/65R22.5 Triangle TR656 160K 20PR TL приц.', 'прицепная'),
+        ('385/65R22.5 Triangle TR656 160K 20PR TL рулевая/трал', 'рулевая'),
+        ('385/65R22.5 Triangle TR656 160K 20PR TL', ''),
+    ],
+)
+def test_fill_sets_axis(raw: str, axis: str) -> None:
+    """Ось — из слова назначения; без слова поле пусто."""
+    row = RowItem({'title': raw})
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    fill_tire_fields(row, parts)
+
+    assert (row.tire.axis or '') == axis

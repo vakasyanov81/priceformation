@@ -107,6 +107,10 @@ _USAGE_WORDS = frozenset(
 # индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
 _USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив.', 'приц', 'карьер')
 _DOT = '.'
+# `R` в размере — радиальная конструкция, дефис и дюймовая запись — диагональная.
+_CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная'}
+# Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
+_AXES = (('вед', 'ведущая'), ('рул', 'рулевая'), ('унив', 'универсальная'), ('приц', 'прицепная'))
 _TokenMatcher = Callable[[str], object]
 
 
@@ -119,6 +123,7 @@ class _SizeParts(NamedTuple):
     diameter: str
     ext_diameter: str = ''
     alt: str = ''
+    construction: str = ''
 
     @classmethod
     def from_match(cls, match: re.Match[str], alt: str = '') -> _SizeParts:
@@ -129,14 +134,14 @@ class _SizeParts(NamedTuple):
         raw_width = match['width'].replace(',', _DOT)
         width, _, height = raw_width.partition('/')
         label = _size_label(width, height, diameter, match)
-        return cls(label, width, height, diameter, '', alt)
+        return cls(label, width, height, diameter, '', alt, _CONSTRUCTIONS[match['construct'].upper() == 'R'])
 
     @classmethod
     def _inch(cls, match: re.Match[str], diameter: str, alt: str) -> _SizeParts:
         ext = match['ext'].replace(',', _DOT)
         width = match['width'].replace(',', _DOT)
         label = f'{ext}x{width}-{diameter}{(match["suffix"] or "").upper()}'
-        return cls(label, width, '', diameter, ext, alt)
+        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[False])
 
 
 class _TitleFields(NamedTuple):
@@ -281,6 +286,8 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
         'height_percent': parts.size.height_percent,
         'diameter': parts.size.diameter,
         'ext_diameter': parts.size.ext_diameter,
+        'construction_type': parts.size.construction,
+        'axis': _axis(parts.usage),
         'layering': parts.layering,
         'index_load': parts.load,
         'index_velocity': parts.velocity,
@@ -290,6 +297,16 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
     for key, parsed_value in fields.items():
         if parsed_value and not row_item.get_field(key):
             row_item.set_field(key, parsed_value)
+
+
+def _axis(usage: tuple[str, ...]) -> str:
+    """Ось из слов назначения; при нескольких (``рулевая/трал``) — по первому слову."""
+    for token in usage:
+        lower = token.lower()
+        for root, axis in _AXES:
+            if lower.startswith(root):
+                return axis
+    return ''
 
 
 def _prepare_text(raw: str) -> str:
