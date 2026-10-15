@@ -8,7 +8,9 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
 from parsers.common_price_group_key import clear_model, group_key
+from parsers.common_price_main_double import main_double
 from parsers.common_price_size import canon_number, size_fields
+from parsers.common_price_title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 
 _MIN_ITEMS_FOR_DOUBLES = 2
@@ -27,7 +29,7 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
     if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
-    min_price_item = min(row_items, key=lambda row_item: row_item.pricing.price_markup)
+    min_price_item = main_double(row_items)
     dispute = dispute_note(row_items)
 
     for row_item in row_items:
@@ -39,15 +41,14 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
             row_item.set_field('disputed', dispute)
 
 
-def _optional_disk_parts(row_item: RowItem) -> tuple[str, ...]:
-    """ET/PCD/цвет: пустое — wildcard, заполненное сравниваем жёстко."""
-    return (
-        canon_number(row_item.disk.slot_count),
-        canon_number(row_item.disk.pcd1),
-        canon_number(row_item.disk.eet),
-        canon_number(row_item.disk.central_diameter),
-        (row_item.disk.color or '').strip().lower(),
-    )
+def _optional_parts(row_item: RowItem) -> tuple[str, ...]:
+    """ET/PCD/цвет диска и модель камеры: пустое — wildcard, заполненное сравниваем жёстко."""
+    disk = row_item.disk
+    numbers = [disk.slot_count, disk.pcd1, disk.eet, disk.central_diameter]
+    parts = [canon_number(number) for number in numbers]
+    parts.append((disk.color or '').strip().lower())
+    parts.append(tube_model(row_item))
+    return tuple(parts)
 
 
 def _split_group_by_index(group: list[RowItem], index: int) -> list[list[RowItem]]:
@@ -55,7 +56,7 @@ def _split_group_by_index(group: list[RowItem], index: int) -> list[list[RowItem
     filled: dict[str, list[RowItem]] = {}
     empties: list[RowItem] = []
     for row_item in group:
-        field_value = _optional_disk_parts(row_item)[index]
+        field_value = _optional_parts(row_item)[index]
         if field_value:
             filled.setdefault(field_value, []).append(row_item)
         else:
@@ -68,10 +69,10 @@ def _split_group_by_index(group: list[RowItem], index: int) -> list[list[RowItem
     return parts
 
 
-def _split_optional_disk(row_items: list[RowItem]) -> list[list[RowItem]]:
+def _split_optional(row_items: list[RowItem]) -> list[list[RowItem]]:
     """После ядра ключа разрезать по опциональным полям диска."""
     groups = [row_items]
-    field_count = len(_optional_disk_parts(row_items[0]))
+    field_count = len(_optional_parts(row_items[0]))
     for index in range(field_count):
         groups = [part for group in groups for part in _split_group_by_index(group, index)]
     return groups
@@ -84,7 +85,7 @@ def _apply_split_groups(
 ) -> int:
     """Выдать подгруппы ядра и вернуть следующий group_id."""
     group_id = start_id
-    for subgroup in _split_optional_disk(row_items):
+    for subgroup in _split_optional(row_items):
         group_id += 1
         grouper._apply_group(group_id, subgroup)
     return group_id

@@ -6,6 +6,8 @@ from re import sub as _re_sub
 from typing import Any, Protocol
 
 from domain.exceptions import SupplierNotHavePricesError
+from domain.row_item.markdown_title import is_markdown_title
+from domain.row_item.production_year import production_year
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.base_parser_config import ParseConfigNotSetError, ParseConfiguration, ParserParams
 from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
@@ -371,6 +373,11 @@ class BaseParser:
         prepared_title = self.get_prepared_title(row_item)
         title_is_prepared = row_item.identity.title == prepared_title
         row_item.set_field('title', prepared_title or row_item.identity.title)
+        if is_markdown_title(row_item.identity.title):
+            row_item.set_field('marked_down', True)
+        year = production_year(row_item.identity.title)
+        if year:
+            row_item.set_field('production_year', year)
         return title_is_prepared
 
     def is_valid_title(self, title: str | None) -> bool:

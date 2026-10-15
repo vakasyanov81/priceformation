@@ -64,12 +64,16 @@ class TitleConfig:
     `markers` дополняет стратегию: подстрока исходного названия → поля позиции.
     Название содержит маркер — незаполненные поля получают заданные значения
     (Пошк: ``шип`` → ``season: зима``, ``spike: да``).
+    `params_from_title` включает извлечение параметров из названия в поля позиции
+    (шины: размер, нагрузка, скорость, слойность, камерность, модель; диски: размер,
+    крепёж, ET, DIA, толщина, цвет, тип); название не меняется.
     """
 
     strategy: str = DEFAULT_TITLE_STRATEGY
     variant: str = ''
     aliases: bool = False
     fallback_brand: str = ''
+    params_from_title: bool = False
     markers: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @classmethod
@@ -81,6 +85,7 @@ class TitleConfig:
             variant=read_text(payload, 'variant', where, ''),
             aliases=read_flag(payload, 'aliases', where),
             fallback_brand=read_text(payload, 'fallback_brand', where, ''),
+            params_from_title=read_flag(payload, 'params_from_title', where),
             markers=read_field_map(payload, 'markers', where),
         )
 

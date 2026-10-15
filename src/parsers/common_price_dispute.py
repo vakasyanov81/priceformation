@@ -1,5 +1,6 @@
-"""Явный конфликт шипа и сезона в группе дублей."""
+"""Явный конфликт шипа, сезона и XL в группе дублей."""
 
+import re
 from collections.abc import Iterable
 from typing import Any
 
@@ -7,12 +8,21 @@ from domain.row_item.row_item import RowItem
 
 
 def dispute_note(row_items: list[RowItem]) -> str:
-    """Метки конфликта: шип и/или сезон."""
+    """Метки конфликта: шип, сезон и/или XL."""
     notes = (
         _conflict_label('шип', (_spike_label(row_item.tire.spike) for row_item in row_items)),
         _conflict_label('сезон', (_season_label(row_item.tire.season) for row_item in row_items)),
+        _conflict_label('XL', (_xl_label(row_item.identity.title) for row_item in row_items)),
     )
     return ', '.join(marker for marker in notes if marker)
+
+
+_XL_RE = re.compile(r'(?<!\w)xl(?!\w)', re.IGNORECASE)
+
+
+def _xl_label(title: str | None) -> str:
+    """XL в названии — «да», иначе «нет»: Мим и Форточки XL не пишут, поэтому это лишь пометка, а не ключ."""
+    return 'да' if _XL_RE.search(title or '') else 'нет'
 
 
 def _conflict_label(field_label: str, canon_values: Iterable[str]) -> str:

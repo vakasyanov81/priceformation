@@ -54,6 +54,9 @@
 ### Запуск приложения
 Точка входа — `src/run.py`, объявлена в `pyproject.toml [project.scripts]` как `priceformation` и короткий алиас `pf`. Поэтому запуск: `uv run pf` (меню) или `uv run pf parse --json`; в justfile — `just run`. Штатные файлы запуска: `src/run.sh`, `src/run.bat` (с `--no-dev --locked`, для запуска без тестовых зависимостей). Пути окружения считаются от `__file__` (`infrastructure/config/file_config_provider.py`), поэтому cwd значения не имеет.
 
+## Коммиты
+Не коммитить автоматически: `git commit` — только после явного подтверждения пользователя. Закончив правку и проверки, показать итог и спросить, коммитить ли; разрешение на один коммит не распространяется на следующие.
+
 ## Тесты
 - Параметры из `pyproject.toml [tool.pytest.ini_options]`: `-n=2` (xdist), branch-покрытие, html/xml отчёты. `pytest-testmon` доступен, но активируется только флагом `--testmon`.
 - `src/parsers/registry.py` — реестр вендоров из `vendors/*.json` конфигов; кэш сбрасывается `clear_registry()`.

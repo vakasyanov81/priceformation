@@ -63,16 +63,6 @@ def test_glues_in_pioner_order(raw: str, expected: str) -> None:
     assert _strategy().prepare(RowItem({'title': raw})) == expected
 
 
-def test_fills_fields_from_title() -> None:
-    """Сборка заодно заполняет пустые поля позиции разобранными параметрами."""
-    row = RowItem({'title': 'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'})
-
-    _strategy().prepare(row)
-
-    filled = (row.tire.width, row.tire.height_percent, row.identity.model)
-    assert filled == ('235', '75', 'LLA78')
-
-
 def test_uses_manufacturer_for_brand() -> None:
     """Канонический производитель подставляется на место разобранного бренда."""
     row = RowItem(
@@ -168,6 +158,6 @@ def test_fallback_normalize_gets_probe() -> None:
     """Нормализация (не размер шины) тоже видит детектор: с брендом заглушка не нужна."""
     strategy = _strategy(_FALLBACK_BRAND, _Probe(has_brand=True))
 
-    prepared = strategy.prepare(RowItem({'title': 'Шина 165-13/6.45-13 АИ-168У 6PR 78P TT, шт'}))
+    prepared = strategy.prepare(RowItem({'title': 'Шина Камера 12.5/80-18 TT, шт'}))
 
-    assert prepared == '165-13/6.45-13 АИ-168У 6PR 78P TT'
+    assert prepared == 'Камера 12.5/80-18 TT'

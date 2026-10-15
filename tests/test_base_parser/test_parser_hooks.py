@@ -122,6 +122,32 @@ def test_title_not_overwritten_by_default() -> None:
     assert row.identity.title == '205/55R16'
 
 
+def test_markdown_title_marks_row_down() -> None:
+    """«Уценка» в названии ставит признак уценки; обычное название признак не трогает."""
+    parser = _make_parser()
+    marked = RowItem({'title': '13 Trebl 5.0*13 паллета Уценка Дефект ЛКП', 'price_opt': _OPT})
+    regular = RowItem({'title': '13 Trebl 5.0*13 паллета', 'price_opt': _OPT})
+
+    parser.set_prepared_title(marked)
+    parser.set_prepared_title(regular)
+
+    assert marked.stock.marked_down is True
+    assert regular.stock.marked_down is None
+
+
+def test_production_year_is_taken_from_title() -> None:
+    """Год выпуска из названия попадает в поле, без года поле пустое."""
+    parser = _make_parser()
+    dated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T 2023г.в.', 'price_opt': _OPT})
+    undated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T', 'price_opt': _OPT})
+
+    parser.set_prepared_title(dated)
+    parser.set_prepared_title(undated)
+
+    assert dated.stock.production_year == 2023
+    assert undated.stock.production_year is None
+
+
 def test_deprecated_vendor_config_fallback_active() -> None:
     """ParseConfiguration без _vendor_config не падает (обратная совместимость)."""
     parser = _make_parser()

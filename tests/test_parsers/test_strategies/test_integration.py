@@ -139,7 +139,7 @@ class TestStrategiesIntegration:
                             'strategy': 'header_rows',
                             'zero_rest_categories': ['прочие'],
                         },
-                        'title': {'strategy': 'manufacturer_from_category', 'variant': ''},
+                        'title': {'strategy': 'manufacturer_from_category', 'variant': '', 'params_from_title': True},
                         'pricing': {'policy': 'map_on_opt'},
                     }
                 ],
@@ -160,6 +160,13 @@ class TestStrategiesIntegration:
         # Заглушка manufacturer_reader возвращает None, поэтому title не изменится
         prepared = integration.get_prepared_title(row)
         assert prepared == 'Nortec ER-218'
+
+        # Параметры шины берутся из названия Пионера
+        row = RowItem({'title': '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая', 'price_opt': 1000})
+        integration.get_prepared_title(row)
+        assert row.tire.width == '215'
+        assert row.tire.diameter == '17.5'
+        assert row.tire.layering == '16PR'
 
         # Тест minus_reserve (остаток минус резерв)
         row = RowItem({'rest_count': 10, 'reserve_count': 3})

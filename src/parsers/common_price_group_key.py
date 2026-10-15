@@ -11,6 +11,7 @@ from parsers.common_price_group_fields import (
     yes_flag,
 )
 from parsers.common_price_size import canon_number, size_fields
+from parsers.common_price_title_flags import valve_key
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 
 _KNOWN_MODEL_PREFIXES = ('кама', 'kama')
@@ -95,6 +96,7 @@ def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any
         yes_flag(row_item.tire.run_flat),
         sidewall(row_item.tire.inscription_on_the_side),
         disk_extras_key(row_item),
+        valve_key(row_item),
     ]
 
 

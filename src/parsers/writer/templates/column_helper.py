@@ -34,6 +34,11 @@ class ColumnHelper:
         self.format: str | None = self.column.get('format')
 
     @property
+    def true_value(self) -> str | None:
+        """Текст вместо ``True`` (например ``Да``)."""
+        return self.column.get('true_value')
+
+    @property
     def suffix(self) -> str | None:
         """Суффикс-маркер колонки (например ``*`` у изменённого типа)."""
         return self.column.get('suffix')

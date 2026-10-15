@@ -304,6 +304,12 @@ def test_title_reads_all_fields() -> None:
     )
 
 
+def test_title_reads_params_from_title_flag() -> None:
+    """Флаг params_from_title читается; по умолчанию выключен."""
+    assert TitleConfig.from_dict({'params_from_title': True}, WHERE).params_from_title is True
+    assert TitleConfig.from_dict({}, WHERE).params_from_title is False
+
+
 def test_title_reads_markers() -> None:
     """Маркеры title читаются: подстрока → поля позиции со значениями."""
     raw = {

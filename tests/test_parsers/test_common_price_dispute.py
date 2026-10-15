@@ -1,4 +1,4 @@
-"""Явный конфликт шипа и сезона в группе дублей."""
+"""Явный конфликт шипа, сезона и XL в группе дублей."""
 
 from typing import Any
 
@@ -81,3 +81,30 @@ def test_unknown_season_still_conflicts() -> None:
 def test_both_markers_joined() -> None:
     """оба конфликта в одной группе: метки соединяются запятой, шип идёт первым."""
     assert dispute_note(_rows(('да', 'зима'), ('нет', 'лето'))) == 'шип, сезон'
+
+
+def _titled(*titles: str) -> list[RowItem]:
+    return [RowItem({'title': title}) for title in titles]
+
+
+def test_xl_conflict_is_marked() -> None:
+    """XL есть в названии одной позиции и нет у другой — спорная группа."""
+    rows = _titled('245/45R20 Compasal Winter Stud 103T XL шип', '245/45R20 Compasal Winter Stud 103T')
+    assert dispute_note(rows) == 'XL'
+
+
+def test_xl_in_all_rows_is_not_conflict() -> None:
+    rows = _titled('245/45R20 Compasal 103T XL', '245/45R20 Compasal 103T xl')
+    assert dispute_note(rows) == ''
+
+
+def test_no_xl_in_any_row_is_not_conflict() -> None:
+    assert dispute_note(_titled('245/45R20 Compasal 103T', '245/45R20 Compasal XLR 103T')) == ''
+
+
+def test_xl_joins_other_conflicts() -> None:
+    rows = [
+        RowItem({'title': '245/45R20 Compasal 103T XL', 'spike': 'да'}),
+        RowItem({'title': '245/45R20 Compasal 103T', 'spike': 'нет'}),
+    ]
+    assert dispute_note(rows) == 'шип, XL'

@@ -1,5 +1,5 @@
 # flake8: noqa: WPS202
-"""Разбор и сборка названия номенклатуры Пошка и STK.
+"""Разбор и сборка названия шины (Пошк, STK, Пионер).
 
 Пошк и STK пишут параметры шины вперемешку: ``н.с.N`` вместо ``NPR``, индекс
 нагрузки/скорости стоит то до модели, то после неё, а производитель
@@ -37,8 +37,11 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies._title_wins import TIRE_TITLE_WINS
 
 _LEADING_KIND = re.compile(r'^\s*(?:а/п|автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
+# Камера и ободная лента — не шина, их размер разбирает `_tube_title_parser`.
+TUBE_PREFIX = re.compile(r'^\s*(?:авто)?камера\b|^\s*(?:ободная\s+)?лента\b', re.IGNORECASE)
 _LEADING_SHIP = re.compile(r'^\s*Шина\b\s*', re.IGNORECASE)
 _LAYER_SOURCE = re.compile(r'н\.\s*с\.?\s*(\d+)', re.IGNORECASE)
 _SPLIT_PR = re.compile(r'(?<!\S)(\d+)\s+PR(?![^\s,])', re.IGNORECASE)
@@ -50,12 +53,28 @@ _SIZE = re.compile(
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
+# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`.
+_INCH_SIZE = re.compile(
+    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*-\s*'
+    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
+    re.IGNORECASE,
+)
+# Размер не в начале строки ищем только по радиальному написанию: иначе поймаем модель вроде `153`.
+_INNER_SIZE = re.compile(
+    r'(?<!\S)(?P<width>\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)?)\s*(?P<lowpro>l)?\s*(?P<construct>R)\s*'
+    r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
+)
+# Другой размер перед найденным: тогда основной размер — не он.
+_OTHER_SIZE = re.compile(r'\d\s*[x/\-]\s*\d')
+# Альтернативная запись размера сразу за основным: `(1200x500-508)`, `/6.45-13`.
+_ALT_SIZE = re.compile(r'^(?:\([^)]*\d[^)]*[x/\-][^)]*\)|/\d+(?:[.,]\d+)?-\d+(?:[.,]\d+)?)\s*')
+_SIZE_SEPARATOR = re.compile(r'(?<=\d)\s*[хХ*]\s*(?=\d)')
 _PR = re.compile(r'^\d+\s*PR$', re.IGNORECASE)
 _LOAD_SPEED = re.compile(
     r'^(?P<load>(?:[4-9]\d|\d{3})(?:/\d{2,3})?)(?P<velocity>[A-Za-z]\d?)$',
 )
 _CAMERA = re.compile(r'^(?:TT|TL|TTF|TT/TL|TL/TT)$', re.IGNORECASE)
-_KIND_WORDS = frozenset(('а/п', 'автошина', 'автошины', 'автопокрышка'))
+_KIND_WORDS = frozenset(('а/п', 'а/ш', 'автошина', 'автошины', 'автопокрышка'))
 _KIND_SUFFIXES = ('автошина', 'автошины', 'автопокрышка')
 _PRODUCERS = frozenset(('НКШЗ', 'БШК', 'ОШЗ', 'ЯШЗ', 'ВОЛШЗ'))
 _USAGE_WORDS = frozenset(
@@ -81,13 +100,24 @@ _USAGE_WORDS = frozenset(
         'цельнолит',
         'змейка',
         'стройка',
+        'кам',
+        'зимняя',
     ),
 )
 # Начала токенов назначения: оси (`вед.ось`, `вед`, `руль/прицеп`, `приц.`),
 # индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
 _USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив.', 'приц', 'карьер')
 _DOT = '.'
+# Заводской код без бренда: `ОИ-73Б`, `И-Н142Б`, `ВЛИ-10`, `Я-166`. До трёх заглавных букв —
+# иначе под правило попали бы `КАМА-310` и `Алтайшина-421` (бренд со слитной моделью).
+_FACTORY_CODE = re.compile(r'^[А-ЯЁ]{1,3}(?:-[А-ЯЁ])?-?\d+[А-ЯЁ]*$')
+# `R` в размере — радиальная конструкция, дефис и дюймовая запись — диагональная.
+_CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная'}
+# Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
+_AXES = (('вед', 'ведущая'), ('рул', 'рулевая'), ('унив', 'универсальная'), ('приц', 'прицепная'))
 _TokenMatcher = Callable[[str], object]
+_SPIKE_TOKENS = frozenset(('шип', 'шипы'))
+_SPIKE_YES = 'Да'
 
 
 class _SizeParts(NamedTuple):
@@ -97,15 +127,27 @@ class _SizeParts(NamedTuple):
     width: str
     height_percent: str
     diameter: str
+    ext_diameter: str = ''
+    alt: str = ''
+    construction: str = ''
 
     @classmethod
-    def from_match(cls, match: re.Match[str]) -> _SizeParts:
-        """Собрать канонический размер из совпадения регулярки."""
+    def from_match(cls, match: re.Match[str], alt: str = '') -> _SizeParts:
+        """Собрать канонический размер из совпадения регулярки; ``alt`` — размер в скобках."""
+        diameter = match['diameter'].replace(',', _DOT)
+        if 'ext' in match.re.groupindex:
+            return cls._inch(match, diameter, alt)
         raw_width = match['width'].replace(',', _DOT)
         width, _, height = raw_width.partition('/')
-        diameter = match['diameter'].replace(',', _DOT)
         label = _size_label(width, height, diameter, match)
-        return cls(label, width, height, diameter)
+        return cls(label, width, height, diameter, '', alt, _CONSTRUCTIONS[match['construct'].upper() == 'R'])
+
+    @classmethod
+    def _inch(cls, match: re.Match[str], diameter: str, alt: str) -> _SizeParts:
+        ext = match['ext'].replace(',', _DOT)
+        width = match['width'].replace(',', _DOT)
+        label = f'{ext}x{width}-{diameter}{(match["suffix"] or "").upper()}'
+        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[False])
 
 
 class _TitleFields(NamedTuple):
@@ -135,7 +177,7 @@ class _Service(NamedTuple):
 
 
 @dataclass(frozen=True, slots=True)
-class PoshkStkTitleParts:
+class TireTitleParts:
     """Разобранные параметры названия Пошка/STK."""
 
     size: _SizeParts
@@ -151,17 +193,17 @@ class PoshkStkTitleParts:
     @classmethod
     def from_raw(
         cls,
-        size_match: re.Match[str],
+        size: _SizeParts,
         tokens: list[str],
         from_ship: bool,
-    ) -> PoshkStkTitleParts | None:
+    ) -> TireTitleParts | None:
         """Собрать параметры из размера и остатка токенов; None без бренда с моделью."""
         service = _Service.from_tokens(tokens)
         fields = _resolve_fields(service.rest)
         if fields is None:
             return None
         return cls(
-            size=_SizeParts.from_match(size_match),
+            size=size,
             brand=fields.brand,
             model=fields.model,
             load=service.load,
@@ -172,10 +214,22 @@ class PoshkStkTitleParts:
             from_ship=from_ship,
         )
 
+    @property
+    def model_name(self) -> str:
+        """Модель; у бренда со слитной моделью (``Кама-310``) — весь токен, он и есть название модели."""
+        if self.model:
+            return self.model
+        return self.brand if any(char.isdigit() for char in self.brand) else ''
+
+    def _size_with_alt(self) -> str:
+        """Размер и альтернативная запись: ``/6.45-13`` клеится к размеру, ``(...)`` — через пробел."""
+        glue = '' if self.size.alt.startswith('/') else ' '
+        return f'{self.size.label}{glue}{self.size.alt}'.strip()
+
     def compose(self, brand: str | None = None) -> str:
         """Склеить название в порядке Пионера; brand перекрывает разобранный."""
         chunks = (
-            self.size.label,
+            self._size_with_alt(),
             _canonical_brand(self.brand, brand),
             self.model,
             f'{self.load}{self.velocity}',
@@ -199,35 +253,80 @@ def _canonical_brand(parsed: str, canonical: str | None) -> str:
     return canonical
 
 
-def parse_poshk_stk_title(raw: str | None) -> PoshkStkTitleParts | None:
+def parse_tire_title(raw: str | None) -> TireTitleParts | None:
     """Разобрать название Пошка/STK на параметры; None, если это не размер шины."""
-    if not raw:
+    if not raw or TUBE_PREFIX.match(raw):
         return None
     text = _prepare_text(raw)
-    size_match = _SIZE.match(text)
-    if size_match is None:
+    found = _find_size(text)
+    if found is None:
         return None
-    tail = text[size_match.end() :].lstrip()
+    size_match, head, tail = found
+    alt = _ALT_SIZE.match(tail)
+    if alt is not None:
+        tail = tail[alt.end() :]
     if not tail or tail[0] in '(/':
         return None
-    return PoshkStkTitleParts.from_raw(size_match, _clean_tokens(tail), _from_ship(raw))
+    size = _SizeParts.from_match(size_match, alt[0].strip() if alt else '')
+    return TireTitleParts.from_raw(size, _clean_tokens(f'{head} {tail}'), _from_ship(raw))
 
 
-def fill_poshk_stk_fields(row_item: RowItem, parts: PoshkStkTitleParts) -> None:
+def parse_leading_size(text: str) -> _SizeParts | None:
+    """Размер в самом начале строки (дюймовый ``33x12.5-15`` или ``12.5/80-18``, ``215R16``); иначе None."""
+    for pattern in (_INCH_SIZE, _SIZE):
+        match = pattern.match(text)
+        if match is not None:
+            return _SizeParts.from_match(match)
+    return None
+
+
+def _find_size(text: str) -> tuple[re.Match[str], str, str] | None:
+    """Размер, слова до него и остаток названия: сначала в начале строки, затем внутри."""
+    for pattern in (_INCH_SIZE, _SIZE):
+        match = pattern.match(text)
+        if match is not None:
+            return match, '', text[match.end() :].lstrip()
+    inner = _INNER_SIZE.search(text)
+    if inner is None or _OTHER_SIZE.search(text[: inner.start()]):
+        return None
+    return inner, text[: inner.start()].strip(), text[inner.end() :].lstrip()
+
+
+def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
     """Записать разобранные параметры в поля позиции, не перетирая готовые."""
     fields = {
         'width': parts.size.width,
         'height_percent': parts.size.height_percent,
         'diameter': parts.size.diameter,
+        'ext_diameter': parts.size.ext_diameter,
+        'construction_type': parts.size.construction,
+        'axis': _axis(parts.usage),
         'layering': parts.layering,
         'index_load': parts.load,
         'index_velocity': parts.velocity,
+        'spike': _SPIKE_YES if any(token.lower().strip(_DOT) in _SPIKE_TOKENS for token in parts.usage) else '',
         'intimacy': parts.intimacy,
-        'model': parts.model,
+        'model': parts.model_name,
     }
     for key, parsed_value in fields.items():
-        if parsed_value and not row_item.get_field(key):
+        current = row_item.get_field(key)
+        if parsed_value and (not current or (key in TIRE_TITLE_WINS and _differs(current, parsed_value))):
             row_item.set_field(key, parsed_value)
+
+
+def _differs(current: object, parsed: str) -> bool:
+    """Значения разные без учёта регистра: `да` из конфига и `Да` из названия — одно и то же."""
+    return str(current).strip().lower() != parsed.lower()
+
+
+def _axis(usage: tuple[str, ...]) -> str:
+    """Ось из слов назначения; при нескольких (``рулевая/трал``) — по первому слову."""
+    for token in usage:
+        lower = token.lower()
+        for root, axis in _AXES:
+            if lower.startswith(root):
+                return axis
+    return ''
 
 
 def _prepare_text(raw: str) -> str:
@@ -236,6 +335,7 @@ def _prepare_text(raw: str) -> str:
     text = _LEADING_KIND.sub('', text)
     text = _LEADING_SHIP.sub('', text)
     text = _LAYER_SOURCE.sub(r'\1PR', text)
+    text = _SIZE_SEPARATOR.sub('x', text)
     return _SPLIT_PR.sub(r'\1PR', text)
 
 
@@ -265,11 +365,20 @@ def _resolve_fields(rest: tuple[str, ...]) -> _TitleFields | None:
     if not tokens:
         return None
     if not producer:
-        return _compose_model(tokens[0], tokens[1:])
+        return _without_producer(tokens)
     if _looks_like_brand(tokens[0]):
         fields = _compose_model(tokens[0], tokens[1:])
         return fields._replace(usage=(*fields.usage, producer))
     return _compose_model(producer, tokens)
+
+
+def _without_producer(tokens: list[str]) -> _TitleFields | None:
+    """Бренд и модель, когда завода в хвосте нет; None, если первое слово — назначение (``об/лента``)."""
+    if _is_usage(tokens[0]):
+        return None
+    if _FACTORY_CODE.match(tokens[0]):
+        return _compose_model('', tokens)
+    return _compose_model(tokens[0], tokens[1:])
 
 
 def _compose_model(brand: str, model_tokens: list[str]) -> _TitleFields:

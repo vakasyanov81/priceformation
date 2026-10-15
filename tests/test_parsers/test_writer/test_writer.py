@@ -16,6 +16,15 @@ from tests.fakes.fake_driver import FakeXlwtDriver
 from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemplate, write_data
 
 
+def test_true_value_replaces_true_with_text() -> None:
+    """true_value: True в поле → заданный текст; False и пусто остаются пустыми."""
+    column = {'Уценка': {'field': 'marked_down', 'true_value': 'Да'}}
+
+    assert writer_mod.get_value(column, {'marked_down': True}) == 'Да'
+    assert writer_mod.get_value(column, {'marked_down': False}) is None
+    assert writer_mod.get_value(column, {}) is None
+
+
 @pytest.mark.parametrize(
     'method, call_count',
     [

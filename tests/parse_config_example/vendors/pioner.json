@@ -5,7 +5,8 @@
   "start_row": 12,
   "file_templates": ["price*.xls", "price*.xlsx"],
   "title": {
-    "strategy": "manufacturer_from_category"
+    "strategy": "manufacturer_from_category",
+    "params_from_title": true
   },
   "pricing": {
     "policy": "map_on_opt",

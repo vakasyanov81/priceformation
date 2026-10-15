@@ -364,6 +364,7 @@ def test_group_key_exact() -> None:
         '',
         '',
         '',
+        '',
     )
 
 
@@ -398,12 +399,13 @@ def test_group_key_exact_strips_own_brand_prefixes() -> None:
         '',
         '',
         '',
+        '',
     )
 
 
 def test_group_key_exact_blank_row() -> None:
     """Пустая строка без размеров в title: все части ключа — пустые строки."""
-    assert group_key(RowItem({'title': 'no marker'}), {}) == ('',) * 16
+    assert group_key(RowItem({'title': 'no marker'}), {}) == ('',) * 17
 
 
 @pytest.mark.parametrize(
@@ -437,3 +439,25 @@ def test_group_key_loads_user_aliases_by_default() -> None:
 def test_clear_model_applies_prefixes_longest_first() -> None:
     """Префиксы применяются от длинного к короткому, а не в алфавитном порядке."""
     assert clear_model('AABCD ZZ 205', 'ZZ', 'AABCD') == '205'
+
+
+@pytest.mark.parametrize(
+    ('title', 'valve'),
+    [
+        ('425/85R21 Nortec TR-184-1 156J 18PR TT с вентилем РК-5А-145 (15)', 'с вент'),
+        ('425/85R21 Nortec TR-184-1 156J 18PR TT', ''),
+    ],
+)
+def test_group_key_splits_valve(title: str, valve: str) -> None:
+    """«С вентилем» в названии — последняя часть ключа: шина с вентилем и без — разные товары."""
+    row = RowItem({'title': title, 'type_production': 'легковая'})
+
+    assert group_key(row, {})[-1] == valve
+
+
+def test_group_key_ignores_xl() -> None:
+    """XL в ключ не входит: Мим и Форточки его не пишут, а цены те же — это одна шина."""
+    plain = RowItem({'title': '245/45R20 Compasal Winter Stud 103T', 'type_production': 'легковая'})
+    reinforced = RowItem({'title': '245/45R20 Compasal Winter Stud 103T XL', 'type_production': 'легковая'})
+
+    assert group_key(plain, {}) == group_key(reinforced, {})

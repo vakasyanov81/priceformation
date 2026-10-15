@@ -14,7 +14,8 @@
     "strategy": "tire_size_category"
   },
   "title": {
-    "strategy": "poshk_stk_tire_compose"
+    "strategy": "poshk_stk_tire_compose",
+    "params_from_title": true
   },
   "sections": [
     {

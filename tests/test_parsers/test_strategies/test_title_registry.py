@@ -16,6 +16,7 @@ from parsers.strategies.title import (
     TitleWithAliases,
 )
 from parsers.strategies.title_markers import TitleWithMarkers
+from parsers.strategies.title_params import ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
@@ -150,6 +151,18 @@ def test_markers_wrap_strategy_and_set_fields() -> None:
     assert strategy.prepare(row) == '205/55 R16 Torero MP30 шипы'
     assert row.tire.season == 'зима'
     assert row.tire.spike == 'да'
+
+
+def test_params_from_title_wraps_strategy() -> None:
+    """params_from_title оборачивает стратегию разбором параметров; без флага — нет."""
+    config = TitleConfig(strategy='default', params_from_title=True)
+    row = RowItem({'title': 'Диск штамп Nortec 5.5x16 6x170 ET106 d130'})
+
+    strategy = make_title_strategy(config, WHERE)
+
+    assert isinstance(strategy, ParamsFromTitle)
+    assert strategy.prepare(row) == 'Диск штамп Nortec 5.5x16 6x170 ET106 d130'
+    assert row.disk.pcd1 == 170
 
 
 def test_without_markers_strategy_is_not_wrapped() -> None:

@@ -1,0 +1,139 @@
+"""Обёртка `params_from_title`: параметры шин и дисков из названия в поля позиции."""
+
+import logging
+
+from log_watch import LoggerWatcher, texts_at
+
+from domain.row_item.row_item import RowItem
+from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
+from parsers.strategies.title import DefaultTitle, ManufacturerFromCategory
+from parsers.strategies.title_params import ParamsFromTitle
+
+_PIONER = '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая'
+
+
+def test_fills_disk_fields_and_keeps_title() -> None:
+    raw = 'Диск штамп Nortec-16 11.75x22.5 10x335 ET0 d281'
+    row = RowItem({'title': raw})
+
+    assert ParamsFromTitle(DefaultTitle()).prepare(row) == raw
+    assert row.disk.pcd1 == 335
+    assert row.disk.eet == 0
+
+
+def test_fills_tire_fields_for_pioner() -> None:
+    row = RowItem({'title': _PIONER, 'price_opt': 1000})
+
+    strategy = ParamsFromTitle(ManufacturerFromCategory(lambda: 'Triangle'))
+
+    assert strategy.prepare(row) == _PIONER
+    assert (row.tire.width, row.tire.height_percent) == ('215', '75')
+    assert row.tire.diameter == '17.5'
+    assert (row.tire.index_load, row.tire.index_velocity) == ('135/133', 'L')
+    assert (row.tire.layering, row.tire.intimacy) == ('16PR', 'TL')
+    assert row.identity.model == 'TR685'
+
+
+def test_parses_title_after_manufacturer_is_prepended() -> None:
+    """Производитель раздела вставлен в название до разбора: модель не принимает его за бренд."""
+    row = RowItem({'title': '215/75R17.5 TR685 135/133L', 'price_opt': 1000})
+
+    ParamsFromTitle(ManufacturerFromCategory(lambda: 'Triangle')).prepare(row)
+
+    assert row.identity.model == 'TR685'
+
+
+def test_fills_tire_fields_from_poshk_compose() -> None:
+    row = RowItem({'title': 'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал'})
+
+    ParamsFromTitle(PoshkStkTireCompose('', None)).prepare(row)
+
+    assert (row.tire.width, row.tire.height_percent) == ('235', '75')
+    assert row.identity.model == 'LLA78'
+
+
+def test_fills_without_price() -> None:
+    row = RowItem({'title': _PIONER})
+
+    ParamsFromTitle(ManufacturerFromCategory(lambda: 'Triangle')).prepare(row)
+
+    assert row.tire.width == '215'
+
+
+def test_keeps_existing_values() -> None:
+    row = RowItem({'title': _PIONER, 'width': '999'})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.tire.width == '999'
+
+
+def test_ignores_unparsable_title() -> None:
+    row = RowItem({'title': 'Камера УК-14М ОШЗ'})
+
+    assert ParamsFromTitle(DefaultTitle()).prepare(row) == 'Камера УК-14М ОШЗ'
+    assert row.tire.width is None
+
+
+def test_fills_tube_size_and_keeps_title() -> None:
+    row = RowItem({'title': 'Камера СВК 20.5-25 ГК-260 (0)'})
+
+    assert ParamsFromTitle(DefaultTitle()).prepare(row) == 'Камера СВК 20.5-25 ГК-260 (0)'
+    assert (row.tire.width, row.tire.diameter) == ('20.5', '25')
+
+
+def test_keeps_none_title() -> None:
+    assert ParamsFromTitle(DefaultTitle()).prepare(RowItem({})) is None
+
+
+_KHOMEN = '15 Khomen KHW1501 ZV Vesta/Almera 6.0*15 4*100 ET50 D60.1 GRAY'
+_PARAMS_LOGGER = 'parsers.strategies.title_conflicts'
+
+
+def test_title_et_overrides_column_and_is_logged(watch_logger: LoggerWatcher) -> None:
+    """Колонка ET=40 при ET50 в названии: берём название и пишем расхождение в лог."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN, 'eet': 40})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.disk.eet == 50
+    messages = texts_at(entries(), logging.WARNING)
+    assert len(messages) == 1
+    assert 'eet 40' in messages[0]
+    assert '50' in messages[0]
+    assert _KHOMEN in messages[0]
+
+
+def test_tire_index_conflict_is_logged(watch_logger: LoggerWatcher) -> None:
+    """Колонка speed_index=H при 86T в названии: индексы берём из названия и пишем в лог."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': '185/65R14 Hankook Kinergy Eco 2 K435 86T', 'index_load': '86', 'index_velocity': 'H'})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert (row.tire.index_load, row.tire.index_velocity) == ('86', 'T')
+    messages = texts_at(entries(), logging.WARNING)
+    assert len(messages) == 1
+    assert 'index_velocity' in messages[0]
+
+
+def test_same_value_in_column_and_title_is_not_logged(watch_logger: LoggerWatcher) -> None:
+    """40 в колонке и ET40 в названии (число и строка) — не расхождение."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN.replace('ET50', 'ET40'), 'eet': 40})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert texts_at(entries(), logging.WARNING) == []
+
+
+def test_empty_column_is_filled_without_log(watch_logger: LoggerWatcher) -> None:
+    """Колонки нет — вылет берём из названия, расхождения нет."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.disk.eet == 50
+    assert texts_at(entries(), logging.WARNING) == []
