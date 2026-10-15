@@ -211,6 +211,13 @@ class TireTitleParts:
             from_ship=from_ship,
         )
 
+    @property
+    def model_name(self) -> str:
+        """Модель; у бренда со слитной моделью (``Кама-310``) — весь токен, он и есть название модели."""
+        if self.model:
+            return self.model
+        return self.brand if any(char.isdigit() for char in self.brand) else ''
+
     def _size_with_alt(self) -> str:
         """Размер и альтернативная запись: ``/6.45-13`` клеится к размеру, ``(...)`` — через пробел."""
         glue = '' if self.size.alt.startswith('/') else ' '
@@ -295,7 +302,7 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
         'index_load': parts.load,
         'index_velocity': parts.velocity,
         'intimacy': parts.intimacy,
-        'model': parts.model,
+        'model': parts.model_name,
     }
     for key, parsed_value in fields.items():
         if parsed_value and not row_item.get_field(key):

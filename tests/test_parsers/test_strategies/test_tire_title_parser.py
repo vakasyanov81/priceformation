@@ -525,3 +525,24 @@ def test_brand_with_digits_stays_brand(raw: str, brand: str, model: str) -> None
 
     assert parts is not None
     assert (parts.brand, parts.model) == (brand, model)
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model'),
+    [
+        ('10.00R20 Кама-310 146/143K 16PR НКШЗ', 'Кама-310'),
+        ('8.25R20 Алтайшина-111 125/122J 10PR TT', 'Алтайшина-111'),
+        ('6L-12 Алтайшина-421 44A6 2PR TT', 'Алтайшина-421'),
+        ('185/75R16 Кама FLAME A/T (HK-245) 97T НКШЗ', 'FLAME A/T (HK-245)'),
+        ('175/70R13 Rapid 82T', ''),
+    ],
+)
+def test_fill_sets_model_for_brand_with_glued_model(raw: str, model: str) -> None:
+    """Бренд со слитной моделью даёт модель целиком; обычный бренд без модели модель не получает."""
+    row = RowItem({'title': raw})
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    fill_tire_fields(row, parts)
+
+    assert (row.identity.model or '') == model
