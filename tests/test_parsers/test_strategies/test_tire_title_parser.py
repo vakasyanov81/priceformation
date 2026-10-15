@@ -490,3 +490,38 @@ def test_fill_sets_axis(raw: str, axis: str) -> None:
     fill_tire_fields(row, parts)
 
     assert (row.tire.axis or '') == axis
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model'),
+    [
+        ('10.00R20 ОИ-73Б 146/143K 16PR TT', 'ОИ-73Б'),
+        ('9.00R20 И-Н142Б 140/137K 14PR TT', 'И-Н142Б'),
+        ('175/80R16 ВЛИ-10 88Q TT', 'ВЛИ-10'),
+        ('185/75R16C БС-1 104/102Q TL', 'БС-1'),
+        ('13.6-38 Я-166 129A6 6PR TT', 'Я-166'),
+        ('15.5/65-18 КФ-105А 137A6 10PR TL', 'КФ-105А'),
+    ],
+)
+def test_factory_code_is_model_not_brand(raw: str, model: str) -> None:
+    """Заводской код без бренда — модель; бренд пуст, а не равен коду."""
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    assert (parts.brand, parts.model) == ('', model)
+
+
+@pytest.mark.parametrize(
+    ('raw', 'brand', 'model'),
+    [
+        ('425/85R21 ALT A-260 173E 22PR TT', 'ALT', 'A-260'),
+        ('225/75R16C Кама-218 121N НКШЗ', 'Кама-218', ''),
+        ('175/70R13 КАМА-310 82T', 'КАМА-310', ''),
+    ],
+)
+def test_brand_with_digits_stays_brand(raw: str, brand: str, model: str) -> None:
+    """Бренд (латиница, `Кама-218`, `КАМА-310`) под правило заводского кода не попадает."""
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    assert (parts.brand, parts.model) == (brand, model)

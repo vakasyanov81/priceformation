@@ -107,6 +107,9 @@ _USAGE_WORDS = frozenset(
 # индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
 _USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив.', 'приц', 'карьер')
 _DOT = '.'
+# Заводской код без бренда: `ОИ-73Б`, `И-Н142Б`, `ВЛИ-10`, `Я-166`. До трёх заглавных букв —
+# иначе под правило попали бы `КАМА-310` и `Алтайшина-421` (бренд со слитной моделью).
+_FACTORY_CODE = re.compile(r'^[А-ЯЁ]{1,3}(?:-[А-ЯЁ])?-?\d+[А-ЯЁ]*$')
 # `R` в размере — радиальная конструкция, дефис и дюймовая запись — диагональная.
 _CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная'}
 # Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
@@ -345,6 +348,8 @@ def _resolve_fields(rest: tuple[str, ...]) -> _TitleFields | None:
     if not tokens:
         return None
     if not producer:
+        if _FACTORY_CODE.match(tokens[0]):
+            return _compose_model('', tokens)
         return _compose_model(tokens[0], tokens[1:])
     if _looks_like_brand(tokens[0]):
         fields = _compose_model(tokens[0], tokens[1:])
