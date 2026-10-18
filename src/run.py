@@ -118,6 +118,7 @@ def response_processing() -> bool:
         AnswerResult.UPDATE_FOUR_TOCHKI_DATA: run_upload_four_tochki_data,
         AnswerResult.REPORT_DOUBLES: run_report_doubles,
         AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
+        AnswerResult.UPDATE_ALL_SUPPLIER_PRICES: run_update_all_supplier_prices,
         AnswerResult.SHOW_HELP: run_show_help,
     }
     try_call(handlers[action])
@@ -152,6 +153,15 @@ def run_fetch_mail_prices() -> None:
     """Download supplier prices from the mail box."""
     fetched = ServiceProvider.resolve(MailService).fetch_prices()
     logger.info(f'*** Прайсы из почты получены: {len(fetched)}. ***\n')
+
+
+def run_update_all_supplier_prices() -> None:
+    """Обновить прайсы всех поставщиков: запаска и Форточки по API, затем почта.
+
+    Сбой одного источника не отменяет остальные (ошибка логируется в try_call).
+    """
+    for update in (run_upload_zapaska_data, run_upload_four_tochki_data, run_fetch_mail_prices):
+        try_call(update)
 
 
 def run_show_help() -> None:

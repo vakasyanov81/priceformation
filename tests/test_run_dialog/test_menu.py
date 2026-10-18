@@ -133,11 +133,12 @@ def test_exit_key_returns_exit(_interactive: _FakeVendorService, monkeypatch: py
     ('shortcut', 'expected_index'),
     [
         ('1', 0),
-        ('2', 1),
-        ('3', 2),
-        ('5', 3),
-        ('6', 4),
-        ('7', 5),
+        ('8', 1),
+        ('2', 2),
+        ('3', 3),
+        ('5', 4),
+        ('6', 5),
+        ('7', 6),
     ],
 )
 def test_shortcut_key_selects_item(

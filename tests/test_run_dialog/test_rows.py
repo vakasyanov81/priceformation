@@ -34,4 +34,4 @@ def test_rows_shortcuts() -> None:
     """Шорткаты строк: действия, пункт активации, выход."""
     rows = build_rows([], expanded=False)
     shortcuts = [row.shortcut for row in rows if row.shortcut]
-    assert shortcuts == ['1', '2', '3', '4', '5', '6', '7', 'q']
+    assert shortcuts == ['1', '8', '2', '3', '4', '5', '6', '7', 'q']

@@ -12,6 +12,7 @@ class AnswerResult(Enum):
     UPDATE_FOUR_TOCHKI_DATA = 'UpdateFourTochkiData'
     REPORT_DOUBLES = 'ReportDoubles'
     FETCH_MAIL_PRICES = 'FetchPricesFromMail'
+    UPDATE_ALL_SUPPLIER_PRICES = 'UpdateAllSupplierPrices'
     SHOW_HELP = 'ShowHelp'
     EXIT = 'Exit'
 
@@ -27,6 +28,7 @@ class MenuItem:
 
 MENU_ITEMS: tuple[MenuItem, ...] = (
     MenuItem(AnswerResult.MAKE_PRICE_BY_SUPPLIER, 'сформировать общий прайс по прайсам поставщиков', '1'),
+    MenuItem(AnswerResult.UPDATE_ALL_SUPPLIER_PRICES, 'обновить прайсы всех поставщиков (API и почта)', '8'),
     MenuItem(AnswerResult.UPDATE_ZAPASKA_DATA, 'Выгрузить прайсы запаски по API', '2'),
     MenuItem(AnswerResult.UPDATE_FOUR_TOCHKI_DATA, 'Выгрузить данные Форточек по API', '3'),
     MenuItem(AnswerResult.SHOW_HELP, 'справка (README)', '5'),

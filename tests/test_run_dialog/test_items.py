@@ -18,17 +18,19 @@ def test_answer_map_keys() -> None:
 def test_menu_items_order_and_keys() -> None:
     """порядок пунктов и клавиши строкового ввода стабильны"""
     keys = [menu_item.key for menu_item in MENU_ITEMS]
-    assert keys == ['1', '2', '3', '5', '6', '7', 'q']
+    assert keys == ['1', '8', '2', '3', '5', '6', '7', 'q']
     assert [menu_item.action for menu_item in MENU_ITEMS] == list(ANSWER_MAP.values())
 
 
 def test_index_by_key() -> None:
     """Клавиша быстрого выбора даёт индекс пункта; пустая/чужая — None."""
     assert index_by_key('1') == 0
-    assert index_by_key('3') == 2
-    assert index_by_key('5') == 3
-    assert index_by_key('6') == 4
-    assert index_by_key('7') == 5
-    assert index_by_key('q') == 6
+    assert index_by_key('8') == 1
+    assert index_by_key('2') == 2
+    assert index_by_key('3') == 3
+    assert index_by_key('5') == 4
+    assert index_by_key('6') == 5
+    assert index_by_key('7') == 6
+    assert index_by_key('q') == 7
     assert index_by_key('9') is None
     assert index_by_key('') is None
