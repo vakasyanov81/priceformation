@@ -121,3 +121,21 @@ def test_guard_checks_after_failure(tmp_path: Path, fake_config_provider: FakeCo
         except RuntimeError:
             pass
         check.assert_called_once_with()
+
+
+def test_snapshot_failure_skips_check(
+    tmp_path: Path, fake_config_provider: FakeConfigProvider, watch_logger: LoggerWatcher
+) -> None:
+    """копия не сделалась (файл занят) — предупреждение, обновление идёт, сравнения нет."""
+    service = _service(tmp_path)
+    entries = watch_logger(_LOGGER, logging.WARNING)
+    with (
+        patch('services.price_schema_service.backup_prices', side_effect=PermissionError('занято')),
+        patch.object(PriceSchemaService, 'check') as check,
+        service.guard(),
+    ):
+        updated = True
+
+    assert updated
+    check.assert_not_called()
+    assert 'Не удалось сделать копию прайсов (занято)' in texts_at(entries(), logging.WARNING)[0]

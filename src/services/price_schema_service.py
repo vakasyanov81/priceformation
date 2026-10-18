@@ -28,24 +28,30 @@ class PriceSchemaService:
         """`backup_folder` — куда класть копию; по умолчанию временная папка ОС."""
         self._backup = backup_folder or default_backup_folder()
         self._depth = 0
+        self._copied = False
 
-    def snapshot(self) -> None:
-        """Скопировать file_prices (кроме result) в папку копии."""
+    def snapshot(self) -> bool:
+        """Скопировать file_prices (кроме result) в папку копии; не вышло — предупреждение и False."""
         provider = get_config_provider()
         skip = Path(provider.result_folder())
-        backup_prices(Path(provider.price_folder('')), self._backup, skip=skip)
+        try:
+            backup_prices(Path(provider.price_folder('')), self._backup, skip=skip)
+        except OSError as exc:
+            logger.warning(f'Не удалось сделать копию прайсов ({exc}): схемы прайсов не будут сравнены.')
+            return False
+        return True
 
     @contextmanager
     def guard(self) -> Iterator[None]:
         """Копия до блока, сравнение после (и после сбоя обновления); вложенные блоки работают как внешний."""
         if self._depth == 0:
-            self.snapshot()
+            self._copied = self.snapshot()
         self._depth += 1
         try:
             yield
         finally:
             self._depth -= 1
-            if self._depth == 0:
+            if self._depth == 0 and self._copied:
                 self.check()
 
     def check(self) -> list[str]:
