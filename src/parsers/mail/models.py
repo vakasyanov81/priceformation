@@ -30,17 +30,20 @@ class MailProfile:
     subject_keyword: str | None
     attachment_glob: str
     enabled: bool
+    link_in_body: bool = False
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> MailProfile:
         """Разобрать профиль поставщика из объекта JSON."""
         payload = as_config_object(raw, where)
+        link_in_body = read_zero_one_flag(payload, 'link_in_body', where, default=False)
         return cls(
             sender=read_text(payload, 'sender', where),
             sender_is_domain=read_zero_one_flag(payload, 'sender_is_domain', where, default=False),
             subject_keyword=_read_optional_text(payload, 'subject_keyword', where),
-            attachment_glob=read_text(payload, 'attachment_glob', where),
+            attachment_glob=read_text(payload, 'attachment_glob', where, '' if link_in_body else None),
             enabled=read_zero_one_flag(payload, 'enabled', where, default=True),
+            link_in_body=link_in_body,
         )
 
 

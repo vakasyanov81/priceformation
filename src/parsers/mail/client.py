@@ -20,6 +20,7 @@ from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail.dates import format_date, message_datetime
 from parsers.mail.doh import open_client
 from parsers.mail.errors import MailConnectionError
+from parsers.mail.links import single_xlsx_link, url_filename
 from parsers.mail.message import (
     attachment_content,
     decode_header_value,
@@ -51,7 +52,8 @@ class FoundPrice:
     subject: str
     date: str
     filename: str
-    payload: bytes
+    payload: bytes = b''
+    link: str | None = None
     when: datetime | None = None
 
 
@@ -234,6 +236,8 @@ def _price_from_message(message: Message, profile: MailProfile) -> FoundPrice | 
         return None
     if profile.subject_keyword is not None and not subject_matches(message, profile.subject_keyword):
         return None
+    if profile.link_in_body:
+        return _price_from_link(message)
     attachments = matching_attachments(message, profile.attachment_glob)
     if len(attachments) != 1:
         return None
@@ -243,6 +247,20 @@ def _price_from_message(message: Message, profile: MailProfile) -> FoundPrice | 
         date=format_date(message),
         filename=filename,
         payload=attachment_content(part),
+        when=message_datetime(message),
+    )
+
+
+def _price_from_link(message: Message) -> FoundPrice | None:
+    """FoundPrice со ссылкой на xlsx из тела письма; ровно одна ссылка — иначе None."""
+    link = single_xlsx_link(message)
+    if link is None:
+        return None
+    return FoundPrice(
+        subject=decode_header_value(message.get('Subject')),
+        date=format_date(message),
+        filename=url_filename(link),
+        link=link,
         when=message_datetime(message),
     )
 

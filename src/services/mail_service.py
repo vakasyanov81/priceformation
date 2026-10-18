@@ -8,7 +8,9 @@ from pathlib import Path
 
 from domain.config_context import get_config_provider
 from infrastructure.config.mail_credentials import get_mail_credentials
-from parsers.mail.client import connect, find_latest_price, list_price_folders, save_price
+from parsers.mail.client import FoundPrice, connect, find_latest_price, list_price_folders, save_price
+from parsers.mail.download import download_price
+from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailConfig
 from parsers.mail.protocols import ImapClient
 from parsers.mail.provider import load_mail_config
@@ -64,18 +66,35 @@ def _collect(client: ImapClient, config: MailConfig, folders: list[str]) -> list
         if found is None:
             logger.warning(f'Для поставщика «{folder}» подходящее письмо не найдено.')
             continue
-        destination = _destination(folder)
-        save_price(destination, found.payload)
-        fetched.append(
-            MailFetchResult(
-                folder=folder,
-                subject=found.subject,
-                date=found.date,
-                filename=found.filename,
-                path=str(destination),
-            ),
-        )
+        saved = _save_found(folder, found)
+        if saved is not None:
+            fetched.append(saved)
     return fetched
+
+
+def _save_found(folder: str, found: FoundPrice) -> MailFetchResult | None:
+    """Записать прайс поставщика; не скачался по ссылке — None и предупреждение."""
+    try:
+        payload = _price_payload(found)
+    except PriceDownloadError as exc:
+        logger.warning(f'Прайс поставщика «{folder}» не скачан: {exc}')
+        return None
+    destination = _destination(folder)
+    save_price(destination, payload)
+    return MailFetchResult(
+        folder=folder,
+        subject=found.subject,
+        date=found.date,
+        filename=found.filename,
+        path=str(destination),
+    )
+
+
+def _price_payload(found: FoundPrice) -> bytes:
+    """Байты прайса: вложение письма или файл по ссылке из тела."""
+    if found.link is None:
+        return found.payload
+    return download_price(found.link)
 
 
 def _destination(folder: str) -> Path:
