@@ -67,6 +67,8 @@ class TitleConfig:
     `params_from_title` включает извлечение параметров из названия в поля позиции
     (шины: размер, нагрузка, скорость, слойность, камерность, модель; диски: размер,
     крепёж, ET, DIA, толщина, цвет, тип); название не меняется.
+    `params_first` (с `params_from_title`) разбирает исходное название до сборки: поля позиции
+    заполняются из него, и сборка (`tire_compose`, `disk_compose`) строит название по ним.
     """
 
     strategy: str = DEFAULT_TITLE_STRATEGY
@@ -74,6 +76,7 @@ class TitleConfig:
     aliases: bool = False
     fallback_brand: str = ''
     params_from_title: bool = False
+    params_first: bool = False
     markers: dict[str, dict[str, str]] = field(default_factory=dict)
 
     @classmethod
@@ -86,6 +89,7 @@ class TitleConfig:
             aliases=read_flag(payload, 'aliases', where),
             fallback_brand=read_text(payload, 'fallback_brand', where, ''),
             params_from_title=read_flag(payload, 'params_from_title', where),
+            params_first=read_flag(payload, 'params_first', where),
             markers=read_field_map(payload, 'markers', where),
         )
 

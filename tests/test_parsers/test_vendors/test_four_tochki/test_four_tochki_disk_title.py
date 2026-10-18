@@ -4,6 +4,7 @@ from domain.row_item.row_item import RowItem
 from parsers.strategies._four_tochki_disk_helper import (
     disk_diameter,
     disk_name_suffix,
+    disk_width,
     et_label,
     fill_disk_thickness,
     thickness_from_name,
@@ -80,3 +81,15 @@ def test_fill_disk_thickness_keeps_existing() -> None:
     fill_disk_thickness(row)
 
     assert row.disk.disk_thickness == '20'
+
+
+def test_disk_width_adds_decimal_for_whole_number() -> None:
+    """Ширина диска из API приходит как `7`; в прайсе она всегда с десятичной частью: `7.0`."""
+    assert disk_width('7') == '7.0'
+    assert disk_width(7) == '7.0'
+
+
+def test_disk_width_keeps_fraction_and_empty() -> None:
+    assert disk_width('6.75') == '6.75'
+    assert disk_width('') == ''
+    assert disk_width(None) == ''

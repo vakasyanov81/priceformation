@@ -27,9 +27,11 @@ class _NotTty:
 
 
 @pytest.fixture(autouse=True)
-def _clean_mail_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv(_LOGIN, raising=False)
-    monkeypatch.delenv(_PASSWORD, raising=False)
+def _clean_mail_env(monkeypatch: pytest.MonkeyPatch, fake_config_provider: FakeConfigProvider) -> None:
+    """Корень проекта — временная папка (без боевого .env), MAIL_* откатываются после теста."""
+    for key in (_LOGIN, _PASSWORD):
+        monkeypatch.setenv(key, '')
+        monkeypatch.delenv(key)
 
 
 def test_credentials_from_env(monkeypatch: pytest.MonkeyPatch) -> None:

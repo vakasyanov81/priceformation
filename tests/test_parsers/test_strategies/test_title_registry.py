@@ -16,7 +16,7 @@ from parsers.strategies.title import (
     TitleWithAliases,
 )
 from parsers.strategies.title_markers import TitleWithMarkers
-from parsers.strategies.title_params import ParamsFromTitle
+from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
@@ -170,3 +170,24 @@ def test_without_markers_strategy_is_not_wrapped() -> None:
     strategy = make_title_strategy(TitleConfig(strategy='default'), WHERE)
 
     assert isinstance(strategy, DefaultTitle)
+
+
+def test_params_first_wraps_before_compose() -> None:
+    """params_first разбирает исходное название до сборки: обёртка ParamsBeforeTitle, не ParamsFromTitle."""
+    config = TitleConfig(
+        strategy='tire_compose',
+        variant='four_tochki',
+        params_from_title=True,
+        params_first=True,
+    )
+
+    strategy = make_title_strategy(config, WHERE)
+
+    assert isinstance(strategy, ParamsBeforeTitle)
+
+
+def test_params_first_requires_params_from_title() -> None:
+    config = TitleConfig(strategy='tire_compose', variant='four_tochki', params_first=True)
+
+    with pytest.raises(ConfigValidationError, match='params_first'):
+        make_title_strategy(config, WHERE)

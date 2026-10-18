@@ -20,6 +20,7 @@ from parsers.strategies._autosnab_helper import fill_from_title
 from parsers.strategies._four_tochki_disk_helper import (
     disk_diameter,
     disk_name_suffix,
+    disk_width,
     et_label,
     fill_disk_thickness,
 )
@@ -146,7 +147,7 @@ class DiskComposeTochki:
 
     def _disk_title(self, row_item: RowItem) -> str:
         return join_title_parts(
-            join_size_parts(row_item.tire.width, _SIZE_MARK, disk_diameter(row_item.tire.diameter)),
+            join_size_parts(disk_width(row_item.tire.width), _SIZE_MARK, disk_diameter(row_item.tire.diameter)),
             join_size_parts(row_item.disk.slot_count, _SIZE_MARK, row_item.disk.pcd1),
             et_label(row_item.disk.eet),
             row_item.disk.central_diameter,

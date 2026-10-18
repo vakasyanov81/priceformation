@@ -1,10 +1,11 @@
 """Разбор письма: заголовки, дата, вложения, отправитель."""
 
-from email import message_from_string
+from email import message_from_bytes, message_from_string
 from email.message import EmailMessage, Message
 
 import pytest
 
+from parsers.mail.body import message_text
 from parsers.mail.message import (
     attachment_content,
     decode_header_value,
@@ -139,3 +140,22 @@ def test_sender_matches_without_from(sender: str, sender_is_domain: bool) -> Non
 def test_subject_matches_table(raw: str, keyword: str, expected: bool) -> None:
     """Слово ищется в теме без учёта регистра; письма без темы содержат только пустое слово."""
     assert subject_matches(_message(raw), keyword) is expected
+
+
+def test_message_text_plain_and_html_skip_attachments() -> None:
+    """В тексте письма есть plain и html части, вложения не попадают."""
+    message = EmailMessage()
+    message['From'] = 'a@b.ru'
+    message.set_content('ссылка https://x.ru/a.xlsx')
+    message.add_alternative('<a href="https://x.ru/b.xlsx">b</a>', subtype='html')
+    message.add_attachment(b'data', maintype='application', subtype='octet-stream', filename='c.xlsx')
+    text = message_text(message_from_string(message.as_string()))
+    assert 'https://x.ru/a.xlsx' in text
+    assert 'https://x.ru/b.xlsx' in text
+    assert 'c.xlsx' not in text
+
+
+def test_message_text_unknown_charset_falls_back() -> None:
+    """Неизвестная кодировка части декодируется как utf-8."""
+    raw = 'Content-Type: text/plain; charset="x-unknown"\n\nпривет'.encode()
+    assert message_text(message_from_bytes(raw)) == 'привет'

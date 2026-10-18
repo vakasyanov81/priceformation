@@ -102,6 +102,32 @@ def test_parse_returns_none_for_non_disk(raw: str | None) -> None:
     assert parse_disk_title(raw) is None
 
 
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('7x17/5x108 ET50 D63,35 Онтарио (КЛ216) Алмаз', ('7', '17', '5', '108', '50', '63.35')),
+        ('6.5x16/5x139.7 ET40 D98 Офф-лайн (КС516) Нео-классик', ('6.5', '16', '5', '139.7', '40', '98')),
+    ],
+)
+def test_bare_disk_title_without_disk_prefix(raw: str, expected: tuple[str, ...]) -> None:
+    """API: название диска начинается с размера; слово «Диск» не нужно, нужен крепёж."""
+    parts = parse_disk_title(raw, bare=True)
+
+    assert parts is not None
+    assert (parts.width, parts.diameter) == expected[:2]
+    assert (parts.slot_count, parts.pcd) == expected[2:4]
+    assert (parts.et, parts.central_diameter) == expected[4:]
+
+
+@pytest.mark.parametrize('raw', ['6x15 ET40 D57 Тест', '5x10 (две половинки)', '', None])
+def test_bare_title_without_fasteners_is_not_disk(raw: str | None) -> None:
+    assert parse_disk_title(raw, bare=True) is None
+
+
+def test_bare_title_not_parsed_without_flag() -> None:
+    assert parse_disk_title('7x17/5x108 ET50 D63,35 Онтарио (КЛ216) Алмаз') is None
+
+
 def test_fill_disk_fields_sets_row_fields() -> None:
     raw = 'Диск штамп SRW 11.75x22.5 10x335 ET135 d281 М22 Silver (13мм) 4500 кг'
     row = RowItem({'title': raw})

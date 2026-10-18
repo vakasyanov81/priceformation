@@ -44,7 +44,10 @@ def test_canon_number(raw: Any, expected: str) -> None:
         ('RZ16', '16'),
         ('R17.5', '17.5'),
         ('R22,5', '22.5'),
-        ('R16C', '16C'),
+        ('R16C', '16'),
+        ('16c', '16'),
+        ('16LT', '16'),
+        ('R17.5C', '17.5'),
     ],
 )
 def test_canon_diameter(raw: Any, expected: str) -> None:

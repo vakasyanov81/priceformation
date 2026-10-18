@@ -166,3 +166,22 @@ def test_error_names_path_to_key(raw: object, message: str) -> None:
         MailConfig.from_dict(raw, 'mail.json')
 
     assert str(error.value) == message
+
+
+def test_profile_link_in_body_needs_no_attachment_glob() -> None:
+    """При link_in_body маска вложения не обязательна."""
+    profile = _config({'four_tochki': {'sender': 'noreply@pro.4tochki.ru', 'link_in_body': 1}}).profiles['four_tochki']
+    assert profile.link_in_body is True
+    assert profile.attachment_glob == ''
+
+
+def test_profile_link_in_body_default_off() -> None:
+    """Без флага link_in_body прайс ищется во вложении."""
+    assert _config({'pioner': _MINIMAL_PROFILE}).profiles['pioner'].link_in_body is False
+
+
+def test_invalid_link_in_body_flag() -> None:
+    """link_in_body принимает только 0/1."""
+    raw = {**_MINIMAL_PROFILE, 'link_in_body': 2}
+    with pytest.raises(ConfigValidationError, match='link_in_body'):
+        _config({'pioner': raw})

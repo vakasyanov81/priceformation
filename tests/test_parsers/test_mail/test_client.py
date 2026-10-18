@@ -563,3 +563,54 @@ def test_connect_quotes_folder(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert connect(account, _CREDENTIALS) is fake
     assert fake.calls == [('select', ('"INBOX.My Prices"', True))]
+
+
+def _link_email(sender: str, body: str, subject: str = 'прайс') -> bytes:
+    message = EmailMessage()
+    message['From'] = sender
+    message['Subject'] = subject
+    message.set_content(body)
+    return message.as_bytes()
+
+
+def test_find_latest_price_link_in_body() -> None:
+    """Профиль со ссылкой: письмо без вложения даёт ссылку и имя файла из неё."""
+    fake = _FakeClient(
+        {'INBOX': {b'1': _link_email('a@b.ru', 'Остатки: https://x.ru/files/ostatki.xlsx')}},
+    )
+    found = find_latest_price(fake, ['INBOX'], profile=_profile(link_in_body=True, attachment_glob=''))
+    assert found is not None
+    assert found.link == 'https://x.ru/files/ostatki.xlsx'
+    assert found.filename == 'ostatki.xlsx'
+    assert found.payload == b''
+
+
+def test_find_latest_price_link_ambiguous_or_missing() -> None:
+    """Без ссылки или с двумя ссылками на xlsx письмо не подходит."""
+    fake = _FakeClient(
+        {
+            'INBOX': {
+                b'1': _link_email('a@b.ru', 'без ссылки'),
+                b'2': _link_email('a@b.ru', 'https://x.ru/a.xlsx https://x.ru/b.xlsx'),
+            },
+        },
+    )
+    profile = _profile(link_in_body=True, attachment_glob='')
+    assert find_latest_price(fake, ['INBOX'], profile=profile) is None
+
+
+def test_find_latest_price_fourtochki_letter() -> None:
+    """Реальное письмо Форточек со ссылкой в теле находится профилем link_in_body."""
+    body = (
+        'В приложении информация о наличии товара на складе Пауэр Интернэшнл-шины.\n'
+        'Ссылка для скачивания: https://b2b.pwrs.ru/export_data/M32334.xlsx.\n'
+    )
+    fake = _FakeClient({'INBOX': {b'1': _link_email('noreply@pro.4tochki.ru', body, 'Форточки: остатки')}})
+    found = find_latest_price(
+        fake,
+        ['INBOX'],
+        profile=_profile(sender='noreply@pro.4tochki.ru', link_in_body=True, attachment_glob=''),
+    )
+    assert found is not None
+    assert found.link == 'https://b2b.pwrs.ru/export_data/M32334.xlsx'
+    assert found.filename == 'M32334.xlsx'

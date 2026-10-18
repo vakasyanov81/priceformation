@@ -31,6 +31,7 @@ class IWriteTemplate:
     __FILE__: ClassVar[str] = DEFAULT_TEMPLATE_FILE
     __EXCLUDE__: ClassVar[WriteExclude] = {}
     __COLOR__: ClassVar[WriteColors] = {}
+    __MERGE_WAREHOUSES__: ClassVar[bool] = False
 
     """ write template interface """
 

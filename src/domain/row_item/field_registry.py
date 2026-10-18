@@ -106,6 +106,9 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('marked_down', STOCK, 'marked_down', row_format.boolean),
     FieldSpec('production_year', STOCK, 'production_year', row_format.integer),
     FieldSpec('available', STOCK, 'available', row_format.text),
+    FieldSpec('warehouse_id', STOCK, 'warehouse_id', row_format.integer),
+    FieldSpec('warehouse_name', STOCK, 'warehouse_name', row_format.text),
+    FieldSpec('warehouse_group', STOCK, 'warehouse_group', row_format.text),
     # ==== Служебные поля и группировка
     FieldSpec('order', DUPLICATE, 'order', row_format.text),
     FieldSpec('group_by_params', DUPLICATE, 'group_by_params', row_format.integer),

@@ -11,6 +11,7 @@ from log_watch import LoggerWatcher, texts_at
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail.client import FoundPrice
+from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
 from services import mail_service
 
@@ -129,3 +130,45 @@ def test_fetch_prices_continues_after_missing_letter(
         )
         for folder in ('pioner', 'poshk')
     ]
+
+
+def test_fetch_prices_downloads_by_link(
+    fake_config_provider: FakeConfigProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Письмо со ссылкой: прайс скачивается по ссылке и сохраняется."""
+    config = MailConfig(account=_ACCOUNT, profiles={'four_tochki': _profile('a@b.ru')})
+    link_found = FoundPrice(subject='Остатки', date='01.01.2025', filename='o.xlsx', link='https://x.ru/o.xlsx')
+    wired = _wire(monkeypatch, config, link_found)
+    downloaded = MagicMock(return_value=b'from-link')
+    monkeypatch.setattr(mail_service, 'download_price', downloaded)
+
+    fetched = mail_service.MailService().fetch_prices()
+
+    downloaded.assert_called_once_with('https://x.ru/o.xlsx')
+    wired.save.assert_called_once_with(
+        Path(fake_config_provider.price_folder('four_tochki')) / 'price.xlsx', b'from-link'
+    )
+    assert len(fetched) == 1
+
+
+def test_fetch_prices_skips_failed_download(
+    watch_logger: LoggerWatcher,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ошибка скачивания не роняет выгрузку: поставщик пропускается с предупреждением."""
+    config = MailConfig(account=_ACCOUNT, profiles={'four_tochki': _profile('a@b.ru')})
+    link_found = FoundPrice(subject='Остатки', date='01.01.2025', filename='o.xlsx', link='https://x.ru/o.xlsx')
+    wired = _wire(monkeypatch, config, link_found)
+
+    def _fail(_url: str) -> bytes:
+        raise PriceDownloadError('сеть недоступна')
+
+    monkeypatch.setattr(mail_service, 'download_price', _fail)
+    entries = watch_logger('services.mail_service')
+
+    assert not mail_service.MailService().fetch_prices()
+    wired.save.assert_not_called()
+    warnings = texts_at(entries(), logging.WARNING)
+    assert len(warnings) == 1
+    assert 'four_tochki' in warnings[0]

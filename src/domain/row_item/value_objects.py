@@ -93,6 +93,9 @@ class Stock:
     condition: str | None = None
     marked_down: bool | None = None
     production_year: int | None = None
+    warehouse_id: int | None = None
+    warehouse_name: str | None = None
+    warehouse_group: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

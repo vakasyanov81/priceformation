@@ -9,24 +9,74 @@ Title builders for four_tochki sheet 1 tires.
 
 from __future__ import annotations
 
+import re
+
 from domain.row_item.row_item import RowItem
 from domain.row_item.row_item_casts import get_try_to_int_or_str
 from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
+from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
 
 _PROFILE_L = 'L'
 _DASH = '-'
 _METRIC_WIDTH_MIN = 100
 _L_FROM_EXCEL = f'{_PROFILE_L}.0'
+_PR_SUFFIX = re.compile(r'\s*PR$', re.IGNORECASE)
+# Конструкция, как её пишет разбор названия API (колонка `construction_type` у xlsx — `R`, `—`, `ZR`).
+_DIAGONAL_PARSED = 'диагональная'
+# Надпись на боковине в названии API: слова за камерой (`TL POR M+S`, `TL M+S 3PMSF 18PR`).
+# `BSW` в колонке прайса нет — из надписи его убираем, но он не разрывает надпись.
+_SIDEWALL_RUN = re.compile(
+    r'(?<!\S)(?:(?:BSW\s+|WW\s+|OWL\s+|RFT\s+|RunFlat\s+|Run\s+Flat\s+)*'
+    r'(?:M\+S|3PMSF|POR|EV|FRT|MPT|Steel Belted|All Steel Radial)(?=\s|$)\s*)+',
+    re.IGNORECASE,
+)
+_SIDEWALL_NOISE = re.compile(r'\b(?:BSW|WW|OWL|RFT|RunFlat|Run\s+Flat)\b\s*', re.IGNORECASE)
+# Размер, который общий разбор названия не принимает: `ZR` (радиальная с ZR), префиксы `P`/`LT`.
+_SIZE_PREFIX = re.compile(r'^(?:P|LT)(?=\d)')
+_ZR_SIZE = re.compile(r'^(\S*?)ZR(?=\d)', re.IGNORECASE)
+# Альтернативный размер в скобках сразу за размером (`11,00R20(300R508)`) и ободная запись (`6,00-9/4,00E`).
+_ALT_AFTER_SIZE = re.compile(r'^(\S+?)\([^)]*\)')
+_RIM_AFTER_SIZE = re.compile(r'^(\d+(?:[.,]\d+)?-\d+(?:[.,]\d+)?)/\d+(?:[.,]\d+)?[A-Z]?(?=\s|$)')
+# Скорость в скобках после индекса нагрузки: `94(Y)`; в прайсе она записана так же, со скобками.
+_SPEED_PAREN = re.compile(r'(\d)\(([A-Za-z])\)(?=\s|$)')
+# Лишний ноль у дробной ширины из названия: `7.50` → `7.5`, `13.0` остаётся как в прайсе.
+_TRAILING_ZEROS = re.compile(r'^(\d+\.\d*[1-9])0+$')
+# Камера: `TL`, `TT (только шина)`, либо цельнолитая пометка вместо камеры (`Цельнолитая с бортом`).
+_CAMERA = re.compile(
+    r'(?<!\S)(?:TT|TL|TTF|TT/TL|TL/TT)(?:\s*\(только шина\))?(?=\s|$)'
+    r'|(?<!\S)Цельнолитая(?: немаркая)?(?: с бортом)?(?=\s|$)',
+    re.IGNORECASE,
+)
+_RUNFLAT = re.compile(r'(?<!\S)(?:RunFlat|Run\s+Flat|RFT)(?=\s|$)', re.IGNORECASE)
+# Суффикс диаметра в размере названия: `185/75R16C`, `7.50R16LT`.
+_SIZE_SUFFIX = re.compile(r'^\S*?\d(?P<suffix>LT|C)(?=\s|$)')
+
+
+# Тип шины API → тип прайса xlsx (по парам позиций обоих источников): внедорожные и легкогрузовые —
+# легковые, сельхоз и погрузчики — спецтехника, квадроциклы — мото.
+_API_TIRE_TYPES = {
+    'vned': 'легковая',
+    'cartruck': 'легковая',
+    'selhoz': 'спецтехника',
+    'loader': 'спецтехника',
+    'quadbike': 'мото',
+}
+
+
+def _tire_kind(row_item: RowItem) -> str:
+    """Тип шины в нижнем регистре, как в прайсе xlsx."""
+    raw = (row_item.tire.tire_type or '').lower()
+    return _API_TIRE_TYPES.get(raw, raw)
 
 
 def is_truck_tire(row_item: RowItem) -> bool:
     """Грузовая шина?"""
-    return row_item.tire.tire_type.lower() == 'грузовая' if row_item.tire.tire_type else False
+    return _tire_kind(row_item) == 'грузовая'
 
 
 def is_special_tire(row_item: RowItem) -> bool:
     """Спецтехника?"""
-    return row_item.tire.tire_type.lower() == 'спецтехника' if row_item.tire.tire_type else False
+    return _tire_kind(row_item) == 'спецтехника'
 
 
 def get_prepared_title(row_item: RowItem) -> str:
@@ -53,8 +103,32 @@ def get_prepared_title(row_item: RowItem) -> str:
     :param item:
     :return:
     """
+    _fill_size_from_title(row_item)
+    _fill_size_suffix(row_item)
+    if not row_item.tire.width and row_item.identity.title:
+        return row_item.identity.title
     dims = _prepare_dimensions(row_item)
     return _compose_title(row_item, dims).strip()
+
+
+def _fill_size_from_title(row_item: RowItem) -> None:
+    """Размер API, который общий разбор не принял (`245/45ZR17`, `P225/60R18`): разобрать без `ZR`/`P`."""
+    if row_item.tire.width or not row_item.identity.title:
+        return
+    text = _SIZE_PREFIX.sub('', row_item.identity.title.strip(), count=1)
+    text = _ALT_AFTER_SIZE.sub(r'\1', text, count=1)
+    text = _RIM_AFTER_SIZE.sub(r'\1', text, count=1)
+    speed = _SPEED_PAREN.search(text)
+    text = _SPEED_PAREN.sub(r'\1\2', text)
+    radial_zr = _ZR_SIZE.match(text) is not None
+    parts = parse_tire_title(_ZR_SIZE.sub(r'\1R', text, count=1))
+    if parts is None:
+        return
+    fill_tire_fields(row_item, parts)
+    if radial_zr:
+        row_item.set_field('diameter', f'ZR{parts.size.diameter}')
+    if speed is not None:
+        row_item.set_field('index_velocity', f'({speed[2]})')
 
 
 def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
@@ -62,7 +136,8 @@ def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
 
     def canon(raw: object) -> str:
         text = str(raw or '').replace(',', '.')
-        return str(get_try_to_int_or_str(text))
+        value = str(get_try_to_int_or_str(text))
+        return _TRAILING_ZEROS.sub(r'\1', value)
 
     width = canon(row_item.tire.width)
     height = canon(row_item.tire.height_percent).replace('999', _PROFILE_L)
@@ -73,6 +148,8 @@ def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
     if _DASH in diameter:
         construct = _DASH
         diameter = diameter.replace(_DASH, '')
+    if row_item.tire.construction_type == _DIAGONAL_PARSED:
+        construct = _DASH
     return width, height, diameter, construct
 
 
@@ -124,10 +201,68 @@ _RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 
 def _extra_labels(row_item: RowItem) -> tuple[str, str]:
     """Боковина и RunFlat для title."""
-    sidewall = str(row_item.tire.inscription_on_the_side or '').strip()
+    return _sidewall(row_item), _runflat(row_item)
+
+
+def _sidewall(row_item: RowItem) -> str:
+    """Надпись на боковине: колонка прайса, а если её нет — из исходного названия (API)."""
+    column = str(row_item.tire.inscription_on_the_side or '').strip()
+    return column or sidewall_from_title(row_item.identity.title)
+
+
+def sidewall_from_title(raw: str | None) -> str:
+    """Надпись на боковине из названия: слова за камерой (`TL POR M+S` → `POR M+S`).
+
+    Без камеры ищем надпись в остатке названия (`Кама Quadro ATM 59 POR`).
+    """
+    if not raw:
+        return ''
+    camera = _CAMERA.search(raw)
+    if camera is not None:
+        after = raw[camera.end() :].lstrip()
+        run = _SIDEWALL_RUN.match(after)
+    else:
+        size_end = raw.find(' ')
+        run = _SIDEWALL_RUN.search(raw, size_end) if size_end > 0 else None
+    if run is None:
+        return ''
+    return ' '.join(_SIDEWALL_NOISE.sub('', run.group(0)).split())
+
+
+def _layering(row_item: RowItem) -> str:
+    """Слойность числом, как в колонке прайса: `16PR` → `16`."""
+    return _PR_SUFFIX.sub('', str(row_item.tire.layering or '').strip())
+
+
+def _camera(row_item: RowItem) -> str:
+    """Камерность колонки; если колонки нет — из названия (разбор кладёт только `TL`/`TT` в `intimacy`)."""
+    if row_item.tire.camera_type:
+        return str(row_item.tire.camera_type).strip()
+    camera = _CAMERA.search(row_item.identity.title or '')
+    if camera is not None:
+        return ' '.join(camera.group(0).split())
+    return str(row_item.tire.intimacy or '')
+
+
+def _runflat(row_item: RowItem) -> str:
+    """RunFlat из колонки прайса или из названия (`RFT`, `Run Flat`)."""
     raw = str(row_item.tire.run_flat or '').strip().lower()
-    runflat = 'RunFlat' if raw in _RUNFLAT_YES else ''
-    return sidewall, runflat
+    if raw in _RUNFLAT_YES or _RUNFLAT.search(row_item.identity.title or ''):
+        return 'RunFlat'
+    return ''
+
+
+def _fill_size_suffix(row_item: RowItem) -> None:
+    """Суффикс диаметра из названия API (`C`, `LT`) в поле диаметра, как в колонке прайса (`R13C`).
+
+    Название собирается дважды (при обогащении и в шаге pipeline), поэтому суффикс дописываем
+    только если диаметр его ещё не содержит: при повторной сборке дубля не будет.
+    """
+    match = _SIZE_SUFFIX.match(row_item.identity.title or '')
+    diameter = str(row_item.tire.diameter or '')
+    if match is None or not diameter or diameter.endswith(match['suffix']):
+        return
+    row_item.set_field('diameter', f'{diameter}{match["suffix"]}')
 
 
 def truck_title(row_item: RowItem, size: str) -> str:
@@ -135,8 +270,8 @@ def truck_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        row_item.tire.layering,
-        row_item.tire.camera_type,
+        _layering(row_item),
+        _camera(row_item),
         _extra_labels(row_item)[0],
         load_velocity(row_item),
     )
@@ -161,8 +296,8 @@ def default_tire_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        row_item.tire.layering,
-        row_item.tire.camera_type,
+        _layering(row_item),
+        _camera(row_item),
         sidewall,
         load_velocity(row_item),
         runflat,

@@ -13,6 +13,7 @@ from parsers.writer.templates.all_templates import (
 PARSE = 'parse'
 DOUBLES = 'doubles'
 ZAPASKA_LOAD_API_DATA = 'zapaska_load_api_data'
+FOUR_TOCHKI_LOAD_API_DATA = 'four_tochki_load_api_data'
 FETCH_MAIL_PRICES = 'fetch_mail_prices'
 GET_SUPLIERS = 'get_supliers'
 LOAD_SUPPLIER_PRICES = 'load_supplier_prices'
@@ -21,6 +22,7 @@ MACHINE_COMMANDS = (
     PARSE,
     DOUBLES,
     ZAPASKA_LOAD_API_DATA,
+    FOUR_TOCHKI_LOAD_API_DATA,
     FETCH_MAIL_PRICES,
     GET_SUPLIERS,
     LOAD_SUPPLIER_PRICES,
@@ -76,6 +78,7 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
     )
     _json_parser(subparsers, json_flag, DOUBLES, 'Разобрать прайсы и записать отчёт о дублях.')
     _json_parser(subparsers, json_flag, ZAPASKA_LOAD_API_DATA, 'Выгрузить прайсы запаски по API.')
+    _json_parser(subparsers, json_flag, FOUR_TOCHKI_LOAD_API_DATA, 'Выгрузить данные Форточек по API.')
     _json_parser(subparsers, json_flag, FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.')
     _json_parser(subparsers, json_flag, GET_SUPLIERS, 'Получить названия поставщиков.')
     load_cmd = _json_parser(

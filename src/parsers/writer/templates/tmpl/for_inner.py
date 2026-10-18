@@ -53,6 +53,12 @@ class ForInner(IWriteTemplate):
                 'field': RowItem.supplier_name.name,
             }
         },
+        {
+            'Склад': {
+                'style': {'width': 256 * 25},
+                'field': RowItem.warehouse_name.name,
+            }
+        },
         {'Наличие': {'field': RowItem.available.name, 'default_value': 'В наличии'}},
         {'Срок доставки': {'field': RowItem.delivery_period.name}},
         {'Состояние': {'field': RowItem.condition.name, 'default_value': 'Новое'}},

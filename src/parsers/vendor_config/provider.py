@@ -8,6 +8,7 @@ from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
 from infrastructure.data.file_reader import read_file, read_json_file
 from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.source import select_source
 
 _VENDORS_FOLDER = 'vendors'
 _JSON_SUFFIX = '.json'
@@ -22,7 +23,7 @@ def _load_folder(folder: str) -> dict[str, VendorConfig]:
         return {}
     configs: dict[str, VendorConfig] = {}
     for path in sorted(directory.glob(f'*{_JSON_SUFFIX}')):
-        raw_config = read_json_file(str(path))
+        raw_config = select_source(read_json_file(str(path)), path.name)
         configs[path.stem] = VendorConfig.from_dict(raw_config, path.stem, path.name)
     return configs
 

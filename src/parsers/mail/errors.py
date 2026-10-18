@@ -9,3 +9,7 @@ class MailConfigNotFoundError(CoreExceptionError):
 
 class MailConnectionError(CoreExceptionError):
     """Не удалось подключиться к IMAP-серверу или открыть папку."""
+
+
+class PriceDownloadError(CoreExceptionError):
+    """Не удалось скачать прайс по ссылке из письма."""

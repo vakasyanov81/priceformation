@@ -25,5 +25,6 @@ class ForDrom(IWriteTemplate):
     ]
 
     __FILE__ = 'price_drom_{now}.xlsx'
+    __MERGE_WAREHOUSES__ = True
 
     __EXCLUDE__: ClassVar[WriteExclude] = {RowItem.rest_count.name: [None, '']}
