@@ -430,3 +430,14 @@ def test_parser_for_vendor_config_without_vendor_metadata_attributes() -> None:
     _parser_for_vendor(MagicMock(), vendor_cls, config)
 
     vendor_cls.assert_called_once_with(parse_config=config)
+
+
+def test_logs_cleared_before_parse(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Перед каждым разбором очищаются файлы логов."""
+    calls: list[str] = []
+    monkeypatch.setattr('services.parse_orchestrator.clear_log_files', lambda: calls.append('cleared'))
+
+    ParseOrchestrator().parse_all([])
+    ParseOrchestrator().parse_all([])
+
+    assert calls == ['cleared', 'cleared']

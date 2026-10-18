@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from typing import Protocol, cast
 
 from domain.row_item.row_item import RowItem
+from infrastructure.logging.file_logging import clear_log_files
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
@@ -95,6 +96,7 @@ class ParseOrchestrator:
     def _parse_vendors(self, vendors: VendorList) -> ParseResult:
         """Общий цикл разбора списка поставщиков с итоговой группировкой."""
         parse_result = ParseResult()
+        clear_log_files()
         start_time = time.monotonic()
         logger.info('\n============== Начало разбора прайсов =================\n')
         self._parse_all_vendors(parse_result, vendors)
