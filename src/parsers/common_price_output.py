@@ -11,6 +11,7 @@ from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
 )
+from parsers.common_price_warehouses import merge_warehouse_rows
 from parsers.writer.ixlsx_driver import IXlsDriver
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
 from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template
@@ -81,7 +82,8 @@ class CommonPriceOut:
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
         written = [
-            self._write_with_template(self.row_items, write_template, as_jsonl=as_jsonl) for write_template in templates
+            self._write_with_template(self._rows_for(write_template), write_template, as_jsonl=as_jsonl)
+            for write_template in templates
         ]
         if as_jsonl:
             return jsonl_output_files(written)
@@ -95,6 +97,12 @@ class CommonPriceOut:
             if row_item.duplicate.is_double or row_item.duplicate.double_candidate
         ]
         return self._write_with_template(doubles, ForDoubles, as_jsonl=as_jsonl)
+
+    def _rows_for(self, template: type[IWriteTemplate]) -> list[RowItem]:
+        """Строки под шаблон: для дрома склады одной группы сводятся в одну строку на позицию."""
+        if template.__MERGE_WAREHOUSES__:
+            return merge_warehouse_rows(self.row_items)
+        return self.row_items
 
     def _write_with_template(
         self,

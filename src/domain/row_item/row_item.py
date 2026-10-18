@@ -112,6 +112,9 @@ class RowItem:
     marked_down = RowField('marked_down')
     production_year = RowField('production_year')
     available = RowField('available')
+    warehouse_id = RowField('warehouse_id')
+    warehouse_name = RowField('warehouse_name')
+    warehouse_group = RowField('warehouse_group')
 
     season = RowField('season')
     spike = RowField('spike')

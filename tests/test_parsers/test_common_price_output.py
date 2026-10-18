@@ -14,6 +14,7 @@ from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
+from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 
@@ -55,7 +56,7 @@ def test_write_all_prices() -> None:
     writer_cls.return_value = writer_instance
     driver_instance = MagicMock()
     driver_cls.return_value = driver_instance
-    template = object()
+    template = ForInner
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
@@ -86,12 +87,46 @@ def test_write_all_prices() -> None:
     assert written == ['file_prices/result/inner.xlsx']
 
 
+def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
+    """Дром получает склады одной группы объединёнными, свой прайс — строки по каждому складу."""
+    writer_cls = MagicMock()
+    out = CommonPriceOut(
+        [_warehouse_row('A', 5000, 3), _warehouse_row('A', 5000, 4)],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+    )
+
+    with (
+        patch.object(out, 'nomenclature_title_correction'),
+        patch('parsers.common_price_output.all_writer_templates', return_value=[ForInner, ForDrom]),
+    ):
+        out.write_all_prices()
+
+    inner_rows, drom_rows = (call.args[1] for call in writer_cls.call_args_list)
+    assert len(inner_rows) == 2
+    assert len(drom_rows) == 1
+    assert drom_rows[0]['rest_count'] == 7
+
+
+def _warehouse_row(code: str, price: float, rest: int) -> RowItem:
+    return RowItem(
+        {
+            'code': code,
+            'title': f'Шина {code}',
+            'price_markup': price,
+            'rest_count': rest,
+            'warehouse_group': 'novosibirsk',
+            'warehouse_name': 'Новосибирск',
+        },
+    )
+
+
 def test_write_all_prices_jsonl() -> None:
     """as_jsonl пишет jsonl и не трогает xlsx writer."""
     rows = [RowItem({_TITLE: 't1'})]
     writer_cls = MagicMock()
     driver_cls = MagicMock()
-    template = object()
+    template = ForInner
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),

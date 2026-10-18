@@ -143,9 +143,11 @@ def test_upload_zapaska_data() -> None:
 def test_upload_four_tochki_data() -> None:
     """upload_data вызывает загрузку данных Форточек с API-конфигом."""
     api = MagicMock()
+    groups = (MagicMock(),)
     with (
         patch('services.four_tochki_service.get_four_tochki_api_config', return_value=api),
+        patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups),
         patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,
     ):
         FourTochkiService().upload_data()
-    mock_load.assert_called_once_with(api=api)
+    mock_load.assert_called_once_with(api=api, groups=groups)

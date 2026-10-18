@@ -1,8 +1,9 @@
 """SOAP-клиент API Форточек: шины и диски по складам → JSON-строки прайса (reader «json»)."""
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import closing
+from functools import partial
 from html import escape
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
@@ -12,6 +13,16 @@ from xml.etree import ElementTree  # nosec B405 — ответ доверенн�
 
 from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
+from parsers.remote.four_tochki_warehouse_selection import (
+    log_selected_warehouses,
+    select_warehouses,
+    warehouses_by_id,
+)
+from parsers.remote.four_tochki_warehouses import (
+    FourTochkiApiWarehouse,
+    FourTochkiWarehouse,
+    FourTochkiWarehouseGroup,
+)
 
 type JsonRow = dict[str, Any]
 
@@ -23,32 +34,6 @@ _PAGE_SIZE = 2000
 _TIRE_CONTRACT_NS = 'http://schemas.datacontract.org/2004/07/TS3.Domain.Models.Client.ClientSoapService.SearchTires'
 _DISK_CONTRACT_NS = 'http://schemas.datacontract.org/2004/07/TS3.Domain.Models.Client.ClientSoapService.SearchDiscs'
 _ARRAY_NS = 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'
-# Склады Новосибирска, Бердска и Искитима из GetWarehouses: собственный склад «Новосибирск» (1423)
-# и склады ОХ (ответственное хранение).
-_NSK_REGION_WAREHOUSE_IDS = (
-    276,
-    2167,
-    912,
-    1423,
-    364,
-    917,
-    1135,
-    1254,
-    283,
-    918,
-    1166,
-    1860,
-    2625,
-    1154,
-    871,
-    1167,
-    2224,
-    2347,
-    3826,
-    1604,
-    2623,
-    2145,
-)
 
 
 def _filter_field(ns: str, name: str, inner: str) -> str:
@@ -56,8 +41,8 @@ def _filter_field(ns: str, name: str, inner: str) -> str:
     return f'<{name} xmlns="{ns}">{inner}</{name}>'
 
 
-def _warehouse_field(ns: str) -> str:
-    ids = ''.join(f'<int xmlns="{_ARRAY_NS}">{warehouse_id}</int>' for warehouse_id in _NSK_REGION_WAREHOUSE_IDS)
+def _warehouse_field(ns: str, warehouses: Sequence[FourTochkiWarehouse]) -> str:
+    ids = ''.join(f'<int xmlns="{_ARRAY_NS}">{warehouse.id}</int>' for warehouse in warehouses)
     return _filter_field(ns, 'wrh_list', ids)
 
 
@@ -65,16 +50,22 @@ def _paid_delivery_field(ns: str) -> str:
     return _filter_field(ns, 'include_paid_delivery', 'true')
 
 
-_TIRE_FILTER = _warehouse_field(_TIRE_CONTRACT_NS) + _paid_delivery_field(_TIRE_CONTRACT_NS)
-_DISK_FILTER = (
-    _filter_field(
-        _DISK_CONTRACT_NS,
-        'rim_vid_name_list',
-        ''.join(f'<string xmlns="{_ARRAY_NS}">{rim_type}</string>' for rim_type in ('car', 'truck', 'specteh')),
+def _tire_filter(warehouses: Sequence[FourTochkiWarehouse]) -> str:
+    return _warehouse_field(_TIRE_CONTRACT_NS, warehouses) + _paid_delivery_field(_TIRE_CONTRACT_NS)
+
+
+def _disk_filter(warehouses: Sequence[FourTochkiWarehouse]) -> str:
+    return (
+        _filter_field(
+            _DISK_CONTRACT_NS,
+            'rim_vid_name_list',
+            ''.join(f'<string xmlns="{_ARRAY_NS}">{rim_type}</string>' for rim_type in ('car', 'truck', 'specteh')),
+        )
+        + _warehouse_field(_DISK_CONTRACT_NS, warehouses)
+        + _paid_delivery_field(_DISK_CONTRACT_NS)
     )
-    + _warehouse_field(_DISK_CONTRACT_NS)
-    + _paid_delivery_field(_DISK_CONTRACT_NS)
-)
+
+
 _SEASONS = {'w': 'Зимняя', 's': 'Летняя', 'u': 'Всесезонная'}
 _TIRE_TYPES = {'car': 'Легковая', 'truck': 'Грузовая', 'moto': 'Мото', 'specteh': 'Спецтехника'}
 _DISK_TYPES = {'0': 'Литой', '1': 'Штампованный', '2': 'Кованный'}
@@ -110,17 +101,36 @@ class FourTochkiApiError(CoreExceptionError):
     __MESSAGE__ = _MSG_API_ERROR
 
 
-def load_remote_vendor_data(*, api: FourTochkiApiAuth) -> None:
-    """Выгрузить шины и диски в file_prices/four_tochki."""
+def load_remote_vendor_data(*, api: FourTochkiApiAuth, groups: Sequence[FourTochkiWarehouseGroup]) -> None:
+    """Подобрать склады API по группам, вывести их и выгрузить шины и диски в file_prices/four_tochki."""
+    warehouses = select_warehouses(groups, fetch_warehouses(api))
+    log_selected_warehouses(groups, warehouses)
     dest_dir = Path(get_config_provider().price_folder(_VENDOR_FOLDER))
-    download_catalogs(dest_dir=dest_dir, api=api)
+    download_catalogs(dest_dir=dest_dir, api=api, warehouses=warehouses)
 
 
-def download_catalogs(*, dest_dir: Path, api: FourTochkiApiAuth) -> None:
+def fetch_warehouses(api: FourTochkiApiAuth) -> list[FourTochkiApiWarehouse]:
+    """Справочник складов, доступных клиенту (GetWarehouses): ID и название."""
+    answer = _call_method(api, 'GetWarehouses')
+    return [
+        FourTochkiApiWarehouse(id=_int(_child_text(element, 'id')), name=_child_text(element, 'name'))
+        for element in answer.iter()
+        if _local(element.tag) == 'WarehouseInfo'
+    ]
+
+
+def download_catalogs(*, dest_dir: Path, api: FourTochkiApiAuth, warehouses: Sequence[FourTochkiWarehouse]) -> None:
     """GetFindTyre / GetFindDisk постранично → dest_dir/tire.json, disk.json."""
     dest_dir.mkdir(parents=True, exist_ok=True)
-    tire_rows = _rows(_fetch_positions(api, 'GetFindTyre', _TIRE_FILTER, 'TyrePriceRest'), _tire_rows)
-    disk_rows = _rows(_fetch_positions(api, 'GetFindDisk', _DISK_FILTER, 'DiskPriceRest'), _disk_rows)
+    by_id = warehouses_by_id(warehouses)
+    tire_rows = _rows(
+        _fetch_positions(api, 'GetFindTyre', _tire_filter(warehouses), 'TyrePriceRest'),
+        partial(_tire_rows, warehouses=by_id),
+    )
+    disk_rows = _rows(
+        _fetch_positions(api, 'GetFindDisk', _disk_filter(warehouses), 'DiskPriceRest'),
+        partial(_disk_rows, warehouses=by_id),
+    )
     _write_rows(dest_dir / _TIRE_FILENAME, tire_rows)
     _write_rows(dest_dir / _DISK_FILENAME, disk_rows)
 
@@ -147,19 +157,21 @@ def _fetch_positions(
     """Все страницы поиска по одному фильтру; страница — до _PAGE_SIZE позиций."""
     page = 0
     while True:
-        answer = _call_method(api, method, filter_xml, page)
+        answer = _call_method(api, method, _search_params(filter_xml, page))
         yield from (element for element in answer.iter() if _local(element.tag) == position_tag)
         page += 1
         if page >= _int(_child_text(answer, 'totalPages')):
             return
 
 
-def _call_method(api: FourTochkiApiAuth, method: str, filter_xml: str, page: int) -> ElementTree.Element:
-    """Один вызов поиска; возвращает элемент <…Result> и проверяет error в ответе."""
-    body = (
-        f'<login>{escape(api.login)}</login><password>{escape(api.password)}</password>'
-        f'<filter>{filter_xml}</filter><page>{page}</page><pageSize>{_PAGE_SIZE}</pageSize>'
-    )
+def _search_params(filter_xml: str, page: int) -> str:
+    """Параметры поиска: фильтр и страница."""
+    return f'<filter>{filter_xml}</filter><page>{page}</page><pageSize>{_PAGE_SIZE}</pageSize>'
+
+
+def _call_method(api: FourTochkiApiAuth, method: str, params_xml: str = '') -> ElementTree.Element:
+    """Один вызов метода; возвращает элемент <…Result> и проверяет error в ответе."""
+    body = f'<login>{escape(api.login)}</login><password>{escape(api.password)}</password>{params_xml}'
     root = _parse_response(_post(api, method, _envelope(method, body)))
     answer = _result_element(root, method)
     _raise_on_error(answer, method)
@@ -218,7 +230,7 @@ def _raise_on_error(answer: ElementTree.Element, method: str) -> None:
             raise FourTochkiApiError(detail=f'method={method} code={_child_text(element, "code")} comment={comment}')
 
 
-def _tire_rows(position: ElementTree.Element) -> list[JsonRow]:
+def _tire_rows(position: ElementTree.Element, warehouses: Mapping[int, FourTochkiWarehouse]) -> list[JsonRow]:
     """Шина → строки по складам; тип и сезон приведены к словарю прайса."""
     base = _position_fields(position)
     base.update(
@@ -226,17 +238,17 @@ def _tire_rows(position: ElementTree.Element) -> list[JsonRow]:
         spike='Да' if _child_text(position, 'thorn') == 'true' else '',
         tire_type=_TIRE_TYPES.get(_child_text(position, 'type'), _child_text(position, 'type')),
     )
-    return _warehouse_rows(position, base)
+    return _warehouse_rows(position, base, warehouses)
 
 
-def _disk_rows(position: ElementTree.Element) -> list[JsonRow]:
+def _disk_rows(position: ElementTree.Element, warehouses: Mapping[int, FourTochkiWarehouse]) -> list[JsonRow]:
     """Диск → строки по складам; тип диска приведён к словарю прайса."""
     base = _position_fields(position)
     base.update(
         color=_child_text(position, 'color'),
         disk_type=_DISK_TYPES.get(_child_text(position, 'type'), ''),
     )
-    return _warehouse_rows(position, base)
+    return _warehouse_rows(position, base, warehouses)
 
 
 def _position_fields(position: ElementTree.Element) -> JsonRow:
@@ -249,11 +261,21 @@ def _position_fields(position: ElementTree.Element) -> JsonRow:
     }
 
 
-def _warehouse_rows(position: ElementTree.Element, base: JsonRow) -> list[JsonRow]:
-    """Остатки и цены по каждому складу из whpr → строки с общими полями позиции."""
+def _warehouse_rows(
+    position: ElementTree.Element,
+    base: JsonRow,
+    warehouses: Mapping[int, FourTochkiWarehouse],
+) -> list[JsonRow]:
+    """Остатки и цены по каждому складу из whpr → строки с общими полями позиции.
+
+    Склад вне настроек пропускается: список складов задаёт настройки, а не ответ API.
+    """
     rows: list[JsonRow] = []
     for whpr in position.iter():
         if _local(whpr.tag) != 'wh_price_rest':
+            continue
+        warehouse = warehouses.get(_int(_child_text(whpr, 'wrh')))
+        if warehouse is None:
             continue
         rows.append(
             {
@@ -261,10 +283,21 @@ def _warehouse_rows(position: ElementTree.Element, base: JsonRow) -> list[JsonRo
                 'price_opt': _float(_child_text(whpr, 'price')),
                 'price_recommended': _float(_child_text(whpr, 'price_rozn')),
                 'rest_count': _int(_child_text(whpr, 'rest')),
-                'warehouse_id': _int(_child_text(whpr, 'wrh')),
+                **_warehouse_fields(warehouse),
             },
         )
     return rows
+
+
+def _warehouse_fields(warehouse: FourTochkiWarehouse) -> JsonRow:
+    """Поля склада из настроек: название для прайса, группа объединения, наличие и срок."""
+    return {
+        'warehouse_id': warehouse.id,
+        'warehouse_name': warehouse.name,
+        'warehouse_group': warehouse.merge_group,
+        'available': warehouse.available,
+        'delivery_period': warehouse.delivery_period,
+    }
 
 
 def _local(tag: str) -> str:
