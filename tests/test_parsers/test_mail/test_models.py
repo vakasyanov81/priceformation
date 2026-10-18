@@ -183,5 +183,5 @@ def test_profile_link_in_body_default_off() -> None:
 def test_invalid_link_in_body_flag() -> None:
     """link_in_body принимает только 0/1."""
     raw = {**_MINIMAL_PROFILE, 'link_in_body': 2}
-    with pytest.raises(ConfigValidationError, match='link_in_body'):
+    with pytest.raises(ConfigValidationError, match=r'^mail\.json → profiles\.pioner: «link_in_body»'):
         _config({'pioner': raw})

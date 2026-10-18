@@ -88,3 +88,19 @@ def test_warehouses_by_id_maps_api_ids() -> None:
     warehouse = FourTochkiWarehouse(id=7, name='Томск')
 
     assert warehouses_by_id((warehouse,)) == {7: warehouse}
+
+
+def test_log_empty_group_does_not_stop_following_groups(watch_logger: LoggerWatcher) -> None:
+    """Пустая группа в начале списка не обрывает вывод остальных групп."""
+    empty = FourTochkiWarehouseGroup(name='omsk', keywords=('Омск',))
+    warehouses = select_warehouses((_ORDER,), _API_WAREHOUSES)
+
+    entries = watch_logger('parsers.remote.four_tochki_warehouse_selection', logging.INFO)
+    log_selected_warehouses((empty, _ORDER), warehouses)
+
+    assert entries() == [
+        (logging.INFO, 'Склады Форточек для выгрузки: 1'),
+        (logging.WARNING, 'Группа «omsk»: нет складов с ключевыми словами Омск'),
+        (logging.INFO, 'Группа «order» (без объединения, Под заказ, срок 5 дн.): 1'),
+        (logging.INFO, '  1492 — Томск'),
+    ]

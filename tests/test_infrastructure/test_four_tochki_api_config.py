@@ -76,3 +76,28 @@ def test_missing_credentials_message(
     Path(fake_config_provider.project_root, '.env').write_text(f'{_LOGIN}=user\n{_PASSWORD}=\n', encoding='utf-8')
     with pytest.raises(FourTochkiApiConfigError, match=f'Укажите {_LOGIN} и {_PASSWORD}'):
         get_four_tochki_api_config()
+
+
+def test_custom_host_is_used_as_is(clean_env: dict[str, str], fake_config_provider: FakeConfigProvider) -> None:
+    """Свой адрес из окружения обрезается по краям и имеет приоритет над адресом по умолчанию."""
+    clean_env.update({_LOGIN: 'user', _PASSWORD: 'pass', _HOST: '  https://other.test/Svc.svc?wsdl '})
+    assert get_four_tochki_api_config().endpoint == 'https://other.test/Svc.svc'
+
+
+@pytest.mark.parametrize('present', [_LOGIN, _PASSWORD])
+def test_one_missing_credential_is_an_error(
+    clean_env: dict[str, str],
+    fake_config_provider: FakeConfigProvider,
+    present: str,
+) -> None:
+    """Достаточно одной пропавшей переменной: вторая не подставляется значением по умолчанию."""
+    clean_env[present] = 'value'
+    with pytest.raises(FourTochkiApiConfigError):
+        get_four_tochki_api_config()
+
+
+def test_credentials_are_stripped(clean_env: dict[str, str], fake_config_provider: FakeConfigProvider) -> None:
+    """Пробелы вокруг логина и пароля из .env отбрасываются."""
+    clean_env.update({_LOGIN: ' user ', _PASSWORD: ' pass\t'})
+    config = get_four_tochki_api_config()
+    assert (config.login, config.password) == ('user', 'pass')

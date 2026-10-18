@@ -99,3 +99,20 @@ def test_source_rows_are_not_changed() -> None:
 
     assert first.stock.rest_count == 3
     assert second.stock.rest_count == 4
+
+
+def test_same_code_of_different_suppliers_is_not_merged() -> None:
+    """Объединение внутри поставщика: одинаковый код и группа у разных поставщиков — разные позиции."""
+    other = RowItem({**_row('A', 5000, 4).to_dict(), 'supplier_name': 'Другой'})
+
+    merged = merge_warehouse_rows([_row('A', 5000, 3), other])
+
+    assert [row.stock.rest_count for row in merged] == [3, 4]
+
+
+def test_missing_rest_counts_as_zero_in_sum() -> None:
+    """Склад без остатка не прибавляет к сумме единицу."""
+    no_rest = RowItem({**_row('A', 5000, 0).to_dict(), 'rest_count': None})
+
+    merged = merge_warehouse_rows([_row('A', 5000, 3), no_rest])
+    assert merged[0].stock.rest_count == 3

@@ -385,3 +385,11 @@ def test_repeated_title_is_not_coded_when_title_is_last(tmp_path: Path) -> None:
     assert first[_meta_key(meta, 'Номенклатура')] == _TITLE
     assert first[_meta_key(meta, 'Сезон')] == '@1'
     assert _load_values(tmp_path) == {'@1': 'Зимняя'}
+
+
+def test_jsonl_meta_keeps_cyrillic_literal(tmp_path: Path) -> None:
+    """result_meta.json читают глазами: названия колонок кириллицей, а не \\uXXXX."""
+    write_template_jsonl(write_data, ForInner, str(tmp_path))
+    text = (tmp_path / RESULT_META_FILE).read_text(encoding='utf-8')
+    assert _TYPE_NAME in text
+    assert '\\u' not in text

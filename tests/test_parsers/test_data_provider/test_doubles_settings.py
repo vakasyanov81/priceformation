@@ -55,3 +55,27 @@ def test_templates_must_be_strings() -> None:
     """Список шаблонов — список строк."""
     with pytest.raises(ConfigValidationError, match='exclude_in_templates'):
         parse_doubles_settings({'exclude_in_templates': 'for_drom'}, _KNOWN)
+
+
+def test_empty_object_means_no_settings() -> None:
+    """Оба ключа необязательны: пустой объект — настройки по умолчанию."""
+    assert parse_doubles_settings({}, _KNOWN) == DoublesSettings()
+
+
+def test_unknown_template_message_lists_all_known_with_comma() -> None:
+    """В сообщении — имя файла, путь до ключа, шаблон и все доступные через запятую."""
+    expected = (
+        f"{DOUBLES_CONFIG_FILE} → exclude_in_templates[0]: шаблон 'x' не существует. "
+        'Доступны: for_inner, for_drom, for_full'
+    )
+    with pytest.raises(ConfigValidationError) as raised:
+        parse_doubles_settings({'exclude_in_templates': ['x']}, _KNOWN)
+    assert str(raised.value) == expected
+
+
+@pytest.mark.parametrize('key', ['exclude_in_templates', 'priority_suppliers'])
+def test_wrong_type_names_file_and_key(key: str) -> None:
+    """Ошибка типа называет файл и ключ."""
+    with pytest.raises(ConfigValidationError) as raised:
+        parse_doubles_settings({key: 'for_drom'}, _KNOWN)
+    assert str(raised.value).startswith(f'{DOUBLES_CONFIG_FILE} → {key}: ожидается список строк')

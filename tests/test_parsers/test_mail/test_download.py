@@ -35,3 +35,17 @@ def test_download_price_wraps_network_error(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr('urllib.request.urlopen', _open_fail)
     with pytest.raises(PriceDownloadError, match='Не удалось скачать'):
         download.download_price('https://x.ru/p.xlsx')
+
+
+def test_download_price_passes_url_and_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Адрес из письма и минутный таймаут доходят до urlopen."""
+    calls: list[tuple[Any, ...]] = []
+
+    def _record(*args: Any, **kwargs: Any) -> io.BytesIO:
+        calls.append((args, kwargs))
+        return io.BytesIO(b'')
+
+    monkeypatch.setattr('urllib.request.urlopen', _record)
+    download.download_price('https://x.ru/p.xlsx')
+
+    assert calls == [(('https://x.ru/p.xlsx',), {'timeout': 60})]

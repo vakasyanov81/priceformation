@@ -181,3 +181,15 @@ def test_params_from_title_keeps_bare_disk_out() -> None:
     ParamsFromTitle(DefaultTitle()).prepare(row)
 
     assert row.disk.pcd1 is None
+
+
+def test_before_title_conflict_log_names_source_title(watch_logger: LoggerWatcher) -> None:
+    """Расхождение колонки и названия при params_first: в логе исходное название, а не пустота."""
+    entries = watch_logger(_PARAMS_LOGGER, logging.WARNING)
+    row = RowItem({'title': _KHOMEN, 'eet': 40})
+
+    ParamsBeforeTitle(DefaultTitle()).prepare(row)
+
+    messages = texts_at(entries(), logging.WARNING)
+    assert len(messages) == 1
+    assert messages[0].endswith(f'// {_KHOMEN}')
