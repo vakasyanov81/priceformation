@@ -28,7 +28,7 @@ def merge_warehouse_rows(row_items: list[RowItem]) -> list[RowItem]:
             merged.append(row_item)
         elif key not in emitted:
             emitted.add(key)
-            merged.append(_merge_bucket(buckets[key]))
+            merged.append(cheapest_with_summed_rest(buckets[key]))
     return merged
 
 
@@ -41,7 +41,8 @@ def _merge_key(row_item: RowItem) -> _MergeKey | None:
     return row_item.vendor.supplier_name or '', code, group
 
 
-def _merge_bucket(rows: list[RowItem]) -> RowItem:
+def cheapest_with_summed_rest(rows: list[RowItem]) -> RowItem:
+    """Строка с наименьшей ценой; при равной наименьшей цене остатки складываются в копию."""
     if len(rows) == 1:
         return rows[0]
     cheapest_price = min(row.pricing.price_markup for row in rows)

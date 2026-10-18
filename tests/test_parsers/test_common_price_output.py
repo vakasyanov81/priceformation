@@ -8,7 +8,9 @@ import pytest
 
 from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.common_price_output import CommonPriceOut, jsonl_output_files
+from parsers.data_provider.doubles_settings import DOUBLES_CONFIG_FILE, DoublesSettings
 from parsers.writer.jsonl_writer import RESULT_META_FILE
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
@@ -66,6 +68,7 @@ def test_write_all_prices() -> None:
 
     with (
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
         patch('parsers.common_price_output.all_writer_templates', return_value=[template]),
         patch(
             'parsers.common_price_output._to_raw_dicts',
@@ -84,7 +87,7 @@ def test_write_all_prices() -> None:
         result_folder=_result_folder(),
     )
     writer_instance.write.assert_called_once()
-    assert written == ['file_prices/result/inner.xlsx']
+    assert written == ['file_prices/result/inner.xlsx', _REPORT_PATH]
 
 
 def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
@@ -98,6 +101,7 @@ def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
 
     with (
         patch.object(out, 'nomenclature_title_correction'),
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
         patch('parsers.common_price_output.all_writer_templates', return_value=[ForInner, ForDrom]),
     ):
         out.write_all_prices()
@@ -135,8 +139,11 @@ def test_write_all_prices_jsonl() -> None:
     raw_rows = [{_TITLE: 't1'}]
     jsonl_path = 'file_prices/result/price.jsonl'
 
+    doubles_path = 'file_prices/result/doubles.jsonl'
+
     with (
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
+        patch.object(out, 'write_doubles_report', return_value=doubles_path) as mock_doubles,
         patch('parsers.common_price_output.all_writer_templates', return_value=[template]),
         patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
         patch('parsers.common_price_output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
@@ -146,7 +153,8 @@ def test_write_all_prices_jsonl() -> None:
     mock_corr.assert_called_once()
     writer_cls.assert_not_called()
     mock_jsonl.assert_called_once_with(raw_rows, template, _result_folder())
-    assert written == jsonl_output_files([jsonl_path])
+    mock_doubles.assert_called_once_with(as_jsonl=True)
+    assert written == jsonl_output_files([jsonl_path, doubles_path])
 
 
 def test_write_all_prices_reloads_nomenclature() -> None:
@@ -164,6 +172,7 @@ def test_write_all_prices_reloads_nomenclature() -> None:
             side_effect=[{'old': 'A'}, {'old': 'B'}],
         ),
         patch('parsers.common_price_output.all_writer_templates', return_value=[]),
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
     ):
         out.write_all_prices()
         assert row.identity.title == 'A'
@@ -256,6 +265,7 @@ def test_write_all_prices_single_template() -> None:
 
     with (
         patch.object(out, 'nomenclature_title_correction'),
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
         patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_drom')
@@ -266,7 +276,7 @@ def test_write_all_prices_single_template() -> None:
         ForDrom,
         result_folder=_result_folder(),
     )
-    assert written == ['file_prices/result/drom.xlsx']
+    assert written == ['file_prices/result/drom.xlsx', _REPORT_PATH]
 
 
 def test_write_all_prices_full_template() -> None:
@@ -287,6 +297,7 @@ def test_write_all_prices_full_template() -> None:
 
     with (
         patch.object(out, 'nomenclature_title_correction'),
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
         patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_full')
@@ -297,7 +308,7 @@ def test_write_all_prices_full_template() -> None:
         ForFull,
         result_folder=_result_folder(),
     )
-    assert written == ['file_prices/result/full.xlsx']
+    assert written == ['file_prices/result/full.xlsx', _REPORT_PATH]
 
 
 def test_write_all_prices_unknown_template() -> None:
@@ -334,3 +345,57 @@ def test_jsonl_output_files_skips_duplicate_meta() -> None:
     jsonl_path = 'file_prices/result/price.jsonl'
     once = jsonl_output_files([jsonl_path])
     assert jsonl_output_files(once) == once
+
+
+def _double_row(supplier: str, price: float) -> RowItem:
+    row_item = RowItem({'supplier_name': supplier, _TITLE: 'Шина', 'price_markup': price, 'rest_count': 2})
+    row_item.set_field('group_by_params', 1)
+    row_item.set_field('is_double', True)
+    return row_item
+
+
+def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
+    """Дубли исключаются только в шаблоне из настроек; доклад о дублях пишется вместе с прайсами."""
+    writer_cls = MagicMock()
+    out = CommonPriceOut(
+        [_double_row('Пошк', 5000), _double_row('Автоснабжение', 6000)],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        doubles_settings=DoublesSettings(exclude_in_templates=('for_drom',), priority_suppliers=('Автоснабжение',)),
+    )
+
+    with (
+        patch.object(out, 'nomenclature_title_correction'),
+        patch('parsers.common_price_output.all_writer_templates', return_value=[ForInner, ForDrom]),
+    ):
+        out.write_all_prices()
+
+    (inner_rows, inner_tmpl), (drom_rows, drom_tmpl), (doubles_rows, doubles_tmpl) = (
+        call.args[1:3] for call in writer_cls.call_args_list
+    )
+    assert (inner_tmpl, drom_tmpl, doubles_tmpl) == (ForInner, ForDrom, ForDoubles)
+    assert len(inner_rows) == 2
+    assert [row['supplier_name'] for row in drom_rows] == ['Автоснабжение']
+    assert len(doubles_rows) == 2
+
+
+def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigProvider) -> None:
+    """Без переданных настроек читается parse_config/doubles.json."""
+    path = Path(fake_config_provider.config_file(DOUBLES_CONFIG_FILE))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('{"exclude_in_templates": ["for_drom"]}', encoding='UTF-8')
+    writer_cls = MagicMock()
+    out = CommonPriceOut(
+        [_double_row('Пошк', 5000), _double_row('Мим', 4000)],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+    )
+
+    with (
+        patch.object(out, 'nomenclature_title_correction'),
+        patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
+    ):
+        out.write_all_prices(result_template='for_drom')
+
+    drom_rows = writer_cls.call_args.args[1]
+    assert [row['supplier_name'] for row in drom_rows] == ['Мим']
