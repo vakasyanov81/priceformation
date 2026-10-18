@@ -85,6 +85,7 @@ def test_empty_stats_exact() -> None:
         'unknown_category_skips': 0,
         'black_list_skips': 0,
         'type_corrections': 0,
+        'title_conflicts': 0,
         'elapsed_seconds': _ROUNDED,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},
@@ -219,6 +220,7 @@ def _result_with_skips() -> ParseResult:
     parsed.unknown_category_skips.append(('МИМ', _SUV))
     parsed.black_list_skips = 3
     parsed.type_corrections = 2
+    parsed.title_conflicts = 4
     return parsed
 
 
@@ -232,6 +234,7 @@ def test_stats_and_warnings_from_result() -> None:
         'unknown_category_skips': 1,
         'black_list_skips': 3,
         'type_corrections': 2,
+        'title_conflicts': 4,
         'elapsed_seconds': _ROUNDED,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 20.0, 'max': 20.0},
@@ -256,6 +259,7 @@ def test_stats_markup_range_across_rows() -> None:
         'unknown_category_skips': 0,
         'black_list_skips': 0,
         'type_corrections': 0,
+        'title_conflicts': 0,
         'elapsed_seconds': 0.0,
         'percent_markup': {'min': 20.0, 'max': 50.0},
         'absolute_markup': {'min': 20.0, 'max': 100.0},
@@ -273,6 +277,7 @@ def test_stats_skip_unpriced_rows() -> None:
         'unknown_category_skips': 0,
         'black_list_skips': 0,
         'type_corrections': 0,
+        'title_conflicts': 0,
         'elapsed_seconds': 0.0,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},

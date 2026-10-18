@@ -61,6 +61,7 @@ def empty_stats(elapsed: float) -> dict[str, Any]:
         'unknown_category_skips': 0,
         'black_list_skips': 0,
         'type_corrections': 0,
+        'title_conflicts': 0,
         'elapsed_seconds': round(elapsed, 2),
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},

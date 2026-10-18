@@ -26,6 +26,7 @@ from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.registry import vendor_config_is_enabled, vendor_entry_for
 from parsers.strategies.product_types import type_corrections_message
+from parsers.strategies.title_conflicts import title_conflicts_message
 from parsers.vendor_config.models import VendorConfig as _VendorConfig
 from parsers.vendor_config.models import VendorSection as _VendorSection
 from services.service_provider import ServiceProvider
@@ -66,6 +67,7 @@ class ParseResult:
     unknown_category_skips: list[UnknownCategorySkip] = field(default_factory=list)
     black_list_skips: int = 0
     type_corrections: int = 0
+    title_conflicts: int = 0
 
 
 class ParseOrchestrator:
@@ -122,6 +124,7 @@ class ParseOrchestrator:
             parse_result.unknown_category_skips.extend(_parser_unknown_skips(parser))
             parse_result.black_list_skips += parser.stats.black_list_skips
             parse_result.type_corrections += parser.stats.type_corrections
+            parse_result.title_conflicts += parser.stats.title_conflicts
 
     def _log_skips(self, parse_result: ParseResult) -> None:
         """Печать сводки по пропускам категорий, black_list и расхождениям типа."""
@@ -134,6 +137,9 @@ class ParseOrchestrator:
         corrections_message = type_corrections_message(parse_result.type_corrections)
         if corrections_message:
             logger.info(corrections_message)
+        conflicts_message = title_conflicts_message(parse_result.title_conflicts)
+        if conflicts_message:
+            logger.warning(conflicts_message)
 
 
 def _parser_for_vendor(
