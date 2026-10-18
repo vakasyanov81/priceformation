@@ -325,7 +325,7 @@ def test_nkshz_and_triangle_are_not_doubles() -> None:
     _assert_split(_row(), _row(manufacturer_name='Triangle'), aliases=_KAMA_ALIASES)
 
 
-@pytest.mark.parametrize('diameter', ['22,5', 'R22.5'])
+@pytest.mark.parametrize('diameter', ['22,5', 'R22.5', '22.5C', 'R22.5LT'])
 def test_normalized_diameter_still_duplicates(diameter: str) -> None:
     _assert_grouped(_row(diameter=diameter), _high())
 

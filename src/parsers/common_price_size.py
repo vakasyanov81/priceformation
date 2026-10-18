@@ -7,6 +7,8 @@ from domain.row_item.row_item import RowItem
 
 _INCH_SIZE_RE = re.compile(r'(?i)(?<!\d)(\d{2,3})[xх](\d+(?:[.,]\d+)?)r(\d+(?:[.,]\d+)?)')
 _DIAMETER_PREFIX_RE = re.compile(r'(?i)^(zr|rz|r)')
+# Суффикс легкогрузовой шины в поле диаметра (`16C`, `16LT`): его пишут не все поставщики, тип различает и без него.
+_DIAMETER_SUFFIX_RE = re.compile(r'(?i)(c|lt)$')
 
 
 def canon_number(raw: Any) -> str:
@@ -26,11 +28,12 @@ def canon_number(raw: Any) -> str:
 
 
 def canon_diameter(raw: Any) -> str:
-    """R16 / ZR16 / 16 — один диаметр для ключа."""
+    """R16 / ZR16 / 16C / 16LT / 16 — один диаметр для ключа."""
     text = str(raw or '').strip()
     if not text:
         return ''
-    return canon_number(_DIAMETER_PREFIX_RE.sub('', text, count=1))
+    text = _DIAMETER_PREFIX_RE.sub('', text, count=1)
+    return canon_number(_DIAMETER_SUFFIX_RE.sub('', text, count=1))
 
 
 def _inch_size_from_title(title: str | None) -> tuple[str, str, str]:
