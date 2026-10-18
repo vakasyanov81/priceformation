@@ -32,6 +32,8 @@ def test_xlsx_links_none() -> None:
     [
         ('https://x.ru/files/%D0%BF.xlsx?token=1', 'п.xlsx'),
         ('https://x.ru/ostatki.xlsx', 'ostatki.xlsx'),
+        ('ostatki.xlsx', 'ostatki.xlsx'),
+        ('https://x.ru', ''),
     ],
 )
 def test_url_filename(url: str, expected: str) -> None:

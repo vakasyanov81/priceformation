@@ -1,6 +1,7 @@
 """tests for ParseOrchestrator (migrated from test_common_price.py)"""
 
 import logging
+from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
@@ -419,3 +420,13 @@ def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> 
         entries(),
         logging.INFO,
     )
+
+
+def test_parser_for_vendor_config_without_vendor_metadata_attributes() -> None:
+    """Конфиг без атрибутов секции и VendorConfig (чужая реализация) — парсер строится классом."""
+    config: Any = SimpleNamespace()
+    vendor_cls = MagicMock()
+
+    _parser_for_vendor(MagicMock(), vendor_cls, config)
+
+    vendor_cls.assert_called_once_with(parse_config=config)

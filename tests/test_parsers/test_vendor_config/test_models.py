@@ -440,3 +440,17 @@ def test_vendor_config_reads_all_fields() -> None:
             ),
         ),
     )
+
+
+def test_title_params_first_is_read() -> None:
+    """params_first включается ключом слота и по умолчанию выключен."""
+    assert TitleConfig.from_dict({'params_first': True}, WHERE).params_first is True
+    assert TitleConfig.from_dict({}, WHERE).params_first is False
+
+
+@pytest.mark.parametrize('key', ['params_from_title', 'params_first'])
+def test_title_flags_error_names_slot_path(key: str) -> None:
+    """Флаг слота title не true/false — ошибка называет путь до слота и ключ."""
+    with pytest.raises(ConfigValidationError) as error:
+        TitleConfig.from_dict({key: 'да'}, WHERE)
+    assert str(error.value).startswith(f'{WHERE}: «{key}» должно быть true/false')

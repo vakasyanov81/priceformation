@@ -6,6 +6,8 @@ import pytest
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies._four_tochki_tire_helper import (
+    _fill_size_from_title,
+    _tire_kind,
     default_tire_title,
     ext_diameter_title,
     get_prepared_title,
@@ -327,3 +329,59 @@ def test_xlsx_columns_path_unchanged_for_special_width() -> None:
 )
 def test_sidewall_from_title(title: str | None, expected: str) -> None:
     assert sidewall_from_title(title) == expected
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('185/70R14 TL foo POR', ''),  # надпись ищется только сразу за камерой
+        ('Кама M+S Quadro', 'M+S'),  # без камеры — со второго слова, а не с последнего
+        ('POR', ''),  # нет пробела — нет размера, после которого искать
+        (' POR M+S', ''),  # пробел в позиции 0
+        ('A POR', 'POR'),  # пробел в позиции 1
+        ('M+S Quadro', ''),  # надпись в первом слове — это размер, не надпись
+    ],
+)
+def test_sidewall_from_title_search_window(raw: str, expected: str) -> None:
+    """Границы окна поиска надписи на боковине: после камеры или после первого слова."""
+    assert sidewall_from_title(raw) == expected
+
+
+def test_fill_size_keeps_existing_width_and_title() -> None:
+    """Размер из названия разбирается только при пустой ширине; заполненные поля не трогаются."""
+    row = RowItem({'title': 'P225/60R18 100H Brand', 'width': '999'})
+    get_prepared_title(row)
+    assert row.tire.width == '999'
+
+
+def test_fill_size_without_title_and_width_is_noop() -> None:
+    """Нет ни ширины, ни названия — разбирать нечего, ошибки нет."""
+    row = RowItem({})
+    _fill_size_from_title(row)
+    assert not row.tire.width
+
+
+def test_fill_size_from_rim_notation_title() -> None:
+    """Ободная запись `6,00-9/4,00E` отбрасывается, размер берётся из `6,00-9`."""
+    row = RowItem({'title': '6,00-9/4,00E Brand 10PR'})
+    get_prepared_title(row)
+    assert (row.tire.width, row.tire.diameter) == ('6.00', '9')
+
+
+def test_prepared_title_strips_trailing_zero_of_fractional_width() -> None:
+    """Дробная ширина `7,50` в названии идёт как `7.5`."""
+    row = RowItem({'width': '7,50', 'diameter': 'R16', 'manufacturer_name': 'Brand', 'model': 'M'})
+    assert get_prepared_title(row).startswith('7.5R16')
+
+
+def test_suffix_not_added_without_diameter() -> None:
+    """Суффикс диаметра дописывается только к существующему диаметру."""
+    row = RowItem({'title': '185/75R16C Brand', 'width': '185'})
+    get_prepared_title(row)
+    assert not row.tire.diameter
+
+
+def test_tire_kind_without_type_is_empty() -> None:
+    """Без типа шины это не грузовая и не спецтехника; пустая строка, а не подстановка."""
+    assert _tire_kind(RowItem({})) == ''
+    assert _tire_kind(RowItem({'tire_type': 'QuadBike'})) == 'мото'

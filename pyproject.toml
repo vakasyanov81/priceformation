@@ -85,6 +85,7 @@ max-positional-args = 6
 "tests/test_parsers/test_remote/test_zapaska_client.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "tests/test_infrastructure/test_four_tochki_api_config.py" = ["S105"]
 "tests/test_parsers/test_remote/test_four_tochki_client.py" = ["S106"]
+"tests/test_parsers/test_remote/test_four_tochki_client_contract.py" = ["S106"]
 "integration_tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "integration_tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
 "load_tests/**/*.py" = ["S101", "PLR2004"]

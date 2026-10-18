@@ -1023,6 +1023,27 @@ timeout 7, score 98,2 %** (было 5536 / 174 / 7 / 97,0 %).
 
 ---
 
+## Task-15: эквивалентные мутанты нового кода ✅ (2026-10-18)
+
+После task-15 (клиент Форточек, хелперы шин, дубли, почтовые ссылки, конфиги)
+выжили 154 мутанта из 9216 (score 98,3 %, было 286 / 96,9 %). Каждый разобран;
+ниже — почему тест их не может различить. Не искать заново.
+
+| Класс | Мутации | Почему не наблюдаемы |
+| --- | --- | --- |
+| `or 'XXXX'` у строки, которую дальше ищет regex/сравнивает | `title or ''`, `type_production or ''` в `common_price_*`, `_four_tochki_*`, `title_flags`, `category`, `tire_category`, `markdown_title`, `production_year`, `_camera`, `_runflat` | пустая строка и `'XXXX'` одинаково не содержат ни маркера, ни слова, ни числа |
+| Метки внутри сравнения | `common_price_dispute` (`'да'`/`'нет'`/`'зимняя'`/`'летняя'` и регистр), `_optional_parts` (`lower`→`upper`), `canon` (`upper`→`lower`), `group_key` (`upper`→`lower` перед `camera_key`) | значение не выходит наружу, а на обеих сторонах сравнения подменяется одинаково |
+| `count=` у якорных regex | `_SIZE_PREFIX`, `_ALT_AFTER_SIZE`, `_RIM_AFTER_SIZE`, `_ZR_SIZE`, `_DIAMETER_PREFIX_RE/_SUFFIX_RE`, `_ENABLED_PATTERN` | `^`/`$` дают не больше одного совпадения |
+| Регистр имён заголовков и кодеков | `message.get('subject'/'DATE'/'FROM')`, `'UTF-8'`, `'Accept'`→`'accept'`, `float('-INF')`, `'\x1B'` | `email.message`, `codecs`, HTTP и `float()` регистр не различают |
+| `rsplit`/`split` без `maxsplit` | `url_filename`, `writer_template_name` | берётся последний элемент, число разрезов не важно (`[+1]` на пути без `/` убит отдельным тестом в `url_filename`) |
+| Граница на равенстве | `end_col`: `cols <= max` → `<`, `known_max < len` → `<=` | на равенстве обе ветки дают одно значение |
+| Значение по умолчанию, которое не читается | `_STEPS.get(key, 0)` (ключ уже проверен `in`), `zip(strict=…)` при равных длинах, `missing_ok` в `clear_result_folder`, `_parser_for_vendor(parser_factory=None)` (параметр не используется), `sections=()` перед `replace(...)`, `ensure_ascii=None` (≡ `False`), `_is_grouped = None` (≡ `False`) | значение либо перезаписывается, либо не доходит до проверки |
+| `_local`: `rsplit('}', …)` | `four_tochki_client._local` | ElementTree не отдаёт тег с двумя `}` |
+
+Остальное в списке выживших — те же приёмы, но в строках, которые не меняют
+вывод (`replace(',', 'XX.XX')` на значении без запятой в `_autosnab_helper`,
+`_first_known` с `strip('XX()XX')`, `_thickness` с заменой на `'XX XX'`).
+
 ## История предыдущей кампании
 
 Кампания 2026-09-28 подняла score с 88.0 % (4515 мутантов) до **93.2 %**

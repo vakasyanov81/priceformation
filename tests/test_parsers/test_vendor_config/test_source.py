@@ -77,3 +77,15 @@ def test_api_source_without_block_is_error() -> None:
     del raw['api']
     with pytest.raises(ConfigValidationError, match='нужен блок «api»'):
         select_source(raw, 'vendor.json')
+
+
+def test_source_errors_name_file_and_key() -> None:
+    """Ошибки выбора источника называют файл и ключ, где они случились."""
+    with pytest.raises(ConfigValidationError, match=r'^vendor\.json: ожидается объект'):
+        select_source([], 'vendor.json')
+    with pytest.raises(ConfigValidationError, match=r'^vendor\.json → source: ожидается строка'):
+        select_source({'source': 5}, 'vendor.json')
+    with pytest.raises(ConfigValidationError, match=r'^vendor\.json → api: ожидается объект'):
+        select_source(_vendor(source='api', api=[]), 'vendor.json')
+    with pytest.raises(ConfigValidationError, match=r'^vendor\.json: «source» должен быть'):
+        select_source(_vendor(source='ftp'), 'vendor.json')

@@ -5,6 +5,10 @@ Tests use the duplicated configs from ``tests/parse_config_example/vendors/``
 guarantee fresh reads and independence from the real ``parse_config/vendors/``.
 """
 
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import MagicMock
+
 import pytest
 
 from domain.row_item.row_item import RowItem
@@ -171,3 +175,11 @@ def test_all_vendors_returns_all_enabled() -> None:
     assert len(entries) == 9
     ids = {config._vendor_section.id for _, config in entries}
     assert ids == {'6', '1', '5', '4', '2', '22'}
+
+
+def test_registry_helpers_tolerate_config_without_vendor_attributes() -> None:
+    """Конфиг без служебных атрибутов поставщика: включён, политики наценки нет."""
+    config: Any = SimpleNamespace()
+
+    assert vendor_config_is_enabled(config) is True
+    assert vendor_markup_policy_for(MagicMock(), config) is None

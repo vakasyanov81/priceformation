@@ -191,3 +191,20 @@ def test_params_first_requires_params_from_title() -> None:
 
     with pytest.raises(ConfigValidationError, match='params_first'):
         make_title_strategy(config, WHERE)
+
+
+def test_params_first_strategy_prepares_title_end_to_end() -> None:
+    """Собранная по конфигу стратегия params_first рабочая: оборачивает вложенную сборку названия."""
+    config = TitleConfig(strategy='tire_compose', variant='four_tochki', params_from_title=True, params_first=True)
+    row = RowItem(
+        {
+            'title': '205/65R16 95T Brina Nordico V-522 TL (102 шип.)',
+            'manufacturer_name': 'Viatti',
+            'model': 'Brina Nordico V-522',
+            'tire_type': 'Легковая',
+        }
+    )
+
+    title = make_title_strategy(config, WHERE).prepare(row)
+
+    assert title == '205/65R16 Viatti Brina Nordico V-522 TL 95T'

@@ -4,7 +4,7 @@ import pytest
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies._tire_title_parser import parse_tire_title
-from parsers.strategies._tube_title_parser import fill_tube_fields, parse_tube_title
+from parsers.strategies._tube_title_parser import TubeTitleParts, fill_tube_fields, parse_tube_title
 
 
 @pytest.mark.parametrize(
@@ -71,3 +71,19 @@ def test_fill_keeps_existing_values() -> None:
 def test_tire_parser_ignores_tape_without_prefix(raw: str) -> None:
     """Лента без префикса — не шина: `об/лента` не становится брендом, конструкция не заполняется."""
     assert parse_tire_title(raw) is None
+
+
+def test_profile_at_upper_bound_is_kept() -> None:
+    """Профиль ровно 100 % — ещё профиль, а не вторая ширина."""
+    parts = parse_tube_title('Автокамера 12.5/100-18')
+    assert parts is not None
+    assert parts.height_percent == '100'
+
+
+def test_fill_writes_all_size_fields() -> None:
+    """Все четыре параметра размера попадают в поля позиции под своими именами."""
+    row = RowItem({})
+    fill_tube_fields(row, TubeTitleParts(width='12.5', height_percent='80', diameter='18', ext_diameter='1200'))
+    tire = row.tire
+    assert (tire.width, tire.height_percent) == ('12.5', '80')
+    assert (tire.diameter, tire.ext_diameter) == ('18', 1200)

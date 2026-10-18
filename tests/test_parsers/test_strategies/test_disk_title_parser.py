@@ -176,3 +176,31 @@ def test_fill_disk_fields_title_overrides_eet_column() -> None:
 def test_et_from_name_needs_fasteners(raw: str | None, expected: str | None) -> None:
     """ET берём только из названия с крепежом `4*100`: `ET-500` у шины — не вылет."""
     assert DiskTitleParts.et_from_name(raw) == expected
+
+
+def test_size_number_at_upper_bound_is_a_disk_size() -> None:
+    """Число размера ровно 30 — ещё размер диска."""
+    parts = parse_disk_title('Диск штамп 30x10')
+    assert parts is not None
+    assert (parts.width, parts.diameter) == ('10', '30')
+
+
+def test_pcd_at_lower_bound_is_fastener() -> None:
+    """PCD ровно 50 — ещё крепёж, а не вторая сторона размера."""
+    parts = _parsed('Диск 7x17 5x50 ET40')
+    assert (parts.slot_count, parts.pcd) == ('5', '50')
+
+
+def test_thickness_in_parentheses_wins_over_bare_millimetres() -> None:
+    """Толщина в скобках важнее голых «мм» в названии."""
+    assert _parsed('Диск 6x16 5x114.3 20мм ET40 (13мм)').thickness == '13'
+
+
+def test_et_from_name_reads_decimal_comma() -> None:
+    """ET с запятой в названии API читается числом: `ET39,5` → 39.5."""
+    assert DiskTitleParts.et_from_name('7x17/5x108 ET39,5 D63,35') == '39.5'
+
+
+def test_et_from_name_needs_both_slots_and_pcd() -> None:
+    """Крепёж без PCD (`4 отв.`) диском не считается: вылет не возвращается."""
+    assert DiskTitleParts.et_from_name('7x17 4 отв. ET40') is None

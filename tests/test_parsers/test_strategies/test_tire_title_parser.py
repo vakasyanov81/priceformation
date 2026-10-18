@@ -6,6 +6,7 @@ from domain.row_item.row_item import RowItem
 from parsers.strategies._tire_title_parser import (
     TireTitleParts,
     fill_tire_fields,
+    parse_leading_size,
     parse_tire_title,
 )
 
@@ -606,3 +607,48 @@ def test_fill_sets_model_for_brand_with_glued_model(raw: str, model: str) -> Non
     fill_tire_fields(row, parts)
 
     assert (row.identity.model or '') == model
+
+
+def test_leading_size_has_no_alt_size() -> None:
+    """Размер в начале строки без скобок: альтернативного размера нет."""
+    size = parse_leading_size('215R16 foo')
+    assert size is not None
+    assert size.alt == ''
+
+
+@pytest.mark.parametrize(
+    ('raw', 'ext', 'width'), [('33x12,5-15 Brand Model', '33', '12.5'), ('10,5x16-10 Brand Model', '10.5', '16')]
+)
+def test_inch_size_decimal_comma(raw: str, ext: str, width: str) -> None:
+    """Запятая в дюймовом размере — десятичный разделитель и во внешнем диаметре, и в ширине."""
+    parts = parse_tire_title(raw)
+    assert parts is not None
+    assert (parts.size.ext_diameter, parts.size.width) == (ext, width)
+
+
+def test_size_inside_title_followed_by_bracket_is_not_a_tire() -> None:
+    """После размера в середине названия сразу скобка — это не шина."""
+    assert parse_tire_title('Brand 185/65R15 (foo) Model') is None
+
+
+@pytest.mark.parametrize(
+    ('raw', 'layering'), [('185/65R15 Brand Model н.с.12', '12PR'), ('185/65R15 Brand Model 12 PR', '12PR')]
+)
+def test_layering_is_written_in_upper_case(raw: str, layering: str) -> None:
+    """Слойность из `н.с.N` и разорванного `N PR` приводится к `NPR` заглавными."""
+    parts = parse_tire_title(raw)
+    assert parts is not None
+    assert parts.layering == layering
+
+
+@pytest.mark.parametrize(
+    ('raw', 'spike'),
+    [('185/65R15 Brand Model шип.', 'Да'), ('185/65R15 Brand Model шипы', 'Да'), ('185/65R15 Brand Model XL', '')],
+)
+def test_spike_from_usage_tokens(raw: str, spike: str) -> None:
+    """Шип — только при слове «шип/шипы» (точка отбрасывается); без него поле пустое."""
+    parts = parse_tire_title(raw)
+    assert parts is not None
+    row = RowItem({})
+    fill_tire_fields(row, parts)
+    assert (row.tire.spike or '') == spike

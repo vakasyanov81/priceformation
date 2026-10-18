@@ -1,5 +1,6 @@
 """Группы складов Форточек из настроек: разбор файла и проверка структуры."""
 
+import re
 from typing import Any
 
 import pytest
@@ -122,3 +123,44 @@ def test_load_reads_config_file() -> None:
     assert groups['novosibirsk'].merge is True
     assert 'НСБ' in groups['novosibirsk'].keywords
     assert groups['order'].delivery_period == 5
+
+
+_WHERE = 'four_tochki_warehouses.json → groups[1]'
+
+
+@pytest.mark.parametrize(
+    ('entry', 'message'),
+    [
+        ({'name': 'g'}, f'{_WHERE}: отсутствует обязательный ключ «keywords»'),
+        ({'name': 'g', 'keywords': 'Омск'}, f'{_WHERE} → keywords: ожидается список строк'),
+        ({'name': 'g', 'keywords': [1]}, f'{_WHERE} → keywords: ожидается список строк'),
+        ({'name': 'g', 'keywords': []}, f'{_WHERE} → keywords: ожидается непустой список'),
+        ({'keywords': ['Омск']}, f'{_WHERE}: отсутствует обязательный ключ «name»'),
+        ({'name': '  ', 'keywords': ['Омск']}, f'{_WHERE} → name: ожидается непустая строка'),
+        ({'name': 'g', 'keywords': ['Омск'], 'merge': 'да'}, f'{_WHERE}: «merge» должно быть true/false'),
+        ({'name': 'g', 'keywords': ['Омск'], 'available': 5}, f'{_WHERE} → available: ожидается строка'),
+        ({'name': 'g', 'keywords': ['Омск'], 'delivery_period': 'x'}, f'{_WHERE} → delivery_period'),
+    ],
+)
+def test_group_error_names_file_and_group_index(entry: dict[str, Any], message: str) -> None:
+    """Ошибка в любом ключе группы называет файл и номер группы, а не только ключ."""
+    with pytest.raises(ConfigValidationError, match=re.escape(message)):
+        parse_warehouse_groups(_payload(_group_entry('first', 'Томск'), entry))
+
+
+def test_group_that_is_not_object_names_file_and_index() -> None:
+    """Группа не объект — в сообщении файл, номер группы и полученное значение."""
+    with pytest.raises(ConfigValidationError, match=re.escape(f'{_WHERE}: ожидается объект группы, получено 5')):
+        parse_warehouse_groups(_payload(_group_entry('first', 'Томск'), 5))  # type: ignore[arg-type]
+
+
+def test_structure_errors_name_file() -> None:
+    """Ошибки корня и пустого списка называют файл."""
+    with pytest.raises(
+        ConfigValidationError, match=r'^four_tochki_warehouses\.json: ожидается объект с ключом «groups»'
+    ):
+        parse_warehouse_groups([])
+    with pytest.raises(ConfigValidationError, match=r'^four_tochki_warehouses\.json → groups: список групп пуст$'):
+        parse_warehouse_groups({'groups': []})
+    with pytest.raises(ConfigValidationError, match=r'^four_tochki_warehouses\.json: группа «g» указана дважды$'):
+        parse_warehouse_groups(_payload(_group_entry('g', 'a'), _group_entry('g', 'b')))

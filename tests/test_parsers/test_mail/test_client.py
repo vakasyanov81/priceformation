@@ -614,3 +614,24 @@ def test_find_latest_price_fourtochki_letter() -> None:
     assert found is not None
     assert found.link == 'https://b2b.pwrs.ru/export_data/M32334.xlsx'
     assert found.filename == 'M32334.xlsx'
+
+
+def test_find_latest_price_link_keeps_subject_date_and_time() -> None:
+    """Прайс по ссылке несёт тему, дату и момент отправки письма, как и прайс из вложения."""
+    message = EmailMessage()
+    message['From'] = 'a@b.ru'
+    message['Subject'] = 'Остатки склада'
+    message['Date'] = 'Mon, 05 Oct 2026 10:00:00 +0000'
+    message.set_content('https://x.ru/files/ostatki.xlsx')
+    fake = _FakeClient({'INBOX': {b'1': message.as_bytes()}})
+
+    found = find_latest_price(fake, ['INBOX'], profile=_profile(link_in_body=True, attachment_glob=''))
+
+    when = datetime(2026, 10, 5, 10, 0, tzinfo=UTC)
+    assert found == FoundPrice(
+        subject='Остатки склада',
+        date=when.astimezone().strftime('%d.%m.%Y %H:%M'),
+        filename='ostatki.xlsx',
+        link='https://x.ru/files/ostatki.xlsx',
+        when=when,
+    )
