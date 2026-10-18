@@ -75,6 +75,19 @@ class DiskTitleParts:
         )
 
     @classmethod
+    def first_size(cls, text: str) -> DiskTitleParts | None:
+        """Параметры по первой паре размеров, похожей на размер диска."""
+        for pair in _PAIR.finditer(text):
+            if max(map(float, pair.groups())) <= _MAX_SIZE_NUMBER:
+                return cls.from_text(text, (pair[1], pair[2]))
+        return None
+
+    @property
+    def has_fasteners(self) -> bool:
+        """Есть крепёж «отверстия x PCD»."""
+        return bool(self.slot_count and self.pcd)
+
+    @classmethod
     def et_from_name(cls, raw: str | None) -> str | None:
         """Вылет ET из названия диска без префикса «Диск» (Запаска, Форточки); None, если это не диск.
 
@@ -88,16 +101,16 @@ class DiskTitleParts:
         return _first_group(_ET, text) or None if slots and pcd else None
 
 
-def parse_disk_title(raw: str | None) -> DiskTitleParts | None:
-    """Разобрать название диска; None, если это не диск с размером."""
-    if not raw or _LEADING_DISK.match(raw) is None:
+def parse_disk_title(raw: str | None, *, bare: bool = False) -> DiskTitleParts | None:
+    """Разобрать название диска; None, если это не диск с размером.
+
+    ``bare`` — название без слова «Диск» (API Форточек: ``7x17/5x108 ET50 D63,35 ...``);
+    такое название считаем диском только при крепеже «отверстия x PCD».
+    """
+    if not raw or (not bare and _LEADING_DISK.match(raw) is None):
         return None
-    text = _DECIMAL_COMMA.sub('.', _SEPARATOR.sub('x', raw))
-    for pair in _PAIR.finditer(text):
-        numbers = tuple(map(float, pair.groups()))
-        if max(numbers) <= _MAX_SIZE_NUMBER:
-            return DiskTitleParts.from_text(text, (pair[1], pair[2]))
-    return None
+    parts = DiskTitleParts.first_size(_DECIMAL_COMMA.sub('.', _SEPARATOR.sub('x', raw)))
+    return parts if parts is not None and (not bare or parts.has_fasteners) else None
 
 
 def fill_disk_fields(row_item: RowItem, parts: DiskTitleParts) -> None:

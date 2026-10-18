@@ -412,8 +412,9 @@ condition  available  type_production
   `api` — блок `api` с JSON-секциями для `tire.json` / `disk.json`, которые
   пишет `four_tochki_load_api_data`. В режиме `api` на каждый склад API — отдельная
   строка прайса. Выгрузка только по складам Новосибирска, Бердска и Искитима (свой склад
-  «Новосибирск», склады ОХ в этих городах; ID в `src/parsers/remote/four_tochki_client.py`), названия берутся из API и
-  разбираются по параметрам (`normalize_title` + `params_from_title`);
+  «Новосибирск», склады ОХ в этих городах; ID в `src/parsers/remote/four_tochki_client.py`). Название из API
+  разбирается по параметрам (`params_from_title` + `params_first`: размер, индексы, камера, диск без слова «Диск»),
+  а затем собирается теми же правилами, что и название из xlsx (`tire_compose` / `disk_compose`, вариант `four_tochki`);
 - **Запаска** — `reader: json`, `base` с порогом РРЦ 8 %,
   `replace_small_recommended: true`, абсолютный пол `mode: delta`, `+150 ₽`;
 - **Автоснабжение** — `identity`: цена в прайсе уже отпускная;

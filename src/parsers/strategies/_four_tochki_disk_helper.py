@@ -61,6 +61,12 @@ def disk_diameter(raw: Any) -> str:
     return text
 
 
+def disk_width(raw: Any) -> str:
+    """Ширина с десятичной частью, как в прайсе: `7` → `7.0`, `6.75` без изменений."""
+    text = str(raw or '')
+    return f'{text}.0' if text.isdigit() else text
+
+
 def _tube_label(name: str) -> str:
     lowered = name.lower()
     if 'под камеру' in lowered:

@@ -6,8 +6,8 @@ from log_watch import LoggerWatcher, texts_at
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
-from parsers.strategies.title import DefaultTitle, ManufacturerFromCategory
-from parsers.strategies.title_params import ParamsFromTitle
+from parsers.strategies.title import DefaultTitle, DiskComposeTochki, ManufacturerFromCategory, TireCompose
+from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 
 _PIONER = '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая'
 
@@ -137,3 +137,47 @@ def test_empty_column_is_filled_without_log(watch_logger: LoggerWatcher) -> None
 
     assert row.disk.eet == 50
     assert texts_at(entries(), logging.WARNING) == []
+
+
+def test_before_title_composes_tire_from_raw_title() -> None:
+    """Поля берутся из исходного названия до сборки; бренд и модель — из колонок прайса."""
+    row = RowItem(
+        {
+            'title': '205/65R16 95T Brina Nordico V-522 TL (102 шип.)',
+            'manufacturer_name': 'Viatti',
+            'model': 'Brina Nordico V-522',
+            'tire_type': 'Легковая',
+        }
+    )
+
+    title = ParamsBeforeTitle(TireCompose('four_tochki')).prepare(row)
+
+    assert title == '205/65R16 Viatti Brina Nordico V-522 TL 95T'
+    assert (row.tire.width, row.tire.diameter) == ('205', '16')
+
+
+def test_before_title_parses_disk_without_disk_prefix() -> None:
+    """У диска API слова «Диск» нет: разбор с крепежом, название собирается по колонкам."""
+    row = RowItem(
+        {
+            'title': '7x17/5x108 ET50 D63,35 Онтарио (КЛ216) Алмаз',
+            'manufacturer_name': 'Khomen',
+            'model': 'Онтарио (КЛ216)',
+            'color': 'Алмаз',
+        }
+    )
+
+    title = ParamsBeforeTitle(DiskComposeTochki()).prepare(row)
+
+    assert title == '7.0x17 5x108 ET50 63.35 Алмаз Khomen Онтарио (КЛ216)'
+    assert (row.disk.slot_count, row.disk.pcd1) == (5, 108)
+    assert row.disk.eet == 50
+
+
+def test_params_from_title_keeps_bare_disk_out() -> None:
+    """Без params_first название без слова «Диск» не разбирается: прежнее поведение для других поставщиков."""
+    row = RowItem({'title': '7x17/5x108 ET50 D63,35 Онтарио (КЛ216) Алмаз'})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert row.disk.pcd1 is None
