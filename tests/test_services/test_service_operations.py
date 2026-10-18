@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from domain.row_item.row_item import RowItem
 from services.doubles_service import DoublesReport, DoublesService
+from services.four_tochki_service import FourTochkiService
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
 
@@ -136,4 +137,15 @@ def test_upload_zapaska_data() -> None:
         patch('services.zapaska_service.load_remote_vendor_data') as mock_load,
     ):
         ZapaskaService().upload_data()
+    mock_load.assert_called_once_with(api=api)
+
+
+def test_upload_four_tochki_data() -> None:
+    """upload_data вызывает загрузку данных Форточек с API-конфигом."""
+    api = MagicMock()
+    with (
+        patch('services.four_tochki_service.get_four_tochki_api_config', return_value=api),
+        patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,
+    ):
+        FourTochkiService().upload_data()
     mock_load.assert_called_once_with(api=api)

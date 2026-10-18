@@ -16,13 +16,14 @@ from parsers.writer.templates.all_templates import UnknownWriterTemplateError, g
 from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
+    FOUR_TOCHKI_LOAD_API_DATA,
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
 )
-from services import doubles_service, zapaska_service
+from services import doubles_service, four_tochki_service, zapaska_service
 from services.configure import ensure_services_configured
 from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
@@ -34,8 +35,10 @@ logger = logging.getLogger(__name__)
 _INTERRUPT = 'interrupted'
 _JSON_OK = 'ok'
 _JSON_ACTION = 'action'
-_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FETCH_MAIL_PRICES))
-_COMPACT_ERROR_COMMANDS = frozenset((LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA, FETCH_MAIL_PRICES))
+_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, FETCH_MAIL_PRICES))
+_COMPACT_ERROR_COMMANDS = frozenset(
+    (LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, FETCH_MAIL_PRICES),
+)
 
 
 def fail_unknown_result_template(
@@ -137,16 +140,24 @@ def _command_payload(
 
 
 def _json_download(command: str) -> Mapping[str, Any]:
-    """Выгрузить удалённые прайсы (API запаски или почта) и вернуть ответ."""
+    """Выгрузить удалённые прайсы (API запаски / Форточек или почта) и вернуть ответ."""
     if command == ZAPASKA_LOAD_API_DATA:
         ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
         return {_JSON_OK: True, _JSON_ACTION: ZAPASKA_LOAD_API_DATA}
+    if command == FOUR_TOCHKI_LOAD_API_DATA:
+        upload_four_tochki_data()
+        return {_JSON_OK: True, _JSON_ACTION: FOUR_TOCHKI_LOAD_API_DATA}
     fetched = ServiceProvider.resolve(MailService).fetch_prices()
     return {
         _JSON_OK: True,
         _JSON_ACTION: FETCH_MAIL_PRICES,
         'files': [entry.path for entry in fetched],
     }
+
+
+def upload_four_tochki_data() -> None:
+    """Выгрузить данные Форточек по API в file_prices/four_tochki."""
+    ServiceProvider.resolve(four_tochki_service.FourTochkiService).upload_data()
 
 
 def _json_load_prices(raw: str | None) -> dict[str, object]:

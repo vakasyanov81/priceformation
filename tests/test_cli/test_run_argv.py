@@ -5,6 +5,7 @@ import pytest
 from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
+    FOUR_TOCHKI_LOAD_API_DATA,
     GET_SUPLIERS,
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
@@ -33,6 +34,7 @@ def test_is_machine_argv_commands() -> None:
     assert is_machine_argv([PARSE]) is True
     assert is_machine_argv([DOUBLES, '--json']) is True
     assert is_machine_argv([ZAPASKA_LOAD_API_DATA]) is True
+    assert is_machine_argv([FOUR_TOCHKI_LOAD_API_DATA]) is True
     assert is_machine_argv([FETCH_MAIL_PRICES]) is True
     assert is_machine_argv([GET_SUPLIERS]) is True
     assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
@@ -70,6 +72,8 @@ def test_parse_all_result_without_json() -> None:
 
 def test_parse_without_json() -> None:
     """команда без --json."""
+    args = parse_machine_args([FOUR_TOCHKI_LOAD_API_DATA])
+    assert args.command == FOUR_TOCHKI_LOAD_API_DATA
     args = parse_machine_args([ZAPASKA_LOAD_API_DATA])
     assert args.command == ZAPASKA_LOAD_API_DATA
     assert args.json is False

@@ -137,6 +137,7 @@ def test_exit_key_returns_exit(_interactive: _FakeVendorService, monkeypatch: py
         ('3', 2),
         ('5', 3),
         ('6', 4),
+        ('7', 5),
     ],
 )
 def test_shortcut_key_selects_item(

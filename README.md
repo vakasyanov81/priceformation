@@ -85,6 +85,8 @@ file_prices/                  входные прайсы и результат
 - `parse` — разобрать прайсы поставщиков и записать файлы;
 - `doubles` — разобрать прайсы и записать отчёт о дублях;
 - `zapaska_load_api_data` — выгрузить прайсы Запаски по API;
+- `four_tochki_load_api_data` — выгрузить шины и диски Форточек по API (в
+  `file_prices/four_tochki/tire.json` и `disk.json`; нужен источник `api`);
 - `fetch_mail_prices` — скачать свежие прайсы поставщиков из почты;
 - `get_supliers` — вернуть каталог поставщиков:
   `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`;
@@ -130,6 +132,7 @@ uv run pf parse --json --all-result
 uv run pf parse --json --result-template for_drom
 uv run pf doubles --json
 uv run pf zapaska_load_api_data --json
+uv run pf four_tochki_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
@@ -399,7 +402,13 @@ condition  available  type_production
   `percent_by_threshold`;
 - **Форточки** — `recommended_range`: диапазоны по категориям и абсолютный пол
   `mode: delta`, `+500 ₽`; названия `tire_compose(four_tochki)` и
-  `disk_compose(four_tochki)`;
+  `disk_compose(four_tochki)`. Источник выбирается полем `source`:
+  `xlsx` (по умолчанию) — xlsx-прайс из `file_prices/four_tochki/price*.xlsx`;
+  `api` — блок `api` с JSON-секциями для `tire.json` / `disk.json`, которые
+  пишет `four_tochki_load_api_data`. В режиме `api` на каждый склад API — отдельная
+  строка прайса. Выгрузка только по складам Новосибирска, Бердска и Искитима (свой склад
+  «Новосибирск», склады ОХ в этих городах; ID в `src/parsers/remote/four_tochki_client.py`), названия берутся из API и
+  разбираются по параметрам (`normalize_title` + `params_from_title`);
 - **Запаска** — `reader: json`, `base` с порогом РРЦ 8 %,
   `replace_small_recommended: true`, абсолютный пол `mode: delta`, `+150 ₽`;
 - **Автоснабжение** — `identity`: цена в прайсе уже отпускная;
@@ -510,6 +519,9 @@ condition  available  type_production
 Файл `.env` (шаблон — `.env.example`):
 
 - `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` — доступ к API Запаски;
+- `FOUR_TOCHKI_API_LOGIN` / `FOUR_TOCHKI_API_PASSWORD` — доступ к API Форточек;
+  `FOUR_TOCHKI_API_HOST` — необязательный адрес сервиса (можно указать WSDL-адрес
+  из инструкции, он приводится к адресу сервиса);
 - `MAIL_LOGIN` / `MAIL_PASSWORD` — доступ к почтовому ящику для
   `fetch_mail_prices`.
 

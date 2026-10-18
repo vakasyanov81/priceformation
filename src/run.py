@@ -12,6 +12,7 @@
     python src/run.py parse --json --result-template for_drom
     python src/run.py doubles --json
     python src/run.py zapaska_load_api_data --json
+    python src/run.py four_tochki_load_api_data --json
     python src/run.py fetch_mail_prices --json
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
@@ -30,6 +31,7 @@ from infrastructure.config.result_folder import clear_result_folder
 from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
+    FOUR_TOCHKI_LOAD_API_DATA,
     JSON_ONLY_COMMANDS,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
@@ -38,7 +40,7 @@ from run_argv import (
 )
 from run_dialog import AnswerResult, ask_action
 from run_dialog.help_format import colorize_markdown
-from run_machine import fail_unknown_result_template, machine_json
+from run_machine import fail_unknown_result_template, machine_json, upload_four_tochki_data
 from services.async_utils import try_call
 from services.configure import configure_services
 from services.doubles_service import DoublesService
@@ -95,6 +97,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
         PARSE: run_make_price_by_supplier,
         DOUBLES: run_report_doubles,
         ZAPASKA_LOAD_API_DATA: run_upload_zapaska_data,
+        FOUR_TOCHKI_LOAD_API_DATA: run_upload_four_tochki_data,
         FETCH_MAIL_PRICES: run_fetch_mail_prices,
     }
     extra: dict[str, str | None] = {}
@@ -112,6 +115,7 @@ def response_processing() -> bool:
     handlers = {
         AnswerResult.MAKE_PRICE_BY_SUPPLIER: run_make_price_by_supplier,
         AnswerResult.UPDATE_ZAPASKA_DATA: run_upload_zapaska_data,
+        AnswerResult.UPDATE_FOUR_TOCHKI_DATA: run_upload_four_tochki_data,
         AnswerResult.REPORT_DOUBLES: run_report_doubles,
         AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
         AnswerResult.SHOW_HELP: run_show_help,
@@ -130,6 +134,12 @@ def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
     ServiceProvider.resolve(ZapaskaService).upload_data()
     logger.info('*** Данные успешно загружены. ***\n')
+
+
+def run_upload_four_tochki_data() -> None:
+    """Load Four Tochki data from api"""
+    upload_four_tochki_data()
+    logger.info('*** Данные Форточек успешно загружены. ***\n')
 
 
 def run_report_doubles() -> None:

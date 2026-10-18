@@ -13,6 +13,7 @@ from parsers.common_price_output import jsonl_output_files
 from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
+    FOUR_TOCHKI_LOAD_API_DATA,
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
@@ -21,6 +22,7 @@ from run_argv import (
 )
 from run_machine import fail_unknown_result_template, machine_json
 from services.doubles_service import DoublesService
+from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
@@ -335,6 +337,21 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         'action': ZAPASKA_LOAD_API_DATA,
     }
     zapaska_service.upload_data.assert_called_once_with()
+
+
+def test_json_four_tochki(capsys: pytest.CaptureFixture[str]) -> None:
+    """four_tochki_load_api_data: compact ok, сервис выгрузки вызван."""
+    four_tochki_service = MagicMock()
+    with patch(_RESOLVE, side_effect={FourTochkiService: four_tochki_service}.__getitem__):
+        code = machine_json(FOUR_TOCHKI_LOAD_API_DATA)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': FOUR_TOCHKI_LOAD_API_DATA,
+    }
+    four_tochki_service.upload_data.assert_called_once_with()
 
 
 def test_json_zapaska_error(capsys: pytest.CaptureFixture[str]) -> None:
