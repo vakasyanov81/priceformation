@@ -1,5 +1,6 @@
 """Главное меню приложения: пункты действий и интерактивный ввод."""
 
+from run_dialog.help_format import colorize_markdown
 from run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult, MenuItem
 from run_dialog.menu import ask_action
 
@@ -9,4 +10,5 @@ __all__ = [
     'AnswerResult',
     'MenuItem',
     'ask_action',
+    'colorize_markdown',
 ]
