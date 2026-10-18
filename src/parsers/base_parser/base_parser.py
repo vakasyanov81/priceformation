@@ -167,6 +167,7 @@ class BaseParser:
         fill_percent_markup(self.parsed_items)
         fill_absolute_markup(self.parsed_items)
         self.stats.type_corrections = self.count_type_corrections()
+        self.stats.title_conflicts = sum(1 for row_item in self.parsed_items if row_item.vendor.title_conflict)
 
     def count_type_corrections(self) -> int:
         """Число позиций итогового результата с исправленным типом.

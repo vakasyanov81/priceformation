@@ -74,8 +74,9 @@ def _config_provider_restored() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _clear_process_file_caches() -> None:
-    """Сброс модульных кэшей файлов, чтобы тесты не зависели от порядка."""
+def _clear_process_file_caches(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Сброс модульных кэшей файлов, чтобы тесты не зависели от порядка; разбор не обнуляет боевые логи."""
+    monkeypatch.setattr('services.parse_orchestrator.clear_log_files', lambda: None)
     clear_nomenclature_cache()
     clear_manufacturer_aliases_cache()
     clear_vendor_configs_cache()

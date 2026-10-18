@@ -5,8 +5,10 @@ import logging
 from log_watch import LoggerWatcher, texts_at
 
 from domain.row_item.row_item import RowItem
+from infrastructure.logging.console import FILE_ONLY
 from parsers.strategies.poshk_stk_title import PoshkStkTireCompose
 from parsers.strategies.title import DefaultTitle, DiskComposeTochki, ManufacturerFromCategory, TireCompose
+from parsers.strategies.title_conflicts import title_conflicts_message
 from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 
 _PIONER = '215/75R17.5 Triangle TR685 135/133L 16PR TL рулевая'
@@ -100,6 +102,7 @@ def test_title_et_overrides_column_and_is_logged(watch_logger: LoggerWatcher) ->
     assert row.disk.eet == 50
     messages = texts_at(entries(), logging.WARNING)
     assert len(messages) == 1
+    assert row.vendor.title_conflict is True
     assert 'eet 40' in messages[0]
     assert '50' in messages[0]
     assert _KHOMEN in messages[0]
@@ -193,3 +196,40 @@ def test_before_title_conflict_log_names_source_title(watch_logger: LoggerWatche
     messages = texts_at(entries(), logging.WARNING)
     assert len(messages) == 1
     assert messages[0].endswith(f'// {_KHOMEN}')
+
+
+class _Collector(logging.Handler):
+    """Складывает записи лога в список."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+def test_conflict_is_file_only() -> None:
+    """Подробное расхождение уходит только в файл лога, на экран — только сводка."""
+    collector = _Collector()
+    logger = logging.getLogger(_PARAMS_LOGGER)
+    logger.addHandler(collector)
+    try:
+        ParamsFromTitle(DefaultTitle()).prepare(RowItem({'title': _KHOMEN, 'eet': 40}))
+    finally:
+        logger.removeHandler(collector)
+
+    assert [getattr(record, FILE_ONLY, False) for record in collector.records] == [True]
+
+
+def test_no_conflict_does_not_mark_row() -> None:
+    row = RowItem({'title': _KHOMEN})
+
+    ParamsFromTitle(DefaultTitle()).prepare(row)
+
+    assert not row.vendor.title_conflict
+
+
+def test_title_conflicts_message() -> None:
+    assert title_conflicts_message(0) == ''
+    assert '3' in title_conflicts_message(3)

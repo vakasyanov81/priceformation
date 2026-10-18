@@ -21,6 +21,7 @@ class ParserStats:
     black_list_skips: int = 0
     unknown_category_skips: list[str] = field(default_factory=list)
     type_corrections: int = 0
+    title_conflicts: int = 0
 
 
 class ParseResultStatistic:

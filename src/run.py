@@ -38,8 +38,7 @@ from run_argv import (
     is_machine_argv,
     parse_machine_args,
 )
-from run_dialog import AnswerResult, ask_action
-from run_dialog.help_format import colorize_markdown
+from run_dialog import AnswerResult, ask_action, colorize_markdown
 from run_machine import fail_unknown_result_template, machine_json, upload_four_tochki_data
 from services.async_utils import try_call
 from services.configure import configure_services
@@ -48,6 +47,7 @@ from services.help_service import HelpService
 from services.mail_service import MailService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
+from services.price_schema_service import schema_guard
 from services.service_provider import ServiceProvider
 from services.zapaska_service import ZapaskaService
 
@@ -118,6 +118,7 @@ def response_processing() -> bool:
         AnswerResult.UPDATE_FOUR_TOCHKI_DATA: run_upload_four_tochki_data,
         AnswerResult.REPORT_DOUBLES: run_report_doubles,
         AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
+        AnswerResult.UPDATE_ALL_SUPPLIER_PRICES: run_update_all_supplier_prices,
         AnswerResult.SHOW_HELP: run_show_help,
     }
     try_call(handlers[action])
@@ -132,13 +133,15 @@ def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
 
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
-    ServiceProvider.resolve(ZapaskaService).upload_data()
+    with schema_guard():
+        ServiceProvider.resolve(ZapaskaService).upload_data()
     logger.info('*** Данные успешно загружены. ***\n')
 
 
 def run_upload_four_tochki_data() -> None:
     """Load Four Tochki data from api"""
-    upload_four_tochki_data()
+    with schema_guard():
+        upload_four_tochki_data()
     logger.info('*** Данные Форточек успешно загружены. ***\n')
 
 
@@ -150,8 +153,20 @@ def run_report_doubles() -> None:
 
 def run_fetch_mail_prices() -> None:
     """Download supplier prices from the mail box."""
-    fetched = ServiceProvider.resolve(MailService).fetch_prices()
+    with schema_guard():
+        fetched = ServiceProvider.resolve(MailService).fetch_prices()
     logger.info(f'*** Прайсы из почты получены: {len(fetched)}. ***\n')
+
+
+def run_update_all_supplier_prices() -> None:
+    """Обновить прайсы всех поставщиков: запаска и Форточки по API, затем почта.
+
+    Сбой одного источника не отменяет остальные (ошибка логируется в try_call).
+    Схемы прайсов сравниваются один раз: копия до первого источника, проверка после последнего.
+    """
+    with schema_guard():
+        for update in (run_upload_zapaska_data, run_upload_four_tochki_data, run_fetch_mail_prices):
+            try_call(update)
 
 
 def run_show_help() -> None:

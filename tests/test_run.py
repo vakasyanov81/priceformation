@@ -9,6 +9,7 @@ from run_dialog import AnswerResult
 from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
+from services.price_schema_service import PriceSchemaService
 from services.zapaska_service import ZapaskaService
 
 _ASK_ACTION = 'run.ask_action'
@@ -90,7 +91,7 @@ def test_run_upload_zapaska(watch_logger: LoggerWatcher) -> None:
     entries = watch_logger(_RUN_LOGGER)
     with patch(
         'run.ServiceProvider.resolve',
-        side_effect={ZapaskaService: zapaska_service}.__getitem__,
+        side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__,
     ):
         from run import run_upload_zapaska_data
 

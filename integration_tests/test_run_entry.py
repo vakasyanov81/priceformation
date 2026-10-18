@@ -11,6 +11,7 @@ from run_dialog import AnswerResult
 from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
+from services.price_schema_service import PriceSchemaService
 from services.zapaska_service import ZapaskaService
 
 _INPUT = 'builtins.input'
@@ -91,7 +92,7 @@ def test_main_update_zapaska_then_exit(watch_logger: LoggerWatcher) -> None:
     entries = watch_logger(_RUN_LOGGER)
     with (
         patch(_INPUT, side_effect=['2', _QUIT]),
-        patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service}.__getitem__),
+        patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
         from run import main
