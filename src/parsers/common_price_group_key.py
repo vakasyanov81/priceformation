@@ -13,6 +13,7 @@ from parsers.common_price_group_fields import (
 from parsers.common_price_size import canon_number, size_fields
 from parsers.common_price_title_flags import valve_key
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
+from parsers.strategies.normalize import replace_homoglyphs
 
 _KNOWN_MODEL_PREFIXES = ('кама', 'kama')
 _PREFIX_SEPARATORS = '- '
@@ -28,13 +29,13 @@ def clear_model(
     manufacturer: str | None = None,
     brand: str | None = None,
 ) -> str:
-    """Очистка модели: нижний регистр, без пробелов, без префикса бренда."""
+    """Очистка модели: нижний регистр, без пробелов, без префикса бренда, кириллические двойники → латиница."""
     if not model:
         return ''
     normalized = model.lower()
     for prefix in _model_prefixes(manufacturer, brand):
         normalized = _lstrip_brand_prefix(normalized, prefix)
-    return normalized.replace(' ', '')
+    return replace_homoglyphs(normalized.replace(' ', ''))
 
 
 def _lstrip_brand_prefix(model: str, prefix: str) -> str:

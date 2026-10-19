@@ -52,6 +52,18 @@ def test_clear_model_kama_nu_variants_match() -> None:
     assert clear_model('КАМА-NU 701') == clear_model('NU701') == clear_model('NU 701')
 
 
+def test_clear_model_cyrillic_homoglyph_matches_latin() -> None:
+    """В прайсе Запаски `Asimmetriсo` с кириллической `с` — та же модель, что у латинской."""
+    assert clear_model('Strada Asimmetri\u0441o V-130') == clear_model('Strada Asimmetrico V-130')
+
+
+def test_group_key_ignores_homoglyph_and_tl_in_title() -> None:
+    """Дубль: `TL` в названии и кириллическая `с` в модели ключ не меняют."""
+    with_tl = _row(title='175/70R13 Viatti Strada Asimmetrico V-130 TL 82H', model='Strada Asimmetrico V-130')
+    without_tl = _row(title='175/70R13 Viatti Strada Asimmetri\u0441o V-130 82H', model='Strada Asimmetri\u0441o V-130')
+    assert group_key(with_tl, {}) == group_key(without_tl, {})
+
+
 def test_clear_model_distinct_hyphen_suffixes() -> None:
     assert clear_model('PW-1') != clear_model('PS-1')
     assert clear_model('CW-2') != clear_model('CA-2')
