@@ -4,11 +4,12 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.category_finder import canonical_product_type, raw_category_label
-from parsers.strategies.product_types import CAMERA, DISK, GENERIC_TIRE, OTHER, RIM_TAPE
+from parsers.strategies.product_types import CAMERA, DISK, GENERIC_TIRE, LIGHT_TRUCK, OTHER, PASSENGER, RIM_TAPE
 from parsers.strategies.protocols import CategoryContext
 from parsers.strategies.tire_category import non_tire_product_type
 from parsers.vendor_config.slot_configs import CategoryConfig
@@ -16,6 +17,8 @@ from parsers.vendor_config.slot_configs import CategoryConfig
 _CATEGORY_FIELD = 'type_production'
 _MANUFACTURER_CHUNK_INDEX = 1
 _MANUFACTURER_HEAD_PREFIX = 'автошин'
+# Суффикс легкогрузовой шины в диаметре: `15C`, `16LT` (латиница или кириллическая `С`).
+_LIGHT_TRUCK_DIAMETER = re.compile(r'(?i)\d(?:c|с|lt)$')
 
 # Канонизация первого слова строки-заголовка (падеж/число/регистр) к типу товара.
 _HEADER_CATEGORIES: Mapping[str, str] = {
@@ -82,24 +85,47 @@ class TitleKeywordsCategory:
 
 
 class FieldMapCategory:
-    """Категория по значению поля строки через карту (регистр и пробелы нормализуются)."""
+    """Категория по значению поля строки через карту (регистр и пробелы нормализуются).
 
-    def __init__(self, field_name: str, mapping: Mapping[str, str], default: str) -> None:
-        """Запомнить имя поля, карту значений и default."""
+    С ``light_truck_by_diameter`` легковая шина с суффиксом C/LT в диаметре — легкогрузовая.
+    """
+
+    def __init__(
+        self,
+        field_name: str,
+        mapping: Mapping[str, str],
+        default: str,
+        *,
+        light_truck_by_diameter: bool = False,
+    ) -> None:
+        """Запомнить имя поля, карту значений, default и признак уточнения по диаметру."""
         self._field_name = field_name
         self._mapping = mapping
         self._default = default
+        self._light_truck_by_diameter = light_truck_by_diameter
 
     @classmethod
     def from_config(cls, config: CategoryConfig) -> FieldMapCategory:
         """Взять поле и карту из конфига."""
-        return cls(config.field_name, config.mapping, config.default_value)
+        return cls(
+            config.field_name,
+            config.mapping,
+            config.default_value,
+            light_truck_by_diameter=config.light_truck_by_diameter,
+        )
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str | None:
         """Сопоставить значение поля карте, иначе вернуть default."""
         raw_value = row_item.get_field(self._field_name)
         key = str(raw_value or '').lower().strip()
-        return self._mapping.get(key) or self._default
+        category = self._mapping.get(key) or self._default
+        if self._light_truck_by_diameter and category == PASSENGER and self._has_light_truck_suffix(row_item):
+            return LIGHT_TRUCK
+        return category
+
+    def _has_light_truck_suffix(self, row_item: RowItem) -> bool:
+        diameter = str(row_item.tire.diameter or '').strip()
+        return _LIGHT_TRUCK_DIAMETER.search(diameter) is not None
 
 
 class ColumnCanonicalCategory:

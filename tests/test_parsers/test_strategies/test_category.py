@@ -87,6 +87,40 @@ def test_field_map_falls_back_to_default() -> None:
     assert strategy.resolve(RowItem({})) == 'Легковая шина'
 
 
+@pytest.mark.parametrize(
+    ('tire_type', 'diameter', 'expected'),
+    [
+        ('vned', '15C', 'Легкогрузовая шина'),
+        ('vned', '16LT', 'Легкогрузовая шина'),
+        ('vned', '16c', 'Легкогрузовая шина'),
+        ('vned', '15', 'Легковая шина'),
+        ('vned', '', 'Легковая шина'),
+        ('грузовая', '22.5', 'Грузовая шина'),
+        ('грузовая', '15C', 'Грузовая шина'),
+    ],
+)
+def test_field_map_light_truck_by_diameter(tire_type: str, diameter: str, expected: str) -> None:
+    """Суффикс C/LT в диаметре делает легковую шину поставщика легкогрузовой; другие типы не трогает."""
+    strategy = FieldMapCategory.from_config(
+        _config(
+            field_name='tire_type',
+            mapping={'vned': 'Легковая шина', 'грузовая': 'Грузовая шина'},
+            default_value='Легковая шина',
+            light_truck_by_diameter=True,
+        ),
+    )
+
+    assert strategy.resolve(RowItem({'tire_type': tire_type, 'diameter': diameter})) == expected
+
+
+def test_field_map_ignores_diameter_suffix_without_flag() -> None:
+    strategy = FieldMapCategory.from_config(
+        _config(field_name='tire_type', mapping={'vned': 'Легковая шина'}, default_value='Легковая шина'),
+    )
+
+    assert strategy.resolve(RowItem({'tire_type': 'vned', 'diameter': '15C'})) == 'Легковая шина'
+
+
 def test_column_canonical_uses_context() -> None:
     strategy = ColumnCanonicalCategory.from_config(_config(unknown_skip=True))
     context = _FakeContext(resolved='Грузовая шина')

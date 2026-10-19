@@ -28,6 +28,9 @@ class CategoryConfig:
     `calculate_type` включает слой независимого типа (`ProductTypeClassifier`):
     заявленный стратегией тип сохраняется для сверки, а в `type_production`
     пишется вычисленный; расхождение помечается `type_corrected`.
+
+    `light_truck_by_diameter` (для `field_map`) — тип «Легковая шина» от поставщика заменяется на
+    «Легкогрузовая шина», если в диаметре есть суффикс `C`/`LT` (Форточки: внедорожные `vned` в размере `15C`).
     """
 
     strategy: str = DEFAULT_CATEGORY_STRATEGY
@@ -39,6 +42,7 @@ class CategoryConfig:
     zero_rest_categories: tuple[str, ...] = ()
     size_fields: dict[str, dict[str, str]] = field(default_factory=dict)
     calculate_type: bool = False
+    light_truck_by_diameter: bool = False
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> CategoryConfig:
@@ -54,6 +58,7 @@ class CategoryConfig:
             zero_rest_categories=read_str_list(payload, 'zero_rest_categories', where, ()),
             size_fields=read_field_map(payload, 'size_fields', where),
             calculate_type=read_flag(payload, 'calculate_type', where),
+            light_truck_by_diameter=read_flag(payload, 'light_truck_by_diameter', where),
         )
 
 
