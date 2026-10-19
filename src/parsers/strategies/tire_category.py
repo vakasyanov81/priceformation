@@ -22,7 +22,8 @@ LIGHT_TRUCK = 'Легкогрузовая шина'
 PASSENGER = 'Легковая шина'
 
 _LIGHT_TRUCK_WIDTH = 245
-_SPEC_WORDS = ('сельхоз', 'спец', 'клюшка', 'индустр', 'flotation')
+# `nortec er-` — индустриальная серия Nortec ER-xxx: размер как у грузовой диагонали (10.00-20), но это спецшина
+_SPEC_WORDS = ('сельхоз', 'спец', 'клюшка', 'индустр', 'flotation', 'nortec er-')
 _TRUCK_AXLE_WORDS = ('руль.ось', 'рулев', 'вед.ось', 'ведущ', 'прицепн', 'унив.ось', 'универс')
 _SPEC_SIZE_PATTERNS = (
     re.compile(r'\d+lr\d+'),  # 28LR26

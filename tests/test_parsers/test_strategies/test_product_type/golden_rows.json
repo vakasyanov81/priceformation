@@ -173,8 +173,8 @@
       "supplier": "Пошк",
       "title": "10.00-20 Nortec ER-109 146B 16PR TT",
       "declared": "Грузовая шина",
-      "own": "Грузовая шина",
-      "corrected": false
+      "own": "Спецшина",
+      "corrected": true
     },
     {
       "supplier": "Пошк",
@@ -271,8 +271,8 @@
       "supplier": "Форточки",
       "title": "10.00-20 Nortec ER-109 16 TT 146B",
       "declared": "Спецшина",
-      "own": "Грузовая шина",
-      "corrected": true
+      "own": "Спецшина",
+      "corrected": false
     },
     {
       "supplier": "Форточки",
