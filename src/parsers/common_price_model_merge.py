@@ -3,9 +3,10 @@
 Поставщики пишут модель по-разному: ``Gravity`` / ``GRAVITY SUV``, ``G075`` / ``Ice Guard G075``,
 ``НК-241 GRANT`` / ``Grant (НК-241)``. Ключ ``clear_model`` склеивает слова в строку, и такие варианты
 в разные группы. Здесь модели с одним ядром ключа (всё, кроме модели) сравниваются по наборам слов:
-короткая модель присоединяется к длинной, если эта длинная — единственная, куда короткая входит целиком.
-Если подходящих несколько (``Gravity`` входит и в ``Gravity SUV``, и в ``Gravity SUV PS-9``), модели
-могут быть разными — ничего не склеиваем.
+короткая модель присоединяется к ближайшей по числу слов длинной, куда входит целиком, и так по цепочке:
+``Gravity`` → ``Gravity SUV`` → ``Gravity SUV PS-9``. Если ближайших несколько и они равны по размеру
+(``G075`` входит и в ``Ice Guard G075``, и в ``iceGuard Studless G075``), неясно, какая из них нужна, —
+ничего не склеиваем.
 """
 
 from collections.abc import Iterable
@@ -33,6 +34,16 @@ def _canonical_keys(token_sets: dict[str, Tokens]) -> CanonicalKeys:
 
 
 def _target_tokens(tokens: Tokens, canonical: CanonicalKeys) -> Tokens:
-    """Набор слов, к которому присоединяется модель: единственный надмножество, иначе свой."""
+    """Набор слов, к которому присоединяется модель: ближайшее надмножество по цепочке, иначе свой."""
+    nearest = _nearest_superset(tokens, canonical)
+    return tokens if nearest is None else _target_tokens(nearest, canonical)
+
+
+def _nearest_superset(tokens: Tokens, canonical: CanonicalKeys) -> Tokens | None:
+    """Надмножество с наименьшим числом слов; None, если его нет или таких несколько."""
     supersets = [other for other in canonical if tokens < other]
-    return supersets[0] if len(supersets) == 1 else tokens
+    if not supersets:
+        return None
+    smallest = min(len(other) for other in supersets)
+    nearest = [other for other in supersets if len(other) == smallest]
+    return nearest[0] if len(nearest) == 1 else None

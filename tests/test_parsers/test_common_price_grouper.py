@@ -444,14 +444,18 @@ def test_model_with_extra_words_is_double() -> None:
     _assert_grouped(_tire('Gravity'), _tire('Gravity SUV', price_markup=_PRICE_HIGH))
 
 
-def test_ambiguous_short_model_is_not_merged() -> None:
-    """`Gravity` подходит к двум длинным моделям сразу: не склеиваем её ни с одной."""
-    short = _tire('Gravity')
-    middle = _tire('Gravity SUV')
-    long = _tire('Gravity SUV PS-9')
-    CommonPriceGrouper([short, middle, long]).group_by_params()
-    assert short.duplicate.group_by_params not in (middle.duplicate.group_by_params, long.duplicate.group_by_params)
-    assert middle.duplicate.group_by_params == long.duplicate.group_by_params
+def test_short_model_joins_nearest_longer_one() -> None:
+    """`Gravity` подходит к двум длинным: склеиваем по цепочке `Gravity` → `Gravity SUV` → `Gravity SUV PS-9`."""
+    _assert_grouped(_tire('Gravity'), _tire('Gravity SUV'), _tire('Gravity SUV PS-9'))
+
+
+def test_equally_near_longer_models_are_not_merged() -> None:
+    """`G075` подходит к двум длинным одного размера: не склеиваем её ни с одной."""
+    short = _tire('G075')
+    first = _tire('Ice Guard G075')
+    second = _tire('iceGuard Studless G075')
+    CommonPriceGrouper([short, first, second]).group_by_params()
+    assert short.duplicate.group_by_params not in (first.duplicate.group_by_params, second.duplicate.group_by_params)
 
 
 def test_merged_models_do_not_cross_other_key_parts() -> None:
