@@ -57,18 +57,19 @@ def test_response_update_all_supplier_prices() -> None:
 
 
 def test_run_update_all_prices_order() -> None:
-    """запаска, Форточки и почта вызываются по порядку, каждый через try_call"""
+    """запаска, Форточки, МИМ и почта вызываются по порядку, каждый через try_call"""
     calls = MagicMock()
     with (
         patch('run.ServiceProvider.resolve', side_effect={PriceSchemaService: MagicMock()}.__getitem__),
         patch('run.run_upload_zapaska_data', calls.zapaska),
         patch('run.run_upload_four_tochki_data', calls.four_tochki),
+        patch('run.run_upload_mim_data', calls.mim),
         patch('run.run_fetch_mail_prices', calls.mail),
     ):
         from run import run_update_all_supplier_prices
 
         run_update_all_supplier_prices()
-        assert [call[0] for call in calls.mock_calls] == ['zapaska', 'four_tochki', 'mail']
+        assert [call[0] for call in calls.mock_calls] == ['zapaska', 'four_tochki', 'mim', 'mail']
 
 
 def test_update_all_single_schema_guard() -> None:
@@ -78,6 +79,7 @@ def test_update_all_single_schema_guard() -> None:
         patch('run.ServiceProvider.resolve', side_effect={PriceSchemaService: schema_service}.__getitem__),
         patch('run.run_upload_zapaska_data'),
         patch('run.run_upload_four_tochki_data'),
+        patch('run.run_upload_mim_data'),
         patch('run.run_fetch_mail_prices'),
     ):
         from run import run_update_all_supplier_prices

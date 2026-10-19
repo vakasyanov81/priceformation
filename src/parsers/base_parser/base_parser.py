@@ -30,6 +30,7 @@ from parsers.base_parser.row_processor import (
     correction_category,
 )
 from parsers.base_parser.title_filter import TitleFilter
+from parsers.base_parser.warehouse_order import apply_warehouse_order
 from domain.row_item.row_item import RowItem
 from parsers.strategies.product_types import declared_matches
 from parsers.xls_reader import IXlsReader, XlsReader
@@ -245,6 +246,8 @@ class BaseParser:
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Выполнить шаги pipeline по порядку."""
+        self.apply_warehouse_filter(hooks, row_item)
+        self.apply_warehouse_order(hooks, row_item)
         for step in hooks.pipeline:
             if step == 'title':
                 self.set_prepared_title(row_item)
@@ -304,6 +307,18 @@ class BaseParser:
         """Обнулить остаток строки без категории, чтобы она не попала в прайс."""
         if hooks.zero_rest_without_category and not row_item.vendor.type_production:
             row_item.set_field('rest_count', 0)
+
+    @classmethod
+    def apply_warehouse_filter(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Обнулить остаток склада вне выбранных городов (`behavior.warehouse_cities`)."""
+        if hooks.warehouse_filter is not None:
+            hooks.warehouse_filter.apply(row_item)
+
+    @classmethod
+    def apply_warehouse_order(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
+        """Наличие «Под заказ» и срок доставки из названия склада (`behavior.order_from_warehouse_name`)."""
+        if hooks.order_from_warehouse_name:
+            apply_warehouse_order(row_item)
 
     @classmethod
     def apply_category_fields(cls, hooks: StrategyHooks, row_item: RowItem) -> None:

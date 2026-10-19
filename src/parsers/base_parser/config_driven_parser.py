@@ -17,7 +17,7 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.base_parser.row_processor import RowProcessor
-from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.strategy_hooks import StrategyHooks, warehouse_filter_for
 from parsers.json_reader import JsonPriceReader
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.pricing_registry import make_pricing_strategy
@@ -54,12 +54,13 @@ def vendor_markup_policy_from_config(section: VendorSection) -> MarkupPolicy:
     return make_pricing_strategy(section.pricing, 'section.pricing')
 
 
-def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig) -> StrategyHooks:
+def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig, folder: str = '') -> StrategyHooks:
     """Собрать ``StrategyHooks`` из секции и поведения поставщика.
 
     Args:
         section: Секция поставщика.
         behavior: Поведение поставщика (из ``VendorConfig.behavior``).
+        folder: Папка поставщика; нужна для фильтра складов по городу (``warehouse_cities``).
     """
     category_strategy = make_category_strategy(section.category, f'section {section.id} category')
     manufacturer_reader = getattr(category_strategy, 'current_manufacturer', None)
@@ -77,6 +78,8 @@ def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig
         find_manufacturer_on_enrich=behavior.find_manufacturer_on_enrich,
         zero_rest_without_category=behavior.zero_rest_without_category,
         pipeline=behavior.pipeline,
+        warehouse_filter=warehouse_filter_for(behavior, folder),
+        order_from_warehouse_name=behavior.order_from_warehouse_name,
     )
 
 
@@ -109,7 +112,7 @@ def make_config_driven_parser(
     Returns:
         ``BaseParser`` с инжектированными стратегиями.
     """
-    hooks = strategy_hooks_from_section(section, vendor_config.behavior)
+    hooks = strategy_hooks_from_section(section, vendor_config.behavior, vendor_config.folder)
     policy = vendor_markup_policy_from_config(section)
     data_reader: type[Any] = _reader_for_config(vendor_config.reader)
     return BaseParser(

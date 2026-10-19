@@ -91,6 +91,7 @@ file_prices/                  входные прайсы и результат
 - `four_tochki_load_api_data` — выгрузить шины и диски Форточек по API (в
   `file_prices/four_tochki/tire.json` и `disk.json`; нужен источник `api`; склады подбираются
   по ключевым словам групп из `parse_config/four_tochki_warehouses.json` и выводятся на экран);
+- `mim_load_api_data` — выгрузить каталог МИМ по API (`file_prices/mim/price.xlsx`);
 - `fetch_mail_prices` — скачать свежие прайсы поставщиков из почты;
 - `get_supliers` — вернуть каталог поставщиков:
   `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`;
@@ -138,6 +139,7 @@ uv run pf parse --json --result-template for_drom
 uv run pf doubles --json
 uv run pf zapaska_load_api_data --json
 uv run pf four_tochki_load_api_data --json
+uv run pf mim_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
@@ -410,6 +412,13 @@ condition  available  type_production
   название `poshk_stk_tire_compose` с маркером «шип»;
 - **Мим** — три секции; легковые и диски — `base`, грузовая вкладка —
   `percent_by_threshold`;
+  выгрузка по API (`mim_load_api_data`) пишет `file_prices/mim/price.xlsx` и список складов
+  `territories.json`. Склады берутся из колонки «Территория» (`warehouse_name`) и «ID Территории»
+  (`warehouse_id`). `behavior.warehouse_cities` (например, `["Новосибирск"]`) оставляет остатки
+  только на складах этих городов: город — слово целиком в названии или адресе склада из
+  `territories.json` (улица «Новосибирская» не подходит), остаток прочих обнуляется. Пустой список —
+  без фильтра; `behavior.api_types` (по умолчанию `[1, 3, 4]`) — категории выгрузки по API: 1 шины, 2 диски, 3 грузовые шины, 4 грузовые диски, 5 секретки, 6 крепёж, 7 прочее; `behavior.order_from_warehouse_name: true` берёт из названия склада «Под заказ» (в «Наличие»)
+  и срок «от N д.» (в «Срок доставки»), например «НС.Под заказ от 4д.»; нет `territories.json` или в нём нет такого города — ошибка разбора МИМ;
 - **Форточки** — `recommended_range`: диапазоны по категориям и абсолютный пол
   `mode: delta`, `+500 ₽`; названия `tire_compose(four_tochki)` и
   `disk_compose(four_tochki)`. Источник выбирается полем `source`:
@@ -618,6 +627,8 @@ condition  available  type_production
 - `FOUR_TOCHKI_API_LOGIN` / `FOUR_TOCHKI_API_PASSWORD` — доступ к API Форточек;
   `FOUR_TOCHKI_API_HOST` — необязательный адрес сервиса (можно указать WSDL-адрес
   из инструкции, он приводится к адресу сервиса);
+- `MIM_API_TOKEN` — токен доступа к API МИМ; `MIM_API_HOST` — необязательный адрес сервиса
+  (категории выгрузки — в `vendors/mim.json`, `behavior.api_types`);
 - `MAIL_LOGIN` / `MAIL_PASSWORD` — доступ к почтовому ящику для
   `fetch_mail_prices`.
 

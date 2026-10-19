@@ -136,9 +136,10 @@ def test_exit_key_returns_exit(_interactive: _FakeVendorService, monkeypatch: py
         ('2', 1),
         ('3', 2),
         ('4', 3),
-        ('6', 4),
+        ('5', 4),
         ('7', 5),
         ('8', 6),
+        ('9', 7),
     ],
 )
 def test_shortcut_key_selects_item(
@@ -185,9 +186,9 @@ def test_activation_shortcut_expands_vendor_list(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Клавиша 4 разворачивает список поставщиков с маркером [] / [*]."""
+    """Клавиша 6 разворачивает список поставщиков с маркером [] / [*]."""
     _interactive.vendors = [VendorState('stk', 'STK', False), VendorState('mim', 'Мим', True)]
-    keys = [KeyPress(Key.OTHER, '5'), KeyPress(Key.EXIT)]
+    keys = [KeyPress(Key.OTHER, '6'), KeyPress(Key.EXIT)]
     monkeypatch.setattr(navigation, 'read_key', _presses(*keys))
 
     assert ask_action() is AnswerResult.EXIT
@@ -205,7 +206,7 @@ def test_enter_on_vendor_toggles_it(
     """Enter на строке поставщика активирует его; список перерисовывается."""
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     keys = [
-        KeyPress(Key.OTHER, '5'),
+        KeyPress(Key.OTHER, '6'),
         KeyPress(Key.DOWN),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
@@ -223,7 +224,7 @@ def test_unknown_shortcut_is_ignored(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Неизвестная цифра не выбирает строку, меню продолжает работу."""
-    keys = _presses(KeyPress(Key.OTHER, '9'), KeyPress(Key.ENTER))
+    keys = _presses(KeyPress(Key.OTHER, '0'), KeyPress(Key.ENTER))
     monkeypatch.setattr(navigation, 'read_key', keys)
     assert ask_action() is MENU_ITEMS[0].action
 
@@ -236,7 +237,7 @@ def test_toggle_failure_keeps_menu_alive(
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     monkeypatch.setattr(_interactive, 'toggle', _raise_os_error)
     keys = [
-        KeyPress(Key.OTHER, '5'),
+        KeyPress(Key.OTHER, '6'),
         KeyPress(Key.DOWN),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
@@ -255,7 +256,7 @@ def test_enter_on_header_collapses_list(
     """Повторный Enter на заголовке сворачивает список."""
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     keys = [
-        KeyPress(Key.OTHER, '5'),
+        KeyPress(Key.OTHER, '6'),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
     ]
@@ -312,7 +313,7 @@ def test_collapse_uses_expanded_frame_height(
     """Кадр сворачивания очищается по высоте развёрнутого — без дублей строк."""
     _interactive.vendors = [VendorState('stk', 'STK', True)]
     keys = [
-        KeyPress(Key.OTHER, '5'),
+        KeyPress(Key.OTHER, '6'),
         KeyPress(Key.ENTER),
         KeyPress(Key.EXIT),
     ]

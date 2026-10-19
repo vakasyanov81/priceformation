@@ -21,7 +21,7 @@ from parsers.xls_reader_row import (
 )
 
 _MAX_COLUMNS = 50
-_MAX_ROWS = 10000
+_MAX_ROWS = 100_000
 
 type Row = list[Any]
 type DRow = dict[str, Any]

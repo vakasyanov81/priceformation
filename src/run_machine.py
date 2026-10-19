@@ -20,12 +20,14 @@ from run_argv import (
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
+    MIM_LOAD_API_DATA,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
 )
 from services import doubles_service, four_tochki_service, zapaska_service
 from services.configure import ensure_services_configured
 from services.mail_service import MailService
+from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -35,9 +37,16 @@ logger = logging.getLogger(__name__)
 _INTERRUPT = 'interrupted'
 _JSON_OK = 'ok'
 _JSON_ACTION = 'action'
-_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, FETCH_MAIL_PRICES))
+_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, MIM_LOAD_API_DATA, FETCH_MAIL_PRICES))
 _COMPACT_ERROR_COMMANDS = frozenset(
-    (LOAD_SUPPLIER_PRICES, LOAD_CONFIG, ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, FETCH_MAIL_PRICES),
+    (
+        LOAD_SUPPLIER_PRICES,
+        LOAD_CONFIG,
+        ZAPASKA_LOAD_API_DATA,
+        FOUR_TOCHKI_LOAD_API_DATA,
+        MIM_LOAD_API_DATA,
+        FETCH_MAIL_PRICES,
+    ),
 )
 
 
@@ -140,13 +149,16 @@ def _command_payload(
 
 
 def _json_download(command: str) -> Mapping[str, Any]:
-    """Выгрузить удалённые прайсы (API запаски / Форточек или почта) и вернуть ответ."""
+    """Выгрузить удалённые прайсы (API запаски / Форточек / МИМ или почта) и вернуть ответ."""
     if command == ZAPASKA_LOAD_API_DATA:
         ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
         return {_JSON_OK: True, _JSON_ACTION: ZAPASKA_LOAD_API_DATA}
     if command == FOUR_TOCHKI_LOAD_API_DATA:
         upload_four_tochki_data()
         return {_JSON_OK: True, _JSON_ACTION: FOUR_TOCHKI_LOAD_API_DATA}
+    if command == MIM_LOAD_API_DATA:
+        ServiceProvider.resolve(MimService).upload_data()
+        return {_JSON_OK: True, _JSON_ACTION: MIM_LOAD_API_DATA}
     fetched = ServiceProvider.resolve(MailService).fetch_prices()
     return {
         _JSON_OK: True,
