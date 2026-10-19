@@ -9,6 +9,7 @@ from run_argv import (
     GET_SUPLIERS,
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
+    MIM_LOAD_API_DATA,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
@@ -35,6 +36,7 @@ def test_is_machine_argv_commands() -> None:
     assert is_machine_argv([DOUBLES, '--json']) is True
     assert is_machine_argv([ZAPASKA_LOAD_API_DATA]) is True
     assert is_machine_argv([FOUR_TOCHKI_LOAD_API_DATA]) is True
+    assert is_machine_argv([MIM_LOAD_API_DATA]) is True
     assert is_machine_argv([FETCH_MAIL_PRICES]) is True
     assert is_machine_argv([GET_SUPLIERS]) is True
     assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
@@ -74,6 +76,7 @@ def test_parse_without_json() -> None:
     """команда без --json."""
     args = parse_machine_args([FOUR_TOCHKI_LOAD_API_DATA])
     assert args.command == FOUR_TOCHKI_LOAD_API_DATA
+    assert parse_machine_args([MIM_LOAD_API_DATA]).command == MIM_LOAD_API_DATA
     args = parse_machine_args([ZAPASKA_LOAD_API_DATA])
     assert args.command == ZAPASKA_LOAD_API_DATA
     assert args.json is False

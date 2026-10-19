@@ -10,6 +10,7 @@ from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.help_service import HelpService
 from services.mail_service import MailService
+from services.mim_service import MimService
 from services.parse_orchestrator import GrouperFactory, ParseOrchestrator, ParserFactory
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
@@ -37,6 +38,7 @@ def test_configure_registers_services() -> None:
     assert isinstance(ServiceProvider.resolve(DoublesService), DoublesService)
     assert isinstance(ServiceProvider.resolve(ZapaskaService), ZapaskaService)
     assert isinstance(ServiceProvider.resolve(FourTochkiService), FourTochkiService)
+    assert isinstance(ServiceProvider.resolve(MimService), MimService)
     assert isinstance(ServiceProvider.resolve(MailService), MailService)
     assert isinstance(ServiceProvider.resolve(HelpService), HelpService)
     assert isinstance(ServiceProvider.resolve(VendorActivationService), VendorActivationService)

@@ -9,6 +9,7 @@ from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.help_service import HelpService
 from services.mail_service import MailService
+from services.mim_service import MimService
 from services.parse_orchestrator import GrouperFactory, ParseOrchestrator, ParserFactory
 from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
@@ -42,9 +43,10 @@ def _register_services() -> None:
 
 
 def _register_update_services() -> None:
-    """Источники обновления прайсов (запаска, Форточки, почта) и контроль схем прайсов."""
+    """Источники обновления прайсов (запаска, Форточки, МИМ, почта) и контроль схем прайсов."""
     ServiceProvider.register(ZapaskaService, ZapaskaService)
     ServiceProvider.register(FourTochkiService, FourTochkiService)
+    ServiceProvider.register(MimService, MimService)
     ServiceProvider.register(MailService, MailService)
     ServiceProvider.register(PriceSchemaService, PriceSchemaService)
 

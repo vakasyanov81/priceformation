@@ -34,6 +34,8 @@ def get_try_to_int_or_str(code_value: str) -> int | str:
     """
 
     def as_int_or_raise() -> int:
+        if isinstance(code_value, str) and not code_value.strip():
+            raise ValueError
         code_new = get_try_to_int_or_float(code_value) or 0
         if isinstance(code_new, float):
             raise ValueError
@@ -48,11 +50,14 @@ def get_try_to_int_or_str(code_value: str) -> int | str:
 def get_try_to_int_or_float(field_raw: str | float | None) -> int | float | None:
     """
     Try Make correct str to int or float
+    "163,5" -> 163.5 (десятичная запятая), "10.0" -> 10, "" -> None (пустая ячейка)
     """
     if field_raw is None:
         return None
 
-    numeric_raw: str | float = field_raw
+    numeric_raw = _numeric_text(field_raw)
+    if numeric_raw == '':
+        return None
 
     def to_int_if_whole() -> int:
         floated_value = float(numeric_raw)
@@ -65,3 +70,10 @@ def get_try_to_int_or_float(field_raw: str | float | None) -> int | float | None
         return to_int_if_whole()
     except ValueError:
         return float(numeric_raw)
+
+
+def _numeric_text(field_raw: str | float) -> str | float:
+    """Строку числа привести к виду для float(): без пробелов по краям, запятая -> точка."""
+    if isinstance(field_raw, str):
+        return field_raw.strip().replace(',', '.')
+    return field_raw

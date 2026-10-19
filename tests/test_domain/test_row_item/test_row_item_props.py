@@ -166,3 +166,9 @@ def test_failed_conversion_leaves_previous_value() -> None:
 def test_row_item_is_not_compared_by_fields() -> None:
     """две одинаковые позиции остаются разными объектами."""
     assert RowItem({'title': 't1'}) != RowItem({'title': 't1'})
+
+
+def test_disk_eet_decimal_comma() -> None:
+    """eet со строкой «163,5» становится float 163.5 (как и остальные числовые параметры диска)."""
+    row = RowItem({'title': 't1', 'eet': '163,5', 'price_opt': '10', 'rest_count': '5'})
+    assert row.disk.eet == 163.5

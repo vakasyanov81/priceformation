@@ -18,6 +18,27 @@ def test_get_try_to_int_or_float() -> None:
     assert get_try_to_int_or_float('10.5') == 10.5
 
 
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('163,5', 163.5),
+        (' 163,5 ', 163.5),
+        ('114,3', 114.3),
+        ('10,0', 10),
+        ('7,', 7),
+    ],
+)
+def test_get_try_to_int_or_float_decimal_comma(raw: str, expected: float) -> None:
+    """Десятичная запятая приводится к точке: eet, pcd1, central_diameter."""
+    assert get_try_to_int_or_float(raw) == expected
+
+
+@pytest.mark.parametrize('raw', ['', '  ', None])
+def test_get_try_to_int_or_float_blank_is_none(raw: str | None) -> None:
+    """Пустая ячейка (pcd1, central_diameter) — не ошибка, а None."""
+    assert get_try_to_int_or_float(raw) is None
+
+
 def test_get_integer() -> None:
     """Try cast string to int"""
     with pytest.raises(ValueError):

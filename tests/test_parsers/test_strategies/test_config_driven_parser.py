@@ -127,6 +127,16 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
     assert parser.data_reader is JsonPriceReader
 
 
+def test_strategy_hooks_without_cities_have_no_warehouse_filter() -> None:
+    assert strategy_hooks_from_section(_section(), BehaviorConfig(), 'mim').warehouse_filter is None
+
+
+def test_strategy_hooks_with_cities_get_warehouse_filter() -> None:
+    hooks = strategy_hooks_from_section(_section(), BehaviorConfig(warehouse_cities=('Новосибирск',)), 'mim')
+
+    assert hooks.warehouse_filter is not None
+
+
 def test_strategy_hooks_from_section_keeps_all_fields() -> None:
     """Все поведенческие поля behavior попадают в StrategyHooks."""
     behavior = BehaviorConfig(

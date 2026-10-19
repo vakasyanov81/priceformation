@@ -125,7 +125,11 @@ class PricingConfig:
 
 @dataclass(frozen=True, slots=True)
 class BehaviorConfig:
-    """Поведение разбора поставщика (секция `behavior`)."""
+    """Поведение разбора поставщика (секция `behavior`).
+
+    `warehouse_cities` — оставить остатки только на складах этих городов (пусто — без фильтра).
+    `order_from_warehouse_name` — «под заказ» и срок доставки берутся из названия склада.
+    """
 
     min_rest: int = DEFAULT_MIN_REST
     rest: str = REST_COUNT
@@ -134,6 +138,8 @@ class BehaviorConfig:
     collect_missing_recommended: bool = False
     find_manufacturer_on_enrich: bool = True
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE
+    warehouse_cities: tuple[str, ...] = ()
+    order_from_warehouse_name: bool = False
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> BehaviorConfig:
@@ -147,4 +153,6 @@ class BehaviorConfig:
             collect_missing_recommended=read_flag(payload, 'collect_missing_recommended', where),
             find_manufacturer_on_enrich=read_flag(payload, 'find_manufacturer_on_enrich', where, True),
             pipeline=read_str_list(payload, 'pipeline', where, DEFAULT_PIPELINE),
+            warehouse_cities=read_str_list(payload, 'warehouse_cities', where, ()),
+            order_from_warehouse_name=read_flag(payload, 'order_from_warehouse_name', where),
         )

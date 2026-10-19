@@ -17,6 +17,7 @@ from run_argv import (
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
+    MIM_LOAD_API_DATA,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
 )
@@ -24,6 +25,7 @@ from run_machine import fail_unknown_result_template, machine_json
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
+from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
@@ -337,6 +339,18 @@ def test_json_zapaska(capsys: pytest.CaptureFixture[str]) -> None:
         'action': ZAPASKA_LOAD_API_DATA,
     }
     zapaska_service.upload_data.assert_called_once_with()
+
+
+def test_json_mim(capsys: pytest.CaptureFixture[str]) -> None:
+    """mim_load_api_data: compact ok, сервис выгрузки вызван."""
+    mim_service = MagicMock()
+    with patch(_RESOLVE, side_effect={MimService: mim_service}.__getitem__):
+        code = machine_json(MIM_LOAD_API_DATA)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {'ok': True, 'action': MIM_LOAD_API_DATA}
+    mim_service.upload_data.assert_called_once_with()
 
 
 def test_json_four_tochki(capsys: pytest.CaptureFixture[str]) -> None:

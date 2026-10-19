@@ -226,6 +226,8 @@ def test_behavior_reads_all_fields() -> None:
         'collect_missing_recommended': True,
         'find_manufacturer_on_enrich': False,
         'pipeline': ['title', 'markup'],
+        'warehouse_cities': ['Новосибирск'],
+        'order_from_warehouse_name': True,
     }
 
     assert BehaviorConfig.from_dict(raw, WHERE) == BehaviorConfig(
@@ -236,6 +238,8 @@ def test_behavior_reads_all_fields() -> None:
         collect_missing_recommended=True,
         find_manufacturer_on_enrich=False,
         pipeline=('title', 'markup'),
+        warehouse_cities=('Новосибирск',),
+        order_from_warehouse_name=True,
     )
 
 

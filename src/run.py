@@ -13,6 +13,7 @@
     python src/run.py doubles --json
     python src/run.py zapaska_load_api_data --json
     python src/run.py four_tochki_load_api_data --json
+    python src/run.py mim_load_api_data --json
     python src/run.py fetch_mail_prices --json
     python src/run.py get_supliers --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
@@ -33,6 +34,7 @@ from run_argv import (
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
     JSON_ONLY_COMMANDS,
+    MIM_LOAD_API_DATA,
     PARSE,
     ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
@@ -45,6 +47,7 @@ from services.configure import configure_services
 from services.doubles_service import DoublesService
 from services.help_service import HelpService
 from services.mail_service import MailService
+from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.price_schema_service import schema_guard
@@ -98,6 +101,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
         DOUBLES: run_report_doubles,
         ZAPASKA_LOAD_API_DATA: run_upload_zapaska_data,
         FOUR_TOCHKI_LOAD_API_DATA: run_upload_four_tochki_data,
+        MIM_LOAD_API_DATA: run_upload_mim_data,
         FETCH_MAIL_PRICES: run_fetch_mail_prices,
     }
     extra: dict[str, str | None] = {}
@@ -116,6 +120,7 @@ def response_processing() -> bool:
         AnswerResult.MAKE_PRICE_BY_SUPPLIER: run_make_price_by_supplier,
         AnswerResult.UPDATE_ZAPASKA_DATA: run_upload_zapaska_data,
         AnswerResult.UPDATE_FOUR_TOCHKI_DATA: run_upload_four_tochki_data,
+        AnswerResult.UPDATE_MIM_DATA: run_upload_mim_data,
         AnswerResult.REPORT_DOUBLES: run_report_doubles,
         AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
         AnswerResult.UPDATE_ALL_SUPPLIER_PRICES: run_update_all_supplier_prices,
@@ -145,6 +150,13 @@ def run_upload_four_tochki_data() -> None:
     logger.info('*** Данные Форточек успешно загружены. ***\n')
 
 
+def run_upload_mim_data() -> None:
+    """Load MIM data from api"""
+    with schema_guard():
+        ServiceProvider.resolve(MimService).upload_data()
+    logger.info('*** Данные МИМ успешно загружены. ***\n')
+
+
 def run_report_doubles() -> None:
     """Parse supplier prices and write duplicates report."""
     report = ServiceProvider.resolve(DoublesService).make_report()
@@ -159,13 +171,18 @@ def run_fetch_mail_prices() -> None:
 
 
 def run_update_all_supplier_prices() -> None:
-    """Обновить прайсы всех поставщиков: запаска и Форточки по API, затем почта.
+    """Обновить прайсы всех поставщиков: запаска, Форточки и МИМ по API, затем почта.
 
     Сбой одного источника не отменяет остальные (ошибка логируется в try_call).
     Схемы прайсов сравниваются один раз: копия до первого источника, проверка после последнего.
     """
     with schema_guard():
-        for update in (run_upload_zapaska_data, run_upload_four_tochki_data, run_fetch_mail_prices):
+        for update in (
+            run_upload_zapaska_data,
+            run_upload_four_tochki_data,
+            run_upload_mim_data,
+            run_fetch_mail_prices,
+        ):
             try_call(update)
 
 
