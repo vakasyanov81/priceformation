@@ -364,7 +364,6 @@ def test_group_key_exact() -> None:
         '225',
         '18',
         '',
-        '40',
         'Y',
         '92',
         'pro205',
@@ -399,7 +398,6 @@ def test_group_key_exact_strips_own_brand_prefixes() -> None:
         '225',
         '18',
         '',
-        '40',
         '',
         '',
         'b200',
@@ -417,7 +415,7 @@ def test_group_key_exact_strips_own_brand_prefixes() -> None:
 
 def test_group_key_exact_blank_row() -> None:
     """Пустая строка без размеров в title: все части ключа — пустые строки."""
-    assert group_key(RowItem({'title': 'no marker'}), {}) == ('',) * 17
+    assert group_key(RowItem({'title': 'no marker'}), {}) == ('',) * 16
 
 
 @pytest.mark.parametrize(
@@ -434,7 +432,7 @@ def test_group_key_exact_blank_row() -> None:
 )
 def test_group_key_camera_part(fields: dict[str, Any], expected: str) -> None:
     """Камерность приводится к верхнему регистру и попадает в свою часть ключа."""
-    assert group_key(_row(**fields), {})[11] == expected
+    assert group_key(_row(**fields), {})[10] == expected
 
 
 def test_group_key_loads_user_aliases_by_default() -> None:
@@ -444,8 +442,8 @@ def test_group_key_loads_user_aliases_by_default() -> None:
         return_value={'ZZZTEST': {'aliases': [], 'group': 'zzz-canon'}},
     ):
         key = group_key(_row(manufacturer_name='ZZZTEST'))
-    assert key[8] == 'zzz-canon'
-    assert group_key(_row(manufacturer_name='ZZZTEST'), {})[8] == 'zzztest'
+    assert key[7] == 'zzz-canon'
+    assert group_key(_row(manufacturer_name='ZZZTEST'), {})[7] == 'zzztest'
 
 
 def test_clear_model_applies_prefixes_longest_first() -> None:
