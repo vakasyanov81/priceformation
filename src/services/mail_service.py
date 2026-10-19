@@ -14,6 +14,7 @@ from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailConfig
 from parsers.mail.protocols import ImapClient
 from parsers.mail.provider import load_mail_config
+from services.vendor_activity import skip_mail_fetch
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,8 @@ def _collect(client: ImapClient, config: MailConfig, folders: list[str]) -> list
     """Обойти активные профили: найти письмо, записать вложение, собрать итог."""
     fetched: list[MailFetchResult] = []
     for folder, profile in config.enabled_profiles().items():
+        if skip_mail_fetch(folder):
+            continue
         found = find_latest_price(client, folders, profile=profile)
         if found is None:
             logger.warning(f'Для поставщика «{folder}» подходящее письмо не найдено.')

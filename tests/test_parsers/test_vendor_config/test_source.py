@@ -89,3 +89,13 @@ def test_source_errors_name_file_and_key() -> None:
         select_source(_vendor(source='api', api=[]), 'vendor.json')
     with pytest.raises(ConfigValidationError, match=r'^vendor\.json: «source» должен быть'):
         select_source(_vendor(source='ftp'), 'vendor.json')
+
+
+_SOURCE_CASES = [({}, 'xlsx'), ({'source': 'api'}, 'api')]
+
+
+@pytest.mark.parametrize(('extra', 'expected'), _SOURCE_CASES)
+def test_vendor_config_keeps_source(extra: dict[str, str], expected: str) -> None:
+    """Источник попадает в модель: по умолчанию «xlsx», для api — «api»."""
+    config = VendorConfig.from_dict(select_source(_vendor(**extra), 'vendor.json'), 'vendor', 'vendor.json')
+    assert config.source == expected

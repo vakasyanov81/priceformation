@@ -14,6 +14,7 @@ from parsers.vendor_config.slot_configs import (
     PricingConfig,
     TitleConfig,
 )
+from parsers.vendor_config.source import SOURCE_FILE
 
 READER_XLS = 'xls'
 READER_JSON = 'json'
@@ -79,6 +80,7 @@ class VendorConfig:
     category: CategoryConfig = field(default_factory=CategoryConfig)
     title: TitleConfig = field(default_factory=TitleConfig)
     sections: tuple[VendorSection, ...] = ()
+    source: str = SOURCE_FILE
 
     @classmethod
     def from_dict(cls, raw: Any, folder: str, where: str) -> VendorConfig:
@@ -101,6 +103,7 @@ class VendorConfig:
             category=CategoryConfig.from_dict(read_object(payload, 'category', where), f'{where} → category'),
             title=TitleConfig.from_dict(read_object(payload, 'title', where), f'{where} → title'),
             sections=(),
+            source=read_text(payload, 'source', where, SOURCE_FILE),
         )
         return replace(config, sections=_read_sections(payload, where, config))
 
