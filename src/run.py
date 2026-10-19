@@ -118,11 +118,6 @@ def response_processing() -> bool:
         return False
     handlers = {
         AnswerResult.MAKE_PRICE_BY_SUPPLIER: run_make_price_by_supplier,
-        AnswerResult.UPDATE_ZAPASKA_DATA: run_upload_zapaska_data,
-        AnswerResult.UPDATE_FOUR_TOCHKI_DATA: run_upload_four_tochki_data,
-        AnswerResult.UPDATE_MIM_DATA: run_upload_mim_data,
-        AnswerResult.REPORT_DOUBLES: run_report_doubles,
-        AnswerResult.FETCH_MAIL_PRICES: run_fetch_mail_prices,
         AnswerResult.UPDATE_ALL_SUPPLIER_PRICES: run_update_all_supplier_prices,
         AnswerResult.SHOW_HELP: run_show_help,
     }
