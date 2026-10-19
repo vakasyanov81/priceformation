@@ -6,7 +6,7 @@ from typing import Any
 from parsers.data_provider.json_fields import as_config_object, read_flag, read_number, read_object
 from parsers.data_provider.models import MarkupRulesConfig
 from parsers.vendor_config.field_map import read_field_map
-from parsers.vendor_config.fields import read_int, read_str_list, read_str_map, read_text
+from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_str_map, read_text
 
 DEFAULT_MIN_REST = 4
 DEFAULT_CATEGORY_STRATEGY = 'none'
@@ -129,6 +129,7 @@ class BehaviorConfig:
 
     `warehouse_cities` — оставить остатки только на складах этих городов (пусто — без фильтра).
     `order_from_warehouse_name` — «под заказ» и срок доставки берутся из названия склада.
+    `api_types` — id категорий, выгружаемых по API поставщика (МИМ); пусто — набор по умолчанию.
     """
 
     min_rest: int = DEFAULT_MIN_REST
@@ -140,6 +141,7 @@ class BehaviorConfig:
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE
     warehouse_cities: tuple[str, ...] = ()
     order_from_warehouse_name: bool = False
+    api_types: tuple[int, ...] = ()
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> BehaviorConfig:
@@ -155,4 +157,5 @@ class BehaviorConfig:
             pipeline=read_str_list(payload, 'pipeline', where, DEFAULT_PIPELINE),
             warehouse_cities=read_str_list(payload, 'warehouse_cities', where, ()),
             order_from_warehouse_name=read_flag(payload, 'order_from_warehouse_name', where),
+            api_types=read_int_list(payload, 'api_types', where),
         )

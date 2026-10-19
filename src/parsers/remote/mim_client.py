@@ -2,6 +2,7 @@
 
 import gzip
 from contextlib import closing
+from dataclasses import dataclass
 from http import HTTPStatus
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
@@ -19,8 +20,15 @@ _TERRITORIES_FILENAME = 'territories.json'
 _FORMAT = 'xlsx'
 _GZIP_MAGIC = b'\x1f\x8b'
 _TYPES_SEPARATOR = ';'
+# Id категорий МИМ: 1 шины, 2 диски, 3 грузовые шины, 4 грузовые диски, 5 секретки, 6 крепёж, 7 прочее.
+_KNOWN_TYPES = frozenset(range(1, 8))
+DEFAULT_TYPES = (1, 3, 4)
 _TIMEOUT_SECONDS = 300
 _MSG_CONNECTION_FAILED = 'Не удалось подключиться к API МИМ. Проверьте интернет-соединение и параметры подключения.'
+_MSG_BAD_TYPES = (
+    'В parse_config/vendors/mim.json (behavior.api_types) указаны неверные категории МИМ: {value}. '
+    'Допустимы id 1–7, например [1, 3, 4].'
+)
 _MSG_BAD_STATUS = 'API МИМ вернул ошибку. Проверьте токен MIM_API_TOKEN в файле .env.'
 
 
@@ -35,6 +43,27 @@ class MimApiAuth(Protocol):
 
     @property
     def types(self) -> tuple[int, ...]: ...
+
+
+@dataclass(frozen=True)
+class MimApiRequest:
+    """Параметры запроса к API МИМ: адрес, токен и категории выгрузки."""
+
+    host: str
+    token: str
+    types: tuple[int, ...]
+
+
+class MimApiTypesError(CoreExceptionError):
+    """В настройках МИМ указаны неизвестные категории."""
+
+
+def resolve_types(configured: tuple[int, ...]) -> tuple[int, ...]:
+    """Категории выгрузки из настроек: без дублей, по порядку; пусто — набор по умолчанию."""
+    unknown = [type_id for type_id in configured if type_id not in _KNOWN_TYPES]
+    if unknown:
+        raise MimApiTypesError(_MSG_BAD_TYPES.format(value=unknown))
+    return tuple(dict.fromkeys(configured)) or DEFAULT_TYPES
 
 
 class MimApiConnectionError(CoreExceptionError):

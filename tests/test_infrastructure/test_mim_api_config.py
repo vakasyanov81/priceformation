@@ -12,13 +12,6 @@ from infrastructure.config.mim_api_config import MimApiConfigError, get_mim_api_
 
 _TOKEN_ENV = 'MIM_API_TOKEN'
 _HOST_ENV = 'MIM_API_HOST'
-_TYPES_ENV = 'MIM_API_TYPES'
-_TYPES_CASES = [
-    ('2', (2,)),
-    ('1;2;7', (1, 2, 7)),
-    (' 4, 3 ;3 ', (4, 3)),
-    ('', (1, 3, 4)),
-]
 _TO_LOG = 'to_log'
 _TEST_SECRET = 'secret'
 
@@ -44,33 +37,6 @@ def test_config_default_host(monkeypatch: Any) -> None:
 
     assert config.token == _TEST_SECRET
     assert config.host == 'webmim.svrauto.ru'
-
-
-def test_types_default(monkeypatch: Any) -> None:
-    monkeypatch.setenv(_TOKEN_ENV, _TEST_SECRET)
-    monkeypatch.delenv(_TYPES_ENV, raising=False)
-
-    assert get_mim_api_config().types == (1, 3, 4)
-
-
-@pytest.mark.parametrize(
-    ('raw', 'expected'),
-    _TYPES_CASES,
-)
-def test_types_from_env(monkeypatch: Any, raw: str, expected: tuple[int, ...]) -> None:
-    monkeypatch.setenv(_TOKEN_ENV, _TEST_SECRET)
-    monkeypatch.setenv(_TYPES_ENV, raw)
-
-    assert get_mim_api_config().types == expected
-
-
-@pytest.mark.parametrize('raw', ['0', '8', 'abc', '1;x', '-1'])
-def test_types_invalid(monkeypatch: Any, raw: str) -> None:
-    monkeypatch.setenv(_TOKEN_ENV, _TEST_SECRET)
-    monkeypatch.setenv(_TYPES_ENV, raw)
-
-    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(MimApiConfigError, match='неверные категории'):
-        get_mim_api_config()
 
 
 def test_config_blank_host_falls_back_to_default(monkeypatch: Any) -> None:

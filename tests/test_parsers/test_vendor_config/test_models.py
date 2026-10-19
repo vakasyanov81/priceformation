@@ -228,6 +228,7 @@ def test_behavior_reads_all_fields() -> None:
         'pipeline': ['title', 'markup'],
         'warehouse_cities': ['Новосибирск'],
         'order_from_warehouse_name': True,
+        'api_types': [1, 3],
     }
 
     assert BehaviorConfig.from_dict(raw, WHERE) == BehaviorConfig(
@@ -240,6 +241,7 @@ def test_behavior_reads_all_fields() -> None:
         pipeline=('title', 'markup'),
         warehouse_cities=('Новосибирск',),
         order_from_warehouse_name=True,
+        api_types=(1, 3),
     )
 
 

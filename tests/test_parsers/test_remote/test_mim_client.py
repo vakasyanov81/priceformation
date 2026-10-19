@@ -8,21 +8,23 @@ import pytest
 
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from infrastructure.config.mim_api_config import MimApiConfig
 from parsers.remote.mim_client import (
     MimApiConnectionError,
+    MimApiRequest,
     MimApiResponseError,
+    MimApiTypesError,
     download_catalog,
     get_catalog,
     get_territories,
     load_remote_vendor_data,
+    resolve_types,
 )
 
 _TEST_SECRET = 'secret'
 _TEST_HOST = 'api.test'
 _TO_LOG = 'to_log'
 _HTTPS = 'parsers.remote.mim_client.HTTPSConnection'
-_API = MimApiConfig(host=_TEST_HOST, token=_TEST_SECRET, types=(1, 3, 4))
+_API = MimApiRequest(host=_TEST_HOST, token=_TEST_SECRET, types=(1, 3, 4))
 _XML = 'PK-xlsx-тест'.encode()
 
 
@@ -147,3 +149,21 @@ def _https_mock(*, body: bytes | None = None, status: int = 200, error: Exceptio
     else:
         connection.request.side_effect = error
     return mock_cls
+
+
+_TYPES_CASES = [
+    ((), (1, 3, 4)),
+    ((2,), (2,)),
+    ((4, 3, 4, 7), (4, 3, 7)),
+]
+
+
+@pytest.mark.parametrize(('configured', 'expected'), _TYPES_CASES)
+def test_resolve_types(configured: tuple[int, ...], expected: tuple[int, ...]) -> None:
+    assert resolve_types(configured) == expected
+
+
+@pytest.mark.parametrize('configured', [(0,), (8,), (1, -1)])
+def test_resolve_types_unknown(configured: tuple[int, ...]) -> None:
+    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(MimApiTypesError, match='неверные категории'):
+        resolve_types(configured)
