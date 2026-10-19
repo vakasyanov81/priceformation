@@ -7,7 +7,7 @@ from functools import partial
 from html import escape
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, NamedTuple, Protocol
 from urllib.parse import urlsplit
 from xml.etree import ElementTree  # nosec B405 — ответ доверенного HTTPS-сервиса, не пользовательский ввод
 
@@ -74,6 +74,11 @@ _MSG_CONNECTION_FAILED = (
 )
 _MSG_RESPONSE_FAILED = 'API Форточек вернул ответ, который не удалось разобрать.'
 _MSG_API_ERROR = 'API Форточек вернул ошибку. Подробности в логе.'
+_MSG_HTTP_STATUS = 'API Форточек ответил HTTP-статусом, отличным от 2xx.'
+_HTTP_TIMEOUT_SECONDS = 60
+_HTTP_STATUS_OK_FROM = 200
+_HTTP_STATUS_OK_TO = 299
+_BODY_SNIPPET_LIMIT = 300
 
 
 class FourTochkiApiAuth(Protocol):
@@ -196,20 +201,46 @@ def _envelope(method: str, body: str) -> bytes:
     return xml_text.encode()
 
 
+class _HttpReply(NamedTuple):
+    """Статус, причина и тело ответа HTTP."""
+
+    status: int
+    reason: str
+    payload: bytes
+
+
 def _post(api: FourTochkiApiAuth, method: str, envelope: bytes) -> bytes:
-    """POST SOAP-конверта; сетевые ошибки — ошибка подключения."""
-    url = urlsplit(api.endpoint)
+    """POST SOAP-конверта; сетевые ошибки и таймаут — ошибка подключения, не-2xx — ошибка API."""
+    try:
+        reply = _send(api.endpoint, method, envelope)
+    except (OSError, HTTPException) as exc:
+        detail = f'endpoint={api.endpoint} method={method}\n{exc!r}'
+        raise FourTochkiApiConnectionError(detail=detail) from exc
+    _raise_on_http_status(reply, method)
+    return reply.payload
+
+
+def _send(endpoint: str, method: str, envelope: bytes) -> _HttpReply:
+    """Один HTTPS-запрос с таймаутом; тело читается целиком до закрытия соединения."""
+    url = urlsplit(endpoint)
     headers = {
         'Content-Type': 'text/xml; charset=utf-8',
         'SOAPAction': f'"{_NAMESPACE}/ClientService/{method}"',
     }
-    try:
-        with closing(HTTPSConnection(url.netloc)) as connection:
-            connection.request('POST', url.path, body=envelope, headers=headers)
-            return connection.getresponse().read()
-    except (OSError, HTTPException) as exc:
-        detail = f'endpoint={api.endpoint} method={method}\n{exc!r}'
-        raise FourTochkiApiConnectionError(detail=detail) from exc
+    with closing(HTTPSConnection(url.netloc, timeout=_HTTP_TIMEOUT_SECONDS)) as connection:
+        connection.request('POST', url.path, body=envelope, headers=headers)
+        response = connection.getresponse()
+        return _HttpReply(response.status, response.reason, response.read())
+
+
+def _raise_on_http_status(reply: _HttpReply, method: str) -> None:
+    """Не-2xx ответ (например, 504 с HTML от прокси) — ошибка API со статусом и началом тела."""
+    if _HTTP_STATUS_OK_FROM <= reply.status <= _HTTP_STATUS_OK_TO:
+        return
+    snippet = reply.payload[:_BODY_SNIPPET_LIMIT].decode('utf-8', 'replace')
+    raise FourTochkiApiError(
+        detail=f'{_MSG_HTTP_STATUS} status={reply.status} {reply.reason} method={method}\n{snippet}',
+    )
 
 
 def _parse_response(payload: bytes) -> ElementTree.Element:

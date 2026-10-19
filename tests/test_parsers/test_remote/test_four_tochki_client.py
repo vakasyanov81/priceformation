@@ -10,6 +10,7 @@ from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.four_tochki_api_config import FourTochkiApiConfig
 from parsers.remote.four_tochki_client import (
+    _HTTP_TIMEOUT_SECONDS,
     FourTochkiApiConnectionError,
     FourTochkiApiError,
     download_catalogs,
@@ -168,11 +169,12 @@ def test_login_is_escaped_in_request(tmp_path: Path) -> None:
 def test_request_targets_endpoint_with_soap_action(tmp_path: Path) -> None:
     """Запрос уходит на адрес сервиса с заголовком SOAPAction метода."""
     connection = MagicMock()
+    connection.getresponse.return_value.status = 200
     connection.getresponse.return_value.read.side_effect = [_soap('GetFindTyre'), _soap('GetFindDisk')]
     with patch(_HTTPS, return_value=connection) as mock_https:
         download_catalogs(dest_dir=tmp_path, api=_API, warehouses=_WAREHOUSES)
 
-    mock_https.assert_called_with('api.test')
+    mock_https.assert_called_with('api.test', timeout=_HTTP_TIMEOUT_SECONDS)
     first_request = connection.request.call_args_list[0]
     assert first_request.args[:2] == ('POST', '/WCF/ClientService.svc')
     soap_action = first_request.kwargs['headers']['SOAPAction']
@@ -215,6 +217,37 @@ def test_connection_error_raises(tmp_path: Path) -> None:
     """Сетевой сбой превращается в ошибку подключения."""
     with (
         patch(_HTTPS, side_effect=OSError('network down')),
+        patch.object(CoreExceptionError, _TO_LOG),
+        pytest.raises(FourTochkiApiConnectionError, match='Не удалось подключиться'),
+    ):
+        download_catalogs(dest_dir=tmp_path, api=_API, warehouses=_WAREHOUSES)
+
+
+def test_http_error_status_raises_with_status_and_body(tmp_path: Path) -> None:
+    """Не-2xx ответ (504 с HTML от nginx) — ошибка API со статусом и телом, а не «не удалось разобрать»."""
+    connection = MagicMock()
+    response = connection.getresponse.return_value
+    response.status = 504
+    response.reason = 'Gateway Time-out'
+    response.read.return_value = b'<html><head><title>504 Gateway Time-out</title></head></html>'
+    with (
+        patch(_HTTPS, return_value=connection),
+        patch.object(CoreExceptionError, _TO_LOG) as to_log,
+        pytest.raises(FourTochkiApiError, match='вернул ошибку'),
+    ):
+        download_catalogs(dest_dir=tmp_path, api=_API, warehouses=_WAREHOUSES)
+    logged = to_log.call_args.args[0]
+    assert 'status=504 Gateway Time-out method=GetFindTyre' in logged
+    assert '504 Gateway Time-out</title>' in logged
+    assert 'не удалось разобрать' not in logged
+
+
+def test_timeout_is_connection_error(tmp_path: Path) -> None:
+    """Зависший сервер: таймаут сокета — ошибка подключения, а не бесконечное ожидание."""
+    connection = MagicMock()
+    connection.request.side_effect = TimeoutError('timed out')
+    with (
+        patch(_HTTPS, return_value=connection),
         patch.object(CoreExceptionError, _TO_LOG),
         pytest.raises(FourTochkiApiConnectionError, match='Не удалось подключиться'),
     ):

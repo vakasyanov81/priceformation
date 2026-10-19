@@ -126,6 +126,7 @@ def test_search_envelopes_match_contract_exactly(tmp_path: Path) -> None:
 def test_post_sends_exact_request() -> None:
     """POST: метод, путь, тело и заголовки — точные значения, имена заголовков в регистре контракта."""
     connection = MagicMock()
+    connection.getresponse.return_value.status = 200
     connection.getresponse.return_value.read.return_value = _page('GetFindTyre')
     with patch(_HTTPS, return_value=connection):
         answer = _post(_API, 'GetFindTyre', b'<body/>')
