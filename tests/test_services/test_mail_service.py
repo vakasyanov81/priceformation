@@ -13,12 +13,19 @@ from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail.client import FoundPrice
 from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
+from parsers.vendor_config.models import VendorConfig
 from services import mail_service
 
 _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
 _CREDENTIALS = MailCredentials(login='user', password='secret')
 _FOUND = FoundPrice(subject='Прайс', date='01.01.2025 10:00', filename='price.xlsx', payload=b'bytes')
 _FOLDERS = ['INBOX', 'INBOX.Prices']
+
+
+@pytest.fixture(autouse=True)
+def _no_vendor_configs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """По умолчанию конфигов поставщиков нет — почта грузится для всех активных профилей."""
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', dict)
 
 
 def _profile(sender: str, *, enabled: bool = True) -> MailProfile:
@@ -172,3 +179,42 @@ def test_fetch_prices_skips_failed_download(
     warnings = texts_at(entries(), logging.WARNING)
     assert len(warnings) == 1
     assert 'four_tochki' in warnings[0]
+
+
+@pytest.mark.parametrize(
+    ('enabled', 'source'),
+    [(False, 'xlsx'), (True, 'api'), (False, 'api')],
+    ids=['vendor-disabled', 'source-api', 'disabled-and-api'],
+)
+def test_fetch_prices_skips_vendor_not_using_mail(
+    monkeypatch: pytest.MonkeyPatch,
+    watch_logger: LoggerWatcher,
+    *,
+    enabled: bool,
+    source: str,
+) -> None:
+    """Поставщик отключён или разбирается по API — письмо для него не ищется."""
+    config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
+    wired = _wire(monkeypatch, config, _FOUND)
+    vendor = MagicMock(spec=VendorConfig, enabled=enabled, source=source)
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+    entries = watch_logger('services.vendor_activity')
+
+    assert not mail_service.MailService().fetch_prices()
+    wired.find.assert_not_called()
+    wired.save.assert_not_called()
+    assert len(texts_at(entries(), logging.INFO)) == 1
+
+
+def test_fetch_prices_loads_active_file_vendor(
+    fake_config_provider: FakeConfigProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Активный поставщик с файловым источником получает прайс из почты."""
+    config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
+    wired = _wire(monkeypatch, config, _FOUND)
+    vendor = MagicMock(spec=VendorConfig, enabled=True, source='xlsx')
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+
+    assert len(mail_service.MailService().fetch_prices()) == 1
+    wired.find.assert_called_once()

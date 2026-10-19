@@ -10,7 +10,7 @@ SOURCE_FILE = 'xlsx'
 SOURCE_API = 'api'
 _SOURCE_KEY = 'source'
 _API_KEY = 'api'
-_SHARED_KEYS = ('enabled', 'code', 'name')
+_SHARED_KEYS = ('enabled', 'code', 'name', _SOURCE_KEY)
 
 
 def select_source(raw: Any, where: str) -> RawConfig:
@@ -25,7 +25,7 @@ def select_source(raw: Any, where: str) -> RawConfig:
 
 
 def _file_payload(payload: RawConfig) -> RawConfig:
-    """Конфиг файлового источника: служебные ключи источника убираются."""
+    """Конфиг файлового источника: служебные ключи источника убираются (по умолчанию модель берёт «xlsx»)."""
     file_payload = dict(payload)
     file_payload.pop(_SOURCE_KEY, None)
     file_payload.pop(_API_KEY, None)
