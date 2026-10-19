@@ -218,6 +218,22 @@ def test_camera_without_model_stays_with_modeled_one() -> None:
     assert pioner.duplicate.group_by_params == poshk.duplicate.group_by_params
 
 
+def test_empty_height_percent_stays_with_filled_one() -> None:
+    """`185R14C`: Запаска пишет профиль 82, Форточки оставляют пустым — это один размер."""
+    title = '185R14C Viatti Vettore Brina V-525 102/100Q'
+    with_height = _row(title=title, width='185', diameter='14', height_percent='82', index_load='102/100')
+    no_height = _high(title=title, width='185', diameter='14C', height_percent='', index_load='102/100')
+    CommonPriceGrouper([with_height, no_height]).group_by_params()
+    assert with_height.duplicate.group_by_params == no_height.duplicate.group_by_params
+
+
+def test_different_filled_height_percent_are_not_doubles() -> None:
+    left = _row(height_percent='80')
+    right = _high(height_percent='85')
+    CommonPriceGrouper([left, right]).group_by_params()
+    assert left.duplicate.group_by_params != right.duplicate.group_by_params
+
+
 def test_distinct_keys_get_separate_groups() -> None:
     wide = _row()
     narrow = _row(width='205')

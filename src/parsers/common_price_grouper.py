@@ -42,10 +42,11 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
 
 
 def _optional_parts(row_item: RowItem) -> tuple[str, ...]:
-    """ET/PCD/цвет диска и модель камеры: пустое — wildcard, заполненное сравниваем жёстко."""
+    """Профиль шины, ET/PCD/цвет диска и модель камеры: пустое — wildcard, заполненное сравниваем жёстко."""
     disk = row_item.disk
     numbers = [disk.slot_count, disk.pcd1, disk.eet, disk.central_diameter]
     parts = [canon_number(number) for number in numbers]
+    parts.append(canon_number(row_item.tire.height_percent))
     parts.append((disk.color or '').strip().lower())
     parts.append(tube_model(row_item))
     return tuple(parts)

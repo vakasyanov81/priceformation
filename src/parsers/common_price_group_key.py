@@ -85,7 +85,6 @@ def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any
     return [
         (row_item.vendor.type_production or '').lower(),
         *size_fields(row_item),
-        canon_number(row_item.tire.height_percent),
         row_item.tire.index_velocity,
         row_item.tire.index_load,
         clear_model(row_item.identity.model, mark, brand),
