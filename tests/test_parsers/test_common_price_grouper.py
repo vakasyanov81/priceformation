@@ -426,3 +426,34 @@ def test_explicit_conflict_is_disputed(
 )
 def test_same_group_not_disputed(left_fields: dict[str, str], right_fields: dict[str, str]) -> None:
     _assert_grouped(_row(**left_fields), _high(**right_fields))
+
+
+def _tire(model: str, width: str = '215', **fields: Any) -> RowItem:
+    return _row(
+        model=model,
+        width=width,
+        type_production='Легковая шина',
+        manufacturer_name='Cordiant',
+        title=f'{width}/55R18 Cordiant {model} 99V',
+        **fields,
+    )
+
+
+def test_model_with_extra_words_is_double() -> None:
+    """`Gravity` у одного поставщика и `Gravity SUV` у другого — одна модель."""
+    _assert_grouped(_tire('Gravity'), _tire('Gravity SUV', price_markup=_PRICE_HIGH))
+
+
+def test_ambiguous_short_model_is_not_merged() -> None:
+    """`Gravity` подходит к двум длинным моделям сразу: не склеиваем её ни с одной."""
+    short = _tire('Gravity')
+    middle = _tire('Gravity SUV')
+    long = _tire('Gravity SUV PS-9')
+    CommonPriceGrouper([short, middle, long]).group_by_params()
+    assert short.duplicate.group_by_params not in (middle.duplicate.group_by_params, long.duplicate.group_by_params)
+    assert middle.duplicate.group_by_params == long.duplicate.group_by_params
+
+
+def test_merged_models_do_not_cross_other_key_parts() -> None:
+    """Слияние моделей работает только внутри одного размера."""
+    _assert_split(_tire('Gravity'), _tire('Gravity SUV', width='225'))

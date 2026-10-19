@@ -6,7 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_key import clear_model, define_intimacy, group_key, sanitize_value
+from parsers.common_price_group_key import (
+    MODEL_KEY_INDEX,
+    define_intimacy,
+    group_key,
+    sanitize_value,
+)
+from parsers.common_price_model import clear_model, model_tokens
 
 
 def _row(**fields: Any) -> RowItem:
@@ -31,17 +37,23 @@ def test_sanitize_none() -> None:
         ('КАМА-NU 701', 'nu701'),
         ('NU701', 'nu701'),
         ('NU 701', 'nu701'),
-        ('A-B-C', 'a-b-c'),
-        ('PW-1', 'pw-1'),
-        ('PS-1', 'ps-1'),
-        ('CW-2', 'cw-2'),
-        ('CA-2', 'ca-2'),
-        ('Кама-1260-1', '1260-1'),
-        ('Кама-1260-2', '1260-2'),
+        ('A-B-C', 'abc'),
+        ('PW-1', 'pw1'),
+        ('PS-1', 'ps1'),
+        ('CW-2', 'cw2'),
+        ('CA-2', 'ca2'),
+        ('Кама-1260-1', '12601'),
+        ('Кама-1260-2', '12602'),
+        ('Breeze (НК-132)', 'breezehk132'),
+        ('BREEZE НК-132', 'breezehk132'),
+        ('BluEarth-GT AE-51', 'bluearthgtae51'),
+        ("N'Blue HD Plus", 'nbluehdplus'),
+        ('N\u2019Fera SU1', 'nferasu1'),
+        ('WP52+', 'wp52+'),
         ('Кама', ''),
         ('SNOW CROSS 2', 'snowcross2'),
         ('Snow Cross 2', 'snowcross2'),
-        ('KAMAZ-X', 'kamaz-x'),
+        ('KAMAZ-X', 'kamazx'),
     ],
 )
 def test_clear_model(model: str | None, expected: str) -> None:
@@ -64,6 +76,18 @@ def test_group_key_ignores_homoglyph_and_tl_in_title() -> None:
     assert group_key(with_tl, {}) == group_key(without_tl, {})
 
 
+def test_clear_model_ignores_punctuation_variants() -> None:
+    """Скобки, дефисы и апострофы в модели разные у поставщиков, на ключ не влияют."""
+    assert clear_model('Breeze (НК-132)') == clear_model('BREEZE НК-132')
+    assert clear_model('AE-51') == clear_model('AE51')
+    assert clear_model("N'Blue") == clear_model('Nblue')
+
+
+def test_clear_model_plus_is_significant() -> None:
+    """`+` отличает модель (`WP52+` — не `WP52`)."""
+    assert clear_model('WP52+') != clear_model('WP52')
+
+
 def test_clear_model_distinct_hyphen_suffixes() -> None:
     assert clear_model('PW-1') != clear_model('PS-1')
     assert clear_model('CW-2') != clear_model('CA-2')
@@ -76,7 +100,7 @@ def test_clear_model_strips_manufacturer() -> None:
 
 
 def test_clear_model_strips_brand() -> None:
-    assert clear_model('Brand PW-1', brand='Brand') == 'pw-1'
+    assert clear_model('Brand PW-1', brand='Brand') == 'pw1'
 
 
 @pytest.mark.parametrize(
@@ -477,3 +501,28 @@ def test_group_key_ignores_xl() -> None:
     reinforced = RowItem({'title': '245/45R20 Compasal Winter Stud 103T XL', 'type_production': 'легковая'})
 
     assert group_key(plain, {}) == group_key(reinforced, {})
+
+
+def test_model_key_index_points_to_cleared_model() -> None:
+    """Группировщик подменяет модель в ключе по `MODEL_KEY_INDEX`: индекс обязан указывать на неё."""
+    row = _row(model='КАМА-NU 701', manufacturer_name='НКШЗ')
+    assert group_key(row, {})[MODEL_KEY_INDEX] == 'nu701'
+
+
+@pytest.mark.parametrize(
+    ('model', 'expected'),
+    [
+        (None, ()),
+        ('', ()),
+        ('Gravity SUV', ('gravity', 'suv')),
+        ('Breeze (НК-132)', ('breeze', 'hk132')),
+        ('НК-241 GRANT', ('hk241', 'grant')),
+        ("N'Blue HD Plus", ('nblue', 'hd', 'plus')),
+    ],
+)
+def test_model_tokens(model: str | None, expected: tuple[str, ...]) -> None:
+    assert model_tokens(model) == frozenset(expected)
+
+
+def test_model_tokens_strip_brand_prefix() -> None:
+    assert model_tokens('Кама Alga НК-531', 'Кама') == frozenset(('alga', 'hk531'))

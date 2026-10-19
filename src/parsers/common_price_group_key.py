@@ -10,51 +10,19 @@ from parsers.common_price_group_fields import (
     sidewall,
     yes_flag,
 )
+from parsers.common_price_model import clear_model
 from parsers.common_price_size import canon_number, size_fields
 from parsers.common_price_title_flags import valve_key
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.strategies.normalize import replace_homoglyphs
 
-_KNOWN_MODEL_PREFIXES = ('кама', 'kama')
-_PREFIX_SEPARATORS = '- '
+# Позиция модели в ключе `group_key` (сверяется тестом): по ней группировщик склеивает модели с лишними словами.
+MODEL_KEY_INDEX = 6
 
 
 def sanitize_value(price_list_values: list[Any]) -> tuple[str, ...]:
     """Преобразует значения в строки, корректно обрабатывая None."""
     return tuple('' if price_list_val is None else str(price_list_val) for price_list_val in price_list_values)
-
-
-def clear_model(
-    model: str | None,
-    manufacturer: str | None = None,
-    brand: str | None = None,
-) -> str:
-    """Очистка модели: нижний регистр, без пробелов, без префикса бренда, кириллические двойники → латиница."""
-    if not model:
-        return ''
-    normalized = model.lower()
-    for prefix in _model_prefixes(manufacturer, brand):
-        normalized = _lstrip_brand_prefix(normalized, prefix)
-    return replace_homoglyphs(normalized.replace(' ', ''))
-
-
-def _lstrip_brand_prefix(model: str, prefix: str) -> str:
-    """Убрать префикс бренда, если за ним разделитель или конец строки."""
-    if not model.startswith(prefix):
-        return model
-    rest = model[len(prefix) :]
-    if not rest:
-        return ''
-    if rest[0] in _PREFIX_SEPARATORS:
-        return rest.lstrip(_PREFIX_SEPARATORS)
-    return model
-
-
-def _model_prefixes(manufacturer: str | None, brand: str | None) -> list[str]:
-    """Префиксы бренда: известные и имена manufacturer/brand, длинные раньше."""
-    names = (manufacturer, brand, *_KNOWN_MODEL_PREFIXES)
-    unique = {name.lower().strip() for name in names if name}
-    return sorted(unique, key=len, reverse=True)
 
 
 def define_intimacy(row_item: RowItem) -> str | None:
