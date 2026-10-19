@@ -449,11 +449,16 @@ def test_short_model_joins_nearest_longer_one() -> None:
     _assert_grouped(_tire('Gravity'), _tire('Gravity SUV'), _tire('Gravity SUV PS-9'))
 
 
-def test_equally_near_longer_models_are_not_merged() -> None:
-    """`G075` подходит к двум длинным одного размера: не склеиваем её ни с одной."""
+def test_separately_written_words_merge_with_joined_ones() -> None:
+    """`G075`, `Ice Guard G075`, `iceGuard Studless G075` — одна модель."""
+    _assert_grouped(_tire('G075'), _tire('Ice Guard G075'), _tire('iceGuard Studless G075'))
+
+
+def test_equally_near_unrelated_models_are_not_merged() -> None:
+    """`G075` подходит к двум несвязанным длинным одного размера: не склеиваем её ни с одной."""
     short = _tire('G075')
     first = _tire('Ice Guard G075')
-    second = _tire('iceGuard Studless G075')
+    second = _tire('Blue Earth G075')
     CommonPriceGrouper([short, first, second]).group_by_params()
     assert short.duplicate.group_by_params not in (first.duplicate.group_by_params, second.duplicate.group_by_params)
 

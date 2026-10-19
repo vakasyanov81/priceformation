@@ -22,9 +22,15 @@ def test_short_model_joins_nearest_longer_one_through_the_chain() -> None:
     assert merged['gravity'] == merged['gravitysuv'] == merged['gravitysuvps9'] == 'gravitysuvps9'
 
 
-def test_equally_near_longer_models_leave_short_one_alone() -> None:
-    """`g075` входит в две длинные одного размера: неясно, к какой — не склеиваем."""
+def test_separately_written_words_are_inside_joined_ones() -> None:
+    """`ice guard g075` входит в `iceguard studless g075`, поэтому `g075` идёт к ближайшей и дальше по цепочке."""
     merged = merge_models(_entries('g075', 'ice guard g075', 'iceguard studless g075'))
+    assert merged['g075'] == merged['iceguardg075'] == merged['iceguardstudlessg075'] == 'iceguardstudlessg075'
+
+
+def test_equally_near_unrelated_longer_models_leave_short_one_alone() -> None:
+    """`g075` входит в две длинные одного размера, не связанные друг с другом: не склеиваем."""
+    merged = merge_models(_entries('g075', 'ice guard g075', 'blue earth g075'))
     assert merged['g075'] == 'g075'
     assert merged['iceguardg075'] == 'iceguardg075'
 

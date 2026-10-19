@@ -288,6 +288,30 @@ def test_fill_tire_fields_keeps_existing_values() -> None:
     assert row.identity.model == 'Old'
 
 
+@pytest.mark.parametrize(
+    ('raw', 'column', 'expected'),
+    [
+        ('205/65R16 Yokohama BluEarth-GT AE-51A 95H', 'BluEarth-GT AE-51', 'BluEarth-GT AE-51A'),
+        ('225/60R18 Yokohama Geolandar G91AT 100H', 'Geolandar G91A', 'Geolandar G91AT'),
+        ('315/60R22.5 КАМА NF201+ 152/148L TL', 'NF201', 'NF201+'),
+        ('215/90R15C Кама Я-245-1 99N', 'Я-245', 'Я-245-1'),
+        ('215/65R16 Yokohama BluEarth-GT AE-51 98H', 'BluEarth-GT AE-51', 'BluEarth-GT AE-51'),
+        ('255/50R19 Pirelli Scorpion Verde(*) Run-Flat 107W XL', 'Scorpion Verde', 'Scorpion Verde'),
+        ('225/55R16 Sonix Ecopro 99 99W XL', 'Ecopro 99', 'Ecopro 99'),
+    ],
+)
+def test_fill_tire_fields_title_completes_truncated_column_model(raw: str, column: str, expected: str) -> None:
+    """Колонка модели у Запаски обрезана на последнюю букву варианта: название достраивает её слитным хвостом.
+
+    Хвост через пробел или в скобках (`Verde(*)`, `... 99W`) — не продолжение модели, колонка остаётся.
+    """
+    row = RowItem({'title': raw, 'model': column})
+
+    fill_tire_fields(row, _parsed(raw))
+
+    assert row.identity.model == expected
+
+
 def test_fill_tire_fields_title_overrides_load_and_speed_index() -> None:
     """Индекс нагрузки/скорости из названия главнее колонки: колонка Запаски дана по модели, а не по артикулу."""
     row = RowItem(
