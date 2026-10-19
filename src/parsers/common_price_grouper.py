@@ -1,14 +1,14 @@
 """Группировка строк прайса по параметрам наименования."""
 
-from functools import partial
 from itertools import groupby
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from typing import Any
 
 from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
-from parsers.common_price_group_key import clear_model, group_key
 from parsers.common_price_main_double import main_double
+from parsers.common_price_model import clear_model
+from parsers.common_price_model_keys import keys_with_merged_models
 from parsers.common_price_size import canon_number, size_fields
 from parsers.common_price_title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
@@ -119,10 +119,9 @@ class CommonPriceGrouper:
     def _assign_groups(self) -> None:
         """Сгруппировать, разметить дубли и выставить group_by_params."""
         group_id = 0
-        item_key = partial(group_key, aliases_map=self._aliases_map)
-        sorted_items = sorted(self.row_items, key=item_key)
-        for _key, group_iter in groupby(sorted_items, key=item_key):
-            group_id = _apply_split_groups(self, group_id, list(group_iter))
+        keyed = sorted(keys_with_merged_models(self.row_items, self._aliases_map), key=itemgetter(0))
+        for _key, group_iter in groupby(keyed, key=itemgetter(0)):
+            group_id = _apply_split_groups(self, group_id, [row_item for _, row_item in group_iter])
 
     def _apply_group(self, group_id: int, group_items: list[RowItem]) -> None:
         """Обработать одну группу дублей."""

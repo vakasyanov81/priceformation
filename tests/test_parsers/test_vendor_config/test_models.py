@@ -293,6 +293,14 @@ def test_category_reads_calculate_type_flag() -> None:
     assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(strategy='header_rows', calculate_type=True)
 
 
+def test_category_reads_light_truck_by_diameter_flag() -> None:
+    """Флаг `light_truck_by_diameter` включается из конфига и по умолчанию выключен."""
+    raw = {'strategy': 'field_map', 'light_truck_by_diameter': True}
+
+    assert CategoryConfig.from_dict(raw, WHERE) == CategoryConfig(strategy='field_map', light_truck_by_diameter=True)
+    assert CategoryConfig.from_dict({}, WHERE).light_truck_by_diameter is False
+
+
 def test_category_calculate_type_defaults_off() -> None:
     """Без ключа `calculate_type` флаг выключен."""
     assert CategoryConfig.from_dict({}, WHERE).calculate_type is False

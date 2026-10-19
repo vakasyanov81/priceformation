@@ -112,6 +112,8 @@ _DOT = '.'
 # Заводской код без бренда: `ОИ-73Б`, `И-Н142Б`, `ВЛИ-10`, `Я-166`. До трёх заглавных букв —
 # иначе под правило попали бы `КАМА-310` и `Алтайшина-421` (бренд со слитной моделью).
 _FACTORY_CODE = re.compile(r'^[А-ЯЁ]{1,3}(?:-[А-ЯЁ])?-?\d+[А-ЯЁ]*$')
+# Хвост, дописанный к обрезанной колонкой модели слитно: `A` в `AE-51A`, `+` в `NF201+`, `-1` в `Я-245-1`.
+_MODEL_TAIL = re.compile(r'[\w+-]+')
 # `R` в размере — радиальная конструкция, дефис и дюймовая запись — диагональная.
 _CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная'}
 # Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
@@ -311,8 +313,21 @@ def fill_tire_fields(row_item: RowItem, parts: TireTitleParts) -> None:
     }
     for key, parsed_value in fields.items():
         current = row_item.get_field(key)
-        if parsed_value and (not current or (key in TIRE_TITLE_WINS and _differs(current, parsed_value))):
+        if parsed_value and (not current or _title_wins(key, current, parsed_value)):
             row_item.set_field(key, parsed_value)
+
+
+def _title_wins(key: str, current: object, parsed: str) -> bool:
+    """Значение из названия заменяет заполненное колонкой."""
+    if key == 'model':
+        return _completes_model(str(current), parsed)
+    return key in TIRE_TITLE_WINS and _differs(current, parsed)
+
+
+def _completes_model(column: str, parsed: str) -> bool:
+    """Колонка обрезана: модель из названия — она же с приписанным слитно хвостом (`AE-51` → `AE-51A`)."""
+    tail = parsed[len(column) :]
+    return parsed.lower().startswith(column.lower()) and _MODEL_TAIL.fullmatch(tail) is not None
 
 
 def _differs(current: object, parsed: str) -> bool:

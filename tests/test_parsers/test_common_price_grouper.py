@@ -426,3 +426,43 @@ def test_explicit_conflict_is_disputed(
 )
 def test_same_group_not_disputed(left_fields: dict[str, str], right_fields: dict[str, str]) -> None:
     _assert_grouped(_row(**left_fields), _high(**right_fields))
+
+
+def _tire(model: str, width: str = '215', **fields: Any) -> RowItem:
+    return _row(
+        model=model,
+        width=width,
+        type_production='Легковая шина',
+        manufacturer_name='Cordiant',
+        title=f'{width}/55R18 Cordiant {model} 99V',
+        **fields,
+    )
+
+
+def test_model_with_extra_words_is_double() -> None:
+    """`Gravity` у одного поставщика и `Gravity SUV` у другого — одна модель."""
+    _assert_grouped(_tire('Gravity'), _tire('Gravity SUV', price_markup=_PRICE_HIGH))
+
+
+def test_short_model_joins_nearest_longer_one() -> None:
+    """`Gravity` подходит к двум длинным: склеиваем по цепочке `Gravity` → `Gravity SUV` → `Gravity SUV PS-9`."""
+    _assert_grouped(_tire('Gravity'), _tire('Gravity SUV'), _tire('Gravity SUV PS-9'))
+
+
+def test_separately_written_words_merge_with_joined_ones() -> None:
+    """`G075`, `Ice Guard G075`, `iceGuard Studless G075` — одна модель."""
+    _assert_grouped(_tire('G075'), _tire('Ice Guard G075'), _tire('iceGuard Studless G075'))
+
+
+def test_equally_near_unrelated_models_are_not_merged() -> None:
+    """`G075` подходит к двум несвязанным длинным одного размера: не склеиваем её ни с одной."""
+    short = _tire('G075')
+    first = _tire('Ice Guard G075')
+    second = _tire('Blue Earth G075')
+    CommonPriceGrouper([short, first, second]).group_by_params()
+    assert short.duplicate.group_by_params not in (first.duplicate.group_by_params, second.duplicate.group_by_params)
+
+
+def test_merged_models_do_not_cross_other_key_parts() -> None:
+    """Слияние моделей работает только внутри одного размера."""
+    _assert_split(_tire('Gravity'), _tire('Gravity SUV', width='225'))
