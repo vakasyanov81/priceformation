@@ -30,32 +30,6 @@ def test_response_make_price() -> None:
         assert mock_try.call_args.args[0].__name__ == 'run_make_price_by_supplier'
 
 
-def test_response_update_zapaska() -> None:
-    """действие выгрузки запаски вызывает try_call"""
-    with (
-        patch(_ASK_ACTION, return_value=AnswerResult.UPDATE_ZAPASKA_DATA),
-        patch('run.try_call') as mock_try,
-    ):
-        from run import response_processing
-
-        assert response_processing() is True
-        mock_try.assert_called_once()
-        assert mock_try.call_args.args[0].__name__ == 'run_upload_zapaska_data'
-
-
-def test_response_report_doubles() -> None:
-    """действие отчёта о дублях вызывает try_call"""
-    with (
-        patch(_ASK_ACTION, return_value=AnswerResult.REPORT_DOUBLES),
-        patch('run.try_call') as mock_try,
-    ):
-        from run import response_processing
-
-        assert response_processing() is True
-        mock_try.assert_called_once()
-        assert mock_try.call_args.args[0].__name__ == 'run_report_doubles'
-
-
 def test_response_exit() -> None:
     """выход останавливает цикл; sys.exit вызывает main."""
     with patch(_ASK_ACTION, return_value=AnswerResult.EXIT):

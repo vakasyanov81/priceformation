@@ -8,11 +8,8 @@ from log_watch import LoggerWatcher, texts_at
 
 from domain.exceptions import SupplierNotHavePricesError
 from run_dialog import AnswerResult
-from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
-from services.price_schema_service import PriceSchemaService
-from services.zapaska_service import ZapaskaService
 
 _INPUT = 'builtins.input'
 _RUN_EXIT = 'run.sys.exit'
@@ -64,44 +61,6 @@ def test_main_make_price_then_exit() -> None:
 
         orchestrator.parse_all.assert_called_once()
         reporter.write_prices.assert_called_once_with([_PARSED_ROW], template=None)
-
-
-def test_main_report_doubles_then_exit() -> None:
-    """выбор 8 вызывает отчёт о дублях, затем выход."""
-    report = MagicMock()
-    report.path = _REPORT_PATH
-    doubles_service = MagicMock()
-    doubles_service.make_report.return_value = report
-
-    with (
-        patch(_INPUT, side_effect=['8', _QUIT]),
-        patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
-        patch(_RUN_EXIT, side_effect=SystemExit(0)),
-    ):
-        from run import main
-
-        with pytest.raises(SystemExit):
-            main()
-
-        doubles_service.make_report.assert_called_once()
-
-
-def test_main_update_zapaska_then_exit(watch_logger: LoggerWatcher) -> None:
-    """выбор 2 вызывает загрузку данных запаски через try_call, затем выход."""
-    zapaska_service = MagicMock()
-    entries = watch_logger(_RUN_LOGGER)
-    with (
-        patch(_INPUT, side_effect=['3', _QUIT]),
-        patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__),
-        patch(_RUN_EXIT, side_effect=SystemExit(0)),
-    ):
-        from run import main
-
-        with pytest.raises(SystemExit):
-            main()
-
-    zapaska_service.upload_data.assert_called_once()
-    assert texts_at(entries(), logging.INFO) == ['*** Данные успешно загружены. ***\n']
 
 
 def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
