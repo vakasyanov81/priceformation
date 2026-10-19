@@ -2,10 +2,8 @@
 
 from dataclasses import dataclass
 
-from run_dialog.items import MENU_ITEMS, AnswerResult, MenuItem
+from run_dialog.items import ACTIVATION_KEY, MENU_ITEMS, AnswerResult, MenuItem
 from services.vendor_activation import VendorState
-
-ACTIVATION_KEY = '4'
 
 
 @dataclass(frozen=True)

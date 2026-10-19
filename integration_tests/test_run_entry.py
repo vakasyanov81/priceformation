@@ -74,7 +74,7 @@ def test_main_report_doubles_then_exit() -> None:
     doubles_service.make_report.return_value = report
 
     with (
-        patch(_INPUT, side_effect=['6', _QUIT]),
+        patch(_INPUT, side_effect=['7', _QUIT]),
         patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
@@ -91,7 +91,7 @@ def test_main_update_zapaska_then_exit(watch_logger: LoggerWatcher) -> None:
     zapaska_service = MagicMock()
     entries = watch_logger(_RUN_LOGGER)
     with (
-        patch(_INPUT, side_effect=['2', _QUIT]),
+        patch(_INPUT, side_effect=['3', _QUIT]),
         patch(_RESOLVE, side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):

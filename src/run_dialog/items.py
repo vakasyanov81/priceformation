@@ -19,23 +19,49 @@ class AnswerResult(Enum):
 
 @dataclasses.dataclass(frozen=True)
 class MenuItem:
-    """Пункт меню: действие, подпись и клавиша для ввода строкой."""
+    """Пункт меню: действие и подпись. Клавиша назначается по порядку расположения."""
 
     action: AnswerResult
     label: str
-    key: str
+
+    @property
+    def key(self) -> str:
+        """Клавиша быстрого выбора: номер по порядку, для выхода — 'q'."""
+        return MENU_KEYS[self.action]
 
 
 MENU_ITEMS: tuple[MenuItem, ...] = (
-    MenuItem(AnswerResult.MAKE_PRICE_BY_SUPPLIER, 'сформировать общий прайс по прайсам поставщиков', '1'),
-    MenuItem(AnswerResult.UPDATE_ALL_SUPPLIER_PRICES, 'обновить прайсы всех поставщиков (API и почта)', '8'),
-    MenuItem(AnswerResult.UPDATE_ZAPASKA_DATA, 'Выгрузить прайсы запаски по API', '2'),
-    MenuItem(AnswerResult.UPDATE_FOUR_TOCHKI_DATA, 'Выгрузить данные Форточек по API', '3'),
-    MenuItem(AnswerResult.SHOW_HELP, 'справка (README)', '5'),
-    MenuItem(AnswerResult.REPORT_DOUBLES, 'отчёт о дублях', '6'),
-    MenuItem(AnswerResult.FETCH_MAIL_PRICES, 'получить прайсы поставщиков по почте', '7'),
-    MenuItem(AnswerResult.EXIT, 'выход', 'q'),
+    MenuItem(AnswerResult.MAKE_PRICE_BY_SUPPLIER, 'сформировать общий прайс по прайсам поставщиков'),
+    MenuItem(AnswerResult.UPDATE_ALL_SUPPLIER_PRICES, 'обновить прайсы всех поставщиков (API и почта)'),
+    MenuItem(AnswerResult.UPDATE_ZAPASKA_DATA, 'Выгрузить прайсы запаски по API'),
+    MenuItem(AnswerResult.UPDATE_FOUR_TOCHKI_DATA, 'Выгрузить данные Форточек по API'),
+    MenuItem(AnswerResult.SHOW_HELP, 'справка (README)'),
+    MenuItem(AnswerResult.REPORT_DOUBLES, 'отчёт о дублях'),
+    MenuItem(AnswerResult.FETCH_MAIL_PRICES, 'получить прайсы поставщиков по почте'),
+    MenuItem(AnswerResult.EXIT, 'выход'),
 )
+
+EXIT_KEY = 'q'
+
+
+def _assign_keys() -> tuple[dict[AnswerResult, str], str]:
+    """Номера по порядку расположения; активация поставщиков стоит перед справкой и получает свой номер."""
+    keys: dict[AnswerResult, str] = {}
+    number = 0
+    activation_key = ''
+    for menu_item in MENU_ITEMS:
+        if menu_item.action is AnswerResult.SHOW_HELP:
+            number += 1
+            activation_key = str(number)
+        if menu_item.action is AnswerResult.EXIT:
+            keys[menu_item.action] = EXIT_KEY
+            continue
+        number += 1
+        keys[menu_item.action] = str(number)
+    return keys, activation_key
+
+
+MENU_KEYS, ACTIVATION_KEY = _assign_keys()
 
 ANSWER_MAP: dict[str, AnswerResult] = {menu_item.key: menu_item.action for menu_item in MENU_ITEMS}
 
