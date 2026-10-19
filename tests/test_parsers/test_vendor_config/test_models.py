@@ -310,6 +310,14 @@ def test_title_reads_all_fields() -> None:
     )
 
 
+def test_title_reads_camera_by_kind() -> None:
+    """`camera_by_kind` читается как карта «слово вида → камерность»; по умолчанию пуста."""
+    raw = {'camera_by_kind': {'автошина': 'TT', 'автопокрышка': 'TL'}}
+
+    assert TitleConfig.from_dict(raw, WHERE).camera_by_kind == {'автошина': 'TT', 'автопокрышка': 'TL'}
+    assert TitleConfig.from_dict({}, WHERE).camera_by_kind == {}
+
+
 def test_title_reads_params_from_title_flag() -> None:
     """Флаг params_from_title читается; по умолчанию выключен."""
     assert TitleConfig.from_dict({'params_from_title': True}, WHERE).params_from_title is True

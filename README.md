@@ -338,7 +338,7 @@ condition  available  type_production
 | `default` | — | оставить название как есть (по умолчанию) |
 | `normalize_title` | — | схлопнуть пробелы, десятичную запятую привести к точке |
 | `normalize_size_chunks` | `fallback_brand` | нормализация названий Пошка: срезать обёртки «Шина»/«а/п», `*`→`x`, «н.с.N»→`PRN` |
-| `poshk_stk_tire_compose` | `fallback_brand` | собрать название STK/Пошка: размер, бренд, модель, нагрузка/скорость, PR, камера, назначение; «Шина» без бренда — как `normalize_size_chunks` |
+| `poshk_stk_tire_compose` | `fallback_brand`, `camera_by_kind` | собрать название STK/Пошка: размер, бренд, модель, нагрузка/скорость, PR, камера, назначение; «Шина» без бренда — как `normalize_size_chunks`; `camera_by_kind` — карта «слово вида шины → камерность», добавляется в название, если камерности в нём нет (Пошк: `автошина`/`спецшина`/`сельхозшина` → `TT`, `*покрышка` → `TL`) |
 | `tire_compose` | `variant` | собрать название шины: `mim_simple`, `mim_truck`, `four_tochki` |
 | `disk_compose` | `variant` | собрать название диска: `four_tochki` |
 | `fill_fields_from_title` | — | разобрать размер и модель из названия, само название не менять (Автоснабжение) |

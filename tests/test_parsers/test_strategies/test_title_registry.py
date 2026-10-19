@@ -89,6 +89,18 @@ def test_poshk_stk_tire_compose_fallback_brand_wired(monkeypatch: pytest.MonkeyP
     assert with_brand == '10.00R20 FORWARD Traction-310 146/143K 16PR TT'
 
 
+def test_poshk_stk_tire_compose_camera_by_kind_wired() -> None:
+    """`camera_by_kind` из конфига доходит до сборки Пошка."""
+    strategy = make_title_strategy(
+        TitleConfig(strategy='poshk_stk_tire_compose', camera_by_kind={'автопокрышка': 'TL'}),
+        WHERE,
+    )
+
+    prepared = strategy.prepare(RowItem({'title': '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, шт'}))
+
+    assert prepared == '11R22.5 TAITONG HS103 146/143M 16PR TL вед.ось'
+
+
 def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

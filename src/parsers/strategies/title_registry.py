@@ -39,10 +39,14 @@ _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'normalize_size_chunks': NormalizeSizeChunks,
     'fill_fields_from_title': FillFieldsFromTitle,
 }
-# Стратегии с бренд-заглушкой «Шина» без бренда: (fallback_brand, детектор бренда).
-_FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[str, BrandProbe | None], TitleStrategy]] = {
-    'normalize_size_chunks': NormalizeSizeChunks,
-    'poshk_stk_tire_compose': PoshkStkTireCompose,
+# Стратегии, которым нужны бренд-заглушка «Шина» без бренда и детектор бренда из слота.
+_FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[TitleConfig], TitleStrategy]] = {
+    'normalize_size_chunks': lambda config: NormalizeSizeChunks(config.fallback_brand, _fallback_probe(config)),
+    'poshk_stk_tire_compose': lambda config: PoshkStkTireCompose(
+        config.fallback_brand,
+        _fallback_probe(config),
+        config.camera_by_kind,
+    ),
 }
 
 ManufacturerReader = Callable[[], str | None]
@@ -83,7 +87,7 @@ def _build_strategy(
         return ManufacturerFromCategory(manufacturer_reader or _no_manufacturer)
     fallback_brand_factory = _FALLBACK_BRAND_STRATEGIES.get(config.strategy)
     if fallback_brand_factory is not None:
-        return fallback_brand_factory(config.fallback_brand, _fallback_probe(config))
+        return fallback_brand_factory(config)
     factory = _SIMPLE_STRATEGIES.get(config.strategy)
     if factory is None:
         raise ConfigValidationError(

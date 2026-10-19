@@ -9,8 +9,22 @@ from parsers.strategies.protocols import BrandProbe
 _FALLBACK_BRAND = 'Алтайшина'
 
 
+_CAMERA_BY_KIND = {
+    'автошина': 'TT',
+    'спецшина': 'TT',
+    'сельхозшина': 'TT',
+    'автопокрышка': 'TL',
+    'спецпокрышка': 'TL',
+    'сельхозпокрышка': 'TL',
+}
+
+
 def _strategy(fallback_brand: str = '', brand_probe: BrandProbe | None = None) -> PoshkStkTireCompose:
     return PoshkStkTireCompose(fallback_brand, brand_probe)
+
+
+def _camera_strategy() -> PoshkStkTireCompose:
+    return PoshkStkTireCompose('', None, _CAMERA_BY_KIND)
 
 
 class _Probe:
@@ -161,3 +175,43 @@ def test_fallback_normalize_gets_probe() -> None:
     prepared = strategy.prepare(RowItem({'title': 'Шина Камера 12.5/80-18 TT, шт'}))
 
     assert prepared == 'Камера 12.5/80-18 TT'
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт', '11.00R20 НКШЗ И-68А 150/146K 16PR TT'),
+        ('10.00-20 NEXT G2/L2 н.с.18 с об/л спецшина, шт', '10.00-20 NEXT G2/L2 18PR TT с об/л спецшина'),
+        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TT сельхозшина'),
+        (
+            '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, шт',
+            '11R22.5 TAITONG HS103 146/143M 16PR TL вед.ось',
+        ),
+        ('10-16.5 NEXT SKS-3 н.с.12 спецпокрышка, шт', '10-16.5 NEXT SKS-3 12PR TL спецпокрышка'),
+        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозпокрышка, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TL сельхозпокрышка'),
+    ],
+)
+def test_camera_added_by_kind_word(raw: str, expected: str) -> None:
+    """Нет камерности в названии — её даёт слово вида шины: *шина → TT, *покрышка → TL."""
+    assert _camera_strategy().prepare(RowItem({'title': raw})) == expected
+
+
+def test_camera_from_title_wins_over_kind_word() -> None:
+    """Камерность, уже указанная в названии, не перетирается видом шины."""
+    prepared = _camera_strategy().prepare(RowItem({'title': 'а/п 425/85R21 NORTEC TR-184-1 18PR 156J TL автошина, шт'}))
+
+    assert prepared == '425/85R21 NORTEC TR-184-1 156J 18PR TL'
+
+
+def test_camera_not_added_without_kind_word() -> None:
+    """Слова вида нет — камерность не выдумываем."""
+    prepared = _camera_strategy().prepare(RowItem({'title': '17.5-25 Rockbuster H108A E3/L3 н.с.28'}))
+
+    assert prepared == '17.5-25 Rockbuster H108A E3/L3 28PR'
+
+
+def test_camera_not_added_without_config() -> None:
+    """Без `camera_by_kind` (STK) поведение прежнее."""
+    prepared = _strategy().prepare(RowItem({'title': '11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт'}))
+
+    assert prepared == '11.00R20 НКШЗ И-68А 150/146K 16PR'
