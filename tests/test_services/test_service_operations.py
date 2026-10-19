@@ -133,6 +133,7 @@ def test_upload_zapaska_data() -> None:
     """upload_data вызывает загрузку удалённых данных с API-конфигом."""
     api = MagicMock()
     with (
+        patch('services.vendor_activity.load_vendor_configs', return_value={}),
         patch('services.zapaska_service.get_zapaska_api_config', return_value=api),
         patch('services.zapaska_service.load_remote_vendor_data') as mock_load,
     ):
@@ -145,6 +146,7 @@ def test_upload_four_tochki_data() -> None:
     api = MagicMock()
     groups = (MagicMock(),)
     with (
+        patch('services.vendor_activity.load_vendor_configs', return_value={}),
         patch('services.four_tochki_service.get_four_tochki_api_config', return_value=api),
         patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups),
         patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,

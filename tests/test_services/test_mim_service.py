@@ -17,6 +17,7 @@ def _upload(configs: dict[str, VendorConfig]) -> MimApiRequest:
     with (
         patch('services.mim_service.get_mim_api_config', return_value=_API),
         patch('services.mim_service.load_vendor_configs', return_value=configs),
+        patch('services.vendor_activity.load_vendor_configs', return_value=configs),
         patch('services.mim_service.load_remote_vendor_data') as mock_load,
     ):
         MimService().upload_data()
