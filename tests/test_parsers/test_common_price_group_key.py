@@ -152,6 +152,12 @@ def test_group_key_tl_matches_missing_intimacy() -> None:
     assert group_key(_row(camera_type='TL')) == group_key(_row())
 
 
+def test_define_intimacy_cyrillic_homoglyph_in_title() -> None:
+    """Запаска пишет `TТ` с кириллической `Т`: это та же камерность, что у латинской."""
+    assert define_intimacy(_row(title='10.00R20 Кама NU903 149/146K T\u0422 НкШЗ')) == 'TT'
+    assert group_key(_row(title='10.00R20 Кама NU903 T\u0422')) == group_key(_row(title='10.00R20 Кама NU903 TT'))
+
+
 def test_group_key_tt_differs_from_tl() -> None:
     assert group_key(_row(intimacy='TT')) != group_key(_row(intimacy='TL'))
     assert group_key(_row(title='tyre TT extra')) != group_key(_row(title='tyre TL extra'))

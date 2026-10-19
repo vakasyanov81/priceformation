@@ -67,7 +67,7 @@ def define_intimacy(row_item: RowItem) -> str | None:
         except ValueError, TypeError:
             return False
 
-    chunks = (row_item.identity.title or '').lower().split()
+    chunks = replace_homoglyphs((row_item.identity.title or '').lower()).split()
     for intimacy in ('tl', 'tt', 'ttf'):
         if intimacy in chunks:
             return intimacy.upper()
