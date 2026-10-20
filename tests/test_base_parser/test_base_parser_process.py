@@ -32,6 +32,9 @@ class _ProcessParser(BaseParser):
             mapped_rows.extend(self._rows_by_file[str(raw['file'])])
         return mapped_rows
 
+    def filter_warehouses(self, row_items: list[RowItem]) -> list[RowItem]:
+        return row_items
+
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return row_items
 

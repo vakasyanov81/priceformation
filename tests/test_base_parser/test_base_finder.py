@@ -1,7 +1,7 @@
 """tests for BaseFinder alias search."""
 
 from parsers.base_parser.alias_container import AliasContainer
-from parsers.base_parser.base_finder import BaseFinder, _has_word_boundaries
+from parsers.base_parser.base_finder import BaseFinder, _has_word_boundaries, find_bounded
 
 
 def test_find_uses_first_alias_occurrence() -> None:
@@ -90,18 +90,23 @@ def test_find_alias_at_position_one() -> None:
 
 def test_find_empty_alias_returns_minus_one() -> None:
     """Пустой алиас не ищется: guard возвращает -1, а не позицию нуля."""
-    finder = BaseFinder(AliasContainer({'Brand': ()}))
-    finder._title = ' abc'  # noqa: WPS437
-    assert finder._find('') == -1  # noqa: WPS437
+    assert find_bounded(' abc', '') == -1
 
 
 def test_find_returns_first_bounded_occurrence() -> None:
     """Следующее совпадение ищется вперёд от позиции, а не с конца строки."""
-    finder = BaseFinder(AliasContainer({'Brand': ()}))
-    finder._title = 'xbrand brand brand'  # noqa: WPS437
-    assert finder._find('brand') == 7  # noqa: WPS437
+    assert find_bounded('xbrand brand brand', 'brand') == 7
 
 
 def test_has_word_boundaries_rejects_alnum_before() -> None:
     """Буква/цифра перед алиасом — не граница слова."""
     assert _has_word_boundaries('ab', 1, 1) is False
+
+
+def test_find_word_in_title_caches_by_title() -> None:
+    """Повторный title не перебирает алиасы заново, результат тот же."""
+    finder = BaseFinder(AliasContainer({'Brand': ('brnd',)}))
+    first = finder.find_word_in_title('xx brnd yy')
+    finder._found['xx brnd yy'] = ('cached', None)  # noqa: WPS437
+    assert first == ('Brand', 'brnd')
+    assert finder.find_word_in_title('xx brnd yy') == ('cached', None)

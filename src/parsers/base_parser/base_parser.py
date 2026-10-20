@@ -159,6 +159,7 @@ class BaseParser:
         mapped = self.map_items(self.read_rows(files))
         raw_count = len(mapped)
         self.parsed_items += mapped
+        self.parsed_items = self.filter_warehouses(self.parsed_items)
         self.parsed_items = self.filter_keep(self.parsed_items)
         self.parsed_items = self.enrich(self.parsed_items)
         self.apply_vendor_hooks(self.parsed_items)
@@ -182,6 +183,14 @@ class BaseParser:
 
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         return enrich_items(self, row_items)
+
+    def filter_warehouses(self, row_items: list[RowItem]) -> list[RowItem]:
+        """Отбросить позиции складов вне выбранных городов (`behavior.warehouse_cities`) до дорогого разбора."""
+        hooks = self._strategy_hooks
+        if hooks is None or hooks.warehouse_filter is None:
+            return row_items
+        city_filter = hooks.warehouse_filter
+        return [row_item for row_item in row_items if city_filter.allows(row_item)]
 
     def filter_keep(self, row_items: list[RowItem]) -> list[RowItem]:
         return [row_item for row_item in row_items if _keep_row_item(self, row_item)]
@@ -248,7 +257,6 @@ class BaseParser:
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Выполнить шаги pipeline по порядку."""
-        self.apply_warehouse_filter(hooks, row_item)
         self.apply_warehouse_order(hooks, row_item)
         for step in hooks.pipeline:
             if step == 'title':
@@ -309,12 +317,6 @@ class BaseParser:
         """Обнулить остаток строки без категории, чтобы она не попала в прайс."""
         if hooks.zero_rest_without_category and not row_item.vendor.type_production:
             row_item.set_field('rest_count', 0)
-
-    @classmethod
-    def apply_warehouse_filter(cls, hooks: StrategyHooks, row_item: RowItem) -> None:
-        """Обнулить остаток склада вне выбранных городов (`behavior.warehouse_cities`)."""
-        if hooks.warehouse_filter is not None:
-            hooks.warehouse_filter.apply(row_item)
 
     @classmethod
     def apply_warehouse_order(cls, hooks: StrategyHooks, row_item: RowItem) -> None:

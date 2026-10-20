@@ -172,3 +172,23 @@ def test_disk_eet_decimal_comma() -> None:
     """eet со строкой «163,5» становится float 163.5 (как и остальные числовые параметры диска)."""
     row = RowItem({'title': 't1', 'eet': '163,5', 'price_opt': '10', 'rest_count': '5'})
     assert row.disk.eet == 163.5
+
+
+def test_set_field_same_value_keeps_value_object() -> None:
+    """запись того же значения не пересоздаёт value object (горячий путь: title и бренд пишутся повторно)."""
+    row = RowItem({'title': 't1', 'eet': '16'})
+    identity, disk = row.identity, row.disk
+    row.set_field('title', 't1')
+    row.set_field('eet', 16)
+    assert row.identity is identity
+    assert row.disk is disk
+
+
+def test_set_field_new_value_replaces_value_object() -> None:
+    """новое значение даёт новый value object, старый не меняется."""
+    row = RowItem({'title': 't1'})
+    identity = row.identity
+    row.set_field('title', 't2')
+    assert row.identity is not identity
+    assert identity.title == 't1'
+    assert row.identity.title == 't2'

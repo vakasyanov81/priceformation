@@ -10,12 +10,12 @@ from typing import Any
 from parsers.writer.jsonl_codes import VALUES_KEY, apply_value_codes, read_value_codes
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-from parsers.writer.xls_writer import PriceRow, get_value, has_value, make_exclude
+from parsers.writer.xls_writer import PriceRow, cell_value, has_value, make_exclude
 
 RESULT_META_FILE = 'result_meta.json'
 _SEPARATORS = (',', ':')
 
-type JsonlColumns = list[dict[str, Any]]
+type JsonlColumns = list[ColumnHelper]
 type NameToKey = dict[str, str]
 type KeyToName = dict[str, str]
 
@@ -41,7 +41,7 @@ def _jsonl_file_name(template: IWriteTemplate) -> str:
 
 
 def _write_jsonl(path: Path, rows: list[PriceRow], template: IWriteTemplate) -> None:
-    columns = [column for column in template.columns() if not ColumnHelper(column).skip]
+    columns = [column for column in map(ColumnHelper, template.columns()) if not column.skip]
     keys = _extend_meta(path.parent, columns)
     compact = [_compact_row(product, columns, keys) for product in rows]
     apply_value_codes(compact, columns, keys, path.parent / RESULT_META_FILE)
@@ -70,7 +70,7 @@ def _assign_keys(by_name: NameToKey, columns: JsonlColumns) -> None:
     used = [int(key) for key in by_name.values()]
     next_index = max(used, default=0) + 1
     for column in columns:
-        name = ColumnHelper(column).name
+        name = column.name
         if name in by_name:
             continue
         by_name[name] = str(next_index)
@@ -97,8 +97,8 @@ def _compact_row(
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {}
     for column in columns:
-        cell = get_value(column, product)
+        cell = cell_value(column, product)
         if not has_value(cell):
             continue
-        payload[name_to_key[ColumnHelper(column).name]] = cell
+        payload[name_to_key[column.name]] = cell
     return payload

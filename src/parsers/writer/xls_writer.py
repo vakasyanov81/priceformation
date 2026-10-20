@@ -16,7 +16,11 @@ type PriceRow = dict[str, Any]
 
 def get_value(column: dict[str, Any], row_item: PriceRow) -> str | None:
     """get value for write cell"""
-    col = ColumnHelper(column)
+    return cell_value(ColumnHelper(column), row_item)
+
+
+def cell_value(col: ColumnHelper, row_item: PriceRow) -> str | None:
+    """Значение ячейки по уже разобранной колонке: helper строится раз на колонку, а не на каждую ячейку."""
     if col.skip:
         return None
 
@@ -93,8 +97,9 @@ class XlsWriter:
         self.driver.set_column_format(self.template.get_columns_format())
         self.driver.write_head(self.col_names())
         filtered_data = make_exclude(self.parse_result, self.exclude)
+        helpers = [ColumnHelper(col) for col in self.template.columns()]
         for row_index, product in enumerate(filtered_data):
-            self._write_row(product, row_index, self._get_color(product))
+            self._write_row(product, row_index, helpers, self._get_color(product))
         self.driver.save()
 
     def get_file_name(self) -> str:
@@ -132,17 +137,23 @@ class XlsWriter:
         index = colors.get('set_to_column_index')
         return color_map.get(column_value), index
 
-    def _write_row(self, row_item: PriceRow, row_index: int, color: RowColor | None = None) -> None:
+    def _write_row(
+        self,
+        row_item: PriceRow,
+        row_index: int,
+        helpers: list[ColumnHelper],
+        color: RowColor | None = None,
+    ) -> None:
         """write row item"""
-        for col_index, col in enumerate(self.template.columns()):
-            cell_value = get_value(col, row_item)
-            if not has_value(cell_value):
+        for col_index, col in enumerate(helpers):
+            cell = cell_value(col, row_item)
+            if not has_value(cell):
                 continue
 
             cell_color = color[0] if color and color[1] == col_index else None
             self.driver.write(
                 row_index + 1,
                 col_index,
-                cell_value,
+                cell,
                 _color=cell_color,
             )

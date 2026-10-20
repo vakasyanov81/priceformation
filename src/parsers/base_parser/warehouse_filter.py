@@ -1,4 +1,4 @@
-"""Фильтр складов поставщика по городу: остаток вне выбранных городов обнуляется."""
+"""Фильтр складов поставщика по городу: позиции вне выбранных городов отсеиваются до разбора."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ class WarehouseFilterError(CoreExceptionError):
 
 
 class CityWarehouseFilter:
-    """Оставляет остаток только на складах выбранных городов.
+    """Пропускает только позиции со складов выбранных городов.
 
     Склад ищется по `warehouse_id` позиции в списке территорий поставщика
     `file_prices/<folder>/territories.json`: город — слово целиком в названии или адресе
@@ -37,10 +37,9 @@ class CityWarehouseFilter:
         self._cities = cities
         self._allowed_ids: frozenset[int] | None = None
 
-    def apply(self, row_item: RowItem) -> None:
-        """Обнулить остаток позиции, если её склад не из выбранных городов."""
-        if row_item.stock.warehouse_id not in self._ids():
-            row_item.set_field('rest_count', 0)
+    def allows(self, row_item: RowItem) -> bool:
+        """Склад позиции из выбранных городов (позиция без склада не проходит)."""
+        return row_item.stock.warehouse_id in self._ids()
 
     def _ids(self) -> frozenset[int]:
         if self._allowed_ids is None:

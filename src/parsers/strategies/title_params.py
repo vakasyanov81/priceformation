@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import lru_cache
 from typing import Any, NamedTuple
 
 from domain.row_item.row_item import RowItem
@@ -30,18 +31,27 @@ def _parse_bare_disk(raw: str | None) -> DiskTitleParts | None:
     return parse_disk_title(raw, bare=True)
 
 
+# Разбор названия — чистая функция строки, а результаты неизменяемы (frozen dataclass / NamedTuple).
+# Одно и то же название разбирается дважды: в enrich и в шаге `title` pipeline, поэтому кэш.
+_PARSE_CACHE_SIZE = 65536
+_tire = lru_cache(maxsize=_PARSE_CACHE_SIZE)(parse_tire_title)
+_disk = lru_cache(maxsize=_PARSE_CACHE_SIZE)(parse_disk_title)
+_bare_disk = lru_cache(maxsize=_PARSE_CACHE_SIZE)(_parse_bare_disk)
+_eet = lru_cache(maxsize=_PARSE_CACHE_SIZE)(DiskTitleParts.et_from_name)
+_tube = lru_cache(maxsize=_PARSE_CACHE_SIZE)(parse_tube_title)
+
 # Каждый разборщик сам отвечает None на чужое название (диск — не шина и наоборот).
 _EXTRACTORS = (
-    _Extractor(parse_tire_title, fill_tire_fields),
-    _Extractor(parse_disk_title, fill_disk_fields),
-    _Extractor(DiskTitleParts.et_from_name, _fill_eet),
-    _Extractor(parse_tube_title, fill_tube_fields),
+    _Extractor(_tire, fill_tire_fields),
+    _Extractor(_disk, fill_disk_fields),
+    _Extractor(_eet, _fill_eet),
+    _Extractor(_tube, fill_tube_fields),
 )
 _BARE_EXTRACTORS = (
-    _Extractor(parse_tire_title, fill_tire_fields),
-    _Extractor(_parse_bare_disk, fill_disk_fields),
-    _Extractor(DiskTitleParts.et_from_name, _fill_eet),
-    _Extractor(parse_tube_title, fill_tube_fields),
+    _Extractor(_tire, fill_tire_fields),
+    _Extractor(_bare_disk, fill_disk_fields),
+    _Extractor(_eet, _fill_eet),
+    _Extractor(_tube, fill_tube_fields),
 )
 
 
