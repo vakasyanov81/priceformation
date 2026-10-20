@@ -9,8 +9,8 @@ from collections.abc import Callable, Mapping
 from typing import ClassVar
 
 from domain.row_item.row_item import RowItem
+from parsers.nomenclature_brand import brand_label, model_label
 from parsers.nomenclature_title import (
-    brand_label,
     compose_tire_title,
     join_size_parts,
     join_title_parts,
@@ -155,7 +155,7 @@ class DiskComposeTochki:
             row_item.disk.central_diameter,
             row_item.disk.color,
             brand_label(row_item),
-            row_item.identity.model,
+            model_label(row_item),
         )
 
 

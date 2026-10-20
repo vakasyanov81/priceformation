@@ -5,8 +5,8 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.nomenclature_brand import brand_label, model_label
 from parsers.nomenclature_title import (
-    brand_label,
     compose_tire_title,
     join_size_parts,
     join_title_parts,
@@ -49,6 +49,24 @@ def test_brand_label_keeps_brand_case() -> None:
     assert brand_label(_row(manufacturer_name='BFGoodrich')) == 'BFGoodrich'
     assert brand_label(_row(manufacturer_name=' Royal Spin ')) == 'Royal Spin'
     assert brand_label(_row()) == ''
+
+
+@pytest.mark.parametrize(
+    ('brand', 'model', 'expected'),
+    [
+        ('Ikon', 'Ikon Character Eco C2', 'Character Eco C2'),
+        ('Кама', 'КАМА-NF 701', 'NF 701'),
+        ('Cordiant', 'CORDIANT PROFESSIONAL DR-1', 'PROFESSIONAL DR-1'),
+        ('LS', 'LS FG10', 'FG10'),
+        ('Кама', 'Камаз-5', 'Камаз-5'),
+        ('KN', 'KN1061', 'KN1061'),
+        ('Кама', 'Кама', 'Кама'),
+        ('', 'Ikon Character', 'Ikon Character'),
+    ],
+)
+def test_model_label_drops_leading_brand(brand: str, model: str, expected: str) -> None:
+    """Бренд в начале модели не повторяется в title; слитное начало и пустой остаток модель не трогают."""
+    assert model_label(_row(manufacturer_name=brand, model=model)) == expected
 
 
 def test_load_velocity_concatenates() -> None:

@@ -1,6 +1,7 @@
 """Сборка названия номенклатуры из параметров строки."""
 
 from domain.row_item.row_item import RowItem
+from parsers.nomenclature_brand import brand_label, model_label
 
 
 def join_title_parts(*parts: object) -> str:
@@ -11,11 +12,6 @@ def join_title_parts(*parts: object) -> str:
 def join_size_parts(*parts: object) -> str:
     """Склеить куски размера без пробелов и пустых."""
     return ''.join(_nonempty_chunks(parts))
-
-
-def brand_label(row_item: RowItem) -> str:
-    """Бренд для title как в поле: регистр бренда (`BFGoodrich`, `XCMG`) не меняется."""
-    return (row_item.identity.manufacturer or '').strip()
 
 
 def load_velocity(row_item: RowItem) -> str:
@@ -30,7 +26,7 @@ def compose_tire_title(row_item: RowItem, size: str, *extras: object) -> str:
     return join_title_parts(
         size,
         brand_label(row_item),
-        row_item.identity.model,
+        model_label(row_item),
         *extras,
     )
 
