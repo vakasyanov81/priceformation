@@ -10,11 +10,11 @@ from typing import ClassVar
 
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature_brand import brand_label, model_label
+from parsers.nomenclature_labels import camera_label
 from parsers.nomenclature_title import (
     compose_tire_title,
     join_size_parts,
     join_title_parts,
-    load_velocity,
 )
 from parsers.strategies._autosnab_helper import fill_from_title
 from parsers.strategies._four_tochki_disk_helper import (
@@ -113,7 +113,7 @@ class TireCompose:
         profile = row_item.tire.height_percent or ''
         delimiter = _SIZE_MARK if self._is_decimal(profile) else '/'
         size = join_size_parts(row_item.tire.width, delimiter, profile, 'R', row_item.tire.diameter)
-        return compose_tire_title(row_item, size, load_velocity(row_item))
+        return compose_tire_title(row_item, size)
 
     def _mim_truck(self, row_item: RowItem) -> str:
         height_percent = row_item.tire.height_percent or ''
@@ -123,10 +123,8 @@ class TireCompose:
         return compose_tire_title(
             row_item,
             size,
-            row_item.tire.layering,
-            load_velocity(row_item),
-            row_item.tire.intimacy,
-            row_item.tire.axis,
+            camera=camera_label(row_item.tire.intimacy),
+            axis=row_item.tire.axis or '',
         )
 
     def _is_decimal(self, candidate: str | int | float) -> bool:

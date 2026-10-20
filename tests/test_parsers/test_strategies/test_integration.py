@@ -213,12 +213,12 @@ class TestStrategiesIntegration:
                 'height_percent': '75',
                 'diameter': '22.5',
                 'layering': '14',
-                'intimacy': '2',
-                'axis': '2',
+                'intimacy': 'TT',
+                'axis': 'Ведущая',
             }
         )
         prepared = integration.get_prepared_title(row)
-        assert prepared == '295/75R22.5 14 2 2'
+        assert prepared == '295/75R22.5 14PR TT Ведущая'
 
         # Тест percent_by_threshold pricing (через strategy)
         # pricing не интегрирована в StrategiesIntegration, но стратегия создана

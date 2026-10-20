@@ -155,7 +155,7 @@ def test_before_title_composes_tire_from_raw_title() -> None:
 
     title = ParamsBeforeTitle(TireCompose('four_tochki')).prepare(row)
 
-    assert title == '205/65R16 Viatti Brina Nordico V-522 TL 95T'
+    assert title == '205/65R16 Viatti Brina Nordico V-522 95T'
     assert (row.tire.width, row.tire.diameter) == ('205', '16')
 
 

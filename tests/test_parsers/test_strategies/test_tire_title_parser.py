@@ -10,15 +10,15 @@ from parsers.strategies._tire_title_parser import (
     parse_tire_title,
 )
 
-# Примеры склейки → Пионер (порядок: размер бренд модель нагрузка/скорость PR камера назначение).
+# Примеры склейки в каноническом порядке (размер бренд модель нагрузка/скорость PR камера ось).
 _GLUE_EXAMPLES = (
     (
         '10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт',
-        '10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+        '10.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная',
     ),
     (
         '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, (1 шт)',
-        '11R22.5 TAITONG HS103 146/143M 16PR вед.ось',
+        '11R22.5 TAITONG HS103 146/143M 16PR Ведущая',
     ),
     (
         'а/п 425/85R21 NORTEC TR-184-1 18PR 156J TT, шт',
@@ -30,71 +30,71 @@ _GLUE_EXAMPLES = (
     ),
     (
         '12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт',
-        '12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина',
+        '12.4L-16 БШК Бел-160М 111A6 8PR',
     ),
     (
         '17.5-25 Rockbuster H108A E3/L3 н.с.28 спецшина, шт',
-        '17.5-25 Rockbuster H108A E3/L3 28PR спецшина',
+        '17.5-25 Rockbuster H108A E3/L3 28PR',
     ),
     # STK
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал',
-        '235/75R17.5 LingLong LLA78 143/141J 18PR TL трал',
+        '235/75R17.5 LingLong LLA78 143/141J 18PR TL',
     ),
     (
         'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 7.00 R16LT14PR 118/114L GREENSTONE ST896 змейка',
-        '7.00R16LT GREENSTONE ST896 118/114L 14PR змейка',
+        '7.00R16LT GREENSTONE ST896 118/114L 14PR',
     ),
     (
         'Автошина 295/80R22.5 18PR 152/149M GREENSTONE ST33 руль',
-        '295/80R22.5 GREENSTONE ST33 152/149M 18PR руль',
+        '295/80R22.5 GREENSTONE ST33 152/149M 18PR Рулевая',
     ),
     (
         'Автошина 385/55R22.5 20PR 160K GREENSTONE ST398 руль/прицеп',
-        '385/55R22.5 GREENSTONE ST398 160K 20PR руль/прицеп',
+        '385/55R22.5 GREENSTONE ST398 160K 20PR Рулевая',
     ),
     (
         'Автошина 315/80 R22.5 22PR 167/164D TRANSMATE TMD18 карьер',
-        '315/80R22.5 TRANSMATE TMD18 167/164D 22PR карьер',
+        '315/80R22.5 TRANSMATE TMD18 167/164D 22PR Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, шт',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер, , шт',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, (12 шт)',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автопокрышка 12.00R24 DRC D931 20PR 160/157F TTF карьер',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка автопокрышка',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 11.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л',
-        '11.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+        '11.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная',
     ),
 )
 
 
 @pytest.mark.parametrize(('raw', 'expected'), _GLUE_EXAMPLES)
 def test_parse_and_compose_examples(raw: str, expected: str) -> None:
-    """Склейка примера даёт порядок Пионера."""
+    """Склейка примера даёт канонический порядок."""
     parts = parse_tire_title(raw)
 
     assert parts is not None
@@ -501,7 +501,7 @@ def test_parse_marks_leading_ship(raw: str, from_ship: bool) -> None:
     [
         ('11R22.5 GREENSTONE DR668 16PR', 'GreenStone', '11R22.5 GreenStone DR668 16PR'),
         ('6L-12 Алтайшина-421 2PR 44A6 TT', 'Алтайшина', '6L-12 Алтайшина-421 44A6 2PR TT'),
-        ('10.00 R20 КАМА-310 146/143K 16PR НКШЗ', 'Кама', '10.00R20 Кама-310 146/143K 16PR НКШЗ'),
+        ('10.00 R20 КАМА-310 146/143K 16PR НКШЗ', 'Кама', '10.00R20 Кама-310 146/143K 16PR'),
         ('11R22.5 DOUBLE ROAD DR-801 16PR', 'Double Road', '11R22.5 Double Road ROAD DR-801 16PR'),
         ('11R22.5 GREENSTONE DR668 16PR', None, '11R22.5 GREENSTONE DR668 16PR'),
     ],

@@ -13,24 +13,16 @@ import re
 
 from domain.row_item.row_item import RowItem
 from domain.row_item.row_item_casts import get_try_to_int_or_str
-from parsers.nomenclature_title import compose_tire_title, join_size_parts, load_velocity
+from parsers.nomenclature_labels import camera_label
+from parsers.nomenclature_title import compose_tire_title, join_size_parts
 from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
 
 _PROFILE_L = 'L'
 _DASH = '-'
 _METRIC_WIDTH_MIN = 100
 _L_FROM_EXCEL = f'{_PROFILE_L}.0'
-_PR_SUFFIX = re.compile(r'\s*PR$', re.IGNORECASE)
 # Конструкция, как её пишет разбор названия API (колонка `construction_type` у xlsx — `R`, `—`, `ZR`).
 _DIAGONAL_PARSED = 'диагональная'
-# Надпись на боковине в названии API: слова за камерой (`TL POR M+S`, `TL M+S 3PMSF 18PR`).
-# `BSW` в колонке прайса нет — из надписи его убираем, но он не разрывает надпись.
-_SIDEWALL_RUN = re.compile(
-    r'(?<!\S)(?:(?:BSW\s+|WW\s+|OWL\s+|RFT\s+|RunFlat\s+|Run\s+Flat\s+)*'
-    r'(?:M\+S|3PMSF|POR|EV|FRT|MPT|Steel Belted|All Steel Radial)(?=\s|$)\s*)+',
-    re.IGNORECASE,
-)
-_SIDEWALL_NOISE = re.compile(r'\b(?:BSW|WW|OWL|RFT|RunFlat|Run\s+Flat)\b\s*', re.IGNORECASE)
 # Размер, который общий разбор названия не принимает: `ZR` (радиальная с ZR), префиксы `P`/`LT`.
 _SIZE_PREFIX = re.compile(r'^(?:P|LT)(?=\d)')
 _ZR_SIZE = re.compile(r'^(\S*?)ZR(?=\d)', re.IGNORECASE)
@@ -199,41 +191,6 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
 _RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 
 
-def _extra_labels(row_item: RowItem) -> tuple[str, str]:
-    """Боковина и RunFlat для title."""
-    return _sidewall(row_item), _runflat(row_item)
-
-
-def _sidewall(row_item: RowItem) -> str:
-    """Надпись на боковине: колонка прайса, а если её нет — из исходного названия (API)."""
-    column = str(row_item.tire.inscription_on_the_side or '').strip()
-    return column or sidewall_from_title(row_item.identity.title)
-
-
-def sidewall_from_title(raw: str | None) -> str:
-    """Надпись на боковине из названия: слова за камерой (`TL POR M+S` → `POR M+S`).
-
-    Без камеры ищем надпись в остатке названия (`Кама Quadro ATM 59 POR`).
-    """
-    if not raw:
-        return ''
-    camera = _CAMERA.search(raw)
-    if camera is not None:
-        after = raw[camera.end() :].lstrip()
-        run = _SIDEWALL_RUN.match(after)
-    else:
-        size_end = raw.find(' ')
-        run = _SIDEWALL_RUN.search(raw, size_end) if size_end > 0 else None
-    if run is None:
-        return ''
-    return ' '.join(_SIDEWALL_NOISE.sub('', run.group(0)).split())
-
-
-def _layering(row_item: RowItem) -> str:
-    """Слойность числом, как в колонке прайса: `16PR` → `16`."""
-    return _PR_SUFFIX.sub('', str(row_item.tire.layering or '').strip())
-
-
 def _camera(row_item: RowItem) -> str:
     """Камерность колонки; если колонки нет — из названия (разбор кладёт только `TL`/`TT` в `intimacy`)."""
     if row_item.tire.camera_type:
@@ -270,35 +227,28 @@ def truck_title(row_item: RowItem, size: str) -> str:
     return compose_tire_title(
         row_item,
         size,
-        _layering(row_item),
-        _camera(row_item),
-        _extra_labels(row_item)[0],
-        load_velocity(row_item),
+        camera=camera_label(_camera(row_item)),
+        axis=row_item.tire.axis or '',
     )
 
 
 def ext_diameter_title(row_item: RowItem, size: str) -> str:
     """Title с внешним диаметром."""
-    sidewall, runflat = _extra_labels(row_item)
     return compose_tire_title(
         row_item,
         size,
-        row_item.tire.index_load,
-        row_item.tire.us_aff_designation,
-        sidewall,
-        runflat,
+        after_load=(row_item.tire.us_aff_designation,),
+        run_flat=_runflat(row_item),
     )
 
 
 def default_tire_title(row_item: RowItem, size: str) -> str:
-    """Обычный title легковой/спец."""
-    sidewall, runflat = _extra_labels(row_item)
+    """Обычный title легковой/спец: `TL` у легковых не пишется, ось — у спецтехники."""
+    special = is_special_tire(row_item)
     return compose_tire_title(
         row_item,
         size,
-        _layering(row_item),
-        _camera(row_item),
-        sidewall,
-        load_velocity(row_item),
-        runflat,
+        camera=camera_label(_camera(row_item), keep_tl=special),
+        axis=row_item.tire.axis or '' if special else '',
+        run_flat=_runflat(row_item),
     )

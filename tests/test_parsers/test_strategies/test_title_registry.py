@@ -98,7 +98,7 @@ def test_poshk_stk_tire_compose_camera_by_kind_wired() -> None:
 
     prepared = strategy.prepare(RowItem({'title': '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, шт'}))
 
-    assert prepared == '11R22.5 TAITONG HS103 146/143M 16PR TL вед.ось'
+    assert prepared == '11R22.5 TAITONG HS103 146/143M 16PR TL Ведущая'
 
 
 def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
@@ -219,4 +219,4 @@ def test_params_first_strategy_prepares_title_end_to_end() -> None:
 
     title = make_title_strategy(config, WHERE).prepare(row)
 
-    assert title == '205/65R16 Viatti Brina Nordico V-522 TL 95T'
+    assert title == '205/65R16 Viatti Brina Nordico V-522 95T'

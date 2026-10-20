@@ -75,7 +75,23 @@ def test_load_velocity_concatenates() -> None:
     assert load_velocity(_row()) == ''
 
 
-def test_compose_tire_title_order_and_extras() -> None:
-    row = _row(manufacturer_name='Pirelli', model='P Zero', layering='XL')
-    title = compose_tire_title(row, '235/40R18', row.tire.layering, '103Y')
-    assert title == '235/40R18 Pirelli P Zero XL 103Y'
+def test_compose_tire_title_canonical_order() -> None:
+    """Порядок: размер, бренд, модель, нагрузка+скорость, после неё доп. токены, `<N>PR`, камера, RunFlat, ось."""
+    row = _row(
+        manufacturer_name='Pirelli',
+        model='P Zero',
+        layering='PR16',
+        index_load='103',
+        index_velocity='Y',
+    )
+
+    title = compose_tire_title(
+        row,
+        '235/40R18',
+        camera='TL',
+        axis='рул.ось',
+        after_load=('XL',),
+        run_flat='RunFlat',
+    )
+
+    assert title == '235/40R18 Pirelli P Zero 103Y XL 16PR TL RunFlat Рулевая'
