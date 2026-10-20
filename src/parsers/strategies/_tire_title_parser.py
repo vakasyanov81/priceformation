@@ -39,6 +39,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from domain.row_item.row_item import RowItem
+from parsers.nomenclature_labels import season_marks_label, xl_label
 from parsers.nomenclature_title import TireTitleTokens
 from parsers.strategies._title_wins import TIRE_TITLE_WINS
 
@@ -184,15 +185,22 @@ class _Service(NamedTuple):
     intimacy: str
     load: str
     velocity: str
+    xl: str
+    season_marks: tuple[str, ...]
     rest: tuple[str, ...]
 
     @classmethod
     def from_tokens(cls, tokens: list[str]) -> _Service:
-        """Вырезать PR, камерность и индекс нагрузки/скорости из токенов."""
+        """Вырезать PR, камерность, индекс нагрузки/скорости, `XL` и `M+S`/`3PMSF` из токенов."""
         layering, rest = _take_token(tokens, _PR.match)
         intimacy, rest = _take_token(rest, _CAMERA.match)
         load, velocity, rest = _take_speed(rest)
-        return cls(layering.upper(), intimacy.upper(), load, velocity, tuple(rest))
+        marks = [token for token in rest if _is_property_token(token)]
+        rest = [token for token in rest if not _is_property_token(token)]
+        text = ' '.join(marks)
+        return cls(
+            layering.upper(), intimacy.upper(), load, velocity, xl_label(text), season_marks_label(text), tuple(rest)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +216,8 @@ class TireTitleParts:
     intimacy: str
     usage: tuple[str, ...]
     from_ship: bool = False
+    xl: str = ''
+    season_marks: tuple[str, ...] = ()
 
     @classmethod
     def from_raw(
@@ -231,6 +241,8 @@ class TireTitleParts:
             intimacy=service.intimacy,
             usage=fields.usage,
             from_ship=from_ship,
+            xl=service.xl,
+            season_marks=service.season_marks,
         )
 
     @property
@@ -261,8 +273,10 @@ class TireTitleParts:
             _canonical_brand(self.brand, brand),
             self.model,
             load_velocity=f'{self.load}{self.velocity}',
+            xl=self.xl,
             layering=self.layering,
             camera=self.intimacy,
+            season_marks=self.season_marks,
             axis=self.axis,
         ).compose()
 
@@ -466,6 +480,11 @@ def _is_usage(token: str) -> bool:
 def _from_ship(raw: str) -> bool:
     """Название начиналось с обёртки «Шина» (нужно для бренд-заглушки)."""
     return _LEADING_SHIP.match(raw) is not None
+
+
+def _is_property_token(token: str) -> bool:
+    """Отдельный токен `XL`, `M+S` или `3PMSF`: свойство шины, а не часть модели."""
+    return bool(xl_label(token) or season_marks_label(token))
 
 
 def _take_token(tokens: list[str], matches: _TokenMatcher) -> tuple[str, list[str]]:

@@ -2,7 +2,16 @@
 
 import pytest
 
-from parsers.nomenclature_labels import axis_label, camera_label, layering_label, run_flat_label
+from parsers.nomenclature_labels import (
+    axis_label,
+    camera_label,
+    layering_label,
+    run_flat_label,
+    season_marks_label,
+    xl_label,
+)
+
+type _Sources = tuple[str | None, ...]
 
 
 @pytest.mark.parametrize(
@@ -22,18 +31,46 @@ def test_layering_label(raw: object, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ('raw', 'keep_tl', 'expected'),
+    ('raw', 'expected'),
     [
-        ('tt', True, 'TT'),
-        ('TL', True, 'TL'),
-        ('TL', False, ''),
-        ('TT', False, 'TT'),
-        ('Цельнолитая', False, 'Цельнолитая'),
+        ('tt', 'TT'),
+        ('TL', 'TL'),
+        ('TT', 'TT'),
+        ('Цельнолитая', 'Цельнолитая'),
     ],
 )
-def test_camera_label(raw: str, keep_tl: bool, expected: str) -> None:
-    """`TL` у легковых не пишется (Р2), прочие камерности и пометки остаются."""
-    assert camera_label(raw, keep_tl=keep_tl) == expected
+def test_camera_label(raw: str, expected: str) -> None:
+    """Камерность заглавными, `TL` не отбрасывается (Р2); прочие пометки остаются как есть."""
+    assert camera_label(raw) == expected
+
+
+@pytest.mark.parametrize(
+    ('sources', 'expected'),
+    [
+        (('245/45ZR17 99W XL Ingens A1 TL M+S', None), ('M+S',)),
+        (('215/70R16 Geolandar TL M+S 3PMSF',), ('M+S', '3PMSF')),
+        (('3PMSF', 'm&s'), ('M+S', '3PMSF')),
+        (('Geolandar A/T G015 MS', 'XL'), ()),
+        ((None, ''), ()),
+    ],
+)
+def test_season_marks_label(sources: _Sources, expected: tuple[str, ...]) -> None:
+    """`M+S`/`3PMSF` из любого из текстов, в каноническом порядке."""
+    assert season_marks_label(*sources) == expected
+
+
+@pytest.mark.parametrize(
+    ('sources', 'expected'),
+    [
+        (('Ingens A1 XL TL',), 'XL'),
+        (('Ingens', 'xl'), 'XL'),
+        (('Ingens XLR',), ''),
+        ((None,), ''),
+    ],
+)
+def test_xl_label(sources: _Sources, expected: str) -> None:
+    """`XL` отдельным словом хотя бы в одном тексте."""
+    assert xl_label(*sources) == expected
 
 
 @pytest.mark.parametrize(

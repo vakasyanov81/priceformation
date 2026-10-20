@@ -235,12 +235,12 @@ def ext_diameter_title(row_item: RowItem, size: str) -> str:
 
 
 def default_tire_title(row_item: RowItem, size: str) -> str:
-    """Обычный title легковой/спец: `TL` у легковых не пишется, ось — у спецтехники."""
+    """Обычный title легковой/спец: ось — только у спецтехники."""
     special = is_special_tire(row_item)
     return compose_tire_title(
         row_item,
         size,
-        camera=camera_label(_camera(row_item), keep_tl=special),
+        camera=camera_label(_camera(row_item)),
         axis=row_item.tire.axis or '' if special else '',
         run_flat=_runflat(row_item),
     )

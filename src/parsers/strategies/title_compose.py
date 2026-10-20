@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-import re
-
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature_brand import model_label
-from parsers.nomenclature_labels import camera_label, run_flat_label
+from parsers.nomenclature_labels import camera_label, run_flat_label, season_marks_label, xl_label
 from parsers.nomenclature_title import TireTitleTokens, load_velocity
 from parsers.strategies._tire_title_parser import TireTitleParts, parse_tire_title
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.product_types import LIGHT_TRUCK, MOTO, PASSENGER, SPECIAL, TRUCK
 from parsers.strategies.protocols import ManufacturerProbe, TitleStrategy
 
-_XL = re.compile(r'(?<!\w)xl(?!\w)', re.IGNORECASE)
-# `TL` пишется у грузовых и спецшин: камерность различает товар; у легковых и легкогрузовых бескамерных 99 %.
-_TL_TYPES = frozenset((TRUCK, SPECIAL))
 _TIRE_TYPES = frozenset((PASSENGER, LIGHT_TRUCK, TRUCK, SPECIAL, MOTO))
 
 
@@ -25,7 +20,8 @@ class TireTitleFromFields:
     Название готовит вложенная стратегия, она же (через ``params_from_title``) заполняет поля позиции.
     Бренд, модель, нагрузка/скорость, слойность, камерность и ось берутся из полей, если они заполнены,
     иначе из разбора названия; размер (с суффиксом ``C``/``LT``, дюймовая запись) — из разбора названия.
-    ``XL`` — свойство шины, а не шум: остаётся, если был в названии поставщика.
+    ``XL``, ``M+S``, ``3PMSF`` и ``TL`` — свойства шины, а не шум: остаются, если были в названии поставщика
+    или в надписи на боковине.
 
     Название не из шины (камера, диск) не меняется. Шина, у которой размер не разобран, остаётся
     текстом вложенной стратегии, позиция получает пометку ``title_not_composed`` для статистики разбора.
@@ -54,16 +50,16 @@ class TireTitleFromFields:
 
     def _compose(self, row_item: RowItem, parts: TireTitleParts, title: str) -> str:
         tire = row_item.tire
-        keep_tl = self._classifier.classify(row_item) in _TL_TYPES
         model = model_label(row_item) or parts.model_name
         return TireTitleTokens(
             parts.size_with_alt(),
             self._brand(row_item, parts, title),
             model,
             load_velocity=load_velocity(row_item) or f'{parts.load}{parts.velocity}',
-            xl='XL' if _XL.search(title) else '',
+            xl=xl_label(title, tire.inscription_on_the_side),
             layering=tire.layering or parts.layering,
-            camera=camera_label(tire.intimacy or parts.intimacy, keep_tl=keep_tl),
+            camera=camera_label(tire.intimacy or parts.intimacy),
+            season_marks=season_marks_label(title, tire.inscription_on_the_side),
             axis=tire.axis or parts.axis,
             run_flat='' if run_flat_label(None, model) else run_flat_label(tire.run_flat, title),
         ).compose()

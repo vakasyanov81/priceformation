@@ -71,13 +71,13 @@ def _compose(row: RowItem) -> str | None:
                 'title': '295/80R22.5 Blackhawk (Sailun Group Co., LTD) BDR75 TL M+S 3PMSF 152/149M 18PR',
                 'model': 'BDR75',
             },
-            '295/80R22.5 Blackhawk BDR75 152/149M 18PR TL',
-            id='autosnab-sidewall-marks-and-owner-dropped',
+            '295/80R22.5 Blackhawk BDR75 152/149M 18PR TL M+S 3PMSF',
+            id='autosnab-sidewall-marks-kept-owner-dropped',
         ),
         pytest.param(
             {'title': '265/70R16 Sailun Ice Blazer WST3 TL 112T шип'},
-            '265/70R16 Sailun Ice Blazer WST3 112T',
-            id='passenger-tl-not-written',
+            '265/70R16 Sailun Ice Blazer WST3 112T TL',
+            id='passenger-tl-kept',
         ),
         pytest.param(
             {'title': '31X10.50R15LT Maxxis Bighorn MT-764 109Q'},

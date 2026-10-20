@@ -39,7 +39,7 @@ def test_truck_title_skips_empty_model() -> None:
     assert _WRAP not in truck_title(RowItem({}), _SIZE)
 
 
-def test_truck_title_keeps_camera_and_drops_sidewall() -> None:
+def test_truck_title_keeps_camera_and_sidewall() -> None:
     row = RowItem(
         {
             'manufacturer_name': 'Triangle',
@@ -52,7 +52,7 @@ def test_truck_title_keeps_camera_and_drops_sidewall() -> None:
         }
     )
     title = truck_title(row, '315/80R22.5')
-    assert title == '315/80R22.5 Triangle TRD06 157/154K 20PR TL'
+    assert title == '315/80R22.5 Triangle TRD06 157/154K 20PR TL 3PMSF'
 
 
 def test_default_title_includes_runflat() -> None:
@@ -67,7 +67,7 @@ def test_default_title_includes_runflat() -> None:
         }
     )
     title = default_tire_title(row, '235/60R18')
-    assert title == '235/60R18 Pirelli Scorpion Verde All-Season 103H RunFlat'
+    assert title == '235/60R18 Pirelli Scorpion Verde All-Season 103H TL RunFlat'
 
 
 def test_ext_diameter_title_skips_empty_optional() -> None:
@@ -169,7 +169,7 @@ def test_default_title_all_parts() -> None:
         }
     )
 
-    assert default_tire_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103H 20PR RunFlat'
+    assert default_tire_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103H 20PR TL 3PMSF RunFlat'
 
 
 def test_ext_diameter_title_all_parts() -> None:
@@ -186,7 +186,7 @@ def test_ext_diameter_title_all_parts() -> None:
         }
     )
 
-    assert ext_diameter_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103 EU RunFlat'
+    assert ext_diameter_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103 EU 3PMSF RunFlat'
 
 
 def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Легковая') -> RowItem:
@@ -203,7 +203,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Viatti',
             'Brina Nordico V-522',
             'Легковая',
-            '205/65R16 Viatti Brina Nordico V-522 95T',
+            '205/65R16 Viatti Brina Nordico V-522 95T TL',
         ),
         # Диагональ, слойность — числом, камера из названия, надпись на боковине из названия.
         (
@@ -211,7 +211,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Kama',
             'И-68А',
             'Грузовая',
-            '11.00R20 Kama И-68А 150/146K 16PR TT',
+            '11.00R20 Kama И-68А 150/146K 16PR TT M+S',
         ),
         (
             '10,0/75-15,3 IMP 12PR 126A6 IM-17 TT РОССИЯ + Камера 10,0/75-15,3 вентиль ЛК (50)',
@@ -225,7 +225,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Kama',
             'Trace (НК-135)',
             'cartruck',
-            '155R13 Kama Trace (НК-135) 90/88S',
+            '155R13 Kama Trace (НК-135) 90/88S TL',
         ),
         # Суффикс диаметра C у грузовых и легкогрузовых — в диаметре, как в колонке прайса.
         (
@@ -233,7 +233,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Kama',
             'Trace (НК-135)',
             'cartruck',
-            '205/75R16C Kama Trace (НК-135) 110/108R',
+            '205/75R16C Kama Trace (НК-135) 110/108R TL',
         ),
         # Конструкции, которых общий разбор не принимает: ZR, префикс P, скорость в скобках.
         (
@@ -241,21 +241,21 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Antares',
             'Ingens A1',
             'Легковая',
-            '245/45ZR17 Antares Ingens A1 99W',
+            '245/45ZR17 Antares Ingens A1 99W XL TL M+S',
         ),
         (
             'P225/60R18 104T XL RA1100 TL WW M+S',
             'Roadcruza',
             'RA1100',
             'Легковая',
-            '225/60R18 Roadcruza RA1100 104T',
+            '225/60R18 Roadcruza RA1100 104T XL TL M+S',
         ),
         (
             '225/40ZR18 94(Y) XL Pilot Sport 5 TL',
             'Michelin',
             'Pilot Sport 5',
             'Легковая',
-            '225/40ZR18 Michelin Pilot Sport 5 94(Y)',
+            '225/40ZR18 Michelin Pilot Sport 5 94(Y) XL TL',
         ),
         # Камера «только шина» и RunFlat из RFT — как в колонках прайса.
         (
@@ -270,7 +270,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Pirelli',
             'Scorpion Verde All-Season',
             'Легковая',
-            '235/60R18 Pirelli Scorpion Verde All-Season 103V RunFlat',
+            '235/60R18 Pirelli Scorpion Verde All-Season 103V TL M+S RunFlat',
         ),
         # Надпись на боковине стоит после неизвестного слова BSW — она всё равно попадает в название.
         (
@@ -278,7 +278,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Sailun',
             'Atrezzo 4 Seasons',
             'Легковая',
-            '215/65R16 Sailun Atrezzo 4 Seasons 102V',
+            '215/65R16 Sailun Atrezzo 4 Seasons 102V XL TL M+S 3PMSF',
         ),
     ],
 )
@@ -300,7 +300,7 @@ def test_api_title_composition_is_stable_on_second_pass() -> None:
     row.set_field('title', first)
     second = get_prepared_title(row)
 
-    assert first == second == '155R13C Kama Trace (НК-135) 90/88S'
+    assert first == second == '155R13C Kama Trace (НК-135) 90/88S TL'
 
 
 def test_unparsable_api_size_keeps_title() -> None:
@@ -314,7 +314,7 @@ def test_inch_radial_api_size_is_composed() -> None:
     """Дюймовый радиальный размер `35x12,50R17` разбирается и собирается в канонической записи без лишнего нуля."""
     title = 'LT35x12,50R17(320/70R17) 121S RA1100 TL WW M+S'
 
-    assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == '35x12.5R17 Roadcruza RA1100 121S'
+    assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == '35x12.5R17 Roadcruza RA1100 121S M+S'
 
 
 def test_xlsx_columns_path_unchanged_for_special_width() -> None:

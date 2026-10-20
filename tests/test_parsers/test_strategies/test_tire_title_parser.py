@@ -720,3 +720,23 @@ def test_unbalanced_paren_group_is_not_usage() -> None:
     parts = _parsed('9.00-20 Rockbuster H966 (U-2) y)')
 
     assert (parts.model, parts.usage) == ('H966 (U-2) y)', ())
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model', 'expected'),
+    [
+        ('205/55R16 Triangle ReliaX XL M+S 91V', 'ReliaX', '205/55R16 Triangle ReliaX 91V XL M+S'),
+        (
+            '315/80R22.5 Кама NF 201 M+S 3PMSF 156/150L 18PR TL',
+            'NF 201',
+            '315/80R22.5 Кама NF 201 156/150L 18PR TL M+S 3PMSF',
+        ),
+    ],
+)
+def test_parse_takes_xl_and_season_marks_out_of_model(raw: str, model: str, expected: str) -> None:
+    """`XL`, `M+S`, `3PMSF` — свойства шины: в модель не попадают, а возвращаются в названии на своё место."""
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    assert parts.model == model
+    assert parts.compose() == expected

@@ -219,7 +219,7 @@ def test_params_first_strategy_prepares_title_end_to_end() -> None:
 
     title = make_title_strategy(config, WHERE).prepare(row)
 
-    assert title == '205/65R16 Viatti Brina Nordico V-522 95T'
+    assert title == '205/65R16 Viatti Brina Nordico V-522 95T TL'
 
 
 def test_compose_requires_params_from_title() -> None:

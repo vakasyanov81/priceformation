@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature_brand import brand_label, model_label
-from parsers.nomenclature_labels import axis_label, layering_label
+from parsers.nomenclature_labels import axis_label, layering_label, season_marks_label, xl_label
 
 
 def join_title_parts(*parts: object) -> str:
@@ -35,12 +35,13 @@ class TireTitleTokens:
     xl: str = ''
     layering: object = ''
     camera: str = ''
+    season_marks: tuple[str, ...] = ()
     axis: object = ''
     after_load: tuple[object, ...] = ()
     run_flat: str = ''
 
     def compose(self) -> str:
-        """Единый порядок: размер, бренд, модель, нагрузка+скорость, XL, `<N>PR`, камерность, RunFlat, ось."""
+        """Порядок: размер, бренд, модель, нагрузка+скорость, XL, `<N>PR`, камерность, M+S, 3PMSF, RunFlat, ось."""
         return join_title_parts(
             self.size,
             self.brand,
@@ -50,6 +51,7 @@ class TireTitleTokens:
             self.xl,
             layering_label(self.layering),
             self.camera,
+            *self.season_marks,
             self.run_flat,
             axis_label(self.axis),
         )
@@ -64,14 +66,21 @@ def compose_tire_title(
     after_load: tuple[object, ...] = (),
     run_flat: str = '',
 ) -> str:
-    """Название шины в каноническом порядке из полей позиции; камерность и ось задаёт вызывающий."""
+    """Название шины в каноническом порядке из полей позиции; камерность и ось задаёт вызывающий.
+
+    ``XL``, ``M+S`` и ``3PMSF`` — свойства шины: берутся из названия поставщика и надписи на боковине.
+    """
+    source_title = row_item.identity.title
+    sidewall = row_item.tire.inscription_on_the_side
     return TireTitleTokens(
         size,
         brand_label(row_item),
         model_label(row_item),
         load_velocity=load_velocity(row_item),
+        xl=xl_label(source_title, sidewall),
         layering=row_item.tire.layering,
         camera=camera,
+        season_marks=season_marks_label(source_title, sidewall),
         axis=axis,
         after_load=after_load,
         run_flat=run_flat,

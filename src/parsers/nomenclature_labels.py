@@ -1,11 +1,14 @@
-"""Каноническое написание токенов названия шины: слойность, камерность, ось."""
+"""Каноническое написание токенов названия шины: слойность, камерность, `XL`, сезонные маркеры, ось."""
 
 import re
 
 _DIGITS = re.compile(r'\d+')
-_CAMERA_TL = 'TL'
 _CAMERA_CODE = re.compile(r'TT|TL|TTF|TT/TL|TL/TT', re.IGNORECASE)
 _RUN_FLAT = re.compile(r'(?<!\S)(?:RunFlat|Run[\s-]?Flat|RFT)(?=\s|$)', re.IGNORECASE)
+_XL = re.compile(r'(?<!\w)xl(?!\w)', re.IGNORECASE)
+# `M+S` и `M&S` — один маркер; `3PMSF` — отдельный: зимний сертификат.
+_SEASON_MARK = re.compile(r'(?<!\S)(M[+&]S|3PMSF)(?!\S)', re.IGNORECASE)
+_SEASON_MARKS = ('M+S', '3PMSF')
 _RUN_FLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 # Корень слова назначения → ось в названии: `вед.ось`, `рулевая`, `унив.ось`, `приц.`, `карьер`.
 _AXIS_LABELS = (
@@ -23,12 +26,26 @@ def layering_label(raw: object) -> str:
     return f'{found[0]}PR' if found else ''
 
 
-def camera_label(raw: object, *, keep_tl: bool = True) -> str:
-    """Камерность заглавными; `TL` у легковых шин не пишется (`keep_tl=False`): бескамерных 99 %."""
+def camera_label(raw: object) -> str:
+    """Камерность заглавными: `TT`, `TL`, `TTF`; остальное как есть."""
     camera = str(raw or '').strip()
-    if not keep_tl and camera.upper() == _CAMERA_TL:
-        return ''
     return camera.upper() if _CAMERA_CODE.fullmatch(camera) else camera
+
+
+def xl_label(*sources: object) -> str:
+    """`XL`, если он есть хотя бы в одном из текстов; иначе пусто."""
+    text = ' '.join(str(source or '') for source in sources)
+    return 'XL' if _XL.search(text) else ''
+
+
+def season_marks_label(*sources: object) -> tuple[str, ...]:
+    """`M+S` и `3PMSF` из текстов (название, надпись на боковине) в каноническом порядке; нет маркера — пусто."""
+    found = {
+        'M+S' if match[1][0] in 'Mm' else '3PMSF'
+        for source in sources
+        for match in _SEASON_MARK.finditer(str(source or ''))
+    }
+    return tuple(mark for mark in _SEASON_MARKS if mark in found)
 
 
 def axis_label(raw: object) -> str:
