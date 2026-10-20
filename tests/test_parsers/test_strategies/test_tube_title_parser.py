@@ -87,3 +87,15 @@ def test_fill_writes_all_size_fields() -> None:
     tire = row.tire
     assert (tire.width, tire.height_percent) == ('12.5', '80')
     assert (tire.diameter, tire.ext_diameter) == ('18', 1200)
+
+
+@pytest.mark.parametrize(
+    ('raw', 'width_max'),
+    [('камера 175/185-16 Ecotech', '185'), ('Автокамера 12.5/80-18', ''), ('Камера СВК 11.00-20 ГК-145', '')],
+)
+def test_width_range_is_kept_apart_from_profile(raw: str, width_max: str) -> None:
+    """`175/185` — диапазон ширин, не профиль: вторая ширина нужна названию, а профиль остаётся полем."""
+    parts = parse_tube_title(raw)
+
+    assert parts is not None
+    assert parts.width_max == width_max

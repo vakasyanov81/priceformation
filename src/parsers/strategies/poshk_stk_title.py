@@ -1,4 +1,4 @@
-"""Стратегия слота `title` для Пошка и STK: сборка названия шины в каноническом порядке."""
+"""Стратегия слота `title` для Пошка и STK: сборка названия шины, камеры и ободной ленты."""
 
 from __future__ import annotations
 
@@ -7,8 +7,9 @@ from dataclasses import replace
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies._tire_title_parser import parse_tire_title
-from parsers.strategies.protocols import BrandProbe
+from parsers.strategies.protocols import BrandProbe, ManufacturerProbe
 from parsers.strategies.title import NormalizeSizeChunks
+from parsers.strategies.tube_title import compose_tube_title_from_text
 
 
 class PoshkStkTireCompose:
@@ -18,7 +19,8 @@ class PoshkStkTireCompose:
     Производитель из хвоста (``НКШЗ``/``БШК``/``ОШЗ``/``ЯШЗ``/``ВолШЗ``), если бренда в начале
     строки нет, становится брендом; канонический производитель позиции перекрывает
     разобранный бренд. Если строка не похожа на размер шины (например диск) или ведущая «Шина» не имеет бренда, работает
-    обычная нормализация ``normalize_size_chunks``.
+    обычная нормализация ``normalize_size_chunks``. Камера и ободная лента собираются из размера, бренда и модели
+    (``tube_title.compose_tube_title_from_text``).
 
     Если камерности в названии нет, её даёт ``camera_by_kind``: слово вида шины
     в исходном названии (``автошина`` → ``TT``, ``автопокрышка`` → ``TL``).
@@ -31,8 +33,10 @@ class PoshkStkTireCompose:
         fallback_brand: str,
         brand_probe: BrandProbe | None,
         camera_by_kind: Mapping[str, str] | None = None,
+        manufacturer_probe: ManufacturerProbe | None = None,
     ) -> None:
-        """Запомнить бренд-заглушку, детектор бренда и карту камерности по виду; заготовить нормализацию."""
+        """Запомнить бренд-заглушку, детектор бренда, карту камерности по виду и поиск производителя камер."""
+        self._manufacturer_probe = manufacturer_probe
         self._camera_by_kind = camera_by_kind or {}
         self._fallback_brand = fallback_brand
         self._brand_probe = brand_probe
@@ -42,6 +46,9 @@ class PoshkStkTireCompose:
         """Собрать название из разобранных параметров."""
         title = row_item.identity.title
         parts = parse_tire_title(title)
+        tube_title = compose_tube_title_from_text(row_item, title, self._manufacturer_probe) if parts is None else None
+        if tube_title is not None:
+            return tube_title
         if parts is None or self._ship_without_brand(title, parts.from_ship):
             return self._fallback.prepare(row_item)
         if not parts.intimacy:

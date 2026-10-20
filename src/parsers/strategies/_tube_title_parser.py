@@ -31,12 +31,16 @@ _MAX_PROFILE = 100
 
 @dataclass(frozen=True, slots=True)
 class TubeTitleParts:
-    """Разобранный размер камеры/ленты; пустая строка — параметра нет."""
+    """Разобранный размер камеры/ленты; пустая строка — параметра нет.
+
+    ``width_max`` — вторая ширина диапазона (``175/185-16``), в поля позиции не пишется: нужна только названию.
+    """
 
     width: str
     height_percent: str
     diameter: str
     ext_diameter: str
+    width_max: str = ''
 
 
 def parse_tube_title(raw: str | None) -> TubeTitleParts | None:
@@ -51,8 +55,8 @@ def parse_tube_title(raw: str | None) -> TubeTitleParts | None:
     size = parse_leading_size(text)
     if size is None:
         return None
-    height = size.height_percent if _is_profile(size.height_percent) else ''
-    return TubeTitleParts(size.width, height, size.diameter, size.ext_diameter)
+    height, width_max = _split_second(size.height_percent)
+    return TubeTitleParts(size.width, height, size.diameter, size.ext_diameter, width_max)
 
 
 def _tube_body(raw: str) -> str | None:
@@ -77,6 +81,11 @@ def fill_tube_fields(row_item: RowItem, parts: TubeTitleParts) -> None:
     for key, parsed_value in fields.items():
         if parsed_value and not row_item.get_field(key):
             row_item.set_field(key, parsed_value)
+
+
+def _split_second(second: str) -> tuple[str, str]:
+    """Значение после `/`: (профиль, '') или ('', вторая ширина диапазона)."""
+    return (second, '') if _is_profile(second) else ('', second)
 
 
 def _is_profile(percent: str) -> bool:

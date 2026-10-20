@@ -157,10 +157,10 @@ def test_fields_win_over_parsed_title() -> None:
 
 @pytest.mark.parametrize(
     'title',
-    ['Автокамера 11.2-20', 'Ободная лента 20.5-25', 'Уплотнительное кольцо 6x70'],
+    ['Уплотнительное кольцо 6x70'],
 )
 def test_not_a_tire_is_left_alone(title: str) -> None:
-    """Камеры, ленты и кольца не шины: название не меняется, пометки «не собрано» нет."""
+    """Кольцо не шина: название не меняется, пометки «не собрано» нет."""
     row = RowItem({'title': title})
 
     assert _compose(row) == title
@@ -184,7 +184,10 @@ def test_empty_title_is_passed_through() -> None:
 
 @pytest.mark.parametrize(
     ('count', 'expected'),
-    [(0, ''), (3, 'Название шины или диска не собрано из полей (оставлен текст поставщика), позиций: 3')],
+    [
+        (0, ''),
+        (3, 'Название шины, диска, камеры или ленты не собрано из полей (оставлен текст поставщика), позиций: 3'),
+    ],
 )
 def test_titles_not_composed_message(count: int, expected: str) -> None:
     assert titles_not_composed_message(count) == expected
@@ -285,3 +288,30 @@ def test_compose_flag_composes_disk_section() -> None:
     )
 
     assert make_title_strategy(config, 'zapaska.json → title').prepare(row) == '6.0x15 4x98 ET35 58.6 Графит СКАД Порту'
+
+
+@pytest.mark.parametrize(
+    ('title', 'expected'),
+    [
+        ('Автокамера 11.2-20', 'Камера 11.2-20'),
+        ('Ободная лента 20.5-25', 'Ободная лента 20.5-25'),
+        ('Автокамера 175/185-16 Ecotech', 'Камера 175/185-16 Nordman'),
+    ],
+)
+def test_tube_is_composed_from_size(title: str, expected: str) -> None:
+    """Камера и лента получают канонический префикс и размер; бренд ищет probe в тексте."""
+    row = RowItem({'title': title})
+
+    def ecotech_probe(text: str | None) -> str | None:
+        return 'Nordman' if 'Ecotech' in (text or '') else None
+
+    assert TitleFromFields(ParamsFromTitle(NormalizeTitle()), ecotech_probe).prepare(row) == expected
+    assert row.vendor.title_not_composed is None
+
+
+def test_tube_without_size_keeps_supplier_text_and_is_marked() -> None:
+    """Камера без размера (`УК-14-02 ОШЗ`) остаётся текстом поставщика и считается в «не собрано»."""
+    row = RowItem({'title': 'Камера УК-14-02 ОШЗ'})
+
+    assert _compose(row) == 'Камера УК-14-02 ОШЗ'
+    assert row.vendor.title_not_composed is True

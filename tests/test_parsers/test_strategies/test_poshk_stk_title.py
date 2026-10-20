@@ -225,3 +225,26 @@ def test_camera_not_added_without_config() -> None:
     prepared = _strategy().prepare(RowItem({'title': '11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт'}))
 
     assert prepared == '11.00R20 НКШЗ И-68А 150/146K 16PR'
+
+
+def _plant_probe(title: str | None) -> str | None:
+    return 'ОШЗ' if 'ОШЗ' in (title or '') else None
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('Камера СВК 11.00-20 ГК-145 (0)', 'Камера 11.00-20 ГК-145'),
+        ('Камера СВК 11.2-20 ТК (48), (1 шт)', 'Камера 11.2-20'),
+        ('Камера СВК 1200х500-508 РК-5А-145 (65)', 'Камера 1200x500-508 РК-5А-145'),
+        ('Камера 215 R16 Гк-115 ОШЗ', 'Камера 215-16 ОШЗ ГК-115'),
+        ('130-10 об/лента', 'Ободная лента 130-10'),
+        ('Ободная лента 300-508А', 'Ободная лента 300-508А'),
+        ('205-457 (12.00-18) об/лента', 'Ободная лента 205-457'),
+    ],
+)
+def test_composes_tube_and_rim_tape(raw: str, expected: str) -> None:
+    """Камера и лента: префикс, размер, бренд из probe и модель; СВК и остаток в скобках отброшены."""
+    strategy = PoshkStkTireCompose('', None, None, _plant_probe)
+
+    assert strategy.prepare(RowItem({'title': raw})) == expected

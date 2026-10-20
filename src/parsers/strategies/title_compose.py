@@ -11,6 +11,7 @@ from parsers.strategies._tire_title_parser import TireTitleParts, parse_tire_tit
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.product_types import DISK, LIGHT_TRUCK, MOTO, PASSENGER, SPECIAL, TRUCK
 from parsers.strategies.protocols import ManufacturerProbe, TitleStrategy
+from parsers.strategies.tube_title import compose_tube_title_from_text
 
 _TIRE_TYPES = frozenset((PASSENGER, LIGHT_TRUCK, TRUCK, SPECIAL, MOTO))
 
@@ -26,9 +27,10 @@ class TitleFromFields:
 
     Диск собирается по шаблону Форточек (``nomenclature_title.compose_disk_title``): размер, крепёж, ``ET``, DIA,
     цвет, бренд, модель — из полей, хвост (толщина, усиление, завод в скобках) — из текста поставщика.
-    Название камеры, ленты и кольца не меняется. Шина без разобранного размера и диск без ширины, диаметра,
-    бренда или модели остаются текстом вложенной стратегии, позиция получает пометку ``title_not_composed``
-    для статистики разбора.
+    Камера и ободная лента: ``Камера|Ободная лента <размер> [бренд] [модель]``
+    (``tube_title.compose_tube_title_from_text``); название кольца не меняется. Шина без разобранного размера
+    и диск без ширины, диаметра, бренда или модели остаются текстом вложенной стратегии, позиция получает
+    пометку ``title_not_composed`` для статистики разбора.
     """
 
     def __init__(
@@ -48,6 +50,9 @@ class TitleFromFields:
         parts = parse_tire_title(title)
         if parts is not None:
             return self._compose(row_item, parts, title or '')
+        tube_title = compose_tube_title_from_text(row_item, title, self._manufacturer_probe)
+        if tube_title is not None:
+            return tube_title
         product_type = self._classifier.classify(row_item)
         if product_type == DISK:
             return self._compose_disk(row_item, title or '')
@@ -102,4 +107,4 @@ def titles_not_composed_message(count: int) -> str:
     """Сводка по шинам с несобранным названием; пустая строка — таких нет."""
     if not count:
         return ''
-    return f'Название шины или диска не собрано из полей (оставлен текст поставщика), позиций: {count}'
+    return f'Название шины, диска, камеры или ленты не собрано из полей (оставлен текст поставщика), позиций: {count}'

@@ -24,7 +24,7 @@ from parsers.strategies.title import (
     TitleWithAliases,
 )
 from parsers.strategies.title_markers import TitleWithMarkers
-from parsers.strategies.title_wrap import check_params_flags, wrap_with_params
+from parsers.strategies.title_wrap import check_params_flags, manufacturer_probe, wrap_with_params
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
@@ -46,6 +46,7 @@ _FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[TitleConfig], TitleStrategy]] = 
         config.fallback_brand,
         _fallback_probe(config),
         config.camera_by_kind,
+        manufacturer_probe(),
     ),
 }
 
