@@ -65,6 +65,7 @@
 
 ## Данные (не код)
 - `parse_config/` — пользовательские настройки: `vendors/*.json`, `mail.json` (IMAP и профили получения прайсов из почты), `black_list`, `manufacturer_aliases.json`, `title_aliases.json`, `correct-nomenclature.xlsx`.
+- `parse_config/vendor_activation.json` — статус активации поставщиков (`{"<папка>": 0|1}`), в `.gitignore`; нет файла — все поставщики включены. Поля `enabled` в `vendors/*.json` больше нет.
 - `file_prices/<sup_code>/` — входные прайсы поставщиков; результат — `file_prices/result/`. `--json`-режим CLI пишет `.jsonl` рядом с `result_meta.json`.
 - `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски; `MAIL_LOGIN` / `MAIL_PASSWORD` для получения прайсов из почты, `MAIL_SENDER_*` — адреса отправителей, на которые ссылается `parse_config/mail.json` как `${MAIL_SENDER_STK}` (подстановка — `infrastructure/config/env_placeholders.py`) (общий загрузчик — `infrastructure/config/dotenv.py`).
 

@@ -62,7 +62,6 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     (vendors_dir / 'test_vendor.json').write_text(
         json.dumps(
             {
-                'enabled': 1,
                 'code': 't1',
                 'name': 'Тестовый поставщик',
                 'start_row': 2,
@@ -143,7 +142,6 @@ def test_new_vendor_has_no_python_code(tmp_path: Path) -> None:
     (vendors_dir / 'minimal.json').write_text(
         json.dumps(
             {
-                'enabled': 1,
                 'code': 'm1',
                 'name': 'Минимальный',
                 'start_row': 1,

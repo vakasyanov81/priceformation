@@ -19,7 +19,6 @@ FOLDER = 'mim'
 WHERE = 'mim.json'
 
 MINIMAL: dict[str, Any] = {
-    'enabled': 1,
     'code': 'mim',
     'name': 'Мим',
     'start_row': 2,
@@ -271,11 +270,6 @@ def test_known_column_field_accepted() -> None:
 def test_slot_must_be_object() -> None:
     with pytest.raises(ConfigValidationError, match='ожидается объект'):
         _config(category=[])
-
-
-def test_enabled_accepts_zero_and_one() -> None:
-    assert _config(enabled=0).enabled is False
-    assert _config(enabled=1).enabled is True
 
 
 # --------------------------------- Полное равенство: каждый ключ на месте

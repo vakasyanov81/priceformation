@@ -217,6 +217,7 @@ setup.py
 
 
 /file_prices/
+/parse_config/vendor_activation.json
 !integration_tests/file_prices_for_test/**/*.xls
 !integration_tests/file_prices_for_test/**/*.xlsx
 src/core/config.py

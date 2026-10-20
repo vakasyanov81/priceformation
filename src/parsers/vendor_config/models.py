@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from domain.exceptions import ConfigValidationError
-from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object, read_zero_one_flag
+from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object
 from parsers.vendor_config.columns import COLUMNS_KEY, read_columns
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
 from parsers.vendor_config.merge import merge_config
@@ -70,7 +70,6 @@ class VendorConfig:
     """Конфиг одного поставщика (одна папка в file_prices)."""
 
     folder: str
-    enabled: bool
     code: str
     name: str
     start_row: int
@@ -83,6 +82,7 @@ class VendorConfig:
     title: TitleConfig = field(default_factory=TitleConfig)
     sections: tuple[VendorSection, ...] = ()
     source: str = SOURCE_FILE
+    enabled: bool = True
 
     @classmethod
     def from_dict(cls, raw: Any, folder: str, where: str) -> VendorConfig:
@@ -93,7 +93,6 @@ class VendorConfig:
             raise ConfigValidationError(f'{where}: «reader» должен быть «xls» или «json», получено {reader!r}')
         config = cls(
             folder=folder,
-            enabled=read_zero_one_flag(payload, 'enabled', where),
             code=read_text(payload, 'code', where),
             name=read_text(payload, 'name', where),
             start_row=read_int(payload, 'start_row', where, DEFAULT_START_ROW),

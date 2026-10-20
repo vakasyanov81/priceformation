@@ -236,7 +236,6 @@ def test_manufacturer_from_category_reader_is_wired() -> None:
     """Пионер: производитель из раздела попадает в brand и в title."""
     config = VendorConfig.from_dict(
         {
-            'enabled': 1,
             'code': '3',
             'name': 'Пионер',
             'start_row': 12,

@@ -64,7 +64,6 @@ class TestStrategiesIntegration:
         """Интеграция с поведением Пошка: normalize_size_chunks + title_keywords + map_on_opt."""
         config = VendorConfig.from_dict(
             {
-                'enabled': 1,
                 'code': 'poshk',
                 'name': 'Пошк',
                 'start_row': 14,
@@ -115,7 +114,6 @@ class TestStrategiesIntegration:
         """Интеграция с поведением Пионера: header_rows + manufacturer_from_category + minus_reserve."""
         config = VendorConfig.from_dict(
             {
-                'enabled': 1,
                 'code': 'pioner',
                 'name': 'Пионер',
                 'start_row': 12,
@@ -177,7 +175,6 @@ class TestStrategiesIntegration:
         """Интеграция с грузовыми Мим: percent_by_threshold."""
         config = VendorConfig.from_dict(
             {
-                'enabled': 1,
                 'code': 'mim',
                 'name': 'Мим',
                 'start_row': 2,
@@ -228,7 +225,6 @@ class TestStrategiesIntegration:
         """Интеграция с Запаской-диск: column_canonical + default title."""
         config = VendorConfig.from_dict(
             {
-                'enabled': 1,
                 'code': 'zapaska',
                 'name': 'Запаска',
                 'start_row': 2,
@@ -269,7 +265,6 @@ class TestStrategiesIntegration:
         """Интеграция с Автоснабом: fill_fields_from_title + identity pricing."""
         config = VendorConfig.from_dict(
             {
-                'enabled': 1,
                 'code': 'autosnab54',
                 'name': 'Автоснаб',
                 'start_row': 2,

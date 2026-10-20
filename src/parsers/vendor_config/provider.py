@@ -1,15 +1,17 @@
 """Провайдер конфигов поставщиков: scan parse_config/vendors/*.json с кэшем на папку.
 
 Файлы с именем на `_` — не поставщики: `_common.json` хранит общие настройки (`common.py`).
+Статус активации (`enabled`) живёт отдельно, в `parse_config/vendor_activation.json` (`activation.py`).
 """
 
-import re
 from functools import lru_cache
 from pathlib import Path
 
 from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
-from infrastructure.data.file_reader import read_file, read_json_file
+from infrastructure.data.file_reader import read_json_file
+from parsers.data_provider.json_fields import RawConfig
+from parsers.vendor_config.activation import apply_activation, load_activation
 from parsers.vendor_config.common import COMMON_FILE_STEM, CommonVendorSettings
 from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.models import VendorConfig
@@ -18,7 +20,7 @@ from parsers.vendor_config.source import select_source
 _VENDORS_FOLDER = 'vendors'
 _JSON_SUFFIX = '.json'
 _SERVICE_PREFIX = '_'
-_ENABLED_PATTERN = re.compile(r'("enabled"\s*:\s*)([01]|true|false)')
+_ENABLED_KEY = 'enabled'
 
 
 @lru_cache(maxsize=1)
@@ -30,6 +32,14 @@ def _load_common(folder: str) -> CommonVendorSettings:
     return CommonVendorSettings.from_dict(read_json_file(str(path)), path.name)
 
 
+def _read_vendor(path: Path, defaults: RawConfig) -> VendorConfig:
+    """Конфиг одного поставщика поверх общих настроек; `enabled` в нём запрещён — статус в vendor_activation.json."""
+    raw_config = merge_config(defaults, select_source(read_json_file(str(path)), path.name))
+    if _ENABLED_KEY in raw_config:
+        raise ConfigValidationError(f'{path.name}: «enabled» перенесён в vendor_activation.json, уберите поле')
+    return VendorConfig.from_dict(raw_config, path.stem, path.name)
+
+
 @lru_cache(maxsize=1)
 def _load_folder(folder: str) -> dict[str, VendorConfig]:
     """Прочитать все конфиги папки поверх общих настроек; самой папки нет — пусто (поставщиков не настроили)."""
@@ -37,13 +47,11 @@ def _load_folder(folder: str) -> dict[str, VendorConfig]:
     if not directory.is_dir():
         return {}
     defaults = _load_common(folder).defaults
-    configs: dict[str, VendorConfig] = {}
-    for path in sorted(directory.glob(f'*{_JSON_SUFFIX}')):
-        if path.name.startswith(_SERVICE_PREFIX):
-            continue
-        raw_config = merge_config(defaults, select_source(read_json_file(str(path)), path.name))
-        configs[path.stem] = VendorConfig.from_dict(raw_config, path.stem, path.name)
-    return configs
+    return {
+        path.stem: _read_vendor(path, defaults)
+        for path in sorted(directory.glob(f'*{_JSON_SUFFIX}'))
+        if not path.name.startswith(_SERVICE_PREFIX)
+    }
 
 
 def _vendors_folder() -> str:
@@ -51,8 +59,8 @@ def _vendors_folder() -> str:
 
 
 def load_vendor_configs() -> dict[str, VendorConfig]:
-    """Конфиги всех поставщиков: папка поставщика → конфиг; неизменяемый кэш результата."""
-    return _load_folder(_vendors_folder())
+    """Конфиги всех поставщиков со статусом активации: папка поставщика → конфиг."""
+    return apply_activation(_load_folder(_vendors_folder()), load_activation())
 
 
 def load_common_settings() -> CommonVendorSettings:
@@ -64,15 +72,3 @@ def clear_vendor_configs_cache() -> None:
     """Сбросить кэш конфигов поставщиков (после смены провайдера путей или правки файлов)."""
     _load_folder.cache_clear()
     _load_common.cache_clear()
-
-
-def set_vendor_enabled(folder: str, enabled: bool) -> None:
-    """Записать флаг enabled в конфиг поставщика, сохранив остальное форматирование файла."""
-    path = Path(get_config_provider().config_file(f'{_VENDORS_FOLDER}/{folder}{_JSON_SUFFIX}'))
-    replacement = f'\\g<1>{int(enabled)}'
-    source = read_file(str(path))
-    updated, replaced = _ENABLED_PATTERN.subn(replacement, source, count=1)
-    if not replaced:
-        raise ConfigValidationError(f'{path.name}: нет поля «enabled» для изменения')
-    path.write_text(updated, encoding='utf-8')
-    clear_vendor_configs_cache()

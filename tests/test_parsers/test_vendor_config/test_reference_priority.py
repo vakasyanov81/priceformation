@@ -10,7 +10,7 @@ from parsers.vendor_config.provider import clear_vendor_configs_cache
 from parsers.vendor_config.reference_priority import load_reference_priority
 
 _VENDOR = (
-    '{{"enabled": 1, "code": "{code}", "name": "{name}", "file_templates": ["*.xls"], '
+    '{{"code": "{code}", "name": "{name}", "file_templates": ["*.xls"], '
     '"sections": [{{"name": "{name} (шины)", "columns": {{"1": "title"}}}}]}}'
 )
 
