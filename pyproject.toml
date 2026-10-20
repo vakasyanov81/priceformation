@@ -24,7 +24,7 @@ dev = [
     "mutmut==3.8.0",
     "pytest-cov==7.1.0",
     "black==26.10.1",
-    "ruff==0.16.10",
+    "ruff==0.17.0",
     "pytest-testmon==2.2.0",
     "pytest-randomly==5.0.0",
     "pytest-xdist==3.8.0",
