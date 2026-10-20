@@ -10,6 +10,9 @@ from domain.row_item.row_item import RowItem
 type BrandProbe = Callable[[str | None], bool]
 """Детектор бренда в title: True, если название содержит известный бренд."""
 
+type ManufacturerProbe = Callable[[str | None], str | None]
+"""Производитель, найденный в title по алиасам производителей; None, если в названии его нет."""
+
 
 class CategoryContext(Protocol):
     """Сервисы парсера, нужные стратегии категории."""

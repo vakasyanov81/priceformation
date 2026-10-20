@@ -5,28 +5,30 @@
 нагрузки/скорости стоит то до модели, то после неё, а производитель
 (``НКШЗ``/``БШК``/``ОШЗ``/``ЯШЗ``/``ВолШЗ``) спрятан в хвосте названия,
 а ``PR`` слипается с размером (``7.00 R16LT14PR``) или отрывается от числа
-(``8 PR``). Разбираем название на параметры и собираем заново в порядке Пионера:
-``размер бренд модель нагрузка/скорость PR камера назначение``.
+(``8 PR``). Разбираем название на параметры и собираем заново в каноническом порядке
+(``nomenclature_title.TireTitleTokens``): ``размер бренд модель нагрузка/скорость PR камера ось``.
+Из назначения в название идёт только ось из словаря (``Рулевая``/``Ведущая``/…), прочее (шип, завод,
+``об/л``, ``спецшина``) в название не входит.
 
 Примеры склейки → Пионер:
 
 - ``10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт``
-  → ``10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л``
+  → ``10.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная``
 - ``11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, (1 шт)``
-  → ``11R22.5 TAITONG HS103 146/143M 16PR вед.ось``
+  → ``11R22.5 TAITONG HS103 146/143M 16PR Ведущая``
 - ``а/п 425/85R21 NORTEC TR-184-1 18PR 156J TT, шт``
   → ``425/85R21 NORTEC TR-184-1 156J 18PR TT``
 - ``11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт``
   → ``11.00R20 НКШЗ И-68А 150/146K 16PR`` — производитель из хвоста
   становится брендом (``НКШЗ → Кама`` подставит ``ManufacturerFinder``)
 - ``12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт``
-  → ``12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина``
+  → ``12.4L-16 БШК Бел-160М 111A6 8PR``
 - ``17.5-25 Rockbuster H108A E3/L3 н.с.28 спецшина, шт``
-  → ``17.5-25 Rockbuster H108A E3/L3 28PR спецшина``
+  → ``17.5-25 Rockbuster H108A E3/L3 28PR``
 - ``Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал`` (STK)
-  → ``235/75R17.5 LingLong LLA78 143/141J 18PR TL трал``
+  → ``235/75R17.5 LingLong LLA78 143/141J 18PR TL``
 - ``Автошина 7.00 R16LT14PR 118/114L GREENSTONE ST896 змейка`` (STK)
-  → ``7.00R16LT GREENSTONE ST896 118/114L 14PR змейка``
+  → ``7.00R16LT GREENSTONE ST896 118/114L 14PR``
 """
 
 from __future__ import annotations
@@ -37,6 +39,8 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from domain.row_item.row_item import RowItem
+from parsers.nomenclature_labels import season_marks_label, xl_label
+from parsers.nomenclature_title import TireTitleTokens
 from parsers.strategies._title_wins import TIRE_TITLE_WINS
 
 _LEADING_KIND = re.compile(r'^\s*(?:а/п|автошина|автошины|автопокрышка)\b\.?\s*', re.IGNORECASE)
@@ -53,9 +57,10 @@ _SIZE = re.compile(
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
-# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`.
+# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`;
+# у радиальной вместо дефиса `R`: `31X10.50R15LT`.
 _INCH_SIZE = re.compile(
-    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*-\s*'
+    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*(?P<construct>[R-])\s*'
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
@@ -105,10 +110,14 @@ _USAGE_WORDS = frozenset(
         'зимняя',
     ),
 )
-# Начала токенов назначения: оси (`вед.ось`, `вед`, `руль/прицеп`, `приц.`),
+# Начала токенов назначения: оси (`вед.ось`, `вед`, `руль/прицеп`, `приц.`, канонические `Универсальная`),
 # индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
-_USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив.', 'приц', 'карьер')
+_USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив', 'приц', 'карьер')
 _DOT = '.'
+# Описание в скобках после модели строчными русскими словами: `(экскаватор)`, `(прерывистая волна)`.
+_USAGE_PAREN = re.compile(r'\([а-яё][а-яё\s.,-]*\)')
+# Лишний ноль у дробной ширины: `10.50` → `10.5`, `7.50` → `7.5`; `13.0` остаётся как в прайсе.
+TRAILING_ZEROS = re.compile(r'^(\d+\.\d*[1-9])0+$')
 # Заводской код без бренда: `ОИ-73Б`, `И-Н142Б`, `ВЛИ-10`, `Я-166`. До трёх заглавных букв —
 # иначе под правило попали бы `КАМА-310` и `Алтайшина-421` (бренд со слитной моделью).
 _FACTORY_CODE = re.compile(r'^[А-ЯЁ]{1,3}(?:-[А-ЯЁ])?-?\d+[А-ЯЁ]*$')
@@ -117,7 +126,13 @@ _MODEL_TAIL = re.compile(r'[\w+-]+')
 # `R` в размере — радиальная конструкция, дефис и дюймовая запись — диагональная.
 _CONSTRUCTIONS = {True: 'радиальная', False: 'диагональная'}
 # Корень слова назначения → значение оси: `вед.ось`, `унив.ось`, `рулевая`, `приц.`, `руль/прицеп`.
-_AXES = (('вед', 'ведущая'), ('рул', 'рулевая'), ('унив', 'универсальная'), ('приц', 'прицепная'))
+_AXES = (
+    ('вед', 'ведущая'),
+    ('рул', 'рулевая'),
+    ('унив', 'универсальная'),
+    ('приц', 'прицепная'),
+    ('карьер', 'карьерная'),
+)
 _TokenMatcher = Callable[[str], object]
 _SPIKE_TOKENS = frozenset(('шип', 'шипы'))
 _SPIKE_YES = 'Да'
@@ -149,8 +164,10 @@ class _SizeParts(NamedTuple):
     def _inch(cls, match: re.Match[str], diameter: str, alt: str) -> _SizeParts:
         ext = match['ext'].replace(',', _DOT)
         width = match['width'].replace(',', _DOT)
-        label = f'{ext}x{width}-{diameter}{(match["suffix"] or "").upper()}'
-        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[False])
+        radial = match['construct'].upper() == 'R'
+        label_width = TRAILING_ZEROS.sub(r'\1', width) if radial else width
+        label = f'{ext}x{label_width}{match["construct"].upper()}{diameter}{(match["suffix"] or "").upper()}'
+        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[radial])
 
 
 class _TitleFields(NamedTuple):
@@ -168,15 +185,22 @@ class _Service(NamedTuple):
     intimacy: str
     load: str
     velocity: str
+    xl: str
+    season_marks: tuple[str, ...]
     rest: tuple[str, ...]
 
     @classmethod
     def from_tokens(cls, tokens: list[str]) -> _Service:
-        """Вырезать PR, камерность и индекс нагрузки/скорости из токенов."""
+        """Вырезать PR, камерность, индекс нагрузки/скорости, `XL` и `M+S`/`3PMSF` из токенов."""
         layering, rest = _take_token(tokens, _PR.match)
         intimacy, rest = _take_token(rest, _CAMERA.match)
         load, velocity, rest = _take_speed(rest)
-        return cls(layering.upper(), intimacy.upper(), load, velocity, tuple(rest))
+        marks = [token for token in rest if _is_property_token(token)]
+        rest = [token for token in rest if not _is_property_token(token)]
+        text = ' '.join(marks)
+        return cls(
+            layering.upper(), intimacy.upper(), load, velocity, xl_label(text), season_marks_label(text), tuple(rest)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,6 +216,8 @@ class TireTitleParts:
     intimacy: str
     usage: tuple[str, ...]
     from_ship: bool = False
+    xl: str = ''
+    season_marks: tuple[str, ...] = ()
 
     @classmethod
     def from_raw(
@@ -215,6 +241,8 @@ class TireTitleParts:
             intimacy=service.intimacy,
             usage=fields.usage,
             from_ship=from_ship,
+            xl=service.xl,
+            season_marks=service.season_marks,
         )
 
     @property
@@ -224,23 +252,33 @@ class TireTitleParts:
             return self.model
         return self.brand if any(char.isdigit() for char in self.brand) else ''
 
-    def _size_with_alt(self) -> str:
+    @property
+    def axis(self) -> str:
+        """Ось из слов назначения (``вед.ось`` → ``ведущая``); пусто, если назначения нет."""
+        return _axis(self.usage)
+
+    def size_with_alt(self) -> str:
         """Размер и альтернативная запись: ``/6.45-13`` клеится к размеру, ``(...)`` — через пробел."""
         glue = '' if self.size.alt.startswith('/') else ' '
         return f'{self.size.label}{glue}{self.size.alt}'.strip()
 
     def compose(self, brand: str | None = None) -> str:
-        """Склеить название в порядке Пионера; brand перекрывает разобранный."""
-        chunks = (
-            self._size_with_alt(),
+        """Склеить название в каноническом порядке; brand перекрывает разобранный.
+
+        Из назначения в название идёт только ось из словаря; остальные слова (шип, завод, ``об/л``)
+        отдельные поля или шум.
+        """
+        return TireTitleTokens(
+            self.size_with_alt(),
             _canonical_brand(self.brand, brand),
             self.model,
-            f'{self.load}{self.velocity}',
-            self.layering,
-            self.intimacy,
-            *self.usage,
-        )
-        return ' '.join(chunk for chunk in chunks if chunk)
+            load_velocity=f'{self.load}{self.velocity}',
+            xl=self.xl,
+            layering=self.layering,
+            camera=self.intimacy,
+            season_marks=self.season_marks,
+            axis=self.axis,
+        ).compose()
 
 
 def _canonical_brand(parsed: str, canonical: str | None) -> str:
@@ -399,12 +437,27 @@ def _without_producer(tokens: list[str]) -> _TitleFields | None:
 
 def _compose_model(brand: str, model_tokens: list[str]) -> _TitleFields:
     """Бренд, модель и назначение по токенам модели (назначение — от первого маркера)."""
-    for index, token in enumerate(model_tokens):
+    usage_start = _trailing_paren_start(model_tokens)
+    for index, token in enumerate(model_tokens[:usage_start]):
         if _is_usage(token):
-            model = model_tokens[:index]
-            usage = tuple(model_tokens[index:])
-            return _TitleFields(brand, ' '.join(model), usage)
-    return _TitleFields(brand, ' '.join(model_tokens), ())
+            usage_start = index
+            break
+    return _TitleFields(brand, ' '.join(model_tokens[:usage_start]), tuple(model_tokens[usage_start:]))
+
+
+def _trailing_paren_start(tokens: list[str]) -> int:
+    """Начало описания в скобках в конце токенов (`(прерывистая волна)`, `(цельнолитая)`); без него — длина списка.
+
+    Скобки с цифрами или латиницей (`(У-2)`, `(HK-245)`, `(snow)`) — часть названия модели, не описание.
+    """
+    if not tokens or not tokens[-1].endswith(')'):
+        return len(tokens)
+    for index in range(len(tokens) - 1, 0, -1):
+        if tokens[index].startswith('('):
+            return index if _USAGE_PAREN.fullmatch(' '.join(tokens[index:])) else len(tokens)
+        if ')' in tokens[index - 1]:
+            break
+    return len(tokens)
 
 
 def _looks_like_brand(token: str) -> bool:
@@ -427,6 +480,11 @@ def _is_usage(token: str) -> bool:
 def _from_ship(raw: str) -> bool:
     """Название начиналось с обёртки «Шина» (нужно для бренд-заглушки)."""
     return _LEADING_SHIP.match(raw) is not None
+
+
+def _is_property_token(token: str) -> bool:
+    """Отдельный токен `XL`, `M+S` или `3PMSF`: свойство шины, а не часть модели."""
+    return bool(xl_label(token) or season_marks_label(token))
 
 
 def _take_token(tokens: list[str], matches: _TokenMatcher) -> tuple[str, list[str]]:

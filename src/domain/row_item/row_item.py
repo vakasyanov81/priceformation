@@ -105,6 +105,7 @@ class RowItem:
     type_production = RowField('type_production')
     type_corrected = RowField('type_corrected')
     title_conflict = RowField('title_conflict')
+    title_not_composed = RowField('title_not_composed')
 
     rest_count = RowField('rest_count')
     reserve_count = RowField('reserve_count')
@@ -112,6 +113,7 @@ class RowItem:
     condition = RowField('condition')
     marked_down = RowField('marked_down')
     production_year = RowField('production_year')
+    production_plant = RowField('production_plant')
     available = RowField('available')
     warehouse_id = RowField('warehouse_id')
     warehouse_name = RowField('warehouse_name')
@@ -170,24 +172,40 @@ class RowItem:
         self._load_raw_row(raw_row or {})
 
     def _load_raw_row(self, raw_row: dict[str, Any]) -> None:
-        """Заполнить позицию из сырого словаря."""
+        """Заполнить позицию из сырого словаря: один replace на value object, а не на каждое поле."""
+        updates: dict[str, dict[str, Any]] = {}
         for key, attr_value in raw_row.items():
-            self.set_field(key, attr_value)
+            spec, coerced = self._coerce(key, attr_value)
+            if spec is not None:
+                updates.setdefault(spec.group, {})[spec.attribute] = coerced
+        self._write_groups(updates)
 
-    def set_field(self, key: str, attr_value: Any) -> None:
-        """Записать значение по плоскому ключу: привести тип и запомнить ключ."""
+    def _write_groups(self, updates: dict[str, dict[str, Any]]) -> None:
+        """Применить накопленные изменения: по одному replace на value object."""
+        for group, changes in updates.items():
+            setattr(self, group, replace(getattr(self, group), **changes))
+
+    def _coerce(self, key: str, attr_value: Any) -> tuple[FieldSpec | None, Any]:
+        """Привести значение и запомнить ключ; вендорский ключ без описания уходит в extra.
+
+        Ошибка приведения копится в parse_errors, и тогда возвращается (None, None).
+        """
         spec = spec_of(key)
         try:
             coerced = spec.coercer(attr_value) if spec else row_format.text(attr_value)
         except ValueError as err:
             self._errors[key] = {'value': attr_value, 'error': str(err)}
-            return
-
+            return None, None
         self._set_keys[key] = None
         if spec is None:
             self.extra[key] = coerced
-            return
-        self._write_spec(spec, coerced)
+        return spec, coerced
+
+    def set_field(self, key: str, attr_value: Any) -> None:
+        """Записать значение по плоскому ключу: привести тип и запомнить ключ."""
+        spec, coerced = self._coerce(key, attr_value)
+        if spec is not None:
+            self._write_spec(spec, coerced)
 
     def get_field(self, key: str) -> Any:
         """Значение по плоскому ключу; у незаданного поля — дефолт реестра."""
@@ -197,8 +215,15 @@ class RowItem:
         return getattr(getattr(self, spec.group), spec.attribute)
 
     def _write_spec(self, spec: FieldSpec, attr_value: Any) -> None:
-        """Положить приведённое значение в value object, описанное в реестре."""
+        """Положить приведённое значение в value object, описанное в реестре.
+
+        Запись того же значения (треть вызовов: title и бренд пишутся повторно) не пересоздаёт VO.
+        Сравнения ``==`` достаточно: у поля один коэрсер, и он приводит значение к одному типу
+        (``int_or_float(16.0)`` → ``16``, цена — всегда ``float``).
+        """
         current = getattr(self, spec.group)
+        if getattr(current, spec.attribute) == attr_value:
+            return
         setattr(self, spec.group, replace(current, **{spec.attribute: attr_value}))
 
     @property

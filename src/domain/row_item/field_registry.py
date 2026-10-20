@@ -105,6 +105,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('condition', STOCK, 'condition', row_format.text),
     FieldSpec('marked_down', STOCK, 'marked_down', row_format.boolean),
     FieldSpec('production_year', STOCK, 'production_year', row_format.integer),
+    FieldSpec('production_plant', STOCK, 'production_plant', row_format.text),
     FieldSpec('available', STOCK, 'available', row_format.text),
     FieldSpec('warehouse_id', STOCK, 'warehouse_id', row_format.integer),
     FieldSpec('warehouse_name', STOCK, 'warehouse_name', row_format.text),
@@ -120,6 +121,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('type_production', VENDOR, 'type_production', row_format.text),
     FieldSpec('type_corrected', VENDOR, 'type_corrected', row_format.boolean),
     FieldSpec('title_conflict', VENDOR, 'title_conflict', row_format.boolean),
+    FieldSpec('title_not_composed', VENDOR, 'title_not_composed', row_format.boolean),
 )
 
 FIELD_KEYS: Final[tuple[str, ...]] = tuple(spec.key for spec in FIELD_SPECS)

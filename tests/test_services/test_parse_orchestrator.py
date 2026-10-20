@@ -422,6 +422,32 @@ def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> 
     )
 
 
+class FakeParserWithTitlesNotComposed(FakeParser):
+    """parser that left supplier text in the title of three tires"""
+
+    def __init__(self, parse_config: Any = None, **kwargs: Any) -> None:
+        """init"""
+        super().__init__(parse_config, **kwargs)
+        self.stats = ParserStats(titles_not_composed=3)
+
+    def parse(self) -> list[RowItem]:
+        """fake parse"""
+        return []
+
+
+def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) -> None:
+    """Шины с несобранным названием суммируются по поставщикам; у каждого поставщика своя строка предупреждения."""
+    entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
+    vendor = (cast(type[BaseParser], FakeParserWithTitlesNotComposed), None)
+
+    parsed = ParseOrchestrator().parse_all([vendor, vendor])
+
+    assert parsed.titles_not_composed == 6
+    warnings = [text for text in texts_at(entries(), logging.WARNING) if 'не собрано из полей' in text]
+    assert len(warnings) == 2
+    assert all(text.endswith('позиций: 3') for text in warnings)
+
+
 def test_parser_for_vendor_config_without_vendor_metadata_attributes() -> None:
     """Конфиг без атрибутов секции и VendorConfig (чужая реализация) — парсер строится классом."""
     config: Any = SimpleNamespace()

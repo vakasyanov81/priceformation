@@ -16,9 +16,9 @@ _COMMA_IN_NUMBER = re.compile(r'(\d),(\d)')
 _WHITESPACE = re.compile(r'\s+')
 _NBSP = '\xa0'
 
-_CYRILLIC_HOMOGLYPHS = 'СРХМЕОАВТНКсрхмеоавтнк'
-_LATIN_HOMOGLYPHS = 'CPXMEOABTHKcpxmeoabthk'
-_HOMOGLYPHS = str.maketrans(_CYRILLIC_HOMOGLYPHS, _LATIN_HOMOGLYPHS)
+CYRILLIC_HOMOGLYPHS = 'СРХМЕОАВТНКсрхмеоавтнк'
+LATIN_HOMOGLYPHS = 'CPXMEOABTHKcpxmeoabthk'
+_HOMOGLYPHS = str.maketrans(CYRILLIC_HOMOGLYPHS, LATIN_HOMOGLYPHS)
 
 
 def replace_homoglyphs(raw: str) -> str:

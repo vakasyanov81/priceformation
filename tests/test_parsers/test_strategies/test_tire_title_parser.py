@@ -10,15 +10,15 @@ from parsers.strategies._tire_title_parser import (
     parse_tire_title,
 )
 
-# Примеры склейки → Пионер (порядок: размер бренд модель нагрузка/скорость PR камера назначение).
+# Примеры склейки в каноническом порядке (размер бренд модель нагрузка/скорость PR камера ось).
 _GLUE_EXAMPLES = (
     (
         '10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт',
-        '10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+        '10.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная',
     ),
     (
         '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, (1 шт)',
-        '11R22.5 TAITONG HS103 146/143M 16PR вед.ось',
+        '11R22.5 TAITONG HS103 146/143M 16PR Ведущая',
     ),
     (
         'а/п 425/85R21 NORTEC TR-184-1 18PR 156J TT, шт',
@@ -30,71 +30,71 @@ _GLUE_EXAMPLES = (
     ),
     (
         '12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт',
-        '12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина',
+        '12.4L-16 БШК Бел-160М 111A6 8PR',
     ),
     (
         '17.5-25 Rockbuster H108A E3/L3 н.с.28 спецшина, шт',
-        '17.5-25 Rockbuster H108A E3/L3 28PR спецшина',
+        '17.5-25 Rockbuster H108A E3/L3 28PR',
     ),
     # STK
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал',
-        '235/75R17.5 LingLong LLA78 143/141J 18PR TL трал',
+        '235/75R17.5 LingLong LLA78 143/141J 18PR TL',
     ),
     (
         'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 7.00 R16LT14PR 118/114L GREENSTONE ST896 змейка',
-        '7.00R16LT GREENSTONE ST896 118/114L 14PR змейка',
+        '7.00R16LT GREENSTONE ST896 118/114L 14PR',
     ),
     (
         'Автошина 295/80R22.5 18PR 152/149M GREENSTONE ST33 руль',
-        '295/80R22.5 GREENSTONE ST33 152/149M 18PR руль',
+        '295/80R22.5 GREENSTONE ST33 152/149M 18PR Рулевая',
     ),
     (
         'Автошина 385/55R22.5 20PR 160K GREENSTONE ST398 руль/прицеп',
-        '385/55R22.5 GREENSTONE ST398 160K 20PR руль/прицеп',
+        '385/55R22.5 GREENSTONE ST398 160K 20PR Рулевая',
     ),
     (
         'Автошина 315/80 R22.5 22PR 167/164D TRANSMATE TMD18 карьер',
-        '315/80R22.5 TRANSMATE TMD18 167/164D 22PR карьер',
+        '315/80R22.5 TRANSMATE TMD18 167/164D 22PR Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, шт',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 12.00R24 DRC D931 20PR 160/157F TTF карьер, , шт',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка, (12 шт)',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автопокрышка 12.00R24 DRC D931 20PR 160/157F TTF карьер',
-        '12.00R24 DRC D931 160/157F 20PR TTF карьер',
+        '12.00R24 DRC D931 160/157F 20PR TTF Карьерная',
     ),
     (
         'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка автопокрышка',
-        '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+        '11R22.5 GREENSTONE DR668 146/143L 16PR',
     ),
     (
         'Автошина 11.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л',
-        '11.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+        '11.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная',
     ),
 )
 
 
 @pytest.mark.parametrize(('raw', 'expected'), _GLUE_EXAMPLES)
 def test_parse_and_compose_examples(raw: str, expected: str) -> None:
-    """Склейка примера даёт порядок Пионера."""
+    """Склейка примера даёт канонический порядок."""
     parts = parse_tire_title(raw)
 
     assert parts is not None
@@ -501,7 +501,7 @@ def test_parse_marks_leading_ship(raw: str, from_ship: bool) -> None:
     [
         ('11R22.5 GREENSTONE DR668 16PR', 'GreenStone', '11R22.5 GreenStone DR668 16PR'),
         ('6L-12 Алтайшина-421 2PR 44A6 TT', 'Алтайшина', '6L-12 Алтайшина-421 44A6 2PR TT'),
-        ('10.00 R20 КАМА-310 146/143K 16PR НКШЗ', 'Кама', '10.00R20 Кама-310 146/143K 16PR НКШЗ'),
+        ('10.00 R20 КАМА-310 146/143K 16PR НКШЗ', 'Кама', '10.00R20 Кама-310 146/143K 16PR'),
         ('11R22.5 DOUBLE ROAD DR-801 16PR', 'Double Road', '11R22.5 Double Road ROAD DR-801 16PR'),
         ('11R22.5 GREENSTONE DR668 16PR', None, '11R22.5 GREENSTONE DR668 16PR'),
     ],
@@ -676,3 +676,67 @@ def test_spike_from_usage_tokens(raw: str, spike: str) -> None:
     row = RowItem({})
     fill_tire_fields(row, parts)
     assert (row.tire.spike or '') == spike
+
+
+@pytest.mark.parametrize(
+    ('raw', 'label', 'width', 'diameter', 'construction'),
+    [
+        ('31X10.50R15LT Maxxis Bighorn MT-764 109Q', '31x10.5R15LT', '10.50', '15', 'радиальная'),
+        ('33x12.50R17 Nexen Roadian MTX 121Q', '33x12.5R17', '12.50', '17', 'радиальная'),
+        ('33x12.5-15 Forward Safari-500 108L TL', '33x12.5-15', '12.5', '15', 'диагональная'),
+        ('31x10.00-15 Forward Safari 500', '31x10.00-15', '10.00', '15', 'диагональная'),
+    ],
+)
+def test_parse_inch_radial_size(raw: str, label: str, width: str, diameter: str, construction: str) -> None:
+    """Дюймовый радиальный размер `31X10.50R15LT`: `R` вместо дефиса, лишний ноль у радиальной ширины срезается."""
+    size = _parsed(raw).size
+
+    assert (size.label, size.construction) == (label, construction)
+    assert (size.width, size.diameter) == (width, diameter)
+    assert size.ext_diameter in {'31', '33'}
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model', 'usage'),
+    [
+        ('9.00-20 Rockbuster H966 G2/L2 18PR TT (экскаватор)', 'H966 G2/L2', ('(экскаватор)',)),
+        ('23.1-26 Rockbuster H178A 16PR TL (ромбик бескамерная)', 'H178A', ('(ромбик', 'бескамерная)')),
+        ('8.25R20 Кама К-84 (У-2) 125/122J 10PR TT', 'К-84 (У-2)', ()),
+        ('225/75R16 Forward Professional-153 (snow) 108R TT', 'Professional-153 (snow)', ()),
+        ('185/75R16 Кама FLAME A/T (HK-245) 97T TL', 'FLAME A/T (HK-245)', ()),
+    ],
+)
+def test_trailing_paren_is_usage_only_for_lowercase_russian_description(
+    raw: str, model: str, usage: tuple[str, ...]
+) -> None:
+    """Описание строчными русскими словами в скобках в конце — назначение; скобки с цифрами и латиницей — модель."""
+    parts = _parsed(raw)
+
+    assert (parts.model, parts.usage) == (model, usage)
+
+
+def test_unbalanced_paren_group_is_not_usage() -> None:
+    """Закрывающая скобка без своей открывающей в конце — не описание: модель остаётся целой."""
+    parts = _parsed('9.00-20 Rockbuster H966 (U-2) y)')
+
+    assert (parts.model, parts.usage) == ('H966 (U-2) y)', ())
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model', 'expected'),
+    [
+        ('205/55R16 Triangle ReliaX XL M+S 91V', 'ReliaX', '205/55R16 Triangle ReliaX 91V XL M+S'),
+        (
+            '315/80R22.5 Кама NF 201 M+S 3PMSF 156/150L 18PR TL',
+            'NF 201',
+            '315/80R22.5 Кама NF 201 156/150L 18PR TL M+S 3PMSF',
+        ),
+    ],
+)
+def test_parse_takes_xl_and_season_marks_out_of_model(raw: str, model: str, expected: str) -> None:
+    """`XL`, `M+S`, `3PMSF` — свойства шины: в модель не попадают, а возвращаются в названии на своё место."""
+    parts = parse_tire_title(raw)
+
+    assert parts is not None
+    assert parts.model == model
+    assert parts.compose() == expected

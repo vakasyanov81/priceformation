@@ -1,4 +1,4 @@
-"""CityWarehouseFilter: остаток только на складах выбранных городов."""
+"""CityWarehouseFilter: позиции только со складов выбранных городов."""
 
 import json
 from pathlib import Path
@@ -15,14 +15,14 @@ from parsers.base_parser.warehouse_filter import CityWarehouseFilter, WarehouseF
 _FOLDER = 'mim'
 _TO_LOG = 'to_log'
 _CASES = [
-    (1, 10),
-    (2, 10),
-    (5, 10),
-    (3, 0),
-    (4, 0),
-    (6, 0),
-    (777, 0),
-    (None, 0),
+    (1, True),
+    (2, True),
+    (5, True),
+    (3, False),
+    (4, False),
+    (6, False),
+    (777, False),
+    (None, False),
 ]
 _TERRITORIES: list[dict[str, Any]] = [
     {'name': 'ЦС Новосибирск', 'type': 'storage', 'id': '1', 'address': 'Новосибирская обл., Двуречье п.'},
@@ -43,43 +43,40 @@ def _write_territories(provider: FakeConfigProvider, payload: Any) -> Path:
     return path
 
 
-def _rest_after(warehouse_id: int | None, cities: tuple[str, ...] = ('Новосибирск',)) -> int:
+def _allowed(warehouse_id: int | None, cities: tuple[str, ...] = ('Новосибирск',)) -> bool:
     row = RowItem({'rest_count': 10, 'warehouse_id': warehouse_id})
-    CityWarehouseFilter(folder=_FOLDER, cities=cities).apply(row)
-    return row.stock.rest_count or 0
+    return CityWarehouseFilter(folder=_FOLDER, cities=cities).allows(row)
 
 
 @pytest.mark.parametrize(
-    ('warehouse_id', 'expected_rest'),
+    ('warehouse_id', 'expected'),
     _CASES,
 )
-def test_keeps_rest_only_in_city_warehouses(
+def test_allows_only_city_warehouses(
     fake_config_provider: FakeConfigProvider,
     warehouse_id: int | None,
-    expected_rest: int,
+    expected: bool,
 ) -> None:
-    """Склад города (по названию или адресу, без учёта регистра) оставляет остаток, остальные и без ID — обнуляют."""
+    """Склад города (по названию или адресу, без учёта регистра) проходит, остальные и без ID — нет."""
     _write_territories(fake_config_provider, _TERRITORIES)
 
-    assert _rest_after(warehouse_id) == expected_rest
+    assert _allowed(warehouse_id) is expected
 
 
 def test_several_cities(fake_config_provider: FakeConfigProvider) -> None:
     _write_territories(fake_config_provider, _TERRITORIES)
 
-    assert _rest_after(6, cities=('Новосибирск', 'Тюмень')) == 10
+    assert _allowed(6, cities=('Новосибирск', 'Тюмень'))
 
 
 def test_territories_are_read_once(fake_config_provider: FakeConfigProvider) -> None:
     path = _write_territories(fake_config_provider, _TERRITORIES)
     city_filter = CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',))
-    city_filter.apply(RowItem({'rest_count': 1, 'warehouse_id': 1}))
+    city_filter.allows(RowItem({'rest_count': 1, 'warehouse_id': 1}))
 
     path.unlink()
-    row = RowItem({'rest_count': 10, 'warehouse_id': 2})
-    city_filter.apply(row)
 
-    assert row.stock.rest_count == 10
+    assert city_filter.allows(RowItem({'rest_count': 10, 'warehouse_id': 2}))
 
 
 def test_missing_file_is_error(fake_config_provider: FakeConfigProvider) -> None:
@@ -87,7 +84,7 @@ def test_missing_file_is_error(fake_config_provider: FakeConfigProvider) -> None
         patch.object(CoreExceptionError, _TO_LOG),
         pytest.raises(WarehouseFilterError, match='Не найден список складов'),
     ):
-        _rest_after(1)
+        _allowed(1)
 
 
 @pytest.mark.parametrize(
@@ -100,7 +97,7 @@ def test_broken_file_is_error(fake_config_provider: FakeConfigProvider, payload:
         patch.object(CoreExceptionError, _TO_LOG),
         pytest.raises(WarehouseFilterError, match='не разобран'),
     ):
-        _rest_after(1)
+        _allowed(1)
 
 
 def test_no_matching_city_is_error(fake_config_provider: FakeConfigProvider) -> None:
@@ -111,24 +108,28 @@ def test_no_matching_city_is_error(fake_config_provider: FakeConfigProvider) -> 
         patch.object(CoreExceptionError, _TO_LOG),
         pytest.raises(WarehouseFilterError, match='Атлантида'),
     ):
-        _rest_after(1, cities=('Атлантида',))
+        _allowed(1, cities=('Атлантида',))
 
 
-def test_base_parser_pipeline_applies_filter(fake_config_provider: FakeConfigProvider) -> None:
-    """Хук парсера обнуляет остаток склада вне города до шагов pipeline."""
+def test_base_parser_drops_foreign_warehouses_before_enrich(fake_config_provider: FakeConfigProvider) -> None:
+    """Позиции складов вне города отсеиваются целиком, а не получают нулевой остаток."""
     from parsers.base_parser.base_parser import BaseParser
     from parsers.base_parser.strategy_hooks import StrategyHooks
 
     _write_territories(fake_config_provider, _TERRITORIES)
     hooks = StrategyHooks(warehouse_filter=CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',)))
-    outside = RowItem({'rest_count': 10, 'warehouse_id': 6})
-    inside = RowItem({'rest_count': 10, 'warehouse_id': 1})
+    warehouse_ids = (6, 1, None, 2)
+    rows = [RowItem({'rest_count': 10, 'warehouse_id': wid}) for wid in warehouse_ids]
+    parser = BaseParser.__new__(BaseParser)
+    parser._strategy_hooks = hooks  # noqa: WPS437
+    plain = BaseParser.__new__(BaseParser)
+    plain._strategy_hooks = StrategyHooks()  # noqa: WPS437
 
-    BaseParser.apply_warehouse_filter(hooks, outside)
-    BaseParser.apply_warehouse_filter(hooks, inside)
-    BaseParser.apply_warehouse_filter(StrategyHooks(), RowItem({'rest_count': 10, 'warehouse_id': 6}))
+    kept = parser.filter_warehouses(rows)
 
-    assert (outside.stock.rest_count, inside.stock.rest_count) == (0, 10)
+    assert [row.stock.warehouse_id for row in kept] == [1, 2]
+    assert plain.filter_warehouses(rows) == rows
+    assert all(row.stock.rest_count == 10 for row in kept)
 
 
 def test_base_parser_applies_order_from_warehouse_name() -> None:

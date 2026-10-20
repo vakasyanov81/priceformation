@@ -40,6 +40,13 @@ class _OrderParser(BaseParser):
         return _CATEGORY
 
 
+class _RebuildTitleParser(_OrderParser):
+    """Парсер, чья стратегия собирает название заново и не несёт в нём ни года, ни уценки."""
+
+    def get_prepared_title(self, row_item: RowItem) -> str | None:
+        return '175/65R14 Viatti Brina V-521 82T'
+
+
 _AFTER_SEEN: list[RowItem | None] = []
 
 
@@ -146,6 +153,41 @@ def test_production_year_is_taken_from_title() -> None:
 
     assert dated.stock.production_year == 2023
     assert undated.stock.production_year is None
+
+
+def _make_rebuild_parser() -> BaseParser:
+    return make_parser(
+        _RebuildTitleParser, ParseConfiguration(_base_params()), markup_policy=IdentityMarkupPolicy.create()
+    )
+
+
+def test_production_year_survives_rebuilt_title() -> None:
+    """Собранное название года выпуска не несёт: год берётся из текста поставщика до сборки."""
+    row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T 2023г.в.', 'price_opt': _OPT})
+
+    _make_rebuild_parser().set_prepared_title(row)
+
+    assert row.identity.title == '175/65R14 Viatti Brina V-521 82T'
+    assert row.stock.production_year == 2023
+
+
+def test_production_plant_survives_rebuilt_title() -> None:
+    """Завод берётся из текста поставщика до сборки: собранное название его не несёт."""
+    row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T НкШЗ', 'price_opt': _OPT})
+
+    _make_rebuild_parser().set_prepared_title(row)
+
+    assert row.identity.title == '175/65R14 Viatti Brina V-521 82T'
+    assert row.stock.production_plant == 'НкШЗ'
+
+
+def test_markdown_survives_rebuilt_title() -> None:
+    """Собранное название слова «Уценка» не несёт: признак уценки берётся из текста поставщика до сборки."""
+    row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T Уценка', 'price_opt': _OPT})
+
+    _make_rebuild_parser().set_prepared_title(row)
+
+    assert row.stock.marked_down is True
 
 
 def test_deprecated_vendor_config_fallback_active() -> None:

@@ -99,3 +99,21 @@ def test_vendor_config_keeps_source(extra: dict[str, str], expected: str) -> Non
     """Источник попадает в модель: по умолчанию «xlsx», для api — «api»."""
     config = VendorConfig.from_dict(select_source(_vendor(**extra), 'vendor.json'), 'vendor', 'vendor.json')
     assert config.source == expected
+
+
+def test_api_block_inherits_vendor_slots_but_not_file_keys() -> None:
+    """Режим api: слоты поставщика (наценка, название) наследуются, колонки и листы файлов — нет."""
+    raw = _vendor(
+        source='api',
+        columns={'5': 'title'},
+        pricing={'policy': 'recommended_range'},
+        title={'variant': 'four_tochki'},
+    )
+    raw['api']['title'] = {'params_first': True}
+
+    payload = select_source(raw, 'vendor.json')
+
+    assert payload['pricing'] == {'policy': 'recommended_range'}
+    assert payload['title'] == {'variant': 'four_tochki', 'params_first': True}
+    assert 'columns' not in payload
+    assert 'api' not in payload

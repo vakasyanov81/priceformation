@@ -223,8 +223,6 @@ src/core/config.py
 .testmondata
 mutants
 reports/
-/parse_config/
-parse_config/vendors/
 integration_tests/result_for_test/
 
 #### archives ####

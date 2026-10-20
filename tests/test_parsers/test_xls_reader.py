@@ -225,3 +225,25 @@ def test_sheets_raises_on_empty_book() -> None:
     with pytest.raises(CoreExceptionError) as exc_info:
         reader.sheets()
     assert str(exc_info.value) == 'В прайсе отсутствуют вкладки!'
+
+
+class _SpyBook:
+    """Книга-обёртка: запоминает, какие вкладки разбирались."""
+
+    def __init__(self, book: Any) -> None:
+        self._book = book
+        self.sheet_names: list[str] = book.sheet_names
+        self.loaded: list[str] = []
+
+    def get_sheet_by_name(self, name: str) -> Any:
+        self.loaded.append(name)
+        return self._book.get_sheet_by_name(name)
+
+
+def test_parse_loads_only_requested_sheets() -> None:
+    """parse() с индексами разбирает только эти вкладки: у МИМ три поставщика на одной большой книге."""
+    reader = make_reader()
+    spy = _SpyBook(reader.book)
+    reader.book = spy  # type: ignore[assignment]
+    assert reader.parse([1]) == SHEET_2
+    assert spy.loaded == [spy.sheet_names[1]]

@@ -92,3 +92,29 @@ def test_set_vendor_enabled_without_flag_fails(fake_config_provider: FakeConfigP
 
     with pytest.raises(ConfigValidationError, match='enabled'):
         set_vendor_enabled('mim', True)
+
+
+def test_common_defaults_apply_to_every_vendor(fake_config_provider: FakeConfigProvider) -> None:
+    """Общие настройки `_common.json` действуют у поставщика, пока он не задал своё значение."""
+    folder = _vendors_dir(fake_config_provider)
+    folder.joinpath('_common.json').write_text(
+        '{"defaults": {"start_row": 7, "behavior": {"min_rest": 0}, "title": {"params_from_title": true}}}',
+        encoding='utf-8',
+    )
+    folder.joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
+
+    config = load_vendor_configs()['mim']
+
+    assert set(load_vendor_configs()) == {'mim'}
+    assert config.sections[0].start_row == 2
+    assert config.behavior.min_rest == 0
+    assert config.sections[0].title.params_from_title is True
+
+
+def test_common_file_errors_name_file(fake_config_provider: FakeConfigProvider) -> None:
+    folder = _vendors_dir(fake_config_provider)
+    folder.joinpath('_common.json').write_text('{"defaults": []}', encoding='utf-8')
+    folder.joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
+
+    with pytest.raises(ConfigValidationError, match=r'_common\.json → defaults: ожидается объект'):
+        load_vendor_configs()

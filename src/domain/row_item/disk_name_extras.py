@@ -27,11 +27,19 @@ def _load_labels(lowered_title: str) -> list[str]:
     return [f'{code.replace(" ", "")} кг' for code in _LOAD_KG_RE.findall(lowered_title)]
 
 
-def disk_name_extras(title: str) -> str:
-    """Завод, alive, вентиль, нагрузка в кг и хвосты диска; без толщины и складского кода."""
+def _factory_labels(title: str) -> list[str]:
+    """Заводы в скобках `(ABC)` из названия."""
+    return [f'({code})' for code in _FACTORY_RE.findall(title)]
+
+
+def disk_name_extras(title: str, model: str = '') -> str:
+    """Завод, alive, вентиль, нагрузка в кг и хвосты диска; без толщины и складского кода.
+
+    Скобка, которая уже есть в модели (`R004 (Logan)`), заводом не считается и в хвост не попадает.
+    """
     if not title:
         return ''
     lowered = title.lower()
-    factories = (f'({code})' for code in _FACTORY_RE.findall(title))
+    factories = (label for label in _factory_labels(title) if label not in model)
     extras = (label for needle, label in _DISK_MARKERS if needle in lowered)
     return ' '.join((*factories, *extras, *_load_labels(lowered)))

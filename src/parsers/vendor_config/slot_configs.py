@@ -74,6 +74,10 @@ class TitleConfig:
     крепёж, ET, DIA, толщина, цвет, тип); название не меняется.
     `params_first` (с `params_from_title`) разбирает исходное название до сборки: поля позиции
     заполняются из него, и сборка (`tire_compose`, `disk_compose`) строит название по ним.
+    `compose` (с `params_from_title`) пересобирает название шины из полей позиции в каноническом порядке
+    (`nomenclature_title.TireTitleTokens`); бренд, модель, индексы, слойность, камерность и ось берутся из полей,
+    размер — из названия. Название не из шины (камера, диск) не меняется; шина без разбираемого размера
+    остаётся нормализованным текстом поставщика и считается в `titles_not_composed`.
     `camera_by_kind` (для `poshk_stk_tire_compose`) — карта «слово вида шины в названии → камерность»:
     если в названии камерности нет, в него добавляется значение первого найденного слова
     (Пошк: ``автошина`` → ``TT``, ``автопокрышка`` → ``TL``).
@@ -85,6 +89,7 @@ class TitleConfig:
     fallback_brand: str = ''
     params_from_title: bool = False
     params_first: bool = False
+    compose: bool = False
     markers: dict[str, dict[str, str]] = field(default_factory=dict)
     camera_by_kind: dict[str, str] = field(default_factory=dict)
 
@@ -99,6 +104,7 @@ class TitleConfig:
             fallback_brand=read_text(payload, 'fallback_brand', where, ''),
             params_from_title=read_flag(payload, 'params_from_title', where),
             params_first=read_flag(payload, 'params_first', where),
+            compose=read_flag(payload, 'compose', where),
             markers=read_field_map(payload, 'markers', where),
             camera_by_kind=read_str_map(payload, 'camera_by_kind', where),
         )

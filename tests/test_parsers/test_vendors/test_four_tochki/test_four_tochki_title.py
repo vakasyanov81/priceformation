@@ -13,7 +13,6 @@ from parsers.strategies._four_tochki_tire_helper import (
     get_prepared_title,
     is_special_tire,
     is_truck_tire,
-    sidewall_from_title,
     truck_title,
 )
 
@@ -53,7 +52,7 @@ def test_truck_title_keeps_camera_and_sidewall() -> None:
         }
     )
     title = truck_title(row, '315/80R22.5')
-    assert title == '315/80R22.5 Triangle TRD06 20 TL 3PMSF 157/154K'
+    assert title == '315/80R22.5 Triangle TRD06 157/154K 20PR TL 3PMSF'
 
 
 def test_default_title_includes_runflat() -> None:
@@ -68,7 +67,7 @@ def test_default_title_includes_runflat() -> None:
         }
     )
     title = default_tire_title(row, '235/60R18')
-    assert title == '235/60R18 Pirelli Scorpion Verde All-Season TL 103H RunFlat'
+    assert title == '235/60R18 Pirelli Scorpion Verde All-Season 103H TL RunFlat'
 
 
 def test_ext_diameter_title_skips_empty_optional() -> None:
@@ -145,6 +144,8 @@ def test_ext_diameter_title_skips_empty_optional() -> None:
             {'width': 30.5, 'height_percent': 55.0, 'diameter': 'R15', 'tire_type': _SPECIAL},
             '30.5/55R15',
         ),
+        # Дробная ширина грузовой шины уже содержит доли: `.00` не дописывается (`8.25R20`, не `8.25.00R20`).
+        ({'width': '8.25', 'diameter': 'R20', 'tire_type': _TRUCK}, '8.25R20'),
         # Дюймовая пара 10/20 получает суффикс .00.
         ({'width': '10', 'diameter': 'R20'}, '10.00R20'),
     ],
@@ -168,7 +169,7 @@ def test_default_title_all_parts() -> None:
         }
     )
 
-    assert default_tire_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 20 TL 3PMSF 103H RunFlat'
+    assert default_tire_title(row, '235/60R18') == '235/60R18 Pirelli Scorpion 103H 20PR TL 3PMSF RunFlat'
 
 
 def test_ext_diameter_title_all_parts() -> None:
@@ -202,7 +203,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Viatti',
             'Brina Nordico V-522',
             'Легковая',
-            '205/65R16 Viatti Brina Nordico V-522 TL 95T',
+            '205/65R16 Viatti Brina Nordico V-522 95T TL',
         ),
         # Диагональ, слойность — числом, камера из названия, надпись на боковине из названия.
         (
@@ -210,21 +211,21 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Kama',
             'И-68А',
             'Грузовая',
-            '11.00R20 Kama И-68А 16 TT M+S 150/146K',
+            '11.00R20 Kama И-68А 150/146K 16PR TT M+S',
         ),
         (
             '10,0/75-15,3 IMP 12PR 126A6 IM-17 TT РОССИЯ + Камера 10,0/75-15,3 вентиль ЛК (50)',
             'NorTec',
             'IM-17',
             'selhoz',
-            '10.0/75-15.3 Nortec IM-17 12 TT 126A6',
+            '10.0/75-15.3 NorTec IM-17 126A6 12PR TT',
         ),
         (
             '155R13 90/88S Trace (НК-135) TL',
             'Kama',
             'Trace (НК-135)',
             'cartruck',
-            '155R13 Kama Trace (НК-135) TL 90/88S',
+            '155R13 Kama Trace (НК-135) 90/88S TL',
         ),
         # Суффикс диаметра C у грузовых и легкогрузовых — в диаметре, как в колонке прайса.
         (
@@ -232,7 +233,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Kama',
             'Trace (НК-135)',
             'cartruck',
-            '205/75R16C Kama Trace (НК-135) TL 110/108R',
+            '205/75R16C Kama Trace (НК-135) 110/108R TL',
         ),
         # Конструкции, которых общий разбор не принимает: ZR, префикс P, скорость в скобках.
         (
@@ -240,21 +241,21 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Antares',
             'Ingens A1',
             'Легковая',
-            '245/45ZR17 Antares Ingens A1 TL M+S 99W',
+            '245/45ZR17 Antares Ingens A1 99W XL TL M+S',
         ),
         (
             'P225/60R18 104T XL RA1100 TL WW M+S',
             'Roadcruza',
             'RA1100',
             'Легковая',
-            '225/60R18 Roadcruza RA1100 TL M+S 104T',
+            '225/60R18 Roadcruza RA1100 104T XL TL M+S',
         ),
         (
             '225/40ZR18 94(Y) XL Pilot Sport 5 TL',
             'Michelin',
             'Pilot Sport 5',
             'Легковая',
-            '225/40ZR18 Michelin Pilot Sport 5 TL 94(Y)',
+            '225/40ZR18 Michelin Pilot Sport 5 94(Y) XL TL',
         ),
         # Камера «только шина» и RunFlat из RFT — как в колонках прайса.
         (
@@ -262,14 +263,14 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Nortec',
             'TR-184-1',
             'Грузовая',
-            '425/85R21 Nortec TR-184-1 18 TT (только шина) 156J',
+            '425/85R21 Nortec TR-184-1 156J 18PR TT (только шина)',
         ),
         (
             '235/60R18 103V Scorpion Verde All-Season TL RFT M+S',
             'Pirelli',
             'Scorpion Verde All-Season',
             'Легковая',
-            '235/60R18 Pirelli Scorpion Verde All-Season TL M+S 103V RunFlat',
+            '235/60R18 Pirelli Scorpion Verde All-Season 103V TL M+S RunFlat',
         ),
         # Надпись на боковине стоит после неизвестного слова BSW — она всё равно попадает в название.
         (
@@ -277,7 +278,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'Sailun',
             'Atrezzo 4 Seasons',
             'Легковая',
-            '215/65R16 Sailun Atrezzo 4 Seasons TL M+S 3PMSF 102V',
+            '215/65R16 Sailun Atrezzo 4 Seasons 102V XL TL M+S 3PMSF',
         ),
     ],
 )
@@ -299,14 +300,21 @@ def test_api_title_composition_is_stable_on_second_pass() -> None:
     row.set_field('title', first)
     second = get_prepared_title(row)
 
-    assert first == second == '155R13C Kama Trace (НК-135) TL 90/88S'
+    assert first == second == '155R13C Kama Trace (НК-135) 90/88S TL'
 
 
 def test_unparsable_api_size_keeps_title() -> None:
     """Размер, который не разобрать даже после нормализации, остаётся исходным названием, а не обрезком."""
-    title = 'LT35x12,50R17(320/70R17) 121S RA1100 TL WW M+S'
+    title = 'LT35x12,50Z17(320/70R17) 121S RA1100 TL WW M+S'
 
     assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == title
+
+
+def test_inch_radial_api_size_is_composed() -> None:
+    """Дюймовый радиальный размер `35x12,50R17` разбирается и собирается в канонической записи без лишнего нуля."""
+    title = 'LT35x12,50R17(320/70R17) 121S RA1100 TL WW M+S'
+
+    assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == '35x12.5R17 Roadcruza RA1100 121S M+S'
 
 
 def test_xlsx_columns_path_unchanged_for_special_width() -> None:
@@ -314,37 +322,6 @@ def test_xlsx_columns_path_unchanged_for_special_width() -> None:
     row = RowItem({'width': '13.0', 'height_percent': '75.0', 'diameter': '-16', 'tire_type': 'спецтехника'})
 
     assert get_prepared_title(row) == '13.0/75-16'
-
-
-@pytest.mark.parametrize(
-    ('title', 'expected'),
-    [
-        ('215/65R16 102V XL Atrezzo 4 Seasons TL BSW M+S 3PMSF', 'M+S 3PMSF'),
-        ('11R22.5 148/145K Forza MIX A TL POR M+S', 'POR M+S'),
-        ('225/50R18 95Q iceGuard Studless iG60 TL', ''),
-        ('30x10-14 Кама Quadro ATM (НК-437) 59 POR', 'POR'),
-        ('205/55R16 91H Energy TL', ''),
-        (None, ''),
-    ],
-)
-def test_sidewall_from_title(title: str | None, expected: str) -> None:
-    assert sidewall_from_title(title) == expected
-
-
-@pytest.mark.parametrize(
-    ('raw', 'expected'),
-    [
-        ('185/70R14 TL foo POR', ''),  # надпись ищется только сразу за камерой
-        ('Кама M+S Quadro', 'M+S'),  # без камеры — со второго слова, а не с последнего
-        ('POR', ''),  # нет пробела — нет размера, после которого искать
-        (' POR M+S', ''),  # пробел в позиции 0
-        ('A POR', 'POR'),  # пробел в позиции 1
-        ('M+S Quadro', ''),  # надпись в первом слове — это размер, не надпись
-    ],
-)
-def test_sidewall_from_title_search_window(raw: str, expected: str) -> None:
-    """Границы окна поиска надписи на боковине: после камеры или после первого слова."""
-    assert sidewall_from_title(raw) == expected
 
 
 def test_fill_size_keeps_existing_width_and_title() -> None:

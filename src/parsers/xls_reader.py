@@ -76,12 +76,19 @@ class XlsReader(IXlsReader):
 
     def sheets(self) -> list[Sheet]:
         """get sheet list"""
+        return [self._load_sheet(s_name) for s_name in self._sheet_names()]
+
+    def _sheet_names(self) -> list[str]:
+        """Имена вкладок книги; книга без вкладок — ошибка."""
         book = self.book
         if book is None or not book.sheet_names:
             make_raise('В прайсе отсутствуют вкладки!')
-        workbook = cast(CalamineWorkbook, book)
+        return cast(CalamineWorkbook, book).sheet_names
 
-        return [workbook.get_sheet_by_name(s_name).to_python(skip_empty_area=False) for s_name in workbook.sheet_names]
+    def _load_sheet(self, sheet_name: str) -> Sheet:
+        """Прочитать одну вкладку: разбор листа — самое дорогое в чтении xlsx."""
+        workbook = cast(CalamineWorkbook, self.book)
+        return workbook.get_sheet_by_name(sheet_name).to_python(skip_empty_area=False)
 
     def next_row_values(self, sheet: Sheet) -> Row | bool:
         """process for next xls row"""
@@ -108,14 +115,18 @@ class XlsReader(IXlsReader):
         return self.cur_row_values
 
     def parse(self, sheet_indexes: Sequence[int] | None = None) -> DSheet:
-        """parse given sheets or all if not specified"""
-        all_sheets = self.sheets()
-        sheet_indexes = sheet_indexes or list(range(len(all_sheets)))
+        """parse given sheets or all if not specified
+
+        Читаются только запрошенные вкладки: у МИМ три поставщика на одной книге,
+        и каждый иначе разбирал бы все листы, включая самый большой чужой.
+        """
+        sheet_names = self._sheet_names()
+        sheet_indexes = sheet_indexes or list(range(len(sheet_names)))
         rows: DSheet = []
         for sheet_index in sheet_indexes:
             self.skipped_empty_rows = 0
             self.cur_row = self.reader_params.start_row
-            sheet = all_sheets[sheet_index]
+            sheet = self._load_sheet(sheet_names[sheet_index])
             while self.next_row_values(sheet):
                 if is_empty_row(self.cur_row_values):
                     continue

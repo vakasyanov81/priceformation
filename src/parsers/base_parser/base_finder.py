@@ -30,6 +30,24 @@ def _has_word_boundaries(title_lower: str, position: int, alias_len: int) -> boo
     return not (before.isalnum() or after.isalnum())
 
 
+def find_bounded(title_lower: str, lower_alias: str) -> int:
+    """Найти алиас как отдельное слово: границы — не буква и не цифра.
+
+    Раньше алиас искался только между пробелами/на краях title, поэтому
+    бренды, склеенные с дефисом или скобками (``NORTEC-16``, ``АЛТАЙШИНА-111``),
+    не находились, хотя есть в списке производителей.
+    """
+    if not title_lower or not lower_alias:
+        return -1
+    alias_len = len(lower_alias)
+    position = title_lower.find(lower_alias)
+    while position != -1:
+        if _has_word_boundaries(title_lower, position, alias_len):
+            return position
+        position = title_lower.find(lower_alias, position + 1)
+    return -1
+
+
 class BaseFinder:
     """
     find word in title
@@ -39,18 +57,27 @@ class BaseFinder:
         """init"""
         self.alias_container = alias_container
         self._title: str | None = None
+        self._title_lower: str | None = None
+        self._found: dict[str | None, tuple[str | None, str | None]] = {}
         self._incorrect_lowers: list[str] = self.alias_container.incorrect_words_lower
         self._correct_lowers: list[str] = self.alias_container.all_correct_words_lower
         self._aliases: dict[str, str] = self.alias_container.reversed_map
 
     @property
     def title_lower(self) -> str | None:
-        """lowercase title"""
-        return self._title.lower() if self._title else self._title
+        """lowercase title (считается один раз на title, а не на каждый алиас)"""
+        return self._title_lower
 
     def find_word_in_title(self, title: str | None) -> tuple[str | None, str | None]:
-        """find substring in title"""
+        """find substring in title (результат кэшируется: названия и до, и после pipeline часто совпадают)"""
+        if title not in self._found:
+            self._found[title] = self._search(title)
+        return self._found[title]
+
+    def _search(self, title: str | None) -> tuple[str | None, str | None]:
+        """Полный перебор алиасов по title."""
         self._title = title
+        self._title_lower = title.lower() if title else title
         correct_alias, incorrect_alias = self._find_from_lower_list(self._correct_lowers, return_correct=True)
         if correct_alias:
             return correct_alias, incorrect_alias
@@ -79,8 +106,14 @@ class BaseFinder:
         title = self._title
         if title is None:
             return None
+        title_lower = self._title_lower
+        if not title_lower:
+            return None
         for index, lower_alias in enumerate(_lowers_list):
-            found_position = self._find(lower_alias)
+            # быстрый отсев: подавляющее большинство алиасов в title вообще не входит
+            if lower_alias not in title_lower:
+                continue
+            found_position = find_bounded(title_lower, lower_alias)
             if found_position == -1:
                 continue
             return (
@@ -89,24 +122,6 @@ class BaseFinder:
                 index,
             )
         return None
-
-    def _find(self, lower_alias: str) -> int:
-        """Найти алиас как отдельное слово: границы — не буква и не цифра.
-
-        Раньше алиас искался только между пробелами/на краях title, поэтому
-        бренды, склеенные с дефисом или скобками (``NORTEC-16``, ``АЛТАЙШИНА-111``),
-        не находились, хотя есть в списке производителей.
-        """
-        title_lower = self.title_lower
-        if not title_lower or not lower_alias:
-            return -1
-        alias_len = len(lower_alias)
-        position = title_lower.find(lower_alias)
-        while position != -1:
-            if _has_word_boundaries(title_lower, position, alias_len):
-                return position
-            position = title_lower.find(lower_alias, position + 1)
-        return -1
 
     def correction_field(self, rec: RowItem, field_key: str, aliases: AliasContainer) -> None:
         """replace field value in rec if it has bad signature"""

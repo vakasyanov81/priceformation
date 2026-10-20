@@ -1,4 +1,4 @@
-"""Стратегия слота `title` для Пошка и STK: сборка названия шины в порядке Пионера."""
+"""Стратегия слота `title` для Пошка и STK: сборка названия шины в каноническом порядке."""
 
 import pytest
 
@@ -44,11 +44,11 @@ class _Probe:
     [
         (
             '10.00 R20 DOUBLEROAD DR-801 н.с.18 149/146K унив.ось с об/л автошина, шт',
-            '10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л',
+            '10.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная',
         ),
         (
             '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, (1 шт)',
-            '11R22.5 TAITONG HS103 146/143M 16PR вед.ось',
+            '11R22.5 TAITONG HS103 146/143M 16PR Ведущая',
         ),
         (
             '11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт',
@@ -56,24 +56,24 @@ class _Probe:
         ),
         (
             '12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт',
-            '12.4L-16 БШК Бел-160М 111A6 8PR сельхозшина',
+            '12.4L-16 БШК Бел-160М 111A6 8PR',
         ),
         (
             'Автошина 11R22.5 16PR 146/143L GREENSTONE DR668 шашка',
-            '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+            '11R22.5 GREENSTONE DR668 146/143L 16PR',
         ),
         (
             'Автошина 235/75R17,5 LingLong LLA78 18PR 143/141J TL трал',
-            '235/75R17.5 LingLong LLA78 143/141J 18PR TL трал',
+            '235/75R17.5 LingLong LLA78 143/141J 18PR TL',
         ),
         (
             'Автошина 7.00 R16LT14PR 118/114L GREENSTONE ST896 змейка',
-            '7.00R16LT GREENSTONE ST896 118/114L 14PR змейка',
+            '7.00R16LT GREENSTONE ST896 118/114L 14PR',
         ),
     ],
 )
-def test_glues_in_pioner_order(raw: str, expected: str) -> None:
-    """Пошк и STK: параметры пересобираются в порядок Пионера."""
+def test_glues_in_canonical_order(raw: str, expected: str) -> None:
+    """Пошк и STK: параметры пересобираются в канонический порядок, из назначения остаётся только ось."""
     assert _strategy().prepare(RowItem({'title': raw})) == expected
 
 
@@ -81,12 +81,12 @@ def test_uses_manufacturer_for_brand() -> None:
     """Канонический производитель подставляется на место разобранного бренда."""
     row = RowItem(
         {
-            'title': '11R22.5 GREENSTONE DR668 146/143L 16PR шашка',
+            'title': '11R22.5 GREENSTONE DR668 146/143L 16PR',
             'manufacturer_name': 'GreenStone',
         },
     )
 
-    assert _strategy().prepare(row) == '11R22.5 GreenStone DR668 146/143L 16PR шашка'
+    assert _strategy().prepare(row) == '11R22.5 GreenStone DR668 146/143L 16PR'
 
 
 def test_is_idempotent() -> None:
@@ -97,7 +97,17 @@ def test_is_idempotent() -> None:
     once = strategy.prepare(row)
     twice = strategy.prepare(row)
 
-    assert once == twice == '10.00R20 DOUBLEROAD DR-801 149/146K 18PR унив.ось с об/л'
+    assert once == twice == '10.00R20 DOUBLEROAD DR-801 149/146K 18PR Универсальная'
+
+
+@pytest.mark.parametrize('axis', ['Универсальная', 'Ведущая', 'Рулевая', 'Прицепная', 'Карьерная'])
+def test_recompose_keeps_canonical_axis_at_end(axis: str) -> None:
+    """Название собирается дважды (при обогащении и в шаге pipeline): каноническая ось не уходит в модель."""
+    strategy = _strategy()
+    first = strategy.prepare(RowItem({'title': f'10.00 R20 Double Road DR-801 н.с.18 149/146K TT {axis}'}))
+
+    assert first == f'10.00R20 Double Road DR-801 149/146K 18PR TT {axis}'
+    assert strategy.prepare(RowItem({'title': first})) == first
 
 
 @pytest.mark.parametrize(
@@ -181,14 +191,14 @@ def test_fallback_normalize_gets_probe() -> None:
     ('raw', 'expected'),
     [
         ('11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт', '11.00R20 НКШЗ И-68А 150/146K 16PR TT'),
-        ('10.00-20 NEXT G2/L2 н.с.18 с об/л спецшина, шт', '10.00-20 NEXT G2/L2 18PR TT с об/л спецшина'),
-        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TT сельхозшина'),
+        ('10.00-20 NEXT G2/L2 н.с.18 с об/л спецшина, шт', '10.00-20 NEXT G2/L2 18PR TT'),
+        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозшина, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TT'),
         (
             '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, шт',
-            '11R22.5 TAITONG HS103 146/143M 16PR TL вед.ось',
+            '11R22.5 TAITONG HS103 146/143M 16PR TL Ведущая',
         ),
-        ('10-16.5 NEXT SKS-3 н.с.12 спецпокрышка, шт', '10-16.5 NEXT SKS-3 12PR TL спецпокрышка'),
-        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозпокрышка, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TL сельхозпокрышка'),
+        ('10-16.5 NEXT SKS-3 н.с.12 спецпокрышка, шт', '10-16.5 NEXT SKS-3 12PR TL'),
+        ('12.4L-16 Бел-160М н.с.8 111A6 БШК сельхозпокрышка, шт', '12.4L-16 БШК Бел-160М 111A6 8PR TL'),
     ],
 )
 def test_camera_added_by_kind_word(raw: str, expected: str) -> None:
@@ -215,3 +225,26 @@ def test_camera_not_added_without_config() -> None:
     prepared = _strategy().prepare(RowItem({'title': '11.00 R20 И-68А н.с. 16 150/146K НКШЗ автошина, шт'}))
 
     assert prepared == '11.00R20 НКШЗ И-68А 150/146K 16PR'
+
+
+def _plant_probe(title: str | None) -> str | None:
+    return 'ОШЗ' if 'ОШЗ' in (title or '') else None
+
+
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        ('Камера СВК 11.00-20 ГК-145 (0)', 'Камера 11.00-20 ГК-145'),
+        ('Камера СВК 11.2-20 ТК (48), (1 шт)', 'Камера 11.2-20'),
+        ('Камера СВК 1200х500-508 РК-5А-145 (65)', 'Камера 1200x500-508 РК-5А-145'),
+        ('Камера 215 R16 Гк-115 ОШЗ', 'Камера 215-16 ОШЗ ГК-115'),
+        ('130-10 об/лента', 'Ободная лента 130-10'),
+        ('Ободная лента 300-508А', 'Ободная лента 300-508А'),
+        ('205-457 (12.00-18) об/лента', 'Ободная лента 205-457'),
+    ],
+)
+def test_composes_tube_and_rim_tape(raw: str, expected: str) -> None:
+    """Камера и лента: префикс, размер, бренд из probe и модель; СВК и остаток в скобках отброшены."""
+    strategy = PoshkStkTireCompose('', None, None, _plant_probe)
+
+    assert strategy.prepare(RowItem({'title': raw})) == expected

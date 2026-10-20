@@ -83,3 +83,13 @@ class TestFullParsePipeline:
 
         # Файлы есть — разбор не должен упасть с CalamineError
         assert parser._file_reader_impl._data_reader is JsonPriceReader  # type: ignore[attr-defined]
+
+    def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
+        """В каждой группе по параметрам после разбора ровно одно название."""
+        titles_by_group: dict[int | None, set[str | None]] = {}
+        for row_item in ParseOrchestrator().parse_all().parsed_items:
+            group_titles = titles_by_group.setdefault(row_item.duplicate.group_by_params, set())
+            group_titles.add(row_item.identity.title)
+
+        assert titles_by_group, 'на эталонных прайсах нет ни одной позиции'
+        assert all(len(titles) == 1 for titles in titles_by_group.values()), titles_by_group

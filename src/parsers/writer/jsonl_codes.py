@@ -16,7 +16,7 @@ _MIN_REPEAT = 2
 
 type JsonlRow = dict[str, Any]
 type ValueCodes = dict[str, Any]
-type ColumnDefs = list[dict[str, Any]]
+type ColumnDefs = list[ColumnHelper]
 type NameToKey = dict[str, str]
 type CellToCode = dict[Any, str]
 
@@ -48,10 +48,9 @@ def read_value_codes(meta_path: Path) -> ValueCodes:
 def _title_keys(columns: ColumnDefs, name_to_key: NameToKey) -> set[str]:
     skipped: set[str] = set()
     for column in columns:
-        helper = ColumnHelper(column)
-        if helper.field != RowItem.title.name:
+        if column.field != RowItem.title.name:
             continue
-        skipped.add(name_to_key[helper.name])
+        skipped.add(name_to_key[column.name])
     return skipped
 
 

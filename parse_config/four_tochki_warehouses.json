@@ -1,0 +1,15 @@
+{
+  "groups": [
+    {
+      "name": "novosibirsk",
+      "keywords": ["Новосибирск", "НСБ"],
+      "merge": true
+    },
+    {
+      "name": "order",
+      "keywords": ["Томск", "Новокузнецк"],
+      "available": "Под заказ",
+      "delivery_period": 5
+    }
+  ]
+}

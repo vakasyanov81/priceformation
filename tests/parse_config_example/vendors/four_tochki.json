@@ -2,6 +2,7 @@
   "enabled": 1,
   "code": "5",
   "name": "Форточки",
+  "title": {"reference_priority": 1},
   "start_row": 2,
   "file_templates": ["price*.xls", "price*.xlsx"],
   "sections": [

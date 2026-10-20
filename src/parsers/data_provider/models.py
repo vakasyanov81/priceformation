@@ -25,6 +25,13 @@ _PERCENT_KEY = 'percent_markup'
 _PERCENT_ALIAS_KEY = 'percent'
 
 
+def _named_rules(raw: Any, where: str) -> RawConfig:
+    """Правила наценки: список `[{min, max, percent}, …]` или карта «имя → правило»; список нумеруется по порядку."""
+    if isinstance(raw, list):
+        return {str(index): rule for index, rule in enumerate(raw)}
+    return as_config_object(raw, f'{where} → {_MARKUP_RULES_KEY}')
+
+
 def _percent_key(rule: RawConfig) -> str:
     """Ключ процента наценки в JSON: `percent_markup`, иначе совместимый алиас `percent`."""
     if _PERCENT_ALIAS_KEY in rule and _PERCENT_KEY not in rule:
@@ -103,7 +110,7 @@ class MarkupRulesConfig:
         """Разобрать `<supplier>_markup_rules.json`."""
         rules = as_config_object(raw, where)
         return cls(
-            markup_rules=cls._read_rules(read_object(rules, _MARKUP_RULES_KEY, where), where),
+            markup_rules=cls._read_rules(_named_rules(rules.get(_MARKUP_RULES_KEY, {}), where), where),
             min_recommended_percent_markup=read_number(rules, 'min_recommended_percent_markup', where),
             max_recommended_percent_markup=read_number(rules, 'max_recommended_percent_markup', where),
             absolute_markup_rules=AbsoluteMarkUpRules.from_dict(

@@ -5,6 +5,7 @@
   "start_row": 2,
   "file_templates": ["price*.xls*"],
   "title": {
+    "reference_priority": 2,
     "strategy": "fill_fields_from_title"
   },
   "pricing": {
