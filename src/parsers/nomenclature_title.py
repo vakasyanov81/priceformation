@@ -14,8 +14,8 @@ def join_size_parts(*parts: object) -> str:
 
 
 def brand_label(row_item: RowItem) -> str:
-    """Бренд для title."""
-    return (row_item.identity.manufacturer or '').lower().capitalize()
+    """Бренд для title как в поле: регистр бренда (`BFGoodrich`, `XCMG`) не меняется."""
+    return (row_item.identity.manufacturer or '').strip()
 
 
 def load_velocity(row_item: RowItem) -> str:

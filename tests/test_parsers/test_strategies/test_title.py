@@ -392,3 +392,27 @@ def test_winter_markers_keep_season_empty_for_plain_model() -> None:
     TitleWithMarkers(DefaultTitle(), _WINTER_MARKERS).prepare(row)
 
     assert row.tire.season is None
+
+
+def test_disk_compose_is_idempotent_with_brackets_in_model() -> None:
+    """Скобка модели не дописывается в хвост, а повторный вызов (title-шаг дважды) не плодит её."""
+    strategy = DiskComposeTochki()
+    row = RowItem(
+        {
+            'title': '5,5x14/4x100 ET43 D60,1 R004 (Logan) BL',
+            'manufacturer_name': 'RST',
+            'model': 'R004 (Logan)',
+            'width': '5.5',
+            'diameter': '14',
+            'slot_count': '4',
+            'pcd1': '100',
+            'eet': '43',
+            'central_diameter': '60.1',
+            'color': 'BL',
+        },
+    )
+    first = strategy.prepare(row)
+    row.set_field('title', first)
+
+    assert first == '5.5x14 4x100 ET43 60.1 BL RST R004 (Logan)'
+    assert strategy.prepare(row) == first

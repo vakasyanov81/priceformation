@@ -143,7 +143,9 @@ class DiskComposeTochki:
         """Собрать title диска с хвостом из исходного наименования."""
         original_name = row_item.identity.title or ''
         fill_disk_thickness(row_item)
-        return join_title_parts(self._disk_title(row_item), disk_name_suffix(original_name))
+        return join_title_parts(
+            self._disk_title(row_item), disk_name_suffix(original_name, row_item.identity.model or '')
+        )
 
     def _disk_title(self, row_item: RowItem) -> str:
         return join_title_parts(

@@ -23,3 +23,10 @@ def test_disk_name_extras_has_load_in_kg(title: str, expected: str) -> None:
 def test_disk_name_extras_ignores_dimensions_before_kg_text() -> None:
     """Диаметр ЦО и ET рядом не принимаются за нагрузку."""
     assert disk_name_extras('13 Trebl 5.0*13 4*98 ЕТ29 60.1 S паллета') == ''
+
+
+def test_disk_name_extras_skips_brackets_already_in_model() -> None:
+    """Скобка модели `(Logan)` не завод: в хвост не попадает, настоящий завод остаётся."""
+    title = '5,5x14/4x100 ET43 D60,1 R004 (Logan) (ABC) BL'
+
+    assert disk_name_extras(title, 'R004 (Logan)') == '(ABC)'

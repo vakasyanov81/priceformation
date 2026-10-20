@@ -186,7 +186,7 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
         return '.0'
     if width == '10' and diameter == '20':
         return '.00'
-    skip_truck_dot = diameter in {'22.5', '16'} or height_percent
+    skip_truck_dot = diameter in {'22.5', '16'} or height_percent or '.' in width
     if not is_truck_tire(row_item) or skip_truck_dot:
         return ''
     return '.00'

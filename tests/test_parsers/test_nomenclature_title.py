@@ -43,8 +43,11 @@ def test_join_size_parts_skips_empty(parts: tuple[object, ...], expected: str) -
     assert join_size_parts(*parts) == expected
 
 
-def test_brand_label_capitalizes() -> None:
-    assert brand_label(_row(manufacturer_name='KAMA')) == 'Kama'
+def test_brand_label_keeps_brand_case() -> None:
+    """Регистр бренда как в поле: `XCMG` не превращается в `Xcmg`, `BFGoodrich` в `Bfgoodrich`."""
+    assert brand_label(_row(manufacturer_name='XCMG')) == 'XCMG'
+    assert brand_label(_row(manufacturer_name='BFGoodrich')) == 'BFGoodrich'
+    assert brand_label(_row(manufacturer_name=' Royal Spin ')) == 'Royal Spin'
     assert brand_label(_row()) == ''
 
 
@@ -55,6 +58,6 @@ def test_load_velocity_concatenates() -> None:
 
 
 def test_compose_tire_title_order_and_extras() -> None:
-    row = _row(manufacturer_name='pirelli', model='P Zero', layering='XL')
+    row = _row(manufacturer_name='Pirelli', model='P Zero', layering='XL')
     title = compose_tire_title(row, '235/40R18', row.tire.layering, '103Y')
     assert title == '235/40R18 Pirelli P Zero XL 103Y'

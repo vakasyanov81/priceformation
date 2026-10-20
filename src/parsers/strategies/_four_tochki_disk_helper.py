@@ -34,15 +34,15 @@ def fill_disk_thickness(row_item: RowItem) -> None:
         row_item.set_field('disk_thickness', thickness)
 
 
-def disk_name_suffix(name: str) -> str:
-    """Толщина, усиление, камерность и различающие хвосты из наименования."""
+def disk_name_suffix(name: str, model: str = '') -> str:
+    """Толщина, усиление, камерность и различающие хвосты из наименования; скобки модели не повторяются."""
     thickness = thickness_from_name(name)
     thick_label = f'({thickness} мм)' if thickness else ''
     return join_title_parts(
         thick_label,
         'усил.' if 'усил' in name.lower() else '',
         _tube_label(name),
-        disk_name_extras(name),
+        disk_name_extras(name, model),
     )
 
 

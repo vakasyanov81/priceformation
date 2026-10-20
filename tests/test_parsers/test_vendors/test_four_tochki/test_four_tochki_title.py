@@ -145,6 +145,8 @@ def test_ext_diameter_title_skips_empty_optional() -> None:
             {'width': 30.5, 'height_percent': 55.0, 'diameter': 'R15', 'tire_type': _SPECIAL},
             '30.5/55R15',
         ),
+        # Дробная ширина грузовой шины уже содержит доли: `.00` не дописывается (`8.25R20`, не `8.25.00R20`).
+        ({'width': '8.25', 'diameter': 'R20', 'tire_type': _TRUCK}, '8.25R20'),
         # Дюймовая пара 10/20 получает суффикс .00.
         ({'width': '10', 'diameter': 'R20'}, '10.00R20'),
     ],
@@ -217,7 +219,7 @@ def _api_tire(title: str, manufacturer: str, model: str, tire_type: str = 'Ле�
             'NorTec',
             'IM-17',
             'selhoz',
-            '10.0/75-15.3 Nortec IM-17 12 TT 126A6',
+            '10.0/75-15.3 NorTec IM-17 12 TT 126A6',
         ),
         (
             '155R13 90/88S Trace (НК-135) TL',
