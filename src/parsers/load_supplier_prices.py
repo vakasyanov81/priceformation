@@ -1,48 +1,63 @@
-"""Загрузка файлов прайсов поставщиков в file_prices."""
+"""Загрузка файлов прайсов поставщиков в file_prices.
+
+Поставщику можно передать один файл, несколько файлов или zip-архив с ними. Имя файла в папке
+поставщика определяет, прочитает ли его разбор (маски `file_templates`), поэтому:
+
+- файл, имя которого уже подходит под маску поставщика или служебное имя (`territories.json`
+  при фильтре складов), сохраняет имя;
+- остальные xls/xlsx получают имя `price.<расширение>` (следующие — `price_2`, `price_3`, …),
+  если такое имя подходит под маски поставщика;
+- прочие файлы — ошибка: разбор их не увидит.
+
+Старые файлы: одноимённые заменяются; если пришли xls/xlsx, прежние Excel-прайсы поставщика
+(подходящие под его маски) удаляются, чтобы в разбор не попал устаревший набор.
+Все файлы проверяются до первого перемещения: при ошибке папки поставщиков не меняются.
+"""
 
 import json
-import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
-from domain.config_context import get_config_provider
 from parsers.all_vendors import all_vendor_supplier_catalog
-from parsers.supplier_price_errors import (
-    InvalidPriceExtensionError,
-    SupplierPriceFileNotFoundError,
-    SupplierPricesMappingError,
-    UnknownSupplierCodeError,
-)
+from parsers.supplier_file_rules import plan_files, vendor_file_rules
+from parsers.supplier_price_errors import SupplierPricesMappingError, UnknownSupplierCodeError
+from parsers.supplier_price_placement import SupplierUpload, place_files
+from parsers.supplier_price_sources import PriceSources, expand_sources, unpacked_dir
 
-_ALLOWED_EXTENSIONS = frozenset(('.xls', '.xlsx'))
-_PRICE_STEM = 'price'
-_MSG_MAPPING = 'Ожидается объект {ид_или_код_поставщика: путь_к_файлу}'
-_MSG_NONEMPTY = 'Ключ поставщика и путь к файлу должны быть непустыми строками'
-_MSG_EXTENSION = 'Недопустимое расширение {0!r}. Допустимые: xls, xlsx'
+_MSG_MAPPING = 'Ожидается объект {ид_или_код_поставщика: путь_к_файлу или список путей}'
+_MSG_NONEMPTY = 'Ключ поставщика и пути к файлам должны быть непустыми строками'
 _MSG_UNKNOWN = 'Неизвестный ИД или код поставщика: {0}'
 
 
-def parse_prices_json(raw: str) -> dict[str, str]:
-    """Разобрать JSON-объект ИД или sup_code → путь к файлу."""
+def parse_prices_json(raw: str) -> dict[str, PriceSources]:
+    """Разобрать JSON-объект ИД или sup_code → путь к файлу или список путей."""
     try:
         loaded: object = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise SupplierPricesMappingError(str(exc)) from exc
     if not isinstance(loaded, dict):
         raise SupplierPricesMappingError(_MSG_MAPPING)
-    mapping: dict[str, str] = {}
-    for key, path in loaded.items():
-        if not (isinstance(key, str) and key and isinstance(path, str) and path):
-            raise SupplierPricesMappingError(_MSG_NONEMPTY)
-        mapping[key] = path
-    return mapping
+    if not all(isinstance(key, str) and key for key in loaded):
+        raise SupplierPricesMappingError(_MSG_NONEMPTY)
+    return {key: _mapping_paths(paths) for key, paths in loaded.items()}
 
 
-def load_supplier_prices(mapping: Mapping[str, str]) -> list[str]:
-    """Переместить файлы в папки поставщиков как price.xls / price.xlsx."""
-    catalog = all_vendor_supplier_catalog()
-    prepared = [_job_for(key, path, catalog) for key, path in mapping.items()]
-    return [_move_price(*job) for job in prepared]
+def _mapping_paths(paths: object) -> PriceSources:
+    """Путь строкой или непустой список непустых строк (кортежем)."""
+    if isinstance(paths, str) and paths:
+        return paths
+    path_list = paths if isinstance(paths, list) else []
+    if path_list and all(isinstance(path, str) and path for path in path_list):
+        return tuple(path_list)
+    raise SupplierPricesMappingError(_MSG_NONEMPTY)
+
+
+def load_supplier_prices(mapping: Mapping[str, PriceSources]) -> list[str]:
+    """Разложить файлы по папкам поставщиков; вернуть пути положенных файлов."""
+    targets = _supplier_folders(mapping)
+    with unpacked_dir() as unpack_dir:
+        uploads = [_plan_upload(folder, sources, unpack_dir) for folder, sources in targets]
+        return [dest for upload in uploads for dest in place_files(upload)]
 
 
 def catalog_entry_for(
@@ -59,34 +74,14 @@ def catalog_entry_for(
     raise UnknownSupplierCodeError(_MSG_UNKNOWN.format(supplier_key))
 
 
-def _job_for(
-    supplier_key: str,
-    source_raw: str,
-    catalog: dict[str, dict[str, str]],
-) -> tuple[Path, Path]:
-    source = Path(source_raw)
-    dest = _destination(source, catalog_entry_for(supplier_key, catalog)['sup_code'])
-    _ensure_xls_file(source)
-    return source, dest
+def _supplier_folders(mapping: Mapping[str, PriceSources]) -> list[tuple[str, PriceSources]]:
+    """Папка поставщика для каждого ключа; неизвестный ключ — ошибка до проверки файлов."""
+    catalog = all_vendor_supplier_catalog()
+    folders = [catalog_entry_for(key, catalog)['sup_code'] for key in mapping]
+    return list(zip(folders, mapping.values(), strict=True))
 
 
-def _destination(source: Path, folder: str) -> Path:
-    dest_dir = Path(get_config_provider().price_folder(folder))
-    return dest_dir / (_PRICE_STEM + source.suffix.lower())
-
-
-def _ensure_xls_file(source: Path) -> None:
-    if source.suffix.lower() not in _ALLOWED_EXTENSIONS:
-        raise InvalidPriceExtensionError(_MSG_EXTENSION.format(source.suffix))
-    if not source.is_file():
-        raise SupplierPriceFileNotFoundError(f'Файл не найден: {source}')
-
-
-def _move_price(source: Path, dest: Path) -> str:
-    if source.resolve() == dest.resolve():
-        return str(dest)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    for extension in _ALLOWED_EXTENSIONS:
-        (dest.parent / (_PRICE_STEM + extension)).unlink(missing_ok=True)
-    shutil.move(source, dest)
-    return str(dest)
+def _plan_upload(folder: str, sources: PriceSources, unpack_dir: Path) -> SupplierUpload:
+    rules = vendor_file_rules()[folder]
+    files = plan_files(folder, rules, expand_sources(sources, unpack_dir))
+    return SupplierUpload(folder, rules, files)

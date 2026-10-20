@@ -96,9 +96,21 @@ file_prices/                  входные прайсы и результат
 - `get_supliers` — вернуть каталог поставщиков:
   `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`;
 - `load_supplier_prices` — разложить файлы прайсов по папкам поставщиков:
-  `{"1": "/путь/прайс.xls"}` или `{"poshk": "/путь/прайс.xls"}`. Ключ — ИД
-  поставщика или `sup_code`. Файл перемещается в `file_prices/<sup_code>/price.xls`
-  (или `.xlsx`); допускаются только `xls` и `xlsx`;
+  `{"1": "/путь/прайс.xls"}`, `{"poshk": "/путь/прайс.xls"}` или список файлов
+  `{"4": ["/путь/прайс.xlsx", "/путь/territories.json"]}`. Ключ — ИД
+  поставщика или `sup_code`. Допускаются `xls`, `xlsx`, `json` и `zip`-архив с
+  такими файлами (вложенные папки архива не важны). Файлы перемещаются в
+  `file_prices/<sup_code>/`:
+  - имя, подходящее под `file_templates` поставщика (у Запаски `disk.json`,
+    `tire.json`) или служебное (`territories.json` у поставщика с
+    `warehouse_cities`), сохраняется;
+  - остальные `xls`/`xlsx` переименовываются в `price.xls(x)`, следующие — в
+    `price_2`, `price_3`, …, если такое имя подходит под маски поставщика;
+  - прочие файлы — ошибка, ничего не перемещается.
+
+  Одноимённые файлы заменяются. Если пришли `xls`/`xlsx`, прежние
+  Excel-прайсы поставщика удаляются (остальные файлы, например
+  `territories.json`, остаются);
 - `load_config` — положить файл или папку настроек в `parse_config`: путь к
   `*.json`, `*.xlsx`, `black_list` или к папке с такими файлами. Файлы
   перемещаются с теми же именами (существующие заменяются). Файл из папки
@@ -143,6 +155,8 @@ uv run pf mim_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
+uv run pf load_supplier_prices='{"4": ["/full/path/mim.xlsx", "/full/path/territories.json"]}'
+uv run pf load_supplier_prices='{"zapaska": "/full/path/zapaska.zip"}'
 uv run pf load_config=/full/path/vendors/mim.json
 uv run pf load_config=/full/path/settings_dir
 ```
