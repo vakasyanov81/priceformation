@@ -2,7 +2,7 @@
 
 import shutil
 import tempfile
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -18,7 +18,7 @@ _MSG_NOT_FOUND = 'Файл не найден: {0}'
 
 
 @contextmanager
-def unpacked_dir() -> Iterator[Path]:
+def unpacked_dir() -> Generator[Path]:
     """Временная папка для содержимого архивов; удаляется после загрузки."""
     folder = Path(tempfile.mkdtemp(prefix='supplier_prices_'))
     try:

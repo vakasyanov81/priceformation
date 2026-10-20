@@ -1,5 +1,6 @@
 """Тесты сервиса активации поставщиков: список и переключение флага."""
 
+import json
 from pathlib import Path
 
 from infrastructure.config.fake_config_provider import FakeConfigProvider
@@ -7,11 +8,12 @@ from parsers.vendor_config.provider import clear_vendor_configs_cache
 from services.vendor_activation import VendorActivationService, VendorState
 
 _FOLDER = 'vendors'
+_ACTIVATION_FILE = 'vendor_activation.json'
 
 
-def _config(code: str, name: str, *, enabled: int) -> str:
+def _config(code: str, name: str) -> str:
     return (
-        f'{{"enabled": {enabled}, "code": "{code}", "name": "{name}", '
+        f'{{"code": "{code}", "name": "{name}", '
         '"start_row": 1, "file_templates": ["*.xls"], "sections": [{"columns": {"1": "title"}}]}'
     )
 
@@ -25,14 +27,16 @@ def _write_vendors(provider: FakeConfigProvider, files: dict[str, str]) -> None:
 
 
 def test_list_vendors_sorted_by_name(fake_config_provider: FakeConfigProvider) -> None:
-    """Список идёт по названию и несёт текущий флаг активности."""
+    """Список идёт по названию и несёт текущий флаг активности из vendor_activation.json."""
     _write_vendors(
         fake_config_provider,
         {
-            'bbb.json': _config('1', 'Omega', enabled=0),
-            'aaa.json': _config('2', 'Alpha', enabled=1),
+            'bbb.json': _config('1', 'Omega'),
+            'aaa.json': _config('2', 'Alpha'),
         },
     )
+    Path(fake_config_provider.config_file(_ACTIVATION_FILE)).write_text('{"bbb": 0}', encoding='utf-8')
+    clear_vendor_configs_cache()
 
     states = VendorActivationService().list_vendors()
 
@@ -40,14 +44,16 @@ def test_list_vendors_sorted_by_name(fake_config_provider: FakeConfigProvider) -
 
 
 def test_toggle_flips_flag_and_persists(fake_config_provider: FakeConfigProvider) -> None:
-    """toggle меняет флаг в памяти и в файле конфига."""
-    _write_vendors(fake_config_provider, {'stk.json': _config('7', 'STK', enabled=0)})
+    """toggle меняет флаг в памяти и в vendor_activation.json; конфиг поставщика не меняется."""
+    stk_source = _config('7', 'STK')
+    _write_vendors(fake_config_provider, {'stk.json': stk_source})
     service = VendorActivationService()
-
-    assert service.toggle('stk') == VendorState('stk', 'STK', True)
-    assert service.list_vendors()[0].enabled is True
-    path = Path(fake_config_provider.config_file(f'{_FOLDER}/stk.json'))
-    assert '"enabled": 1' in path.read_text(encoding='utf-8')
+    activation = Path(fake_config_provider.config_file(_ACTIVATION_FILE))
 
     assert service.toggle('stk') == VendorState('stk', 'STK', False)
-    assert '"enabled": 0' in path.read_text(encoding='utf-8')
+    assert service.list_vendors()[0].enabled is False
+    assert json.loads(activation.read_text(encoding='utf-8')) == {'stk': 0}
+
+    assert service.toggle('stk') == VendorState('stk', 'STK', True)
+    assert json.loads(activation.read_text(encoding='utf-8')) == {'stk': 1}
+    assert Path(fake_config_provider.config_file(f'{_FOLDER}/stk.json')).read_text(encoding='utf-8') == stk_source

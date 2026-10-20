@@ -1,20 +1,22 @@
 """Загрузка конфигов поставщиков из parse_config/vendors с кэшем."""
 
+import json
 from pathlib import Path
 
 import pytest
 
 from domain.exceptions import ConfigValidationError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from parsers.vendor_config.activation import set_vendor_enabled
 from parsers.vendor_config.provider import (
     clear_vendor_configs_cache,
     load_vendor_configs,
-    set_vendor_enabled,
 )
 
 FOLDER = 'vendors'
+ACTIVATION_FILE = 'vendor_activation.json'
 MIM_JSON = (
-    '{"enabled": 1, "code": "mim", "name": "Мим", "start_row": 2, '
+    '{"code": "mim", "name": "Мим", "start_row": 2, '
     '"file_templates": ["*.xls"], "sections": [{"columns": {"1": "manufacturer_name"}}]}'
 )
 
@@ -63,35 +65,69 @@ def test_result_is_cached_until_cleared(fake_config_provider: FakeConfigProvider
     assert set(load_vendor_configs()) == {'mim'}
 
 
-def test_set_vendor_enabled_writes_flag(fake_config_provider: FakeConfigProvider) -> None:
-    """Переключение флага пишет 0/1 и сбрасывает кэш."""
+def _activation_path(provider: FakeConfigProvider) -> Path:
+    return Path(provider.config_file(ACTIVATION_FILE))
+
+
+def _read_activation(provider: FakeConfigProvider) -> dict[str, int]:
+    statuses: dict[str, int] = json.loads(_activation_path(provider).read_text(encoding='utf-8'))
+    return statuses
+
+
+def test_missing_activation_file_keeps_vendors_enabled(fake_config_provider: FakeConfigProvider) -> None:
+    """Без vendor_activation.json все поставщики включены."""
+    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
+
+    assert load_vendor_configs()['mim'].enabled is True
+
+
+def test_activation_file_sets_status(fake_config_provider: FakeConfigProvider) -> None:
+    """Статус берётся из vendor_activation.json по имени папки."""
+    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
+    _activation_path(fake_config_provider).write_text('{"mim": 0}', encoding='utf-8')
+    clear_vendor_configs_cache()
+
+    assert load_vendor_configs()['mim'].enabled is False
+
+
+def test_set_vendor_enabled_writes_activation_file(fake_config_provider: FakeConfigProvider) -> None:
+    """Переключение пишет статус в vendor_activation.json, сам конфиг поставщика не трогает."""
     path = _vendors_dir(fake_config_provider).joinpath('mim.json')
     path.write_text(MIM_JSON, encoding='utf-8')
     assert load_vendor_configs()['mim'].enabled is True
 
     set_vendor_enabled('mim', False)
 
-    assert '"enabled": 0' in path.read_text(encoding='utf-8')
+    assert _read_activation(fake_config_provider) == {'mim': 0}
+    assert path.read_text(encoding='utf-8') == MIM_JSON
     assert load_vendor_configs()['mim'].enabled is False
 
 
-def test_set_vendor_enabled_preserves_other_fields(fake_config_provider: FakeConfigProvider) -> None:
-    """Меняется только токен enabled, остальное форматирование сохраняется."""
-    source = '{\n  "enabled": 0,\n  "code": "mim",\n  "name": "Мим"\n}\n'
-    path = _vendors_dir(fake_config_provider).joinpath('mim.json')
-    path.write_text(source, encoding='utf-8')
+def test_set_vendor_enabled_keeps_other_vendors(fake_config_provider: FakeConfigProvider) -> None:
+    """Запись одного поставщика не трогает статусы остальных."""
+    _activation_path(fake_config_provider).write_text('{"stk": 0, "mim": 1}', encoding='utf-8')
 
-    set_vendor_enabled('mim', True)
+    set_vendor_enabled('mim', False)
 
-    assert path.read_text(encoding='utf-8') == '{\n  "enabled": 1,\n  "code": "mim",\n  "name": "Мим"\n}\n'
+    assert _read_activation(fake_config_provider) == {'mim': 0, 'stk': 0}
 
 
-def test_set_vendor_enabled_without_flag_fails(fake_config_provider: FakeConfigProvider) -> None:
-    """Нет поля enabled — понятная ошибка с именем файла."""
-    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text('{"code": "mim"}', encoding='utf-8')
+def test_activation_file_rejects_bad_flag(fake_config_provider: FakeConfigProvider) -> None:
+    """Статус только 0 или 1; ошибка называет файл активации."""
+    _activation_path(fake_config_provider).write_text('{"mim": 2}', encoding='utf-8')
+    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
 
-    with pytest.raises(ConfigValidationError, match='enabled'):
-        set_vendor_enabled('mim', True)
+    with pytest.raises(ConfigValidationError, match=r'vendor_activation\.json'):
+        load_vendor_configs()
+
+
+def test_enabled_in_vendor_json_is_rejected(fake_config_provider: FakeConfigProvider) -> None:
+    """Поле enabled в конфиге поставщика больше не действует — ошибка с подсказкой, куда его перенесли."""
+    source = MIM_JSON.replace('"code"', '"enabled": 1, "code"', 1)
+    _vendors_dir(fake_config_provider).joinpath('mim.json').write_text(source, encoding='utf-8')
+
+    with pytest.raises(ConfigValidationError, match=r'mim\.json: «enabled» перенесён в vendor_activation\.json'):
+        load_vendor_configs()
 
 
 def test_common_defaults_apply_to_every_vendor(fake_config_provider: FakeConfigProvider) -> None:

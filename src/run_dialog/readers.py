@@ -9,7 +9,7 @@ import importlib
 import os
 import select
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
 from run_dialog.key_codes import Key, KeyPress, decode_char, decode_unix_arrow, decode_windows_extended
@@ -61,7 +61,7 @@ def read_windows_key(getch: Callable[[], str] = _windows_getch) -> KeyPress:
 
 
 @contextmanager
-def raw_terminal() -> Iterator[None]:
+def raw_terminal() -> Generator[None]:
     """Перевести stdin в cbreak на Unix; на Windows ничего не делать."""
     if os.name == 'nt':
         yield

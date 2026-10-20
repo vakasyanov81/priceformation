@@ -2,7 +2,8 @@
 
 from dataclasses import dataclass
 
-from parsers.vendor_config.provider import load_vendor_configs, set_vendor_enabled
+from parsers.vendor_config.activation import set_vendor_enabled
+from parsers.vendor_config.provider import load_vendor_configs
 
 
 @dataclass(frozen=True)

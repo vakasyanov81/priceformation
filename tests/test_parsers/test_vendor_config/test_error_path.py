@@ -18,7 +18,6 @@ FOLDER = 'mim'
 WHERE = 'mim.json'
 
 MINIMAL: dict[str, Any] = {
-    'enabled': 1,
     'code': 'mim',
     'name': 'Мим',
     'start_row': 2,
@@ -37,7 +36,6 @@ def _raw(**overrides: Any) -> dict[str, Any]:
 PATH_CASES = [
     # корень и ключи верхнего уровня
     ({**_raw(), 'reader': 5}, f'{WHERE} → reader'),
-    ({**_raw(), 'enabled': 5}, WHERE),
     ({**_raw(), 'name': 5}, f'{WHERE} → name'),
     ({**_raw(), 'start_row': 'x'}, f'{WHERE} → start_row'),
     ({**_raw(), 'file_templates': 'x'}, f'{WHERE} → file_templates'),
