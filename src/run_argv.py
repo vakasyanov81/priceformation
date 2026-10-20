@@ -17,6 +17,7 @@ FOUR_TOCHKI_LOAD_API_DATA = 'four_tochki_load_api_data'
 MIM_LOAD_API_DATA = 'mim_load_api_data'
 FETCH_MAIL_PRICES = 'fetch_mail_prices'
 GET_SUPLIERS = 'get_supliers'
+GET_PRODUCT_TYPES = 'get_product_types'
 LOAD_SUPPLIER_PRICES = 'load_supplier_prices'
 LOAD_CONFIG = 'load_config'
 MACHINE_COMMANDS = (
@@ -27,14 +28,26 @@ MACHINE_COMMANDS = (
     MIM_LOAD_API_DATA,
     FETCH_MAIL_PRICES,
     GET_SUPLIERS,
+    GET_PRODUCT_TYPES,
     LOAD_SUPPLIER_PRICES,
     LOAD_CONFIG,
 )
-JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
+JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, GET_PRODUCT_TYPES, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
 _LOAD_INLINE_PREFIX = f'{LOAD_SUPPLIER_PRICES}='
 _CONFIG_INLINE_PREFIX = f'{LOAD_CONFIG}='
 _PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь" или ["путь", ...]}: xls, xlsx, json или zip.'
 _CONFIG_HELP = 'Полный путь к файлу или папке настроек (*.json, *.xlsx или black_list).'
+
+# Подкоманды без собственных аргументов: только общие флаги (--json и др.).
+_PLAIN_COMMANDS = (
+    (DOUBLES, 'Разобрать прайсы и записать отчёт о дублях.'),
+    (ZAPASKA_LOAD_API_DATA, 'Выгрузить прайсы запаски по API.'),
+    (FOUR_TOCHKI_LOAD_API_DATA, 'Выгрузить данные Форточек по API.'),
+    (MIM_LOAD_API_DATA, 'Выгрузить данные МИМ по API.'),
+    (FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.'),
+    (GET_SUPLIERS, 'Получить названия поставщиков.'),
+    (GET_PRODUCT_TYPES, 'Получить типы товара, которые бывают в прайсах.'),
+)
 
 _HELP_FLAGS = ('-h', '--help')
 _JSON_HELP = 'JSON в stdout; прайсы в jsonl; логи не печатаются (для Django и других скриптов).'
@@ -78,12 +91,8 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
         metavar='NAME',
         help=_result_template_help(),
     )
-    _json_parser(subparsers, json_flag, DOUBLES, 'Разобрать прайсы и записать отчёт о дублях.')
-    _json_parser(subparsers, json_flag, ZAPASKA_LOAD_API_DATA, 'Выгрузить прайсы запаски по API.')
-    _json_parser(subparsers, json_flag, FOUR_TOCHKI_LOAD_API_DATA, 'Выгрузить данные Форточек по API.')
-    _json_parser(subparsers, json_flag, MIM_LOAD_API_DATA, 'Выгрузить данные МИМ по API.')
-    _json_parser(subparsers, json_flag, FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.')
-    _json_parser(subparsers, json_flag, GET_SUPLIERS, 'Получить названия поставщиков.')
+    for plain_command in _PLAIN_COMMANDS:
+        _json_parser(subparsers, json_flag, *plain_command)
     load_cmd = _json_parser(
         subparsers,
         json_flag,

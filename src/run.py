@@ -16,6 +16,7 @@
     python src/run.py mim_load_api_data --json
     python src/run.py fetch_mail_prices --json
     python src/run.py get_supliers --json
+    python src/run.py get_product_types --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_config=/full/path/settings_dir
 
