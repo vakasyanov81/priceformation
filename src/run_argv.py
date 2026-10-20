@@ -33,7 +33,7 @@ MACHINE_COMMANDS = (
 JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
 _LOAD_INLINE_PREFIX = f'{LOAD_SUPPLIER_PRICES}='
 _CONFIG_INLINE_PREFIX = f'{LOAD_CONFIG}='
-_PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь к xls или xlsx"}.'
+_PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь" или ["путь", ...]}: xls, xlsx, json или zip.'
 _CONFIG_HELP = 'Полный путь к файлу или папке настроек (*.json, *.xlsx или black_list).'
 
 _HELP_FLAGS = ('-h', '--help')
