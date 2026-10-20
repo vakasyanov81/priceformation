@@ -12,11 +12,13 @@ from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.common_price_output import jsonl_output_files
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
+from parsers.strategies.product_types import CANONICAL_TYPES
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
+    GET_PRODUCT_TYPES,
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
@@ -133,8 +135,9 @@ def _command_payload(
     result_template: str | None,
     payload_arg: str | None,
 ) -> Mapping[str, Any]:
-    if command == GET_SUPLIERS:
-        return all_vendor_supplier_catalog()
+    reference = _reference_payload(command)
+    if reference is not None:
+        return reference
     if command == LOAD_SUPPLIER_PRICES:
         return _json_load_prices(payload_arg)
     if command == LOAD_CONFIG:
@@ -146,6 +149,15 @@ def _command_payload(
     if command in _DOWNLOAD_COMMANDS:
         return _json_download(command)
     return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
+
+
+def _reference_payload(command: str) -> Mapping[str, Any] | None:
+    """Справочные команды: каталог поставщиков и типы товара; None — команда не справочная."""
+    if command == GET_SUPLIERS:
+        return all_vendor_supplier_catalog()
+    if command == GET_PRODUCT_TYPES:
+        return {_JSON_OK: True, _JSON_ACTION: GET_PRODUCT_TYPES, 'types': list(CANONICAL_TYPES)}
+    return None
 
 
 def _json_download(command: str) -> Mapping[str, Any]:

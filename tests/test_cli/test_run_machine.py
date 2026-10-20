@@ -14,6 +14,7 @@ from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
+    GET_PRODUCT_TYPES,
     GET_SUPLIERS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
@@ -418,6 +419,29 @@ def test_json_fetch_mail_error(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['error']['kind'] == 'RuntimeError'
     assert 'positions' not in payload
     assert 'stats' not in payload
+
+
+def test_json_get_product_types(capsys: pytest.CaptureFixture[str]) -> None:
+    """get_product_types: канонические типы товара в порядке словаря."""
+    code = machine_json(GET_PRODUCT_TYPES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': GET_PRODUCT_TYPES,
+        'types': [
+            'Легковая шина',
+            'Легкогрузовая шина',
+            'Грузовая шина',
+            'Спецшина',
+            'Мотошина',
+            'Автокамера',
+            'Ободная лента',
+            'Уплотнительное кольцо',
+            'Диск',
+        ],
+    }
 
 
 def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:

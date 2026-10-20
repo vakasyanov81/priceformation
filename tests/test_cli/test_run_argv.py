@@ -6,6 +6,7 @@ from run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
+    GET_PRODUCT_TYPES,
     GET_SUPLIERS,
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
@@ -39,6 +40,7 @@ def test_is_machine_argv_commands() -> None:
     assert is_machine_argv([MIM_LOAD_API_DATA]) is True
     assert is_machine_argv([FETCH_MAIL_PRICES]) is True
     assert is_machine_argv([GET_SUPLIERS]) is True
+    assert is_machine_argv([GET_PRODUCT_TYPES]) is True
     assert is_machine_argv([LOAD_SUPPLIER_PRICES]) is True
     assert is_machine_argv([f'{LOAD_SUPPLIER_PRICES}={{"1": "a.xls"}}']) is True
     assert is_machine_argv([_CONFIG_CMD]) is True
@@ -50,6 +52,11 @@ def test_is_machine_argv_commands() -> None:
 def test_load_is_json_only() -> None:
     """load_supplier_prices всегда в JSON-режиме."""
     assert LOAD_SUPPLIER_PRICES in JSON_ONLY_COMMANDS
+
+
+def test_get_product_types_is_json_only() -> None:
+    """get_product_types всегда в JSON-режиме: ответ читают скрипты (бот)."""
+    assert GET_PRODUCT_TYPES in JSON_ONLY_COMMANDS
 
 
 def test_load_config_is_json_only() -> None:
@@ -124,6 +131,13 @@ def test_parse_fetch_mail_prices() -> None:
     assert args.command == FETCH_MAIL_PRICES
     assert args.json is True
     assert args.all_result is False
+
+
+def test_parse_get_product_types() -> None:
+    """команда get_product_types."""
+    args = parse_machine_args([GET_PRODUCT_TYPES])
+    assert args.command == GET_PRODUCT_TYPES
+    assert args.json is False
 
 
 def test_parse_get_supliers() -> None:

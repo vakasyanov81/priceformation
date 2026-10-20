@@ -95,6 +95,9 @@ file_prices/                  входные прайсы и результат
 - `fetch_mail_prices` — скачать свежие прайсы поставщиков из почты;
 - `get_supliers` — вернуть каталог поставщиков:
   `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`;
+- `get_product_types` — вернуть типы товара, которые priceformation ставит в
+  колонку «Тип товара» прайсов (в порядке словаря):
+  `{"ok": true, "action": "get_product_types", "types": ["Легковая шина", …]}`;
 - `load_supplier_prices` — разложить файлы прайсов по папкам поставщиков:
   `{"1": "/путь/прайс.xls"}`, `{"poshk": "/путь/прайс.xls"}` или список файлов
   `{"4": ["/путь/прайс.xlsx", "/путь/territories.json"]}`. Ключ — ИД
@@ -154,6 +157,7 @@ uv run pf four_tochki_load_api_data --json
 uv run pf mim_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
+uv run pf get_product_types
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
 uv run pf load_supplier_prices='{"4": ["/full/path/mim.xlsx", "/full/path/territories.json"]}'
 uv run pf load_supplier_prices='{"zapaska": "/full/path/zapaska.zip"}'
