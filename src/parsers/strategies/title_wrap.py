@@ -7,7 +7,7 @@ from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
 from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_aliases_map
 from parsers.strategies.protocols import ManufacturerProbe, TitleStrategy
-from parsers.strategies.title_compose import TireTitleFromFields
+from parsers.strategies.title_compose import TitleFromFields
 from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 from parsers.vendor_config.slot_configs import TitleConfig
 
@@ -29,7 +29,7 @@ def wrap_with_params(strategy: TitleStrategy, config: TitleConfig) -> TitleStrat
     if not config.params_from_title:
         return strategy
     parsed = ParamsFromTitle(strategy)
-    return TireTitleFromFields(parsed, manufacturer_probe()) if config.compose else parsed
+    return TitleFromFields(parsed, manufacturer_probe()) if config.compose else parsed
 
 
 def manufacturer_probe() -> ManufacturerProbe:

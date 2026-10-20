@@ -8,7 +8,6 @@ Title extras for four_tochki sheet 2 disks.
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from domain.row_item.disk_name_extras import disk_name_extras
 from domain.row_item.row_item import RowItem
@@ -44,27 +43,6 @@ def disk_name_suffix(name: str, model: str = '') -> str:
         _tube_label(name),
         disk_name_extras(name, model),
     )
-
-
-def et_label(eet: Any) -> str:
-    """ET с нулём: 0 не должен пропадать как falsy."""
-    if eet is None or eet == '':
-        return 'ET'
-    return f'ET{eet}'
-
-
-def disk_diameter(raw: Any) -> str:
-    """Диаметр без хвостового .0, без порчи 22.5."""
-    text = str(raw or '')
-    if text.endswith('.0'):
-        return text[:-2]
-    return text
-
-
-def disk_width(raw: Any) -> str:
-    """Ширина с десятичной частью, как в прайсе: `7` → `7.0`, `6.75` без изменений."""
-    text = str(raw or '')
-    return f'{text}.0' if text.isdigit() else text
 
 
 def _tube_label(name: str) -> str:

@@ -154,7 +154,7 @@ class ParseOrchestrator:
 
 
 def _log_titles_not_composed(parser: BaseParser) -> None:
-    """Сколько названий шин не собрано из полей (остался нормализованный текст поставщика)."""
+    """Сколько названий шин и дисков не собрано из полей (остался нормализованный текст поставщика)."""
     message = titles_not_composed_message(parser.stats.titles_not_composed)
     if message:
         logger.warning(f'{parser!r}: {message}')

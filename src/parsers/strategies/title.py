@@ -9,21 +9,10 @@ from collections.abc import Callable, Mapping
 from typing import ClassVar
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_brand import brand_label, model_label
 from parsers.nomenclature_labels import camera_label
-from parsers.nomenclature_title import (
-    compose_tire_title,
-    join_size_parts,
-    join_title_parts,
-)
+from parsers.nomenclature_title import compose_disk_title, compose_tire_title, join_size_parts
 from parsers.strategies._autosnab_helper import fill_from_title
-from parsers.strategies._four_tochki_disk_helper import (
-    disk_diameter,
-    disk_name_suffix,
-    disk_width,
-    et_label,
-    fill_disk_thickness,
-)
+from parsers.strategies._four_tochki_disk_helper import disk_name_suffix, fill_disk_thickness
 from parsers.strategies._four_tochki_tire_helper import get_prepared_title as compose_four_tochki
 from parsers.strategies.protocols import BrandProbe, TitleStrategy
 
@@ -141,20 +130,7 @@ class DiskComposeTochki:
         """Собрать title диска с хвостом из исходного наименования."""
         original_name = row_item.identity.title or ''
         fill_disk_thickness(row_item)
-        return join_title_parts(
-            self._disk_title(row_item), disk_name_suffix(original_name, row_item.identity.model or '')
-        )
-
-    def _disk_title(self, row_item: RowItem) -> str:
-        return join_title_parts(
-            join_size_parts(disk_width(row_item.tire.width), _SIZE_MARK, disk_diameter(row_item.tire.diameter)),
-            join_size_parts(row_item.disk.slot_count, _SIZE_MARK, row_item.disk.pcd1),
-            et_label(row_item.disk.eet),
-            row_item.disk.central_diameter,
-            row_item.disk.color,
-            brand_label(row_item),
-            model_label(row_item),
-        )
+        return compose_disk_title(row_item, disk_name_suffix(original_name, row_item.identity.model or ''))
 
 
 class FillFieldsFromTitle:

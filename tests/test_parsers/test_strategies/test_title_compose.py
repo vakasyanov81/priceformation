@@ -4,7 +4,7 @@ import pytest
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies.normalize import NormalizeTitle
-from parsers.strategies.title_compose import TireTitleFromFields, titles_not_composed_message
+from parsers.strategies.title_compose import TitleFromFields, titles_not_composed_message
 from parsers.strategies.title_params import ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
@@ -20,7 +20,7 @@ def _probe(title: str | None) -> str | None:
 
 
 def _compose(row: RowItem) -> str | None:
-    return TireTitleFromFields(ParamsFromTitle(NormalizeTitle()), _probe).prepare(row)
+    return TitleFromFields(ParamsFromTitle(NormalizeTitle()), _probe).prepare(row)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_brand_is_the_manufacturer_found_in_supplier_text() -> None:
     """Бренд — производитель, которого найдёт поиск по алиасам в тексте поставщика, а не колонка с владельцем."""
     row = RowItem({'title': '215/65R16 Cordiant (Bridgestone) Sno-Max 7000 98T', 'manufacturer_name': 'Cordiant'})
 
-    title = TireTitleFromFields(NormalizeTitle(), lambda _title: 'Bridgestone').prepare(row)
+    title = TitleFromFields(NormalizeTitle(), lambda _title: 'Bridgestone').prepare(row)
 
     assert title is not None
     assert title.startswith('215/65R16 Bridgestone ')
@@ -120,8 +120,8 @@ def test_brand_without_probe_comes_from_manufacturer_field_then_title() -> None:
     with_field = RowItem({'title': '205/55R16 Foo Bar 91V', 'manufacturer_name': 'Baz'})
     without_field = RowItem({'title': '205/55R16 Foo Bar 91V'})
 
-    assert TireTitleFromFields(NormalizeTitle()).prepare(with_field) == '205/55R16 Baz Bar 91V'
-    assert TireTitleFromFields(NormalizeTitle()).prepare(without_field) == '205/55R16 Foo Bar 91V'
+    assert TitleFromFields(NormalizeTitle()).prepare(with_field) == '205/55R16 Baz Bar 91V'
+    assert TitleFromFields(NormalizeTitle()).prepare(without_field) == '205/55R16 Foo Bar 91V'
 
 
 def test_compose_is_stable_on_second_pass() -> None:
@@ -157,10 +157,10 @@ def test_fields_win_over_parsed_title() -> None:
 
 @pytest.mark.parametrize(
     'title',
-    ['Автокамера 11.2-20', 'Ободная лента 20.5-25', 'Уплотнительное кольцо 6x70', 'Диск 6.0x15 4x98 ET35'],
+    ['Автокамера 11.2-20', 'Ободная лента 20.5-25', 'Уплотнительное кольцо 6x70'],
 )
 def test_not_a_tire_is_left_alone(title: str) -> None:
-    """Камеры, ленты, кольца и диски не шины: название не меняется, пометки «не собрано» нет."""
+    """Камеры, ленты и кольца не шины: название не меняется, пометки «не собрано» нет."""
     row = RowItem({'title': title})
 
     assert _compose(row) == title
@@ -178,12 +178,13 @@ def test_unparsable_tire_keeps_supplier_text_and_is_marked() -> None:
 def test_empty_title_is_passed_through() -> None:
     row = RowItem({})
 
-    assert TireTitleFromFields(NormalizeTitle()).prepare(row) is None
+    assert TitleFromFields(NormalizeTitle()).prepare(row) is None
     assert row.vendor.title_not_composed is None
 
 
 @pytest.mark.parametrize(
-    ('count', 'expected'), [(0, ''), (3, 'Название шины не собрано из полей (оставлен текст поставщика), позиций: 3')]
+    ('count', 'expected'),
+    [(0, ''), (3, 'Название шины или диска не собрано из полей (оставлен текст поставщика), позиций: 3')],
 )
 def test_titles_not_composed_message(count: int, expected: str) -> None:
     assert titles_not_composed_message(count) == expected
@@ -196,5 +197,91 @@ def test_compose_flag_builds_wrapper_that_composes() -> None:
 
     strategy = make_title_strategy(config, 'zapaska.json → title')
 
-    assert isinstance(strategy, TireTitleFromFields)
+    assert isinstance(strategy, TitleFromFields)
     assert strategy.prepare(row) == '195/75R16C Triangle TRIN LL01 107/105Q 8PR'
+
+
+def _zapaska_disk(title: str, **fields: str) -> RowItem:
+    """Диск Запаски: размер, крепёж, ET, DIA и цвет приходят колонками прайса, название — текст поставщика."""
+    return RowItem({'title': title, 'type_production': 'Диск', **fields})
+
+
+def test_disk_is_composed_from_fields_in_canonical_order() -> None:
+    """Диск Запаски собирается как диск Форточек: размер, крепёж, ET, DIA, цвет, бренд, модель."""
+    row = _zapaska_disk(
+        '15 СКАД Порту 6.0*15 4*98 ET35 D58.6 графит',
+        manufacturer_name='СКАД',
+        model='Порту',
+        width='6.0',
+        diameter='15',
+        slot_count='4',
+        pcd1='98',
+        eet='35',
+        central_diameter='58.6',
+        color='графит',
+    )
+
+    assert _compose(row) == '6.0x15 4x98 ET35 58.6 Графит СКАД Порту'
+
+
+def test_disk_title_has_no_dia_letter_and_color_starts_with_capital() -> None:
+    """`D58.5` из названия поставщика не попадает в DIA, цвет пишется с заглавной, остальные буквы цвета не меняются."""
+    row = _zapaska_disk(
+        '14 КиК Флэш 5.0*14 4*98 ET35 D58.5 дарк платинум',
+        manufacturer_name='КиК',
+        model='Флэш',
+        width='5.0',
+        diameter='14',
+        slot_count='4',
+        pcd1='98',
+        eet='35',
+        central_diameter='58.5',
+        color='дарк платинум',
+    )
+
+    assert _compose(row) == '5.0x14 4x98 ET35 58.5 Дарк платинум КиК Флэш'
+
+
+def test_disk_title_keeps_suffix_from_supplier_text() -> None:
+    """Хвост поставщика (усиление) дописывается к собранному названию."""
+    row = _zapaska_disk(
+        '16 Replay HND369 7.5*16 5*114.3 ET49.5 D67.1 MGMF усил.',
+        manufacturer_name='Replay',
+        model='HND369',
+        width='7.5',
+        diameter='16',
+        slot_count='5',
+        pcd1='114.3',
+        eet='49.5',
+        central_diameter='67.1',
+        color='MGMF',
+    )
+
+    assert _compose(row) == '7.5x16 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'
+
+
+def test_disk_without_model_keeps_supplier_text_and_is_marked() -> None:
+    """Без модели диск собрать нельзя: остаётся текст поставщика, позиция помечена для статистики."""
+    row = _zapaska_disk('Диск 6.0x15 4x98 ET35', manufacturer_name='СКАД', width='6.0', diameter='15')
+
+    assert _compose(row) == 'Диск 6.0x15 4x98 ET35'
+    assert row.vendor.title_not_composed is True
+
+
+def test_compose_flag_composes_disk_section() -> None:
+    """Слот `compose` у секции дисков собирает название диска, а не только шины."""
+    config = TitleConfig(strategy='normalize_title', params_from_title=True, compose=True)
+    row = _zapaska_disk(
+        '15 СКАД Порту 6.0*15 4*98 ET35 D58.6 графит',
+        manufacturer_name='СКАД',
+        model='Порту',
+        width='6.0',
+        diameter='15',
+        slot_count='4',
+        pcd1='98',
+        eet='35',
+        central_diameter='58.6',
+        color='графит',
+    )
+
+    assert make_title_strategy(config, 'zapaska.json → title').prepare(row) == '6.0x15 4x98 ET35 58.6 Графит СКАД Порту'

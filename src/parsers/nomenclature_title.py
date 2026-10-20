@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature_brand import brand_label, model_label
+from parsers.nomenclature_disk_labels import color_label, disk_diameter, disk_width, et_label
 from parsers.nomenclature_labels import axis_label, layering_label, season_marks_label, xl_label
 
 
@@ -85,6 +86,24 @@ def compose_tire_title(
         after_load=after_load,
         run_flat=run_flat,
     ).compose()
+
+
+def compose_disk_title(row_item: RowItem, suffix: str = '') -> str:
+    """Название диска в каноническом порядке из полей позиции.
+
+    `<ширина>x<диаметр> <отверстия>x<PCD> ET<вылет> <DIA> <Цвет> <бренд> <модель> [хвост]`;
+    ``suffix`` — хвост (толщина, усиление, завод и т. п.), который собирает вызывающий из названия поставщика.
+    """
+    return join_title_parts(
+        join_size_parts(disk_width(row_item.tire.width), 'x', disk_diameter(row_item.tire.diameter)),
+        join_size_parts(row_item.disk.slot_count, 'x', row_item.disk.pcd1),
+        et_label(row_item.disk.eet),
+        row_item.disk.central_diameter,
+        color_label(row_item.disk.color),
+        brand_label(row_item),
+        model_label(row_item),
+        suffix,
+    )
 
 
 def _nonempty_chunks(parts: tuple[object, ...]) -> list[str]:

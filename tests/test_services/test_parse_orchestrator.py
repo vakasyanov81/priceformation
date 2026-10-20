@@ -443,7 +443,7 @@ def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) 
     parsed = ParseOrchestrator().parse_all([vendor, vendor])
 
     assert parsed.titles_not_composed == 6
-    warnings = [text for text in texts_at(entries(), logging.WARNING) if 'Название шины не собрано' in text]
+    warnings = [text for text in texts_at(entries(), logging.WARNING) if 'не собрано из полей' in text]
     assert len(warnings) == 2
     assert all(text.endswith('позиций: 3') for text in warnings)
 
