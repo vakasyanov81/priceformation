@@ -36,7 +36,7 @@ _TRUCK_PATTERNS = (
     re.compile(r'r\s*(?:17[.,]5|19[.,]5|22[.,]5|24[.,]5)\b'),  # R22.5
     re.compile(r'(?<![\d./])\d{1,2}(?:[.,]\d{1,2})?\s*r\s*\d{2}(?!\d)'),  # 10.00 R20
     re.compile(r'\b\d{1,2}[.,]\d{2}\s*-\s*\d{2}\b'),  # 7.50-20
-    re.compile(r'\b\d{1,2}\s*pr\b'),  # 16PR
+    re.compile(r'\b(?:1[4-9]|[2-9]\d)\s*pr\b'),  # 14PR и выше; 6–10PR — легкогрузовая (8PR в 215/65R16C)
 )
 _LIGHT_TRUCK_SUFFIX = re.compile(r'(?:\blt\b|r\s*\d{2}\s*lt\b)')  # R16LT
 _METRIC_SIZE = re.compile(r'\b(\d{3})\s*/\s*(\d{2})\s*r?\s*-?\s*(\d{2})\s*([cс])?\b')  # 205/55R16

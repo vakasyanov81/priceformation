@@ -271,6 +271,8 @@ def test_header_rows_zero_rest_flag() -> None:
         ('Nortec прицепная', 'Грузовая шина'),
         ('10.00-20 Nortec ER-109 146B 16PR TT', 'Спецшина'),
         ('195/75 R16C TRIANGLE TRIN', 'Легкогрузовая шина'),
+        ('215/65R16C Triangle Connex Van TV701 109/107T 8PR TL', 'Легкогрузовая шина'),
+        ('185/75R16C Three-A TRACVAN IMP 104/102R 8PR TL', 'Легкогрузовая шина'),
         ('265/80-16 NORTEC ET-500', 'Легкогрузовая шина'),
         ('285/75 R16LT Rapid Mud', 'Легкогрузовая шина'),
         ('185 R14C Rapid EffiVan', 'Легкогрузовая шина'),
