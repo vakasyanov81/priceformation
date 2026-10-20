@@ -1,0 +1,14 @@
+{
+  "title_reference_order": ["four_tochki", "autosnab54_ru", "zapaska", "mim", "stk", "pioner", "poshk"],
+  "defaults": {
+    "file_templates": ["price*.xls", "price*.xlsx"],
+    "category": {
+      "size_fields": {
+        "Грузовая шина": { "season": "Всесезонная" },
+        "Спецшина": { "season": "Всесезонная" }
+      }
+    },
+    "title": { "params_from_title": true },
+    "behavior": { "min_rest": 4 }
+  }
+}

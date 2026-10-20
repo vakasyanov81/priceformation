@@ -66,7 +66,7 @@
 ## Данные (не код)
 - `parse_config/` — пользовательские настройки: `vendors/*.json`, `mail.json` (IMAP и профили получения прайсов из почты), `black_list`, `manufacturer_aliases.json`, `title_aliases.json`, `correct-nomenclature.xlsx`.
 - `file_prices/<sup_code>/` — входные прайсы поставщиков; результат — `file_prices/result/`. `--json`-режим CLI пишет `.jsonl` рядом с `result_meta.json`.
-- `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски; `MAIL_LOGIN` / `MAIL_PASSWORD` для получения прайсов из почты (общий загрузчик — `infrastructure/config/dotenv.py`).
+- `.env` — `ZAPASKA_API_LOGIN` / `ZAPASKA_API_PASSWORD` для выгрузки данных запаски; `MAIL_LOGIN` / `MAIL_PASSWORD` для получения прайсов из почты, `MAIL_SENDER_*` — адреса отправителей, на которые ссылается `parse_config/mail.json` как `${MAIL_SENDER_STK}` (подстановка — `infrastructure/config/env_placeholders.py`) (общий загрузчик — `infrastructure/config/dotenv.py`).
 
 ## Архитектура
 - Слои: `src/domain/` (чистое: сущности, value objects, порты, исключения, конфиг-контекст — без IO), `src/infrastructure/` (адаптеры: `config/`, `data/`, `logging/`), `src/parsers/`, `src/services/`, `src/cfg/` (композиционный корень). Пакета `src/core/` больше нет; правила слоёв проверяет `uv run lint-imports` (контракты в `pyproject.toml [tool.importlinter]`: `cfg`/`services` → `parsers` → `infrastructure` → `domain`, только вниз), не-импортные маркеры — `tests/test_architecture_markers.py`.

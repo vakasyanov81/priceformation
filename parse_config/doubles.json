@@ -1,0 +1,4 @@
+{
+  "exclude_in_templates": ["for_drom"],
+  "priority_suppliers": ["Автоснабжение"]
+}

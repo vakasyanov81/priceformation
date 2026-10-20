@@ -1,0 +1,18 @@
+{
+  "enabled": 1,
+  "code": "7",
+  "name": "STK",
+  "start_row": 12,
+  "file_templates": ["price.xlsx"],
+  "category": {
+    "strategy": "tire_size_category"
+  },
+  "title": { "strategy": "poshk_stk_tire_compose" },
+  "pricing": { "policy": "map_on_opt" },
+  "sections": [
+    {
+      "sheet_indexes": [0],
+      "columns": { "0": "code", "1": "title", "2": "price_opt", "4": "price_recommended", "5": "rest_count" }
+    }
+  ]
+}

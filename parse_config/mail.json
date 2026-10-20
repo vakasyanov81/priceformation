@@ -1,0 +1,32 @@
+{
+  "imap": {
+    "host": "imap.timeweb.ru",
+    "port": 993,
+    "folder": "Price"
+  },
+  "profiles": {
+    "pioner": {
+      "enabled": 1,
+      "sender": "${MAIL_SENDER_PIONER}",
+      "subject_keyword": "прайс",
+      "attachment_glob": "*.xlsx"
+    },
+    "poshk": {
+      "enabled": 1,
+      "sender": "${MAIL_SENDER_POSHK}",
+      "sender_is_domain": 1,
+      "attachment_glob": "прайс*.xlsx"
+    },
+    "stk": {
+      "enabled": 1,
+      "sender": "${MAIL_SENDER_STK}",
+      "attachment_glob": "остатки*.xlsx"
+    },
+    "four_tochki": {
+      "enabled": 1,
+      "sender": "${MAIL_SENDER_FOUR_TOCHKI}",
+      "subject_keyword": "Форточки: Автоматическая рассылка остатков",
+      "link_in_body": 1
+    }
+  }
+}

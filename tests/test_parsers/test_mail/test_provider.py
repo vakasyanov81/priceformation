@@ -51,3 +51,21 @@ def test_broken_json_raises(fake_config_provider: FakeConfigProvider) -> None:
     Path(fake_config_provider.config_file('mail.json')).write_text('{', encoding='utf-8')
     with pytest.raises(ConfigValidationError, match=r'mail\.json'):
         load_mail_config()
+
+
+def test_sender_is_taken_from_env(fake_config_provider: FakeConfigProvider, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ссылка ``${…}`` в mail.json заменяется значением из окружения: адрес в файле не хранится."""
+    monkeypatch.setenv('MAIL_SENDER_TEST', 'price@supplier.ru')
+    _write(fake_config_provider, {'profiles': {'stk': {'sender': '${MAIL_SENDER_TEST}', 'attachment_glob': '*.xlsx'}}})
+
+    assert load_mail_config().profiles['stk'].sender == 'price@supplier.ru'
+
+
+def test_missing_sender_env_names_key(
+    fake_config_provider: FakeConfigProvider, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv('MAIL_SENDER_ABSENT', raising=False)
+    _write(fake_config_provider, {'profiles': {'stk': {'sender': '${MAIL_SENDER_ABSENT}'}}})
+
+    with pytest.raises(ConfigValidationError, match='profiles → stk → sender: не задана переменная окружения'):
+        load_mail_config()
