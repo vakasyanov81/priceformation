@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_title import replace_season
+from parsers.strategies.homoglyphs import fix_row_homoglyphs
 
 if TYPE_CHECKING:
     from parsers.base_parser.base_parser import BaseParser
@@ -43,6 +44,9 @@ def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
 
 def _try_prepare_row(parser: BaseParser, row_id: int, row_item: RowItem) -> RowItem | None:
     """Подготовить одну строку или вернуть None при ошибке/фильтре."""
+    homoglyphs = fix_row_homoglyphs(row_item)
+    parser.stats.homoglyph_fixes += len(homoglyphs.fixed)
+    parser.stats.homoglyph_suspects += len(homoglyphs.suspects)
     if not _set_title_or_log(parser, row_id, row_item):
         return None
     if row_item.parse_errors:

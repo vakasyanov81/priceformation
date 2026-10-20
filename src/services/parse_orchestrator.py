@@ -69,6 +69,8 @@ class ParseResult:
     black_list_skips: int = 0
     type_corrections: int = 0
     title_conflicts: int = 0
+    homoglyph_fixes: int = 0
+    homoglyph_suspects: int = 0
 
 
 class ParseOrchestrator:
@@ -127,6 +129,9 @@ class ParseOrchestrator:
             parse_result.black_list_skips += parser.stats.black_list_skips
             parse_result.type_corrections += parser.stats.type_corrections
             parse_result.title_conflicts += parser.stats.title_conflicts
+            parse_result.homoglyph_fixes += parser.stats.homoglyph_fixes
+            parse_result.homoglyph_suspects += parser.stats.homoglyph_suspects
+            _log_homoglyphs(parser)
 
     def _log_skips(self, parse_result: ParseResult) -> None:
         """Печать сводки по пропускам категорий, black_list и расхождениям типа."""
@@ -142,6 +147,16 @@ class ParseOrchestrator:
         conflicts_message = title_conflicts_message(parse_result.title_conflicts)
         if conflicts_message:
             logger.warning(conflicts_message)
+
+
+def _log_homoglyphs(parser: BaseParser) -> None:
+    """Сколько кириллических двойников исправлено у поставщика и сколько смесей оставлено в логе."""
+    stats = parser.stats
+    if stats.homoglyph_fixes or stats.homoglyph_suspects:
+        logger.info(
+            f'{parser!r}: кириллические двойники исправлены: {stats.homoglyph_fixes}, '
+            f'не исправлено (смесь алфавитов): {stats.homoglyph_suspects}; подробности в логе',
+        )
 
 
 def _parser_for_vendor(
