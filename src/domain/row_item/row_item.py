@@ -113,6 +113,7 @@ class RowItem:
     condition = RowField('condition')
     marked_down = RowField('marked_down')
     production_year = RowField('production_year')
+    production_plant = RowField('production_plant')
     available = RowField('available')
     warehouse_id = RowField('warehouse_id')
     warehouse_name = RowField('warehouse_name')

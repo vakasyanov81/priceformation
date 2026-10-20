@@ -63,6 +63,8 @@ class ForInner(IWriteTemplate):
         {'Срок доставки': {'field': RowItem.delivery_period.name}},
         {'Состояние': {'field': RowItem.condition.name, 'default_value': 'Новое'}},
         {'Уценка': {'field': RowItem.marked_down.name, 'true_value': 'Да'}},
+        {'Завод': {'field': RowItem.production_plant.name}},
+        {'Год выпуска': {'field': RowItem.production_year.name}},
     ]
 
     __COLOR__: ClassVar[WriteColors] = {

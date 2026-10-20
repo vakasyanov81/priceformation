@@ -171,6 +171,16 @@ def test_production_year_survives_rebuilt_title() -> None:
     assert row.stock.production_year == 2023
 
 
+def test_production_plant_survives_rebuilt_title() -> None:
+    """Завод берётся из текста поставщика до сборки: собранное название его не несёт."""
+    row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T НкШЗ', 'price_opt': _OPT})
+
+    _make_rebuild_parser().set_prepared_title(row)
+
+    assert row.identity.title == '175/65R14 Viatti Brina V-521 82T'
+    assert row.stock.production_plant == 'НкШЗ'
+
+
 def test_markdown_survives_rebuilt_title() -> None:
     """Собранное название слова «Уценка» не несёт: признак уценки берётся из текста поставщика до сборки."""
     row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T Уценка', 'price_opt': _OPT})

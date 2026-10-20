@@ -56,6 +56,8 @@ _SPECS: tuple[tuple[str, str], ...] = (
     ('Срок доставки', RowItem.delivery_period.name),
     ('Состояние', RowItem.condition.name),
     ('Уценка', RowItem.marked_down.name),
+    ('Завод', RowItem.production_plant.name),
+    ('Год выпуска', RowItem.production_year.name),
 )
 
 
