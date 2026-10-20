@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 
@@ -42,7 +42,7 @@ class PriceSchemaService:
         return True
 
     @contextmanager
-    def guard(self) -> Iterator[None]:
+    def guard(self) -> Generator[None]:
         """Копия до блока, сравнение после (и после сбоя обновления); вложенные блоки работают как внешний."""
         if self._depth == 0:
             self._copied = self.snapshot()

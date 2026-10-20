@@ -4,7 +4,7 @@
 режим по ошибке.
 """
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
@@ -22,7 +22,7 @@ def json_mode_active() -> bool:
 
 
 @contextmanager
-def quiet_console() -> Iterator[None]:
+def quiet_console() -> Generator[None]:
     """Глушить консольные логи на время блока, потом вернуть обычный режим."""
     set_json_mode(True)
     try:
