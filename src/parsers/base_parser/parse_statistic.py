@@ -22,6 +22,7 @@ class ParserStats:
     unknown_category_skips: list[str] = field(default_factory=list)
     type_corrections: int = 0
     title_conflicts: int = 0
+    titles_not_composed: int = 0
     homoglyph_fixes: int = 0
     homoglyph_suspects: int = 0
 

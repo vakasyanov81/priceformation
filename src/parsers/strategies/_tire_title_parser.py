@@ -56,9 +56,10 @@ _SIZE = re.compile(
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
-# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`.
+# Дюймовый размер «внешний диаметр x ширина - посадочный»: `33x12.5-15`, `18x7-8`, `1220x400-533`;
+# у радиальной вместо дефиса `R`: `31X10.50R15LT`.
 _INCH_SIZE = re.compile(
-    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*-\s*'
+    r'(?P<ext>\d+(?:[.,]\d+)?)\s*x\s*(?P<width>\d+(?:[.,]\d+)?)\s*(?P<construct>[R-])\s*'
     r'(?P<diameter>\d+(?:[.,]\d+)?)\s*(?:(?P<suffix>lt|[cс])(?![^\W\d_]))?',
     re.IGNORECASE,
 )
@@ -112,6 +113,10 @@ _USAGE_WORDS = frozenset(
 # индекс (`инд.102`), карьерный протектор (`карьер`, `карьерка/вед`).
 _USAGE_PREFIXES = ('инд.', 'ось', 'вед', 'рул', 'унив', 'приц', 'карьер')
 _DOT = '.'
+# Описание в скобках после модели строчными русскими словами: `(экскаватор)`, `(прерывистая волна)`.
+_USAGE_PAREN = re.compile(r'\([а-яё][а-яё\s.,-]*\)')
+# Лишний ноль у дробной ширины: `10.50` → `10.5`, `7.50` → `7.5`; `13.0` остаётся как в прайсе.
+TRAILING_ZEROS = re.compile(r'^(\d+\.\d*[1-9])0+$')
 # Заводской код без бренда: `ОИ-73Б`, `И-Н142Б`, `ВЛИ-10`, `Я-166`. До трёх заглавных букв —
 # иначе под правило попали бы `КАМА-310` и `Алтайшина-421` (бренд со слитной моделью).
 _FACTORY_CODE = re.compile(r'^[А-ЯЁ]{1,3}(?:-[А-ЯЁ])?-?\d+[А-ЯЁ]*$')
@@ -158,8 +163,10 @@ class _SizeParts(NamedTuple):
     def _inch(cls, match: re.Match[str], diameter: str, alt: str) -> _SizeParts:
         ext = match['ext'].replace(',', _DOT)
         width = match['width'].replace(',', _DOT)
-        label = f'{ext}x{width}-{diameter}{(match["suffix"] or "").upper()}'
-        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[False])
+        radial = match['construct'].upper() == 'R'
+        label_width = TRAILING_ZEROS.sub(r'\1', width) if radial else width
+        label = f'{ext}x{label_width}{match["construct"].upper()}{diameter}{(match["suffix"] or "").upper()}'
+        return cls(label, width, '', diameter, ext, alt, _CONSTRUCTIONS[radial])
 
 
 class _TitleFields(NamedTuple):
@@ -233,7 +240,12 @@ class TireTitleParts:
             return self.model
         return self.brand if any(char.isdigit() for char in self.brand) else ''
 
-    def _size_with_alt(self) -> str:
+    @property
+    def axis(self) -> str:
+        """Ось из слов назначения (``вед.ось`` → ``ведущая``); пусто, если назначения нет."""
+        return _axis(self.usage)
+
+    def size_with_alt(self) -> str:
         """Размер и альтернативная запись: ``/6.45-13`` клеится к размеру, ``(...)`` — через пробел."""
         glue = '' if self.size.alt.startswith('/') else ' '
         return f'{self.size.label}{glue}{self.size.alt}'.strip()
@@ -245,13 +257,13 @@ class TireTitleParts:
         отдельные поля или шум.
         """
         return TireTitleTokens(
-            self._size_with_alt(),
+            self.size_with_alt(),
             _canonical_brand(self.brand, brand),
             self.model,
             load_velocity=f'{self.load}{self.velocity}',
             layering=self.layering,
             camera=self.intimacy,
-            axis=_axis(self.usage),
+            axis=self.axis,
         ).compose()
 
 
@@ -411,12 +423,27 @@ def _without_producer(tokens: list[str]) -> _TitleFields | None:
 
 def _compose_model(brand: str, model_tokens: list[str]) -> _TitleFields:
     """Бренд, модель и назначение по токенам модели (назначение — от первого маркера)."""
-    for index, token in enumerate(model_tokens):
+    usage_start = _trailing_paren_start(model_tokens)
+    for index, token in enumerate(model_tokens[:usage_start]):
         if _is_usage(token):
-            model = model_tokens[:index]
-            usage = tuple(model_tokens[index:])
-            return _TitleFields(brand, ' '.join(model), usage)
-    return _TitleFields(brand, ' '.join(model_tokens), ())
+            usage_start = index
+            break
+    return _TitleFields(brand, ' '.join(model_tokens[:usage_start]), tuple(model_tokens[usage_start:]))
+
+
+def _trailing_paren_start(tokens: list[str]) -> int:
+    """Начало описания в скобках в конце токенов (`(прерывистая волна)`, `(цельнолитая)`); без него — длина списка.
+
+    Скобки с цифрами или латиницей (`(У-2)`, `(HK-245)`, `(snow)`) — часть названия модели, не описание.
+    """
+    if not tokens or not tokens[-1].endswith(')'):
+        return len(tokens)
+    for index in range(len(tokens) - 1, 0, -1):
+        if tokens[index].startswith('('):
+            return index if _USAGE_PAREN.fullmatch(' '.join(tokens[index:])) else len(tokens)
+        if ')' in tokens[index - 1]:
+            break
+    return len(tokens)
 
 
 def _looks_like_brand(token: str) -> bool:

@@ -5,6 +5,8 @@ import re
 _DIGITS = re.compile(r'\d+')
 _CAMERA_TL = 'TL'
 _CAMERA_CODE = re.compile(r'TT|TL|TTF|TT/TL|TL/TT', re.IGNORECASE)
+_RUN_FLAT = re.compile(r'(?<!\S)(?:RunFlat|Run[\s-]?Flat|RFT)(?=\s|$)', re.IGNORECASE)
+_RUN_FLAT_YES = frozenset(('да', 'yes', '1', 'true'))
 # Корень слова назначения → ось в названии: `вед.ось`, `рулевая`, `унив.ось`, `приц.`, `карьер`.
 _AXIS_LABELS = (
     ('вед', 'Ведущая'),
@@ -36,3 +38,9 @@ def axis_label(raw: object) -> str:
         if lower.startswith(root):
             return label
     return ''
+
+
+def run_flat_label(flag: object, title: str | None) -> str:
+    """`RunFlat`, если колонка прайса отмечена («да») или в названии есть `RFT`/`Run Flat`/`Run-Flat`; иначе пусто."""
+    marked = str(flag or '').strip().lower() in _RUN_FLAT_YES
+    return 'RunFlat' if marked or _RUN_FLAT.search(title or '') else ''

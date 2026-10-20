@@ -220,3 +220,19 @@ def test_params_first_strategy_prepares_title_end_to_end() -> None:
     title = make_title_strategy(config, WHERE).prepare(row)
 
     assert title == '205/65R16 Viatti Brina Nordico V-522 95T'
+
+
+def test_compose_requires_params_from_title() -> None:
+    config = TitleConfig(strategy='normalize_title', compose=True)
+
+    with pytest.raises(ConfigValidationError, match='compose'):
+        make_title_strategy(config, WHERE)
+
+
+def test_compose_is_not_combined_with_params_first() -> None:
+    config = TitleConfig(
+        strategy='tire_compose', variant='four_tochki', params_from_title=True, params_first=True, compose=True
+    )
+
+    with pytest.raises(ConfigValidationError, match='params_first'):
+        make_title_strategy(config, WHERE)

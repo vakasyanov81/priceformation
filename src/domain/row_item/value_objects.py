@@ -117,3 +117,4 @@ class VendorMeta:
     type_production: str | None = None
     type_corrected: bool | None = None
     title_conflict: bool | None = None
+    title_not_composed: bool | None = None

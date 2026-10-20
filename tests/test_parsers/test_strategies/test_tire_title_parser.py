@@ -676,3 +676,47 @@ def test_spike_from_usage_tokens(raw: str, spike: str) -> None:
     row = RowItem({})
     fill_tire_fields(row, parts)
     assert (row.tire.spike or '') == spike
+
+
+@pytest.mark.parametrize(
+    ('raw', 'label', 'width', 'diameter', 'construction'),
+    [
+        ('31X10.50R15LT Maxxis Bighorn MT-764 109Q', '31x10.5R15LT', '10.50', '15', 'радиальная'),
+        ('33x12.50R17 Nexen Roadian MTX 121Q', '33x12.5R17', '12.50', '17', 'радиальная'),
+        ('33x12.5-15 Forward Safari-500 108L TL', '33x12.5-15', '12.5', '15', 'диагональная'),
+        ('31x10.00-15 Forward Safari 500', '31x10.00-15', '10.00', '15', 'диагональная'),
+    ],
+)
+def test_parse_inch_radial_size(raw: str, label: str, width: str, diameter: str, construction: str) -> None:
+    """Дюймовый радиальный размер `31X10.50R15LT`: `R` вместо дефиса, лишний ноль у радиальной ширины срезается."""
+    size = _parsed(raw).size
+
+    assert (size.label, size.construction) == (label, construction)
+    assert (size.width, size.diameter) == (width, diameter)
+    assert size.ext_diameter in {'31', '33'}
+
+
+@pytest.mark.parametrize(
+    ('raw', 'model', 'usage'),
+    [
+        ('9.00-20 Rockbuster H966 G2/L2 18PR TT (экскаватор)', 'H966 G2/L2', ('(экскаватор)',)),
+        ('23.1-26 Rockbuster H178A 16PR TL (ромбик бескамерная)', 'H178A', ('(ромбик', 'бескамерная)')),
+        ('8.25R20 Кама К-84 (У-2) 125/122J 10PR TT', 'К-84 (У-2)', ()),
+        ('225/75R16 Forward Professional-153 (snow) 108R TT', 'Professional-153 (snow)', ()),
+        ('185/75R16 Кама FLAME A/T (HK-245) 97T TL', 'FLAME A/T (HK-245)', ()),
+    ],
+)
+def test_trailing_paren_is_usage_only_for_lowercase_russian_description(
+    raw: str, model: str, usage: tuple[str, ...]
+) -> None:
+    """Описание строчными русскими словами в скобках в конце — назначение; скобки с цифрами и латиницей — модель."""
+    parts = _parsed(raw)
+
+    assert (parts.model, parts.usage) == (model, usage)
+
+
+def test_unbalanced_paren_group_is_not_usage() -> None:
+    """Закрывающая скобка без своей открывающей в конце — не описание: модель остаётся целой."""
+    parts = _parsed('9.00-20 Rockbuster H966 (U-2) y)')
+
+    assert (parts.model, parts.usage) == ('H966 (U-2) y)', ())

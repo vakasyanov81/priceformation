@@ -150,6 +150,19 @@ def test_enrich_counts_blacklist_after_title() -> None:
     assert parser.stats.black_list_skips == 1
 
 
+def test_after_process_counts_titles_not_composed() -> None:
+    """Итог разбора считает позиции, у которых название шины не собралось из полей."""
+    parser = _parser()
+    parser.parsed_items = [
+        RowItem({'title': _TITLE, 'rest_count': _REST, 'price_opt': _PRICE, 'title_not_composed': True}),
+        RowItem({'title': _TITLE, 'rest_count': _REST, 'price_opt': _PRICE}),
+    ]
+
+    parser.after_process()
+
+    assert parser.stats.titles_not_composed == 1
+
+
 def test_enrich_empty_title_not_counted() -> None:
     parser = _parser()
     assert enrich_items(parser, [RowItem({})]) == []

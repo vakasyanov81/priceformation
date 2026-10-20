@@ -13,9 +13,9 @@ import re
 
 from domain.row_item.row_item import RowItem
 from domain.row_item.row_item_casts import get_try_to_int_or_str
-from parsers.nomenclature_labels import camera_label
+from parsers.nomenclature_labels import camera_label, run_flat_label
 from parsers.nomenclature_title import compose_tire_title, join_size_parts
-from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
+from parsers.strategies._tire_title_parser import TRAILING_ZEROS, fill_tire_fields, parse_tire_title
 
 _PROFILE_L = 'L'
 _DASH = '-'
@@ -31,15 +31,12 @@ _ALT_AFTER_SIZE = re.compile(r'^(\S+?)\([^)]*\)')
 _RIM_AFTER_SIZE = re.compile(r'^(\d+(?:[.,]\d+)?-\d+(?:[.,]\d+)?)/\d+(?:[.,]\d+)?[A-Z]?(?=\s|$)')
 # Скорость в скобках после индекса нагрузки: `94(Y)`; в прайсе она записана так же, со скобками.
 _SPEED_PAREN = re.compile(r'(\d)\(([A-Za-z])\)(?=\s|$)')
-# Лишний ноль у дробной ширины из названия: `7.50` → `7.5`, `13.0` остаётся как в прайсе.
-_TRAILING_ZEROS = re.compile(r'^(\d+\.\d*[1-9])0+$')
 # Камера: `TL`, `TT (только шина)`, либо цельнолитая пометка вместо камеры (`Цельнолитая с бортом`).
 _CAMERA = re.compile(
     r'(?<!\S)(?:TT|TL|TTF|TT/TL|TL/TT)(?:\s*\(только шина\))?(?=\s|$)'
     r'|(?<!\S)Цельнолитая(?: немаркая)?(?: с бортом)?(?=\s|$)',
     re.IGNORECASE,
 )
-_RUNFLAT = re.compile(r'(?<!\S)(?:RunFlat|Run\s+Flat|RFT)(?=\s|$)', re.IGNORECASE)
 # Суффикс диаметра в размере названия: `185/75R16C`, `7.50R16LT`.
 _SIZE_SUFFIX = re.compile(r'^\S*?\d(?P<suffix>LT|C)(?=\s|$)')
 
@@ -129,7 +126,7 @@ def _prepare_dimensions(row_item: RowItem) -> tuple[str, str, str, str]:
     def canon(raw: object) -> str:
         text = str(raw or '').replace(',', '.')
         value = str(get_try_to_int_or_str(text))
-        return _TRAILING_ZEROS.sub(r'\1', value)
+        return TRAILING_ZEROS.sub(r'\1', value)
 
     width = canon(row_item.tire.width)
     height = canon(row_item.tire.height_percent).replace('999', _PROFILE_L)
@@ -188,8 +185,6 @@ def _resolve_width_postfix(row_item: RowItem, width: str, height_percent: str, d
 # Title size format variants (ex-four_tochki_title_parts.py)
 # ---------------------------------------------------------------------------
 
-_RUNFLAT_YES = frozenset(('да', 'yes', '1', 'true'))
-
 
 def _camera(row_item: RowItem) -> str:
     """Камерность колонки; если колонки нет — из названия (разбор кладёт только `TL`/`TT` в `intimacy`)."""
@@ -203,10 +198,7 @@ def _camera(row_item: RowItem) -> str:
 
 def _runflat(row_item: RowItem) -> str:
     """RunFlat из колонки прайса или из названия (`RFT`, `Run Flat`)."""
-    raw = str(row_item.tire.run_flat or '').strip().lower()
-    if raw in _RUNFLAT_YES or _RUNFLAT.search(row_item.identity.title or ''):
-        return 'RunFlat'
-    return ''
+    return run_flat_label(row_item.tire.run_flat, row_item.identity.title)
 
 
 def _fill_size_suffix(row_item: RowItem) -> None:

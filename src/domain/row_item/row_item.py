@@ -105,6 +105,7 @@ class RowItem:
     type_production = RowField('type_production')
     type_corrected = RowField('type_corrected')
     title_conflict = RowField('title_conflict')
+    title_not_composed = RowField('title_not_composed')
 
     rest_count = RowField('rest_count')
     reserve_count = RowField('reserve_count')

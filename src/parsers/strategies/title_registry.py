@@ -24,7 +24,7 @@ from parsers.strategies.title import (
     TitleWithAliases,
 )
 from parsers.strategies.title_markers import TitleWithMarkers
-from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
+from parsers.strategies.title_wrap import check_params_flags, wrap_with_params
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
@@ -59,15 +59,11 @@ def make_title_strategy(
     manufacturer_reader: ManufacturerReader | None = None,
 ) -> TitleStrategy:
     """Собрать стратегию title по слоту конфига; при `aliases` — обернуть картой."""
-    if config.params_first and not config.params_from_title:
-        raise ConfigValidationError(f'{where}: «params_first» работает только вместе с «params_from_title»')
+    check_params_flags(config, where)
     strategy = _build_strategy(config, where, manufacturer_reader)
     if config.aliases:
         strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name))
-    if config.params_first:
-        strategy = ParamsBeforeTitle(strategy)
-    elif config.params_from_title:
-        strategy = ParamsFromTitle(strategy)
+    strategy = wrap_with_params(strategy, config)
     if config.markers:
         strategy = TitleWithMarkers(strategy, config.markers)
     return strategy

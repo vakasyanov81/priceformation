@@ -305,9 +305,16 @@ def test_api_title_composition_is_stable_on_second_pass() -> None:
 
 def test_unparsable_api_size_keeps_title() -> None:
     """Размер, который не разобрать даже после нормализации, остаётся исходным названием, а не обрезком."""
-    title = 'LT35x12,50R17(320/70R17) 121S RA1100 TL WW M+S'
+    title = 'LT35x12,50Z17(320/70R17) 121S RA1100 TL WW M+S'
 
     assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == title
+
+
+def test_inch_radial_api_size_is_composed() -> None:
+    """Дюймовый радиальный размер `35x12,50R17` разбирается и собирается в канонической записи без лишнего нуля."""
+    title = 'LT35x12,50R17(320/70R17) 121S RA1100 TL WW M+S'
+
+    assert get_prepared_title(_api_tire(title, 'Roadcruza', 'RA1100')) == '35x12.5R17 Roadcruza RA1100 121S'
 
 
 def test_xlsx_columns_path_unchanged_for_special_width() -> None:

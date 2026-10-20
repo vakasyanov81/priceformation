@@ -32,6 +32,7 @@ class TireTitleTokens:
     brand: str
     model: str
     load_velocity: str = ''
+    xl: str = ''
     layering: object = ''
     camera: str = ''
     axis: object = ''
@@ -39,13 +40,14 @@ class TireTitleTokens:
     run_flat: str = ''
 
     def compose(self) -> str:
-        """Единый порядок: размер, бренд, модель, нагрузка+скорость, `<N>PR`, камерность, RunFlat, ось."""
+        """Единый порядок: размер, бренд, модель, нагрузка+скорость, XL, `<N>PR`, камерность, RunFlat, ось."""
         return join_title_parts(
             self.size,
             self.brand,
             self.model,
             self.load_velocity,
             *self.after_load,
+            self.xl,
             layering_label(self.layering),
             self.camera,
             self.run_flat,

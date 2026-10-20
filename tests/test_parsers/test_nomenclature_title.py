@@ -7,6 +7,7 @@ import pytest
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature_brand import brand_label, model_label
 from parsers.nomenclature_title import (
+    TireTitleTokens,
     compose_tire_title,
     join_size_parts,
     join_title_parts,
@@ -73,6 +74,15 @@ def test_load_velocity_concatenates() -> None:
     assert load_velocity(_row(index_load='94', index_velocity='W')) == '94W'
     assert load_velocity(_row(index_load='94')) == '94'
     assert load_velocity(_row()) == ''
+
+
+def test_tire_title_tokens_put_xl_after_load_velocity() -> None:
+    """XL стоит сразу за нагрузкой и скоростью, перед `<N>PR` и камерностью."""
+    tokens = TireTitleTokens(
+        '205/55R16', 'Kumho', 'WinterCraft', load_velocity='94T', xl='XL', layering='8', camera='TT'
+    )
+
+    assert tokens.compose() == '205/55R16 Kumho WinterCraft 94T XL 8PR TT'
 
 
 def test_compose_tire_title_canonical_order() -> None:

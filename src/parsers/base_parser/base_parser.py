@@ -169,6 +169,7 @@ class BaseParser:
         fill_absolute_markup(self.parsed_items)
         self.stats.type_corrections = self.count_type_corrections()
         self.stats.title_conflicts = sum(1 for row_item in self.parsed_items if row_item.vendor.title_conflict)
+        self.stats.titles_not_composed = sum(1 for row_item in self.parsed_items if row_item.vendor.title_not_composed)
 
     def count_type_corrections(self) -> int:
         """Число позиций итогового результата с исправленным типом.
@@ -386,12 +387,14 @@ class BaseParser:
         return self._title_filter.get_prepared_title(row_item)
 
     def set_prepared_title(self, row_item: RowItem) -> bool:
+        """Подготовить title; уценка и год выпуска читаются и из текста поставщика: собранное название их не несёт."""
+        source_title = row_item.identity.title
         prepared_title = self.get_prepared_title(row_item)
-        title_is_prepared = row_item.identity.title == prepared_title
-        row_item.set_field('title', prepared_title or row_item.identity.title)
-        if is_markdown_title(row_item.identity.title):
+        title_is_prepared = source_title == prepared_title
+        row_item.set_field('title', prepared_title or source_title)
+        if is_markdown_title(source_title) or is_markdown_title(row_item.identity.title):
             row_item.set_field('marked_down', True)
-        year = production_year(row_item.identity.title)
+        year = production_year(source_title) or production_year(row_item.identity.title)
         if year:
             row_item.set_field('production_year', year)
         return title_is_prepared

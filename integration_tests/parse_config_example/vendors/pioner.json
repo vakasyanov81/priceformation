@@ -9,7 +9,8 @@
   ],
   "title": {
     "strategy": "manufacturer_from_category",
-    "params_from_title": true
+    "params_from_title": true,
+    "compose": true
   },
   "pricing": {
     "policy": "map_on_opt",

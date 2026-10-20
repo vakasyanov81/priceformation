@@ -27,6 +27,7 @@ from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.registry import vendor_config_is_enabled, vendor_entry_for
 from parsers.strategies.product_types import type_corrections_message
+from parsers.strategies.title_compose import titles_not_composed_message
 from parsers.strategies.title_conflicts import title_conflicts_message
 from parsers.vendor_config.models import VendorConfig as _VendorConfig
 from parsers.vendor_config.models import VendorSection as _VendorSection
@@ -69,6 +70,7 @@ class ParseResult:
     black_list_skips: int = 0
     type_corrections: int = 0
     title_conflicts: int = 0
+    titles_not_composed: int = 0
     homoglyph_fixes: int = 0
     homoglyph_suspects: int = 0
 
@@ -129,9 +131,11 @@ class ParseOrchestrator:
             parse_result.black_list_skips += parser.stats.black_list_skips
             parse_result.type_corrections += parser.stats.type_corrections
             parse_result.title_conflicts += parser.stats.title_conflicts
+            parse_result.titles_not_composed += parser.stats.titles_not_composed
             parse_result.homoglyph_fixes += parser.stats.homoglyph_fixes
             parse_result.homoglyph_suspects += parser.stats.homoglyph_suspects
             _log_homoglyphs(parser)
+            _log_titles_not_composed(parser)
 
     def _log_skips(self, parse_result: ParseResult) -> None:
         """Печать сводки по пропускам категорий, black_list и расхождениям типа."""
@@ -147,6 +151,13 @@ class ParseOrchestrator:
         conflicts_message = title_conflicts_message(parse_result.title_conflicts)
         if conflicts_message:
             logger.warning(conflicts_message)
+
+
+def _log_titles_not_composed(parser: BaseParser) -> None:
+    """Сколько названий шин не собрано из полей (остался нормализованный текст поставщика)."""
+    message = titles_not_composed_message(parser.stats.titles_not_composed)
+    if message:
+        logger.warning(f'{parser!r}: {message}')
 
 
 def _log_homoglyphs(parser: BaseParser) -> None:

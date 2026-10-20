@@ -470,7 +470,13 @@ def test_title_params_first_is_read() -> None:
     assert TitleConfig.from_dict({}, WHERE).params_first is False
 
 
-@pytest.mark.parametrize('key', ['params_from_title', 'params_first'])
+def test_title_compose_is_read() -> None:
+    """compose включается ключом слота и по умолчанию выключен."""
+    assert TitleConfig.from_dict({'compose': True}, WHERE).compose is True
+    assert TitleConfig.from_dict({}, WHERE).compose is False
+
+
+@pytest.mark.parametrize('key', ['params_from_title', 'params_first', 'compose'])
 def test_title_flags_error_names_slot_path(key: str) -> None:
     """Флаг слота title не true/false — ошибка называет путь до слота и ключ."""
     with pytest.raises(ConfigValidationError) as error:
