@@ -174,9 +174,26 @@ def test_ignores_unknown_cap_key() -> None:
     assert rules.max_recommended_percent_markup == 0.3
 
 
-def test_markup_rules_must_be_object() -> None:
-    with pytest.raises(ConfigValidationError, match='ожидается объект'):
-        MarkupRulesConfig.from_dict({'markup_rules': []}, _CONFIG)
+def test_markup_rules_must_be_object_or_list() -> None:
+    with pytest.raises(ConfigValidationError, match='markup_rules: ожидается объект'):
+        MarkupRulesConfig.from_dict({'markup_rules': 5}, _CONFIG)
+
+
+def test_markup_rules_list_keeps_order() -> None:
+    """Шкала списком: правила без имён, порядок сохраняется (первое подходящее правило выигрывает)."""
+    first = {'min': 0, 'max': 100, 'percent': 0.3}
+    second = {'min': 50, 'max': 200, 'percent': 0.2}
+    rules = MarkupRulesConfig.from_dict({'markup_rules': [first, second]}, _CONFIG)
+
+    assert list(rules.markup_rules.values()) == [
+        MarkUpRule(min=0, max=100, percent_markup=0.3),
+        MarkUpRule(min=50, max=200, percent_markup=0.2),
+    ]
+
+
+def test_markup_rules_list_error_names_rule_position() -> None:
+    with pytest.raises(ConfigValidationError, match=r'markup_rules\.1'):
+        MarkupRulesConfig.from_dict({'markup_rules': [{'min': 0}, 'bad']}, _CONFIG)
 
 
 def test_absolute_markup_rules_must_be_object() -> None:

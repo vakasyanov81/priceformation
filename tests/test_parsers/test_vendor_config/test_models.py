@@ -56,11 +56,20 @@ def test_section_inherits_vendor_fields() -> None:
 
 
 def test_xls_columns_get_integer_keys() -> None:
+    """Колонки секции дополняют колонки поставщика; ключи xls — целые."""
     sections = [{'columns': {'1': 'manufacturer_name'}}]
     config = _config(columns={'2': 'title'}, sections=sections)
 
     assert config.columns == {2: 'title'}
-    assert config.sections[0].columns == {1: 'manufacturer_name'}
+    assert config.sections[0].columns == {2: 'title', 1: 'manufacturer_name'}
+
+
+def test_section_column_overrides_vendor_column() -> None:
+    """Та же колонка в секции заменяет поле поставщика."""
+    sections = [{'columns': {'1': 'model'}}]
+    config = _config(columns={'1': 'title', '2': 'code'}, sections=sections)
+
+    assert config.sections[0].columns == {1: 'model', 2: 'code'}
 
 
 def test_json_reader_keeps_text_column_keys() -> None:
@@ -71,7 +80,63 @@ def test_json_reader_keeps_text_column_keys() -> None:
     )
 
     assert config.columns == {'article': 'code_art'}
-    assert config.sections[0].columns == {'name': 'title'}
+    assert config.sections[0].columns == {'article': 'code_art', 'name': 'title'}
+
+
+def test_json_columns_list_maps_same_named_keys() -> None:
+    """Список колонок у json: ключ записи совпадает с полем позиции и заменяет колонки поставщика."""
+    sections = [{'columns': ['code', 'title']}]
+    config = _config(reader='json', columns={'article': 'code_art'}, sections=sections)
+
+    assert config.sections[0].columns == {'code': 'code', 'title': 'title'}
+
+
+def test_json_columns_list_rejects_unknown_field() -> None:
+    with pytest.raises(ConfigValidationError, match='неизвестное поле «nope»'):
+        _config(reader='json', sections=[{'columns': ['code', 'nope']}])
+
+
+def test_section_slot_merges_with_vendor_slot() -> None:
+    """Слот секции дополняет слот поставщика по ключам: заданное в секции заменяет, остальное наследуется."""
+    config = _config(
+        title={'strategy': 'tire_compose', 'variant': 'four_tochki'},
+        pricing={'policy': 'base', 'rules': {'min_recommended_percent_markup': 0.1}},
+        sections=[
+            {
+                'columns': {'0': 'title'},
+                'title': {'params_first': True},
+                'pricing': {'rules': {'markup_rules': [{'min': 0, 'max': 10, 'percent': 0.5}]}},
+            }
+        ],
+    )
+    section = config.sections[0]
+
+    assert section.title == TitleConfig(strategy='tire_compose', variant='four_tochki', params_first=True)
+    rules = section.pricing.rules
+    assert section.pricing.policy == 'base'
+    assert rules.min_recommended_percent_markup == 0.1
+    assert rules.markup_rules == {'0': MarkUpRule(min=0, max=10, percent_markup=0.5)}
+
+
+def test_section_markup_rules_replace_vendor_rules() -> None:
+    """Шкала наценки секции заменяет шкалу поставщика целиком, а не смешивается с ней."""
+    vendor_rules = {'low': {'min': 0, 'max': 10, 'percent': 0.5}}
+    section_rules = {'high': {'min': 10, 'max': 20, 'percent': 0.2}}
+    config = _config(
+        pricing={'rules': {'markup_rules': vendor_rules}},
+        sections=[{'columns': {'0': 'title'}, 'pricing': {'rules': {'markup_rules': section_rules}}}],
+    )
+
+    section_pricing = config.sections[0].pricing
+    assert list(section_pricing.rules.markup_rules) == ['high']
+
+
+def test_start_row_defaults_to_first_row() -> None:
+    """Без start_row данные читаются с первой строки."""
+    raw = dict(MINIMAL)
+    raw.pop('start_row')
+
+    assert VendorConfig.from_dict(raw, FOLDER, WHERE).sections[0].start_row == 1
 
 
 def test_behaviour_defaults() -> None:
@@ -453,11 +518,11 @@ def test_vendor_config_reads_all_fields() -> None:
                 name='Лист',
                 start_row=5,
                 file_templates=('a.xls',),
-                columns={0: 'code'},
+                columns={2: 'title', 0: 'code'},
                 sheet_info='лист',
                 sheet_indexes=(0, 1),
-                category=CategoryConfig(strategy='fixed', fixed_value='Диск'),
-                title=TitleConfig(aliases=True),
+                category=CategoryConfig(strategy='fixed', fixed_value='Диск', field_name='type'),
+                title=TitleConfig(variant='v1', aliases=True),
                 pricing=PricingConfig(threshold=10),
             ),
         ),
