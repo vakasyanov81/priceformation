@@ -20,6 +20,11 @@ _AXIS_LABELS = (
 )
 
 
+AXIS_NAMES = frozenset(label for _root, label in _AXIS_LABELS)
+CAMERA_CODES = frozenset(('TT', 'TL', 'TTF'))
+SEASON_MARK_NAMES = frozenset(_SEASON_MARKS)
+
+
 def layering_label(raw: object) -> str:
     """Слойность как `<N>PR`: `16`, `16PR`, `PR16` → `16PR`; без числа — пусто."""
     found = _DIGITS.search(str(raw or ''))

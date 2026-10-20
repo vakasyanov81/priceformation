@@ -1,17 +1,20 @@
 """Группировка строк прайса по параметрам наименования."""
 
+from collections.abc import Mapping
 from itertools import groupby
 from operator import attrgetter, itemgetter
 from typing import Any
 
 from domain.row_item.row_item import RowItem
 from parsers.common_price_dispute import dispute_note
+from parsers.common_price_group_title import unify_group_title
 from parsers.common_price_main_double import main_double
 from parsers.common_price_model import clear_model
 from parsers.common_price_model_keys import keys_with_merged_models
 from parsers.common_price_size import canon_number, size_fields
 from parsers.common_price_title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
+from parsers.vendor_config.reference_priority import load_reference_priority
 
 _MIN_ITEMS_FOR_DOUBLES = 2
 _GROUP_ORDER_KEY = attrgetter('duplicate.group_by_params', 'duplicate.order')
@@ -95,9 +98,15 @@ def _apply_split_groups(
 class CommonPriceGrouper:
     """Группировка результата разбора прайсов поставщиков по параметрам наименований"""
 
-    def __init__(self, row_items: list[RowItem], aliases_map: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        row_items: list[RowItem],
+        aliases_map: dict[str, Any] | None = None,
+        reference_priority: Mapping[str, int] | None = None,
+    ):
         self.row_items = row_items
         self._aliases_map = load_aliases_map() if aliases_map is None else aliases_map
+        self._reference_priority = load_reference_priority() if reference_priority is None else reference_priority
         self._is_grouped = False
 
     def group_by_params(self) -> CommonPriceGrouper:
@@ -127,6 +136,7 @@ class CommonPriceGrouper:
         """Обработать одну группу дублей."""
         if _has_product_identity(group_items[0]):
             _mark_double_items(group_items)
+            unify_group_title(group_items, self._reference_priority)
         for row_item in group_items:
             row_item.set_field('group_by_params', group_id)
 

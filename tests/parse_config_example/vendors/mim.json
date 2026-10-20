@@ -2,6 +2,7 @@
   "enabled": 1,
   "code": "4",
   "name": "Мим",
+  "title": {"reference_priority": 4},
   "start_row": 2,
   "file_templates": ["price*.xls", "price*.xlsx"],
   "sections": [

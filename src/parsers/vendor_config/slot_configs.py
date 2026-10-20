@@ -81,6 +81,8 @@ class TitleConfig:
     `camera_by_kind` (для `poshk_stk_tire_compose`) — карта «слово вида шины в названии → камерность»:
     если в названии камерности нет, в него добавляется значение первого найденного слова
     (Пошк: ``автошина`` → ``TT``, ``автопокрышка`` → ``TL``).
+    `reference_priority` — очередь поставщика среди эталонов названия группы дублей (1 — первый; 0 — не задана,
+    поставщик идёт после всех заданных): среди позиций с равно полной моделью название берётся у эталона.
     """
 
     strategy: str = DEFAULT_TITLE_STRATEGY
@@ -92,6 +94,7 @@ class TitleConfig:
     compose: bool = False
     markers: dict[str, dict[str, str]] = field(default_factory=dict)
     camera_by_kind: dict[str, str] = field(default_factory=dict)
+    reference_priority: int = 0
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> TitleConfig:
@@ -107,6 +110,7 @@ class TitleConfig:
             compose=read_flag(payload, 'compose', where),
             markers=read_field_map(payload, 'markers', where),
             camera_by_kind=read_str_map(payload, 'camera_by_kind', where),
+            reference_priority=read_int(payload, 'reference_priority', where, 0),
         )
 
 
