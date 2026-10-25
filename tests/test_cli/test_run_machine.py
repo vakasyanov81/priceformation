@@ -16,10 +16,12 @@ from run_argv import (
     FOUR_TOCHKI_LOAD_API_DATA,
     GET_PRODUCT_TYPES,
     GET_SUPLIERS,
+    GET_VENDORS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
     MIM_LOAD_API_DATA,
     PARSE,
+    TOGGLE_VENDOR,
     ZAPASKA_LOAD_API_DATA,
 )
 from run_machine import fail_unknown_result_template, machine_json
@@ -29,6 +31,7 @@ from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
+from services.vendor_activation import VendorActivationService, VendorState
 from services.zapaska_service import ZapaskaService
 
 _TITLE = 'шина'
@@ -455,6 +458,61 @@ def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload == catalog
 
 
+def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
+    """get_vendors: файлы поставщиков с признаком активности, как в интерактивном меню."""
+    vendor_service = MagicMock()
+    vendor_service.list_vendors.return_value = [
+        VendorState('poshk', 'Пошк', True),
+        VendorState('mim', 'МИМ', False),
+    ]
+    with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
+        code = machine_json(GET_VENDORS)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': GET_VENDORS,
+        'vendors': [
+            {'folder': 'poshk', 'name': 'Пошк', 'enabled': True},
+            {'folder': 'mim', 'name': 'МИМ', 'enabled': False},
+        ],
+    }
+
+
+def test_json_toggle_vendor(capsys: pytest.CaptureFixture[str]) -> None:
+    """toggle_vendor: переключает файл поставщика и возвращает новое состояние."""
+    vendor_service = MagicMock()
+    vendor_service.list_vendors.return_value = [VendorState('poshk', 'Пошк', True)]
+    vendor_service.toggle.return_value = VendorState('poshk', 'Пошк', False)
+    with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
+        code = machine_json(TOGGLE_VENDOR, vendor_folder='poshk')
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': TOGGLE_VENDOR,
+        'vendor': {'folder': 'poshk', 'name': 'Пошк', 'enabled': False},
+    }
+    vendor_service.toggle.assert_called_once_with('poshk')
+
+
+def test_json_toggle_unknown_vendor_changes_nothing(capsys: pytest.CaptureFixture[str]) -> None:
+    """неизвестная папка поставщика: compact-ошибка и ни одного переключения."""
+    vendor_service = MagicMock()
+    vendor_service.list_vendors.return_value = [VendorState('poshk', 'Пошк', True)]
+    with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
+        code = machine_json(TOGGLE_VENDOR, vendor_folder='unknown')
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload['ok'] is False
+    assert payload['action'] == TOGGLE_VENDOR
+    assert payload['error']['kind'] == 'ConfigValidationError'
+    assert 'unknown' in payload['error']['message']
+    vendor_service.toggle.assert_not_called()
+
+
 def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     """load_supplier_prices: ok, files и suppliers."""
     files = ['file_prices/poshk/price.xls']
@@ -602,6 +660,7 @@ def test_run_machine_json_load_config() -> None:
             result_template=None,
             supplier_prices=None,
             config_path=raw,
+            vendor_folder=None,
         )
 
 
@@ -669,4 +728,5 @@ def test_run_machine_json_passes_supplier_prices() -> None:
             result_template=None,
             supplier_prices=raw,
             config_path=None,
+            vendor_folder=None,
         )

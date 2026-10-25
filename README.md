@@ -98,6 +98,12 @@ file_prices/                  входные прайсы и результат
 - `get_product_types` — вернуть типы товара, которые priceformation ставит в
   колонку «Тип товара» прайсов (в порядке словаря):
   `{"ok": true, "action": "get_product_types", "types": ["Легковая шина", …]}`;
+- `get_vendors` — вернуть поставщиков (файлы конфигов `parse_config/vendors/*.json`) с
+  признаком активности, как в интерактивном меню:
+  `{"ok": true, "action": "get_vendors", "vendors": [{"folder": "poshk", "name": "Пошк", "enabled": true}]}`;
+- `toggle_vendor <folder>` — переключить активность поставщика по папке (имя файла без `.json`)
+  и вернуть новое состояние: `{"ok": true, "action": "toggle_vendor", "vendor": {"folder": "poshk", "name": "Пошк", "enabled": false}}`.
+  Неизвестная папка — `ok: false` с `error.kind` = `ConfigValidationError`, файлы не меняются;
 - `load_supplier_prices` — разложить файлы прайсов по папкам поставщиков:
   `{"1": "/путь/прайс.xls"}`, `{"poshk": "/путь/прайс.xls"}` или список файлов
   `{"4": ["/путь/прайс.xlsx", "/путь/territories.json"]}`. Ключ — ИД
@@ -158,6 +164,8 @@ uv run pf mim_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
 uv run pf get_product_types
+uv run pf get_vendors --json
+uv run pf toggle_vendor poshk --json
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
 uv run pf load_supplier_prices='{"4": ["/full/path/mim.xlsx", "/full/path/territories.json"]}'
 uv run pf load_supplier_prices='{"zapaska": "/full/path/zapaska.zip"}'

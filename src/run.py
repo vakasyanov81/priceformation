@@ -17,6 +17,8 @@
     python src/run.py fetch_mail_prices --json
     python src/run.py get_supliers --json
     python src/run.py get_product_types --json
+    python src/run.py get_vendors --json
+    python src/run.py toggle_vendor poshk --json
     python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
     python src/run.py load_config=/full/path/settings_dir
 
@@ -91,6 +93,7 @@ def _run_machine(argv: list[str]) -> int:
             result_template=result_template,
             supplier_prices=getattr(args, 'prices', None),
             config_path=getattr(args, 'config', None),
+            vendor_folder=getattr(args, 'folder', None),
         )
     return _machine_human(command, result_template)
 
