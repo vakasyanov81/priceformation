@@ -8,10 +8,12 @@ from run_argv import (
     FOUR_TOCHKI_LOAD_API_DATA,
     GET_PRODUCT_TYPES,
     GET_SUPLIERS,
+    GET_VENDORS,
     JSON_ONLY_COMMANDS,
     LOAD_SUPPLIER_PRICES,
     MIM_LOAD_API_DATA,
     PARSE,
+    TOGGLE_VENDOR,
     ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
     parse_machine_args,
@@ -145,6 +147,27 @@ def test_parse_get_supliers() -> None:
     args = parse_machine_args([GET_SUPLIERS, '--json'])
     assert args.command == GET_SUPLIERS
     assert args.json is True
+
+
+def test_parse_get_vendors() -> None:
+    """команда get_vendors в JSON-режиме."""
+    assert is_machine_argv([GET_VENDORS]) is True
+    args = parse_machine_args([GET_VENDORS])
+    assert args.command == GET_VENDORS
+
+
+def test_parse_toggle_vendor_folder() -> None:
+    """toggle_vendor принимает папку поставщика."""
+    args = parse_machine_args([TOGGLE_VENDOR, 'poshk', '--json'])
+    assert args.command == TOGGLE_VENDOR
+    assert args.folder == 'poshk'
+    assert args.json is True
+
+
+def test_vendor_commands_are_json_only() -> None:
+    """get_vendors и toggle_vendor всегда в JSON-режиме: ответ читает бот."""
+    assert GET_VENDORS in JSON_ONLY_COMMANDS
+    assert TOGGLE_VENDOR in JSON_ONLY_COMMANDS
 
 
 def test_parse_load_supplier_prices() -> None:

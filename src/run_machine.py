@@ -5,6 +5,7 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from domain.exceptions import ConfigValidationError
 from infrastructure.logging.json_mode import quiet_console
 from parse_report import JsonReport, emit_json, error_payload
 from parse_report_build import report_from_result
@@ -20,10 +21,12 @@ from run_argv import (
     FOUR_TOCHKI_LOAD_API_DATA,
     GET_PRODUCT_TYPES,
     GET_SUPLIERS,
+    GET_VENDORS,
     LOAD_CONFIG,
     LOAD_SUPPLIER_PRICES,
     MIM_LOAD_API_DATA,
     PARSE,
+    TOGGLE_VENDOR,
     ZAPASKA_LOAD_API_DATA,
 )
 from services import doubles_service, four_tochki_service, zapaska_service
@@ -33,6 +36,7 @@ from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.service_provider import ServiceProvider
+from services.vendor_activation import VendorActivationService, VendorState
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +52,8 @@ _COMPACT_ERROR_COMMANDS = frozenset(
         FOUR_TOCHKI_LOAD_API_DATA,
         MIM_LOAD_API_DATA,
         FETCH_MAIL_PRICES,
+        GET_VENDORS,
+        TOGGLE_VENDOR,
     ),
 )
 
@@ -83,16 +89,13 @@ def machine_json(
     result_template: str | None = None,
     supplier_prices: str | None = None,
     config_path: str | None = None,
+    vendor_folder: str | None = None,
 ) -> int:
     """Выполнить команду, JSON в stdout. Логи в этом режиме не печатаются."""
     ensure_services_configured()
+    payload_args = {LOAD_CONFIG: config_path, TOGGLE_VENDOR: vendor_folder}
     with quiet_console():
-        return _emit_command(
-            command,
-            all_result,
-            result_template,
-            config_path if command == LOAD_CONFIG else supplier_prices,
-        )
+        return _emit_command(command, all_result, result_template, payload_args.get(command, supplier_prices))
 
 
 def _emit_command(
@@ -135,7 +138,7 @@ def _command_payload(
     result_template: str | None,
     payload_arg: str | None,
 ) -> Mapping[str, Any]:
-    reference = _reference_payload(command)
+    reference = _reference_payload(command, payload_arg)
     if reference is not None:
         return reference
     if command == LOAD_SUPPLIER_PRICES:
@@ -151,13 +154,36 @@ def _command_payload(
     return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
 
 
-def _reference_payload(command: str) -> Mapping[str, Any] | None:
-    """Справочные команды: каталог поставщиков и типы товара; None — команда не справочная."""
+def _reference_payload(command: str, payload_arg: str | None) -> Mapping[str, Any] | None:
+    """Справочные команды: каталог поставщиков, типы товара и активность поставщиков; None — команда не справочная."""
     if command == GET_SUPLIERS:
         return all_vendor_supplier_catalog()
     if command == GET_PRODUCT_TYPES:
         return {_JSON_OK: True, _JSON_ACTION: GET_PRODUCT_TYPES, 'types': list(CANONICAL_TYPES)}
+    if command == GET_VENDORS:
+        return _vendors_payload()
+    if command == TOGGLE_VENDOR:
+        return _toggle_vendor_payload(payload_arg)
     return None
+
+
+def _vendors_payload() -> Mapping[str, Any]:
+    """Поставщики (файлы конфигов) с признаком активности: как в интерактивном меню."""
+    states = ServiceProvider.resolve(VendorActivationService).list_vendors()
+    return {_JSON_OK: True, _JSON_ACTION: GET_VENDORS, 'vendors': [_vendor_json(state) for state in states]}
+
+
+def _toggle_vendor_payload(folder: str | None) -> Mapping[str, Any]:
+    """Переключить активность поставщика по папке; неизвестная папка — ошибка, файл не меняется."""
+    service = ServiceProvider.resolve(VendorActivationService)
+    known = {state.folder for state in service.list_vendors()}
+    if folder not in known:
+        raise ConfigValidationError(f'неизвестный поставщик: {folder}')
+    return {_JSON_OK: True, _JSON_ACTION: TOGGLE_VENDOR, 'vendor': _vendor_json(service.toggle(folder))}
+
+
+def _vendor_json(state: VendorState) -> dict[str, Any]:
+    return {'folder': state.folder, 'name': state.name, 'enabled': state.enabled}
 
 
 def _json_download(command: str) -> Mapping[str, Any]:

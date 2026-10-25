@@ -18,6 +18,8 @@ MIM_LOAD_API_DATA = 'mim_load_api_data'
 FETCH_MAIL_PRICES = 'fetch_mail_prices'
 GET_SUPLIERS = 'get_supliers'
 GET_PRODUCT_TYPES = 'get_product_types'
+GET_VENDORS = 'get_vendors'
+TOGGLE_VENDOR = 'toggle_vendor'
 LOAD_SUPPLIER_PRICES = 'load_supplier_prices'
 LOAD_CONFIG = 'load_config'
 MACHINE_COMMANDS = (
@@ -29,14 +31,19 @@ MACHINE_COMMANDS = (
     FETCH_MAIL_PRICES,
     GET_SUPLIERS,
     GET_PRODUCT_TYPES,
+    GET_VENDORS,
+    TOGGLE_VENDOR,
     LOAD_SUPPLIER_PRICES,
     LOAD_CONFIG,
 )
-JSON_ONLY_COMMANDS = frozenset((GET_SUPLIERS, GET_PRODUCT_TYPES, LOAD_SUPPLIER_PRICES, LOAD_CONFIG))
+JSON_ONLY_COMMANDS = frozenset(
+    (GET_SUPLIERS, GET_PRODUCT_TYPES, GET_VENDORS, TOGGLE_VENDOR, LOAD_SUPPLIER_PRICES, LOAD_CONFIG),
+)
 _LOAD_INLINE_PREFIX = f'{LOAD_SUPPLIER_PRICES}='
 _CONFIG_INLINE_PREFIX = f'{LOAD_CONFIG}='
 _PRICES_HELP = 'JSON-объект {"ИД или sup_code": "путь" или ["путь", ...]}: xls, xlsx, json или zip.'
 _CONFIG_HELP = 'Полный путь к файлу или папке настроек (*.json, *.xlsx или black_list).'
+_VENDOR_FOLDER_HELP = 'Папка поставщика из get_vendors (имя файла конфига без .json).'
 
 # Подкоманды без собственных аргументов: только общие флаги (--json и др.).
 _PLAIN_COMMANDS = (
@@ -47,6 +54,7 @@ _PLAIN_COMMANDS = (
     (FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.'),
     (GET_SUPLIERS, 'Получить названия поставщиков.'),
     (GET_PRODUCT_TYPES, 'Получить типы товара, которые бывают в прайсах.'),
+    (GET_VENDORS, 'Получить поставщиков (файлы конфигов) с признаком активности.'),
 )
 
 _HELP_FLAGS = ('-h', '--help')
@@ -93,6 +101,12 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
     )
     for plain_command in _PLAIN_COMMANDS:
         _json_parser(subparsers, json_flag, *plain_command)
+    _json_parser(
+        subparsers,
+        json_flag,
+        TOGGLE_VENDOR,
+        'Переключить активность поставщика (файла конфига) по папке.',
+    ).add_argument('folder', help=_VENDOR_FOLDER_HELP)
     load_cmd = _json_parser(
         subparsers,
         json_flag,
