@@ -39,6 +39,7 @@ from run_argv import (
     JSON_ONLY_COMMANDS,
     MIM_LOAD_API_DATA,
     PARSE,
+    UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
     parse_machine_args,
@@ -107,6 +108,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
         FOUR_TOCHKI_LOAD_API_DATA: run_upload_four_tochki_data,
         MIM_LOAD_API_DATA: run_upload_mim_data,
         FETCH_MAIL_PRICES: run_fetch_mail_prices,
+        UPDATE_ALL_SUPPLIER_PRICES: run_update_all_supplier_prices,
     }
     extra: dict[str, str | None] = {}
     if command == PARSE:

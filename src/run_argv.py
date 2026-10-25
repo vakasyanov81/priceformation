@@ -16,6 +16,7 @@ ZAPASKA_LOAD_API_DATA = 'zapaska_load_api_data'
 FOUR_TOCHKI_LOAD_API_DATA = 'four_tochki_load_api_data'
 MIM_LOAD_API_DATA = 'mim_load_api_data'
 FETCH_MAIL_PRICES = 'fetch_mail_prices'
+UPDATE_ALL_SUPPLIER_PRICES = 'update_all_supplier_prices'
 GET_SUPLIERS = 'get_supliers'
 GET_PRODUCT_TYPES = 'get_product_types'
 GET_VENDORS = 'get_vendors'
@@ -29,6 +30,7 @@ MACHINE_COMMANDS = (
     FOUR_TOCHKI_LOAD_API_DATA,
     MIM_LOAD_API_DATA,
     FETCH_MAIL_PRICES,
+    UPDATE_ALL_SUPPLIER_PRICES,
     GET_SUPLIERS,
     GET_PRODUCT_TYPES,
     GET_VENDORS,
@@ -52,6 +54,7 @@ _PLAIN_COMMANDS = (
     (FOUR_TOCHKI_LOAD_API_DATA, 'Выгрузить данные Форточек по API.'),
     (MIM_LOAD_API_DATA, 'Выгрузить данные МИМ по API.'),
     (FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.'),
+    (UPDATE_ALL_SUPPLIER_PRICES, 'Обновить прайсы всех поставщиков: API и почта.'),
     (GET_SUPLIERS, 'Получить названия поставщиков.'),
     (GET_PRODUCT_TYPES, 'Получить типы товара, которые бывают в прайсах.'),
     (GET_VENDORS, 'Получить поставщиков (файлы конфигов) с признаком активности.'),
