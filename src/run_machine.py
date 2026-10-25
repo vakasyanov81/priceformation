@@ -2,10 +2,10 @@
 
 import logging
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
-from domain.exceptions import ConfigValidationError
+from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.json_mode import quiet_console
 from parse_report import JsonReport, emit_json, error_payload
 from parse_report_build import report_from_result
@@ -27,6 +27,7 @@ from run_argv import (
     MIM_LOAD_API_DATA,
     PARSE,
     TOGGLE_VENDOR,
+    UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
 from services import doubles_service, four_tochki_service, zapaska_service
@@ -35,6 +36,7 @@ from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
+from services.price_schema_service import schema_guard
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService, VendorState
 
@@ -43,7 +45,19 @@ logger = logging.getLogger(__name__)
 _INTERRUPT = 'interrupted'
 _JSON_OK = 'ok'
 _JSON_ACTION = 'action'
-_DOWNLOAD_COMMANDS = frozenset((ZAPASKA_LOAD_API_DATA, FOUR_TOCHKI_LOAD_API_DATA, MIM_LOAD_API_DATA, FETCH_MAIL_PRICES))
+_JSON_FILES = 'files'
+_Errors = dict[str, str]
+_Update = Callable[[], None]
+_UPDATE_ALL_SOURCES = ('zapaska', 'four_tochki', 'mim', 'mail')
+_DOWNLOAD_COMMANDS = frozenset(
+    (
+        ZAPASKA_LOAD_API_DATA,
+        FOUR_TOCHKI_LOAD_API_DATA,
+        MIM_LOAD_API_DATA,
+        FETCH_MAIL_PRICES,
+        UPDATE_ALL_SUPPLIER_PRICES,
+    ),
+)
 _COMPACT_ERROR_COMMANDS = frozenset(
     (
         LOAD_SUPPLIER_PRICES,
@@ -52,6 +66,7 @@ _COMPACT_ERROR_COMMANDS = frozenset(
         FOUR_TOCHKI_LOAD_API_DATA,
         MIM_LOAD_API_DATA,
         FETCH_MAIL_PRICES,
+        UPDATE_ALL_SUPPLIER_PRICES,
         GET_VENDORS,
         TOGGLE_VENDOR,
     ),
@@ -147,7 +162,7 @@ def _command_payload(
         return {
             _JSON_OK: True,
             _JSON_ACTION: LOAD_CONFIG,
-            'files': load_config(payload_arg or ''),
+            _JSON_FILES: load_config(payload_arg or ''),
         }
     if command in _DOWNLOAD_COMMANDS:
         return _json_download(command)
@@ -188,6 +203,8 @@ def _vendor_json(state: VendorState) -> dict[str, Any]:
 
 def _json_download(command: str) -> Mapping[str, Any]:
     """Выгрузить удалённые прайсы (API запаски / Форточек / МИМ или почта) и вернуть ответ."""
+    if command == UPDATE_ALL_SUPPLIER_PRICES:
+        return _json_update_all()
     if command == ZAPASKA_LOAD_API_DATA:
         ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
         return {_JSON_OK: True, _JSON_ACTION: ZAPASKA_LOAD_API_DATA}
@@ -201,7 +218,7 @@ def _json_download(command: str) -> Mapping[str, Any]:
     return {
         _JSON_OK: True,
         _JSON_ACTION: FETCH_MAIL_PRICES,
-        'files': [entry.path for entry in fetched],
+        _JSON_FILES: [entry.path for entry in fetched],
     }
 
 
@@ -210,13 +227,65 @@ def upload_four_tochki_data() -> None:
     ServiceProvider.resolve(four_tochki_service.FourTochkiService).upload_data()
 
 
+def _json_update_all() -> Mapping[str, Any]:
+    """Все источники подряд: ошибка одного не отменяет остальные; ответ — итог по каждому источнику."""
+    errors: _Errors = {}
+    with schema_guard():
+        for source, update in (
+            ('zapaska', _upload_zapaska),
+            ('four_tochki', upload_four_tochki_data),
+            ('mim', _upload_mim),
+        ):
+            _collect_error(errors, source, update)
+        files = _collect_mail(errors)
+    return {
+        _JSON_OK: not errors,
+        _JSON_ACTION: UPDATE_ALL_SUPPLIER_PRICES,
+        'sources': {name: 'error' if name in errors else 'ok' for name in _UPDATE_ALL_SOURCES},
+        'errors': errors,
+        _JSON_FILES: files,
+    }
+
+
+def _collect_error(errors: _Errors, source: str, update: _Update) -> None:
+    """Выполнить выгрузку источника; ошибка домена записывается в errors по имени источника."""
+    try:
+        update()
+    except CoreExceptionError as exc:
+        errors[source] = str(exc)
+
+
+def _collect_mail(errors: _Errors) -> list[str]:
+    """Скачать прайсы из почты; ошибка домена — в errors, файлов нет."""
+    try:
+        return _fetch_mail_paths()
+    except CoreExceptionError as exc:
+        errors['mail'] = str(exc)
+        return []
+
+
+def _fetch_mail_paths() -> list[str]:
+    """Скачать прайсы поставщиков из почты и вернуть пути сохранённых файлов."""
+    return [entry.path for entry in ServiceProvider.resolve(MailService).fetch_prices()]
+
+
+def _upload_zapaska() -> None:
+    """Выгрузить данные запаски по API."""
+    ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
+
+
+def _upload_mim() -> None:
+    """Выгрузить данные МИМ по API."""
+    ServiceProvider.resolve(MimService).upload_data()
+
+
 def _json_load_prices(raw: str | None) -> dict[str, object]:
     mapping = parse_prices_json(raw or '')
     catalog = all_vendor_supplier_catalog()
     return {
         'ok': True,
         'action': LOAD_SUPPLIER_PRICES,
-        'files': load_supplier_prices(mapping),
+        _JSON_FILES: load_supplier_prices(mapping),
         'suppliers': {key: catalog_entry_for(key, catalog)['sup_title'] for key in mapping},
     }
 
