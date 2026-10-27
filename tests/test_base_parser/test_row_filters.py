@@ -22,7 +22,7 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.parser_settings import ParserSettings
-from parsers.base_parser.price_files import PriceFiles, type_production_from_filename
+from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.row_filters import DEFAULT_MIN_REST, drop_empty_rest
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
@@ -209,9 +209,8 @@ def _params_with_sheet_info(sheet_info: str) -> BasePriceParseConfigurationParam
 
 
 def test_parser_initial_optional_state_is_none() -> None:
-    """До разбора type_production и files — None, а не пустая строка."""
+    """До разбора files — None, а не пустая строка."""
     parser = _parser()
-    assert parser.price_files.type_production is None
     assert parser.price_files.files is None
 
 
@@ -223,12 +222,6 @@ def test_repr_includes_sheet_info() -> None:
 
 def test_default_min_rest_is_four() -> None:
     assert DEFAULT_MIN_REST == 4
-
-
-def test_type_production_from_filename_without_underscore() -> None:
-    """Имя без `_` целиком; иначе берётся хвост после последнего `_`."""
-    assert type_production_from_filename('disks.xls') == 'disks.xls'
-    assert type_production_from_filename('brand_cat_disks.xls') == 'disks.xls'
 
 
 def test_category_for_without_hooks_is_none() -> None:

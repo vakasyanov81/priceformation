@@ -9,11 +9,6 @@ from parsers.base_parser.protocols import FileReaderProtocol
 from parsers.xls_reader import IXlsReader
 
 
-def type_production_from_filename(price_file: str) -> str:
-    """Последний суффикс имени файла после `_` (например disks.xls)."""
-    return price_file.rpartition('_')[2]
-
-
 class PriceFiles:
     """Файлы прайса и их разбор; параметры берёт из `ParserSettings`, чтение — из `FileReaderProtocol`."""
 
@@ -21,7 +16,6 @@ class PriceFiles:
         self.settings = settings
         self.file_reader = file_reader
         self.files: list[str] | None = None
-        self.type_production: str | None = None
 
     def resolve(self) -> list[str]:
         """Файлы для разбора: заданные явно или найденные в папке поставщика."""
@@ -32,7 +26,6 @@ class PriceFiles:
     def read_rows(self, paths: list[str]) -> list[dict[str, Any]]:
         raw_rows: list[dict[str, Any]] = []
         for price_file in paths:
-            self.type_production = type_production_from_filename(price_file)
             raw_rows.extend(self.raw_parse(price_file))
         return raw_rows
 

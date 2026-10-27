@@ -44,14 +44,13 @@ def test_resolve_without_prices_raises_with_supplier_name() -> None:
         price_files.resolve()
 
 
-def test_read_rows_collects_rows_and_remembers_last_type() -> None:
+def test_read_rows_collects_rows_from_all_files() -> None:
     price_files, reader = _price_files()
     reader.raw_parse.side_effect = [[{'title': 'a'}], [{'title': 'b'}]]
 
     rows = price_files.read_rows(['x_tires.xls', 'x_disks.xls'])
 
     assert rows == [{'title': 'a'}, {'title': 'b'}]
-    assert price_files.type_production == 'disks.xls'
 
 
 def test_map_items_builds_row_items_with_adaptor() -> None:
