@@ -100,7 +100,7 @@ def _product_type(section: VendorSection) -> ProductTypeClassifier | None:
 def make_config_driven_parser(
     section: VendorSection,
     vendor_config: VendorConfig,
-    parse_config: ParseConfiguration,  # noqa: WPS110
+    parse_config: ParseConfiguration,
 ) -> BaseParser:
     """Собрать ``BaseParser`` с поведением из конфига поставщика.
 

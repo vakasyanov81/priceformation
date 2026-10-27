@@ -131,8 +131,10 @@ def test_add_sheet_raises_when_active_is_none(tmp_path: Any) -> None:
     driver = XlsxWriterDriver()
     driver.init_workbook(str(tmp_path), _FILE_NAME)
     # Удаляем все листы — тогда workbook.active вернёт None
-    for sheet_name in driver.work_book.sheetnames:  # type: ignore[union-attr]
-        del driver.work_book[sheet_name]  # type: ignore[union-attr]
+    work_book = driver.work_book
+    assert work_book is not None
+    for sheet_name in work_book.sheetnames:
+        del work_book[sheet_name]
     with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         driver.add_sheet(_SHEET)
 

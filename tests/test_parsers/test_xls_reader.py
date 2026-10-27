@@ -160,14 +160,14 @@ def test_next_row_values_counts_empty_rows_by_one() -> None:
     assert _read_until_end(reader, _blank_then_data(['data'])) == [['data']]
 
 
-def test_parse_resets_skipped_empty_rows() -> None:
+def test_parse_resets_skipped_empty_rows(monkeypatch: pytest.MonkeyPatch) -> None:
     reader = _row_reader(max_rows=1)
     reader.skipped_empty_rows = 5
 
     def fake_sheets() -> list[Any]:
         return [[['a'], ['b']]]
 
-    reader.sheets = fake_sheets  # type: ignore[method-assign]
+    monkeypatch.setattr(reader, 'sheets', fake_sheets)
     with pytest.raises(MaxRowsReachedError):
         reader.parse([0])
     assert reader.skipped_empty_rows == 0
@@ -218,10 +218,10 @@ def test_parse_defaults_to_all_sheets() -> None:
     assert len(make_reader().parse()) == 6
 
 
-def test_sheets_raises_on_empty_book() -> None:
+def test_sheets_raises_on_empty_book(monkeypatch: pytest.MonkeyPatch) -> None:
     """Книга без вкладок — ошибка с текстом, а не пустой список."""
     reader = make_reader()
-    reader.book = _EmptyBook()  # type: ignore[assignment]
+    monkeypatch.setattr(reader, 'book', _EmptyBook())
     with pytest.raises(CoreExceptionError) as exc_info:
         reader.sheets()
     assert str(exc_info.value) == 'В прайсе отсутствуют вкладки!'
@@ -240,11 +240,11 @@ class _SpyBook:
         return self._book.get_sheet_by_name(name)
 
 
-def test_parse_loads_only_requested_sheets() -> None:
+def test_parse_loads_only_requested_sheets(monkeypatch: pytest.MonkeyPatch) -> None:
     """parse() с индексами разбирает только эти вкладки: у МИМ три поставщика на одной большой книге."""
     reader = make_reader()
     spy = _SpyBook(reader.book)
-    reader.book = spy  # type: ignore[assignment]
+    monkeypatch.setattr(reader, 'book', spy)
     assert reader.parse([1]) == SHEET_2
     assert spy.loaded == [spy.sheet_names[1]]
 

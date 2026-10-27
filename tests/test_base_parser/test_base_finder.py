@@ -107,6 +107,6 @@ def test_find_word_in_title_caches_by_title() -> None:
     """Повторный title не перебирает алиасы заново, результат тот же."""
     finder = BaseFinder(AliasContainer({'Brand': ('brnd',)}))
     first = finder.find_word_in_title('xx brnd yy')
-    finder._found['xx brnd yy'] = ('cached', None)  # noqa: WPS437
+    finder._found['xx brnd yy'] = ('cached', None)
     assert first == ('Brand', 'brnd')
     assert finder.find_word_in_title('xx brnd yy') == ('cached', None)

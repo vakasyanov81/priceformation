@@ -3,7 +3,7 @@
 Формирование прайсов из прайс-листов поставщиков шин. Python `==3.14.*`, пакетный менеджер — `uv` (запрещено вызывать голые бинари, только `uv run ...`).
 
 ## Импорты (важно)
-Пакет лежит в `src/`, но импортируется как верхний уровень: `from parsers.all_vendors import all_vendors`, `from cfg import init_cfg`. НЕ писать `src.parsers.*` — `src/` добавляется в `sys.path` в `tests/conftest.py` и `integration_tests/conftest.py`.
+Пакет лежит в `src/`, но импортируется как верхний уровень: `from parsers.all_vendors import all_vendors`, `from cfg import init_cfg`. НЕ писать `src.parsers.*` — `src/` добавляется в `sys.path` через `pythonpath` в `pyproject.toml [tool.pytest.ini_options]`.
 
 ## Проверки после правок кода
 Порядок и команды — из CI `.github/workflows/python-app.yml`; тот же набор в `.pre-commit-config.yaml`. Запускать из корня по всему репозиторию:

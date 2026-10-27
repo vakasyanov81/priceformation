@@ -109,11 +109,11 @@ def test_spec_of_known_and_unknown_key() -> None:
     assert registry.spec_of('hash_title') is None
 
 
-def test_spec_is_immutable() -> None:
+def test_spec_is_immutable(monkeypatch: pytest.MonkeyPatch) -> None:
     """описание поля нельзя переписать: key/group/attribute зафиксированы."""
     spec = registry.SPEC_BY_KEY['width']
     with pytest.raises(AttributeError):
-        spec.key = 'other'  # type: ignore[misc]
+        monkeypatch.setattr(spec, 'key', 'other')
 
 
 @pytest.mark.parametrize('key', registry.FIELD_KEYS, ids=registry.FIELD_KEYS)

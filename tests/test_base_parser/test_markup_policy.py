@@ -167,37 +167,37 @@ def test_recommended_percent_from_rrc() -> None:
 
 def test_is_small_recommended_percent_below_min() -> None:
     policy = _policy((_FIRST_RULE,), min_recommended=_MIN_RECOMMENDED)
-    assert policy._is_small_recommended_percent(_OPT, _RRC_BELOW_MIN) is True  # noqa: WPS437
+    assert policy._is_small_recommended_percent(_OPT, _RRC_BELOW_MIN) is True
 
 
 def test_small_rrc_percent_at_min() -> None:
     policy = _policy((_FIRST_RULE,), min_recommended=_MIN_RECOMMENDED)
-    assert policy._is_small_recommended_percent(_OPT, _RRC_AT_MIN) is False  # noqa: WPS437
+    assert policy._is_small_recommended_percent(_OPT, _RRC_AT_MIN) is False
 
 
 def test_is_big_recommended_percent_above_max() -> None:
-    assert _mim_policy()._is_big_recommended_percent(_OPT, _RRC_ABOVE_MAX) is True  # noqa: WPS437
+    assert _mim_policy()._is_big_recommended_percent(_OPT, _RRC_ABOVE_MAX) is True
 
 
 def test_big_rrc_percent_at_max() -> None:
-    assert _mim_policy()._is_big_recommended_percent(_OPT, _RRC_AT_MAX) is False  # noqa: WPS437
+    assert _mim_policy()._is_big_recommended_percent(_OPT, _RRC_AT_MAX) is False
 
 
 def test_big_rrc_percent_max_off() -> None:
     policy = _policy((_FIRST_RULE,), max_recommended=_ZERO)
-    assert policy._is_big_recommended_percent(_OPT, _RECOMMENDED) is False  # noqa: WPS437
+    assert policy._is_big_recommended_percent(_OPT, _RECOMMENDED) is False
 
 
 def test_is_small_absolute_markup_below_floor() -> None:
-    assert _mim_policy()._is_small_absolute_markup(_SELLING_BELOW_FLOOR, _OPT) is True  # noqa: WPS437
+    assert _mim_policy()._is_small_absolute_markup(_SELLING_BELOW_FLOOR, _OPT) is True
 
 
 def test_small_absolute_at_floor() -> None:
-    assert _mim_policy()._is_small_absolute_markup(_SELLING_AT_FLOOR, _OPT) is False  # noqa: WPS437
+    assert _mim_policy()._is_small_absolute_markup(_SELLING_AT_FLOOR, _OPT) is False
 
 
 def test_price_with_absolute_rule() -> None:
-    assert _mim_policy()._price_with_absolute_rule(_OPT) == _ABSOLUTE_PRICE  # noqa: WPS437
+    assert _mim_policy()._price_with_absolute_rule(_OPT) == _ABSOLUTE_PRICE
 
 
 def test_apply_no_rrc_uses_map() -> None:
@@ -385,8 +385,8 @@ def _three_rule_map_on_opt() -> MapOnOptMarkupPolicy:
 def test_identity_create_builds_empty_rules_and_map() -> None:
     """«Без наценки» создаётся с пустыми правилами и пустой картой, а не с None."""
     policy = IdentityMarkupPolicy.create()
-    assert policy._rules == MarkupRulesConfig()  # noqa: WPS437
-    assert policy._price_map == ()  # noqa: WPS437
+    assert policy._rules == MarkupRulesConfig()
+    assert policy._price_map == ()
 
 
 def test_markup_percent_rule_min_included() -> None:
@@ -450,7 +450,7 @@ def test_percent_to_store_uses_opt() -> None:
 def test_small_absolute_delta_at_floor_is_small() -> None:
     """В delta-режиме маржа, равная полу, считается малой (`<=`)."""
     policy = _zapaska_like_policy(min_absolute=_DELTA_FLOOR, absolute_mode=ABSOLUTE_MODE_DELTA)
-    assert policy._is_small_absolute_markup(_OPT + _DELTA_FLOOR, _OPT) is True  # noqa: WPS437
+    assert policy._is_small_absolute_markup(_OPT + _DELTA_FLOOR, _OPT) is True
 
 
 _TRUCK_CATEGORY = 'Грузовая шина'

@@ -23,7 +23,7 @@ _ORDER = FourTochkiWarehouseGroup(
 )
 
 
-def _payload(*groups: dict[str, Any]) -> dict[str, Any]:
+def _payload(*groups: Any) -> dict[str, Any]:
     return {'groups': list(groups)}
 
 
@@ -151,7 +151,7 @@ def test_group_error_names_file_and_group_index(entry: dict[str, Any], message: 
 def test_group_that_is_not_object_names_file_and_index() -> None:
     """Группа не объект — в сообщении файл, номер группы и полученное значение."""
     with pytest.raises(ConfigValidationError, match=re.escape(f'{_WHERE}: ожидается объект группы, получено 5')):
-        parse_warehouse_groups(_payload(_group_entry('first', 'Томск'), 5))  # type: ignore[arg-type]
+        parse_warehouse_groups(_payload(_group_entry('first', 'Томск'), 5))
 
 
 def test_structure_errors_name_file() -> None:

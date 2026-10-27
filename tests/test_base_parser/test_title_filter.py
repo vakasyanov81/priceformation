@@ -1,5 +1,7 @@
 """tests for TitleFilter: стоп-слова, чёрный список и подготовка title."""
 
+from typing import Any
+
 from test_parsers.test_vendors._test_providers import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
@@ -54,7 +56,8 @@ def test_strip_words_in_title_keeps_blank_as_is() -> None:
 
 def test_strip_words_in_title_none_stays_none() -> None:
     """None-заголовок возвращается как есть, а не превращается в заглушку."""
-    assert strip_words_in_title(None) is None  # type: ignore[arg-type]
+    missing_title: Any = None
+    assert strip_words_in_title(missing_title) is None
 
 
 def test_block_list_strips_black_list_entries() -> None:
