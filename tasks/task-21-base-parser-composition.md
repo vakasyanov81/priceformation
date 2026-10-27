@@ -1,6 +1,36 @@
 # Task-21: `BaseParser` — от цепочки наследования к композиции
 
-Продолжение [task-19](./task-19-base-parser-flake8-noqa.md).
+**Статус: выполнено.** `BaseParser` — оркестратор без наследования; цепочка миксинов `parser_core` … `parser_pipeline` удалена. Продолжение [task-19](./task-19-base-parser-flake8-noqa.md).
+
+## Итог
+
+Фактические коллабораторы (`src/parsers/base_parser/`) отличаются от первоначальной таблицы:
+
+| Объект | Файл | Что делает |
+| --- | --- | --- |
+| `ParserSettings` | `parser_settings.py` | конфиг, `parser_params`, кэш `ManufacturerFinder`, `is_active` (через `ParseConfiguration.is_enabled`), имя поставщика |
+| `PriceFiles` | `price_files.py` | файлы прайса, чтение сырых строк, маппинг в `RowItem` |
+| `RowFilters` | `row_filters.py` | фильтр складов, «под заказ», мин. остаток, `drop_empty_rest` |
+| `TitleService` | `title_service.py` | подготовка title, уценка/год/завод из текста поставщика |
+| `CategoryLookup` + `CategoryService` | `category_service.py` | справочник категорий и статистика (`CategoryContext`) отдельно от применения категории и типа товара |
+| `ManufacturerService` | `manufacturer_service.py` | поиск производителя при enrich и после pipeline |
+| `RowEnricher` | `row_enricher.py` | разбор и отсев строк; владеет сервисами title, категории, производителя (бывший `base_parser_row.py`) |
+| `RowPipeline` | `row_pipeline.py` | порядок шагов разбора строки |
+
+Отступления от плана и причины:
+
+- `MarkupService` не заводился: наценка уже живёт в `RowProcessor(markup_policy)`, обёртка над ним повторила бы монолит.
+- `RowEnricher` выделен раньше `RowPipeline`: его сервисы нужны и пайплайну, и бывшим функциям `base_parser_row.py`; без группировки `ParserCore` упирался в WPS230/WPS211.
+- `CategoryService` разделён на две роли (WPS214), `ParserCore.data_reader` убран как дубль `FileReader.data_reader`.
+- Удалён мёртвый код, который переопределялся только в тестах: `StrategiesIntegration`, `is_category_row`, `get_item_rest`, `get_min_rest_count`, `prepare_title`, `strip_chunks_title`, `strip_words_in_title` (классовые), `round_price`, `get_markup`, `require_markup_policy`, `after_row_mapped`.
+- Логгер ошибок разбора строки теперь `parsers.base_parser.row_enricher` (был `…base_parser_row`).
+
+Остаточный долг (вне этой задачи, не трогали):
+
+- `# noqa: WPS214` без `FIXME` на `TitleFilter`, `TitleFilterProtocol`, `RowProcessor`.
+- `ParserSettings.set_parse_config` вызывается только из тестов; `TitleFilter` при смене конфига остаётся на старом.
+- `PriceFiles.type_production` только записывается, в `src/` не читается.
+- `registry.vendor_config_is_enabled` и `getattr(..., '_vendor_section')` в `services/vendor_parser.py` дублируют знание о `ParseConfiguration`.
 
 ## Проблема
 
@@ -50,10 +80,10 @@ Task-19 уложил `BaseParser` в лимит WPS214 цепочкой микс
 
 ## Критерии готовности
 
-- [ ] `BaseParser` не наследует миксины; файлов `parser_core.py` … `parser_pipeline.py` как цепочки нет.
-- [ ] Коллабораторы создаются с явными зависимостями и тестируются без `BaseParser`.
-- [ ] В `base_parser_row.py` нет `TYPE_CHECKING`-импорта `BaseParser`.
-- [ ] `__getattr__`-делегирования и подавлений (`# noqa`, `# type: ignore`) нет.
-- [ ] Вывод парсеров не изменился (паритет конфигов, интеграционные тесты).
-- [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
-- [ ] Коммит — только после подтверждения пользователя.
+- [x] `BaseParser` не наследует миксины; файлов `parser_core.py` … `parser_pipeline.py` как цепочки нет.
+- [x] Коллабораторы создаются с явными зависимостями и тестируются без `BaseParser`.
+- [x] В `base_parser_row.py` нет `TYPE_CHECKING`-импорта `BaseParser`.
+- [x] `__getattr__`-делегирования и подавлений (`# noqa`, `# type: ignore`) нет.
+- [x] Вывод парсеров не изменился (паритет конфигов, интеграционные тесты).
+- [x] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
+- [x] Коммит — только после подтверждения пользователя.
