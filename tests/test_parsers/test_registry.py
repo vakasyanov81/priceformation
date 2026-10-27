@@ -5,8 +5,6 @@ Tests use the duplicated configs from ``tests/parse_config_example/vendors/``
 guarantee fresh reads and independence from the real ``parse_config/vendors/``.
 """
 
-from types import SimpleNamespace
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,7 +22,6 @@ from parsers.registry import (
     all_vendors_from_registry,
     clear_registry,
     make_vendor_entry,
-    vendor_config_is_enabled,
     vendor_entry_for,
     vendor_markup_policy_for,
 )
@@ -41,31 +38,31 @@ def test_all_vendors_returns_entries() -> None:
     for parser_cls, config in entries:
         assert parser_cls is BaseParser
         assert isinstance(config, ParseConfiguration)
-        assert hasattr(config, '_vendor_section')
-        assert hasattr(config, '_vendor_config')
-        assert vendor_config_is_enabled(config)
+        assert config.vendor_section is not None
+        assert config.vendor_config is not None
+        assert config.is_enabled
 
 
 def test_vendor_entry_for_finds_by_id() -> None:
     """vendor_entry_for находит секцию по id."""
     clear_registry()
     _, config = vendor_entry_for('2')
-    assert config._vendor_section.id == '2'
-    assert config._vendor_section.name == 'Запаска (диски)'
+    assert config.vendor_section.id == '2'
+    assert config.vendor_section.name == 'Запаска (диски)'
 
 
 def test_vendor_entry_for_finds_tire_section() -> None:
     """Запаска (шины) с id=22."""
     clear_registry()
     _, config = vendor_entry_for('22')
-    assert config._vendor_section.name == 'Запаска (шины)'
+    assert config.vendor_section.name == 'Запаска (шины)'
 
 
 def test_vendor_entry_for_mim_returns_first_section() -> None:
     """Мим с id=4; первая секция = Легковая шина."""
     clear_registry()
     _, config = vendor_entry_for('4')
-    section = config._vendor_section
+    section = config.vendor_section
     assert section.id == '4'
     assert section.category.strategy == 'fixed'
     assert section.category.fixed_value == 'Легковая шина'
@@ -82,8 +79,8 @@ def test_entries_carry_folder_and_vendor_config() -> None:
     """Записи несут папку поставщика и сам VendorConfig (не None)."""
     clear_registry()
     for _, config in all_vendors_from_registry():
-        assert isinstance(config._vendor_config, VendorConfig)
-        assert config.parser_params.supplier.folder_name == config._vendor_config.folder
+        assert isinstance(config.vendor_config, VendorConfig)
+        assert config.parser_params.supplier.folder_name == config.vendor_config.folder
 
 
 def test_make_vendor_entry_attaches_section_and_config() -> None:
@@ -99,12 +96,12 @@ def test_make_vendor_entry_attaches_section_and_config() -> None:
 
     _, config = make_vendor_entry(section, vendor_cfg)
 
-    assert config._vendor_section is section
-    assert config._vendor_config is vendor_cfg
+    assert config.vendor_section is section
+    assert config.vendor_config is vendor_cfg
     assert config.parser_params.supplier.folder_name == 'my_folder'
 
 
-def test_vendor_config_is_enabled_without_vendor_config() -> None:
+def test_legacy_config_without_vendor_is_enabled_and_has_no_markup_policy() -> None:
     """Без привязанного VendorConfig поставщик считается включённым."""
     parser_params = ParserParams(
         supplier=ParseParamsSupplier(folder_name='f', name='n', code='c'),
@@ -117,21 +114,24 @@ def test_vendor_config_is_enabled_without_vendor_config() -> None:
         row_item_adaptor=RowItem,
     )
 
-    assert vendor_config_is_enabled(make_parse_config(parser_params))
+    config = make_parse_config(parser_params)
+
+    assert config.is_enabled
+    assert vendor_markup_policy_for(MagicMock(), config) is None
 
 
-def test_vendor_config_is_enabled_for_disabled() -> None:
+def test_is_enabled_for_disabled() -> None:
     """Выключенный поставщик (stk) — enabled=False."""
     clear_registry()
     _, config = vendor_entry_for('7')
-    assert not vendor_config_is_enabled(config)
+    assert not config.is_enabled
 
 
-def test_vendor_config_is_enabled_for_enabled() -> None:
+def test_is_enabled_for_enabled() -> None:
     """Включённый поставщик (mim) — enabled=True."""
     clear_registry()
     _, config = vendor_entry_for('4')
-    assert vendor_config_is_enabled(config)
+    assert config.is_enabled
 
 
 def test_vendor_markup_policy_from_config() -> None:
@@ -173,13 +173,5 @@ def test_all_vendors_returns_all_enabled() -> None:
     entries = all_vendors_from_registry()
     # autosnab (1 секция) + poshk (1) + four_tochki (2) + mim (3) + zapaska (2) = 9
     assert len(entries) == 9
-    ids = {config._vendor_section.id for _, config in entries}
+    ids = {config.vendor_section.id for _, config in entries if config.vendor_section}
     assert ids == {'6', '1', '5', '4', '2', '22'}
-
-
-def test_registry_helpers_tolerate_config_without_vendor_attributes() -> None:
-    """Конфиг без служебных атрибутов поставщика: включён, политики наценки нет."""
-    config: Any = SimpleNamespace()
-
-    assert vendor_config_is_enabled(config) is True
-    assert vendor_markup_policy_for(MagicMock(), config) is None

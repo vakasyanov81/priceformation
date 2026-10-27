@@ -186,7 +186,7 @@ def test_markdown_survives_rebuilt_title() -> None:
 
 
 def test_deprecated_vendor_config_fallback_active() -> None:
-    """ParseConfiguration без _vendor_config не падает (обратная совместимость)."""
+    """ParseConfiguration без vendor_config не падает (обратная совместимость)."""
     parser = _make_parser()
     assert parser.settings.is_active is True
 

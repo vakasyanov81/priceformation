@@ -7,9 +7,7 @@ from typing import Any, NamedTuple
 
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
-
-# Динамические атрибуты, устанавливаемые registry для config-driven вендоров:
-# Эти атрибуты устанавливаются registry динамически
+from parsers.vendor_config.models import VendorConfig, VendorSection
 
 
 class ParseConfigNotSetError(RuntimeError):
@@ -54,12 +52,15 @@ class BasePriceParseConfigurationParams(NamedTuple):
 class ParseConfiguration:
     """base price parser configuration"""
 
-    # Динамические атрибуты для config-driven вендоров (устанавливаются registry).
-    _vendor_section: Any = None
-    _vendor_config: Any = None
-
-    def __init__(self, parse_config: BasePriceParseConfigurationParams):
-        """init"""
+    def __init__(
+        self,
+        parse_config: BasePriceParseConfigurationParams,
+        vendor_section: VendorSection | None = None,
+        vendor_config: VendorConfig | None = None,
+    ):
+        """Секция и конфиг вендора заданы у config-driven поставщика, у легаси-вендора — None."""
+        self.vendor_section = vendor_section
+        self.vendor_config = vendor_config
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self.parser_params = parse_config.parser_params
         self.supplier = self.parser_params.supplier
@@ -69,10 +70,10 @@ class ParseConfiguration:
 
     @property
     def is_enabled(self) -> bool:
-        """Поставщик включён; без `_vendor_config` (легаси-вендор) — включён."""
-        if self._vendor_config is None:
+        """Поставщик включён; без `vendor_config` (легаси-вендор) — включён."""
+        if self.vendor_config is None:
             return True
-        return bool(self._vendor_config.enabled)
+        return self.vendor_config.enabled
 
     def get_markup_rules(self) -> data_provider.MarkupRulesConfig:
         """get markup rules and caching"""
@@ -107,6 +108,8 @@ def make_parse_config(
     markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
+    vendor_section: VendorSection | None = None,
+    vendor_config: VendorConfig | None = None,
 ) -> ParseConfiguration:
     """ParseConfiguration with default FromUserConfig providers."""
     folder_name = parser_params.supplier.folder_name
@@ -116,5 +119,7 @@ def make_parse_config(
             black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(),
             manufacturer_aliases=manufacturer_aliases or data_provider.ManufacturerAliasesProviderFromUserConfig(),
             parser_params=parser_params,
-        )
+        ),
+        vendor_section,
+        vendor_config,
     )

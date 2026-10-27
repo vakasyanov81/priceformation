@@ -104,7 +104,7 @@ def test_markup_percent_empty_map_is_zero() -> None:
 
 
 def test_missing_vendor_is_disabled() -> None:
-    """Вендор без _vendor_config считается активным (обратная совместимость)."""
+    """Вендор без vendor_config считается активным (обратная совместимость)."""
     parser = _parser(_base_params())
     assert parser.settings.is_active is True
 

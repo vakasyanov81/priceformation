@@ -148,7 +148,7 @@ def test_parse_all_clears_aliases_cache() -> None:
 
 def test_parse_all_passes_config() -> None:
     """vendor_cls получает переданный vendor_config, не None."""
-    vendor_config = MagicMock()
+    vendor_config = MagicMock(vendor_section=None, vendor_config=None)
     orchestrator = ParseOrchestrator()
     with patch.object(orchestrator, '_parse_supplier') as mock_parse:
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), vendor_config)])
@@ -281,7 +281,7 @@ def _config_driven_vendor_entry(
     with_section: bool = True,
     with_config: bool = True,
 ) -> tuple[VendorSection, VendorConfig, ParseConfiguration]:
-    """Запись вендора с возможностью снять ``_vendor_section``/``_vendor_config``."""
+    """Запись вендора с возможностью снять ``vendor_section``/``vendor_config``."""
     vendor_cfg = VendorConfig(folder='test_folder', enabled=enabled, code='99', name='Test', start_row=1)
     section = VendorSection(
         id='99',
@@ -292,9 +292,9 @@ def _config_driven_vendor_entry(
     )
     _, config = make_vendor_entry(section, vendor_cfg)
     if not with_section:
-        config._vendor_section = None
+        config.vendor_section = None
     if not with_config:
-        config._vendor_config = None
+        config.vendor_config = None
     return section, vendor_cfg, config
 
 
@@ -332,7 +332,7 @@ def test_parser_for_vendor_enabled_with_metadata_builds_config_driven() -> None:
 
 
 def test_parser_for_vendor_enabled_without_vendor_config_falls_back() -> None:
-    """Без ``_vendor_config`` (не VendorConfig) парсер строится классом."""
+    """Без ``vendor_config`` парсер строится классом."""
     _, _, config = _config_driven_vendor_entry(enabled=True, with_config=False)
     vendor_cls = MagicMock()
     make_cd = MagicMock()
@@ -445,16 +445,6 @@ def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) 
     warnings = [text for text in texts_at(entries(), logging.WARNING) if 'не собрано из полей' in text]
     assert len(warnings) == 2
     assert all(text.endswith('позиций: 3') for text in warnings)
-
-
-def test_parser_for_vendor_config_without_vendor_metadata_attributes() -> None:
-    """Конфиг без атрибутов секции и VendorConfig (чужая реализация) — парсер строится классом."""
-    config: Any = SimpleNamespace()
-    vendor_cls = MagicMock()
-
-    parser_for_vendor(vendor_cls, config)
-
-    vendor_cls.assert_called_once_with(parse_config=config)
 
 
 def test_logs_cleared_before_parse(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -74,8 +74,10 @@ class TestFullParsePipeline:
         from parsers.registry import vendor_entry_for
 
         _entry, parse_config = vendor_entry_for('22')  # zapaska tires
-        section = parse_config._vendor_section
-        vendor_cfg = parse_config._vendor_config
+        section = parse_config.vendor_section
+        vendor_cfg = parse_config.vendor_config
+        assert section is not None
+        assert vendor_cfg is not None
 
         parser = make_config_driven_parser(section, vendor_cfg, parse_config)
         assert isinstance(parser.price_files.file_reader, FileReader)

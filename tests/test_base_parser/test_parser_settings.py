@@ -1,7 +1,6 @@
 """ParserSettings: конфиг, имя поставщика, признак активности — без BaseParser."""
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,6 +13,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.vendor_config.models import VendorConfig
 
 _SUPPLIER_NAME = 'Поставщик'
 _SHEET = 'лист 2'
@@ -63,13 +63,17 @@ def test_manufacturer_finder_is_cached_per_settings() -> None:
 
 
 def test_is_active_without_vendor_config() -> None:
-    """Легаси-вендор без `_vendor_config` считается включённым."""
+    """Легаси-вендор без `vendor_config` считается включённым."""
     assert ParserSettings(_config()).is_active is True
+
+
+def _vendor_config(enabled: bool) -> VendorConfig:
+    return VendorConfig(folder='f', enabled=enabled, code='c', name='n', start_row=1)
 
 
 @pytest.mark.parametrize('enabled', [True, False])
 def test_is_active_follows_vendor_config(enabled: bool) -> None:
     config = _config()
+    config.vendor_config = _vendor_config(enabled)
 
-    with patch.object(config, '_vendor_config', SimpleNamespace(enabled=enabled)):
-        assert ParserSettings(config).is_active is enabled
+    assert ParserSettings(config).is_active is enabled

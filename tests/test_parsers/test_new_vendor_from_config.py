@@ -173,4 +173,5 @@ def test_new_vendor_has_no_python_code(tmp_path: Path) -> None:
     assert parser_cls is BaseParser
     assert parse_config.supplier.code == 'm1'  # id секции
     assert parse_config.supplier.name == 'Раздел 1'  # section.name
-    assert parse_config._vendor_config.name == 'Минимальный'  # vendor.name
+    assert parse_config.vendor_config is not None
+    assert parse_config.vendor_config.name == 'Минимальный'  # vendor.name
