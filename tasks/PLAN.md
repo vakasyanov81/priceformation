@@ -79,6 +79,7 @@ services/                        ← оркестрация
 | [Убрать `# flake8: noqa` из `BaseParser`](./task-19-base-parser-flake8-noqa.md) | Директива скрывает WPS201 (24 > 18 импортов), WPS214 (52 > 7 методов в классе) и WPS231 (сложность `_run_pipeline` 15 > 12). Разложить `BaseParser` по ролям. |
 | [Убрать `# flake8: noqa` из двух модулей стратегий](./task-20-strategies-flake8-noqa.md) | `_four_tochki_tire_helper.py` и `_tire_title_parser.py`: директива скрывает WPS202 и ещё WPS210/221/237/110. Разбить модули по ролям, упростить функции. |
 | [`BaseParser`: от наследования к композиции](./task-21-base-parser-composition.md) | Заменить цепочку миксинов из task-19 коллабораторами с явными зависимостями; `BaseParser` — тонкий оркестратор. |
+| [Остаточный долг после task-21](./task-22-base-parser-leftovers.md) | `# noqa: WPS214` без `FIXME` (`TitleFilter`, `TitleFilterProtocol`, `RowProcessor`), `set_parse_config` только для тестов, неиспользуемый `PriceFiles.type_production`, `getattr` по приватным полям `ParseConfiguration`. |
 | [Устранение замечаний по качеству кода](./QUALITY_PLAN.md) | 14 задач по итогам ревью: bandit и pip-audit в CI, тестовые заглушки в колесе, мёртвый код, мутабельные `ParserParams`, опечатки в именах модулей. |
 
 План по тестам не пересекается с архитектурным: он меняет только `tests/` и
