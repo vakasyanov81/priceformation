@@ -12,6 +12,7 @@ from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
+from parsers.base_parser.row_enricher import RowEnricher
 from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
@@ -38,12 +39,16 @@ class ParserCore:
         self.row_filters = RowFilters(strategy_hooks)
         self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self.stats = ParserStats()
-        self.categories = CategoryService(strategy_hooks, CategoryLookup(self.stats))
 
         self.price_files = PriceFiles(self.settings, file_reader or FileReader(data_reader=data_reader))
         self._row_processor = row_processor or RowProcessor()
-        self.manufacturers = ManufacturerService(self.settings, strategy_hooks)
-        self.titles = TitleService(strategy_hooks, title_filter or TitleFilter(parse_config))
+        self.enricher = RowEnricher(
+            self.settings,
+            TitleService(strategy_hooks, title_filter or TitleFilter(parse_config)),
+            CategoryService(strategy_hooks, CategoryLookup(self.stats)),
+            ManufacturerService(self.settings, strategy_hooks),
+            self.stats,
+        )
 
     def __repr__(self) -> str:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""

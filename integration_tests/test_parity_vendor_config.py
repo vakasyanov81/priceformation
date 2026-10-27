@@ -20,7 +20,7 @@ from services.parse_orchestrator import ParseOrchestrator
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
 _CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
-_ROW_LOGGER = 'parsers.base_parser.base_parser_row'
+_ROW_LOGGER = 'parsers.base_parser.row_enricher'
 
 
 @pytest.fixture

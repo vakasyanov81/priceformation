@@ -197,9 +197,9 @@ def test_category_strategy_is_called() -> None:
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
 
     row = RowItem({'title': 'Шина'})
-    category = parser.categories.category_for(row)
+    category = parser.enricher.categories.category_for(row)
     assert category == 'Автошина'
-    strategy.resolve.assert_called_once_with(row, parser.categories.lookup)
+    strategy.resolve.assert_called_once_with(row, parser.enricher.categories.lookup)
 
 
 def test_manufacturer_correction_survives_title_recompose() -> None:
@@ -283,7 +283,7 @@ def test_title_strategy_is_called() -> None:
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
 
     row = RowItem({'title': '385/65 R22.5'})
-    prepared_title = parser.titles.get_prepared_title(row)
+    prepared_title = parser.enricher.titles.get_prepared_title(row)
     assert prepared_title == '385/65R22.5'
     strategy.prepare.assert_called_once_with(row)
 
@@ -323,7 +323,7 @@ def test_find_manufacturer_from_hooks() -> None:
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder  # noqa: WPS437
 
-    parser.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
+    parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 
     finder.process.assert_not_called()
 
@@ -334,7 +334,7 @@ def test_find_manufacturer_default_when_no_hooks() -> None:
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder  # noqa: WPS437
 
-    parser.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
+    parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 
     finder.process.assert_called_once()
 
@@ -351,15 +351,16 @@ def test_pipeline_default_order() -> None:
     )
 
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
-    parser.titles.title_filter = MagicMock()
-    parser.titles.title_filter.get_prepared_title.return_value = 'Стандарт'
+    title_filter = MagicMock()
+    parser.enricher.titles.title_filter = title_filter
+    title_filter.get_prepared_title.return_value = 'Стандарт'
     parser._row_processor = MagicMock()
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
     parser.process_parsed_row(row)
 
     # title → min_rest → category → markup
-    parser.titles.title_filter.get_prepared_title.assert_called_once()
+    title_filter.get_prepared_title.assert_called_once()
     cat_strategy.resolve.assert_called_once()
     parser._row_processor.add_price_markup.assert_called_once_with(row)
 
@@ -376,8 +377,9 @@ def test_pipeline_custom_order() -> None:
     )
 
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
-    parser.titles.title_filter = MagicMock()
-    parser.titles.title_filter.get_prepared_title.return_value = 'Стандарт'
+    title_filter = MagicMock()
+    parser.enricher.titles.title_filter = title_filter
+    title_filter.get_prepared_title.return_value = 'Стандарт'
     parser._row_processor = MagicMock()
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})

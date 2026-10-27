@@ -20,11 +20,10 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.base_parser.base_parser_row import _enrich_row_item, _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles, type_production_from_filename
-from parsers.base_parser.row_filters import DEFAULT_MIN_REST
+from parsers.base_parser.row_filters import DEFAULT_MIN_REST, drop_empty_rest
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
@@ -57,7 +56,7 @@ def _parser() -> BaseParser:
 
 def _parser_with_finder() -> BaseParser:
     parser = _parser()
-    parser.categories.lookup.reset()
+    parser.enricher.categories.lookup.reset()
     return parser
 
 
@@ -68,21 +67,21 @@ def _priced(title: str) -> RowItem:
 def test_correction_category_skips_without_finder() -> None:
     parser = _parser()
     row = RowItem({'type_production': 'грузовая'})
-    parser.categories.lookup.correction_category(row)
+    parser.enricher.categories.lookup.correction_category(row)
     assert row.vendor.type_production == 'грузовая'
 
 
 def test_correction_category_skips_empty_type() -> None:
     parser = _parser_with_finder()
     row = RowItem({})
-    parser.categories.lookup.correction_category(row)
+    parser.enricher.categories.lookup.correction_category(row)
     assert not row.vendor.type_production
 
 
 def test_correction_category_maps_alias() -> None:
     parser = _parser_with_finder()
     row = RowItem({'type_production': 'грузовая'})
-    parser.categories.lookup.correction_category(row)
+    parser.enricher.categories.lookup.correction_category(row)
     assert row.vendor.type_production == 'Грузовая шина'
 
 
@@ -90,7 +89,7 @@ def test_drop_row_with_rest_and_no_purchase_price() -> None:
     parser = _parser()
     dropped = RowItem({'title': _TITLE, 'rest_count': _REST})
     kept = RowItem({'title': _TITLE, 'rest_count': _REST, 'price_opt': _PRICE})
-    assert parser.filter_keep([dropped, kept]) == [kept]
+    assert parser.enricher.keep([dropped, kept]) == [kept]
 
 
 def test_drop_empty_rest_requires_opt_and_rest() -> None:
@@ -102,44 +101,44 @@ def test_drop_empty_rest_requires_opt_and_rest() -> None:
 
 
 def test_is_valid_title_keeps_normal() -> None:
-    assert _parser().titles.is_valid_title(_TITLE)
+    assert _parser().enricher.titles.is_valid_title(_TITLE)
 
 
 def test_is_valid_title_rejects_empty() -> None:
-    assert not _parser().titles.is_valid_title('')
+    assert not _parser().enricher.titles.is_valid_title('')
 
 
 def test_is_valid_title_rejects_exact_blacklist() -> None:
-    assert not _parser().titles.is_valid_title('wrong title')
+    assert not _parser().enricher.titles.is_valid_title('wrong title')
 
 
 def test_is_valid_title_rejects_mask() -> None:
-    assert not _parser().titles.is_valid_title('some некондиция product')
+    assert not _parser().enricher.titles.is_valid_title('some некондиция product')
 
 
 def test_filter_keep_counts_exact_blacklist() -> None:
     parser = _parser()
     kept = _priced(_TITLE)
-    assert parser.filter_keep([_priced('wrong title'), kept]) == [kept]
+    assert parser.enricher.keep([_priced('wrong title'), kept]) == [kept]
     assert parser.stats.black_list_skips == 1
 
 
 def test_filter_keep_counts_mask() -> None:
     parser = _parser()
-    parser.filter_keep([_priced('some некондиция product')])
+    parser.enricher.keep([_priced('some некондиция product')])
     assert parser.stats.black_list_skips == 1
 
 
 def test_filter_keep_does_not_count_missing_price() -> None:
     parser = _parser()
-    parser.filter_keep([RowItem({'title': _TITLE, 'rest_count': _REST})])
+    parser.enricher.keep([RowItem({'title': _TITLE, 'rest_count': _REST})])
     assert parser.stats.black_list_skips == 0
 
 
 def test_enrich_counts_blacklist_after_title() -> None:
     parser = _parser()
     kept = _priced(_TITLE)
-    kept_rows = enrich_items(parser, [_priced('wrong title 2'), kept])
+    kept_rows = parser.enricher.enrich([_priced('wrong title 2'), kept])
     assert [row_item.identity.title for row_item in kept_rows] == [_TITLE]
     assert parser.stats.black_list_skips == 1
 
@@ -159,7 +158,7 @@ def test_after_process_counts_titles_not_composed() -> None:
 
 def test_enrich_empty_title_not_counted() -> None:
     parser = _parser()
-    assert enrich_items(parser, [RowItem({})]) == []
+    assert parser.enricher.enrich([RowItem({})]) == []
     assert parser.stats.black_list_skips == 0
 
 
@@ -173,19 +172,17 @@ def test_enrich_skips_title_value_error() -> None:
             raise ValueError('bad title')
         return True
 
-    parser.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
-    rows = enrich_items(parser, [_priced(_TITLE)])
+    parser.enricher.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    rows = parser.enricher.enrich([_priced(_TITLE)])
     assert rows == []
 
 
 def test_enrich_row_item_sets_service_fields() -> None:
-    """_enrich_row_item проставляет поставщика, шип и канонический сезон по ключам."""
-    parser = MagicMock()
-    supplier_params = parser.settings.parser_params.return_value
-    supplier_params.supplier.name = 'Тест'
+    """enrich проставляет поставщика, шип и канонический сезон по ключам."""
+    parser = _parser()
     row = RowItem({'title': _TITLE, 'season': 'лето', 'spike': 'да'})
 
-    _enrich_row_item(parser, row)
+    parser.enricher.enrich([row])
 
     assert row.get_field('supplier_name') == 'Тест'
     assert row.get_field('spike') == 'Да'
@@ -236,7 +233,7 @@ def test_type_production_from_filename_without_underscore() -> None:
 
 def test_category_for_without_hooks_is_none() -> None:
     """Без стратегий категория не ищется (не падает на None.category)."""
-    assert _parser().categories.category_for(RowItem({'title': _TITLE})) is None
+    assert _parser().enricher.categories.category_for(RowItem({'title': _TITLE})) is None
 
 
 class _DiskCategories(CategoryService):
@@ -249,9 +246,9 @@ class _DiskCategories(CategoryService):
 def test_apply_category_sets_type_production() -> None:
     """Категория строки попадает в type_production по правильному ключу."""
     parser = _parser()
-    parser.categories = _DiskCategories(None, CategoryLookup(parser.stats))
+    parser.enricher.categories = _DiskCategories(None, CategoryLookup(parser.stats))
     row = RowItem({'title': _TITLE})
-    parser.categories.apply_category(row)
+    parser.enricher.categories.apply_category(row)
     assert row.vendor.type_production == 'Диск'
 
 
@@ -260,7 +257,7 @@ def test_apply_manufacturer_calls_finder() -> None:
     parser = _parser()
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder  # noqa: WPS437
-    parser.manufacturers.apply_manufacturer(RowItem({'title': _TITLE}))
+    parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': _TITLE}))
     finder.process.assert_called_once()
 
 
@@ -319,9 +316,9 @@ def test_parse_creates_category_finder() -> None:
     """parse() готовит CategoryFinder до обработки строк."""
     parser = _parser()
     parser.price_files = _NoPriceFiles()
-    parser.categories.lookup = _ResetSpyLookup(parser.stats)
+    parser.enricher.categories.lookup = _ResetSpyLookup(parser.stats)
     parser.parse()
-    assert parser.categories.lookup.reset_calls == 1
+    assert parser.enricher.categories.lookup.reset_calls == 1
 
 
 def _parser_with_start_row(start_row: int) -> BaseParser:
@@ -335,8 +332,8 @@ def test_keep_row_item_counts_each_skip() -> None:
     """Счётчик пропусков накапливается, а не обнуляется в единицу."""
     parser = _parser()
 
-    assert _keep_row_item(parser, _priced('wrong title')) is False
-    assert _keep_row_item(parser, _priced('wrong title 2')) is False
+    assert parser.enricher.keep([_priced('wrong title')]) == []
+    assert parser.enricher.keep([_priced('wrong title 2')]) == []
     assert parser.stats.black_list_skips == 2
 
 
@@ -344,7 +341,7 @@ def test_enrich_counts_each_blacklist_skip() -> None:
     """enrich накапливает пропуски по чёрному списку, а не пишет 1."""
     parser = _parser()
 
-    enrich_items(parser, [_priced('wrong title'), _priced('wrong title 2')])
+    parser.enricher.enrich([_priced('wrong title'), _priced('wrong title 2')])
 
     assert parser.stats.black_list_skips == 2
 
@@ -356,9 +353,9 @@ def test_enrich_logs_row_number_from_start_row(caplog: pytest.LogCaptureFixture)
     def _raise_on_title(row_item: RowItem) -> bool:
         raise ValueError('bad title')
 
-    parser.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    parser.enricher.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
 
     with caplog.at_level(logging.ERROR):
-        enrich_items(parser, [_priced(_TITLE)])
+        parser.enricher.enrich([_priced(_TITLE)])
 
     assert '(№ 5)' in caplog.text

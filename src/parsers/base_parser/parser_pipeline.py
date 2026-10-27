@@ -24,12 +24,12 @@ class ParserPipeline(ParserCore):
         hooks = self._strategy_hooks
         if hooks is not None:
             self._run_pipeline(hooks, row_item)
-            self.manufacturers.apply_manufacturer_after_pipeline(row_item)
+            self.enricher.manufacturers.apply_manufacturer_after_pipeline(row_item)
             return
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
         self.row_filters.skip_by_min_rest(row_item)
-        self.categories.apply_category(row_item)
+        self.enricher.categories.apply_category(row_item)
         self._row_processor.add_price_markup(row_item)
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
@@ -41,12 +41,12 @@ class ParserPipeline(ParserCore):
     def _run_step(self, step: str, row_item: RowItem) -> None:
         """Один шаг pipeline; неизвестное имя шага пропускается."""
         if step == 'category':
-            self.categories.apply_category(row_item)
-            self.categories.zero_rest_without_category(row_item)
-            self.categories.apply_category_fields(row_item)
+            self.enricher.categories.apply_category(row_item)
+            self.enricher.categories.zero_rest_without_category(row_item)
+            self.enricher.categories.apply_category_fields(row_item)
             return
         simple_steps = {
-            'title': self.titles.set_prepared_title,
+            'title': self.enricher.titles.set_prepared_title,
             'min_rest': self.row_filters.skip_by_min_rest,
             'markup': self._row_processor.add_price_markup,
         }

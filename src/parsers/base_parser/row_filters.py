@@ -8,6 +8,14 @@ from parsers.base_parser.warehouse_order import apply_warehouse_order
 DEFAULT_MIN_REST = 4
 
 
+def drop_empty_rest(row_items: list[RowItem]) -> list[RowItem]:
+    """Оставить позиции с ценой закупки и остатком.
+
+    rest_count может быть ``>40`` и не приводится к float — только истинность.
+    """
+    return [row_item for row_item in row_items if row_item.pricing.price_opt and row_item.stock.rest_count]
+
+
 class RowFilters:
     """Фильтры позиций и правила остатка; поведение задают `StrategyHooks` (без них — дефолты)."""
 

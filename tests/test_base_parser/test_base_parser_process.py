@@ -7,6 +7,7 @@ from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
+from parsers.base_parser.row_enricher import RowEnricher
 
 _FIRST_FILE = 'brand_kind_cat_tires.xls'
 _SECOND_FILE = 'brand_kind_cat_disks.xls'
@@ -33,15 +34,23 @@ class _CannedPriceFiles(PriceFiles):
         return mapped_rows
 
 
+class _PassThroughEnricher(RowEnricher):
+    """Enrich без разбора строк: тесты файлового цикла не нуждаются в title и производителе."""
+
+    def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
+        return row_items
+
+
 class _ProcessParser(BaseParser):
     """Парсер с заготовленными файлами; enrich и построчные хуки отключены."""
 
     def __init__(self, rows_by_file: dict[str, list[RowItem]]) -> None:
         super().__init__(_parse_config())
         self.price_files = _CannedPriceFiles(rows_by_file)
-
-    def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
-        return row_items
+        enricher = self.enricher
+        self.enricher = _PassThroughEnricher(
+            self.settings, enricher.titles, enricher.categories, enricher.manufacturers, self.stats
+        )
 
     def process_parsed_row(self, row_item: RowItem) -> None:
         """File-loop stub: no markup policy."""

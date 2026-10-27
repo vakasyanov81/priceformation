@@ -8,10 +8,10 @@ from typing import Any, Protocol
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.markup_policy import MarkupPolicy, make_markup_policy
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.base_parser.parser_pipeline import ParserPipeline
+from parsers.base_parser.row_filters import drop_empty_rest
 from parsers.base_parser.price_markup import fill_absolute_markup, fill_percent_markup
 from parsers.base_parser.row_processor import RowProcessor
 
@@ -34,7 +34,7 @@ class BaseParser(ParserPipeline):
         if not self.settings.is_active:
             self._logger.log_disable_status()
             return []
-        self.categories.lookup.reset()
+        self.enricher.categories.lookup.reset()
         self.price_files.resolve()
         self._logger.log_start()
         self.process()
@@ -54,8 +54,8 @@ class BaseParser(ParserPipeline):
         raw_count = len(mapped)
         self.parsed_items += mapped
         self.parsed_items = self.row_filters.filter_warehouses(self.parsed_items)
-        self.parsed_items = self.filter_keep(self.parsed_items)
-        self.parsed_items = self.enrich(self.parsed_items)
+        self.parsed_items = self.enricher.keep(self.parsed_items)
+        self.parsed_items = self.enricher.enrich(self.parsed_items)
         self.apply_vendor_hooks(self.parsed_items)
         return raw_count
 
@@ -74,12 +74,6 @@ class BaseParser(ParserPipeline):
         без цены закупки или остатка, в прайс не попадают и в счётчик не входят.
         """
         return sum(1 for row_item in self.parsed_items if row_item.vendor.type_corrected)
-
-    def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
-        return enrich_items(self, row_items)
-
-    def filter_keep(self, row_items: list[RowItem]) -> list[RowItem]:
-        return [row_item for row_item in row_items if _keep_row_item(self, row_item)]
 
 
 def make_parser[TParser: BaseParser](
