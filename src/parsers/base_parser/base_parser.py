@@ -36,7 +36,7 @@ class BaseParser(ParserPipeline):
             self.logger.log_disable_status()
             return []
         self._category_finder = CategoryFinder()
-        self.files = self._price_files()
+        self.price_files.resolve()
         self.logger.log_start()
         self.process()
         self.after_process()
@@ -44,11 +44,14 @@ class BaseParser(ParserPipeline):
         self.logger.log_finish(ParseResultStatistic(parsed))
         return parsed
 
+    def get_parsed_items(self) -> list[RowItem]:
+        return self.parsed_items
+
     def process(self) -> int:
         """read → map → filter → enrich → vendor hook. Count before filters."""
-        files = self.files or []
+        files = self.price_files.files or []
         self.logger.log_list_files(files)
-        mapped = self.map_items(self.read_rows(files))
+        mapped = self.price_files.map_items(self.price_files.read_rows(files))
         raw_count = len(mapped)
         self.parsed_items += mapped
         self.parsed_items = self.filter_warehouses(self.parsed_items)
@@ -97,5 +100,5 @@ def make_parser[TParser: BaseParser](
     if data_reader is not None:
         kwargs['data_reader'] = data_reader
     parser = parser_cls(**kwargs)
-    parser.files = file_prices
+    parser.price_files.files = file_prices
     return parser

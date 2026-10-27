@@ -179,4 +179,4 @@ def test_make_parser_passes_data_reader_when_given() -> None:
 def test_make_parser_passes_file_prices() -> None:
     """file_prices доезжает до parser.files как есть."""
     parser = make_parser(BaseParser, ParseConfiguration(_base_params()), file_prices=['a.xls'])
-    assert parser.files == ['a.xls']
+    assert parser.price_files.files == ['a.xls']

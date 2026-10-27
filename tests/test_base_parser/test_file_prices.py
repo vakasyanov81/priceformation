@@ -54,7 +54,7 @@ class _SilentParser(BaseParser):
         parse_params.file_templates = [_TEMPLATE]
         parse_config = MagicMock(parser_params=parse_params, is_enabled=True)
         super().__init__(parse_config, file_reader=FileReader(price_source=price_source))
-        self.files = file_prices
+        self.price_files.files = file_prices
 
     def process(self) -> int:
         return 0
@@ -100,7 +100,7 @@ def test_parser_uses_price_source() -> None:
     parser.parse()
     assert source.folder_name == _SUPPLIER
     assert source.templates == [_TEMPLATE]
-    assert parser.files == [_SOURCE_FILE]
+    assert parser.price_files.files == [_SOURCE_FILE]
 
 
 def test_parser_skips_source_if_files_set() -> None:
@@ -108,7 +108,7 @@ def test_parser_skips_source_if_files_set() -> None:
     parser = _SilentParser(source, file_prices=[_GIVEN_FILE])
     parser.parse()
     assert not source.called
-    assert parser.files == [_GIVEN_FILE]
+    assert parser.price_files.files == [_GIVEN_FILE]
 
 
 def test_parser_missing_prices_raises() -> None:

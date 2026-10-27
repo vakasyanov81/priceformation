@@ -10,6 +10,7 @@ from parsers.base_parser.log_parser_process import LoggerParseProcess
 from parsers.base_parser.markup_policy import MarkupPolicySpec
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
@@ -36,14 +37,12 @@ class ParserCore:
         self.parsed_items: list[RowItem] = []
         self.settings = ParserSettings(parse_config)
         self._strategy_hooks = strategy_hooks
-        self.type_production: str | None = None
         self.data_reader = data_reader or XlsReader
-        self.files: list[str] | None = None
         self.logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self._category_finder: CategoryFinder | None = None
         self.stats = ParserStats()
 
-        self._file_reader_impl = file_reader or FileReader(data_reader=self.data_reader)
+        self.price_files = PriceFiles(self.settings, file_reader or FileReader(data_reader=self.data_reader))
         self._row_processor = row_processor or RowProcessor()
         self._title_filter = title_filter or TitleFilter(parse_config)
 

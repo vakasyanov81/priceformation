@@ -6,7 +6,7 @@ from domain.row_item.markdown_title import is_markdown_title
 from domain.row_item.production_plant import production_plant
 from domain.row_item.production_year import production_year
 from domain.row_item.row_item import RowItem
-from parsers.base_parser.parser_files import ParserFiles
+from parsers.base_parser.parser_core import ParserCore
 
 # Значения признака шипов, считающиеся «Да».
 _SPIKE_YES_VALUES = {'ш.', 'да'}
@@ -16,7 +16,7 @@ _COMMA_RE = r'(\d),(\d)'
 _COMMA_REPLACEMENT = r'\1.\2'
 
 
-class ParserTitleText(ParserFiles):
+class ParserTitleText(ParserCore):
     """Текстовые хелперы названия, переопределяемые поставщиками."""
 
     @classmethod

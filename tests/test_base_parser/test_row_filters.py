@@ -22,7 +22,8 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.base_parser_row import _enrich_row_item, _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
-from parsers.base_parser.parser_files import type_production_from_filename
+from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.price_files import PriceFiles, type_production_from_filename
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
@@ -222,8 +223,8 @@ def _params_with_sheet_info(sheet_info: str) -> BasePriceParseConfigurationParam
 def test_parser_initial_optional_state_is_none() -> None:
     """До разбора type_production и files — None, а не пустая строка."""
     parser = _parser()
-    assert parser.type_production is None
-    assert parser.files is None
+    assert parser.price_files.type_production is None
+    assert parser.price_files.files is None
 
 
 def test_repr_includes_sheet_info() -> None:
@@ -302,16 +303,27 @@ def test_set_parse_config_resets_manufacturer_finder() -> None:
 def test_raw_parse_passes_file_path_to_reader() -> None:
     """raw_parse прокидывает путь файла в читатель."""
     parser = _parser()
-    parser._file_reader_impl = MagicMock()  # noqa: WPS437
-    parser.raw_parse('price.xls')
-    reader = parser._file_reader_impl  # noqa: WPS437
+    reader = MagicMock()
+    parser.price_files.file_reader = reader
+    parser.price_files.raw_parse('price.xls')
     reader.raw_parse.assert_called_once_with('price.xls', parser.settings.parser_params())
+
+
+class _NoPriceFiles(PriceFiles):
+    """Коллаборатор без файлов: parse() не лезет в папку поставщика."""
+
+    def __init__(self) -> None:
+        super().__init__(ParserSettings(), MagicMock())
+
+    def resolve(self) -> list[str]:
+        self.files = []
+        return self.files
 
 
 def test_parse_creates_category_finder() -> None:
     """parse() готовит CategoryFinder до обработки строк."""
     parser = _parser()
-    parser._price_files = list  # type: ignore[method-assign]
+    parser.price_files = _NoPriceFiles()
     parser.parse()
     assert parser._category_finder is not None  # noqa: WPS437
 

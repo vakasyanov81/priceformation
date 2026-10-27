@@ -82,7 +82,7 @@ class TestFullParsePipeline:
         ), f'Для json-вендора ожидается JsonPriceReader, получен {parser.data_reader}'
 
         # Файлы есть — разбор не должен упасть с CalamineError
-        assert parser._file_reader_impl._data_reader is JsonPriceReader  # type: ignore[attr-defined]
+        assert parser.price_files.file_reader._data_reader is JsonPriceReader  # type: ignore[attr-defined]
 
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""
