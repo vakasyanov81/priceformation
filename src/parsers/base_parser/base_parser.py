@@ -32,15 +32,15 @@ class BaseParser(ParserPipeline):
 
     def parse(self) -> list[RowItem]:
         if not self.settings.is_active:
-            self.logger.log_disable_status()
+            self._logger.log_disable_status()
             return []
         self.categories.lookup.reset()
         self.price_files.resolve()
-        self.logger.log_start()
+        self._logger.log_start()
         self.process()
         self.after_process()
         parsed = self.get_parsed_items()
-        self.logger.log_finish(ParseResultStatistic(parsed))
+        self._logger.log_finish(ParseResultStatistic(parsed))
         return parsed
 
     def get_parsed_items(self) -> list[RowItem]:
@@ -49,7 +49,7 @@ class BaseParser(ParserPipeline):
     def process(self) -> int:
         """read → map → filter → enrich → vendor hook. Count before filters."""
         files = self.price_files.files or []
-        self.logger.log_list_files(files)
+        self._logger.log_list_files(files)
         mapped = self.price_files.map_items(self.price_files.read_rows(files))
         raw_count = len(mapped)
         self.parsed_items += mapped

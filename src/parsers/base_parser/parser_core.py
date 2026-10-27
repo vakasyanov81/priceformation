@@ -7,7 +7,7 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.log_parser_process import LoggerParseProcess
-from parsers.base_parser.markup_policy import MarkupPolicySpec
+from parsers.base_parser.manufacturer_service import ManufacturerService
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
@@ -21,9 +21,6 @@ from parsers.base_parser.title_service import TitleService
 
 class ParserCore:
     """Состояние парсера и доступ к конфигу; нижний слой цепочки ролей BaseParser."""
-
-    find_manufacturer_on_enrich: bool = True
-    _markup_policy_type: MarkupPolicySpec | None = None
 
     def __init__(
         self,
@@ -39,12 +36,13 @@ class ParserCore:
         self.settings = ParserSettings(parse_config)
         self._strategy_hooks = strategy_hooks
         self.row_filters = RowFilters(strategy_hooks)
-        self.logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
+        self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self.stats = ParserStats()
         self.categories = CategoryService(strategy_hooks, CategoryLookup(self.stats))
 
         self.price_files = PriceFiles(self.settings, file_reader or FileReader(data_reader=data_reader))
         self._row_processor = row_processor or RowProcessor()
+        self.manufacturers = ManufacturerService(self.settings, strategy_hooks)
         self.titles = TitleService(strategy_hooks, title_filter or TitleFilter(parse_config))
 
     def __repr__(self) -> str:

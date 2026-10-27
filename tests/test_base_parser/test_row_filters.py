@@ -260,7 +260,7 @@ def test_apply_manufacturer_calls_finder() -> None:
     parser = _parser()
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder  # noqa: WPS437
-    parser.apply_manufacturer(RowItem({'title': _TITLE}))
+    parser.manufacturers.apply_manufacturer(RowItem({'title': _TITLE}))
     finder.process.assert_called_once()
 
 

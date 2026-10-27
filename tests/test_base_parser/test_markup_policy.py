@@ -4,7 +4,6 @@ from typing import cast
 
 import pytest
 
-from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
@@ -273,14 +272,6 @@ def test_map_on_opt_stored_percent_markup() -> None:
 def test_map_on_opt_stored_percent_empty_map() -> None:
     policy = _policy((), policy_cls=MapOnOptMarkupPolicy)
     assert percent_to_store(policy, _MAP_OPT) == _ZERO
-
-
-def test_round_price_up() -> None:
-    assert BaseParser.round_price(_ROUND_UP_PRICE) == _ROUNDED_UP_PRICE
-
-
-def test_round_price_exact() -> None:
-    assert BaseParser.round_price(_ROUND_EXACT_PRICE) == _ROUND_EXACT_PRICE
 
 
 def test_identity_apply_keeps_opt() -> None:

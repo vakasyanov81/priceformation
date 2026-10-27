@@ -1,11 +1,11 @@
 """Pipeline шагов разбора строки в BaseParser: порядок из стратегий или дефолтный."""
 
 from domain.row_item.row_item import RowItem
-from parsers.base_parser.parser_markup import ParserMarkup
+from parsers.base_parser.parser_core import ParserCore
 from parsers.base_parser.strategy_hooks import StrategyHooks
 
 
-class ParserPipeline(ParserMarkup):
+class ParserPipeline(ParserCore):
     """Шаги обработки строки после enrich."""
 
     def apply_vendor_hooks(self, row_items: list[RowItem]) -> None:
@@ -24,13 +24,13 @@ class ParserPipeline(ParserMarkup):
         hooks = self._strategy_hooks
         if hooks is not None:
             self._run_pipeline(hooks, row_item)
-            self.apply_manufacturer_after_pipeline(row_item)
+            self.manufacturers.apply_manufacturer_after_pipeline(row_item)
             return
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
         self.row_filters.skip_by_min_rest(row_item)
         self.categories.apply_category(row_item)
-        self.add_price_markup(row_item)
+        self._row_processor.add_price_markup(row_item)
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Выполнить шаги pipeline по порядку."""
@@ -48,7 +48,7 @@ class ParserPipeline(ParserMarkup):
         simple_steps = {
             'title': self.titles.set_prepared_title,
             'min_rest': self.row_filters.skip_by_min_rest,
-            'markup': self.add_price_markup,
+            'markup': self._row_processor.add_price_markup,
         }
         run_simple = simple_steps.get(step)
         if run_simple is not None:

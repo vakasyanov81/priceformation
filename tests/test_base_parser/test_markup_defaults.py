@@ -21,8 +21,9 @@ from parsers.base_parser.markup_policy import (
     MapOnOptMarkupPolicy,
     MarkupPolicy,
     make_map_on_opt_markup_policy,
+    make_markup_policy,
 )
-from parsers.base_parser.row_processor import MarkupPolicyNotSetError
+from parsers.base_parser.row_processor import MarkupPolicyNotSetError, RowProcessor
 from parsers.data_provider import AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig
 from parsers.data_provider.markup_rules import MarkupRulesProviderBase
 
@@ -80,6 +81,15 @@ def _parser(
     return make_parser(BaseParser, ParseConfiguration(config), markup_policy=markup_policy)
 
 
+def _processor(
+    config: BasePriceParseConfigurationParams,
+    *,
+    markup_policy: MarkupPolicy | None = None,
+) -> RowProcessor:
+    policy = make_markup_policy(ParseConfiguration(config)) if markup_policy is None else markup_policy
+    return RowProcessor(markup_policy=policy)
+
+
 def _map_on_opt_policy() -> MapOnOptMarkupPolicy:
     return MapOnOptMarkupPolicy(
         MarkupRulesConfig(absolute_markup_rules=AbsoluteMarkUpRules()),
@@ -88,9 +98,9 @@ def _map_on_opt_policy() -> MapOnOptMarkupPolicy:
 
 
 def test_markup_percent_empty_map_is_zero() -> None:
-    parser = _parser(_empty_params())
-    assert parser.get_markup_percent(_ZERO) == _ZERO
-    assert parser.get_markup_percent(_SOME_PRICE) == _ZERO
+    processor = _processor(_empty_params())
+    assert processor.get_markup_percent(_ZERO) == _ZERO
+    assert processor.get_markup_percent(_SOME_PRICE) == _ZERO
 
 
 def test_missing_vendor_is_disabled() -> None:
@@ -100,16 +110,14 @@ def test_missing_vendor_is_disabled() -> None:
 
 
 def test_markup_without_prices_is_zero() -> None:
-    parser = _parser(_base_params())
     row = RowItem({})
-    parser.add_price_markup(row)
+    _processor(_base_params()).add_price_markup(row)
     assert row.pricing.price_markup == _ZERO
 
 
 def test_markup_without_policy_raises() -> None:
-    parser = BaseParser(parse_config=ParseConfiguration(_base_params()))
     with pytest.raises(MarkupPolicyNotSetError):
-        parser.get_markup_percent(_SOME_PRICE)
+        RowProcessor().get_markup_percent(_SOME_PRICE)
 
 
 def test_markup_policy_error_message() -> None:
@@ -118,16 +126,14 @@ def test_markup_policy_error_message() -> None:
 
 
 def test_mim_skips_stored_percent() -> None:
-    parser = _parser(_base_params())
     row = RowItem({'price_opt': _SOME_PRICE})
-    parser.add_price_markup(row)
+    _processor(_base_params()).add_price_markup(row)
     assert row.pricing.percent_markup is None
 
 
 def test_map_on_opt_stores_percent() -> None:
-    parser = _parser(_base_params(), markup_policy=_map_on_opt_policy())
     row = RowItem({'price_opt': _MAP_OPT})
-    parser.add_price_markup(row)
+    _processor(_base_params(), markup_policy=_map_on_opt_policy()).add_price_markup(row)
     assert row.pricing.price_markup == _MAP_PRICE
     assert row.pricing.percent_markup == _MAP_STORED_PERCENT
 
@@ -141,9 +147,8 @@ def test_make_map_on_opt_markup_policy() -> None:
 
 
 def test_identity_add_price_markup_keeps_opt() -> None:
-    parser = _parser(_base_params(), markup_policy=IdentityMarkupPolicy.create())
     row = RowItem({'price_opt': _IDENTITY_OPT})
-    parser.add_price_markup(row)
+    _processor(_base_params(), markup_policy=IdentityMarkupPolicy.create()).add_price_markup(row)
     assert row.pricing.price_markup == _IDENTITY_OPT
     assert row.pricing.percent_markup is None
 
@@ -158,9 +163,9 @@ _GET_MARKUP_POLICY = MapOnOptMarkupPolicy(
 
 
 def test_get_markup_percent_uses_price_argument() -> None:
-    """BaseParser.get_markup_percent передаёт цену дальше, а не None."""
-    parser = _parser(_base_params(), markup_policy=_GET_MARKUP_POLICY)
-    assert parser.get_markup_percent(5) == 0.5
+    """RowProcessor.get_markup_percent передаёт цену дальше, а не None."""
+    processor = _processor(_base_params(), markup_policy=_GET_MARKUP_POLICY)
+    assert processor.get_markup_percent(5) == 0.5
 
 
 class _FakeReader:
