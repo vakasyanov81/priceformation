@@ -15,6 +15,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.markup_policy import (
     IdentityMarkupPolicy,
     MapOnOptMarkupPolicy,
@@ -173,7 +174,9 @@ def test_make_parser_passes_data_reader_when_given() -> None:
         ParseConfiguration(_base_params()),
         data_reader=_FakeReader,
     )
-    assert parser.data_reader is _FakeReader
+    file_reader = parser.price_files.file_reader
+    assert isinstance(file_reader, FileReader)
+    assert file_reader.data_reader is _FakeReader
 
 
 def test_make_parser_passes_file_prices() -> None:

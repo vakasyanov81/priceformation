@@ -21,7 +21,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.base_parser_row import _enrich_row_item, _keep_row_item, drop_empty_rest, enrich_items
-from parsers.base_parser.category_finder import CategoryFinder
+from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles, type_production_from_filename
 from parsers.base_parser.row_filters import DEFAULT_MIN_REST
@@ -57,7 +57,7 @@ def _parser() -> BaseParser:
 
 def _parser_with_finder() -> BaseParser:
     parser = _parser()
-    parser._category_finder = CategoryFinder()  # noqa: WPS437
+    parser.categories.lookup.reset()
     return parser
 
 
@@ -68,21 +68,21 @@ def _priced(title: str) -> RowItem:
 def test_correction_category_skips_without_finder() -> None:
     parser = _parser()
     row = RowItem({'type_production': 'грузовая'})
-    parser.correction_category(row)
+    parser.categories.lookup.correction_category(row)
     assert row.vendor.type_production == 'грузовая'
 
 
 def test_correction_category_skips_empty_type() -> None:
     parser = _parser_with_finder()
     row = RowItem({})
-    parser.correction_category(row)
+    parser.categories.lookup.correction_category(row)
     assert not row.vendor.type_production
 
 
 def test_correction_category_maps_alias() -> None:
     parser = _parser_with_finder()
     row = RowItem({'type_production': 'грузовая'})
-    parser.correction_category(row)
+    parser.categories.lookup.correction_category(row)
     assert row.vendor.type_production == 'Грузовая шина'
 
 
@@ -236,11 +236,11 @@ def test_type_production_from_filename_without_underscore() -> None:
 
 def test_category_for_without_hooks_is_none() -> None:
     """Без стратегий категория не ищется (не падает на None.category)."""
-    assert _parser().category_for(RowItem({'title': _TITLE})) is None
+    assert _parser().categories.category_for(RowItem({'title': _TITLE})) is None
 
 
-class _CategoryParser(BaseParser):
-    """Парсер с категорией, зависящей от строки."""
+class _DiskCategories(CategoryService):
+    """Категория, зависящая от строки."""
 
     def category_for(self, row_item: RowItem) -> str | None:
         return None if row_item is None else 'Диск'
@@ -248,9 +248,10 @@ class _CategoryParser(BaseParser):
 
 def test_apply_category_sets_type_production() -> None:
     """Категория строки попадает в type_production по правильному ключу."""
-    parser = _CategoryParser(parse_config=ParseConfiguration(_base_params()))
+    parser = _parser()
+    parser.categories = _DiskCategories(None, CategoryLookup(parser.stats))
     row = RowItem({'title': _TITLE})
-    parser.apply_category(row)
+    parser.categories.apply_category(row)
     assert row.vendor.type_production == 'Диск'
 
 
@@ -306,12 +307,21 @@ class _NoPriceFiles(PriceFiles):
         return self.files
 
 
+class _ResetSpyLookup(CategoryLookup):
+    reset_calls = 0
+
+    def reset(self) -> None:
+        self.reset_calls += 1
+        super().reset()
+
+
 def test_parse_creates_category_finder() -> None:
     """parse() готовит CategoryFinder до обработки строк."""
     parser = _parser()
     parser.price_files = _NoPriceFiles()
+    parser.categories.lookup = _ResetSpyLookup(parser.stats)
     parser.parse()
-    assert parser._category_finder is not None  # noqa: WPS437
+    assert parser.categories.lookup.reset_calls == 1
 
 
 def _parser_with_start_row(start_row: int) -> BaseParser:

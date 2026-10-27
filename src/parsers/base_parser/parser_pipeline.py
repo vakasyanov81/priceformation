@@ -29,21 +29,21 @@ class ParserPipeline(ParserMarkup):
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
         self.row_filters.skip_by_min_rest(row_item)
-        self.apply_category(row_item)
+        self.categories.apply_category(row_item)
         self.add_price_markup(row_item)
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Выполнить шаги pipeline по порядку."""
         self.row_filters.apply_warehouse_order(row_item)
         for step in hooks.pipeline:
-            self._run_step(step, hooks, row_item)
+            self._run_step(step, row_item)
 
-    def _run_step(self, step: str, hooks: StrategyHooks, row_item: RowItem) -> None:
+    def _run_step(self, step: str, row_item: RowItem) -> None:
         """Один шаг pipeline; неизвестное имя шага пропускается."""
         if step == 'category':
-            self.apply_category(row_item)
-            self.zero_rest_without_category(hooks, row_item)
-            self.apply_category_fields(hooks, row_item)
+            self.categories.apply_category(row_item)
+            self.categories.zero_rest_without_category(row_item)
+            self.categories.apply_category_fields(row_item)
             return
         simple_steps = {
             'title': self.titles.set_prepared_title,

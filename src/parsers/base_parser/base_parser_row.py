@@ -35,7 +35,7 @@ def _log_row_parse_errors(parser: BaseParser, row_id: int, row_item: RowItem) ->
 def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
     """Производитель, категория, служебные поля."""
     parser.apply_manufacturer(row_item)
-    parser.correction_category(row_item)
+    parser.categories.lookup.correction_category(row_item)
     row_item.set_field('supplier_name', parser.settings.parser_params().supplier.name)
     row_item.set_field('spike', get_spike_title(row_item))
     row_item.set_field('season', replace_season(row_item))

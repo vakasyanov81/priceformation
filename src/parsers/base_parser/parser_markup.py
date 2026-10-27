@@ -2,14 +2,14 @@
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.markup_policy import MarkupPolicy
-from parsers.base_parser.parser_category import ParserCategory
+from parsers.base_parser.parser_core import ParserCore
 from parsers.base_parser.price_markup import get_markup as price_get_markup
 from parsers.base_parser.row_processor import apply_manufacturer as apply_row_manufacturer
 
 _CENTS = 10
 
 
-class ParserManufacturer(ParserCategory):
+class ParserManufacturer(ParserCore):
     """Поиск производителя в названии позиции."""
 
     @property

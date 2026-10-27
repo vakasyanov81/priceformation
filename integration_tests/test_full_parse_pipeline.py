@@ -69,6 +69,7 @@ class TestFullParsePipeline:
     ) -> None:
         """Zapaska (reader: json) разбирается через JsonPriceReader, а не XlsReader."""
         from parsers.base_parser.config_driven_parser import make_config_driven_parser
+        from parsers.base_parser.file_reader import FileReader
         from parsers.json_reader import JsonPriceReader
         from parsers.registry import vendor_entry_for
 
@@ -77,12 +78,10 @@ class TestFullParsePipeline:
         vendor_cfg = parse_config._vendor_config
 
         parser = make_config_driven_parser(section, vendor_cfg, parse_config)
+        assert isinstance(parser.price_files.file_reader, FileReader)
         assert (
-            parser.data_reader is JsonPriceReader
-        ), f'Для json-вендора ожидается JsonPriceReader, получен {parser.data_reader}'
-
-        # Файлы есть — разбор не должен упасть с CalamineError
-        assert parser.price_files.file_reader._data_reader is JsonPriceReader  # type: ignore[attr-defined]
+            parser.price_files.file_reader.data_reader is JsonPriceReader
+        ), 'Для json-вендора ожидается JsonPriceReader'
 
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""

@@ -110,7 +110,6 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     parse_config = entry[1]
 
     parser = make_config_driven_parser(section, vendor_cfg, parse_config)
-    parser.data_reader = _FakeDataReader
     parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader)
     parser.price_files.files = ['price_test.xls']
 

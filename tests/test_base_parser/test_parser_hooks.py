@@ -16,6 +16,7 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
 from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.strategy_hooks import StrategyHooks
@@ -35,13 +36,15 @@ class _SpyRowFilters(RowFilters):
         super().skip_by_min_rest(row_item)
 
 
-class _OrderParser(BaseParser):
-    def after_row_mapped(self, row_item: RowItem) -> None:
-        _CALLS.append('after')
-
+class _SpyCategories(CategoryService):
     def category_for(self, row_item: RowItem) -> str | None:
         _CALLS.append('category')
         return _CATEGORY
+
+
+class _OrderParser(BaseParser):
+    def after_row_mapped(self, row_item: RowItem) -> None:
+        _CALLS.append('after')
 
 
 class _RebuildTitles(TitleService):
@@ -96,6 +99,7 @@ def _make_parser(*, markup_policy: IdentityMarkupPolicy | None = None) -> BasePa
         markup_policy=markup_policy,
     )
     parser.row_filters = _SpyRowFilters()
+    parser.categories = _SpyCategories(None, CategoryLookup(parser.stats))
     return parser
 
 

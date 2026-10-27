@@ -9,7 +9,6 @@ from typing import Any, Protocol
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.base_parser_row import _keep_row_item, drop_empty_rest, enrich_items
-from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.markup_policy import MarkupPolicy, make_markup_policy
 from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.base_parser.parser_pipeline import ParserPipeline
@@ -35,7 +34,7 @@ class BaseParser(ParserPipeline):
         if not self.settings.is_active:
             self.logger.log_disable_status()
             return []
-        self._category_finder = CategoryFinder()
+        self.categories.lookup.reset()
         self.price_files.resolve()
         self.logger.log_start()
         self.process()

@@ -21,6 +21,7 @@ from parsers.base_parser.config_driven_parser import (
     strategy_hooks_from_section,
     vendor_markup_policy_from_config,
 )
+from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.json_reader import JsonPriceReader
@@ -124,7 +125,9 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
 
     assert parser._strategy_hooks is not None
     assert parser._strategy_hooks.min_rest == vendor_config.behavior.min_rest
-    assert parser.data_reader is JsonPriceReader
+    file_reader = parser.price_files.file_reader
+    assert isinstance(file_reader, FileReader)
+    assert file_reader.data_reader is JsonPriceReader
 
 
 def test_strategy_hooks_without_cities_have_no_warehouse_filter() -> None:
@@ -194,9 +197,9 @@ def test_category_strategy_is_called() -> None:
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
 
     row = RowItem({'title': 'Шина'})
-    category = parser.category_for(row)
+    category = parser.categories.category_for(row)
     assert category == 'Автошина'
-    strategy.resolve.assert_called_once_with(row, parser)
+    strategy.resolve.assert_called_once_with(row, parser.categories.lookup)
 
 
 def test_manufacturer_correction_survives_title_recompose() -> None:
@@ -537,7 +540,7 @@ def test_apply_category_generic_declared_not_marked() -> None:
 def test_apply_category_logs_correction(watch_logger: LoggerWatcher) -> None:
     """Расхождение попадает в debug-лог с заявленным/вычисленным типом."""
     parser = _classifier_parser(LIGHT_TRUCK)
-    watch = watch_logger('parsers.base_parser.parser_category', logging.DEBUG)
+    watch = watch_logger('parsers.base_parser.category_service', logging.DEBUG)
 
     parser.process_parsed_row(RowItem({'title': '275/65R20 112T'}))
 
