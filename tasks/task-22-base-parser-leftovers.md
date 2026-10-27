@@ -32,8 +32,8 @@
 
 ## Критерии готовности
 
-- [ ] В `src/parsers/base_parser/` нет `# noqa: WPS214`.
-- [ ] `ParserSettings.set_parse_config` и `PriceFiles.type_production` удалены или обоснованно используются в `src/`.
-- [ ] `getattr(..., '_vendor_section' | '_vendor_config')` в `src/` нет; `vendor_config_is_enabled` удалена.
-- [ ] Вывод парсеров не изменился.
-- [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
+- [x] В `src/parsers/base_parser/` нет `# noqa: WPS214`.
+- [x] `ParserSettings.set_parse_config` и `PriceFiles.type_production` удалены или обоснованно используются в `src/`.
+- [x] `getattr(..., '_vendor_section' | '_vendor_config')` в `src/` нет; `vendor_config_is_enabled` удалена.
+- [x] Вывод парсеров не изменился.
+- [x] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
