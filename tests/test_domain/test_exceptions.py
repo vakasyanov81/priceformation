@@ -17,7 +17,7 @@ _STACK_LIMIT = 10
 class _CustomError(CoreExceptionError):
     """ошибка с сообщением по умолчанию"""
 
-    __MESSAGE__ = 'default msg'  # noqa: WPS115
+    __MESSAGE__ = 'default msg'
 
 
 def test_core_exception_logs_message() -> None:

@@ -162,7 +162,7 @@ def test_enrich_empty_title_not_counted() -> None:
     assert parser.stats.black_list_skips == 0
 
 
-def test_enrich_skips_title_value_error() -> None:
+def test_enrich_skips_title_value_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """ValueError от set_prepared_title логируется, строка пропускается."""
     parser = _parser()
 
@@ -172,7 +172,7 @@ def test_enrich_skips_title_value_error() -> None:
             raise ValueError('bad title')
         return True
 
-    parser.enricher.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    monkeypatch.setattr(parser.enricher.titles, 'set_prepared_title', _raise_on_title)
     rows = parser.enricher.enrich([_priced(_TITLE)])
     assert rows == []
 
@@ -249,7 +249,7 @@ def test_apply_manufacturer_calls_finder() -> None:
     """apply_manufacturer запускает поиск, пока включён флаг."""
     parser = _parser()
     finder = MagicMock()
-    parser.settings._manufacturer_finder = finder  # noqa: WPS437
+    parser.settings._manufacturer_finder = finder
     parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': _TITLE}))
     finder.process.assert_called_once()
 
@@ -331,14 +331,16 @@ def test_enrich_counts_each_blacklist_skip() -> None:
     assert parser.stats.black_list_skips == 2
 
 
-def test_enrich_logs_row_number_from_start_row(caplog: pytest.LogCaptureFixture) -> None:
+def test_enrich_logs_row_number_from_start_row(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Номер строки в логе пропуска берётся из start_row, а не с нуля и не None."""
     parser = _parser_with_start_row(5)
 
     def _raise_on_title(row_item: RowItem) -> bool:
         raise ValueError('bad title')
 
-    parser.enricher.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    monkeypatch.setattr(parser.enricher.titles, 'set_prepared_title', _raise_on_title)
 
     with caplog.at_level(logging.ERROR):
         parser.enricher.enrich([_priced(_TITLE)])

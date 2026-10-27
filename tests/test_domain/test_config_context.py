@@ -18,9 +18,9 @@ _NOT_CONFIGURED = 'Config provider is not configured'
 
 @pytest.fixture
 def _restore_provider() -> Iterator[None]:
-    previous = _CurrentConfigProvider.configured  # noqa: WPS437
+    previous = _CurrentConfigProvider.configured
     yield
-    _CurrentConfigProvider.configured = previous  # noqa: WPS437
+    _CurrentConfigProvider.configured = previous
 
 
 def test_set_provider_is_used_by_get(_restore_provider: None, tmp_path: Path) -> None:
@@ -32,7 +32,7 @@ def test_set_provider_is_used_by_get(_restore_provider: None, tmp_path: Path) ->
 
 def test_get_provider_requires_configure(_restore_provider: None) -> None:
     """без set_config_provider — явная ошибка."""
-    _CurrentConfigProvider.configured = None  # noqa: WPS437
+    _CurrentConfigProvider.configured = None
     with pytest.raises(ConfigProviderNotConfiguredError, match=_NOT_CONFIGURED):
         get_config_provider()
 

@@ -172,8 +172,8 @@ def test_unix_has_pending_passes_escape_timeout(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr(select, 'select', _select)
     monkeypatch.setattr(sys, 'stdin', _StdinDescriptor(3))
-    assert readers._unix_has_pending() is True  # noqa: WPS437
-    assert recorded['timeout'] == readers._ESCAPE_TIMEOUT  # noqa: WPS437
+    assert readers._unix_has_pending() is True
+    assert recorded['timeout'] == readers._ESCAPE_TIMEOUT
 
 
 def test_windows_getch(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -321,7 +321,7 @@ def test_find_manufacturer_from_hooks() -> None:
 
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
     finder = MagicMock()
-    parser.settings._manufacturer_finder = finder  # noqa: WPS437
+    parser.settings._manufacturer_finder = finder
 
     parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 
@@ -332,7 +332,7 @@ def test_find_manufacturer_default_when_no_hooks() -> None:
     """Без StrategyHooks поиск производителя при enrich включён."""
     parser = BaseParser(parse_config=_mock_parse_config())
     finder = MagicMock()
-    parser.settings._manufacturer_finder = finder  # noqa: WPS437
+    parser.settings._manufacturer_finder = finder
 
     parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 

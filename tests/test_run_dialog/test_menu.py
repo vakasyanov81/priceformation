@@ -1,11 +1,13 @@
 """tests for arrow-key navigation menu"""
 
 import contextlib
+import logging
 import sys
 from collections.abc import Callable
 from unittest.mock import MagicMock
 
 import pytest
+from log_watch import LoggerWatcher
 
 from cfg.color import Colors
 from run_dialog import AnswerResult, ask_action, menu, navigation
@@ -227,8 +229,10 @@ def test_unknown_shortcut_is_ignored(
 def test_toggle_failure_keeps_menu_alive(
     _interactive: _FakeVendorService,
     monkeypatch: pytest.MonkeyPatch,
+    watch_logger: LoggerWatcher,
 ) -> None:
-    """Ошибка записи конфига не роняет меню и не меняет флаг."""
+    """Ошибка записи конфига не роняет меню и не меняет флаг, причина попадает в лог."""
+    entries = watch_logger('run_dialog.navigation')
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     monkeypatch.setattr(_interactive, 'toggle', _raise_os_error)
     keys = [
@@ -241,6 +245,9 @@ def test_toggle_failure_keeps_menu_alive(
 
     assert ask_action() is AnswerResult.EXIT
     assert _interactive.vendors[0].enabled is False
+    logged = entries()
+    assert [level for level, _ in logged] == [logging.WARNING]
+    assert 'disk full' in logged[0][1]
 
 
 def test_enter_on_header_collapses_list(

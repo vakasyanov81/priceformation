@@ -364,3 +364,19 @@ def test_unknown_template_does_not_clear_result() -> None:
 
         mock_clear.assert_not_called()
         mock_json.assert_not_called()
+
+
+def test_run_machine_human_failure_exit_code() -> None:
+    """parse без --json: ошибка домена из try_call даёт ненулевой код возврата."""
+    with (
+        patch('run.sys.argv', ['run.py', 'parse']),
+        patch('run.init_cfg'),
+        patch('run.try_call', return_value=False),
+        patch('run.sys.exit', side_effect=SystemExit(1)) as mock_exit,
+    ):
+        from run import main
+
+        with pytest.raises(SystemExit):
+            main()
+
+        mock_exit.assert_called_once_with(1)

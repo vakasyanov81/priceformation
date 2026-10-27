@@ -116,6 +116,8 @@ inline-quotes = "single"
 quote-style = "single"
 
 [tool.pytest.ini_options]
+# Пакеты лежат в src/, но импортируются как верхний уровень; tests/ — общие хелперы (log_watch).
+pythonpath = [".", "src", "tests", "integration_tests"]
 testpaths = [
     "tests",
     "integration_tests",

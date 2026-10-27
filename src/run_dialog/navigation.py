@@ -1,5 +1,6 @@
 """Навигация по главному меню и разворот списка поставщиков."""
 
+import logging
 from dataclasses import dataclass
 
 from domain.exceptions import ConfigValidationError
@@ -9,6 +10,8 @@ from run_dialog.keys import read_key
 from run_dialog.rows import MenuRow, build_rows
 from run_dialog.screen import draw, settle
 from services.vendor_activation import VendorActivationService
+
+logger = logging.getLogger(__name__)
 
 _STEPS = {Key.UP: -1, Key.DOWN: 1}
 
@@ -74,11 +77,11 @@ def _commit(view: MenuView) -> AnswerResult | None:
 
 
 def _toggle(service: VendorActivationService, folder: str) -> None:
-    """Переключить поставщика; ошибку записи не роняем — маркер просто не изменится."""
+    """Переключить поставщика; ошибку записи не роняем — маркер не изменится, причина в логе."""
     try:
         service.toggle(folder)
-    except (OSError, ConfigValidationError):
-        return
+    except (OSError, ConfigValidationError) as exc:
+        logger.warning(f'Не удалось переключить поставщика {folder!r}: {exc}')
 
 
 def _shortcut_index(rows: list[MenuRow], char: str) -> int | None:

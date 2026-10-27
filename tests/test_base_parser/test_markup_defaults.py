@@ -142,8 +142,8 @@ def test_make_map_on_opt_markup_policy() -> None:
     config = ParseConfiguration(_base_params())
     policy = make_map_on_opt_markup_policy(config)
     assert isinstance(policy, MapOnOptMarkupPolicy)
-    assert policy._rules == config.get_markup_rules()  # noqa: WPS437
-    assert policy._price_map == config.get_price_markup_map()  # noqa: WPS437
+    assert policy._rules == config.get_markup_rules()
+    assert policy._price_map == config.get_price_markup_map()
 
 
 def test_identity_add_price_markup_keeps_opt() -> None:

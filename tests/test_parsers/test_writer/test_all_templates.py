@@ -1,5 +1,7 @@
 """tests for writer templates collection"""
 
+from typing import ClassVar
+
 import pytest
 
 from parsers.writer.templates.all_templates import (
@@ -10,11 +12,19 @@ from parsers.writer.templates.all_templates import (
     writer_template_name,
     writer_templates_by_name,
 )
-from parsers.writer.templates.iwrite_template import DEFAULT_TEMPLATE_FILE, IWriteTemplate
+from parsers.writer.templates.iwrite_template import DEFAULT_TEMPLATE_FILE, IWriteTemplate, WriteColumns
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xlsx_driver import solid_fill
+
+
+class _NoFormat(IWriteTemplate):
+    __COLUMNS__: ClassVar[WriteColumns] = [{'A': {'field': 'title'}}]
+
+
+class _Misspelled(IWriteTemplate):
+    __COLUMN__: ClassVar[WriteColumns] = [{'A': {'field': 'title'}}]
 
 
 def test_all_writer_templates_order() -> None:
@@ -51,10 +61,6 @@ def test_get_writer_template_unknown() -> None:
 
 def test_get_columns_format_empty_without_format() -> None:
     """get_columns_format возвращает пустой словарь, если нет колонок с format."""
-
-    class _NoFormat(IWriteTemplate):  # noqa: WPS431
-        __COLUMNS__ = [{'A': {'field': 'title'}}]  # noqa: RUF012
-
     no_format = _NoFormat()
     fmt = no_format.get_columns_format()
     assert fmt == {}
@@ -67,13 +73,9 @@ def test_misspelled_template_setting_is_not_silently_ignored() -> None:
     колонок. Теперь настройки объявлены в IWriteTemplate, поэтому подкласс без
     них читает то, что задал родитель, а неожиданного имени нет вовсе.
     """
-
-    class _Misspelled(IWriteTemplate):  # noqa: WPS431
-        __COLUMN__ = [{'A': {'field': 'title'}}]  # noqa: RUF012
-
     # Имя есть в классе, но шаблон читает объявленное в IWriteTemplate
     # __COLUMNS__: опечатка не подменяет настройку, а остаётся мёртвым атрибутом.
-    assert _Misspelled.__COLUMN__  # noqa: WPS609
+    assert _Misspelled.__COLUMN__
     assert _Misspelled().columns() == []
     # Настоящая настройка видна на любом подклассе без hasattr/getattr.
     assert IWriteTemplate.__COLUMNS__ == []

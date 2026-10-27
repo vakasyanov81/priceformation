@@ -3,14 +3,17 @@
 import logging
 from unittest.mock import MagicMock, patch
 
+import pytest
 from log_watch import LoggerWatcher, texts_at
 
+from domain.exceptions import CoreExceptionError
 from run_dialog import AnswerResult
 from services.mail_service import MailService
 from services.price_schema_service import PriceSchemaService
 
 _ASK_ACTION = 'run.ask_action'
 _RUN_LOGGER = 'run'
+_RESOLVE = 'run.ServiceProvider.resolve'
 
 
 def test_run_fetch_mail_prices(watch_logger: LoggerWatcher) -> None:
@@ -20,7 +23,7 @@ def test_run_fetch_mail_prices(watch_logger: LoggerWatcher) -> None:
     entries = watch_logger(_RUN_LOGGER)
 
     with patch(
-        'run.ServiceProvider.resolve',
+        _RESOLVE,
         side_effect={MailService: mail_service, PriceSchemaService: MagicMock()}.__getitem__,
     ):
         from run import run_fetch_mail_prices
@@ -47,7 +50,7 @@ def test_run_update_all_prices_order() -> None:
     """запаска, Форточки, МИМ и почта вызываются по порядку, каждый через try_call"""
     calls = MagicMock()
     with (
-        patch('run.ServiceProvider.resolve', side_effect={PriceSchemaService: MagicMock()}.__getitem__),
+        patch(_RESOLVE, side_effect={PriceSchemaService: MagicMock()}.__getitem__),
         patch('run.run_upload_zapaska_data', calls.zapaska),
         patch('run.run_upload_four_tochki_data', calls.four_tochki),
         patch('run.run_upload_mim_data', calls.mim),
@@ -63,7 +66,7 @@ def test_update_all_single_schema_guard() -> None:
     """сравнение схем — один раз на весь пакет обновлений, а не на каждый источник"""
     schema_service = MagicMock()
     with (
-        patch('run.ServiceProvider.resolve', side_effect={PriceSchemaService: schema_service}.__getitem__),
+        patch(_RESOLVE, side_effect={PriceSchemaService: schema_service}.__getitem__),
         patch('run.run_upload_zapaska_data'),
         patch('run.run_upload_four_tochki_data'),
         patch('run.run_upload_mim_data'),
@@ -75,3 +78,25 @@ def test_update_all_single_schema_guard() -> None:
 
     schema_service.guard.assert_called_once_with()
     schema_service.guard.return_value.__enter__.assert_called_once_with()
+
+
+def test_update_all_raises_on_failed_source() -> None:
+    """сбой одного источника не отменяет остальные, но итог — ошибка домена, а не тихий успех"""
+    mim = MagicMock()
+
+    def run_upload_zapaska_data() -> None:
+        raise CoreExceptionError('zapaska down')
+
+    with (
+        patch(_RESOLVE, side_effect={PriceSchemaService: MagicMock()}.__getitem__),
+        patch('run.run_upload_zapaska_data', run_upload_zapaska_data),
+        patch('run.run_upload_four_tochki_data'),
+        patch('run.run_upload_mim_data', mim),
+        patch('run.run_fetch_mail_prices'),
+        patch('services.async_utils.logger'),
+    ):
+        from run import run_update_all_supplier_prices
+
+        with pytest.raises(CoreExceptionError, match='run_upload_zapaska_data'):
+            run_update_all_supplier_prices()
+    mim.assert_called_once_with()

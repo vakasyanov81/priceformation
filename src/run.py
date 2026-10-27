@@ -31,6 +31,7 @@ import pydoc
 import sys
 
 from cfg import init_cfg
+from domain.exceptions import CoreExceptionError
 from infrastructure.config.result_folder import clear_result_folder
 from run_argv import (
     DOUBLES,
@@ -113,8 +114,7 @@ def _machine_human(command: str, result_template: str | None) -> int:
     extra: dict[str, str | None] = {}
     if command == PARSE:
         extra['result_template'] = result_template
-    try_call(handlers[command], **extra)
-    return 0
+    return 0 if try_call(handlers[command], **extra) else 1
 
 
 def response_processing() -> bool:
@@ -174,17 +174,21 @@ def run_fetch_mail_prices() -> None:
 def run_update_all_supplier_prices() -> None:
     """Обновить прайсы всех поставщиков: запаска, Форточки и МИМ по API, затем почта.
 
-    Сбой одного источника не отменяет остальные (ошибка логируется в try_call).
+    Сбой одного источника не отменяет остальные (ошибка логируется в try_call), но в конце
+    поднимается ошибка домена, чтобы код возврата не скрывал частичный сбой.
     Схемы прайсов сравниваются один раз: копия до первого источника, проверка после последнего.
     """
     with schema_guard():
-        for update in (
+        updates = (
             run_upload_zapaska_data,
             run_upload_four_tochki_data,
             run_upload_mim_data,
             run_fetch_mail_prices,
-        ):
-            try_call(update)
+        )
+        failed = [update.__name__ for update in updates if not try_call(update)]
+    if failed:
+        names = ', '.join(failed)
+        raise CoreExceptionError(f'Не обновлены источники прайсов: {names}')
 
 
 def run_show_help() -> None:
