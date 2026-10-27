@@ -47,19 +47,14 @@ class _SilentParser(BaseParser):
         price_source: PriceSource,
         file_prices: list[str] | None = None,
     ) -> None:
-        self._parse_params = MagicMock()
-        self._parse_params.supplier.folder_name = _SUPPLIER
-        self._parse_params.supplier.name = _SUPPLIER_NAME
-        self._parse_params.file_templates = [_TEMPLATE]
-        super().__init__(file_reader=FileReader(price_source=price_source))
-        self.files = file_prices
-
-    @property
-    def is_active(self) -> bool:
-        return True
-
-    def parser_params(self) -> Any:
-        return self._parse_params
+        parse_params = MagicMock()
+        parse_params.supplier.folder_name = _SUPPLIER
+        parse_params.supplier.name = _SUPPLIER_NAME
+        parse_params.sheet_info = ''
+        parse_params.file_templates = [_TEMPLATE]
+        parse_config = MagicMock(parser_params=parse_params, is_enabled=True)
+        super().__init__(parse_config, file_reader=FileReader(price_source=price_source))
+        self.price_files.files = file_prices
 
     def process(self) -> int:
         return 0
@@ -105,7 +100,7 @@ def test_parser_uses_price_source() -> None:
     parser.parse()
     assert source.folder_name == _SUPPLIER
     assert source.templates == [_TEMPLATE]
-    assert parser.files == [_SOURCE_FILE]
+    assert parser.price_files.files == [_SOURCE_FILE]
 
 
 def test_parser_skips_source_if_files_set() -> None:
@@ -113,7 +108,7 @@ def test_parser_skips_source_if_files_set() -> None:
     parser = _SilentParser(source, file_prices=[_GIVEN_FILE])
     parser.parse()
     assert not source.called
-    assert parser.files == [_GIVEN_FILE]
+    assert parser.price_files.files == [_GIVEN_FILE]
 
 
 def test_parser_missing_prices_raises() -> None:

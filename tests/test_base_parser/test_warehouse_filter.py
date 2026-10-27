@@ -10,6 +10,7 @@ import pytest
 from domain.exceptions import CoreExceptionError
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.warehouse_filter import CityWarehouseFilter, WarehouseFilterError
 
 _FOLDER = 'mim'
@@ -113,19 +114,15 @@ def test_no_matching_city_is_error(fake_config_provider: FakeConfigProvider) -> 
 
 def test_base_parser_drops_foreign_warehouses_before_enrich(fake_config_provider: FakeConfigProvider) -> None:
     """Позиции складов вне города отсеиваются целиком, а не получают нулевой остаток."""
-    from parsers.base_parser.base_parser import BaseParser
     from parsers.base_parser.strategy_hooks import StrategyHooks
 
     _write_territories(fake_config_provider, _TERRITORIES)
     hooks = StrategyHooks(warehouse_filter=CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',)))
     warehouse_ids = (6, 1, None, 2)
     rows = [RowItem({'rest_count': 10, 'warehouse_id': wid}) for wid in warehouse_ids]
-    parser = BaseParser.__new__(BaseParser)
-    parser._strategy_hooks = hooks  # noqa: WPS437
-    plain = BaseParser.__new__(BaseParser)
-    plain._strategy_hooks = StrategyHooks()  # noqa: WPS437
+    plain = RowFilters(StrategyHooks())
 
-    kept = parser.filter_warehouses(rows)
+    kept = RowFilters(hooks).filter_warehouses(rows)
 
     assert [row.stock.warehouse_id for row in kept] == [1, 2]
     assert plain.filter_warehouses(rows) == rows
@@ -134,14 +131,13 @@ def test_base_parser_drops_foreign_warehouses_before_enrich(fake_config_provider
 
 def test_base_parser_applies_order_from_warehouse_name() -> None:
     """Флаг order_from_warehouse_name включает разбор названия склада."""
-    from parsers.base_parser.base_parser import BaseParser
     from parsers.base_parser.strategy_hooks import StrategyHooks
 
     enabled = RowItem({'warehouse_name': 'НС.Под заказ от 4д.'})
     disabled = RowItem({'warehouse_name': 'НС.Под заказ'})
 
-    BaseParser.apply_warehouse_order(StrategyHooks(order_from_warehouse_name=True), enabled)
-    BaseParser.apply_warehouse_order(StrategyHooks(), disabled)
+    RowFilters(StrategyHooks(order_from_warehouse_name=True)).apply_warehouse_order(enabled)
+    RowFilters(StrategyHooks()).apply_warehouse_order(disabled)
 
     assert (enabled.stock.available, enabled.stock.delivery_period) == ('Под заказ', 4)
     assert disabled.stock.available is None

@@ -1,17 +1,19 @@
-"""Подготовка title — утилиты и константы.
-
-Классы ParserTitleOps / ParserTitleFilters удалены (задача 4: composition over inheritance).
-Логика перенесена в title_filter.py; классметоды — в base_parser.py.
-"""
-
-import re
+"""Утилиты строки позиции: признак шипов и канонический сезон."""
 
 from domain.row_item.row_item import RowItem
 
-_COMMA_IN_NUMBER = re.compile(r'(\d),(\d)')
-
+# Значения признака шипов, считающиеся «Да».
 _SPIKE_YES = {'ш.', 'да'}
 _SEASON_TITLES = {'зима': 'Зимняя', 'лето': 'Летняя'}
+
+
+def get_spike_title(row_item: RowItem) -> str:
+    """«Да», если у шины заданы шипы; иначе пустая строка."""
+    if not row_item.tire.spike:
+        return ''
+    if row_item.tire.spike.strip().lower() in _SPIKE_YES:
+        return 'Да'
+    return ''
 
 
 def replace_season(row_item: RowItem) -> str | None:

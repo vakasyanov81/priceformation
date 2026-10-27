@@ -6,15 +6,13 @@ import pytest
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies._four_tochki_tire_helper import (
-    _fill_size_from_title,
-    _tire_kind,
     default_tire_title,
     ext_diameter_title,
     get_prepared_title,
-    is_special_tire,
-    is_truck_tire,
     truck_title,
 )
+from parsers.strategies._four_tochki_tire_kind import is_special_tire, is_truck_tire, tire_kind
+from parsers.strategies._four_tochki_tire_size import fill_size_from_title
 
 _SIZE = '205/55R16'
 _WRAP = 'XXXX'
@@ -334,7 +332,7 @@ def test_fill_size_keeps_existing_width_and_title() -> None:
 def test_fill_size_without_title_and_width_is_noop() -> None:
     """Нет ни ширины, ни названия — разбирать нечего, ошибки нет."""
     row = RowItem({})
-    _fill_size_from_title(row)
+    fill_size_from_title(row)
     assert not row.tire.width
 
 
@@ -360,5 +358,5 @@ def test_suffix_not_added_without_diameter() -> None:
 
 def test_tire_kind_without_type_is_empty() -> None:
     """Без типа шины это не грузовая и не спецтехника; пустая строка, а не подстановка."""
-    assert _tire_kind(RowItem({})) == ''
-    assert _tire_kind(RowItem({'tire_type': 'QuadBike'})) == 'мото'
+    assert tire_kind(RowItem({})) == ''
+    assert tire_kind(RowItem({'tire_type': 'QuadBike'})) == 'мото'

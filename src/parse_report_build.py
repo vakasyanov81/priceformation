@@ -10,7 +10,7 @@ from parsers.base_parser.parse_statistic import ParseResultStatistic
 from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.strategies.product_types import type_corrections_message
 from parsers.strategies.title_conflicts import title_conflicts_message
-from services.parse_orchestrator import ParseResult
+from services.parse_result import ParseResult
 
 
 def stats_from_result(parse_result: ParseResult, elapsed: float) -> dict[str, Any]:

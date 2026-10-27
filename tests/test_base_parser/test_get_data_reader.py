@@ -43,7 +43,7 @@ def test_get_data_reader_passes_path_and_params() -> None:
     data_reader.get_instance.return_value = instance
     parser = BaseParser(parse_config=_parse_config(), data_reader=data_reader)
 
-    assert parser.get_data_reader(_XLS_PATH) is instance
+    assert parser.price_files.get_data_reader(_XLS_PATH) is instance
     data_reader.get_instance.assert_called_once_with(
         _XLS_PATH,
         {

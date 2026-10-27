@@ -60,15 +60,14 @@ def test_manufacturer_aliases_reads_provider_once() -> None:
 
 def test_parser_reuses_manufacturer_finder() -> None:
     parser = BaseParser(parse_config=_configuration()[0])
-    assert parser.manufacturer_finder() is parser.manufacturer_finder()
+    assert parser.settings.manufacturer_finder() is parser.settings.manufacturer_finder()
 
 
-def test_set_parse_config_drops_cached_finder() -> None:
-    parser = BaseParser(parse_config=_configuration()[0])
-    first = parser.manufacturer_finder()
-    parser.set_parse_config(_configuration({'Bridgestone': ('Бриджстоун',)})[0])
-    second = parser.manufacturer_finder()
-    assert first is not second
+def test_parsers_with_different_configs_have_own_finders() -> None:
+    other_aliases = {'Bridgestone': ('Бриджстоун',)}
+    first = BaseParser(parse_config=_configuration()[0])
+    second = BaseParser(parse_config=_configuration(other_aliases)[0])
+    assert first.settings.manufacturer_finder() is not second.settings.manufacturer_finder()
 
 
 def test_enrich_builds_finder_once(monkeypatch: Any) -> None:
@@ -81,7 +80,7 @@ def test_enrich_builds_finder_once(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(ManufacturerFinder, '__init__', counting_init)
     parser = BaseParser(parse_config=_configuration()[0])
-    parser.enrich(
+    parser.enricher.enrich(
         [
             RowItem({'title': 'Aeolus winter'}),
             RowItem({'title': 'Aeolus summer'}),

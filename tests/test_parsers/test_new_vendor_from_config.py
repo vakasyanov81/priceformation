@@ -110,9 +110,8 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     parse_config = entry[1]
 
     parser = make_config_driven_parser(section, vendor_cfg, parse_config)
-    parser.data_reader = _FakeDataReader
-    parser._file_reader_impl = FileReader(data_reader=_FakeDataReader)
-    parser.files = ['price_test.xls']
+    parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader)
+    parser.price_files.files = ['price_test.xls']
 
     parsed = parser.parse()
 
@@ -174,4 +173,5 @@ def test_new_vendor_has_no_python_code(tmp_path: Path) -> None:
     assert parser_cls is BaseParser
     assert parse_config.supplier.code == 'm1'  # id секции
     assert parse_config.supplier.name == 'Раздел 1'  # section.name
-    assert parse_config._vendor_config.name == 'Минимальный'  # vendor.name
+    assert parse_config.vendor_config is not None
+    assert parse_config.vendor_config.name == 'Минимальный'  # vendor.name

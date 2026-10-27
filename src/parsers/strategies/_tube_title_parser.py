@@ -16,7 +16,8 @@ import re
 from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
-from parsers.strategies._tire_title_parser import TUBE_PREFIX, parse_leading_size
+from parsers.strategies._tire_size_parts import parse_leading_size
+from parsers.strategies._tire_title_parser import TUBE_PREFIX
 
 # До размера допустимы слова без цифр: `СВК` или вставленный производитель раздела (`камера Triangle 11.2-20`).
 _LEADING_WORDS = re.compile(r'^(?:[^\d\s]+\s+){0,2}')

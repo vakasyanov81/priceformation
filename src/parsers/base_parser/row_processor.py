@@ -41,7 +41,7 @@ def correction_category(row_item: RowItem, category_finder: Any) -> None:
         row_item.set_field('type_production', category)
 
 
-class RowProcessor:  # noqa: WPS214
+class RowProcessor:
     """Дефолтные реализации построжечной обработки: остатки, наценка, производитель.
 
     Содержит только instance-методы, требующие self._markup_policy.

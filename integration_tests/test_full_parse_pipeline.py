@@ -22,7 +22,7 @@ from services.parse_orchestrator import ParseOrchestrator
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
 _PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
-_ROW_LOGGER = 'parsers.base_parser.base_parser_row'
+_ROW_LOGGER = 'parsers.base_parser.row_enricher'
 
 
 @pytest.fixture
@@ -69,20 +69,21 @@ class TestFullParsePipeline:
     ) -> None:
         """Zapaska (reader: json) разбирается через JsonPriceReader, а не XlsReader."""
         from parsers.base_parser.config_driven_parser import make_config_driven_parser
+        from parsers.base_parser.file_reader import FileReader
         from parsers.json_reader import JsonPriceReader
         from parsers.registry import vendor_entry_for
 
         _entry, parse_config = vendor_entry_for('22')  # zapaska tires
-        section = parse_config._vendor_section
-        vendor_cfg = parse_config._vendor_config
+        section = parse_config.vendor_section
+        vendor_cfg = parse_config.vendor_config
+        assert section is not None
+        assert vendor_cfg is not None
 
         parser = make_config_driven_parser(section, vendor_cfg, parse_config)
+        assert isinstance(parser.price_files.file_reader, FileReader)
         assert (
-            parser.data_reader is JsonPriceReader
-        ), f'Для json-вендора ожидается JsonPriceReader, получен {parser.data_reader}'
-
-        # Файлы есть — разбор не должен упасть с CalamineError
-        assert parser._file_reader_impl._data_reader is JsonPriceReader  # type: ignore[attr-defined]
+            parser.price_files.file_reader.data_reader is JsonPriceReader
+        ), 'Для json-вендора ожидается JsonPriceReader'
 
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""

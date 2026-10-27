@@ -13,7 +13,7 @@ def test_parse_config_not_set_error_message() -> None:
 
 
 def test_parse_config_raises_without_config() -> None:
-    """Вызов parse_config() до set_parse_config — исключение.
+    """Вызов parse_config() без конфига — исключение.
 
     BaseParser.__init__ вызывает repr(self) → parser_params() →
     parse_config() → ParseConfigNotSetError.

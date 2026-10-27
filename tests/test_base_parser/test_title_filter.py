@@ -1,6 +1,5 @@
 """tests for TitleFilter: стоп-слова, чёрный список и подготовка title."""
 
-import pytest
 from test_parsers.test_vendors._test_providers import (
     BlackListProviderForTests,
     ManufacturerAliasesProviderForTests,
@@ -11,12 +10,11 @@ from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
-    ParseConfigNotSetError,
     ParseConfiguration,
     ParseParamsSupplier,
     ParserParams,
 )
-from parsers.base_parser.title_filter import TitleFilter, strip_words_in_title
+from parsers.base_parser.title_filter import TitleBlockList, TitleFilter, strip_words_in_title
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'Michelin 185/65 R15 88H'
@@ -59,49 +57,22 @@ def test_strip_words_in_title_none_stays_none() -> None:
     assert strip_words_in_title(None) is None  # type: ignore[arg-type]
 
 
-def test_without_config_any_read_raises() -> None:
-    """TitleFilter без конфига: любое чтение данных — ParseConfigNotSetError."""
-    title_filter = TitleFilter(None)
-
-    with pytest.raises(ParseConfigNotSetError):
-        title_filter.get_black_list()
-    with pytest.raises(ParseConfigNotSetError):
-        title_filter.get_stop_words()
+def test_block_list_strips_black_list_entries() -> None:
+    block_list = TitleBlockList(_config_with(['  некондиция  ', ''], []))
+    assert block_list.black_list == ['некондиция', '']
 
 
-def test_reset_caches_forces_re_read() -> None:
-    """Сброс кэшей заставляет перечитать black list и stop words."""
-    title_filter = _title_filter()
-    black_list = title_filter.get_black_list()
-
-    assert title_filter.get_black_list() is black_list
-    title_filter.reset_caches()
-    assert title_filter.get_black_list() is not black_list
+def test_block_list_reads_config_once() -> None:
+    block_list = TitleBlockList(_config_with(['некондиция'], ['*2 сорт*']))
+    assert block_list.black_list is block_list.black_list
+    assert block_list.stop_words is block_list.stop_words
 
 
-def test_reset_caches_reloads_black_list_from_config() -> None:
-    """После сброса чёрный список снова читается из конфига, а не остаётся пустой строкой."""
-    title_filter = _title_filter_with(['некондиция'], [])
-    title_filter.get_black_list()
-
-    title_filter.reset_caches()
-
-    assert not title_filter.is_valid_title('некондиция')
-
-
-def test_reset_caches_reloads_stop_words_from_config() -> None:
-    """После сброса стоп-слова снова читаются из конфига, а не остаются пустой строкой."""
-    title_filter = _title_filter_with([], ['*2 сорт*'])
-    title_filter.get_stop_words()
-
-    title_filter.reset_caches()
-
-    assert not title_filter.is_valid_title('Шина 185/65 R15 2 сорт')
-
-
-def test_prepare_black_list_strips_entries() -> None:
-    prepared = _title_filter().prepare_black_list(['  некондиция  ', ''])
-    assert prepared == ['некондиция', '']
+def test_block_list_blocks_entry_and_mask() -> None:
+    block_list = TitleBlockList(_config_with(['некондиция'], ['*2 сорт*']))
+    assert block_list.blocks('некондиция')
+    assert block_list.blocks('Шина 185/65 R15 2 сорт')
+    assert not block_list.blocks(_TITLE)
 
 
 def test_is_valid_title_rejects_empty() -> None:
@@ -141,7 +112,10 @@ class _BlackListProvider(data_provider.BlackListProviderBase):
         return self._masks
 
 
-def _title_filter_with(entries: list[str], masks: list[str]) -> TitleFilter:
+def _config_with(entries: list[str], masks: list[str]) -> ParseConfiguration:
     base_params = _base_params()
-    config_params = base_params._replace(black_list_provider=_BlackListProvider(entries, masks))
-    return TitleFilter(ParseConfiguration(config_params))
+    return ParseConfiguration(base_params._replace(black_list_provider=_BlackListProvider(entries, masks)))
+
+
+def _title_filter_with(entries: list[str], masks: list[str]) -> TitleFilter:
+    return TitleFilter(_config_with(entries, masks))

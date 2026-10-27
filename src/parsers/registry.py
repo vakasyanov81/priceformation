@@ -54,11 +54,7 @@ def _vendor_entries(*, include_disabled: bool) -> list[VendorEntry]:
     for config in load_vendor_configs().values():
         if not include_disabled and not config.enabled:
             continue
-        for section in config.sections:
-            parse_config = _build_parse_config(section, config.folder)
-            parse_config._vendor_section = section
-            parse_config._vendor_config = config
-            entries.append((BaseParser, parse_config))
+        entries.extend((BaseParser, _build_parse_config(section, config)) for section in config.sections)
     return entries
 
 
@@ -71,10 +67,7 @@ def vendor_entry_for(code: str) -> VendorEntry:
     for config in load_vendor_configs().values():
         for section in config.sections:
             if section.id == code:
-                parse_config = _build_parse_config(section, config.folder)
-                parse_config._vendor_section = section
-                parse_config._vendor_config = config
-                return (BaseParser, parse_config)
+                return (BaseParser, _build_parse_config(section, config))
     raise UnknownVendorError(code)
 
 
@@ -84,34 +77,25 @@ def vendor_markup_policy_for(
 ) -> MarkupPolicy | None:
     """Построить политику наценки из конфига секции поставщика.
 
-    Всегда читает ``pricing`` из ``_vendor_section`` конфига.
+    Всегда читает ``pricing`` из ``vendor_section`` конфига.
     """
-    section: VendorSection | None = getattr(vendor_config, '_vendor_section', None)
-    if isinstance(section, VendorSection):
-        return vendor_markup_policy_from_config(section)
-    return None
+    section = vendor_config.vendor_section
+    if section is None:
+        return None
+    return vendor_markup_policy_from_config(section)
 
 
-def make_vendor_entry(
-    section: VendorSection,
-    config: VendorConfig,
-    parse_config: ParseConfiguration | None = None,
-) -> VendorEntry:
+def make_vendor_entry(section: VendorSection, config: VendorConfig) -> VendorEntry:
     """Собрать запись вендора для секции.
 
     Args:
         section: Секция поставщика.
         config: Конфиг поставщика (folder, behavior).
-        parse_config: Готовый ParseConfiguration или None — будет создан.
 
     Returns:
         (BaseParser, ParseConfiguration) с прикреплёнными метаданными.
     """
-    if parse_config is None:
-        parse_config = _build_parse_config(section, config.folder)
-    parse_config._vendor_section = section
-    parse_config._vendor_config = config
-    return (BaseParser, parse_config)
+    return (BaseParser, _build_parse_config(section, config))
 
 
 def clear_registry() -> None:
@@ -119,15 +103,7 @@ def clear_registry() -> None:
     clear_vendor_configs_cache()
 
 
-def vendor_config_is_enabled(config: ParseConfiguration) -> bool:
-    """Поставщик включён (читает ``VendorConfig.enabled``)."""
-    vendor_cfg: VendorConfig | None = getattr(config, '_vendor_config', None)
-    if isinstance(vendor_cfg, VendorConfig):
-        return vendor_cfg.enabled
-    return True
-
-
-def _build_parse_config(section: VendorSection, folder: str) -> ParseConfiguration:
-    """Построить ParseConfiguration из секции конфига."""
-    params = parser_params_from_section(section, folder)
-    return make_parse_config(params)
+def _build_parse_config(section: VendorSection, config: VendorConfig) -> ParseConfiguration:
+    """Построить ParseConfiguration из секции конфига вендора."""
+    params = parser_params_from_section(section, config.folder)
+    return make_parse_config(params, vendor_section=section, vendor_config=config)

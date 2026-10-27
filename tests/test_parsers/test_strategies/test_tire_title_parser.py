@@ -3,12 +3,9 @@
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.strategies._tire_title_parser import (
-    TireTitleParts,
-    fill_tire_fields,
-    parse_leading_size,
-    parse_tire_title,
-)
+from parsers.strategies._tire_size_parts import parse_leading_size
+from parsers.strategies._tire_title_fill import fill_tire_fields
+from parsers.strategies._tire_title_parser import TireTitleParts, parse_tire_title
 
 # Примеры склейки в каноническом порядке (размер бренд модель нагрузка/скорость PR камера ось).
 _GLUE_EXAMPLES = (

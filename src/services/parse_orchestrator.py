@@ -4,14 +4,11 @@
 поставщиков, собирает статистику пропусков и группирует результат.
 """
 
-# flake8: noqa: WPS201
-
 from __future__ import annotations
 
 import logging
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
 from typing import Protocol, cast
 
 from domain.row_item.row_item import RowItem
@@ -19,24 +16,18 @@ from infrastructure.logging.file_logging import clear_log_files
 from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.base_parser.category_finder import skipped_unknown_categories_message
-from parsers.base_parser.config_driven_parser import make_config_driven_parser
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price_grouper import CommonPriceGrouper
-from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
-from parsers.registry import vendor_config_is_enabled, vendor_entry_for
-from parsers.strategies.product_types import type_corrections_message
-from parsers.strategies.title_compose import titles_not_composed_message
-from parsers.strategies.title_conflicts import title_conflicts_message
-from parsers.vendor_config.models import VendorConfig as _VendorConfig
-from parsers.vendor_config.models import VendorSection as _VendorSection
+from parsers.registry import vendor_entry_for
+from services.parse_logging import LogMessage, parser_messages, skips_messages
+from services.parse_result import ParseResult, UnknownCategorySkip
 from services.service_provider import ServiceProvider
+from services.vendor_parser import parser_for_vendor
 
 logger = logging.getLogger(__name__)
 
 type VendorList = Sequence[tuple[type[BaseParser], ParseConfiguration | None]]
-type UnknownCategorySkip = tuple[str, str]
 
 
 class ParserFactory(Protocol):
@@ -59,20 +50,6 @@ class GrouperFactory(Protocol):
     def __call__(self, row_items: list[RowItem]) -> CommonPriceGrouper:
         """Создать группировщик для списка записей."""
         ...
-
-
-@dataclass
-class ParseResult:
-    """Результат разбора и группировки: записи и накопленные пропуски."""
-
-    parsed_items: list[RowItem] = field(default_factory=list)
-    unknown_category_skips: list[UnknownCategorySkip] = field(default_factory=list)
-    black_list_skips: int = 0
-    type_corrections: int = 0
-    title_conflicts: int = 0
-    titles_not_composed: int = 0
-    homoglyph_fixes: int = 0
-    homoglyph_suspects: int = 0
 
 
 class ParseOrchestrator:
@@ -104,7 +81,7 @@ class ParseOrchestrator:
         start_time = time.monotonic()
         logger.info('\n============== Начало разбора прайсов =================\n')
         self._parse_all_vendors(parse_result, vendors)
-        self._log_skips(parse_result)
+        _emit(skips_messages(parse_result))
         clear_manufacturer_aliases_cache()
         grouper = self._grouper_factory(parse_result.parsed_items)
         parse_result.parsed_items = grouper.group_by_params().get_row_items()
@@ -116,7 +93,7 @@ class ParseOrchestrator:
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
         """Проход по списку поставщиков: разбор каждого через фабрику парсеров."""
         for vendor_cls, vendor_config in vendors:
-            self._parse_supplier(parse_result, _parser_for_vendor(self._parser_factory, vendor_cls, vendor_config))
+            self._parse_supplier(parse_result, parser_for_vendor(vendor_cls, vendor_config))
 
     def _parse_supplier(self, parse_result: ParseResult, parser: BaseParser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к результату."""
@@ -134,55 +111,13 @@ class ParseOrchestrator:
             parse_result.titles_not_composed += parser.stats.titles_not_composed
             parse_result.homoglyph_fixes += parser.stats.homoglyph_fixes
             parse_result.homoglyph_suspects += parser.stats.homoglyph_suspects
-            _log_homoglyphs(parser)
-            _log_titles_not_composed(parser)
-
-    def _log_skips(self, parse_result: ParseResult) -> None:
-        """Печать сводки по пропускам категорий, black_list и расхождениям типа."""
-        category_message = skipped_unknown_categories_message(parse_result.unknown_category_skips)
-        if category_message:
-            logger.warning(category_message)
-        black_list_message = skipped_black_list_message(parse_result.black_list_skips)
-        if black_list_message:
-            logger.info(black_list_message)
-        corrections_message = type_corrections_message(parse_result.type_corrections)
-        if corrections_message:
-            logger.info(corrections_message)
-        conflicts_message = title_conflicts_message(parse_result.title_conflicts)
-        if conflicts_message:
-            logger.warning(conflicts_message)
+            _emit(parser_messages(parser))
 
 
-def _log_titles_not_composed(parser: BaseParser) -> None:
-    """Сколько названий шин и дисков не собрано из полей (остался нормализованный текст поставщика)."""
-    message = titles_not_composed_message(parser.stats.titles_not_composed)
-    if message:
-        logger.warning(f'{parser!r}: {message}')
-
-
-def _log_homoglyphs(parser: BaseParser) -> None:
-    """Сколько кириллических двойников исправлено у поставщика и сколько смесей оставлено в логе."""
-    stats = parser.stats
-    if stats.homoglyph_fixes or stats.homoglyph_suspects:
-        logger.info(
-            f'{parser!r}: кириллические двойники исправлены: {stats.homoglyph_fixes}, '
-            f'не исправлено (смесь алфавитов): {stats.homoglyph_suspects}; подробности в логе',
-        )
-
-
-def _parser_for_vendor(
-    parser_factory: ParserFactory,
-    vendor_cls: type[BaseParser],
-    vendor_config: ParseConfiguration | None,
-) -> BaseParser:
-    """Собрать config-driven парсер поставщика."""
-    if vendor_config is None or not vendor_config_is_enabled(vendor_config):
-        return vendor_cls(parse_config=vendor_config)
-    section = getattr(vendor_config, '_vendor_section', None)
-    vendor_cfg = getattr(vendor_config, '_vendor_config', None)
-    if isinstance(section, _VendorSection) and isinstance(vendor_cfg, _VendorConfig):
-        return make_config_driven_parser(section, vendor_cfg, vendor_config)
-    return vendor_cls(parse_config=vendor_config)
+def _emit(messages: list[LogMessage]) -> None:
+    """Записать сообщения сводки в лог оркестратора."""
+    for level, text in messages:
+        logger.log(level, text)
 
 
 def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
@@ -190,5 +125,5 @@ def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
     skips = parser.stats.unknown_category_skips
     if not skips:
         return []
-    supplier = parser.parser_params().supplier.name
+    supplier = parser.settings.parser_params().supplier.name
     return [(supplier, category) for category in skips]
