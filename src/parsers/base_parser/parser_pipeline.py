@@ -28,13 +28,13 @@ class ParserPipeline(ParserMarkup):
             return
         # дефолтный порядок (обратная совместимость)
         self.after_row_mapped(row_item)
-        self.skip_by_min_rest(row_item)
+        self.row_filters.skip_by_min_rest(row_item)
         self.apply_category(row_item)
         self.add_price_markup(row_item)
 
     def _run_pipeline(self, hooks: StrategyHooks, row_item: RowItem) -> None:
         """Выполнить шаги pipeline по порядку."""
-        self.apply_warehouse_order(hooks, row_item)
+        self.row_filters.apply_warehouse_order(row_item)
         for step in hooks.pipeline:
             self._run_step(step, hooks, row_item)
 
@@ -47,7 +47,7 @@ class ParserPipeline(ParserMarkup):
             return
         simple_steps = {
             'title': self.set_prepared_title,
-            'min_rest': self.skip_by_min_rest,
+            'min_rest': self.row_filters.skip_by_min_rest,
             'markup': self.add_price_markup,
         }
         run_simple = simple_steps.get(step)

@@ -294,7 +294,7 @@ def test_rest_strategy_is_called() -> None:
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
 
     row = RowItem({'rest_count': 3})
-    parser.skip_by_min_rest(row)
+    parser.row_filters.skip_by_min_rest(row)
     strategy.item_rest.assert_called_once_with(row)
     assert row.stock.rest_count == 0  # обнулился, т.к. 3 < 4
 
@@ -308,7 +308,7 @@ def test_rest_strategy_passes_large_rest() -> None:
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
 
     row = RowItem({'rest_count': 5})
-    parser.skip_by_min_rest(row)
+    parser.row_filters.skip_by_min_rest(row)
     assert row.stock.rest_count == 5  # не обнулился
 
 

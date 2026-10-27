@@ -54,7 +54,7 @@ class BaseParser(ParserPipeline):
         mapped = self.price_files.map_items(self.price_files.read_rows(files))
         raw_count = len(mapped)
         self.parsed_items += mapped
-        self.parsed_items = self.filter_warehouses(self.parsed_items)
+        self.parsed_items = self.row_filters.filter_warehouses(self.parsed_items)
         self.parsed_items = self.filter_keep(self.parsed_items)
         self.parsed_items = self.enrich(self.parsed_items)
         self.apply_vendor_hooks(self.parsed_items)

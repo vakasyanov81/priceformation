@@ -17,6 +17,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
+from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.strategy_hooks import StrategyHooks
 
 _OPT = 100
@@ -27,13 +28,15 @@ _CATEGORY = 'Диск'
 _CALLS: list[str] = []
 
 
-class _OrderParser(BaseParser):
-    def after_row_mapped(self, row_item: RowItem) -> None:
-        _CALLS.append('after')
-
+class _SpyRowFilters(RowFilters):
     def skip_by_min_rest(self, row_item: RowItem) -> None:
         _CALLS.append('skip')
         super().skip_by_min_rest(row_item)
+
+
+class _OrderParser(BaseParser):
+    def after_row_mapped(self, row_item: RowItem) -> None:
+        _CALLS.append('after')
 
     def category_for(self, row_item: RowItem) -> str | None:
         _CALLS.append('category')
@@ -86,11 +89,13 @@ def _make_parser(*, markup_policy: IdentityMarkupPolicy | None = None) -> BasePa
     if markup_policy is None:
         markup_policy = IdentityMarkupPolicy.create()
     parse_config = ParseConfiguration(_base_params())
-    return make_parser(
+    parser = make_parser(
         _OrderParser,
         parse_config,
         markup_policy=markup_policy,
     )
+    parser.row_filters = _SpyRowFilters()
+    return parser
 
 
 def test_hook_order_after_enrich() -> None:
@@ -200,7 +205,7 @@ def test_skip_by_min_rest_keeps_large_rest() -> None:
     """Дефолтный путь берёт остаток из строки, а не None."""
     parser = _make_parser()
     row = RowItem({'price_opt': _OPT, 'rest_count': _REST_OK})
-    parser.skip_by_min_rest(row)
+    parser.row_filters.skip_by_min_rest(row)
     assert row.stock.rest_count == _REST_OK
 
 

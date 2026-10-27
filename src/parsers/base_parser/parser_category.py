@@ -4,7 +4,7 @@ import logging
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.category_finder import CategoryFinder
-from parsers.base_parser.parser_rows import ParserRows
+from parsers.base_parser.parser_title import ParserTitle
 from parsers.base_parser.row_processor import correction_category
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.strategies.product_types import declared_matches
@@ -12,7 +12,7 @@ from parsers.strategies.product_types import declared_matches
 logger = logging.getLogger(__name__)
 
 
-class ParserCategory(ParserRows):
+class ParserCategory(ParserTitle):
     """Определение категории и типа товара."""
 
     def category_for(self, row_item: RowItem) -> str | None:

@@ -24,6 +24,7 @@ from parsers.base_parser.base_parser_row import _enrich_row_item, _keep_row_item
 from parsers.base_parser.category_finder import CategoryFinder
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles, type_production_from_filename
+from parsers.base_parser.row_filters import DEFAULT_MIN_REST
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
@@ -233,8 +234,8 @@ def test_repr_includes_sheet_info() -> None:
     assert repr(parser) == f'Тест ({_SHEET_INFO})'
 
 
-def test_get_min_rest_count_is_four() -> None:
-    assert BaseParser.get_min_rest_count() == 4
+def test_default_min_rest_is_four() -> None:
+    assert DEFAULT_MIN_REST == 4
 
 
 def test_strip_words_in_title_none_stays_none() -> None:
