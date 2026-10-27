@@ -12,14 +12,15 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 type RowColor = tuple[str | None, int | None]
 type PriceRow = dict[str, Any]
+type CellValue = str | int | float | None
 
 
-def get_value(column: dict[str, Any], row_item: PriceRow) -> str | None:
+def get_value(column: dict[str, Any], row_item: PriceRow) -> CellValue:
     """get value for write cell"""
     return cell_value(ColumnHelper(column), row_item)
 
 
-def cell_value(col: ColumnHelper, row_item: PriceRow) -> str | None:
+def cell_value(col: ColumnHelper, row_item: PriceRow) -> CellValue:
     """Значение ячейки по уже разобранной колонке: helper строится раз на колонку, а не на каждую ячейку."""
     if col.skip:
         return None
@@ -36,13 +37,13 @@ def cell_value(col: ColumnHelper, row_item: PriceRow) -> str | None:
     return cell_value
 
 
-def _to_str(raw_value: object) -> str:
-    """list to string"""
+def _to_str(raw_value: CellValue | list[str]) -> CellValue:
+    """Список — в строку через запятую; скаляр ячейки (str, число, None) остаётся как есть."""
     if isinstance(raw_value, list):
         filtered_items = [element for element in raw_value if element]
         return ', '.join(filtered_items)
 
-    return raw_value  # type: ignore[return-value]
+    return raw_value
 
 
 def has_value(cell: object) -> bool:
