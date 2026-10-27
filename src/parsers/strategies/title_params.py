@@ -8,7 +8,8 @@ from typing import Any, NamedTuple
 
 from domain.row_item.row_item import RowItem
 from parsers.strategies._disk_title_parser import DiskTitleParts, fill_disk_fields, parse_disk_title
-from parsers.strategies._tire_title_parser import fill_tire_fields, parse_tire_title
+from parsers.strategies._tire_title_fill import fill_tire_fields
+from parsers.strategies._tire_title_parser import parse_tire_title
 from parsers.strategies._tube_title_parser import fill_tube_fields, parse_tube_title
 from parsers.strategies.protocols import TitleStrategy
 from parsers.strategies.title_conflicts import column_values, log_title_conflicts
