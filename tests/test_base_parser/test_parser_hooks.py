@@ -42,26 +42,11 @@ class _SpyCategories(CategoryService):
         return _CATEGORY
 
 
-class _OrderParser(BaseParser):
-    def after_row_mapped(self, row_item: RowItem) -> None:
-        _CALLS.append('after')
-
-
 class _RebuildTitles(TitleService):
     """Название собирается заново и не несёт в себе ни года, ни уценки."""
 
     def get_prepared_title(self, row_item: RowItem) -> str | None:
         return '175/65R14 Viatti Brina V-521 82T'
-
-
-_AFTER_SEEN: list[RowItem | None] = []
-
-
-class _AfterParser(_OrderParser):
-    """Парсер, запоминающий строку, пришедшую в after_row_mapped."""
-
-    def after_row_mapped(self, row_item: RowItem) -> None:
-        _AFTER_SEEN.append(row_item)
 
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
@@ -94,25 +79,25 @@ def _make_parser(*, markup_policy: IdentityMarkupPolicy | None = None) -> BasePa
         markup_policy = IdentityMarkupPolicy.create()
     parse_config = ParseConfiguration(_base_params())
     parser = make_parser(
-        _OrderParser,
+        BaseParser,
         parse_config,
         markup_policy=markup_policy,
     )
-    parser.row_filters = _SpyRowFilters()
+    parser.pipeline.row_filters = _SpyRowFilters()
     parser.enricher.categories = _SpyCategories(None, CategoryLookup(parser.stats))
     return parser
 
 
 def test_hook_order_after_enrich() -> None:
-    """after_row_mapped → skip_by_min_rest → apply_category → add_price_markup."""
+    """skip_by_min_rest → apply_category → add_price_markup."""
     parser = _make_parser()
     row = RowItem({'title': '205/55R16', 'price_opt': _OPT, 'rest_count': _REST_OK})
     row.set_field('type_production', _CATEGORY)
 
     _reset_calls()
-    parser.apply_vendor_hooks([row])
+    parser.pipeline.run([row])
 
-    assert _CALLS == ['after', 'skip', 'category']
+    assert _CALLS == ['skip', 'category']
     assert row.identity.title == '205/55R16'
 
 
@@ -122,7 +107,7 @@ def test_rest_filter_drops_low_rest() -> None:
     row = RowItem({'price_opt': _OPT, 'rest_count': _REST_LOW})
 
     _reset_calls()
-    parser.apply_vendor_hooks([row])
+    parser.pipeline.run([row])
 
     assert row.stock.rest_count == 0
     assert row.pricing.price_markup == _OPT
@@ -221,19 +206,6 @@ def test_set_prepared_title_reports_unchanged_title() -> None:
     assert parser.enricher.titles.set_prepared_title(row) is True
 
 
-def test_after_row_mapped_receives_row() -> None:
-    """Дефолтный pipeline передаёт в after_row_mapped саму строку."""
-    _AFTER_SEEN.clear()
-    parser = make_parser(
-        _AfterParser,
-        ParseConfiguration(_base_params()),
-        markup_policy=IdentityMarkupPolicy.create(),
-    )
-    row = RowItem({'title': '205/55R16', 'price_opt': _OPT, 'rest_count': _REST_OK})
-    parser.process_parsed_row(row)
-    assert [row] == _AFTER_SEEN
-
-
 def test_pipeline_min_rest_step_runs_rest_strategy() -> None:
     """Шаг 'min_rest' в pipeline распознаётся и применяет стратегию остатка."""
     strategy = MagicMock()
@@ -242,7 +214,7 @@ def test_pipeline_min_rest_step_runs_rest_strategy() -> None:
     parser = BaseParser(parse_config=ParseConfiguration(_base_params()), strategy_hooks=hooks)
 
     row = RowItem({'rest_count': _REST_LOW})
-    parser.process_parsed_row(row)
+    parser.pipeline.process_row(row)
 
     strategy.item_rest.assert_called_once_with(row)
     assert row.stock.rest_count == 0

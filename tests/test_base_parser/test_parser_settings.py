@@ -1,7 +1,7 @@
 """ParserSettings: конфиг, имя поставщика, признак активности — без BaseParser."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -73,6 +73,6 @@ def test_is_active_without_vendor_config() -> None:
 @pytest.mark.parametrize('enabled', [True, False])
 def test_is_active_follows_vendor_config(enabled: bool) -> None:
     config = _config()
-    config._vendor_config = SimpleNamespace(enabled=enabled)  # noqa: WPS437
 
-    assert ParserSettings(config).is_active is enabled
+    with patch.object(config, '_vendor_config', SimpleNamespace(enabled=enabled)):
+        assert ParserSettings(config).is_active is enabled

@@ -4,10 +4,13 @@ import logging
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_title import get_spike_title, replace_season
-from parsers.base_parser.category_service import CategoryService
+from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.manufacturer_service import ManufacturerService
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.protocols import TitleFilterProtocol
+from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.title_filter import TitleFilter
 from parsers.base_parser.title_service import TitleService
 from parsers.strategies.homoglyphs import fix_row_homoglyphs
 
@@ -94,3 +97,19 @@ class RowEnricher:
         row_item.set_field('spike', get_spike_title(row_item))
         row_item.set_field('season', replace_season(row_item))
         return row_item
+
+
+def make_row_enricher(
+    settings: ParserSettings,
+    stats: ParserStats,
+    hooks: StrategyHooks | None = None,
+    title_filter: TitleFilterProtocol | None = None,
+) -> RowEnricher:
+    """Собрать `RowEnricher` с сервисами title, категории и производителя; без `title_filter` — стандартный."""
+    return RowEnricher(
+        settings,
+        TitleService(hooks, title_filter or TitleFilter(settings.parse_config())),
+        CategoryService(hooks, CategoryLookup(stats)),
+        ManufacturerService(settings, hooks),
+        stats,
+    )
