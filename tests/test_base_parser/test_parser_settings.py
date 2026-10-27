@@ -55,14 +55,11 @@ def test_title_adds_sheet_info() -> None:
     assert ParserSettings(_config(_SHEET)).title() == f'{_SUPPLIER_NAME} ({_SHEET})'
 
 
-def test_manufacturer_finder_is_cached_until_config_changes() -> None:
+def test_manufacturer_finder_is_cached_per_settings() -> None:
     settings = ParserSettings(_config())
     first = settings.manufacturer_finder()
     assert settings.manufacturer_finder() is first
-
-    settings.set_parse_config(_config())
-
-    assert settings.manufacturer_finder() is not first
+    assert ParserSettings(_config()).manufacturer_finder() is not first
 
 
 def test_is_active_without_vendor_config() -> None:

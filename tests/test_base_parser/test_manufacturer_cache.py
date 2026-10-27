@@ -63,12 +63,11 @@ def test_parser_reuses_manufacturer_finder() -> None:
     assert parser.settings.manufacturer_finder() is parser.settings.manufacturer_finder()
 
 
-def test_set_parse_config_drops_cached_finder() -> None:
-    parser = BaseParser(parse_config=_configuration()[0])
-    first = parser.settings.manufacturer_finder()
-    parser.settings.set_parse_config(_configuration({'Bridgestone': ('Бриджстоун',)})[0])
-    second = parser.settings.manufacturer_finder()
-    assert first is not second
+def test_parsers_with_different_configs_have_own_finders() -> None:
+    other_aliases = {'Bridgestone': ('Бриджстоун',)}
+    first = BaseParser(parse_config=_configuration()[0])
+    second = BaseParser(parse_config=_configuration(other_aliases)[0])
+    assert first.settings.manufacturer_finder() is not second.settings.manufacturer_finder()
 
 
 def test_enrich_builds_finder_once(monkeypatch: Any) -> None:

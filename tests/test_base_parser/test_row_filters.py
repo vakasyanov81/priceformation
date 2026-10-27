@@ -269,14 +269,6 @@ def test_manufacturer_finder_uses_config_aliases(monkeypatch: pytest.MonkeyPatch
     assert captured['aliases'] == parser.settings.parse_config().manufacturer_aliases()
 
 
-def test_set_parse_config_resets_manufacturer_finder() -> None:
-    """Смена конфига сбрасывает закэшированный манипулятор в None."""
-    parser = _parser()
-    parser.settings._manufacturer_finder = MagicMock()  # noqa: WPS437
-    parser.settings.set_parse_config(ParseConfiguration(_base_params()))
-    assert parser.settings._manufacturer_finder is None  # noqa: WPS437
-
-
 def test_raw_parse_passes_file_path_to_reader() -> None:
     """raw_parse прокидывает путь файла в читатель."""
     parser = _parser()

@@ -16,10 +16,6 @@ class ParserSettings:
             raise ParseConfigNotSetError()
         return self._parse_config
 
-    def set_parse_config(self, parse_config: ParseConfiguration) -> None:
-        self._parse_config = parse_config
-        self._manufacturer_finder = None
-
     def parser_params(self) -> ParserParams:
         return self.parse_config().parser_params
 
