@@ -1,5 +1,7 @@
 # Task-18: Убрать `# flake8: noqa` из `services/parse_orchestrator.py`
 
+**Статус: выполнено.** Выбран вариант B: `services/parse_logging.py` возвращает пары (уровень, текст), логирует оркестратор. `_parser_for_vendor` стал `vendor_parser.parser_for_vendor`; неиспользуемый аргумент `parser_factory` убран.
+
 ## Проблема
 
 В `src/services/parse_orchestrator.py` стоит файловая директива `# flake8: noqa: WPS201`:

@@ -15,7 +15,9 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.registry import UnknownVendorError, make_vendor_entry
 from parsers.vendor_config.models import VendorConfig, VendorSection
-from services.parse_orchestrator import ParseOrchestrator, ParseResult, _parser_for_vendor
+from services.parse_orchestrator import ParseOrchestrator
+from services.parse_result import ParseResult
+from services.vendor_parser import parser_for_vendor
 
 _MOD = 'services.parse_orchestrator'
 _ORCHESTRATOR_LOGGER = 'services.parse_orchestrator'
@@ -303,7 +305,7 @@ def test_parser_for_vendor_without_config() -> None:
     """Без vendor_config класс получает None (легаси-парсер)."""
     vendor_cls = MagicMock()
 
-    _parser_for_vendor(MagicMock(), vendor_cls, None)
+    parser_for_vendor(vendor_cls, None)
 
     vendor_cls.assert_called_once_with(parse_config=None)
 
@@ -314,8 +316,8 @@ def test_parser_for_vendor_disabled_uses_parse_config() -> None:
     vendor_cls = MagicMock()
     make_cd = MagicMock()
 
-    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
-        _parser_for_vendor(MagicMock(), vendor_cls, config)
+    with patch('services.vendor_parser.make_config_driven_parser', make_cd):
+        parser_for_vendor(vendor_cls, config)
 
     vendor_cls.assert_called_once_with(parse_config=config)
     make_cd.assert_not_called()
@@ -326,8 +328,8 @@ def test_parser_for_vendor_enabled_with_metadata_builds_config_driven() -> None:
     section, vendor_cfg, config = _config_driven_vendor_entry(enabled=True)
     make_cd = MagicMock(return_value='parser')
 
-    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
-        _parser_for_vendor(MagicMock(), MagicMock(), config)
+    with patch('services.vendor_parser.make_config_driven_parser', make_cd):
+        parser_for_vendor(MagicMock(), config)
 
     make_cd.assert_called_once_with(section, vendor_cfg, config)
 
@@ -338,8 +340,8 @@ def test_parser_for_vendor_enabled_without_vendor_config_falls_back() -> None:
     vendor_cls = MagicMock()
     make_cd = MagicMock()
 
-    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
-        _parser_for_vendor(MagicMock(), vendor_cls, config)
+    with patch('services.vendor_parser.make_config_driven_parser', make_cd):
+        parser_for_vendor(vendor_cls, config)
 
     vendor_cls.assert_called_once_with(parse_config=config)
     make_cd.assert_not_called()
@@ -351,8 +353,8 @@ def test_parser_for_vendor_enabled_without_metadata_falls_back() -> None:
     vendor_cls = MagicMock()
     make_cd = MagicMock()
 
-    with patch(f'{_MOD}.make_config_driven_parser', make_cd):
-        _parser_for_vendor(MagicMock(), vendor_cls, config)
+    with patch('services.vendor_parser.make_config_driven_parser', make_cd):
+        parser_for_vendor(vendor_cls, config)
 
     vendor_cls.assert_called_once_with(parse_config=config)
     make_cd.assert_not_called()
@@ -453,7 +455,7 @@ def test_parser_for_vendor_config_without_vendor_metadata_attributes() -> None:
     config: Any = SimpleNamespace()
     vendor_cls = MagicMock()
 
-    _parser_for_vendor(MagicMock(), vendor_cls, config)
+    parser_for_vendor(vendor_cls, config)
 
     vendor_cls.assert_called_once_with(parse_config=config)
 

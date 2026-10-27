@@ -22,7 +22,7 @@ from parse_report_build import (
     stats_from_result,
     warnings_from_result,
 )
-from services.parse_orchestrator import ParseResult
+from services.parse_result import ParseResult
 
 _TITLE = 'шина test'
 _OPT = 100
