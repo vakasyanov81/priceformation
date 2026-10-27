@@ -20,11 +20,11 @@ class ParserManufacturer(ParserCategory):
         return self.find_manufacturer_on_enrich
 
     def apply_manufacturer(self, row_item: RowItem) -> None:
-        apply_row_manufacturer(row_item, self._effective_find_manufacturer, self.manufacturer_finder())
+        apply_row_manufacturer(row_item, self._effective_find_manufacturer, self.settings.manufacturer_finder())
 
     def apply_manufacturer_after_pipeline(self, row_item: RowItem) -> None:
         """Найти производителя по финальному title, независимо от ``find_manufacturer_on_enrich``."""
-        apply_row_manufacturer(row_item, True, self.manufacturer_finder())
+        apply_row_manufacturer(row_item, True, self.settings.manufacturer_finder())
 
 
 class ParserMarkup(ParserManufacturer):

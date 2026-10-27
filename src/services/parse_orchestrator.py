@@ -125,5 +125,5 @@ def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
     skips = parser.stats.unknown_category_skips
     if not skips:
         return []
-    supplier = parser.parser_params().supplier.name
+    supplier = parser.settings.parser_params().supplier.name
     return [(supplier, category) for category in skips]

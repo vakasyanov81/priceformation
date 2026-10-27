@@ -36,7 +36,7 @@ def _enrich_row_item(parser: BaseParser, row_item: RowItem) -> RowItem:
     """Производитель, категория, служебные поля."""
     parser.apply_manufacturer(row_item)
     parser.correction_category(row_item)
-    row_item.set_field('supplier_name', parser.parser_params().supplier.name)
+    row_item.set_field('supplier_name', parser.settings.parser_params().supplier.name)
     row_item.set_field('spike', parser.get_spike_title(row_item))
     row_item.set_field('season', replace_season(row_item))
     return row_item
@@ -72,7 +72,7 @@ def _keep_row_item(parser: BaseParser, row_item: RowItem) -> bool:
 def enrich_items(parser: BaseParser, row_items: list[RowItem]) -> list[RowItem]:
     """Title, отсев по ошибкам/stop/black и служебные поля."""
     parsed_items: list[RowItem] = []
-    start_row = parser.parser_params().start_row
+    start_row = parser.settings.parser_params().start_row
     for row_id, row_item in enumerate(row_items, start=start_row):
         prepared = _try_prepare_row(parser, row_id, row_item)
         if prepared is not None:

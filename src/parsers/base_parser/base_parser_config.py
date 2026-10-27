@@ -67,6 +67,13 @@ class ParseConfiguration:
         self._price_markup_map: tuple[data_provider.MarkUpRule, ...] | None = None
         self._manufacturer_aliases: dict[str, Any] | None = None
 
+    @property
+    def is_enabled(self) -> bool:
+        """Поставщик включён; без `_vendor_config` (легаси-вендор) — включён."""
+        if self._vendor_config is None:
+            return True
+        return bool(self._vendor_config.enabled)
+
     def get_markup_rules(self) -> data_provider.MarkupRulesConfig:
         """get markup rules and caching"""
         if self._markup_rules is None:

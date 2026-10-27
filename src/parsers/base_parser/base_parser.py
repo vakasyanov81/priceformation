@@ -32,7 +32,7 @@ class BaseParser(ParserPipeline):
     """Парсер — композиция FileReader, RowProcessor, TitleFilter."""
 
     def parse(self) -> list[RowItem]:
-        if not self.is_active:
+        if not self.settings.is_active:
             self.logger.log_disable_status()
             return []
         self._category_finder = CategoryFinder()

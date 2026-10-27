@@ -24,13 +24,13 @@ class ParserFiles(ParserCore):
         return raw_rows
 
     def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
-        return [self.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
+        return [self.settings.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
-        return self._file_reader_impl.raw_parse(full_file_xls_path, self.parser_params())
+        return self._file_reader_impl.raw_parse(full_file_xls_path, self.settings.parser_params())
 
     def get_data_reader(self, full_file_xls_path: str) -> IXlsReader:
-        return self._file_reader_impl.get_data_reader(full_file_xls_path, self.parser_params())
+        return self._file_reader_impl.get_data_reader(full_file_xls_path, self.settings.parser_params())
 
     def get_parsed_items(self) -> list[RowItem]:
         return self.parsed_items
@@ -38,8 +38,8 @@ class ParserFiles(ParserCore):
     def _price_files(self) -> list[str]:
         if self.files:
             return self.files
-        files = self._file_reader_impl.price_files(self.parser_params())
+        files = self._file_reader_impl.price_files(self.settings.parser_params())
         if not files:
-            supplier_name = self.parser_params().supplier.name
+            supplier_name = self.settings.parser_params().supplier.name
             raise SupplierNotHavePricesError(f'Прайсов у поставщика ({supplier_name}) не обнаружено!')
         return files

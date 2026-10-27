@@ -67,14 +67,11 @@ class FakeParserWithSkips:
         """init"""
         self.parse_config = parse_config
         self.stats = ParserStats(unknown_category_skips=['SUV', 'Foo'])
+        self.settings = SimpleNamespace(parser_params=_SkipParserParams)
 
     def parse(self) -> list[RowItem]:
         """fake parse"""
         return []
-
-    def parser_params(self) -> _SkipParserParams:
-        """supplier params for skip report"""
-        return _SkipParserParams()
 
 
 class FakeParserWithBlackListSkips:

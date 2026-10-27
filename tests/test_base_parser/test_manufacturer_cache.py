@@ -60,14 +60,14 @@ def test_manufacturer_aliases_reads_provider_once() -> None:
 
 def test_parser_reuses_manufacturer_finder() -> None:
     parser = BaseParser(parse_config=_configuration()[0])
-    assert parser.manufacturer_finder() is parser.manufacturer_finder()
+    assert parser.settings.manufacturer_finder() is parser.settings.manufacturer_finder()
 
 
 def test_set_parse_config_drops_cached_finder() -> None:
     parser = BaseParser(parse_config=_configuration()[0])
-    first = parser.manufacturer_finder()
-    parser.set_parse_config(_configuration({'Bridgestone': ('Бриджстоун',)})[0])
-    second = parser.manufacturer_finder()
+    first = parser.settings.manufacturer_finder()
+    parser.settings.set_parse_config(_configuration({'Bridgestone': ('Бриджстоун',)})[0])
+    second = parser.settings.manufacturer_finder()
     assert first is not second
 
 

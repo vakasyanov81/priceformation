@@ -209,7 +209,7 @@ def test_manufacturer_correction_survives_title_recompose() -> None:
     strategy.prepare.return_value = '10-16.5 Toptrust L-2 10 TL'
     hooks = StrategyHooks(title=strategy, pipeline=('title',))
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
-    parser._manufacturer_finder = ManufacturerFinder({'TopTrust': ()})
+    parser.settings._manufacturer_finder = ManufacturerFinder({'TopTrust': ()})
 
     row = RowItem({'title': '10-16.5 Toptrust L-2 10 TL', 'manufacturer_name': 'TopTrust'})
     parser.process_parsed_row(row)
@@ -224,7 +224,7 @@ def test_manufacturer_found_after_pipeline_when_enrich_disabled() -> None:
     strategy.prepare.return_value = '195/75R16 Triangle TR652'
     hooks = StrategyHooks(title=strategy, find_manufacturer_on_enrich=False, pipeline=('title',))
     parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
-    parser._manufacturer_finder = ManufacturerFinder({'Triangle': ()})
+    parser.settings._manufacturer_finder = ManufacturerFinder({'Triangle': ()})
 
     row = RowItem({'title': '195/75R16 TR652'})
     parser.process_parsed_row(row)

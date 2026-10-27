@@ -193,7 +193,7 @@ def test_markdown_survives_rebuilt_title() -> None:
 def test_deprecated_vendor_config_fallback_active() -> None:
     """ParseConfiguration без _vendor_config не падает (обратная совместимость)."""
     parser = _make_parser()
-    assert parser.is_active is True
+    assert parser.settings.is_active is True
 
 
 def test_skip_by_min_rest_keeps_large_rest() -> None:

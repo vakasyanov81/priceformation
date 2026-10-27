@@ -12,7 +12,7 @@ from test_parsers.test_vendors._test_providers import (
 )
 
 from domain.row_item.row_item import RowItem
-from parsers.base_parser import parser_core as base_parser_module
+from parsers.base_parser import parser_settings as base_parser_module
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
@@ -188,7 +188,8 @@ def test_enrich_skips_title_value_error() -> None:
 def test_enrich_row_item_sets_service_fields() -> None:
     """_enrich_row_item проставляет поставщика, шип и канонический сезон по ключам."""
     parser = MagicMock()
-    parser.parser_params.return_value.supplier.name = 'Тест'
+    supplier_params = parser.settings.parser_params.return_value
+    supplier_params.supplier.name = 'Тест'
     parser.get_spike_title.return_value = 'Да'
     row = RowItem({'title': _TITLE, 'season': 'лето'})
 
@@ -270,7 +271,7 @@ def test_apply_manufacturer_calls_finder() -> None:
     """apply_manufacturer запускает поиск, пока включён флаг."""
     parser = _parser()
     finder = MagicMock()
-    parser._manufacturer_finder = finder  # noqa: WPS437
+    parser.settings._manufacturer_finder = finder  # noqa: WPS437
     parser.apply_manufacturer(RowItem({'title': _TITLE}))
     finder.process.assert_called_once()
 
@@ -286,16 +287,16 @@ def test_manufacturer_finder_uses_config_aliases(monkeypatch: pytest.MonkeyPatch
         return sentinel
 
     monkeypatch.setattr(base_parser_module, 'ManufacturerFinder', _fake)
-    assert parser.manufacturer_finder() is sentinel
-    assert captured['aliases'] == parser.parse_config().manufacturer_aliases()
+    assert parser.settings.manufacturer_finder() is sentinel
+    assert captured['aliases'] == parser.settings.parse_config().manufacturer_aliases()
 
 
 def test_set_parse_config_resets_manufacturer_finder() -> None:
     """Смена конфига сбрасывает закэшированный манипулятор в None."""
     parser = _parser()
-    parser._manufacturer_finder = MagicMock()  # noqa: WPS437
-    parser.set_parse_config(ParseConfiguration(_base_params()))
-    assert parser._manufacturer_finder is None  # noqa: WPS437
+    parser.settings._manufacturer_finder = MagicMock()  # noqa: WPS437
+    parser.settings.set_parse_config(ParseConfiguration(_base_params()))
+    assert parser.settings._manufacturer_finder is None  # noqa: WPS437
 
 
 def test_raw_parse_passes_file_path_to_reader() -> None:
@@ -303,7 +304,8 @@ def test_raw_parse_passes_file_path_to_reader() -> None:
     parser = _parser()
     parser._file_reader_impl = MagicMock()  # noqa: WPS437
     parser.raw_parse('price.xls')
-    parser._file_reader_impl.raw_parse.assert_called_once_with('price.xls', parser.parser_params())  # noqa: WPS437
+    reader = parser._file_reader_impl  # noqa: WPS437
+    reader.raw_parse.assert_called_once_with('price.xls', parser.settings.parser_params())
 
 
 def test_parse_creates_category_finder() -> None:
