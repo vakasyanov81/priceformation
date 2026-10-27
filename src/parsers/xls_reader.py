@@ -103,9 +103,10 @@ class XlsReader(IXlsReader):
         if self.cur_row > self.reader_params.max_rows:
             raise MaxRowsReachedError(self.reader_params.max_rows)
 
-        try:
+        if cur_row < len(sheet):
             self.cur_row_values = [strip_cell_value(cell) for cell in row_values(sheet, cur_row, end_col)]
-        except IndexError:
+        else:
+            # за последней строкой листа: считается пустой, после серии пустых чтение завершается
             self.cur_row_values = [None]
 
         if is_empty_row(self.cur_row_values):

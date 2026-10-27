@@ -10,8 +10,8 @@ from domain.exceptions import CoreExceptionError, SupplierNotHavePricesError
 logger = logging.getLogger(__name__)
 
 
-def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
-    """Try method call"""
+def try_call(method: Callable[..., Any], **kwargs: Any) -> bool:
+    """Try method call; False — ошибка домена залогирована, действие не выполнено."""
     try:
         method(**kwargs)
     except SupplierNotHavePricesError as exc:
@@ -19,5 +19,7 @@ def try_call(method: Callable[..., Any], **kwargs: Any) -> None:
         sys.exit(1)
     except CoreExceptionError as exc:
         logger.error(f'{exc}')
+        return False
     except KeyboardInterrupt:
         sys.exit(0)
+    return True

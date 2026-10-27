@@ -15,7 +15,7 @@ _ASYNC_LOGGER = 'services.async_utils'
 def test_try_call_success() -> None:
     """успешный вызов метода с kwargs"""
     method = MagicMock()
-    try_call(method, a=1, b=2)
+    assert try_call(method, a=1, b=2) is True
     method.assert_called_once_with(a=1, b=2)
 
 
@@ -48,7 +48,7 @@ def test_try_call_core_error(watch_logger: LoggerWatcher) -> None:
         method = MagicMock(side_effect=CoreExceptionError('понятная ошибка'))
 
     with patch('services.async_utils.sys.exit') as mock_exit:
-        try_call(method)
+        assert try_call(method) is False
 
     assert entries() == [(ERROR, 'понятная ошибка')]
     mock_exit.assert_not_called()

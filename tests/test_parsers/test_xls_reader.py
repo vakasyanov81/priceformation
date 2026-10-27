@@ -247,3 +247,14 @@ def test_parse_loads_only_requested_sheets() -> None:
     reader.book = spy  # type: ignore[assignment]
     assert reader.parse([1]) == SHEET_2
     assert spy.loaded == [spy.sheet_names[1]]
+
+
+def test_next_row_values_past_sheet_end_is_empty_row() -> None:
+    """Строка за концом листа считается пустой; серия пустых строк завершает чтение."""
+    reader = _row_reader()
+    sheet = [['a']]
+    assert reader.next_row_values(sheet) == ['a']
+    assert reader.next_row_values(sheet) is True
+    assert reader.cur_row_values == [None]
+    assert reader.skipped_empty_rows == 1
+    assert _read_until_end(reader, sheet) == []

@@ -90,12 +90,19 @@ def _doh_addresses(host: str) -> list[str]:
         try:
             with urllib.request.urlopen(request, timeout=_DOH_TIMEOUT_SECONDS) as response:  # noqa: S310  # nosec B310
                 payload = json.load(response)
-        except (OSError, ValueError):
+        except (OSError, ValueError) as exc:
+            _log_doh_failure(template, host, exc)
             continue
         addresses = _doh_answers(payload)
         if addresses:
             return addresses
     return []
+
+
+def _log_doh_failure(template: str, host: str, exc: Exception) -> None:
+    """Записать сбой одного DoH-провайдера: без лога причина пустого результата теряется."""
+    endpoint = template.split('?', maxsplit=1)[0]
+    logger.warning(f'DoH {endpoint}, хост {host!r}: {exc!r}')
 
 
 def _doh_answers(payload: object) -> list[str]:

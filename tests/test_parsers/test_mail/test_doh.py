@@ -5,6 +5,7 @@ from __future__ import annotations
 import imaplib
 import io
 import json
+import logging
 import socket
 import ssl
 import urllib.request
@@ -12,6 +13,7 @@ from typing import Any
 from unittest.mock import MagicMock, call
 
 import pytest
+from log_watch import LoggerWatcher
 
 from parsers.mail import doh as mail_doh
 from parsers.mail.doh import _ImapSslByAddress
@@ -143,7 +145,7 @@ _NO_ANSWERS: tuple[object, ...] = ([], {}, {'Status': 3})
 @pytest.mark.parametrize('payload', _NO_ANSWERS, ids=['not-mapping', 'empty', 'no-answer'])
 def test_doh_answers_without_answer(payload: object) -> None:
     """Не объект или объект без Answer — пустой список адресов."""
-    assert mail_doh._doh_answers(payload) == []
+    assert not mail_doh._doh_answers(payload)
 
 
 def test_imap_ssl_by_address_uses_expected_socket(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -177,3 +179,16 @@ def _patch_urlopen(monkeypatch: pytest.MonkeyPatch, responses: list[Any]) -> Mag
     urlopen = MagicMock(side_effect=responses)
     monkeypatch.setattr(urllib.request, 'urlopen', urlopen)
     return urlopen
+
+
+def test_doh_addresses_logs_failed_providers(monkeypatch: pytest.MonkeyPatch, watch_logger: LoggerWatcher) -> None:
+    """Сбой каждого DoH-провайдера попадает в лог, а не пропускается молча."""
+    entries = watch_logger('parsers.mail.doh')
+    _patch_urlopen(monkeypatch, [io.BytesIO(b'{'), OSError('google down')])
+
+    assert not mail_doh._doh_addresses('imap.example.ru')
+
+    texts = [text for level, text in entries() if level == logging.WARNING]
+    assert len(texts) == 2
+    assert 'cloudflare-dns.com' in texts[0]
+    assert 'google down' in texts[1]
