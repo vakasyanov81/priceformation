@@ -12,8 +12,8 @@ from test_parsers.test_vendors._test_providers import (
 )
 
 from domain.row_item.row_item import RowItem
-from parsers.base_parser import base_parser as base_parser_module
-from parsers.base_parser.base_parser import BaseParser, _type_production_from_filename
+from parsers.base_parser import parser_core as base_parser_module
+from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -22,6 +22,7 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.base_parser_row import _enrich_row_item, _keep_row_item, drop_empty_rest, enrich_items
 from parsers.base_parser.category_finder import CategoryFinder
+from parsers.base_parser.parser_files import type_production_from_filename
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
@@ -241,8 +242,8 @@ def test_strip_words_in_title_none_stays_none() -> None:
 
 def test_type_production_from_filename_without_underscore() -> None:
     """Имя без `_` целиком; иначе берётся хвост после последнего `_`."""
-    assert _type_production_from_filename('disks.xls') == 'disks.xls'
-    assert _type_production_from_filename('brand_cat_disks.xls') == 'disks.xls'
+    assert type_production_from_filename('disks.xls') == 'disks.xls'
+    assert type_production_from_filename('brand_cat_disks.xls') == 'disks.xls'
 
 
 def test_category_for_without_hooks_is_none() -> None:

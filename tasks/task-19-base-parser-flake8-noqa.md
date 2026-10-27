@@ -1,5 +1,7 @@
 # Task-19: Убрать `# flake8: noqa` из `parsers/base_parser/base_parser.py`
 
+**Статус: выполнено.** `BaseParser` разложен на цепочку слоёв-миксинов в `parsers/base_parser/`: `parser_core` → `parser_files` → `parser_title` → `parser_rows` → `parser_category` → `parser_markup` → `parser_pipeline` → `BaseParser` (парсинг, `process`, `after_process`, `enrich`, `filter_keep`). Каждый класс ≤ 7 методов, публичный API и MRO для вендорных подклассов не изменились. `_run_pipeline` разбит на `_run_step`. Остаточный долг: слои делят состояние через `self`, полноценная композиция потребует отдельной задачи.
+
 ## Проблема
 
 В первой строке `src/parsers/base_parser/base_parser.py` стоит файловая директива `# flake8: noqa: WPS201`. Без неё `uv run flake8 .` падает на трёх нарушениях:

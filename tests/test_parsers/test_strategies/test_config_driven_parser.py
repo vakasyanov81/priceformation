@@ -537,7 +537,7 @@ def test_apply_category_generic_declared_not_marked() -> None:
 def test_apply_category_logs_correction(watch_logger: LoggerWatcher) -> None:
     """Расхождение попадает в debug-лог с заявленным/вычисленным типом."""
     parser = _classifier_parser(LIGHT_TRUCK)
-    watch = watch_logger('parsers.base_parser.base_parser', logging.DEBUG)
+    watch = watch_logger('parsers.base_parser.parser_category', logging.DEBUG)
 
     parser.process_parsed_row(RowItem({'title': '275/65R20 112T'}))
 
