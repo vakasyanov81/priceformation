@@ -86,15 +86,6 @@ def test_correction_category_maps_alias() -> None:
     assert row.vendor.type_production == 'Грузовая шина'
 
 
-def test_strip_words_collapses_spaces() -> None:
-    assert BaseParser.strip_words_in_title('  385/65   R22.5  ') == '385/65 R22.5'
-
-
-def test_strip_words_keeps_empty_and_whitespace() -> None:
-    assert BaseParser.strip_words_in_title('') == ''
-    assert BaseParser.strip_words_in_title('   ') == '   '
-
-
 def test_drop_row_with_rest_and_no_purchase_price() -> None:
     parser = _parser()
     dropped = RowItem({'title': _TITLE, 'rest_count': _REST})
@@ -111,19 +102,19 @@ def test_drop_empty_rest_requires_opt_and_rest() -> None:
 
 
 def test_is_valid_title_keeps_normal() -> None:
-    assert _parser().is_valid_title(_TITLE)
+    assert _parser().titles.is_valid_title(_TITLE)
 
 
 def test_is_valid_title_rejects_empty() -> None:
-    assert not _parser().is_valid_title('')
+    assert not _parser().titles.is_valid_title('')
 
 
 def test_is_valid_title_rejects_exact_blacklist() -> None:
-    assert not _parser().is_valid_title('wrong title')
+    assert not _parser().titles.is_valid_title('wrong title')
 
 
 def test_is_valid_title_rejects_mask() -> None:
-    assert not _parser().is_valid_title('some некондиция product')
+    assert not _parser().titles.is_valid_title('some некондиция product')
 
 
 def test_filter_keep_counts_exact_blacklist() -> None:
@@ -182,7 +173,7 @@ def test_enrich_skips_title_value_error() -> None:
             raise ValueError('bad title')
         return True
 
-    parser.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    parser.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
     rows = enrich_items(parser, [_priced(_TITLE)])
     assert rows == []
 
@@ -192,8 +183,7 @@ def test_enrich_row_item_sets_service_fields() -> None:
     parser = MagicMock()
     supplier_params = parser.settings.parser_params.return_value
     supplier_params.supplier.name = 'Тест'
-    parser.get_spike_title.return_value = 'Да'
-    row = RowItem({'title': _TITLE, 'season': 'лето'})
+    row = RowItem({'title': _TITLE, 'season': 'лето', 'spike': 'да'})
 
     _enrich_row_item(parser, row)
 
@@ -236,11 +226,6 @@ def test_repr_includes_sheet_info() -> None:
 
 def test_default_min_rest_is_four() -> None:
     assert DEFAULT_MIN_REST == 4
-
-
-def test_strip_words_in_title_none_stays_none() -> None:
-    """None-заголовок не превращается в подставную строку."""
-    assert BaseParser.strip_words_in_title(None) is None  # type: ignore[arg-type]
 
 
 def test_type_production_from_filename_without_underscore() -> None:
@@ -361,7 +346,7 @@ def test_enrich_logs_row_number_from_start_row(caplog: pytest.LogCaptureFixture)
     def _raise_on_title(row_item: RowItem) -> bool:
         raise ValueError('bad title')
 
-    parser.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
+    parser.titles.set_prepared_title = _raise_on_title  # type: ignore[method-assign]
 
     with caplog.at_level(logging.ERROR):
         enrich_items(parser, [_priced(_TITLE)])

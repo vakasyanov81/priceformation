@@ -19,6 +19,7 @@ from parsers.base_parser.base_parser_config import (
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
 from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.title_service import TitleService
 
 _OPT = 100
 _REST_OK = 10
@@ -43,8 +44,8 @@ class _OrderParser(BaseParser):
         return _CATEGORY
 
 
-class _RebuildTitleParser(_OrderParser):
-    """Парсер, чья стратегия собирает название заново и не несёт в нём ни года, ни уценки."""
+class _RebuildTitles(TitleService):
+    """Название собирается заново и не несёт в себе ни года, ни уценки."""
 
     def get_prepared_title(self, row_item: RowItem) -> str | None:
         return '175/65R14 Viatti Brina V-521 82T'
@@ -129,7 +130,7 @@ def test_title_not_overwritten_by_default() -> None:
     row = RowItem({'title': '205/55R16', 'price_opt': _OPT, 'rest_count': _REST_OK})
 
     _reset_calls()
-    parser.set_prepared_title(row)
+    parser.titles.set_prepared_title(row)
 
     assert row.identity.title == '205/55R16'
 
@@ -140,8 +141,8 @@ def test_markdown_title_marks_row_down() -> None:
     marked = RowItem({'title': '13 Trebl 5.0*13 паллета Уценка Дефект ЛКП', 'price_opt': _OPT})
     regular = RowItem({'title': '13 Trebl 5.0*13 паллета', 'price_opt': _OPT})
 
-    parser.set_prepared_title(marked)
-    parser.set_prepared_title(regular)
+    parser.titles.set_prepared_title(marked)
+    parser.titles.set_prepared_title(regular)
 
     assert marked.stock.marked_down is True
     assert regular.stock.marked_down is None
@@ -153,24 +154,24 @@ def test_production_year_is_taken_from_title() -> None:
     dated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T 2023г.в.', 'price_opt': _OPT})
     undated = RowItem({'title': '175/65R14 Viatti Brina V-521 82T', 'price_opt': _OPT})
 
-    parser.set_prepared_title(dated)
-    parser.set_prepared_title(undated)
+    parser.titles.set_prepared_title(dated)
+    parser.titles.set_prepared_title(undated)
 
     assert dated.stock.production_year == 2023
     assert undated.stock.production_year is None
 
 
 def _make_rebuild_parser() -> BaseParser:
-    return make_parser(
-        _RebuildTitleParser, ParseConfiguration(_base_params()), markup_policy=IdentityMarkupPolicy.create()
-    )
+    parser = _make_parser()
+    parser.titles = _RebuildTitles(None, parser.titles.title_filter)
+    return parser
 
 
 def test_production_year_survives_rebuilt_title() -> None:
     """Собранное название года выпуска не несёт: год берётся из текста поставщика до сборки."""
     row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T 2023г.в.', 'price_opt': _OPT})
 
-    _make_rebuild_parser().set_prepared_title(row)
+    _make_rebuild_parser().titles.set_prepared_title(row)
 
     assert row.identity.title == '175/65R14 Viatti Brina V-521 82T'
     assert row.stock.production_year == 2023
@@ -180,7 +181,7 @@ def test_production_plant_survives_rebuilt_title() -> None:
     """Завод берётся из текста поставщика до сборки: собранное название его не несёт."""
     row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T НкШЗ', 'price_opt': _OPT})
 
-    _make_rebuild_parser().set_prepared_title(row)
+    _make_rebuild_parser().titles.set_prepared_title(row)
 
     assert row.identity.title == '175/65R14 Viatti Brina V-521 82T'
     assert row.stock.production_plant == 'НкШЗ'
@@ -190,7 +191,7 @@ def test_markdown_survives_rebuilt_title() -> None:
     """Собранное название слова «Уценка» не несёт: признак уценки берётся из текста поставщика до сборки."""
     row = RowItem({'title': '175/65R14 Viatti Brina V-521 82T Уценка', 'price_opt': _OPT})
 
-    _make_rebuild_parser().set_prepared_title(row)
+    _make_rebuild_parser().titles.set_prepared_title(row)
 
     assert row.stock.marked_down is True
 
@@ -213,7 +214,7 @@ def test_set_prepared_title_reports_unchanged_title() -> None:
     """set_prepared_title возвращает True, когда title не изменился."""
     parser = _make_parser()
     row = RowItem({'title': '205/55R16'})
-    assert parser.set_prepared_title(row) is True
+    assert parser.titles.set_prepared_title(row) is True
 
 
 def test_after_row_mapped_receives_row() -> None:

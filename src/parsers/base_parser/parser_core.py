@@ -16,6 +16,7 @@ from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.title_filter import TitleFilter
+from parsers.base_parser.title_service import TitleService
 from parsers.xls_reader import XlsReader
 
 
@@ -46,7 +47,7 @@ class ParserCore:
 
         self.price_files = PriceFiles(self.settings, file_reader or FileReader(data_reader=self.data_reader))
         self._row_processor = row_processor or RowProcessor()
-        self._title_filter = title_filter or TitleFilter(parse_config)
+        self.titles = TitleService(strategy_hooks, title_filter or TitleFilter(parse_config))
 
     def __repr__(self) -> str:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""

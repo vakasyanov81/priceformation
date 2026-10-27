@@ -46,7 +46,7 @@ class ParserPipeline(ParserMarkup):
             self.apply_category_fields(hooks, row_item)
             return
         simple_steps = {
-            'title': self.set_prepared_title,
+            'title': self.titles.set_prepared_title,
             'min_rest': self.row_filters.skip_by_min_rest,
             'markup': self.add_price_markup,
         }
