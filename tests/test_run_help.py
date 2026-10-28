@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from run_dialog import AnswerResult
+from app.run_dialog import AnswerResult
 from services.help_service import HelpService
 
-_ASK_ACTION = 'run.ask_action'
+_ASK_ACTION = 'app.run.ask_action'
 _DOC = '# Документация'
 
 
@@ -16,9 +16,9 @@ def test_response_show_help() -> None:
     """действие справки выводит README через try_call"""
     with (
         patch(_ASK_ACTION, return_value=AnswerResult.SHOW_HELP),
-        patch('run.try_call') as mock_try,
+        patch('app.run.try_call') as mock_try,
     ):
-        from run import response_processing
+        from app.run import response_processing
 
         assert response_processing() is True
         mock_try.assert_called_once()
@@ -31,10 +31,10 @@ def test_run_show_help(capsys: pytest.CaptureFixture[str]) -> None:
     help_service.readme.return_value = _DOC
 
     with patch(
-        'run.ServiceProvider.resolve',
+        'app.run.ServiceProvider.resolve',
         side_effect={HelpService: help_service}.__getitem__,
     ):
-        from run import run_show_help
+        from app.run import run_show_help
 
         run_show_help()
 
@@ -52,12 +52,12 @@ def test_run_show_help_pages_in_terminal(monkeypatch: pytest.MonkeyPatch) -> Non
 
     with (
         patch(
-            'run.ServiceProvider.resolve',
+            'app.run.ServiceProvider.resolve',
             side_effect={HelpService: help_service}.__getitem__,
         ),
-        patch('run.pydoc.pager') as mock_pager,
+        patch('app.run.pydoc.pager') as mock_pager,
     ):
-        from run import run_show_help
+        from app.run import run_show_help
 
         run_show_help()
 

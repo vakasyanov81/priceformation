@@ -1,4 +1,4 @@
-"""Integration tests for application entry point (src/run.py)."""
+"""Integration tests for application entry point (src/app.run.py)."""
 
 import logging
 from unittest.mock import MagicMock, patch
@@ -6,19 +6,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 from log_watch import LoggerWatcher, texts_at
 
+from app.run_dialog import AnswerResult
 from domain.exceptions import SupplierNotHavePricesError
-from run_dialog import AnswerResult
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 
 _INPUT = 'builtins.input'
-_RUN_EXIT = 'run.sys.exit'
+_RUN_EXIT = 'app.run.sys.exit'
 _QUIT = 'q'
 _PARSED_ROW = 'item'
-_RESOLVE = 'run.ServiceProvider.resolve'
+_RESOLVE = 'app.run.ServiceProvider.resolve'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
-_RUN_LOGGER = 'run'
-_DIALOG_LOGGER = 'run_dialog.line_fallback'
+_RUN_LOGGER = 'app.run'
+_DIALOG_LOGGER = 'app.run_dialog.line_fallback'
 
 
 def test_main_exits_on_quit() -> None:
@@ -26,9 +26,9 @@ def test_main_exits_on_quit() -> None:
     with (
         patch(_INPUT, return_value=_QUIT),
         patch(_RUN_EXIT, side_effect=SystemExit(0)) as mock_exit,
-        patch('run.init_cfg') as mock_init,
+        patch('app.run.init_cfg') as mock_init,
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit) as exit_info:
             main()
@@ -54,7 +54,7 @@ def test_main_make_price_then_exit() -> None:
         ),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit):
             main()
@@ -70,7 +70,7 @@ def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
         patch(_INPUT, side_effect=['x', _QUIT]),
         patch(_RUN_EXIT, side_effect=SystemExit(0)),
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit):
             main()
@@ -89,13 +89,13 @@ def test_response_make_price_via_try_call() -> None:
     reporter = MagicMock()
 
     with (
-        patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
+        patch('app.run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
         patch(
             _RESOLVE,
             side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
         ),
     ):
-        from run import response_processing
+        from app.run import response_processing
 
         assert response_processing() is True
 
@@ -106,11 +106,11 @@ def test_response_make_price_via_try_call() -> None:
 def test_response_supplier_error_exits() -> None:
     """SupplierNotHavePricesError в try_call завершает процесс с кодом 1."""
     with (
-        patch('run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
-        patch('run.run_make_price_by_supplier', side_effect=SupplierNotHavePricesError('empty')),
+        patch('app.run.ask_action', return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
+        patch('app.run.run_make_price_by_supplier', side_effect=SupplierNotHavePricesError('empty')),
         patch('services.async_utils.sys.exit', side_effect=SystemExit(1)) as mock_exit,
     ):
-        from run import response_processing
+        from app.run import response_processing
 
         with pytest.raises(SystemExit) as exit_info:
             response_processing()

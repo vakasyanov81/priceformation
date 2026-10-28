@@ -9,11 +9,11 @@ from unittest.mock import MagicMock
 import pytest
 from log_watch import LoggerWatcher
 
+from app.run_dialog import AnswerResult, ask_action, menu, navigation
+from app.run_dialog.items import MENU_ITEMS
+from app.run_dialog.key_codes import Key, KeyPress
+from app.run_dialog.rows import build_rows
 from cfg.color import Colors
-from run_dialog import AnswerResult, ask_action, menu, navigation
-from run_dialog.items import MENU_ITEMS
-from run_dialog.key_codes import Key, KeyPress
-from run_dialog.rows import build_rows
 from services.vendor_activation import VendorActivationService, VendorState
 
 
@@ -232,7 +232,7 @@ def test_toggle_failure_keeps_menu_alive(
     watch_logger: LoggerWatcher,
 ) -> None:
     """Ошибка записи конфига не роняет меню и не меняет флаг, причина попадает в лог."""
-    entries = watch_logger('run_dialog.navigation')
+    entries = watch_logger('app.run_dialog.navigation')
     _interactive.vendors = [VendorState('stk', 'STK', False)]
     monkeypatch.setattr(_interactive, 'toggle', _raise_os_error)
     keys = [

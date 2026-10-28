@@ -7,20 +7,20 @@
 
 Неинтерактивно (для Django и других скриптов)::
 
-    python src/run.py parse --json
-    python src/run.py parse --json --all-result
-    python src/run.py parse --json --result-template for_drom
-    python src/run.py doubles --json
-    python src/run.py zapaska_load_api_data --json
-    python src/run.py four_tochki_load_api_data --json
-    python src/run.py mim_load_api_data --json
-    python src/run.py fetch_mail_prices --json
-    python src/run.py get_supliers --json
-    python src/run.py get_product_types --json
-    python src/run.py get_vendors --json
-    python src/run.py toggle_vendor poshk --json
-    python src/run.py load_supplier_prices={"1": "/full/path/any_price_name.xls"}
-    python src/run.py load_config=/full/path/settings_dir
+    uv run pf parse --json
+    uv run pf parse --json --all-result
+    uv run pf parse --json --result-template for_drom
+    uv run pf doubles --json
+    uv run pf zapaska_load_api_data --json
+    uv run pf four_tochki_load_api_data --json
+    uv run pf mim_load_api_data --json
+    uv run pf fetch_mail_prices --json
+    uv run pf get_supliers --json
+    uv run pf get_product_types --json
+    uv run pf get_vendors --json
+    uv run pf toggle_vendor poshk --json
+    uv run pf load_supplier_prices={"1": "/full/path/any_price_name.xls"}
+    uv run pf load_config=/full/path/settings_dir
 
 JSON печатается в stdout, логи в этом режиме не выводятся. Прайсы пишутся в jsonl вместо xlsx.
 Код выхода 0 при успехе, 1 при ошибке.
@@ -30,10 +30,7 @@ import logging
 import pydoc
 import sys
 
-from cfg import init_cfg
-from domain.exceptions import CoreExceptionError
-from infrastructure.config.result_folder import clear_result_folder
-from run_argv import (
+from app.run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
@@ -45,8 +42,11 @@ from run_argv import (
     is_machine_argv,
     parse_machine_args,
 )
-from run_dialog import AnswerResult, ask_action, colorize_markdown
-from run_machine import fail_unknown_result_template, machine_json, upload_four_tochki_data
+from app.run_dialog import AnswerResult, ask_action, colorize_markdown
+from app.run_machine import fail_unknown_result_template, machine_json, upload_four_tochki_data
+from cfg import init_cfg
+from domain.exceptions import CoreExceptionError
+from infrastructure.config.result_folder import clear_result_folder
 from services.async_utils import try_call
 from services.configure import configure_services
 from services.doubles_service import DoublesService

@@ -13,10 +13,9 @@ dependencies = [
 ]
 
 # CLI-точка: `uv run priceformation ...` и короткий алиас `uv run pf ...`.
-# Раньше запуск был `uv run python src/run.py`; модуль run лежит в src/ верхним уровнем.
 [project.scripts]
-priceformation = "run:main"
-pf = "run:main"
+priceformation = "app.run:main"
+pf = "app.run:main"
 
 [dependency-groups]
 dev = [
@@ -99,7 +98,7 @@ max-positional-args = 6
 # Классификатор типа товара: таблица правил README §2–§9 — пороги-литералы,
 # много ветвлений и возвратов по формам размеров.
 "src/parsers/strategies/product_type.py" = ["PLR2004", "PLR0911", "C901", "SIM103"]
-"src/parse_report.py" = ["T201"]
+"src/app/parse_report.py" = ["T201"]
 "src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
 "src/infrastructure/config/four_tochki_api_config.py" = ["S105"]
@@ -229,25 +228,22 @@ exclude_dirs = [
 
 [tool.importlinter]
 # Пакеты лежат в src/, но импортируются как верхний уровень (src в sys.path).
-# Модули оболочки (run, run_argv, run_machine, parse_report*) — отдельные .py в src/,
-# не пакеты: для контракта «Слои не зависят от оболочки приложения» они внешние модули,
-# поэтому include_external_packages включён глобально.
-include_external_packages = true
 root_packages = [
+    "app",
     "cfg",
     "domain",
     "infrastructure",
     "parsers",
     "services",
-    "run_dialog",
 ]
 
-# Слои сверху вниз: композиционный корень → сервисы → парсеры → инфраструктура → домен.
+# Слои сверху вниз: оболочка → композиционный корень → сервисы → парсеры → инфраструктура → домен.
 # Внутри одного слоя (cfg и services) импорты разрешены, между слоями — только вниз.
 [[tool.importlinter.contracts]]
-name = "Слои: cfg/services -> parsers -> infrastructure -> domain"
+name = "Слои: app -> cfg/services -> parsers -> infrastructure -> domain"
 type = "layers"
 layers = [
+    "app",
     "cfg",
     "services",
     "parsers",
@@ -291,5 +287,5 @@ broken_contract_guidance = "Настройки читать через get_confi
 name = "Слои не зависят от оболочки приложения"
 type = "forbidden"
 source_modules = ["cfg", "domain", "infrastructure", "parsers", "services"]
-forbidden_modules = ["run", "run_argv", "run_machine", "parse_report", "parse_report_build", "run_dialog"]
-broken_contract_guidance = "Оболочку приложения импортируют только точки входа: логика принадлежит слоям (services/parsers), вызов — run_* / run_dialog."
+forbidden_modules = ["app"]
+broken_contract_guidance = "Оболочку приложения импортирует только app: логика принадлежит слоям services/parsers."

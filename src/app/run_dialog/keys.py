@@ -2,8 +2,8 @@
 
 import os
 
-from run_dialog.key_codes import KeyPress
-from run_dialog.readers import read_unix_key, read_windows_key
+from app.run_dialog.key_codes import KeyPress
+from app.run_dialog.readers import read_unix_key, read_windows_key
 
 
 def read_key() -> KeyPress:

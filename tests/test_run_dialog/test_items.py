@@ -1,7 +1,7 @@
 """tests for menu items"""
 
-from run_dialog import MENU_ITEMS
-from run_dialog.items import ACTIVATION_KEY, ANSWER_MAP, AnswerResult, index_by_key
+from app.run_dialog import MENU_ITEMS
+from app.run_dialog.items import ACTIVATION_KEY, ANSWER_MAP, AnswerResult, index_by_key
 
 
 def test_answer_map_keys() -> None:

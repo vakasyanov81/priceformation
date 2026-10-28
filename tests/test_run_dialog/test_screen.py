@@ -2,8 +2,8 @@
 
 import pytest
 
-from run_dialog import screen
-from run_dialog.rows import MenuRow
+from app.run_dialog import screen
+from app.run_dialog.rows import MenuRow
 
 _ROWS = [MenuRow('one', shortcut='1'), MenuRow('two', shortcut='2')]
 

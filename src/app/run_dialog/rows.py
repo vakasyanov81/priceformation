@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from run_dialog.items import ACTIVATION_KEY, MENU_ITEMS, AnswerResult, MenuItem
+from app.run_dialog.items import ACTIVATION_KEY, MENU_ITEMS, AnswerResult, MenuItem
 from services.vendor_activation import VendorState
 
 

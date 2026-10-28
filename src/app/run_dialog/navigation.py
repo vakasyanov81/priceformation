@@ -3,12 +3,12 @@
 import logging
 from dataclasses import dataclass
 
+from app.run_dialog.items import AnswerResult
+from app.run_dialog.key_codes import Key, KeyPress
+from app.run_dialog.keys import read_key
+from app.run_dialog.rows import MenuRow, build_rows
+from app.run_dialog.screen import draw, settle
 from domain.exceptions import ConfigValidationError
-from run_dialog.items import AnswerResult
-from run_dialog.key_codes import Key, KeyPress
-from run_dialog.keys import read_key
-from run_dialog.rows import MenuRow, build_rows
-from run_dialog.screen import draw, settle
 from services.vendor_activation import VendorActivationService
 
 logger = logging.getLogger(__name__)

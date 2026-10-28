@@ -1,7 +1,7 @@
 """Тесты подсветки markdown-справки в терминале."""
 
+from app.run_dialog.help_format import colorize_markdown
 from cfg.color import Colors
-from run_dialog.help_format import colorize_markdown
 
 
 def test_heading_colored_by_level() -> None:

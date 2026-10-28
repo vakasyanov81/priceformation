@@ -5,17 +5,9 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from domain.exceptions import ConfigValidationError, CoreExceptionError
-from infrastructure.logging.json_mode import quiet_console
-from parse_report import JsonReport, emit_json, error_payload
-from parse_report_build import report_from_result
-from parsers.all_vendors import all_vendor_supplier_catalog
-from parsers.common_price_output import jsonl_output_files
-from parsers.load_config import load_config
-from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
-from parsers.strategies.product_types import CANONICAL_TYPES
-from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
-from run_argv import (
+from app.parse_report import JsonReport, emit_json, error_payload
+from app.parse_report_build import report_from_result
+from app.run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
@@ -30,6 +22,14 @@ from run_argv import (
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
+from domain.exceptions import ConfigValidationError, CoreExceptionError
+from infrastructure.logging.json_mode import quiet_console
+from parsers.all_vendors import all_vendor_supplier_catalog
+from parsers.common_price_output import jsonl_output_files
+from parsers.load_config import load_config
+from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
+from parsers.strategies.product_types import CANONICAL_TYPES
+from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
 from services.configure import ensure_services_configured
 from services.mail_service import MailService

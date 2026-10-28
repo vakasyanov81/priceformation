@@ -44,9 +44,13 @@ def test_no_module_refers_to_removed_main_config() -> None:
     assert not _offenders(_SRC_ROOT, _MAIN_CONFIG_MARKERS)
 
 
-def test_legacy_core_package_is_gone() -> None:
-    """core/ разделён на domain/ и infrastructure/, пакет удалён."""
+def test_legacy_core_and_scattered_shell_are_gone() -> None:
+    """core/ удалён, а CLI, JSON-отчёты и диалог собраны в app/."""
     assert not _LEGACY_CORE_ROOT.exists()
+    scattered = [*_SRC_ROOT.glob('run*.py'), *_SRC_ROOT.glob('parse_report*.py')]
+    assert scattered == []
+    assert (_SRC_ROOT / 'app' / 'run.py').is_file()
+    assert (_SRC_ROOT / 'app' / 'run_dialog').is_dir()
 
 
 def test_no_module_calls_legacy_log_functions() -> None:

@@ -7,10 +7,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 
-from domain.row_item.row_item import RowItem
-from infrastructure.logging.json_mode import json_mode_active
-from parsers.common_price_output import jsonl_output_files
-from run_argv import (
+from app.run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
@@ -24,7 +21,10 @@ from run_argv import (
     TOGGLE_VENDOR,
     ZAPASKA_LOAD_API_DATA,
 )
-from run_machine import fail_unknown_result_template, machine_json
+from app.run_machine import fail_unknown_result_template, machine_json
+from domain.row_item.row_item import RowItem
+from infrastructure.logging.json_mode import json_mode_active
+from parsers.common_price_output import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
@@ -38,13 +38,13 @@ _TITLE = 'шина'
 _PATH = 'file_prices/result/price.jsonl'
 _DOUBLE_PATH = 'file_prices/result/doubles.jsonl'
 _PRICE_FIELDS = {'title': _TITLE, 'price_opt': 10, 'price_markup': 12}
-_RESOLVE = 'run_machine.ServiceProvider.resolve'
+_RESOLVE = 'app.run_machine.ServiceProvider.resolve'
 _LOG_NOISE = 'NOISE-ON-STDOUT'
 _NOISY_LOGGER = 'tests.noisy'
 
 
 def _fake_time(started: float, parse_start: float, parse_end: float) -> types.SimpleNamespace:
-    """Модуль-заглушка вместо ``run_machine.time``: monotonic отдаёт значения по очереди."""
+    """Модуль-заглушка вместо ``app.run_machine.time``: monotonic отдаёт значения по очереди."""
     return types.SimpleNamespace(monotonic=iter((started, parse_start, parse_end)).__next__)
 
 
@@ -220,7 +220,7 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_keyboard_interrupt_compact_command(capsys: pytest.CaptureFixture[str]) -> None:
     """Прерывание компактной команды: ответ без полей разбора, только ошибка."""
-    with patch('run_machine.load_config', side_effect=KeyboardInterrupt):
+    with patch('app.run_machine.load_config', side_effect=KeyboardInterrupt):
         code = machine_json(LOAD_CONFIG, config_path='/incoming/settings')
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
@@ -240,7 +240,7 @@ def test_json_parse_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixtur
     reporter = MagicMock()
     reporter.write_prices.return_value = [_PATH]
     with (
-        patch('run_machine.time', _fake_time(100.0, 50.0, 52.5)),
+        patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
         patch(
             _RESOLVE,
             side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -263,7 +263,7 @@ def test_json_doubles_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixt
         path=_DOUBLE_PATH,
     )
     with (
-        patch('run_machine.time', _fake_time(100.0, 50.0, 52.5)),
+        patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
         patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__),
     ):
         code = machine_json(DOUBLES)
@@ -450,7 +450,7 @@ def test_json_get_product_types(capsys: pytest.CaptureFixture[str]) -> None:
 def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
     """get_supliers: каталог код → folder и название."""
     catalog = {'1': {'sup_code': 'poshk', 'sup_title': 'Пошк'}}
-    with patch('run_machine.all_vendor_supplier_catalog', return_value=catalog):
+    with patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog):
         code = machine_json(GET_SUPLIERS)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -519,9 +519,9 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     catalog = {'1': {'sup_code': 'poshk', 'sup_title': 'Пошк'}}
     raw = '{"1": "/incoming/any.xls"}'
     with (
-        patch('run_machine.parse_prices_json', return_value={'1': '/incoming/any.xls'}) as mock_parse,
-        patch('run_machine.load_supplier_prices', return_value=files) as mock_load,
-        patch('run_machine.all_vendor_supplier_catalog', return_value=catalog),
+        patch('app.run_machine.parse_prices_json', return_value={'1': '/incoming/any.xls'}) as mock_parse,
+        patch('app.run_machine.load_supplier_prices', return_value=files) as mock_load,
+        patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog),
     ):
         code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
     payload = json.loads(capsys.readouterr().out)
@@ -544,9 +544,9 @@ def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str
     raw = '{"poshk": "/incoming/any.xls"}'
     mapping = {'poshk': '/incoming/any.xls'}
     with (
-        patch('run_machine.parse_prices_json', return_value=mapping),
-        patch('run_machine.load_supplier_prices', return_value=files),
-        patch('run_machine.all_vendor_supplier_catalog', return_value=catalog),
+        patch('app.run_machine.parse_prices_json', return_value=mapping),
+        patch('app.run_machine.load_supplier_prices', return_value=files),
+        patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog),
     ):
         code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
     payload = json.loads(capsys.readouterr().out)
@@ -577,7 +577,7 @@ def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
     """load_config: ok и files."""
     dests = ['parse_config/vendor_list.json']
     raw = '/incoming/vendor_list.json'
-    with patch('run_machine.load_config', return_value=dests) as mock_load:
+    with patch('app.run_machine.load_config', return_value=dests) as mock_load:
         code = machine_json(LOAD_CONFIG, config_path=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -594,7 +594,7 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
     """load_config папки: несколько путей в files."""
     dests = ['parse_config/black_list', 'parse_config/vendor_list.json']
     raw = '/incoming/settings'
-    with patch('run_machine.load_config', return_value=dests) as mock_load:
+    with patch('app.run_machine.load_config', return_value=dests) as mock_load:
         code = machine_json(LOAD_CONFIG, config_path=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -605,7 +605,7 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_load_config_without_path_is_empty(capsys: pytest.CaptureFixture[str]) -> None:
     """без пути load_config получает пустую строку, а не подстановку."""
-    with patch('run_machine.load_config', return_value=[]) as mock_load:
+    with patch('app.run_machine.load_config', return_value=[]) as mock_load:
         code = machine_json(LOAD_CONFIG)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -616,9 +616,9 @@ def test_json_load_config_without_path_is_empty(capsys: pytest.CaptureFixture[st
 def test_json_load_supplier_prices_without_raw_is_empty(capsys: pytest.CaptureFixture[str]) -> None:
     """без карты parse_prices_json получает пустую строку, а не подстановку."""
     with (
-        patch('run_machine.parse_prices_json', return_value={}) as mock_parse,
-        patch('run_machine.load_supplier_prices', return_value=[]),
-        patch('run_machine.all_vendor_supplier_catalog', return_value={}),
+        patch('app.run_machine.parse_prices_json', return_value={}) as mock_parse,
+        patch('app.run_machine.load_supplier_prices', return_value=[]),
+        patch('app.run_machine.all_vendor_supplier_catalog', return_value={}),
     ):
         code = machine_json(LOAD_SUPPLIER_PRICES)
     payload = json.loads(capsys.readouterr().out)
@@ -644,12 +644,12 @@ def test_run_machine_json_load_config() -> None:
     """load_config без --json уходит в JSON-режим с путём."""
     raw = '/incoming/vendor_list.json'
     with (
-        patch('run.sys.argv', ['run.py', f'load_config={raw}']),
-        patch('run.init_cfg'),
-        patch('run.machine_json', return_value=0) as mock_json,
-        patch('run.sys.exit', side_effect=SystemExit(0)),
+        patch('app.run.sys.argv', ['app.run.py', f'load_config={raw}']),
+        patch('app.run.init_cfg'),
+        patch('app.run.machine_json', return_value=0) as mock_json,
+        patch('app.run.sys.exit', side_effect=SystemExit(0)),
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit):
             main()
@@ -696,11 +696,11 @@ def test_fail_unknown_human(capsys: pytest.CaptureFixture[str]) -> None:
 def test_run_machine_human_exit_code_zero() -> None:
     """Человекочитаемая команда завершает процесс кодом 0."""
     with (
-        patch('run.sys.argv', ['run.py', 'parse']),
-        patch('run.init_cfg'),
-        patch('run.try_call'),
+        patch('app.run.sys.argv', ['app.run.py', 'parse']),
+        patch('app.run.init_cfg'),
+        patch('app.run.try_call'),
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit) as exit_info:
             main()
@@ -712,12 +712,12 @@ def test_run_machine_json_passes_supplier_prices() -> None:
     """load_supplier_prices передаёт JSON-карту из args.prices, а не None."""
     raw = '{"1": "/incoming/any.xls"}'
     with (
-        patch('run.sys.argv', ['run.py', 'load_supplier_prices', raw]),
-        patch('run.init_cfg'),
-        patch('run.machine_json', return_value=0) as mock_json,
-        patch('run.sys.exit', side_effect=SystemExit(0)),
+        patch('app.run.sys.argv', ['app.run.py', 'load_supplier_prices', raw]),
+        patch('app.run.init_cfg'),
+        patch('app.run.machine_json', return_value=0) as mock_json,
+        patch('app.run.sys.exit', side_effect=SystemExit(0)),
     ):
-        from run import main
+        from app.run import main
 
         with pytest.raises(SystemExit):
             main()

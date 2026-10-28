@@ -12,7 +12,7 @@ import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
-from run_dialog.key_codes import Key, KeyPress, decode_char, decode_unix_arrow, decode_windows_extended
+from app.run_dialog.key_codes import Key, KeyPress, decode_char, decode_unix_arrow, decode_windows_extended
 
 _ESCAPE_TIMEOUT = 0.05
 

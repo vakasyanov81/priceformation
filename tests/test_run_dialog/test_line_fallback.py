@@ -6,12 +6,12 @@ from unittest.mock import patch
 
 import pytest
 
+from app.run_dialog import line_fallback
+from app.run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult
 from cfg.color import Colors
-from run_dialog import line_fallback
-from run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult
 
 _INPUT = 'builtins.input'
-_DIALOG_LOGGER = 'run_dialog.line_fallback'
+_DIALOG_LOGGER = 'app.run_dialog.line_fallback'
 _RETRY_MSG = 'Не понял'
 _ACTION_ONE = '1'
 

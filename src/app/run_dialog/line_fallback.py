@@ -2,8 +2,8 @@
 
 import logging
 
+from app.run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult
 from cfg.color import Colors
-from run_dialog.items import ANSWER_MAP, MENU_ITEMS, AnswerResult
 
 logger = logging.getLogger(__name__)
 

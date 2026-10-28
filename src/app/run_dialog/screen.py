@@ -2,8 +2,8 @@
 
 import sys
 
+from app.run_dialog.rows import MenuRow
 from cfg.color import Colors
-from run_dialog.rows import MenuRow
 
 _HEADER = 'Выберите действие (стрелки ↑/↓, Enter — выбрать, q — выход):'
 

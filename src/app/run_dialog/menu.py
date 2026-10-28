@@ -2,11 +2,11 @@
 
 import sys
 
-from run_dialog.items import AnswerResult
-from run_dialog.line_fallback import ask_by_line
-from run_dialog.navigation import MenuView, navigate
-from run_dialog.readers import raw_terminal
-from run_dialog.rows import build_rows
+from app.run_dialog.items import AnswerResult
+from app.run_dialog.line_fallback import ask_by_line
+from app.run_dialog.navigation import MenuView, navigate
+from app.run_dialog.readers import raw_terminal
+from app.run_dialog.rows import build_rows
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService
 
