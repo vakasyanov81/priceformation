@@ -9,7 +9,7 @@ import pytest
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.zapaska_api_config import ZapaskaApiConfig
-from parsers.remote.zapaska_client import (
+from infrastructure.remote.zapaska_client import (
     ZapaskaApiConnectionError,
     basic_auth,
     download_catalogs,
@@ -23,8 +23,8 @@ _TEST_HOST = 'api.test:443'
 _TO_LOG = 'to_log'
 _GET_TIRES_URL = '/API/hs/V2/GetTires'
 _GET_DISK_URL = '/API/hs/V2/GetDisk'
-_HTTPS = 'parsers.remote.zapaska_client.HTTPSConnection'
-_GET_DATA = 'parsers.remote.zapaska_client.get_data'
+_HTTPS = 'infrastructure.remote.zapaska_client.HTTPSConnection'
+_GET_DATA = 'infrastructure.remote.zapaska_client.get_data'
 _API = ZapaskaApiConfig(host=_TEST_HOST, login='u', password=_TEST_SECRET)
 _VENDOR_FOLDER = 'zapaska'
 
@@ -89,7 +89,7 @@ def test_download_catalogs_writes_tire_and_disk(tmp_path: Path) -> None:
 
 
 def test_load_remote_vendor_data_uses_config_provider(fake_config_provider: FakeConfigProvider) -> None:
-    with patch('parsers.remote.zapaska_client.download_catalogs') as mock_download:
+    with patch('infrastructure.remote.zapaska_client.download_catalogs') as mock_download:
         load_remote_vendor_data(api=_API)
 
     dest_dir = Path(fake_config_provider.price_folder(_VENDOR_FOLDER))

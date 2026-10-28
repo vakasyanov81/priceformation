@@ -11,18 +11,8 @@ from typing import Any, NamedTuple, Protocol
 from urllib.parse import urlsplit
 from xml.etree import ElementTree  # nosec B405 — ответ доверенного HTTPS-сервиса, не пользовательский ввод
 
-from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
-from parsers.remote.four_tochki_warehouse_selection import (
-    log_selected_warehouses,
-    select_warehouses,
-    warehouses_by_id,
-)
-from parsers.remote.four_tochki_warehouses import (
-    FourTochkiApiWarehouse,
-    FourTochkiWarehouse,
-    FourTochkiWarehouseGroup,
-)
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse
 
 type JsonRow = dict[str, Any]
 
@@ -106,14 +96,6 @@ class FourTochkiApiError(CoreExceptionError):
     __MESSAGE__ = _MSG_API_ERROR
 
 
-def load_remote_vendor_data(*, api: FourTochkiApiAuth, groups: Sequence[FourTochkiWarehouseGroup]) -> None:
-    """Подобрать склады API по группам, вывести их и выгрузить шины и диски в file_prices/four_tochki."""
-    warehouses = select_warehouses(groups, fetch_warehouses(api))
-    log_selected_warehouses(groups, warehouses)
-    dest_dir = Path(get_config_provider().price_folder(_VENDOR_FOLDER))
-    download_catalogs(dest_dir=dest_dir, api=api, warehouses=warehouses)
-
-
 def fetch_warehouses(api: FourTochkiApiAuth) -> list[FourTochkiApiWarehouse]:
     """Справочник складов, доступных клиенту (GetWarehouses): ID и название."""
     answer = _call_method(api, 'GetWarehouses')
@@ -122,6 +104,11 @@ def fetch_warehouses(api: FourTochkiApiAuth) -> list[FourTochkiApiWarehouse]:
         for element in answer.iter()
         if _local(element.tag) == 'WarehouseInfo'
     ]
+
+
+def warehouses_by_id(warehouses: Sequence[FourTochkiWarehouse]) -> Mapping[int, FourTochkiWarehouse]:
+    """Склады по ID из API."""
+    return {warehouse.id: warehouse for warehouse in warehouses}
 
 
 def download_catalogs(*, dest_dir: Path, api: FourTochkiApiAuth, warehouses: Sequence[FourTochkiWarehouse]) -> None:

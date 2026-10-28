@@ -1,15 +1,11 @@
 """Подбор складов Форточек из справочника API по группам настроек и вывод их на экран."""
 
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from domain.exceptions import CoreExceptionError
-from parsers.remote.four_tochki_warehouses import (
-    WAREHOUSES_CONFIG_FILE,
-    FourTochkiApiWarehouse,
-    FourTochkiWarehouse,
-    FourTochkiWarehouseGroup,
-)
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
+from parsers.remote.four_tochki_warehouses import WAREHOUSES_CONFIG_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +54,3 @@ def log_selected_warehouses(
         logger.info(f'Группа «{group.name}» ({details}): {len(members)}')
         for warehouse in members:
             logger.info(f'  {warehouse.id} — {warehouse.name}')
-
-
-def warehouses_by_id(warehouses: Sequence[FourTochkiWarehouse]) -> Mapping[int, FourTochkiWarehouse]:
-    """Склады по ID из API."""
-    return {warehouse.id: warehouse for warehouse in warehouses}

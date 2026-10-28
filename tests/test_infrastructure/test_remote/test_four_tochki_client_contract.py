@@ -8,21 +8,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from domain.exceptions import CoreExceptionError
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse
 from infrastructure.config.four_tochki_api_config import FourTochkiApiConfig
-from parsers.remote.four_tochki_client import (
+from infrastructure.remote.four_tochki_client import (
     FourTochkiApiConnectionError,
     FourTochkiApiError,
     _post,
     download_catalogs,
     fetch_warehouses,
 )
-from parsers.remote.four_tochki_warehouses import FourTochkiApiWarehouse, FourTochkiWarehouse
 
 _API = FourTochkiApiConfig(endpoint='https://api.test/WCF/ClientService.svc', login='user', password='secret')
 _WAREHOUSE = FourTochkiWarehouse(id=7, name='Склад')
 _SECOND = FourTochkiWarehouse(id=9, name='Второй')
-_POST = 'parsers.remote.four_tochki_client._post'
-_HTTPS = 'parsers.remote.four_tochki_client.HTTPSConnection'
+_POST = 'infrastructure.remote.four_tochki_client._post'
+_HTTPS = 'infrastructure.remote.four_tochki_client.HTTPSConnection'
 _NS_RESULT = 'xmlns:a="x" xmlns:b="y" xmlns:i="z"'
 _SERVICE_NS = 'Wcf.ClientService.Client.WebAPI.TS3'
 _ARRAY_NS = 'http://schemas.microsoft.com/2003/10/Serialization/Arrays'

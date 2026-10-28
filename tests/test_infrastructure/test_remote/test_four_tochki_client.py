@@ -7,25 +7,24 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from domain.exceptions import CoreExceptionError
-from infrastructure.config.fake_config_provider import FakeConfigProvider
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 from infrastructure.config.four_tochki_api_config import FourTochkiApiConfig
-from parsers.remote.four_tochki_client import (
+from infrastructure.remote.four_tochki_client import (
     _HTTP_TIMEOUT_SECONDS,
     FourTochkiApiConnectionError,
     FourTochkiApiError,
     download_catalogs,
     fetch_warehouses,
-    load_remote_vendor_data,
+    warehouses_by_id,
 )
-from parsers.remote.four_tochki_warehouses import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 
 _API = FourTochkiApiConfig(endpoint='https://api.test/WCF/ClientService.svc', login='a&b', password='secret')
 _WAREHOUSES = (
     FourTochkiWarehouse(id=1423, name='Новосибирск', merge_group='novosibirsk'),
     FourTochkiWarehouse(id=1492, name='Томск', available='Под заказ', delivery_period=5),
 )
-_POST = 'parsers.remote.four_tochki_client._post'
-_HTTPS = 'parsers.remote.four_tochki_client.HTTPSConnection'
+_POST = 'infrastructure.remote.four_tochki_client._post'
+_HTTPS = 'infrastructure.remote.four_tochki_client.HTTPSConnection'
 _TO_LOG = 'to_log'
 _NS_RESULT = 'xmlns:a="x" xmlns:b="y" xmlns:i="z"'
 _TIRE_POSITION = (
@@ -279,20 +278,11 @@ def test_fetch_warehouses_api_error_raises() -> None:
         fetch_warehouses(_API)
 
 
-def test_load_remote_vendor_data_uses_price_folder(fake_config_provider: FakeConfigProvider) -> None:
-    """Склады подбираются по группам из справочника; данные — в папку прайсов Форточек."""
-    responses = [_warehouses_soap(), _soap('GetFindTyre', _TIRE_POSITION), _soap('GetFindDisk')]
-    with patch(_POST, side_effect=responses) as mock_post:
-        load_remote_vendor_data(api=_API, groups=_GROUPS)
+def test_warehouses_by_id_maps_api_ids() -> None:
+    """Поиск по ID из API."""
+    warehouse = FourTochkiWarehouse(id=7, name='Томск')
 
-    tyre_envelope = mock_post.call_args_list[1].args[2]
-    assert b'>1423</int>' in tyre_envelope
-    assert b'>276</int>' not in tyre_envelope
-    folder = Path(fake_config_provider.price_folder('four_tochki'))
-    tires = json.loads((folder / 'tire.json').read_text(encoding='utf-8'))
-    assert [tire['warehouse_id'] for tire in tires] == [1423]
-    assert tires[0]['warehouse_group'] == 'novosibirsk'
-    assert json.loads((folder / 'disk.json').read_text(encoding='utf-8')) == []
+    assert warehouses_by_id((warehouse,)) == {7: warehouse}
 
 
 def test_filters_are_sent_in_contract_namespace_with_configured_warehouses(tmp_path: Path) -> None:

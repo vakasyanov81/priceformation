@@ -6,13 +6,8 @@ from typing import Any
 import pytest
 
 from domain.exceptions import ConfigValidationError
-from parsers.remote.four_tochki_warehouses import (
-    FourTochkiApiWarehouse,
-    FourTochkiWarehouse,
-    FourTochkiWarehouseGroup,
-    load_four_tochki_warehouse_groups,
-    parse_warehouse_groups,
-)
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
+from parsers.remote.four_tochki_warehouses import load_four_tochki_warehouse_groups, parse_warehouse_groups
 
 _NOVOSIBIRSK = FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск', 'НСБ'), merge=True)
 _ORDER = FourTochkiWarehouseGroup(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from infrastructure.config.zapaska_api_config import get_zapaska_api_config
-from parsers.remote.zapaska_client import load_remote_vendor_data
+from infrastructure.remote.zapaska_client import load_remote_vendor_data
 from services.vendor_activity import skip_disabled_upload
 
 _VENDOR_FOLDER = 'zapaska'

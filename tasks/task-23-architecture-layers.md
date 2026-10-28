@@ -57,12 +57,22 @@
 
 Перед правкой контракта `app` — негативная проверка: временно добавить запрещённый импорт и убедиться, что контракт его ловит. После каждого этапа — полный набор проверок из AGENTS.md; коммит только после подтверждения.
 
+## Текущее состояние (2026-10-29)
+
+- **Пакет `app/` — выполнен.** Оболочка и `run_dialog` перенесены в `src/app/`; точки входа, import-linter, настройки линтеров, тестовые пути и `AGENTS.md` обновлены. Негативная проверка подтвердила, что контракт ловит запрещённый импорт `app` из нижнего слоя. `uv run pf get_product_types --json` возвращает код 0 и валидный JSON.
+- **Mail-адаптер — выполнен.** IMAP, DoH, скачивание и запись вложений находятся в `src/infrastructure/mail/`; поиск и фильтрация писем, прикладные модели остались в `src/parsers/mail/`. Протокол IMAP и почтовые ошибки вынесены в `src/domain/mail.py`; `infrastructure/mail` не импортирует `parsers`.
+- **Поведение сохранено после `app` и mail.** Эталон содержит 15 разобранных строк и содержимое четырёх XLSX; канонический JSON имеет SHA-256 `aa592887c36adffcf870788ef6ba6cef001c56c77316fe810a01daad286fb020`. Повторное сравнение: `PARITY OK rows=15 workbooks=4`.
+- **Проверки после mail пройдены:** полный `just ci`, включая 3251 тест и покрытие 99,54%; все девять обязательных команд из `AGENTS.md` завершились с кодом 0.
+- **Remote-адаптеры — выполнены.** `four_tochki_client`, `zapaska_client`, `mim_client` лежат в `src/infrastructure/remote/` и не импортируют `parsers`. Датаклассы складов Форточек вынесены в `src/domain/four_tochki.py`; выбор складов и чтение их конфига остались в `parsers/remote`; оркестрация «подобрать → залогировать → скачать» — в `services/four_tochki_service.py`. Корень проблемы, из-за которой контракт не ловил `infrastructure → parsers`: у `infrastructure/remote` и `parsers/remote` не было `__init__.py` (namespace-пакеты не попадают в граф grimp) — добавлены; негативная проверка подтвердила, что контракт теперь ловит запрещённый импорт.
+- **Проверки после remote пройдены:** все девять команд из `AGENTS.md` с кодом 0, 3251 тест, покрытие 99,54%. Сравнение с эталоном (`PARITY OK`) после этого этапа не перезапускалось.
+- Подпакеты `parsers`, внедрение `ConfigProvider`, generic-типизация `ServiceProvider` и закрепление traceback ещё не начаты. Коммиты не создавались.
+
 ## Критерии готовности
 
-- [ ] В `src/` нет оболочки россыпью: `run*`, `parse_report*`, `run_dialog` лежат в `app/`; в `importlinter` нет `include_external_packages` и ручного списка модулей оболочки.
-- [ ] `setup.cfg`, `pyproject.toml`, импорты, строковые пути тестов, docstring оболочки и `AGENTS.md` обновлены под новые пути.
-- [ ] Реальная команда `uv run pf get_product_types --json` возвращает код 0 и валидный JSON.
-- [ ] В `parsers/` нет IMAP / HTTP / download-адаптеров; порты и типы границ не создают зависимостей `infrastructure → parsers` или `domain → верхние слои`.
+- [x] В `src/` нет оболочки россыпью: `run*`, `parse_report*`, `run_dialog` лежат в `app/`; в `importlinter` нет `include_external_packages` и ручного списка модулей оболочки.
+- [x] `setup.cfg`, `pyproject.toml`, импорты, строковые пути тестов, docstring оболочки и `AGENTS.md` обновлены под новые пути.
+- [x] Реальная команда `uv run pf get_product_types --json` возвращает код 0 и валидный JSON.
+- [x] В `parsers/` нет IMAP / HTTP / download-адаптеров; порты и типы границ не создают зависимостей `infrastructure → parsers` или `domain → верхние слои`.
 - [ ] В корне `parsers/` нет россыпи `common_price_*` / `nomenclature_*` / `price_schema_*` / `supplier_price_*`.
 - [ ] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
 - [ ] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.

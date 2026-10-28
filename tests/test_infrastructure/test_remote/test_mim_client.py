@@ -8,7 +8,7 @@ import pytest
 
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.remote.mim_client import (
+from infrastructure.remote.mim_client import (
     MimApiConnectionError,
     MimApiRequest,
     MimApiResponseError,
@@ -23,7 +23,7 @@ from parsers.remote.mim_client import (
 _TEST_SECRET = 'secret'
 _TEST_HOST = 'api.test'
 _TO_LOG = 'to_log'
-_HTTPS = 'parsers.remote.mim_client.HTTPSConnection'
+_HTTPS = 'infrastructure.remote.mim_client.HTTPSConnection'
 _API = MimApiRequest(host=_TEST_HOST, token=_TEST_SECRET, types=(1, 3, 4))
 _XML = 'PK-xlsx-тест'.encode()
 
@@ -106,8 +106,8 @@ def test_download_catalog_writes_file_and_overwrites(tmp_path: Path) -> None:
     dest = tmp_path / 'nested' / 'mim'
 
     with (
-        patch('parsers.remote.mim_client.get_catalog', side_effect=[b'old-xlsx', _XML]),
-        patch('parsers.remote.mim_client.get_territories', side_effect=[b'[1]', b'[2]']),
+        patch('infrastructure.remote.mim_client.get_catalog', side_effect=[b'old-xlsx', _XML]),
+        patch('infrastructure.remote.mim_client.get_territories', side_effect=[b'[1]', b'[2]']),
     ):
         download_catalog(dest_dir=dest, api=_API)
         download_catalog(dest_dir=dest, api=_API)
@@ -122,8 +122,8 @@ def test_download_catalog_keeps_old_file_on_error(tmp_path: Path) -> None:
     (dest / 'price.xlsx').write_bytes(b'old')
 
     with (
-        patch('parsers.remote.mim_client.get_catalog', return_value=_XML),
-        patch('parsers.remote.mim_client.get_territories', side_effect=MimApiResponseError(detail='x')),
+        patch('infrastructure.remote.mim_client.get_catalog', return_value=_XML),
+        patch('infrastructure.remote.mim_client.get_territories', side_effect=MimApiResponseError(detail='x')),
         pytest.raises(MimApiResponseError),
     ):
         download_catalog(dest_dir=dest, api=_API)
@@ -133,7 +133,7 @@ def test_download_catalog_keeps_old_file_on_error(tmp_path: Path) -> None:
 
 
 def test_load_remote_vendor_data_uses_config_provider(fake_config_provider: FakeConfigProvider) -> None:
-    with patch('parsers.remote.mim_client.download_catalog') as mock_download:
+    with patch('infrastructure.remote.mim_client.download_catalog') as mock_download:
         load_remote_vendor_data(api=_API)
 
     mock_download.assert_called_once_with(dest_dir=Path(fake_config_provider.price_folder('mim')), api=_API)
