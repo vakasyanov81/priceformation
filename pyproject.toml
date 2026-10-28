@@ -229,7 +229,18 @@ exclude_dirs = [
 
 [tool.importlinter]
 # Пакеты лежат в src/, но импортируются как верхний уровень (src в sys.path).
-root_packages = ["cfg", "domain", "infrastructure", "parsers", "services"]
+# Модули оболочки (run, run_argv, run_machine, parse_report*) — отдельные .py в src/,
+# не пакеты: для контракта «Слои не зависят от оболочки приложения» они внешние модули,
+# поэтому include_external_packages включён глобально.
+include_external_packages = true
+root_packages = [
+    "cfg",
+    "domain",
+    "infrastructure",
+    "parsers",
+    "services",
+    "run_dialog",
+]
 
 # Слои сверху вниз: композиционный корень → сервисы → парсеры → инфраструктура → домен.
 # Внутри одного слоя (cfg и services) импорты разрешены, между слоями — только вниз.
@@ -273,3 +284,12 @@ type = "forbidden"
 source_modules = ["services"]
 forbidden_modules = ["cfg"]
 broken_contract_guidance = "Настройки читать через get_config_provider() или инфраструктурный адаптер, а не импортом из cfg."
+
+# Оболочка приложения (CLI-вход run*, JSON-режим, отчёты parse_report*, диалог run_dialog)
+# — верхняя граница композиции: она импортирует слои, но слои её не импортируют.
+[[tool.importlinter.contracts]]
+name = "Слои не зависят от оболочки приложения"
+type = "forbidden"
+source_modules = ["cfg", "domain", "infrastructure", "parsers", "services"]
+forbidden_modules = ["run", "run_argv", "run_machine", "parse_report", "parse_report_build", "run_dialog"]
+broken_contract_guidance = "Оболочку приложения импортируют только точки входа: логика принадлежит слоям (services/parsers), вызов — run_* / run_dialog."
