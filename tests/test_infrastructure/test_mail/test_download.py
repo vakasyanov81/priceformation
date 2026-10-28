@@ -6,8 +6,8 @@ from urllib.error import URLError
 
 import pytest
 
-from parsers.mail import download
-from parsers.mail.errors import PriceDownloadError
+from domain.mail import PriceDownloadError
+from infrastructure.mail import download
 
 
 def _open_ok(*_args: Any, **_kwargs: Any) -> io.BytesIO:

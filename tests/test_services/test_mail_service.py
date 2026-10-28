@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 import pytest
 from log_watch import LoggerWatcher, texts_at
 
+from domain.mail import PriceDownloadError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail.client import FoundPrice
-from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
 from parsers.vendor_config.models import VendorConfig
 from services import mail_service
@@ -86,7 +86,7 @@ def test_fetch_prices_saves_each_enabled_profile(
     fetched = mail_service.MailService().fetch_prices()
 
     destination = Path(fake_config_provider.price_folder('pioner')) / 'price.xlsx'
-    wired.connect.assert_called_once_with(_ACCOUNT, _CREDENTIALS)
+    wired.connect.assert_called_once_with(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
     wired.folders.assert_called_once_with(wired.client, 'INBOX')
     wired.client.logout.assert_called_once()
     wired.find.assert_called_once_with(wired.client, _FOLDERS, profile=config.profiles['pioner'])

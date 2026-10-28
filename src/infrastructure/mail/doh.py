@@ -14,8 +14,7 @@ import socket
 import ssl
 import urllib.request
 
-from parsers.mail.errors import MailConnectionError
-from parsers.mail.models import MailAccount
+from domain.mail import MailConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +26,14 @@ _DOH_URLS = (
 )
 
 
-def open_client(account: MailAccount) -> imaplib.IMAP4_SSL:
+def open_client(host: str, port: int) -> imaplib.IMAP4_SSL:
     """Подключиться к серверу; при сбое системного DNS — по адресам из DoH."""
     context = ssl.create_default_context()
     try:
-        return imaplib.IMAP4_SSL(account.host, account.port, ssl_context=context, timeout=_TIMEOUT_SECONDS)
+        return imaplib.IMAP4_SSL(host, port, ssl_context=context, timeout=_TIMEOUT_SECONDS)
     except socket.gaierror:
-        logger.warning(f'Системный DNS не разрешил {account.host!r}; пробую через DoH.')
-    return _open_client_via_doh(account, context)
+        logger.warning(f'Системный DNS не разрешил {host!r}; пробую через DoH.')
+    return _open_client_via_doh(host, port, context)
 
 
 class _ImapSslByAddress(imaplib.IMAP4_SSL):
@@ -65,17 +64,17 @@ class _ImapSslByAddress(imaplib.IMAP4_SSL):
         return wrapped
 
 
-def _open_client_via_doh(account: MailAccount, context: ssl.SSLContext) -> imaplib.IMAP4_SSL:
-    addresses = _doh_addresses(account.host)
+def _open_client_via_doh(host: str, port: int, context: ssl.SSLContext) -> imaplib.IMAP4_SSL:
+    addresses = _doh_addresses(host)
     if not addresses:
-        raise MailConnectionError(f'Не удалось разрешить {account.host!r} ни системным DNS, ни через DoH.')
+        raise MailConnectionError(f'Не удалось разрешить {host!r} ни системным DNS, ни через DoH.')
     errors: list[str] = []
     for address in addresses:
         try:
-            return _ImapSslByAddress(account.host, account.port, address, context, _TIMEOUT_SECONDS)
+            return _ImapSslByAddress(host, port, address, context, _TIMEOUT_SECONDS)
         except (OSError, ssl.SSLError) as exc:
             errors.append(f'{address}: {exc!r}')
-    target = f'{account.host}:{account.port}'
+    target = f'{host}:{port}'
     detail = '; '.join(errors)
     raise MailConnectionError(f'Не удалось подключиться к {target} ({detail})')
 

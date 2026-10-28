@@ -3,7 +3,7 @@
 import urllib.request
 from urllib.parse import urlsplit
 
-from parsers.mail.errors import PriceDownloadError
+from domain.mail import PriceDownloadError
 
 _TIMEOUT_SECONDS = 60
 _ALLOWED_SCHEMES = ('http', 'https')

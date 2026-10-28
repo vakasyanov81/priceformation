@@ -13,10 +13,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.mail import MailConnectionError
 from infrastructure.config.mail_credentials import MailCredentials
+from infrastructure.mail import imap as imap_adapter
+from infrastructure.mail.imap import connect, save_price
 from parsers.mail import client as mail_client
-from parsers.mail.client import FoundPrice, connect, find_latest_price, save_price
-from parsers.mail.errors import MailConnectionError
+from parsers.mail.client import FoundPrice, find_latest_price
 from parsers.mail.models import MailAccount, MailProfile
 
 _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
@@ -253,37 +255,37 @@ def test_list_price_folders_filters_subtree() -> None:
         b'(\\Noselect) "." "INBOX.Container"',
     ]
     fake = _FakeClient({}, list_lines=lines)
-    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices', 'INBOX.Prices.2024']
+    assert imap_adapter.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices', 'INBOX.Prices.2024']
 
 
 def test_list_price_folders_adds_root_when_absent() -> None:
     """Если сервер не вернул саму INBOX, она добавляется первой."""
     fake = _FakeClient({}, list_lines=[b'(\\HasNoChildren) "." "INBOX.Prices"'])
-    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
+    assert imap_adapter.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
 
 
 def test_list_price_folders_keeps_root_on_error() -> None:
     """Сбой LIST не мешает искать хотя бы в корневой папке."""
     fake = _FakeClient({'INBOX': {}}, list_status='NO')
-    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX']
+    assert imap_adapter.list_price_folders(fake, 'INBOX') == ['INBOX']
 
 
 def test_list_price_folders_nil_delimiter() -> None:
     """Без разделителя иерархии в поддерево попадает только сам корень."""
     lines = [b'(\\HasNoChildren) NIL "INBOX"', b'(\\HasNoChildren) NIL "Other"']
     fake = _FakeClient({}, list_lines=lines)
-    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX']
+    assert imap_adapter.list_price_folders(fake, 'INBOX') == ['INBOX']
 
 
 def test_parse_list_entry_ignores_garbage() -> None:
     """Строки, не похожие на LIST, и не-bytes не разбираются."""
-    assert mail_client._parse_list_entry(b'garbage') is None
-    assert mail_client._parse_list_entry(None) is None
+    assert imap_adapter._parse_list_entry(b'garbage') is None
+    assert imap_adapter._parse_list_entry(None) is None
 
 
 def test_parse_list_entry_unquotes_name() -> None:
     """Кавычки и обратные слэши в имени папки снимаются."""
-    parsed = mail_client._parse_list_entry(b'(\\HasNoChildren) "." "INBOX.My \\"Prices\\""')
+    parsed = imap_adapter._parse_list_entry(b'(\\HasNoChildren) "." "INBOX.My \\"Prices\\""')
     assert parsed is not None
     _flags, delimiter, name = parsed
     assert delimiter == '.'
@@ -294,7 +296,7 @@ def test_search_uids_non_bytes_response() -> None:
     """Ответ SEARCH без bytes не считается списком UID."""
     fake = MagicMock()
     fake.uid.return_value = ('OK', ['not-bytes'])
-    assert not mail_client._search_uids(fake, 'a@b.ru')
+    assert not imap_adapter.search_uids(fake, 'a@b.ru')
 
 
 def test_save_price_writes_and_removes_stale(tmp_path: Path) -> None:
@@ -315,7 +317,7 @@ def test_connect_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     fake.select.return_value = ('OK', [b''])
     monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(return_value=fake))
 
-    client = connect(_ACCOUNT, _CREDENTIALS)
+    client = connect(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
 
     assert client is fake
     fake.login.assert_called_once_with('user', 'secret')
@@ -329,7 +331,7 @@ def test_connect_login_error_logs_out(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(return_value=fake))
 
     with pytest.raises(imaplib.IMAP4.error):
-        connect(_ACCOUNT, _CREDENTIALS)
+        connect(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
 
     fake.logout.assert_called_once()
 
@@ -342,7 +344,7 @@ def test_connect_folder_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(return_value=fake))
 
     with pytest.raises(MailConnectionError, match='INBOX'):
-        connect(_ACCOUNT, _CREDENTIALS)
+        connect(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
 
     fake.logout.assert_called_once()
 
@@ -404,7 +406,7 @@ def test_find_latest_price_message_without_headers() -> None:
 def test_list_price_folders_requests_all_mailboxes() -> None:
     """LIST запрашивает все папки от корня иерархии."""
     fake = _FakeClient({'INBOX': {}})
-    mail_client.list_price_folders(fake, 'INBOX')
+    imap_adapter.list_price_folders(fake, 'INBOX')
     assert fake.calls == [('list', ('""', '*'))]
 
 
@@ -412,12 +414,12 @@ def test_list_price_folders_root_first() -> None:
     """Корень всегда первым, даже если сервер вернул его после подпапок."""
     lines = [b'(\\HasNoChildren) "." "INBOX.Prices"', b'(\\HasChildren) "." "INBOX"']
     fake = _FakeClient({}, list_lines=lines)
-    assert mail_client.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
+    assert imap_adapter.list_price_folders(fake, 'INBOX') == ['INBOX', 'INBOX.Prices']
 
 
 def test_parse_list_entry_lowercase_nil() -> None:
     """NIL — атом IMAP, регистр не важен: разделителя нет."""
-    assert mail_client._parse_list_entry(b'(\\HasNoChildren) nil "INBOX"') == (
+    assert imap_adapter._parse_list_entry(b'(\\HasNoChildren) nil "INBOX"') == (
         frozenset((b'\\HasNoChildren',)),
         None,
         'INBOX',
@@ -438,7 +440,7 @@ def test_parse_list_entry_lowercase_nil() -> None:
 )
 def test_delimiter(token: bytes, expected: str | None) -> None:
     """Разделитель иерархии: NIL в любом регистре и пустая строка — нет разделителя."""
-    assert mail_client._delimiter(token) == expected
+    assert imap_adapter._delimiter(token) == expected
 
 
 @pytest.mark.parametrize(
@@ -457,7 +459,7 @@ def test_delimiter(token: bytes, expected: str | None) -> None:
 )
 def test_unquote(token: bytes, expected: str) -> None:
     """Кавычки снимаются только с полной IMAP-строки; битый UTF-8 не роняет разбор."""
-    assert mail_client._unquote(token) == expected
+    assert imap_adapter._unquote(token) == expected
 
 
 @pytest.mark.parametrize(
@@ -473,7 +475,7 @@ def test_unquote(token: bytes, expected: str) -> None:
 )
 def test_mailbox_arg(name: str, expected: str) -> None:
     """Атом передаётся как есть; пустое имя и спецсимволы — в кавычках с экранированием."""
-    assert mail_client._mailbox_arg(name) == expected
+    assert imap_adapter._mailbox_arg(name) == expected
 
 
 class _StubClient(_FakeClient):
@@ -500,7 +502,7 @@ class _StubClient(_FakeClient):
 def test_search_uids_status(response: tuple[str, list[Any]], expected: list[bytes]) -> None:
     """UID берутся только из успешного непустого ответа SEARCH."""
     stub = _StubClient(response)
-    assert mail_client._search_uids(stub, 'a@b.ru') == expected
+    assert imap_adapter.search_uids(stub, 'a@b.ru') == expected
 
 
 @pytest.mark.parametrize(
@@ -510,7 +512,7 @@ def test_search_uids_status(response: tuple[str, list[Any]], expected: list[byte
 )
 def test_fetch_message_rejects(response: tuple[str, list[Any]]) -> None:
     """Неуспешный или пустой ответ FETCH не даёт письма."""
-    assert mail_client._fetch_message(_StubClient(response), b'1') is None
+    assert imap_adapter.fetch_message(_StubClient(response), b'1') is None
 
 
 def _found(when: datetime | None) -> FoundPrice:
@@ -558,10 +560,10 @@ def test_save_price_creates_nested_folder(tmp_path: Path) -> None:
 def test_connect_quotes_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     """Папка со спецсимволами открывается в кавычках, как и при поиске."""
     fake = _FakeClient({'INBOX.My Prices': {}})
-    monkeypatch.setattr(mail_client, 'open_client', lambda account: fake)
+    monkeypatch.setattr(imap_adapter, 'open_client', lambda host, port: fake)
     account = MailAccount(host='imap.example.ru', port=993, folder='INBOX.My Prices')
 
-    assert connect(account, _CREDENTIALS) is fake
+    assert connect(account.host, account.port, account.folder, _CREDENTIALS) is fake
     assert fake.calls == [('select', ('"INBOX.My Prices"', True))]
 
 

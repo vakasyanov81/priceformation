@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from domain.exceptions import ConfigValidationError
+from domain.mail import MailConfigNotFoundError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.mail.errors import MailConfigNotFoundError
 from parsers.mail.provider import clear_mail_config_cache, load_mail_config
 
 _CONFIG = {

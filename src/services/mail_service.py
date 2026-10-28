@@ -7,12 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from domain.config_context import get_config_provider
+from domain.mail import ImapClient, PriceDownloadError
 from infrastructure.config.mail_credentials import get_mail_credentials
-from parsers.mail.client import FoundPrice, connect, find_latest_price, list_price_folders, save_price
-from parsers.mail.download import download_price
-from parsers.mail.errors import PriceDownloadError
+from infrastructure.mail.download import download_price
+from infrastructure.mail.imap import connect, list_price_folders, save_price
+from parsers.mail.client import FoundPrice, find_latest_price
 from parsers.mail.models import MailConfig
-from parsers.mail.protocols import ImapClient
 from parsers.mail.provider import load_mail_config
 from services.vendor_activity import skip_mail_fetch
 
@@ -53,7 +53,8 @@ class MailService:
     def fetch_prices(self) -> list[MailFetchResult]:
         """Скачать по одному свежему прайсу на каждый активный профиль."""
         config = load_mail_config()
-        client = connect(config.account, get_mail_credentials())
+        account = config.account
+        client = connect(account.host, account.port, account.folder, get_mail_credentials())
         with _MailSession(client) as inbox:
             folders = list_price_folders(inbox, config.account.folder)
             return _collect(inbox, config, folders)

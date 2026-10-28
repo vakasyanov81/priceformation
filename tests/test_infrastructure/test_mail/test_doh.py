@@ -15,9 +15,9 @@ from unittest.mock import MagicMock, call
 import pytest
 from log_watch import LoggerWatcher
 
-from parsers.mail import doh as mail_doh
-from parsers.mail.doh import _ImapSslByAddress
-from parsers.mail.errors import MailConnectionError
+from domain.mail import MailConnectionError
+from infrastructure.mail import doh as mail_doh
+from infrastructure.mail.doh import _ImapSslByAddress
 from parsers.mail.models import MailAccount
 
 _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
@@ -36,7 +36,7 @@ def test_open_client_system_dns(monkeypatch: pytest.MonkeyPatch, ssl_context: ob
     imap_ssl = MagicMock()
     monkeypatch.setattr(imaplib, 'IMAP4_SSL', imap_ssl)
 
-    assert mail_doh.open_client(_ACCOUNT) is imap_ssl.return_value
+    assert mail_doh.open_client(_ACCOUNT.host, _ACCOUNT.port) is imap_ssl.return_value
     imap_ssl.assert_called_once_with('imap.example.ru', 993, ssl_context=ssl_context, timeout=30)
 
 
@@ -46,8 +46,8 @@ def test_open_client_doh_fallback(monkeypatch: pytest.MonkeyPatch, ssl_context: 
     via_doh = MagicMock()
     monkeypatch.setattr(mail_doh, '_open_client_via_doh', via_doh)
 
-    assert mail_doh.open_client(_ACCOUNT) is via_doh.return_value
-    via_doh.assert_called_once_with(_ACCOUNT, ssl_context)
+    assert mail_doh.open_client(_ACCOUNT.host, _ACCOUNT.port) is via_doh.return_value
+    via_doh.assert_called_once_with(_ACCOUNT.host, _ACCOUNT.port, ssl_context)
 
 
 def test_open_client_via_doh_unresolved(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -56,7 +56,7 @@ def test_open_client_via_doh_unresolved(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setattr(mail_doh, '_doh_addresses', doh_addresses)
 
     with pytest.raises(MailConnectionError) as error:
-        mail_doh._open_client_via_doh(_ACCOUNT, MagicMock())
+        mail_doh._open_client_via_doh(_ACCOUNT.host, _ACCOUNT.port, MagicMock())
 
     assert str(error.value) == "Не удалось разрешить 'imap.example.ru' ни системным DNS, ни через DoH."
     doh_addresses.assert_called_once_with('imap.example.ru')
@@ -69,7 +69,7 @@ def test_open_client_via_doh_success(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(mail_doh, '_doh_addresses', lambda host: ['1.2.3.4', '5.6.7.8'] if host else [])
     monkeypatch.setattr(mail_doh, '_ImapSslByAddress', by_address)
 
-    assert mail_doh._open_client_via_doh(_ACCOUNT, context) is by_address.return_value
+    assert mail_doh._open_client_via_doh(_ACCOUNT.host, _ACCOUNT.port, context) is by_address.return_value
     by_address.assert_called_once_with('imap.example.ru', 993, '1.2.3.4', context, 30)
 
 
@@ -81,7 +81,7 @@ def test_open_client_via_doh_all_fail(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(mail_doh, '_ImapSslByAddress', by_address)
 
     with pytest.raises(MailConnectionError) as error:
-        mail_doh._open_client_via_doh(_ACCOUNT, context)
+        mail_doh._open_client_via_doh(_ACCOUNT.host, _ACCOUNT.port, context)
 
     reasons = "1.2.3.4: OSError('refused'); 5.6.7.8: SSLError('handshake')"
     assert str(error.value) == f'Не удалось подключиться к imap.example.ru:993 ({reasons})'
@@ -183,7 +183,7 @@ def _patch_urlopen(monkeypatch: pytest.MonkeyPatch, responses: list[Any]) -> Mag
 
 def test_doh_addresses_logs_failed_providers(monkeypatch: pytest.MonkeyPatch, watch_logger: LoggerWatcher) -> None:
     """Сбой каждого DoH-провайдера попадает в лог, а не пропускается молча."""
-    entries = watch_logger('parsers.mail.doh')
+    entries = watch_logger('infrastructure.mail.doh')
     _patch_urlopen(monkeypatch, [io.BytesIO(b'{'), OSError('google down')])
 
     assert not mail_doh._doh_addresses('imap.example.ru')

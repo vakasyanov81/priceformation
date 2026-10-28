@@ -9,10 +9,10 @@ from functools import lru_cache
 from pathlib import Path
 
 from domain.config_context import get_config_provider
+from domain.mail import MailConfigNotFoundError
 from infrastructure.config.dotenv import load_dotenv
 from infrastructure.config.env_placeholders import expand_env
 from infrastructure.data.file_reader import read_json_file
-from parsers.mail.errors import MailConfigNotFoundError
 from parsers.mail.models import MailConfig
 
 _CONFIG_NAME = 'mail.json'
