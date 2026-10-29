@@ -77,7 +77,7 @@ class CommonPriceOut:
             title = row_item.identity.title
             if title is None:
                 continue
-            row_item.set_field('title', get_nomenclature_corrected_title(title))
+            row_item.set_field('title', get_nomenclature_corrected_title(title, self._config_provider))
 
     def write_all_prices(
         self,

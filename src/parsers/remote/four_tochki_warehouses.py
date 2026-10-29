@@ -3,9 +3,9 @@
 import json
 from typing import Any
 
-from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
 from domain.four_tochki import FourTochkiWarehouseGroup
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_file
 from parsers.data_provider.json_fields import read_flag
 from parsers.vendor_config.fields import read_int, read_str_list, read_text
@@ -13,9 +13,9 @@ from parsers.vendor_config.fields import read_int, read_str_list, read_text
 WAREHOUSES_CONFIG_FILE = 'four_tochki_warehouses.json'
 
 
-def load_four_tochki_warehouse_groups() -> tuple[FourTochkiWarehouseGroup, ...]:
+def load_four_tochki_warehouse_groups(config_provider: ConfigProvider) -> tuple[FourTochkiWarehouseGroup, ...]:
     """Группы складов из parse_config/four_tochki_warehouses.json."""
-    raw = read_file(get_config_provider().config_file(WAREHOUSES_CONFIG_FILE))
+    raw = read_file(config_provider.config_file(WAREHOUSES_CONFIG_FILE))
     return parse_warehouse_groups(json.loads(raw))
 
 

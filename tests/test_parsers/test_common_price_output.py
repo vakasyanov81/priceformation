@@ -41,7 +41,7 @@ def test_nomenclature_title_correction() -> None:
 
     with patch(
         'parsers.common_price.output.get_nomenclature_corrected_title',
-        side_effect=lambda title: f'fixed-{title}' if title == 'old' else title,
+        side_effect=lambda title, _provider: f'fixed-{title}' if title == 'old' else title,
     ):
         out.nomenclature_title_correction()
 

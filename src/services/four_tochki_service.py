@@ -31,4 +31,6 @@ class FourTochkiService:
         """Загрузить удалённые данные в file_prices/four_tochki."""
         if skip_disabled_upload(_VENDOR_FOLDER):
             return
-        load_remote_vendor_data(api=get_four_tochki_api_config(), groups=load_four_tochki_warehouse_groups())
+        load_remote_vendor_data(
+            api=get_four_tochki_api_config(), groups=load_four_tochki_warehouse_groups(get_config_provider())
+        )

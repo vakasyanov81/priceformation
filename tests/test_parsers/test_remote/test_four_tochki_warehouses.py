@@ -1,13 +1,21 @@
 """Группы складов Форточек из настроек: разбор файла и проверка структуры."""
 
+import json
 import re
+from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
 from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
-from parsers.remote.four_tochki_warehouses import load_four_tochki_warehouse_groups, parse_warehouse_groups
+from parsers.remote.four_tochki_warehouses import (
+    WAREHOUSES_CONFIG_FILE,
+    load_four_tochki_warehouse_groups,
+    parse_warehouse_groups,
+)
 
 _NOVOSIBIRSK = FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск', 'НСБ'), merge=True)
 _ORDER = FourTochkiWarehouseGroup(
@@ -113,7 +121,7 @@ def test_group_applies_rules_to_api_warehouse() -> None:
 @pytest.mark.usefixtures('example_vendors_provider')
 def test_load_reads_config_file() -> None:
     """Файл берётся из папки конфигов провайдера; в эталонной копии — Новосибирск и склады под заказ."""
-    groups = {group.name: group for group in load_four_tochki_warehouse_groups()}
+    groups = {group.name: group for group in load_four_tochki_warehouse_groups(get_config_provider())}
 
     assert groups['novosibirsk'].merge is True
     assert 'НСБ' in groups['novosibirsk'].keywords
@@ -159,3 +167,17 @@ def test_structure_errors_name_file() -> None:
         parse_warehouse_groups({'groups': []})
     with pytest.raises(ConfigValidationError, match=r'^four_tochki_warehouses\.json: группа «g» указана дважды$'):
         parse_warehouse_groups(_payload(_group_entry('g', 'a'), _group_entry('g', 'b')))
+
+
+def test_load_reads_file_from_injected_provider(tmp_path: Path) -> None:
+    """файл групп складов берётся у переданного провайдера, а не у глобального локатора"""
+    config = tmp_path / 'groups.json'
+    group = {'name': 'g', 'keywords': ['k'], 'merge': False}
+    config.write_text(json.dumps({'groups': [group]}), encoding='utf-8')
+    injected = MagicMock()
+    injected.config_file.return_value = str(config)
+
+    groups = load_four_tochki_warehouse_groups(injected)
+
+    assert [group.name for group in groups] == ['g']
+    injected.config_file.assert_called_once_with(WAREHOUSES_CONFIG_FILE)
