@@ -65,9 +65,20 @@
 - **Проверки после mail пройдены:** полный `just ci`, включая 3251 тест и покрытие 99,54%; все девять обязательных команд из `AGENTS.md` завершились с кодом 0.
 - **Remote-адаптеры — выполнены.** `four_tochki_client`, `zapaska_client`, `mim_client` лежат в `src/infrastructure/remote/` и не импортируют `parsers`. Датаклассы складов Форточек вынесены в `src/domain/four_tochki.py`; выбор складов и чтение их конфига остались в `parsers/remote`; оркестрация «подобрать → залогировать → скачать» — в `services/four_tochki_service.py`. Корень проблемы, из-за которой контракт не ловил `infrastructure → parsers`: у `infrastructure/remote` и `parsers/remote` не было `__init__.py` (namespace-пакеты не попадают в граф grimp) — добавлены; негативная проверка подтвердила, что контракт теперь ловит запрещённый импорт.
 - **Проверки после remote пройдены:** все девять команд из `AGENTS.md` с кодом 0, 3251 тест, покрытие 99,54%. Сравнение с эталоном (`PARITY OK`) после этого этапа не перезапускалось.
-- **Подпакеты `parsers` — выполнены** (отдельные коммиты): `common_price/`, `nomenclature/`, `price_schema/` (`price_schema.py` → `schema.py`), `supplier_price/`. В корне остались `load_supplier_prices.py` и `supplier_file_rules.py` — вне префиксных семейств.
-- **Traceback — выполнен.** `log_exception_once` (`infrastructure/logging/exception_logging.py`) пишет ERROR с traceback один раз на исключение (флаг в `exc.__dict__`: встроенные исключения не weakref-able); `ConsoleFormatter` форматирует копию записи без `exc_info`/`exc_text` (кэш `exc_text` общий для handler'ов). Оркестратор и граница `run_machine` вызывают его; JSON-ответ и код 1 не менялись.
-- **Пилот `ConfigProvider` — выполнен на `black_list`.** `BlackListProviderFromUserConfig(config_provider)`; провайдер идёт через `make_parse_config(..., config_provider=)` ← `registry` (`make_vendor_entry`, `vendor_entry_for`, `all_vendors_*`) ← `all_vendors(config_provider)` ← `services/vendor_source.py` (`VendorSource`, провайдер берётся лениво в момент вызова). Неиспользуемые переопределения `markup_rules_provider` / `manufacturer_aliases` в `make_parse_config` удалены. Остальные вызовы `get_config_provider()` в `parsers` (14 файлов) и generic-типизация `ServiceProvider` ещё впереди.
+- **Подпакеты `parsers` — выполнены** (коммиты d08f371, d4e62f1, d4ae12f, 5521646): `common_price/`, `nomenclature/`, `price_schema/` (`price_schema.py` → `schema.py`), `supplier_price/`. В корне остались `load_supplier_prices.py` и `supplier_file_rules.py` — вне префиксных семейств.
+- **Traceback — выполнен** (af088f9). `log_exception_once` (`infrastructure/logging/exception_logging.py`) пишет ERROR с traceback один раз на исключение (флаг в `exc.__dict__`: встроенные исключения не weakref-able); `ConsoleFormatter` форматирует копию записи без `exc_info`/`exc_text` (кэш `exc_text` общий для handler'ов). Оркестратор (через `services/parse_logging.log_parse_failure`) и граница `run_machine` вызывают его; JSON-ответ и код 1 не менялись.
+- **`ConfigProvider` в `parsers` — выполнен частично** (коммиты 69e9ba9 … 62dba12). Переведены на явную передачу:
+  - `black_list`, `markup_rules` — конструктор провайдера данных; цепочка `make_parse_config(config_provider=)` ← `registry` ← `all_vendors(config_provider)` ← `services/vendor_source.py` (`VendorSource`, провайдер берётся лениво в момент вызова). Неиспользуемые переопределения `markup_rules_provider` / `manufacturer_aliases` в `make_parse_config` удалены.
+  - `ParseConfiguration.config_provider` (поле `BasePriceParseConfigurationParams`): `price_source` (`FilePricesSource`), `warehouse_filter` (`CityWarehouseFilter`); `FileReader` требует `price_source`, выбор ридера по конфигу — `file_reader.data_reader_for`.
+  - `CommonPriceOut(config_provider=)` — `result_folder`, `doubles_settings`, `nomenclature_correction`.
+  - `load_config`, `load_supplier_prices` / `place_files`, `load_mail_config`, `load_four_tochki_warehouse_groups` — аргумент `config_provider`; `MailService(config_provider=None)`; точки композиции — `app/run_machine.py` и `services`.
+  На каждый перевод есть тест на корень: отдельный `MagicMock`-провайдер вместо глобального.
+- **Осталось в `parsers` (4 файла с `get_config_provider()`):**
+  - `vendor_config/provider.py` (`load_vendor_configs`, `load_common_settings`; `lru_cache` по папке) и `vendor_config/activation.py`. Около 15 вызывающих мест, часть в `services` (`vendor_activity`, `vendor_activation`, `mim_service`, `price_schema_service`) и `supplier_file_rules`, `reference_priority`, `all_vendors`, `registry`. Нужно решить, как провайдер попадает в эти вызовы и кто владеет кэшем.
+  - `data_provider/manufacturer_aliases.py`: `load_aliases_map()` — процессный `lru_cache`, читают `title_wrap`, `title_registry`, `group_key`, `grouper`; `ManufacturerAliasesProviderFromUserConfig` строится в `make_parse_config`.
+  - `data_provider/title_aliases.py`: `load_title_aliases(supplier_name)` вызывается из `title_registry`.
+- **Не начато:** этап 7 — generic-типизация `ServiceProvider` (`register` / `resolve` / `create`, удаление `cast`).
+- **Проверки:** после каждого коммита все девять команд из `AGENTS.md` с кодом 0. Сравнение с эталоном (parity) после этапов 3–6 не перезапускалось — скрипта в репозитории нет.
 
 ## Критерии готовности
 
@@ -75,9 +86,9 @@
 - [x] `setup.cfg`, `pyproject.toml`, импорты, строковые пути тестов, docstring оболочки и `AGENTS.md` обновлены под новые пути.
 - [x] Реальная команда `uv run pf get_product_types --json` возвращает код 0 и валидный JSON.
 - [x] В `parsers/` нет IMAP / HTTP / download-адаптеров; порты и типы границ не создают зависимостей `infrastructure → parsers` или `domain → верхние слои`.
-- [ ] В корне `parsers/` нет россыпи `common_price_*` / `nomenclature_*` / `price_schema_*` / `supplier_price_*`.
+- [x] В корне `parsers/` нет россыпи `common_price_*` / `nomenclature_*` / `price_schema_*` / `supplier_price_*`.
 - [ ] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
 - [ ] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.
-- [ ] Ошибка парсера по-прежнему пробрасывается, JSON-ошибка и код 1 сохранены; traceback покрыт тестами и не дублируется.
+- [x] Ошибка парсера по-прежнему пробрасывается, JSON-ошибка и код 1 сохранены; traceback покрыт тестами и не дублируется.
 - [ ] Разобранные строки и содержимое writer-результатов на фикстурах совпадают с эталоном до переносов.
 - [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
