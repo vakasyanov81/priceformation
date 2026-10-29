@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -15,19 +16,18 @@ from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
 )
+from parsers.base_parser.file_reader import data_reader_for
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks, warehouse_filter_for
-from parsers.json_reader import JsonPriceReader
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.pricing_registry import make_pricing_strategy
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.registry import make_category_strategy
 from parsers.strategies.rest_registry import make_rest_strategy
 from parsers.strategies.title_registry import make_title_strategy
-from parsers.vendor_config.models import READER_JSON, VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig, VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
-from parsers.xls_reader import XlsReader
 
 
 def parser_params_from_section(section: VendorSection, folder: str) -> ParserParams:
@@ -54,12 +54,18 @@ def vendor_markup_policy_from_config(section: VendorSection) -> MarkupPolicy:
     return make_pricing_strategy(section.pricing, 'section.pricing')
 
 
-def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig, folder: str = '') -> StrategyHooks:
+def strategy_hooks_from_section(
+    section: VendorSection,
+    behavior: BehaviorConfig,
+    config_provider: ConfigProvider,
+    folder: str = '',
+) -> StrategyHooks:
     """Собрать ``StrategyHooks`` из секции и поведения поставщика.
 
     Args:
         section: Секция поставщика.
         behavior: Поведение поставщика (из ``VendorConfig.behavior``).
+        config_provider: Провайдер путей окружения (список складов поставщика).
         folder: Папка поставщика; нужна для фильтра складов по городу (``warehouse_cities``).
     """
     category_strategy = make_category_strategy(section.category, f'section {section.id} category')
@@ -78,7 +84,7 @@ def strategy_hooks_from_section(section: VendorSection, behavior: BehaviorConfig
         find_manufacturer_on_enrich=behavior.find_manufacturer_on_enrich,
         zero_rest_without_category=behavior.zero_rest_without_category,
         pipeline=behavior.pipeline,
-        warehouse_filter=warehouse_filter_for(behavior, folder),
+        warehouse_filter=warehouse_filter_for(behavior, folder, config_provider),
         order_from_warehouse_name=behavior.order_from_warehouse_name,
     )
 
@@ -112,19 +118,14 @@ def make_config_driven_parser(
     Returns:
         ``BaseParser`` с инжектированными стратегиями.
     """
-    hooks = strategy_hooks_from_section(section, vendor_config.behavior, vendor_config.folder)
+    hooks = strategy_hooks_from_section(
+        section, vendor_config.behavior, parse_config.config_provider, vendor_config.folder
+    )
     policy = vendor_markup_policy_from_config(section)
-    data_reader: type[Any] = _reader_for_config(vendor_config.reader)
+    data_reader: type[Any] = data_reader_for(vendor_config.reader)
     return BaseParser(
         parse_config=parse_config,
         row_processor=RowProcessor(markup_policy=policy),
         strategy_hooks=hooks,
         data_reader=data_reader,
     )
-
-
-def _reader_for_config(reader: str) -> type[Any]:
-    """Вернуть класс ридера по типу из конфига."""
-    if reader == READER_JSON:
-        return JsonPriceReader
-    return XlsReader

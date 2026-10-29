@@ -47,6 +47,7 @@ class BasePriceParseConfigurationParams(NamedTuple):
     markup_rules_provider: data_provider.MarkupRulesProviderBase
     black_list_provider: data_provider.BlackListProviderBase
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase
+    config_provider: ConfigProvider
     parser_params: ParserParams
 
 
@@ -64,6 +65,7 @@ class ParseConfiguration:
         self.vendor_config = vendor_config
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self.parser_params = parse_config.parser_params
+        self.config_provider = parse_config.config_provider
         self.supplier = self.parser_params.supplier
         self._markup_rules: data_provider.MarkupRulesConfig | None = None
         self._price_markup_map: tuple[data_provider.MarkUpRule, ...] | None = None
@@ -118,6 +120,7 @@ def make_parse_config(
             markup_rules_provider=data_provider.MarkupRulesProviderFromUserConfig(config_provider, folder_name),
             black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(config_provider),
             manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+            config_provider=config_provider,
             parser_params=parser_params,
         ),
         vendor_section,

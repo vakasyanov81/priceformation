@@ -7,8 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 
 TERRITORIES_FILENAME = 'territories.json'
@@ -32,7 +32,8 @@ class CityWarehouseFilter:
     Список читается при первой позиции, а не при сборке парсера: до первой выгрузки файла ещё нет.
     """
 
-    def __init__(self, *, folder: str, cities: tuple[str, ...]) -> None:
+    def __init__(self, *, folder: str, cities: tuple[str, ...], config_provider: ConfigProvider) -> None:
+        self._config_provider = config_provider
         self._folder = folder
         self._cities = cities
         self._allowed_ids: frozenset[int] | None = None
@@ -47,7 +48,7 @@ class CityWarehouseFilter:
         return self._allowed_ids
 
     def _load_ids(self) -> frozenset[int]:
-        path = Path(get_config_provider().price_folder(self._folder)) / TERRITORIES_FILENAME
+        path = Path(self._config_provider.price_folder(self._folder)) / TERRITORIES_FILENAME
         if not path.is_file():
             raise WarehouseFilterError(_MSG_NO_FILE.format(path=path))
         matchers = [_city_pattern(city) for city in self._cities]

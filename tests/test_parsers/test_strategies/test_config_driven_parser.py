@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from log_watch import LoggerWatcher
 
+from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
@@ -15,13 +16,12 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.config_driven_parser import (
-    _reader_for_config,
     make_config_driven_parser,
     parser_params_from_section,
     strategy_hooks_from_section,
     vendor_markup_policy_from_config,
 )
-from parsers.base_parser.file_reader import FileReader
+from parsers.base_parser.file_reader import FileReader, data_reader_for
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.json_reader import JsonPriceReader
@@ -54,6 +54,7 @@ def _mock_parse_config() -> ParseConfiguration:
     mock = MagicMock(spec=ParseConfiguration)
     mock.parser_params = _TEST_PARAMS
     mock.supplier = _TEST_PARAMS.supplier
+    mock.config_provider = get_config_provider()
     mock.manufacturer_aliases.return_value = {}
     return mock
 
@@ -105,7 +106,7 @@ def test_parser_params_from_section_full() -> None:
 )
 def test_reader_for_config(reader: str, expected: type) -> None:
     """Тип ридера выбирается по значению reader конфига."""
-    assert _reader_for_config(reader) is expected
+    assert data_reader_for(reader) is expected
 
 
 def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
@@ -131,11 +132,15 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
 
 
 def test_strategy_hooks_without_cities_have_no_warehouse_filter() -> None:
-    assert strategy_hooks_from_section(_section(), BehaviorConfig(), 'mim').warehouse_filter is None
+    assert (
+        strategy_hooks_from_section(_section(), BehaviorConfig(), get_config_provider(), 'mim').warehouse_filter is None
+    )
 
 
 def test_strategy_hooks_with_cities_get_warehouse_filter() -> None:
-    hooks = strategy_hooks_from_section(_section(), BehaviorConfig(warehouse_cities=('Новосибирск',)), 'mim')
+    hooks = strategy_hooks_from_section(
+        _section(), BehaviorConfig(warehouse_cities=('Новосибирск',)), get_config_provider(), 'mim'
+    )
 
     assert hooks.warehouse_filter is not None
 
@@ -149,7 +154,7 @@ def test_strategy_hooks_from_section_keeps_all_fields() -> None:
         pipeline=('category', 'markup'),
     )
 
-    hooks = strategy_hooks_from_section(_section(), behavior)
+    hooks = strategy_hooks_from_section(_section(), behavior, get_config_provider())
 
     assert hooks.category is not None
     assert hooks.title is not None
@@ -175,7 +180,7 @@ def test_strategy_hooks_error_carries_section_path(
 ) -> None:
     """Ошибка стратегии несёт путь с id секции — по нему правят конфиг."""
     with pytest.raises(ConfigValidationError) as exc_info:
-        strategy_hooks_from_section(section, behavior)
+        strategy_hooks_from_section(section, behavior, get_config_provider())
 
     assert str(exc_info.value).startswith(f'{fragment}:')
 
@@ -262,7 +267,7 @@ def test_manufacturer_from_category_reader_is_wired() -> None:
         'pioner',
         'pioner.json',
     )
-    hooks = strategy_hooks_from_section(config.sections[0], config.behavior)
+    hooks = strategy_hooks_from_section(config.sections[0], config.behavior, get_config_provider())
     assert hooks.category is not None
     assert hooks.title is not None
 
@@ -456,7 +461,7 @@ def test_strategy_hooks_build_category_fields_from_size_fields() -> None:
     """size_fields слота category превращаются в стратегию полей."""
     section = _section(category=CategoryConfig(size_fields={'Грузовая шина': {'season': 'Всесезонная'}}))
 
-    hooks = strategy_hooks_from_section(section, BehaviorConfig())
+    hooks = strategy_hooks_from_section(section, BehaviorConfig(), get_config_provider())
 
     assert hooks.category_fields is not None
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
@@ -466,7 +471,7 @@ def test_strategy_hooks_build_category_fields_from_size_fields() -> None:
 
 def test_strategy_hooks_without_size_fields_has_no_category_fields() -> None:
     """Без size_fields стратегия полей не создаётся."""
-    hooks = strategy_hooks_from_section(_section(), BehaviorConfig())
+    hooks = strategy_hooks_from_section(_section(), BehaviorConfig(), get_config_provider())
 
     assert hooks.category_fields is None
 
@@ -493,14 +498,14 @@ def test_strategy_hooks_builds_product_type_when_independent() -> None:
     """`calculate_type` в конфиге включает независимый классификатор."""
     section = _section(category=CategoryConfig(strategy='header_rows', calculate_type=True))
 
-    hooks = strategy_hooks_from_section(section, BehaviorConfig())
+    hooks = strategy_hooks_from_section(section, BehaviorConfig(), get_config_provider())
 
     assert isinstance(hooks.product_type, ProductTypeClassifier)
 
 
 def test_strategy_hooks_without_calculate_type_has_no_product_type() -> None:
     """По умолчанию слой независимого типа выключен."""
-    hooks = strategy_hooks_from_section(_section(), BehaviorConfig())
+    hooks = strategy_hooks_from_section(_section(), BehaviorConfig(), get_config_provider())
 
     assert hooks.product_type is None
 

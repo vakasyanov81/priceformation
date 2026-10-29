@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 from cfg import init_cfg
 from domain.config_context import get_config_provider
@@ -111,7 +112,7 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     parse_config = entry[1]
 
     parser = make_config_driven_parser(section, vendor_cfg, parse_config)
-    parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader)
+    parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader, price_source=MagicMock())
     parser.price_files.files = ['price_test.xls']
 
     parsed = parser.parse()

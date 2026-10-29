@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 
 
 class PriceSource(Protocol):
@@ -18,8 +18,11 @@ class PriceSource(Protocol):
 class FilePricesSource:
     """Прайсы на диске: glob шаблонов в file_prices/<folder_name>/."""
 
+    def __init__(self, config_provider: ConfigProvider) -> None:
+        self._config_provider = config_provider
+
     def list_files(self, folder_name: str, templates: Sequence[str]) -> list[str]:
-        supplier_folder = Path(get_config_provider().price_folder(folder_name))
+        supplier_folder = Path(self._config_provider.price_folder(folder_name))
         return _glob_price_files(supplier_folder, templates)
 
 

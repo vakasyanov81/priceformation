@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.exceptions import SupplierNotHavePricesError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser import BaseParser
@@ -70,7 +71,7 @@ def test_file_prices_source_uses_config_provider(tmp_path: Any, fake_config_prov
     supplier_dir.mkdir(parents=True)
     price_file = supplier_dir / _PRICE_NAME
     price_file.write_bytes(b'x')
-    files = FilePricesSource().list_files(_SUPPLIER, [_TEMPLATE])
+    files = FilePricesSource(get_config_provider()).list_files(_SUPPLIER, [_TEMPLATE])
     assert str(price_file) in files
 
 
@@ -83,7 +84,7 @@ def test_file_prices_source_keeps_template_order(tmp_path: Any, fake_config_prov
     xlsx_file = supplier_dir / _PRICE_NAME
     xls_file.write_bytes(b'x')
     xlsx_file.write_bytes(b'x')
-    files = FilePricesSource().list_files(_SUPPLIER, [_XLS_TEMPLATE, _XLSX_TEMPLATE])
+    files = FilePricesSource(get_config_provider()).list_files(_SUPPLIER, [_XLS_TEMPLATE, _XLSX_TEMPLATE])
     assert files == [str(xls_file), str(xlsx_file)]
 
 
@@ -91,7 +92,7 @@ def test_file_prices_source_empty_is_empty_list(tmp_path: Any, fake_config_provi
     """нет файлов — пустой список, без исключения."""
     prices_root = tmp_path / 'file_prices'
     (prices_root / _SUPPLIER).mkdir(parents=True)
-    assert FilePricesSource().list_files(_SUPPLIER, [_TEMPLATE]) == []
+    assert FilePricesSource(get_config_provider()).list_files(_SUPPLIER, [_TEMPLATE]) == []
 
 
 def test_parser_uses_price_source() -> None:
@@ -115,3 +116,18 @@ def test_parser_missing_prices_raises() -> None:
     parser = _SilentParser(_ListSource([]))
     with pytest.raises(SupplierNotHavePricesError, match=re.escape(_MISSING_MSG)):
         parser.parse()
+
+
+def test_file_prices_source_folder_comes_from_injected_provider(tmp_path: Any) -> None:
+    """папка прайсов берётся у переданного провайдера, а не у глобального локатора."""
+    supplier_dir = tmp_path / 'custom'
+    supplier_dir.mkdir()
+    price_file = supplier_dir / _PRICE_NAME
+    price_file.write_bytes(b'x')
+    injected = MagicMock()
+    injected.price_folder.return_value = str(supplier_dir)
+
+    files = FilePricesSource(injected).list_files(_SUPPLIER, [_TEMPLATE])
+
+    assert files == [str(price_file)]
+    injected.price_folder.assert_called_once_with(_SUPPLIER)

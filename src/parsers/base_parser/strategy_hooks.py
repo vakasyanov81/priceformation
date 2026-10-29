@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from domain.protocols import ConfigProvider
 from parsers.base_parser.warehouse_filter import CityWarehouseFilter
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.product_type import ProductTypeClassifier
@@ -34,8 +35,10 @@ class StrategyHooks:
     order_from_warehouse_name: bool = False
 
 
-def warehouse_filter_for(behavior: BehaviorConfig, folder: str) -> CityWarehouseFilter | None:
+def warehouse_filter_for(
+    behavior: BehaviorConfig, folder: str, config_provider: ConfigProvider
+) -> CityWarehouseFilter | None:
     """Фильтр складов по городам, если они заданы в `behavior.warehouse_cities`."""
     if not behavior.warehouse_cities:
         return None
-    return CityWarehouseFilter(folder=folder, cities=behavior.warehouse_cities)
+    return CityWarehouseFilter(folder=folder, cities=behavior.warehouse_cities, config_provider=config_provider)

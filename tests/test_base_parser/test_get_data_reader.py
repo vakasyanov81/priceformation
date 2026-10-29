@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -23,6 +24,7 @@ def _parse_config() -> ParseConfiguration:
             markup_rules_provider=stub,
             black_list_provider=stub,
             manufacturer_aliases=stub,
+            config_provider=get_config_provider(),
             parser_params=ParserParams(
                 supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),
                 start_row=_START_ROW,

@@ -3,10 +3,11 @@
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
@@ -46,7 +47,7 @@ def _write_territories(provider: FakeConfigProvider, payload: Any) -> Path:
 
 def _allowed(warehouse_id: int | None, cities: tuple[str, ...] = ('Новосибирск',)) -> bool:
     row = RowItem({'rest_count': 10, 'warehouse_id': warehouse_id})
-    return CityWarehouseFilter(folder=_FOLDER, cities=cities).allows(row)
+    return CityWarehouseFilter(folder=_FOLDER, cities=cities, config_provider=get_config_provider()).allows(row)
 
 
 @pytest.mark.parametrize(
@@ -72,7 +73,7 @@ def test_several_cities(fake_config_provider: FakeConfigProvider) -> None:
 
 def test_territories_are_read_once(fake_config_provider: FakeConfigProvider) -> None:
     path = _write_territories(fake_config_provider, _TERRITORIES)
-    city_filter = CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',))
+    city_filter = CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',), config_provider=get_config_provider())
     city_filter.allows(RowItem({'rest_count': 1, 'warehouse_id': 1}))
 
     path.unlink()
@@ -117,7 +118,11 @@ def test_base_parser_drops_foreign_warehouses_before_enrich(fake_config_provider
     from parsers.base_parser.strategy_hooks import StrategyHooks
 
     _write_territories(fake_config_provider, _TERRITORIES)
-    hooks = StrategyHooks(warehouse_filter=CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',)))
+    hooks = StrategyHooks(
+        warehouse_filter=CityWarehouseFilter(
+            folder=_FOLDER, cities=('Новосибирск',), config_provider=get_config_provider()
+        )
+    )
     warehouse_ids = (6, 1, None, 2)
     rows = [RowItem({'rest_count': 10, 'warehouse_id': wid}) for wid in warehouse_ids]
     plain = RowFilters(StrategyHooks())
@@ -141,3 +146,14 @@ def test_base_parser_applies_order_from_warehouse_name() -> None:
 
     assert (enabled.stock.available, enabled.stock.delivery_period) == ('Под заказ', 4)
     assert disabled.stock.available is None
+
+
+def test_territories_path_comes_from_injected_provider(tmp_path: Path) -> None:
+    """список складов ищется в папке переданного провайдера, а не глобального локатора"""
+    (tmp_path / 'territories.json').write_text(json.dumps(_TERRITORIES), encoding='utf-8')
+    injected = MagicMock()
+    injected.price_folder.return_value = str(tmp_path)
+    city_filter = CityWarehouseFilter(folder=_FOLDER, cities=('Новосибирск',), config_provider=injected)
+
+    assert city_filter.allows(RowItem({'rest_count': 10, 'warehouse_id': 1}))
+    injected.price_folder.assert_called_once_with(_FOLDER)
