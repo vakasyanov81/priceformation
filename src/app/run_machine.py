@@ -23,6 +23,7 @@ from app.run_argv import (
     ZAPASKA_LOAD_API_DATA,
 )
 from domain.exceptions import ConfigValidationError, CoreExceptionError
+from infrastructure.logging.exception_logging import log_exception_once
 from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.common_price.output import jsonl_output_files
@@ -134,6 +135,7 @@ def _emit_command(
         )
         return 1
     except Exception as exc:
+        log_exception_once(logger, f'Команда {command} завершилась ошибкой // {exc}', exc)
         emit_json(
             error_payload(
                 command,

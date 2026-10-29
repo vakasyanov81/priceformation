@@ -1,10 +1,12 @@
 """Сообщения сводки разбора: пропуски, расхождения, кириллические двойники.
 
-Модуль только собирает пары (уровень, текст); писать их в лог — задача оркестратора.
+Модуль собирает пары (уровень, текст); писать их в лог — задача оркестратора. Исключение — ошибка разбора:
+её traceback пишется один раз здесь.
 """
 
 import logging
 
+from infrastructure.logging.exception_logging import log_exception_once
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.data_provider.black_list import skipped_black_list_message
@@ -14,6 +16,11 @@ from parsers.strategies.title_conflicts import title_conflicts_message
 from services.parse_result import ParseResult
 
 type LogMessage = tuple[int, str]
+
+
+def log_parse_failure(target: logging.Logger, parser: BaseParser, exc: BaseException) -> None:
+    """Записать ошибку разбора прайса поставщика: сообщение в консоль и файл, traceback только в файл."""
+    log_exception_once(target, f'Ошибка разбора прайса поставщика {parser!r} // {exc}', exc)
 
 
 def skips_messages(parse_result: ParseResult) -> list[LogMessage]:

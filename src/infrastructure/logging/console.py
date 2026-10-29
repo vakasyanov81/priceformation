@@ -1,5 +1,6 @@
 """Консольный обработчик логов: цветной вывод, который уважает JSON-режим."""
 
+import copy
 import logging
 import sys
 
@@ -28,13 +29,21 @@ class FileOnlyFilter(logging.Filter):
         return not getattr(record, FILE_ONLY, False)
 
 
+def _without_traceback(record: logging.LogRecord) -> logging.LogRecord:
+    """Копия записи без traceback: ``exc_text`` кэшируется на записи и иначе просочился бы из файлового handler."""
+    plain = copy.copy(record)
+    plain.exc_info = None
+    plain.exc_text = None
+    return plain
+
+
 class ConsoleFormatter(logging.Formatter):
-    """Консольный вид сообщения: INFO — голый текст, прочие уровни с префиксом и цветом."""
+    """Консольный вид сообщения: INFO — голый текст, прочие уровни с префиксом и цветом; traceback не печатает."""
 
     def format(self, record: logging.LogRecord) -> str:
         """Текст записи с префиксом уровня и подсветкой."""
         level_text = get_log_level_text(record.levelno)
-        message = super().format(record)
+        message = super().format(_without_traceback(record))
         formatted = message if record.levelno == logging.INFO else f'[{level_text}]: {message}'
         return colored(formatted, get_level_color(level_text))
 

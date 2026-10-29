@@ -3,6 +3,7 @@
 import json
 import logging
 import types
+from pathlib import Path
 from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
@@ -24,12 +25,15 @@ from app.run_argv import (
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
+from infrastructure.logging.log_paths import LogPaths
+from infrastructure.logging.log_setup import setup_logging
 from parsers.common_price.output import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
+from services.parse_result import ParseResult
 from services.price_report import PriceReportService
 from services.vendor_activation import VendorActivationService, VendorState
 from services.zapaska_service import ZapaskaService
@@ -199,6 +203,48 @@ def test_json_parse_error(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['ok'] is False
     assert payload['error']['kind'] == 'RuntimeError'
     assert payload['error']['message'] == 'boom'
+
+
+_TRACEBACK = 'Traceback (most recent call last)'
+
+
+def test_json_parse_error_has_single_traceback_in_log(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """ошибка парсера: один traceback в файле (не два), в stdout только JSON с ok=false, код 1."""
+    paths = LogPaths.for_folder(str(tmp_path))
+    setup_logging(paths)
+    parser = MagicMock()
+    parser.parse.side_effect = RuntimeError('boom')
+    orchestrator = ParseOrchestrator()
+    orchestrator_mock = MagicMock()
+    orchestrator_mock.parse_all.side_effect = lambda *_args, **_kwargs: orchestrator._parse_supplier(
+        ParseResult(), parser
+    )
+    with patch(
+        _RESOLVE,
+        side_effect={ParseOrchestrator: orchestrator_mock, PriceReportService: MagicMock()}.__getitem__,
+    ):
+        code = machine_json(PARSE)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload['ok'] is False
+    assert payload['error'] == {'kind': 'RuntimeError', 'message': 'boom'}
+    assert Path(paths.err_file).read_text(encoding='utf-8').count(_TRACEBACK) == 1
+
+
+def test_json_error_outside_orchestrator_gets_traceback_in_log(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """ошибка вне оркестратора: граница оболочки сама пишет traceback в файл, JSON и код 1 сохраняются."""
+    paths = LogPaths.for_folder(str(tmp_path))
+    setup_logging(paths)
+    mail_service = MagicMock()
+    mail_service.fetch_prices.side_effect = RuntimeError('mail down')
+    with patch(_RESOLVE, side_effect={MailService: mail_service}.__getitem__):
+        code = machine_json(FETCH_MAIL_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 1
+    assert payload['error']['message'] == 'mail down'
+    assert Path(paths.err_file).read_text(encoding='utf-8').count(_TRACEBACK) == 1
 
 
 def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:

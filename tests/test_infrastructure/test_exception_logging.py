@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from infrastructure.logging.exception_logging import write_exception_log
+from infrastructure.logging.exception_logging import log_exception_once, write_exception_log
 from infrastructure.logging.log_paths import LogPaths
 from infrastructure.logging.log_setup import setup_logging
 
@@ -38,3 +38,35 @@ def test_write_exception_log_without_setup(caplog: pytest.LogCaptureFixture) -> 
     write_exception_log(_TRACE)
 
     assert _TRACE in caplog.text
+
+
+def _boom() -> RuntimeError:
+    with pytest.raises(RuntimeError) as caught:
+        raise RuntimeError('boom')
+    return caught.value
+
+
+def test_log_exception_once_writes_traceback_to_file_only(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """traceback исключения попадает в лог-файл, а консоль видит только строку сообщения"""
+    paths = LogPaths.for_folder(str(tmp_path))
+    setup_logging(paths)
+
+    log_exception_once(logging.getLogger('tests.once'), _TRACE, _boom())
+
+    assert 'RuntimeError: boom' in Path(paths.err_file).read_text(encoding='utf-8')
+    console = capsys.readouterr().out
+    assert _TRACE in console
+    assert 'Traceback' not in console
+
+
+def test_log_exception_once_skips_repeated_exception(tmp_path: Path) -> None:
+    """тот же объект исключения второй раз не пишется: нет двойного traceback"""
+    paths = LogPaths.for_folder(str(tmp_path))
+    setup_logging(paths)
+    exc = _boom()
+    target = logging.getLogger('tests.once')
+
+    log_exception_once(target, _TRACE, exc)
+    log_exception_once(target, _TRACE, exc)
+
+    assert Path(paths.err_file).read_text(encoding='utf-8').count('Traceback (most recent call last)') == 1

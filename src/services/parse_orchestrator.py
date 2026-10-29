@@ -20,7 +20,7 @@ from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.registry import vendor_entry_for
-from services.parse_logging import LogMessage, parser_messages, skips_messages
+from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
 from services.parse_result import ParseResult, UnknownCategorySkip
 from services.service_provider import ServiceProvider
 from services.vendor_parser import parser_for_vendor
@@ -100,7 +100,7 @@ class ParseOrchestrator:
         try:
             parsed = parser.parse()
         except Exception as exc:
-            logger.error(f'Ошибка разбора прайса поставщика {parser!r} // {exc}')
+            log_parse_failure(logger, parser, exc)
             raise
         else:
             parse_result.parsed_items.extend(parsed)
