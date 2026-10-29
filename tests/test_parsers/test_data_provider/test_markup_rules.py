@@ -1,6 +1,6 @@
 """tests for markup rules provider"""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,17 +28,17 @@ def test_markup_rules_base() -> None:
 
 
 def test_markup_path_with_supplier(fake_config_provider: FakeConfigProvider) -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+    provider = MarkupRulesProviderFromUserConfig(fake_config_provider, 'stk')
     assert provider.get_file_path() == fake_config_provider.config_file(_STK_RULES_FILE)
 
 
 def test_markup_path_default(fake_config_provider: FakeConfigProvider) -> None:
-    provider = MarkupRulesProviderFromUserConfig()
+    provider = MarkupRulesProviderFromUserConfig(fake_config_provider)
     assert provider.get_file_path() == fake_config_provider.config_file(_MARKUP_RULES_FILE)
 
 
 def test_markup_missing_file() -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+    provider = MarkupRulesProviderFromUserConfig(MagicMock(), 'stk')
     with (
         patch.object(CoreExceptionError, _TO_LOG),
         patch.object(provider, 'get_file_path', return_value=_MISSING_FILE),
@@ -52,8 +52,8 @@ def test_markup_missing_file() -> None:
     mock_read.assert_called_once_with(_MISSING_FILE)
 
 
-def test_load_markup_broken_json_reports_file() -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+def test_load_markup_broken_json_reports_file(fake_config_provider: FakeConfigProvider) -> None:
+    provider = MarkupRulesProviderFromUserConfig(fake_config_provider, 'stk')
     with (
         patch.object(ConfigValidationError, _TO_LOG),
         patch('infrastructure.data.file_reader.read_file', return_value='{'),
@@ -64,7 +64,7 @@ def test_load_markup_broken_json_reports_file() -> None:
 
 
 def test_load_markup_reads_file_path(fake_config_provider: FakeConfigProvider) -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+    provider = MarkupRulesProviderFromUserConfig(fake_config_provider, 'stk')
     rules_path = fake_config_provider.config_file(_STK_RULES_FILE)
     with patch('infrastructure.data.file_reader.read_file', return_value='{}') as mock_read:
         assert provider.get_markup_data() == MarkupRulesConfig()
@@ -74,7 +74,7 @@ def test_load_markup_reads_file_path(fake_config_provider: FakeConfigProvider) -
 def test_broken_markup_json_reports_file_and_key(
     fake_config_provider: FakeConfigProvider,
 ) -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+    provider = MarkupRulesProviderFromUserConfig(fake_config_provider, 'stk')
     raw = '{"markup_rules": {"r": {"min": "abc"}}}'
     with (
         patch.object(ConfigValidationError, _TO_LOG),
@@ -88,10 +88,21 @@ def test_broken_markup_json_reports_file_and_key(
 
 
 def test_markup_root_must_be_object() -> None:
-    provider = MarkupRulesProviderFromUserConfig('stk')
+    provider = MarkupRulesProviderFromUserConfig(MagicMock(), 'stk')
     with (
         patch.object(ConfigValidationError, _TO_LOG),
         patch('infrastructure.data.file_reader.read_file', return_value='[]'),
         pytest.raises(ConfigValidationError, match='ожидается объект'),
     ):
         provider.get_markup_data()
+
+
+def test_markup_path_comes_from_injected_provider() -> None:
+    """путь к файлу правил берётся у переданного провайдера, а не у глобального локатора"""
+    injected = MagicMock()
+    injected.config_file.return_value = '/injected/stk_markup_rules.json'
+
+    provider = MarkupRulesProviderFromUserConfig(injected, 'stk')
+
+    assert provider.get_file_path() == '/injected/stk_markup_rules.json'
+    injected.config_file.assert_called_once_with(_STK_RULES_FILE)
