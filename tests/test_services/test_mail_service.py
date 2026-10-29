@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 import pytest
 from log_watch import LoggerWatcher, texts_at
 
+from domain.mail import PriceDownloadError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.mail_credentials import MailCredentials
 from parsers.mail.client import FoundPrice
-from parsers.mail.errors import PriceDownloadError
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
 from parsers.vendor_config.models import VendorConfig
 from services import mail_service
@@ -25,7 +25,7 @@ _FOLDERS = ['INBOX', 'INBOX.Prices']
 @pytest.fixture(autouse=True)
 def _no_vendor_configs(monkeypatch: pytest.MonkeyPatch) -> None:
     """По умолчанию конфигов поставщиков нет — почта грузится для всех активных профилей."""
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', dict)
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {})
 
 
 def _profile(sender: str, *, enabled: bool = True) -> MailProfile:
@@ -63,7 +63,7 @@ def _wire(
         save=MagicMock(),
         client=client,
     )
-    monkeypatch.setattr(mail_service, 'load_mail_config', lambda: config)
+    monkeypatch.setattr(mail_service, 'load_mail_config', lambda _provider: config)
     monkeypatch.setattr(mail_service, 'get_mail_credentials', lambda: _CREDENTIALS)
     monkeypatch.setattr(mail_service, 'connect', wired.connect)
     monkeypatch.setattr(mail_service, 'list_price_folders', wired.folders)
@@ -86,7 +86,7 @@ def test_fetch_prices_saves_each_enabled_profile(
     fetched = mail_service.MailService().fetch_prices()
 
     destination = Path(fake_config_provider.price_folder('pioner')) / 'price.xlsx'
-    wired.connect.assert_called_once_with(_ACCOUNT, _CREDENTIALS)
+    wired.connect.assert_called_once_with(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
     wired.folders.assert_called_once_with(wired.client, 'INBOX')
     wired.client.logout.assert_called_once()
     wired.find.assert_called_once_with(wired.client, _FOLDERS, profile=config.profiles['pioner'])
@@ -197,7 +197,7 @@ def test_fetch_prices_skips_vendor_not_using_mail(
     config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
     wired = _wire(monkeypatch, config, _FOUND)
     vendor = MagicMock(spec=VendorConfig, enabled=enabled, source=source)
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {'pioner': vendor})
     entries = watch_logger('services.vendor_activity')
 
     assert not mail_service.MailService().fetch_prices()
@@ -214,7 +214,24 @@ def test_fetch_prices_loads_active_file_vendor(
     config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
     wired = _wire(monkeypatch, config, _FOUND)
     vendor = MagicMock(spec=VendorConfig, enabled=True, source='xlsx')
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {'pioner': vendor})
 
     assert len(mail_service.MailService().fetch_prices()) == 1
     wired.find.assert_called_once()
+
+
+def test_fetch_prices_passes_injected_provider_to_mail_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """MailService отдаёт настройкам почты переданный провайдер, а не глобальный"""
+    injected = MagicMock()
+    seen: list[object] = []
+
+    def fake_load(provider: object) -> None:
+        seen.append(provider)
+        raise RuntimeError('stop')
+
+    monkeypatch.setattr(mail_service, 'load_mail_config', fake_load)
+
+    with pytest.raises(RuntimeError, match='stop'):
+        mail_service.MailService(injected).fetch_prices()
+
+    assert seen == [injected]

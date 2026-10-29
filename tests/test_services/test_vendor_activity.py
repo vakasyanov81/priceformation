@@ -27,7 +27,7 @@ _CASES = [
 @pytest.mark.parametrize(('configs', 'expected'), _CASES)
 def test_is_vendor_enabled(configs: dict[str, VendorConfig], expected: bool) -> None:
     with patch('services.vendor_activity.load_vendor_configs', return_value=configs):
-        assert is_vendor_enabled('zapaska') is expected
+        assert is_vendor_enabled('zapaska', MagicMock()) is expected
 
 
 def test_zapaska_disabled_not_loaded() -> None:

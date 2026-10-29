@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 from cfg import init_cfg
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.config_driven_parser import make_config_driven_parser
@@ -100,17 +102,18 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     )
     clear_registry()
 
+    from domain.config_context import get_config_provider
     from parsers.vendor_config.provider import load_vendor_configs
 
-    cfgs = load_vendor_configs()
+    cfgs = load_vendor_configs(get_config_provider())
     vendor_cfg = cfgs['test_vendor']
 
     section = vendor_cfg.sections[0]
-    entry = make_vendor_entry(section, vendor_cfg)
+    entry = make_vendor_entry(section, vendor_cfg, get_config_provider())
     parse_config = entry[1]
 
     parser = make_config_driven_parser(section, vendor_cfg, parse_config)
-    parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader)
+    parser.price_files.file_reader = FileReader(data_reader=_FakeDataReader, price_source=MagicMock())
     parser.price_files.files = ['price_test.xls']
 
     parsed = parser.parse()
@@ -168,7 +171,7 @@ def test_new_vendor_has_no_python_code(tmp_path: Path) -> None:
 
     from parsers.registry import vendor_entry_for
 
-    parser_cls, parse_config = vendor_entry_for('m1')
+    parser_cls, parse_config = vendor_entry_for('m1', get_config_provider())
 
     assert parser_cls is BaseParser
     assert parse_config.supplier.code == 'm1'  # id секции

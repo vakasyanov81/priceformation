@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from infrastructure.config.mim_api_config import MimApiConfig
-from parsers.remote.mim_client import MimApiRequest
+from infrastructure.remote.mim_client import MimApiRequest
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.slot_configs import BehaviorConfig
 from services.mim_service import MimService

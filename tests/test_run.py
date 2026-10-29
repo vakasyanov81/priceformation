@@ -5,25 +5,25 @@ from unittest.mock import MagicMock, patch
 
 from log_watch import LoggerWatcher, texts_at
 
-from run_dialog import AnswerResult
+from app.run_dialog import AnswerResult
 from services.doubles_service import DoublesService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.zapaska_service import ZapaskaService
 
-_ASK_ACTION = 'run.ask_action'
+_ASK_ACTION = 'app.run.ask_action'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
-_RUN_LOGGER = 'run'
+_RUN_LOGGER = 'app.run'
 
 
 def test_response_make_price() -> None:
     """действие формирования прайса вызывает try_call"""
     with (
         patch(_ASK_ACTION, return_value=AnswerResult.MAKE_PRICE_BY_SUPPLIER),
-        patch('run.try_call') as mock_try,
+        patch('app.run.try_call') as mock_try,
     ):
-        from run import response_processing
+        from app.run import response_processing
 
         assert response_processing() is True
         mock_try.assert_called_once()
@@ -33,7 +33,7 @@ def test_response_make_price() -> None:
 def test_response_exit() -> None:
     """выход останавливает цикл; sys.exit вызывает main."""
     with patch(_ASK_ACTION, return_value=AnswerResult.EXIT):
-        from run import response_processing
+        from app.run import response_processing
 
         assert response_processing() is False
 
@@ -47,10 +47,10 @@ def test_run_make_price() -> None:
     reporter = MagicMock()
 
     with patch(
-        'run.ServiceProvider.resolve',
+        'app.run.ServiceProvider.resolve',
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
-        from run import run_make_price_by_supplier
+        from app.run import run_make_price_by_supplier
 
         run_make_price_by_supplier()
         orchestrator.parse_all.assert_called_once()
@@ -64,10 +64,10 @@ def test_run_upload_zapaska(watch_logger: LoggerWatcher) -> None:
     zapaska_service = MagicMock()
     entries = watch_logger(_RUN_LOGGER)
     with patch(
-        'run.ServiceProvider.resolve',
+        'app.run.ServiceProvider.resolve',
         side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__,
     ):
-        from run import run_upload_zapaska_data
+        from app.run import run_upload_zapaska_data
 
         run_upload_zapaska_data()
 
@@ -84,10 +84,10 @@ def test_run_report_doubles(watch_logger: LoggerWatcher) -> None:
     entries = watch_logger(_RUN_LOGGER)
 
     with patch(
-        'run.ServiceProvider.resolve',
+        'app.run.ServiceProvider.resolve',
         side_effect={DoublesService: doubles_service}.__getitem__,
     ):
-        from run import run_report_doubles
+        from app.run import run_report_doubles
 
         run_report_doubles()
 

@@ -1,6 +1,6 @@
 """tests for model merge by token sets."""
 
-from parsers.common_price_model_merge import ModelEntry, merge_models
+from parsers.common_price.model_merge import ModelEntry, merge_models
 
 
 def _entry(model: str) -> ModelEntry:

@@ -7,16 +7,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.run_argv import UPDATE_ALL_SUPPLIER_PRICES
+from app.run_machine import machine_json
 from domain.exceptions import CoreExceptionError
-from run_argv import UPDATE_ALL_SUPPLIER_PRICES
-from run_machine import machine_json
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.zapaska_service import ZapaskaService
 
-_RESOLVE = 'run_machine.ServiceProvider.resolve'
-_SCHEMA_GUARD = 'run_machine.schema_guard'
+_RESOLVE = 'app.run_machine.ServiceProvider.resolve'
+_SCHEMA_GUARD = 'app.run_machine.schema_guard'
 _MAIL_FILE = 'file_prices/stk/price.xlsx'
 _Services = dict[type, MagicMock]
 _Capsys = pytest.CaptureFixture[str]

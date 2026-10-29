@@ -3,8 +3,8 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_title import unify_group_title
-from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.common_price.group_title import unify_group_title
+from parsers.common_price.grouper import CommonPriceGrouper
 
 _PRIORITY = {'Форточки': 1, 'Запаска': 3, 'Мим': 4}
 _ALIASES: dict[str, Any] = {'Cordiant': []}

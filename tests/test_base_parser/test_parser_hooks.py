@@ -8,6 +8,7 @@ from test_parsers.test_vendors._test_providers import (
     MarkupRulesProviderForTests,
 )
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser, make_parser
 from parsers.base_parser.base_parser_config import (
@@ -57,6 +58,7 @@ def _base_params() -> BasePriceParseConfigurationParams:
         black_list_provider=BlackListProviderForTests(),
         markup_rules_provider=MarkupRulesProviderForTests(),
         manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+        config_provider=get_config_provider(),
         parser_params=ParserParams(
             supplier=_SUPPLIER,
             start_row=1,

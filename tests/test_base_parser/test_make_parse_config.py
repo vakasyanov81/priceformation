@@ -29,13 +29,13 @@ def _parser_params() -> ParserParams:
 
 def test_make_parse_config_keeps_parser_params() -> None:
     parser_params = _parser_params()
-    config = make_parse_config(parser_params)
+    config = make_parse_config(parser_params, config_provider=MagicMock())
     assert config.parser_params is parser_params
     assert config.supplier is parser_params.supplier
 
 
 def test_markup_provider_uses_folder_name() -> None:
-    provider = make_parse_config(_parser_params()).parse_config.markup_rules_provider
+    provider = make_parse_config(_parser_params(), config_provider=MagicMock()).parse_config.markup_rules_provider
     assert isinstance(provider, MarkupRulesProviderFromUserConfig)
     assert provider.supplier_name == _FOLDER_NAME
     assert provider.supplier_name != _SUPPLIER_NAME
@@ -43,6 +43,8 @@ def test_markup_provider_uses_folder_name() -> None:
 
 def test_make_parse_config_overrides_one_provider() -> None:
     stub = MagicMock()
-    parse_config = make_parse_config(_parser_params(), black_list_provider=stub).parse_config
+    parse_config = make_parse_config(
+        _parser_params(), config_provider=MagicMock(), black_list_provider=stub
+    ).parse_config
     assert parse_config.black_list_provider is stub
     assert isinstance(parse_config.markup_rules_provider, MarkupRulesProviderFromUserConfig)

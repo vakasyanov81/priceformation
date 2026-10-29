@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -43,6 +44,7 @@ def _configuration(aliases: dict[str, Any] | None = None) -> tuple[ParseConfigur
             markup_rules_provider=stub,
             black_list_provider=stub,
             manufacturer_aliases=aliases_provider,
+            config_provider=get_config_provider(),
             parser_params=_parser_params(),
         )
     )

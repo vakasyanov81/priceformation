@@ -1,15 +1,21 @@
 """Тесты сервисов: PriceReportService, DoublesService, ZapaskaService."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 from domain.row_item.row_item import RowItem
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from services.doubles_service import DoublesReport, DoublesService
 from services.four_tochki_service import FourTochkiService
+from services.four_tochki_service import load_remote_vendor_data as load_four_tochki_data
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
 
 _TITLE = 'title'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
+_NSK_API = FourTochkiApiWarehouse(id=1423, name='Новосибирск')
+_API_DIRECTORY = [_NSK_API, FourTochkiApiWarehouse(id=276, name='Омск')]
 
 
 def _row_item(title: str) -> RowItem:
@@ -153,3 +159,22 @@ def test_upload_four_tochki_data() -> None:
     ):
         FourTochkiService().upload_data()
     mock_load.assert_called_once_with(api=api, groups=groups)
+
+
+def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
+    fake_config_provider: FakeConfigProvider,
+) -> None:
+    """Склады подбираются по группам из справочника; каталоги качаются только по ним — в папку прайсов Форточек."""
+    api = MagicMock()
+    groups = (FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск',), merge=True),)
+    with (
+        patch('services.four_tochki_service.fetch_warehouses', return_value=_API_DIRECTORY),
+        patch('services.four_tochki_service.download_catalogs') as mock_download,
+    ):
+        load_four_tochki_data(api=api, groups=groups)
+
+    mock_download.assert_called_once_with(
+        dest_dir=Path(fake_config_provider.price_folder('four_tochki')),
+        api=api,
+        warehouses=(FourTochkiWarehouse(id=1423, name='Новосибирск', group='novosibirsk', merge_group='novosibirsk'),),
+    )

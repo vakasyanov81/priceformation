@@ -11,8 +11,8 @@ from __future__ import annotations
 import re
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_labels import camera_label, run_flat_label
-from parsers.nomenclature_title import compose_tire_title, join_size_parts
+from parsers.nomenclature.labels import camera_label, run_flat_label
+from parsers.nomenclature.title import compose_tire_title, join_size_parts
 from parsers.strategies._four_tochki_tire_kind import is_special_tire, is_truck_tire
 from parsers.strategies._four_tochki_tire_size import (
     fill_size_from_title,

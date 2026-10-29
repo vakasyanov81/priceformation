@@ -7,8 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from domain.row_item.row_item import RowItem
-from parse_report import (
+from app.parse_report import (
     REPORT_VERSION,
     dump_json,
     emit_json,
@@ -16,12 +15,13 @@ from parse_report import (
     error_payload,
     ok_payload,
 )
-from parse_report_build import (
+from app.parse_report_build import (
     report_from_result,
     row_items_to_json,
     stats_from_result,
     warnings_from_result,
 )
+from domain.row_item.row_item import RowItem
 from services.parse_result import ParseResult
 
 _TITLE = 'шина test'
@@ -171,7 +171,7 @@ def test_emit_json_skips_elapsed_without_ok() -> None:
 
 def test_emit_json_exact_elapsed(monkeypatch: pytest.MonkeyPatch) -> None:
     """elapsed_seconds округляется до сотых от переданного started."""
-    monkeypatch.setattr('parse_report.time.monotonic', lambda: _MONOTONIC)
+    monkeypatch.setattr('app.parse_report.time.monotonic', lambda: _MONOTONIC)
     stream = StringIO()
     emit_json({'ok': True}, stream, started=_STARTED)
     assert json.loads(stream.getvalue())['elapsed_seconds'] == _ROUNDED
@@ -350,7 +350,7 @@ def test_report_splits_disabled_suppliers() -> None:
     """активные и отключённые поставщики — разные поля JSON."""
     parsed = ParseResult()
     with patch(
-        'parse_report_build.split_vendor_supplier_info',
+        'app.parse_report_build.split_vendor_supplier_info',
         return_value=({'3': 'Пионер'}, {'7': 'STK'}),
     ):
         report = report_from_result('parse', parsed, [_RESULT_A], 0)

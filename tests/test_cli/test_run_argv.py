@@ -2,7 +2,7 @@
 
 import pytest
 
-from run_argv import (
+from app.run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,

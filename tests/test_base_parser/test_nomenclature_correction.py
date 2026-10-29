@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from python_calamine import WorksheetNotFound
 
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser import nomenclature_correction as noc
 
@@ -20,7 +21,7 @@ def _write_nomenclature(fake_config_provider: FakeConfigProvider, file_bytes: by
 
 def test_load_file_missing(fake_config_provider: FakeConfigProvider) -> None:
     """нет файла — пустой словарь"""
-    assert not noc.load_file()
+    assert not noc.load_file(get_config_provider())
 
 
 def test_load_file_reads_xlsx(fake_config_provider: FakeConfigProvider) -> None:
@@ -42,7 +43,7 @@ def test_load_file_reads_xlsx(fake_config_provider: FakeConfigProvider) -> None:
             return_value=fake_wb,
         ) as mock_from_path,
     ):
-        mapping = noc.load_file()
+        mapping = noc.load_file(get_config_provider())
         assert mapping == {'old title': 'new title', 'keep': 'fixed'}
         fake_wb.get_sheet_by_name.assert_called_once_with('Sheet1')
         mock_from_path.assert_called_once_with(expected_path)
@@ -52,9 +53,9 @@ def test_corrected_title_cache() -> None:
     """подмена из кэша и fallback на исходный title"""
     noc.clear_nomenclature_cache()
     with patch.object(noc, 'load_file', return_value={'A': 'B'}) as mock_load:
-        assert noc.get_nomenclature_corrected_title('A') == 'B'
-        assert noc.get_nomenclature_corrected_title('A') == 'B'
-        assert noc.get_nomenclature_corrected_title('C') == 'C'
+        assert noc.get_nomenclature_corrected_title('A', get_config_provider()) == 'B'
+        assert noc.get_nomenclature_corrected_title('A', get_config_provider()) == 'B'
+        assert noc.get_nomenclature_corrected_title('C', get_config_provider()) == 'C'
         mock_load.assert_called_once()
     noc.clear_nomenclature_cache()
 
@@ -68,7 +69,7 @@ def test_invalid_file_raises_error(fake_config_provider: FakeConfigProvider) -> 
             match=r'correct-nomenclature\.xlsx повреждён',
         ),
     ):
-        noc.load_file()
+        noc.load_file(get_config_provider())
 
 
 def test_missing_sheet_raises_error(fake_config_provider: FakeConfigProvider) -> None:
@@ -87,7 +88,7 @@ def test_missing_sheet_raises_error(fake_config_provider: FakeConfigProvider) ->
             match=r'correct-nomenclature\.xlsx повреждён',
         ),
     ):
-        noc.load_file()
+        noc.load_file(get_config_provider())
 
 
 def test_too_few_columns_raises_error(fake_config_provider: FakeConfigProvider) -> None:
@@ -110,7 +111,7 @@ def test_too_few_columns_raises_error(fake_config_provider: FakeConfigProvider) 
             match=r'correct-nomenclature\.xlsx повреждён',
         ),
     ):
-        noc.load_file()
+        noc.load_file(get_config_provider())
 
 
 def test_corrected_title_reloads_after_clear() -> None:
@@ -118,9 +119,18 @@ def test_corrected_title_reloads_after_clear() -> None:
     noc.clear_nomenclature_cache()
     maps = [{'A': 'B'}, {'A': 'C'}]
     with patch.object(noc, 'load_file', side_effect=maps) as mock_load:
-        assert noc.get_nomenclature_corrected_title('A') == 'B'
-        assert noc.get_nomenclature_corrected_title('A') == 'B'
+        assert noc.get_nomenclature_corrected_title('A', get_config_provider()) == 'B'
+        assert noc.get_nomenclature_corrected_title('A', get_config_provider()) == 'B'
         noc.clear_nomenclature_cache()
-        assert noc.get_nomenclature_corrected_title('A') == 'C'
+        assert noc.get_nomenclature_corrected_title('A', get_config_provider()) == 'C'
         assert mock_load.call_count == 2
     noc.clear_nomenclature_cache()
+
+
+def test_load_file_path_comes_from_injected_provider(tmp_path: Path) -> None:
+    """файл исправлений ищется у переданного провайдера, а не у глобального локатора"""
+    injected = MagicMock()
+    injected.config_file.return_value = str(tmp_path / 'absent.xlsx')
+
+    assert not noc.load_file(injected)
+    injected.config_file.assert_called_once_with('correct-nomenclature.xlsx')

@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -19,7 +20,7 @@ _KNOWN = ('for_inner', 'for_drom', 'for_full')
 
 def test_missing_file_excludes_nothing(fake_config_provider: FakeConfigProvider) -> None:
     """Нет doubles.json — дубли не исключаются ни в одном шаблоне."""
-    settings = load_doubles_settings(_KNOWN)
+    settings = load_doubles_settings(_KNOWN, fake_config_provider)
 
     assert settings == DoublesSettings()
     assert not settings.excludes_in('for_drom')
@@ -32,7 +33,7 @@ def test_file_is_read(fake_config_provider: FakeConfigProvider) -> None:
     payload = {'exclude_in_templates': ['for_drom'], 'priority_suppliers': [' Автоснабжение ', '']}
     path.write_text(json.dumps(payload), encoding='UTF-8')
 
-    settings = load_doubles_settings(_KNOWN)
+    settings = load_doubles_settings(_KNOWN, fake_config_provider)
 
     assert settings.excludes_in('for_drom')
     assert not settings.excludes_in('for_inner')
@@ -79,3 +80,12 @@ def test_wrong_type_names_file_and_key(key: str) -> None:
     with pytest.raises(ConfigValidationError) as raised:
         parse_doubles_settings({key: 'for_drom'}, _KNOWN)
     assert str(raised.value).startswith(f'{DOUBLES_CONFIG_FILE} → {key}: ожидается список строк')
+
+
+def test_path_comes_from_injected_provider(tmp_path: Path) -> None:
+    """doubles.json ищется у переданного провайдера, а не у глобального локатора"""
+    injected = MagicMock()
+    injected.config_file.return_value = str(tmp_path / 'absent.json')
+
+    assert load_doubles_settings(_KNOWN, injected) == DoublesSettings()
+    injected.config_file.assert_called_once_with(DOUBLES_CONFIG_FILE)

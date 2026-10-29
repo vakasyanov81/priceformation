@@ -4,10 +4,10 @@ import sys
 import time
 from pathlib import Path
 
+from app.run import run_make_price_by_supplier
 from cfg import init_cfg
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.file_config_provider import FileConfigProvider
-from run import run_make_price_by_supplier
 from services.configure import configure_services
 
 

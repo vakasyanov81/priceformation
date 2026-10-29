@@ -7,10 +7,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
-from parsers.common_price_output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
+from parsers.common_price.output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
 from services.service_provider import ServiceProvider
 
 
@@ -40,6 +40,7 @@ def common_price_out(row_items: list[RowItem]) -> CommonPriceOut:
     """CommonPriceOut с фабриками записи из контейнера."""
     return CommonPriceOut(
         row_items,
-        xls_writer=cast(XlsWriterFactory, ServiceProvider.resolve(XlsWriterFactory)),
-        write_driver=cast(WriteDriverFactory, ServiceProvider.resolve(WriteDriverFactory)),
+        xls_writer=ServiceProvider.resolve(XlsWriterFactory),
+        write_driver=ServiceProvider.resolve(WriteDriverFactory),
+        config_provider=get_config_provider(),
     )

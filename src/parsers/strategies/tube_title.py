@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_title_flags import has_valve, tube_model_from_title
-from parsers.nomenclature_brand import brand_label
-from parsers.nomenclature_tube_title import compose_tube_title, tube_size_label
+from parsers.common_price.title_flags import has_valve, tube_model_from_title
+from parsers.nomenclature.brand import brand_label
+from parsers.nomenclature.tube_title import compose_tube_title, tube_size_label
 from parsers.strategies._tire_title_parser import TUBE_PREFIX
 from parsers.strategies._tube_title_parser import parse_tube_title
 from parsers.strategies.protocols import ManufacturerProbe
@@ -29,7 +29,7 @@ def compose_tube_title_from_text(
     ``manufacturer_probe`` в тексте (поле позиции на этом шаге ещё пусто: производитель определяется по названию),
     иначе берётся поле.
     Слова ``СВК``, ``(25)``, ``Китай`` в название не входят. Модель остаётся: она режет группу дублей
-    (``common_price_title_flags.tube_model``).
+    (``common_price.title_flags.tube_model``).
     """
     parts = parse_tube_title(title)
     if parts is None:

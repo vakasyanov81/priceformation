@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from log_watch import LoggerWatcher, texts_at
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
@@ -117,7 +118,7 @@ def test_parse_all_uses_vendors_provider() -> None:
 def test_parse_vendor_by_code() -> None:
     """parse_vendor разбирает одного поставщика по коду реестра"""
     orchestrator = ParseOrchestrator()
-    with patch(f'{_MOD}.vendor_entry_for', return_value=(cast(type[BaseParser], FakeParser), None)):
+    with patch('services.vendor_source.vendor_entry_for', return_value=(cast(type[BaseParser], FakeParser), None)):
         parsed = orchestrator.parse_vendor('poshk')
 
     assert parsed.parsed_items == fake_result
@@ -127,7 +128,7 @@ def test_parse_vendor_unknown_code() -> None:
     """неизвестный код поставщика → UnknownVendorError"""
     orchestrator = ParseOrchestrator()
     with (
-        patch(f'{_MOD}.vendor_entry_for', side_effect=UnknownVendorError('nope')),
+        patch('services.vendor_source.vendor_entry_for', side_effect=UnknownVendorError('nope')),
         pytest.raises(UnknownVendorError),
     ):
         orchestrator.parse_vendor('nope')
@@ -138,7 +139,7 @@ def test_parse_all_clears_aliases_cache() -> None:
     orchestrator = ParseOrchestrator()
     with (
         patch(f'{_MOD}.clear_manufacturer_aliases_cache') as mock_clear,
-        patch('parsers.common_price_grouper.load_aliases_map', return_value={}) as mock_load,
+        patch('services.vendor_source.load_aliases_map', return_value={}) as mock_load,
     ):
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
@@ -237,7 +238,7 @@ def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
 @pytest.mark.usefixtures('example_vendors_provider')
 def test_suppliers_info() -> None:
     """supplier maps cover vendor codes and do not overlap."""
-    enabled, disabled = split_vendor_supplier_info()
+    enabled, disabled = split_vendor_supplier_info(get_config_provider())
     combined = {**enabled, **disabled}
     assert combined['22'] == 'Запаска (шины)'
     assert None not in combined.values()
@@ -261,7 +262,7 @@ def _disabled_vendor_entry() -> tuple[type[BaseParser], ParseConfiguration]:
         columns={0: 'title'},
         sheet_indexes=(0,),
     )
-    return make_vendor_entry(section, vendor_cfg)
+    return make_vendor_entry(section, vendor_cfg, get_config_provider())
 
 
 def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
@@ -290,7 +291,7 @@ def _config_driven_vendor_entry(
         file_templates=('price*.xls',),
         columns={0: 'title'},
     )
-    _, config = make_vendor_entry(section, vendor_cfg)
+    _, config = make_vendor_entry(section, vendor_cfg, get_config_provider())
     if not with_section:
         config.vendor_section = None
     if not with_config:
@@ -376,10 +377,10 @@ def test_parse_vendor_passes_code_to_registry() -> None:
     orchestrator = ParseOrchestrator()
     entry = (cast(type[BaseParser], FakeParser), None)
 
-    with patch(f'{_MOD}.vendor_entry_for', return_value=entry) as mock_entry:
+    with patch('services.vendor_source.vendor_entry_for', return_value=entry) as mock_entry:
         orchestrator.parse_vendor('poshk')
 
-    mock_entry.assert_called_once_with('poshk')
+    mock_entry.assert_called_once_with('poshk', get_config_provider())
 
 
 def test_parse_vendors_logs_elapsed(watch_logger: LoggerWatcher) -> None:
@@ -456,3 +457,15 @@ def test_logs_cleared_before_parse(monkeypatch: pytest.MonkeyPatch) -> None:
     ParseOrchestrator().parse_all([])
 
     assert calls == ['cleared', 'cleared']
+
+
+def test_parse_vendor_uses_injected_config_provider() -> None:
+    """явно переданный провайдер уходит в реестр, а не подменяется глобальным"""
+    injected = MagicMock()
+    orchestrator = ParseOrchestrator(config_provider=injected)
+    entry = (cast(type[BaseParser], FakeParser), None)
+
+    with patch('services.vendor_source.vendor_entry_for', return_value=entry) as mock_entry:
+        orchestrator.parse_vendor('poshk')
+
+    mock_entry.assert_called_once_with('poshk', injected)

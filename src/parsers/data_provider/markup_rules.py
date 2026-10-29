@@ -4,8 +4,8 @@ markup rules provider
 
 from pathlib import Path
 
-from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_json_file
 from parsers.data_provider.models import MarkupRulesConfig
 
@@ -38,6 +38,10 @@ class MarkupRulesProviderBase:
 class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
     """Markup rules data provider from user config file."""
 
+    def __init__(self, config_provider: ConfigProvider, supplier_name: str | None = None) -> None:
+        super().__init__(supplier_name)
+        self._config_provider = config_provider
+
     def get_markup_data(self) -> MarkupRulesConfig:
         """Get markup data from user config file."""
         return self.try_markup_data_for_supplier()
@@ -59,4 +63,4 @@ class MarkupRulesProviderFromUserConfig(MarkupRulesProviderBase):
         file_name = _CONFIG_FILE
         if self.supplier_name:
             file_name = f'{self.supplier_name}_{_CONFIG_FILE}'
-        return get_config_provider().config_file(file_name)
+        return self._config_provider.config_file(file_name)

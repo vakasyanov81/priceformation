@@ -1,7 +1,7 @@
 """tests for building menu rows with the collapsible vendor list"""
 
-from run_dialog.items import MENU_ITEMS
-from run_dialog.rows import build_rows
+from app.run_dialog.items import MENU_ITEMS
+from app.run_dialog.rows import build_rows
 from services.vendor_activation import VendorState
 
 

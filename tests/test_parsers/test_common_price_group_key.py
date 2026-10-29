@@ -1,18 +1,17 @@
 """tests for price grouping key helpers."""
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_key import (
+from parsers.common_price.group_key import (
     MODEL_KEY_INDEX,
     define_intimacy,
     group_key,
     sanitize_value,
 )
-from parsers.common_price_model import clear_model, model_tokens
+from parsers.common_price.model import clear_model, model_tokens
 
 
 def _row(**fields: Any) -> RowItem:
@@ -465,15 +464,11 @@ def test_group_key_camera_part(fields: dict[str, Any], expected: str) -> None:
     assert group_key(_row(**fields), {})[10] == expected
 
 
-def test_group_key_loads_user_aliases_by_default() -> None:
-    """Без явной карты group_key берёт алиасы пользователя, а не пустую карту."""
-    with patch(
-        'parsers.common_price_group_key.load_aliases_map',
-        return_value={'ZZZTEST': {'aliases': [], 'group': 'zzz-canon'}},
-    ):
-        key = group_key(_row(manufacturer_name='ZZZTEST'))
-    assert key[7] == 'zzz-canon'
-    assert group_key(_row(manufacturer_name='ZZZTEST'), {})[7] == 'zzztest'
+def test_group_key_uses_passed_aliases_and_empty_by_default() -> None:
+    """Карта алиасов приходит аргументом; без неё — пустая, файлы не читаются."""
+    aliases = {'ZZZTEST': {'aliases': [], 'group': 'zzz-canon'}}
+    assert group_key(_row(manufacturer_name='ZZZTEST'), aliases)[7] == 'zzz-canon'
+    assert group_key(_row(manufacturer_name='ZZZTEST'))[7] == 'zzztest'
 
 
 def test_clear_model_applies_prefixes_longest_first() -> None:

@@ -1,7 +1,7 @@
 """tests for manufacturer aliases providers"""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -15,6 +15,8 @@ from parsers.data_provider.manufacturer_aliases import (
 )
 from parsers.data_provider.manufacturer_group import manufacturer_group
 
+_PROVIDER = MagicMock(config_file=MagicMock(return_value='manufacturer_aliases.json'))
+
 
 def test_aliases_base_raises() -> None:
     with pytest.raises(NotImplementedError):
@@ -23,7 +25,7 @@ def test_aliases_base_raises() -> None:
 
 def test_aliases_from_config() -> None:
     with patch('parsers.data_provider.manufacturer_aliases.read_file', return_value='{"A": "B"}'):
-        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'A': 'B'}
+        assert ManufacturerAliasesProviderFromUserConfig(_PROVIDER).get_aliases() == {'A': 'B'}
 
 
 @pytest.mark.parametrize(
@@ -104,7 +106,7 @@ def test_manufacturer_group_lookup_once_per_map() -> None:
 def test_load_aliases_map_missing_file() -> None:
     clear_manufacturer_aliases_cache()
     with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=FileNotFoundError):
-        assert load_aliases_map() == {}
+        assert load_aliases_map(_PROVIDER) == {}
     clear_manufacturer_aliases_cache()
 
 
@@ -112,16 +114,16 @@ def test_load_aliases_map_reloads_after_clear() -> None:
     """FileNotFound кэширует {}; после сброса появляется файл."""
     clear_manufacturer_aliases_cache()
     with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=[FileNotFoundError, '{"A": "B"}']):
-        assert load_aliases_map() == {}
-        assert load_aliases_map() == {}
+        assert load_aliases_map(_PROVIDER) == {}
+        assert load_aliases_map(_PROVIDER) == {}
         clear_manufacturer_aliases_cache()
-        assert load_aliases_map() == {'A': 'B'}
+        assert load_aliases_map(_PROVIDER) == {'A': 'B'}
     clear_manufacturer_aliases_cache()
 
 
 def test_aliases_from_config_drops_blanks() -> None:
     with patch('parsers.data_provider.manufacturer_aliases.read_file', return_value='{"Brand": ["", " ", "Bar"]}'):
-        assert ManufacturerAliasesProviderFromUserConfig().get_aliases() == {'Brand': ['Bar']}
+        assert ManufacturerAliasesProviderFromUserConfig(_PROVIDER).get_aliases() == {'Brand': ['Bar']}
 
 
 def test_filled_aliases_keeps_values_after_nonstring() -> None:
@@ -149,3 +151,18 @@ def test_drop_blank_aliases_missing_key_gets_empty_list() -> None:
     cleaned = drop_blank_aliases({'Brand': {'group': 'brand'}})
 
     assert cleaned == {'Brand': {'aliases': [], 'group': 'brand'}}
+
+
+def test_load_aliases_map_reads_file_of_passed_provider(tmp_path: Any) -> None:
+    """Карта читается из файла переданного провайдера; разные провайдеры не смешиваются."""
+    first, second = tmp_path / 'a.json', tmp_path / 'b.json'
+    first.write_text('{"A": ["a"]}', encoding='utf-8')
+    second.write_text('{"B": ["b"]}', encoding='utf-8')
+    clear_manufacturer_aliases_cache()
+
+    provider_a = MagicMock(config_file=MagicMock(return_value=str(first)))
+    provider_b = MagicMock(config_file=MagicMock(return_value=str(second)))
+
+    assert load_aliases_map(provider_a) == {'A': ['a']}
+    assert load_aliases_map(provider_b) == {'B': ['b']}
+    clear_manufacturer_aliases_cache()

@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from run_dialog import key_codes, keys, readers
+from app.run_dialog import key_codes, keys, readers
 
 
 def _reader(chars: list[str]) -> Callable[[], str]:

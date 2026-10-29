@@ -1,7 +1,7 @@
 """tests for four_tochki disk title helpers."""
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_disk_labels import disk_diameter, disk_width, et_label
+from parsers.nomenclature.disk_labels import disk_diameter, disk_width, et_label
 from parsers.strategies._four_tochki_disk_helper import disk_name_suffix, fill_disk_thickness, thickness_from_name
 
 

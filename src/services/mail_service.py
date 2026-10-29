@@ -7,12 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from domain.config_context import get_config_provider
+from domain.mail import ImapClient, PriceDownloadError
+from domain.protocols import ConfigProvider
 from infrastructure.config.mail_credentials import get_mail_credentials
-from parsers.mail.client import FoundPrice, connect, find_latest_price, list_price_folders, save_price
-from parsers.mail.download import download_price
-from parsers.mail.errors import PriceDownloadError
+from infrastructure.mail.download import download_price
+from infrastructure.mail.imap import connect, list_price_folders, save_price
+from parsers.mail.client import FoundPrice, find_latest_price
 from parsers.mail.models import MailConfig
-from parsers.mail.protocols import ImapClient
 from parsers.mail.provider import load_mail_config
 from services.vendor_activity import skip_mail_fetch
 
@@ -50,20 +51,26 @@ class _MailSession:
 class MailService:
     """Скачивает свежие прайсы поставщиков из настроенного почтового ящика."""
 
+    def __init__(self, config_provider: ConfigProvider | None = None) -> None:
+        self._config_provider = config_provider
+
     def fetch_prices(self) -> list[MailFetchResult]:
         """Скачать по одному свежему прайсу на каждый активный профиль."""
-        config = load_mail_config()
-        client = connect(config.account, get_mail_credentials())
+        provider = self._config_provider or get_config_provider()
+        config = load_mail_config(provider)
+        account = config.account
+        client = connect(account.host, account.port, account.folder, get_mail_credentials())
         with _MailSession(client) as inbox:
-            folders = list_price_folders(inbox, config.account.folder)
-            return _collect(inbox, config, folders)
+            return _collect(inbox, config, list_price_folders(inbox, account.folder), provider)
 
 
-def _collect(client: ImapClient, config: MailConfig, folders: list[str]) -> list[MailFetchResult]:
+def _collect(
+    client: ImapClient, config: MailConfig, folders: list[str], config_provider: ConfigProvider
+) -> list[MailFetchResult]:
     """Обойти активные профили: найти письмо, записать вложение, собрать итог."""
     fetched: list[MailFetchResult] = []
     for folder, profile in config.enabled_profiles().items():
-        if skip_mail_fetch(folder):
+        if skip_mail_fetch(folder, config_provider):
             continue
         found = find_latest_price(client, folders, profile=profile)
         if found is None:

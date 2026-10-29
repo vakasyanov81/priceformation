@@ -2,6 +2,7 @@
 
 from types import SimpleNamespace
 from typing import Any, ClassVar
+from unittest.mock import MagicMock
 
 from parsers.base_parser.file_reader import FileReader
 
@@ -35,7 +36,7 @@ class _RecordingReader:
 def test_raw_parse_passes_path_and_sheet_indexes() -> None:
     """Путь и вкладки доходят до читателя без подмены на None."""
     _RecordingReader.created.clear()
-    reader = FileReader(data_reader=_RecordingReader)
+    reader = FileReader(data_reader=_RecordingReader, price_source=MagicMock())
     parser_params = SimpleNamespace(start_row=_START_ROW, columns=_COLUMNS, sheet_indexes=_SHEET_INDEXES)
 
     reader.raw_parse(_PATH, parser_params)

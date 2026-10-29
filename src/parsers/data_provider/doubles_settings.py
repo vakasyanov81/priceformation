@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_json_file
 from parsers.data_provider.json_fields import as_config_object
 from parsers.vendor_config.fields import read_str_list
@@ -25,9 +25,9 @@ class DoublesSettings:
         return template_name in self.exclude_in_templates
 
 
-def load_doubles_settings(known_templates: tuple[str, ...]) -> DoublesSettings:
+def load_doubles_settings(known_templates: tuple[str, ...], config_provider: ConfigProvider) -> DoublesSettings:
     """Прочитать doubles.json; файла нет — дубли нигде не исключаются."""
-    path = get_config_provider().config_file(DOUBLES_CONFIG_FILE)
+    path = config_provider.config_file(DOUBLES_CONFIG_FILE)
     if not Path(path).is_file():
         return DoublesSettings()
     return parse_doubles_settings(read_json_file(path), known_templates)

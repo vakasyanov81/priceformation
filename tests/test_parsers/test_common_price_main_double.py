@@ -3,7 +3,7 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_main_double import main_double
+from parsers.common_price.main_double import main_double
 
 
 def _row(price: int, **fields: Any) -> RowItem:

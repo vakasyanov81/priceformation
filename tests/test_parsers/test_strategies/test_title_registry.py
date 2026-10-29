@@ -1,5 +1,7 @@
 """Реестр стратегий title: имя из конфига → фабрика."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from domain.exceptions import ConfigValidationError
@@ -20,6 +22,7 @@ from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
+_PROVIDER = MagicMock(config_file=MagicMock(return_value='/nonexistent/aliases.json'))
 WHERE = 'mim.json → sections[0] → title'
 
 _KNOWN = [
@@ -33,25 +36,29 @@ _KNOWN = [
 
 @pytest.mark.parametrize(('name', 'expected_type'), _KNOWN)
 def test_make_known_title_strategy(name: str, expected_type: type) -> None:
-    strategy = make_title_strategy(TitleConfig(strategy=name), WHERE)
+    strategy = make_title_strategy(TitleConfig(strategy=name), WHERE, config_provider=_PROVIDER)
 
     assert isinstance(strategy, expected_type)
 
 
 def test_tire_compose_built_by_variant() -> None:
-    strategy = make_title_strategy(TitleConfig(strategy='tire_compose', variant='mim_simple'), WHERE)
+    strategy = make_title_strategy(
+        TitleConfig(strategy='tire_compose', variant='mim_simple'), WHERE, config_provider=_PROVIDER
+    )
 
     assert isinstance(strategy, TireCompose)
 
 
 def test_disk_compose_built_by_variant() -> None:
-    strategy = make_title_strategy(TitleConfig(strategy='disk_compose', variant='four_tochki'), WHERE)
+    strategy = make_title_strategy(
+        TitleConfig(strategy='disk_compose', variant='four_tochki'), WHERE, config_provider=_PROVIDER
+    )
 
     assert isinstance(strategy, DiskComposeTochki)
 
 
 def test_manufacturer_from_category_built() -> None:
-    strategy = make_title_strategy(TitleConfig(strategy='manufacturer_from_category'), WHERE)
+    strategy = make_title_strategy(TitleConfig(strategy='manufacturer_from_category'), WHERE, config_provider=_PROVIDER)
 
     assert isinstance(strategy, ManufacturerFromCategory)
 
@@ -60,11 +67,12 @@ def test_normalize_size_chunks_fallback_brand_wired(monkeypatch: pytest.MonkeyPa
     """fallback_brand конфига подменяет ведущую «Шина», когда бренда в title нет."""
     monkeypatch.setattr(
         'parsers.strategies.title_registry.load_aliases_map',
-        lambda: {'Nortec': [], 'Алтайшина': ['АШК']},
+        lambda _provider: {'Nortec': [], 'Алтайшина': ['АШК']},
     )
     strategy = make_title_strategy(
         TitleConfig(strategy='normalize_size_chunks', fallback_brand='Алтайшина'),
         WHERE,
+        config_provider=_PROVIDER,
     )
 
     assert strategy.prepare(RowItem({'title': 'Шина 155/65R13'})) == 'Алтайшина 155/65R13'
@@ -75,11 +83,12 @@ def test_poshk_stk_tire_compose_fallback_brand_wired(monkeypatch: pytest.MonkeyP
     """fallback_brand и детектор бренда доходят до сборки Пошка/STK."""
     monkeypatch.setattr(
         'parsers.strategies.title_registry.load_aliases_map',
-        lambda: {'FORWARD': [], 'Алтайшина': ['АШК']},
+        lambda _provider: {'FORWARD': [], 'Алтайшина': ['АШК']},
     )
     strategy = make_title_strategy(
         TitleConfig(strategy='poshk_stk_tire_compose', fallback_brand='Алтайшина'),
         WHERE,
+        config_provider=_PROVIDER,
     )
 
     without_brand = strategy.prepare(RowItem({'title': 'Шина 11.00R20 И-111А 16PR 150/146K TT, шт'}))
@@ -94,6 +103,7 @@ def test_poshk_stk_tire_compose_camera_by_kind_wired() -> None:
     strategy = make_title_strategy(
         TitleConfig(strategy='poshk_stk_tire_compose', camera_by_kind={'автопокрышка': 'TL'}),
         WHERE,
+        config_provider=_PROVIDER,
     )
 
     prepared = strategy.prepare(RowItem({'title': '11 R22.5 TAITONG HS103 н.с.16 146/143M вед.ось автопокрышка, шт'}))
@@ -107,30 +117,30 @@ def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
     """Без fallback_brand алиасы производителей не читаются."""
     monkeypatch.setattr(
         'parsers.strategies.title_registry.load_aliases_map',
-        lambda: pytest.fail('aliases must not be loaded'),
+        lambda _provider: pytest.fail('aliases must not be loaded'),
     )
-    strategy = make_title_strategy(TitleConfig(strategy='normalize_size_chunks'), WHERE)
+    strategy = make_title_strategy(TitleConfig(strategy='normalize_size_chunks'), WHERE, config_provider=_PROVIDER)
 
     assert strategy.prepare(RowItem({'title': 'Шина 155/65R13'})) == '155/65R13'
 
 
 def test_unknown_strategy_raises_with_location() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестная стратегия title') as exc_info:
-        make_title_strategy(TitleConfig(strategy='nope'), WHERE)
+        make_title_strategy(TitleConfig(strategy='nope'), WHERE, config_provider=_PROVIDER)
 
     assert WHERE in str(exc_info.value)
 
 
 def test_unknown_tire_variant_raises() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестный вариант') as exc_info:
-        make_title_strategy(TitleConfig(strategy='tire_compose', variant='nope'), WHERE)
+        make_title_strategy(TitleConfig(strategy='tire_compose', variant='nope'), WHERE, config_provider=_PROVIDER)
 
     assert WHERE in str(exc_info.value)
 
 
 def test_unknown_disk_variant_raises() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестный вариант') as exc_info:
-        make_title_strategy(TitleConfig(strategy='disk_compose', variant='nope'), WHERE)
+        make_title_strategy(TitleConfig(strategy='disk_compose', variant='nope'), WHERE, config_provider=_PROVIDER)
 
     assert WHERE in str(exc_info.value)
 
@@ -139,12 +149,14 @@ def test_aliases_wraps_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
     """Обёртка aliases читает таблицу поставщика и применяет её к title."""
     seen: dict[str, str] = {}
 
-    def _aliases(supplier_name: str) -> dict[str, str]:
+    def _aliases(supplier_name: str, _provider: object) -> dict[str, str]:
         seen['supplier_name'] = supplier_name
         return {'Старый': 'Новый'}
 
     monkeypatch.setattr('parsers.strategies.title_registry.load_title_aliases', _aliases)
-    strategy = make_title_strategy(TitleConfig(strategy='default', aliases=True), WHERE, supplier_name='s')
+    strategy = make_title_strategy(
+        TitleConfig(strategy='default', aliases=True), WHERE, supplier_name='s', config_provider=_PROVIDER
+    )
 
     assert isinstance(strategy, TitleWithAliases)
     assert strategy.prepare(RowItem({'title': 'Старый'})) == 'Новый'
@@ -156,6 +168,7 @@ def test_markers_wrap_strategy_and_set_fields() -> None:
     strategy = make_title_strategy(
         TitleConfig(strategy='default', markers={'шип': {'season': 'зима', 'spike': 'да'}}),
         WHERE,
+        config_provider=_PROVIDER,
     )
     row = RowItem({'title': '205/55 R16 Torero MP30 шипы'})
 
@@ -170,7 +183,7 @@ def test_params_from_title_wraps_strategy() -> None:
     config = TitleConfig(strategy='default', params_from_title=True)
     row = RowItem({'title': 'Диск штамп Nortec 5.5x16 6x170 ET106 d130'})
 
-    strategy = make_title_strategy(config, WHERE)
+    strategy = make_title_strategy(config, WHERE, config_provider=_PROVIDER)
 
     assert isinstance(strategy, ParamsFromTitle)
     assert strategy.prepare(row) == 'Диск штамп Nortec 5.5x16 6x170 ET106 d130'
@@ -179,7 +192,7 @@ def test_params_from_title_wraps_strategy() -> None:
 
 def test_without_markers_strategy_is_not_wrapped() -> None:
     """Без markers обёртка не создаётся."""
-    strategy = make_title_strategy(TitleConfig(strategy='default'), WHERE)
+    strategy = make_title_strategy(TitleConfig(strategy='default'), WHERE, config_provider=_PROVIDER)
 
     assert isinstance(strategy, DefaultTitle)
 
@@ -193,7 +206,7 @@ def test_params_first_wraps_before_compose() -> None:
         params_first=True,
     )
 
-    strategy = make_title_strategy(config, WHERE)
+    strategy = make_title_strategy(config, WHERE, config_provider=_PROVIDER)
 
     assert isinstance(strategy, ParamsBeforeTitle)
 
@@ -202,7 +215,7 @@ def test_params_first_requires_params_from_title() -> None:
     config = TitleConfig(strategy='tire_compose', variant='four_tochki', params_first=True)
 
     with pytest.raises(ConfigValidationError, match='params_first'):
-        make_title_strategy(config, WHERE)
+        make_title_strategy(config, WHERE, config_provider=_PROVIDER)
 
 
 def test_params_first_strategy_prepares_title_end_to_end() -> None:
@@ -217,7 +230,7 @@ def test_params_first_strategy_prepares_title_end_to_end() -> None:
         }
     )
 
-    title = make_title_strategy(config, WHERE).prepare(row)
+    title = make_title_strategy(config, WHERE, config_provider=_PROVIDER).prepare(row)
 
     assert title == '205/65R16 Viatti Brina Nordico V-522 95T TL'
 
@@ -226,7 +239,7 @@ def test_compose_requires_params_from_title() -> None:
     config = TitleConfig(strategy='normalize_title', compose=True)
 
     with pytest.raises(ConfigValidationError, match='compose'):
-        make_title_strategy(config, WHERE)
+        make_title_strategy(config, WHERE, config_provider=_PROVIDER)
 
 
 def test_compose_is_not_combined_with_params_first() -> None:
@@ -235,4 +248,4 @@ def test_compose_is_not_combined_with_params_first() -> None:
     )
 
     with pytest.raises(ConfigValidationError, match='params_first'):
-        make_title_strategy(config, WHERE)
+        make_title_strategy(config, WHERE, config_provider=_PROVIDER)

@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from domain.exceptions import ConfigValidationError
+from domain.protocols import ConfigProvider
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
 from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_aliases_map
@@ -40,13 +41,15 @@ _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'fill_fields_from_title': FillFieldsFromTitle,
 }
 # Стратегии, которым нужны бренд-заглушка «Шина» без бренда и детектор бренда из слота.
-_FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[TitleConfig], TitleStrategy]] = {
-    'normalize_size_chunks': lambda config: NormalizeSizeChunks(config.fallback_brand, _fallback_probe(config)),
-    'poshk_stk_tire_compose': lambda config: PoshkStkTireCompose(
+_FALLBACK_BRAND_STRATEGIES: dict[str, Callable[[TitleConfig, ConfigProvider], TitleStrategy]] = {
+    'normalize_size_chunks': lambda config, provider: NormalizeSizeChunks(
+        config.fallback_brand, _fallback_probe(config, provider)
+    ),
+    'poshk_stk_tire_compose': lambda config, provider: PoshkStkTireCompose(
         config.fallback_brand,
-        _fallback_probe(config),
+        _fallback_probe(config, provider),
         config.camera_by_kind,
-        manufacturer_probe(),
+        manufacturer_probe(provider),
     ),
 }
 
@@ -58,13 +61,15 @@ def make_title_strategy(
     where: str,
     supplier_name: str = '',
     manufacturer_reader: ManufacturerReader | None = None,
+    *,
+    config_provider: ConfigProvider,
 ) -> TitleStrategy:
     """Собрать стратегию title по слоту конфига; при `aliases` — обернуть картой."""
     check_params_flags(config, where)
-    strategy = _build_strategy(config, where, manufacturer_reader)
+    strategy = _build_strategy(config, where, manufacturer_reader, config_provider)
     if config.aliases:
-        strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name))
-    strategy = wrap_with_params(strategy, config)
+        strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name, config_provider))
+    strategy = wrap_with_params(strategy, config, config_provider)
     if config.markers:
         strategy = TitleWithMarkers(strategy, config.markers)
     return strategy
@@ -74,6 +79,7 @@ def _build_strategy(
     config: TitleConfig,
     where: str,
     manufacturer_reader: ManufacturerReader | None,
+    config_provider: ConfigProvider,
 ) -> TitleStrategy:
     if config.strategy == 'tire_compose':
         return TireCompose(_require_variant(config.variant, _TIRE_VARIANTS, where))
@@ -84,7 +90,7 @@ def _build_strategy(
         return ManufacturerFromCategory(manufacturer_reader or _no_manufacturer)
     fallback_brand_factory = _FALLBACK_BRAND_STRATEGIES.get(config.strategy)
     if fallback_brand_factory is not None:
-        return fallback_brand_factory(config)
+        return fallback_brand_factory(config, config_provider)
     factory = _SIMPLE_STRATEGIES.get(config.strategy)
     if factory is None:
         raise ConfigValidationError(
@@ -105,12 +111,12 @@ def _no_manufacturer() -> str | None:
     """Заглушка: производитель раздела ещё не прочитан."""
 
 
-def _fallback_probe(config: TitleConfig) -> BrandProbe | None:
+def _fallback_probe(config: TitleConfig, config_provider: ConfigProvider) -> BrandProbe | None:
     """Детектор бренда нужен только при заданном ``fallback_brand``."""
-    return _brand_probe() if config.fallback_brand else None
+    return _brand_probe(config_provider) if config.fallback_brand else None
 
 
-def _brand_probe() -> BrandProbe:
+def _brand_probe(config_provider: ConfigProvider) -> BrandProbe:
     """Детектор бренда в title по алиасам производителей (границы как у BaseFinder)."""
-    finder = BaseFinder(AliasContainer(aliases_for_finder(load_aliases_map())))
+    finder = BaseFinder(AliasContainer(aliases_for_finder(load_aliases_map(config_provider))))
     return lambda title: finder.find_word_in_title(title)[0] is not None

@@ -1,4 +1,4 @@
-"""Пункт меню и загрузка данных МИМ по API (run.py)."""
+"""Пункт меню и загрузка данных МИМ по API (app.run.py)."""
 
 import logging
 from unittest.mock import MagicMock, patch
@@ -8,8 +8,8 @@ from log_watch import LoggerWatcher, texts_at
 from services.mim_service import MimService
 from services.price_schema_service import PriceSchemaService
 
-_ASK_ACTION = 'run.ask_action'
-_RUN_LOGGER = 'run'
+_ASK_ACTION = 'app.run.ask_action'
+_RUN_LOGGER = 'app.run'
 
 
 def test_run_upload_mim(watch_logger: LoggerWatcher) -> None:
@@ -17,10 +17,10 @@ def test_run_upload_mim(watch_logger: LoggerWatcher) -> None:
     mim_service = MagicMock()
     entries = watch_logger(_RUN_LOGGER)
     with patch(
-        'run.ServiceProvider.resolve',
+        'app.run.ServiceProvider.resolve',
         side_effect={MimService: mim_service, PriceSchemaService: MagicMock()}.__getitem__,
     ):
-        from run import run_upload_mim_data
+        from app.run import run_upload_mim_data
 
         run_upload_mim_data()
 

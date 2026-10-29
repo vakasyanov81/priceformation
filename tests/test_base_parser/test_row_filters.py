@@ -11,6 +11,7 @@ from test_parsers.test_vendors._test_providers import (
     MarkupRulesProviderForTests,
 )
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser import parser_settings as base_parser_module
 from parsers.base_parser.base_parser import BaseParser
@@ -37,6 +38,7 @@ def _base_params() -> BasePriceParseConfigurationParams:
         black_list_provider=BlackListProviderForTests(),
         markup_rules_provider=MarkupRulesProviderForTests(),
         manufacturer_aliases=ManufacturerAliasesProviderForTests(),
+        config_provider=get_config_provider(),
         parser_params=ParserParams(
             supplier=_SUPPLIER,
             start_row=1,
@@ -195,6 +197,7 @@ def _params_with_sheet_info(sheet_info: str) -> BasePriceParseConfigurationParam
         black_list_provider=base.black_list_provider,
         markup_rules_provider=base.markup_rules_provider,
         manufacturer_aliases=base.manufacturer_aliases,
+        config_provider=get_config_provider(),
         parser_params=ParserParams(
             supplier=base.parser_params.supplier,
             start_row=base.parser_params.start_row,

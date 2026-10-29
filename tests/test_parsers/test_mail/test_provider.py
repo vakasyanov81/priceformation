@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
+from domain.mail import MailConfigNotFoundError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.mail.errors import MailConfigNotFoundError
 from parsers.mail.provider import clear_mail_config_cache, load_mail_config
 
 _CONFIG = {
@@ -25,7 +26,7 @@ def _write(provider: FakeConfigProvider, payload: object) -> Path:
 def test_load_mail_config(fake_config_provider: FakeConfigProvider) -> None:
     """Настройки читаются из parse_config/mail.json активного провайдера."""
     _write(fake_config_provider, _CONFIG)
-    config = load_mail_config()
+    config = load_mail_config(get_config_provider())
     assert config.account.host == 'imap.example.ru'
     assert config.profiles['pioner'].sender == 'rmv@pionersib.ru'
 
@@ -33,24 +34,24 @@ def test_load_mail_config(fake_config_provider: FakeConfigProvider) -> None:
 def test_load_mail_config_cached(fake_config_provider: FakeConfigProvider) -> None:
     """Повторное чтение отдаёт закэшированный объект, пока кэш не сброшен."""
     _write(fake_config_provider, _CONFIG)
-    first = load_mail_config()
+    first = load_mail_config(get_config_provider())
     _write(fake_config_provider, {'profiles': {}})
-    assert load_mail_config() is first
+    assert load_mail_config(get_config_provider()) is first
     clear_mail_config_cache()
-    assert load_mail_config().profiles == {}
+    assert load_mail_config(get_config_provider()).profiles == {}
 
 
 def test_missing_file_raises(fake_config_provider: FakeConfigProvider) -> None:
     """Нет файла настроек — понятная ошибка."""
     with pytest.raises(MailConfigNotFoundError, match=r'mail\.json'):
-        load_mail_config()
+        load_mail_config(get_config_provider())
 
 
 def test_broken_json_raises(fake_config_provider: FakeConfigProvider) -> None:
     """Нечитаемый JSON — ошибка конфига с именем файла."""
     Path(fake_config_provider.config_file('mail.json')).write_text('{', encoding='utf-8')
     with pytest.raises(ConfigValidationError, match=r'mail\.json'):
-        load_mail_config()
+        load_mail_config(get_config_provider())
 
 
 def test_sender_is_taken_from_env(fake_config_provider: FakeConfigProvider, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -58,7 +59,7 @@ def test_sender_is_taken_from_env(fake_config_provider: FakeConfigProvider, monk
     monkeypatch.setenv('MAIL_SENDER_TEST', 'price@supplier.ru')
     _write(fake_config_provider, {'profiles': {'stk': {'sender': '${MAIL_SENDER_TEST}', 'attachment_glob': '*.xlsx'}}})
 
-    assert load_mail_config().profiles['stk'].sender == 'price@supplier.ru'
+    assert load_mail_config(get_config_provider()).profiles['stk'].sender == 'price@supplier.ru'
 
 
 def test_missing_sender_env_names_key(
@@ -68,4 +69,4 @@ def test_missing_sender_env_names_key(
     _write(fake_config_provider, {'profiles': {'stk': {'sender': '${MAIL_SENDER_ABSENT}'}}})
 
     with pytest.raises(ConfigValidationError, match='profiles → stk → sender: не задана переменная окружения'):
-        load_mail_config()
+        load_mail_config(get_config_provider())

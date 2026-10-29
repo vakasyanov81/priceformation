@@ -2,7 +2,7 @@
 
 import pytest
 
-from parsers.nomenclature_labels import (
+from parsers.nomenclature.labels import (
     axis_label,
     camera_label,
     layering_label,

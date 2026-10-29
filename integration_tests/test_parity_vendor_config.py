@@ -13,6 +13,7 @@ import pytest
 from log_watch import LoggerWatcher
 
 from cfg import init_cfg
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import clear_registry, vendor_entry_for
 from services.parse_orchestrator import ParseOrchestrator
@@ -53,7 +54,7 @@ class TestFourTochkiConfigDriven:
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, f'Есть ошибки разбора строк:\n{errors}'
 
-        parsed = ParseOrchestrator().parse_all([vendor_entry_for('5')])
+        parsed = ParseOrchestrator().parse_all([vendor_entry_for('5', get_config_provider())])
         assert parsed.parsed_items, 'Нет разобранных строк'
         assert parsed.unknown_category_skips == []
 
@@ -64,7 +65,7 @@ class TestFourTochkiConfigDriven:
         """Каталог содержит 8 записей — проверка что реестр читает все конфиги."""
         from parsers.all_vendors import all_vendor_supplier_info
 
-        supplier_info = all_vendor_supplier_info()
+        supplier_info = all_vendor_supplier_info(get_config_provider())
         assert len(supplier_info) == 8, f'Ожидалось 8 записей, получено {len(supplier_info)}'
         # Коды: 1-пошк, 2-запаска(диски), 22-запаска(шины), 3-пионер,
         # 4-мим, 5-форточки, 6-автоснабжение, 7-STK
@@ -103,7 +104,7 @@ class TestSupplierCatalog:
         """8 записей поставщиков."""
         from parsers.all_vendors import all_vendor_supplier_catalog
 
-        catalog = all_vendor_supplier_catalog()
+        catalog = all_vendor_supplier_catalog(get_config_provider())
         assert len(catalog) == 8, f'Ожидалось 8 записей, получено {len(catalog)}'
         assert set(catalog) == {'1', '2', '22', '3', '4', '5', '6', '7'}
 
@@ -114,6 +115,6 @@ class TestSupplierCatalog:
         """Запаска: два ИД — 2 (диски) и 22 (шины)."""
         from parsers.all_vendors import all_vendor_supplier_info
 
-        supplier_info = all_vendor_supplier_info()
+        supplier_info = all_vendor_supplier_info(get_config_provider())
         assert supplier_info.get('2') == 'Запаска (диски)'
         assert supplier_info.get('22') == 'Запаска (шины)'

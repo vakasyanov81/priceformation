@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
@@ -35,6 +36,7 @@ def _configuration_from_example(config_name: str) -> ParseConfiguration:
         markup_rules_provider=markup_provider,
         black_list_provider=stub,
         manufacturer_aliases=stub,
+        config_provider=get_config_provider(),
         parser_params=ParserParams(
             supplier=ParseParamsSupplier(folder_name='x', name='x', code='x'),
             start_row=0,

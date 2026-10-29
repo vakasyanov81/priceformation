@@ -8,8 +8,8 @@ from typing import Any
 
 from python_calamine import CalamineError, CalamineWorkbook, WorksheetNotFound, ZipError
 
-from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
+from domain.protocols import ConfigProvider
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +29,17 @@ def clear_nomenclature_cache() -> None:
     _NomenclatureCache.titles = None
 
 
-def get_nomenclature_corrected_title(nomenclature_title: str) -> str:
+def get_nomenclature_corrected_title(nomenclature_title: str, config_provider: ConfigProvider) -> str:
     """Return corrected title from cache or original title."""
     if _NomenclatureCache.titles is None:
-        _NomenclatureCache.titles = load_file()
+        _NomenclatureCache.titles = load_file(config_provider)
 
     return _NomenclatureCache.titles.get(nomenclature_title) or nomenclature_title
 
 
-def load_file() -> dict[str, str]:
+def load_file(config_provider: ConfigProvider) -> dict[str, str]:
     """Load title corrections from correct-nomenclature.xlsx."""
-    file_path = get_config_provider().config_file(_NOMENCLATURE_FILE)
+    file_path = config_provider.config_file(_NOMENCLATURE_FILE)
     if not Path(file_path).exists():
         return {}
     return _read_corrections(file_path)

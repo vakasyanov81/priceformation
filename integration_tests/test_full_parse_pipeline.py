@@ -15,6 +15,7 @@ import pytest
 from log_watch import LoggerWatcher
 
 from cfg import init_cfg
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import clear_registry
 from services.parse_orchestrator import ParseOrchestrator
@@ -73,7 +74,7 @@ class TestFullParsePipeline:
         from parsers.json_reader import JsonPriceReader
         from parsers.registry import vendor_entry_for
 
-        _entry, parse_config = vendor_entry_for('22')  # zapaska tires
+        _entry, parse_config = vendor_entry_for('22', get_config_provider())  # zapaska tires
         section = parse_config.vendor_section
         vendor_cfg = parse_config.vendor_config
         assert section is not None

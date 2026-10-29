@@ -1,5 +1,7 @@
 """Обёртка `title.compose`: название шины из полей позиции в каноническом порядке."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from domain.row_item.row_item import RowItem
@@ -10,6 +12,8 @@ from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _ALIASES = {'ikon (nokian tyres)': 'Nokian', 'nordman': 'Nordman', 'gislaved': 'Gislaved', 'cordiant': 'Cordiant'}
+
+_PROVIDER = MagicMock(config_file=MagicMock(return_value='/nonexistent/aliases.json'))
 
 
 def _probe(title: str | None) -> str | None:
@@ -198,7 +202,7 @@ def test_compose_flag_builds_wrapper_that_composes() -> None:
     config = TitleConfig(strategy='normalize_title', params_from_title=True, compose=True)
     row = RowItem({'title': '195/75 R16C Triangle TRIN LL01 8PR 107/105Q', 'manufacturer_name': 'Triangle'})
 
-    strategy = make_title_strategy(config, 'zapaska.json → title')
+    strategy = make_title_strategy(config, 'zapaska.json → title', config_provider=_PROVIDER)
 
     assert isinstance(strategy, TitleFromFields)
     assert strategy.prepare(row) == '195/75R16C Triangle TRIN LL01 107/105Q 8PR'
@@ -287,7 +291,10 @@ def test_compose_flag_composes_disk_section() -> None:
         color='графит',
     )
 
-    assert make_title_strategy(config, 'zapaska.json → title').prepare(row) == '6.0x15 4x98 ET35 58.6 Графит СКАД Порту'
+    assert (
+        make_title_strategy(config, 'zapaska.json → title', config_provider=_PROVIDER).prepare(row)
+        == '6.0x15 4x98 ET35 58.6 Графит СКАД Порту'
+    )
 
 
 @pytest.mark.parametrize(

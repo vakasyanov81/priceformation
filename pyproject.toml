@@ -13,10 +13,9 @@ dependencies = [
 ]
 
 # CLI-точка: `uv run priceformation ...` и короткий алиас `uv run pf ...`.
-# Раньше запуск был `uv run python src/run.py`; модуль run лежит в src/ верхним уровнем.
 [project.scripts]
-priceformation = "run:main"
-pf = "run:main"
+priceformation = "app.run:main"
+pf = "app.run:main"
 
 [dependency-groups]
 dev = [
@@ -83,13 +82,13 @@ max-positional-args = 6
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
 "tests/test_infrastructure/test_zapaska_api_config.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
-"tests/test_parsers/test_remote/test_zapaska_client.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
+"tests/test_infrastructure/test_remote/test_zapaska_client.py" = ["S101", "S105", "S106", "PLR2004", "PLC0415"]
 "tests/test_infrastructure/test_four_tochki_api_config.py" = ["S105"]
 "tests/test_infrastructure/test_mim_api_config.py" = ["S105"]
-"tests/test_parsers/test_remote/test_mim_client.py" = ["S105"]
+"tests/test_infrastructure/test_remote/test_mim_client.py" = ["S105"]
 "tests/test_services/test_mim_service.py" = ["S106"]
-"tests/test_parsers/test_remote/test_four_tochki_client.py" = ["S106"]
-"tests/test_parsers/test_remote/test_four_tochki_client_contract.py" = ["S106"]
+"tests/test_infrastructure/test_remote/test_four_tochki_client.py" = ["S106"]
+"tests/test_infrastructure/test_remote/test_four_tochki_client_contract.py" = ["S106"]
 "integration_tests/*.py" = ["S101", "PLR2004", "PLC0415"]
 "integration_tests/**/*.py" = ["S101", "PLR2004", "PLC0415"]
 "load_tests/**/*.py" = ["S101", "PLR2004"]
@@ -99,7 +98,7 @@ max-positional-args = 6
 # Классификатор типа товара: таблица правил README §2–§9 — пороги-литералы,
 # много ветвлений и возвратов по формам размеров.
 "src/parsers/strategies/product_type.py" = ["PLR2004", "PLR0911", "C901", "SIM103"]
-"src/parse_report.py" = ["T201"]
+"src/app/parse_report.py" = ["T201"]
 "src/infrastructure/logging/log_setup.py" = ["T201"]
 "src/infrastructure/config/zapaska_api_config.py" = ["S105"]
 "src/infrastructure/config/four_tochki_api_config.py" = ["S105"]
@@ -229,14 +228,22 @@ exclude_dirs = [
 
 [tool.importlinter]
 # Пакеты лежат в src/, но импортируются как верхний уровень (src в sys.path).
-root_packages = ["cfg", "domain", "infrastructure", "parsers", "services"]
+root_packages = [
+    "app",
+    "cfg",
+    "domain",
+    "infrastructure",
+    "parsers",
+    "services",
+]
 
-# Слои сверху вниз: композиционный корень → сервисы → парсеры → инфраструктура → домен.
+# Слои сверху вниз: оболочка → композиционный корень → сервисы → парсеры → инфраструктура → домен.
 # Внутри одного слоя (cfg и services) импорты разрешены, между слоями — только вниз.
 [[tool.importlinter.contracts]]
-name = "Слои: cfg/services -> parsers -> infrastructure -> domain"
+name = "Слои: app -> cfg/services -> parsers -> infrastructure -> domain"
 type = "layers"
 layers = [
+    "app",
     "cfg",
     "services",
     "parsers",
@@ -273,3 +280,12 @@ type = "forbidden"
 source_modules = ["services"]
 forbidden_modules = ["cfg"]
 broken_contract_guidance = "Настройки читать через get_config_provider() или инфраструктурный адаптер, а не импортом из cfg."
+
+# Оболочка приложения (CLI-вход run*, JSON-режим, отчёты parse_report*, диалог run_dialog)
+# — верхняя граница композиции: она импортирует слои, но слои её не импортируют.
+[[tool.importlinter.contracts]]
+name = "Слои не зависят от оболочки приложения"
+type = "forbidden"
+source_modules = ["cfg", "domain", "infrastructure", "parsers", "services"]
+forbidden_modules = ["app"]
+broken_contract_guidance = "Оболочку приложения импортирует только app: логика принадлежит слоям services/parsers."

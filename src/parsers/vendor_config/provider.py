@@ -7,8 +7,8 @@
 from functools import lru_cache
 from pathlib import Path
 
-from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_json_file
 from parsers.data_provider.json_fields import RawConfig
 from parsers.vendor_config.activation import apply_activation, load_activation
@@ -54,18 +54,18 @@ def _load_folder(folder: str) -> dict[str, VendorConfig]:
     }
 
 
-def _vendors_folder() -> str:
-    return get_config_provider().config_file(_VENDORS_FOLDER)
+def _vendors_folder(config_provider: ConfigProvider) -> str:
+    return config_provider.config_file(_VENDORS_FOLDER)
 
 
-def load_vendor_configs() -> dict[str, VendorConfig]:
+def load_vendor_configs(config_provider: ConfigProvider) -> dict[str, VendorConfig]:
     """Конфиги всех поставщиков со статусом активации: папка поставщика → конфиг."""
-    return apply_activation(_load_folder(_vendors_folder()), load_activation())
+    return apply_activation(_load_folder(_vendors_folder(config_provider)), load_activation(config_provider))
 
 
-def load_common_settings() -> CommonVendorSettings:
+def load_common_settings(config_provider: ConfigProvider) -> CommonVendorSettings:
     """Общие настройки поставщиков (`vendors/_common.json`)."""
-    return _load_common(_vendors_folder())
+    return _load_common(_vendors_folder(config_provider))
 
 
 def clear_vendor_configs_cache() -> None:

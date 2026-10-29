@@ -5,6 +5,7 @@ base parser config logic
 from dataclasses import dataclass
 from typing import Any, NamedTuple
 
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.vendor_config.models import VendorConfig, VendorSection
@@ -46,6 +47,7 @@ class BasePriceParseConfigurationParams(NamedTuple):
     markup_rules_provider: data_provider.MarkupRulesProviderBase
     black_list_provider: data_provider.BlackListProviderBase
     manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase
+    config_provider: ConfigProvider
     parser_params: ParserParams
 
 
@@ -63,6 +65,7 @@ class ParseConfiguration:
         self.vendor_config = vendor_config
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self.parser_params = parse_config.parser_params
+        self.config_provider = parse_config.config_provider
         self.supplier = self.parser_params.supplier
         self._markup_rules: data_provider.MarkupRulesConfig | None = None
         self._price_markup_map: tuple[data_provider.MarkUpRule, ...] | None = None
@@ -105,9 +108,8 @@ class ParseConfiguration:
 def make_parse_config(
     parser_params: ParserParams,
     *,
-    markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
+    config_provider: ConfigProvider,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
     vendor_section: VendorSection | None = None,
     vendor_config: VendorConfig | None = None,
 ) -> ParseConfiguration:
@@ -115,9 +117,10 @@ def make_parse_config(
     folder_name = parser_params.supplier.folder_name
     return ParseConfiguration(
         BasePriceParseConfigurationParams(
-            markup_rules_provider=markup_rules_provider or data_provider.MarkupRulesProviderFromUserConfig(folder_name),
-            black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(),
-            manufacturer_aliases=manufacturer_aliases or data_provider.ManufacturerAliasesProviderFromUserConfig(),
+            markup_rules_provider=data_provider.MarkupRulesProviderFromUserConfig(config_provider, folder_name),
+            black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(config_provider),
+            manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(config_provider),
+            config_provider=config_provider,
             parser_params=parser_params,
         ),
         vendor_section,

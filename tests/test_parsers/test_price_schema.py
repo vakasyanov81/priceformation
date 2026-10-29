@@ -5,9 +5,9 @@ from pathlib import Path
 
 import openpyxl
 
-from parsers.price_schema import build_schema, read_file_head
-from parsers.price_schema_diff import compare_schemas
-from parsers.price_schema_models import FileHead, PriceSchema, SheetHead
+from parsers.price_schema.diff import compare_schemas
+from parsers.price_schema.models import FileHead, PriceSchema, SheetHead
+from parsers.price_schema.schema import build_schema, read_file_head
 
 _COLUMNS: dict[int | str, str] = {0: 'code', 2: 'title'}
 

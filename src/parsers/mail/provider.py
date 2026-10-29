@@ -8,11 +8,11 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from domain.config_context import get_config_provider
+from domain.mail import MailConfigNotFoundError
+from domain.protocols import ConfigProvider
 from infrastructure.config.dotenv import load_dotenv
 from infrastructure.config.env_placeholders import expand_env
 from infrastructure.data.file_reader import read_json_file
-from parsers.mail.errors import MailConfigNotFoundError
 from parsers.mail.models import MailConfig
 
 _CONFIG_NAME = 'mail.json'
@@ -28,9 +28,9 @@ def _load_config(path: str) -> MailConfig:
     return MailConfig.from_dict(expand_env(read_json_file(path), os.environ, where), where)
 
 
-def load_mail_config() -> MailConfig:
+def load_mail_config(config_provider: ConfigProvider) -> MailConfig:
     """Настройки почты из parse_config/mail.json."""
-    return _load_config(get_config_provider().config_file(_CONFIG_NAME))
+    return _load_config(config_provider.config_file(_CONFIG_NAME))
 
 
 def clear_mail_config_cache() -> None:

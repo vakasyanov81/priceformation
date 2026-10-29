@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
@@ -46,6 +47,7 @@ def _configuration(markup_data: MarkupRulesConfig) -> tuple[ParseConfiguration, 
             markup_rules_provider=provider,
             black_list_provider=stub,
             manufacturer_aliases=stub,
+            config_provider=get_config_provider(),
             parser_params=_parser_params(),
         )
     )

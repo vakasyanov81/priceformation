@@ -7,16 +7,11 @@ import pytest
 from log_watch import LoggerWatcher
 
 from domain.exceptions import CoreExceptionError
+from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 from parsers.remote.four_tochki_warehouse_selection import (
     FourTochkiNoWarehousesError,
     log_selected_warehouses,
     select_warehouses,
-    warehouses_by_id,
-)
-from parsers.remote.four_tochki_warehouses import (
-    FourTochkiApiWarehouse,
-    FourTochkiWarehouse,
-    FourTochkiWarehouseGroup,
 )
 
 _NOVOSIBIRSK = FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск', 'НСБ'), merge=True)
@@ -81,13 +76,6 @@ def test_log_selected_warehouses_by_groups(watch_logger: LoggerWatcher) -> None:
         (logging.INFO, '  1492 — Томск'),
         (logging.WARNING, 'Группа «omsk»: нет складов с ключевыми словами Омск, Тара'),
     ]
-
-
-def test_warehouses_by_id_maps_api_ids() -> None:
-    """Поиск по ID из API."""
-    warehouse = FourTochkiWarehouse(id=7, name='Томск')
-
-    assert warehouses_by_id((warehouse,)) == {7: warehouse}
 
 
 def test_log_empty_group_does_not_stop_following_groups(watch_logger: LoggerWatcher) -> None:

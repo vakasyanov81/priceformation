@@ -11,7 +11,7 @@ import re
 
 from domain.row_item.disk_name_extras import disk_name_extras
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_title import join_title_parts
+from parsers.nomenclature.title import join_title_parts
 
 _THICKNESS_RE = re.compile(r'\((\d+(?:[.,]\d+)?)\s*мм\)', re.IGNORECASE)
 
