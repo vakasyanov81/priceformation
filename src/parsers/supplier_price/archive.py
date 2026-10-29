@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
 
-from parsers.supplier_price_errors import InvalidPriceExtensionError, SupplierPriceFileNotFoundError
+from parsers.supplier_price.errors import InvalidPriceExtensionError, SupplierPriceFileNotFoundError
 
 ZIP_EXTENSION = '.zip'
 _MACOS_SERVICE_FOLDER = '__MACOSX/'

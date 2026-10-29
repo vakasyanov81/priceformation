@@ -6,8 +6,8 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
-from parsers.supplier_price_archive import ZIP_EXTENSION, unzip
-from parsers.supplier_price_errors import InvalidPriceExtensionError, SupplierPriceFileNotFoundError
+from parsers.supplier_price.archive import ZIP_EXTENSION, unzip
+from parsers.supplier_price.errors import InvalidPriceExtensionError, SupplierPriceFileNotFoundError
 
 type PriceSources = str | Sequence[str]
 

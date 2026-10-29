@@ -6,7 +6,7 @@ from pathlib import Path
 
 from domain.config_context import get_config_provider
 from parsers.supplier_file_rules import PriceFile, SupplierFileRules
-from parsers.supplier_price_sources import is_excel
+from parsers.supplier_price.sources import is_excel
 
 
 @dataclass(frozen=True, slots=True)

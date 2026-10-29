@@ -20,9 +20,9 @@ from pathlib import Path
 
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.supplier_file_rules import plan_files, vendor_file_rules
-from parsers.supplier_price_errors import SupplierPricesMappingError, UnknownSupplierCodeError
-from parsers.supplier_price_placement import SupplierUpload, place_files
-from parsers.supplier_price_sources import PriceSources, expand_sources, unpacked_dir
+from parsers.supplier_price.errors import SupplierPricesMappingError, UnknownSupplierCodeError
+from parsers.supplier_price.placement import SupplierUpload, place_files
+from parsers.supplier_price.sources import PriceSources, expand_sources, unpacked_dir
 
 _MSG_MAPPING = 'Ожидается объект {ид_или_код_поставщика: путь_к_файлу или список путей}'
 _MSG_NONEMPTY = 'Ключ поставщика и пути к файлам должны быть непустыми строками'

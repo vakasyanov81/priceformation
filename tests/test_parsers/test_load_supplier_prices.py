@@ -15,7 +15,7 @@ from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.file_config_provider import FileConfigProvider
 from parsers.load_supplier_prices import load_supplier_prices, parse_prices_json
 from parsers.supplier_file_rules import SupplierFileRules, vendor_file_rules
-from parsers.supplier_price_errors import (
+from parsers.supplier_price.errors import (
     InvalidPriceExtensionError,
     SupplierPriceFileNameError,
     SupplierPriceFileNotFoundError,

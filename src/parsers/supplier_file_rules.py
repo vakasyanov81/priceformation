@@ -5,8 +5,8 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 
 from parsers.base_parser.warehouse_filter import TERRITORIES_FILENAME
-from parsers.supplier_price_errors import SupplierPriceFileNameError
-from parsers.supplier_price_sources import is_excel
+from parsers.supplier_price.errors import SupplierPriceFileNameError
+from parsers.supplier_price.sources import is_excel
 from parsers.vendor_config.provider import load_vendor_configs
 
 _PRICE_STEM = 'price'
