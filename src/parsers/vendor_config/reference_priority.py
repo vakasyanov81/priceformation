@@ -1,16 +1,17 @@
 """Очередь поставщиков-эталонов названия: имя поставщика в позиции прайса → место в очереди (1 — первый)."""
 
 from domain.exceptions import ConfigValidationError
+from domain.protocols import ConfigProvider
 from parsers.vendor_config.provider import load_common_settings, load_vendor_configs
 
 _WHERE = '_common.json → title_reference_order'
 
 
-def load_reference_priority() -> dict[str, int]:
+def load_reference_priority(config_provider: ConfigProvider) -> dict[str, int]:
     """Места из ``title_reference_order`` общих настроек; поставщики вне очереди в карту не попадают."""
-    configs = load_vendor_configs()
+    configs = load_vendor_configs(config_provider)
     priority: dict[str, int] = {}
-    for rank, folder in enumerate(load_common_settings().title_reference_order, start=1):
+    for rank, folder in enumerate(load_common_settings(config_provider).title_reference_order, start=1):
         config = configs.get(folder)
         if config is None:
             raise ConfigValidationError(f'{_WHERE}: нет поставщика «{folder}» (ожидается имя файла из vendors/)')

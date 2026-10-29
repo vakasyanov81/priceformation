@@ -5,7 +5,7 @@ import shutil
 import zipfile
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -506,9 +506,10 @@ def test_vendor_file_rules_from_configs(tmp_path: Path) -> None:
     mim = json.loads(mim_path.read_text(encoding='utf-8'))
     mim.setdefault('behavior', {})['warehouse_cities'] = ['Новосибирск']
     mim_path.write_text(json.dumps(mim, ensure_ascii=False), encoding='utf-8')
-    set_config_provider(FakeConfigProvider(tmp_path, config_folder=config_folder))
+    provider = FakeConfigProvider(tmp_path, config_folder=config_folder)
+    set_config_provider(provider)
 
-    rules = vendor_file_rules()
+    rules = vendor_file_rules(provider)
 
     assert rules['zapaska'] == SupplierFileRules(('disk.json', 'tire.json'))
     assert rules['poshk'] == SupplierFileRules(_DEFAULT_TEMPLATES)
@@ -520,9 +521,8 @@ def test_place_files_folder_comes_from_injected_provider(tmp_path: Path) -> None
     source = tmp_path / 'price.xlsx'
     source.write_bytes(b'x')
     dest = tmp_path / 'custom_prices'
-    injected = MagicMock()
-    injected.price_folder.return_value = str(dest)
+    injected = FakeConfigProvider(tmp_path, config_folder=_EXAMPLE_CONFIG, prices_folder=dest)
 
     found = load_supplier_prices({'1': str(source)}, injected)
 
-    assert found == [str(dest / 'price.xlsx')]
+    assert found == [str(dest / 'poshk' / 'price.xlsx')]

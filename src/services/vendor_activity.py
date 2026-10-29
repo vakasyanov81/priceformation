@@ -4,32 +4,33 @@ from __future__ import annotations
 
 import logging
 
+from domain.protocols import ConfigProvider
 from parsers.vendor_config.provider import load_vendor_configs
 from parsers.vendor_config.source import SOURCE_API
 
 logger = logging.getLogger(__name__)
 
 
-def is_vendor_enabled(folder: str) -> bool:
+def is_vendor_enabled(folder: str, config_provider: ConfigProvider) -> bool:
     """Поставщик включён в настройках; конфига нет — считаем включённым (как раньше)."""
-    config = load_vendor_configs().get(folder)
+    config = load_vendor_configs(config_provider).get(folder)
     return True if config is None else bool(config.enabled)
 
 
-def skip_disabled_upload(folder: str) -> bool:
+def skip_disabled_upload(folder: str, config_provider: ConfigProvider) -> bool:
     """Вернуть True и написать в лог, если поставщик отключён и данные по API грузить не нужно."""
-    if is_vendor_enabled(folder):
+    if is_vendor_enabled(folder, config_provider):
         return False
     logger.info(f'Поставщик «{folder}» отключён в настройках, данные по API не загружаются.')
     return True
 
 
-def skip_mail_fetch(folder: str) -> bool:
+def skip_mail_fetch(folder: str, config_provider: ConfigProvider) -> bool:
     """Вернуть True и написать в лог, если прайс поставщика по почте получать не нужно.
 
     Не нужно, когда поставщик отключён или в настройках выбран разбор по API.
     """
-    config = load_vendor_configs().get(folder)
+    config = load_vendor_configs(config_provider).get(folder)
     if config is None:
         return False
     if not config.enabled:

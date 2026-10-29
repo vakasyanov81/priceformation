@@ -122,7 +122,7 @@ def test_columns_match_price_headers(
     layout: _Layout,
 ) -> None:
     """каждая спроектированная колонка вендора указывает на своё поле прайса."""
-    cfg = load_vendor_configs()['four_tochki']
+    cfg = load_vendor_configs(get_config_provider())['four_tochki']
     section = cfg.sections[section_index]
     columns = section.columns
     assert dict(columns) == {index: field_name for index, field_name, _header in layout}

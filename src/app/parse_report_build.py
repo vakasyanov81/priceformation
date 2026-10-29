@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.parse_report import JsonReport, ok_payload
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
@@ -68,7 +69,7 @@ def report_from_result(
     """
     selected = parse_result.parsed_items if rows is None else rows
     positions = row_items_to_json(selected) if all_result else []
-    enabled, disabled = split_vendor_supplier_info()
+    enabled, disabled = split_vendor_supplier_info(get_config_provider())
     payload = ok_payload(
         action=action,
         positions=positions,

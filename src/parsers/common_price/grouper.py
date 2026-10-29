@@ -14,7 +14,6 @@ from parsers.common_price.model_keys import keys_with_merged_models
 from parsers.common_price.size import canon_number, size_fields
 from parsers.common_price.title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
-from parsers.vendor_config.reference_priority import load_reference_priority
 
 _MIN_ITEMS_FOR_DOUBLES = 2
 _GROUP_ORDER_KEY = attrgetter('duplicate.group_by_params', 'duplicate.order')
@@ -106,7 +105,7 @@ class CommonPriceGrouper:
     ):
         self.row_items = row_items
         self._aliases_map = load_aliases_map() if aliases_map is None else aliases_map
-        self._reference_priority = load_reference_priority() if reference_priority is None else reference_priority
+        self._reference_priority = {} if reference_priority is None else reference_priority
         self._is_grouped = False
 
     def group_by_params(self) -> CommonPriceGrouper:

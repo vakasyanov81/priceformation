@@ -55,9 +55,9 @@ def _mapping_paths(paths: object) -> PriceSources:
 
 def load_supplier_prices(mapping: Mapping[str, PriceSources], config_provider: ConfigProvider) -> list[str]:
     """Разложить файлы по папкам поставщиков; вернуть пути положенных файлов."""
-    targets = _supplier_folders(mapping)
+    targets = _supplier_folders(mapping, config_provider)
     with unpacked_dir() as unpack_dir:
-        uploads = [_plan_upload(folder, sources, unpack_dir) for folder, sources in targets]
+        uploads = [_plan_upload(folder, sources, unpack_dir, config_provider) for folder, sources in targets]
         return [dest for upload in uploads for dest in place_files(upload, config_provider)]
 
 
@@ -75,14 +75,18 @@ def catalog_entry_for(
     raise UnknownSupplierCodeError(_MSG_UNKNOWN.format(supplier_key))
 
 
-def _supplier_folders(mapping: Mapping[str, PriceSources]) -> list[tuple[str, PriceSources]]:
+def _supplier_folders(
+    mapping: Mapping[str, PriceSources], config_provider: ConfigProvider
+) -> list[tuple[str, PriceSources]]:
     """Папка поставщика для каждого ключа; неизвестный ключ — ошибка до проверки файлов."""
-    catalog = all_vendor_supplier_catalog()
+    catalog = all_vendor_supplier_catalog(config_provider)
     folders = [catalog_entry_for(key, catalog)['sup_code'] for key in mapping]
     return list(zip(folders, mapping.values(), strict=True))
 
 
-def _plan_upload(folder: str, sources: PriceSources, unpack_dir: Path) -> SupplierUpload:
-    rules = vendor_file_rules()[folder]
+def _plan_upload(
+    folder: str, sources: PriceSources, unpack_dir: Path, config_provider: ConfigProvider
+) -> SupplierUpload:
+    rules = vendor_file_rules(config_provider)[folder]
     files = plan_files(folder, rules, expand_sources(sources, unpack_dir))
     return SupplierUpload(folder, rules, files)

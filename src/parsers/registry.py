@@ -52,7 +52,7 @@ def all_vendors_including_disabled(config_provider: ConfigProvider) -> list[Vend
 def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) -> list[VendorEntry]:
     """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
-    for config in load_vendor_configs().values():
+    for config in load_vendor_configs(config_provider).values():
         if not include_disabled and not config.enabled:
             continue
         entries.extend(
@@ -67,7 +67,7 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     Ищет среди всех загруженных конфигов секцию с указанным ``id``.
     Возвращает первую найденную (включая отключённых).
     """
-    for config in load_vendor_configs().values():
+    for config in load_vendor_configs(config_provider).values():
         for section in config.sections:
             if section.id == code:
                 return (BaseParser, _build_parse_config(section, config, config_provider))

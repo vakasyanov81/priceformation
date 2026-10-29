@@ -56,19 +56,21 @@ class MailService:
 
     def fetch_prices(self) -> list[MailFetchResult]:
         """Скачать по одному свежему прайсу на каждый активный профиль."""
-        config = load_mail_config(self._config_provider or get_config_provider())
+        provider = self._config_provider or get_config_provider()
+        config = load_mail_config(provider)
         account = config.account
         client = connect(account.host, account.port, account.folder, get_mail_credentials())
         with _MailSession(client) as inbox:
-            folders = list_price_folders(inbox, config.account.folder)
-            return _collect(inbox, config, folders)
+            return _collect(inbox, config, list_price_folders(inbox, account.folder), provider)
 
 
-def _collect(client: ImapClient, config: MailConfig, folders: list[str]) -> list[MailFetchResult]:
+def _collect(
+    client: ImapClient, config: MailConfig, folders: list[str], config_provider: ConfigProvider
+) -> list[MailFetchResult]:
     """Обойти активные профили: найти письмо, записать вложение, собрать итог."""
     fetched: list[MailFetchResult] = []
     for folder, profile in config.enabled_profiles().items():
-        if skip_mail_fetch(folder):
+        if skip_mail_fetch(folder, config_provider):
             continue
         found = find_latest_price(client, folders, profile=profile)
         if found is None:

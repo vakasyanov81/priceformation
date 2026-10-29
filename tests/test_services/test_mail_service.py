@@ -25,7 +25,7 @@ _FOLDERS = ['INBOX', 'INBOX.Prices']
 @pytest.fixture(autouse=True)
 def _no_vendor_configs(monkeypatch: pytest.MonkeyPatch) -> None:
     """По умолчанию конфигов поставщиков нет — почта грузится для всех активных профилей."""
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', dict)
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {})
 
 
 def _profile(sender: str, *, enabled: bool = True) -> MailProfile:
@@ -197,7 +197,7 @@ def test_fetch_prices_skips_vendor_not_using_mail(
     config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
     wired = _wire(monkeypatch, config, _FOUND)
     vendor = MagicMock(spec=VendorConfig, enabled=enabled, source=source)
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {'pioner': vendor})
     entries = watch_logger('services.vendor_activity')
 
     assert not mail_service.MailService().fetch_prices()
@@ -214,7 +214,7 @@ def test_fetch_prices_loads_active_file_vendor(
     config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
     wired = _wire(monkeypatch, config, _FOUND)
     vendor = MagicMock(spec=VendorConfig, enabled=True, source='xlsx')
-    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda: {'pioner': vendor})
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: {'pioner': vendor})
 
     assert len(mail_service.MailService().fetch_prices()) == 1
     wired.find.assert_called_once()

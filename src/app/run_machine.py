@@ -175,7 +175,7 @@ def _command_payload(
 def _reference_payload(command: str, payload_arg: str | None) -> Mapping[str, Any] | None:
     """Справочные команды: каталог поставщиков, типы товара и активность поставщиков; None — команда не справочная."""
     if command == GET_SUPLIERS:
-        return all_vendor_supplier_catalog()
+        return all_vendor_supplier_catalog(get_config_provider())
     if command == GET_PRODUCT_TYPES:
         return {_JSON_OK: True, _JSON_ACTION: GET_PRODUCT_TYPES, 'types': list(CANONICAL_TYPES)}
     if command == GET_VENDORS:
@@ -284,7 +284,7 @@ def _upload_mim() -> None:
 
 def _json_load_prices(raw: str | None) -> dict[str, object]:
     mapping = parse_prices_json(raw or '')
-    catalog = all_vendor_supplier_catalog()
+    catalog = all_vendor_supplier_catalog(get_config_provider())
     return {
         'ok': True,
         'action': LOAD_SUPPLIER_PRICES,

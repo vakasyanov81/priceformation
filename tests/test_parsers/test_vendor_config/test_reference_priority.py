@@ -38,14 +38,19 @@ def test_priority_is_set_for_vendor_and_its_sections(fake_config_provider: FakeC
     _write(fake_config_provider, 'c', 'Безымянный')
     _write_order(fake_config_provider, '["b", "a"]')
 
-    assert load_reference_priority() == {'Второй': 1, 'Второй (шины)': 1, 'Первый': 2, 'Первый (шины)': 2}
+    assert load_reference_priority(fake_config_provider) == {
+        'Второй': 1,
+        'Второй (шины)': 1,
+        'Первый': 2,
+        'Первый (шины)': 2,
+    }
 
 
 def test_without_common_file_priority_is_empty(fake_config_provider: FakeConfigProvider) -> None:
     _write(fake_config_provider, 'a', 'Первый')
     clear_vendor_configs_cache()
 
-    assert not load_reference_priority()
+    assert not load_reference_priority(fake_config_provider)
 
 
 def test_unknown_vendor_in_order_rejected(fake_config_provider: FakeConfigProvider) -> None:
@@ -54,4 +59,4 @@ def test_unknown_vendor_in_order_rejected(fake_config_provider: FakeConfigProvid
     _write_order(fake_config_provider, '["a", "zz"]')
 
     with pytest.raises(ConfigValidationError, match='title_reference_order: нет поставщика «zz»'):
-        load_reference_priority()
+        load_reference_priority(fake_config_provider)

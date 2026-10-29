@@ -102,9 +102,10 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     )
     clear_registry()
 
+    from domain.config_context import get_config_provider
     from parsers.vendor_config.provider import load_vendor_configs
 
-    cfgs = load_vendor_configs()
+    cfgs = load_vendor_configs(get_config_provider())
     vendor_cfg = cfgs['test_vendor']
 
     section = vendor_cfg.sections[0]

@@ -25,19 +25,19 @@ def all_vendors(config_provider: ConfigProvider) -> list[VendorEntry]:
     return all_vendors_including_disabled(config_provider)
 
 
-def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:
+def all_vendor_supplier_info(config_provider: ConfigProvider) -> dict[SupplierCode, SupplierName]:
     """Все поставщики: код → название, без учёта enabled."""
     supplier_info: dict[SupplierCode, SupplierName] = {}
-    for config in load_vendor_configs().values():
+    for config in load_vendor_configs(config_provider).values():
         for section in config.sections:
             supplier_info[section.id] = section.name
     return supplier_info
 
 
-def all_vendor_supplier_catalog() -> dict[SupplierCode, dict[str, str]]:
+def all_vendor_supplier_catalog(config_provider: ConfigProvider) -> dict[SupplierCode, dict[str, str]]:
     """Все поставщики: код → folder (folder_name) и название (sup_title)."""
     catalog: dict[SupplierCode, dict[str, str]] = {}
-    for config in load_vendor_configs().values():
+    for config in load_vendor_configs(config_provider).values():
         for section in config.sections:
             catalog[section.id] = {
                 'sup_code': config.folder,
@@ -46,11 +46,13 @@ def all_vendor_supplier_catalog() -> dict[SupplierCode, dict[str, str]]:
     return catalog
 
 
-def split_vendor_supplier_info() -> tuple[dict[SupplierCode, SupplierName], dict[SupplierCode, SupplierName]]:
+def split_vendor_supplier_info(
+    config_provider: ConfigProvider,
+) -> tuple[dict[SupplierCode, SupplierName], dict[SupplierCode, SupplierName]]:
     """Активные и отключённые поставщики: код → название."""
     enabled: dict[SupplierCode, SupplierName] = {}
     disabled: dict[SupplierCode, SupplierName] = {}
-    for config in load_vendor_configs().values():
+    for config in load_vendor_configs(config_provider).values():
         for section in config.sections:
             target = enabled if config.enabled else disabled
             target[section.id] = section.name

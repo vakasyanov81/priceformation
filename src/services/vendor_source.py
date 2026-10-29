@@ -4,6 +4,7 @@ from domain.config_context import get_config_provider
 from domain.protocols import ConfigProvider
 from parsers.all_vendors import VendorEntry, all_vendors
 from parsers.registry import vendor_entry_for
+from parsers.vendor_config.reference_priority import load_reference_priority
 
 
 class VendorSource:
@@ -19,6 +20,10 @@ class VendorSource:
     def entry_for(self, code: str) -> VendorEntry:
         """Запись поставщика по коду (id секции)."""
         return vendor_entry_for(code, self._provider())
+
+    def reference_priority(self) -> dict[str, int]:
+        """Очередь поставщиков-эталонов названия из общих настроек."""
+        return load_reference_priority(self._provider())
 
     def _provider(self) -> ConfigProvider:
         """Явно переданный провайдер или активный; активный берётся в момент вызова, а не создания сервиса."""

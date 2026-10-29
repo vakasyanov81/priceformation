@@ -57,3 +57,20 @@ def test_toggle_flips_flag_and_persists(fake_config_provider: FakeConfigProvider
     assert service.toggle('stk') == VendorState('stk', 'STK', True)
     assert json.loads(activation.read_text(encoding='utf-8')) == {'stk': 1}
     assert Path(fake_config_provider.config_file(f'{_FOLDER}/stk.json')).read_text(encoding='utf-8') == stk_source
+
+
+def test_service_uses_injected_provider(tmp_path: Path) -> None:
+    """Список и переключение идут через переданный провайдер, а не глобальный."""
+    provider = FakeConfigProvider(tmp_path, config_folder=tmp_path / 'parse_config')
+    vendors = Path(provider.config_file('vendors'))
+    vendors.mkdir(parents=True)
+    vendors.joinpath('mim.json').write_text(
+        '{"code": "mim", "name": "Мим", "start_row": 2, "file_templates": ["*.xls"],'
+        ' "sections": [{"columns": {"1": "manufacturer_name"}}]}',
+        encoding='utf-8',
+    )
+    service = VendorActivationService(config_provider=provider)
+
+    assert [state.folder for state in service.list_vendors()] == ['mim']
+    assert service.toggle('mim').enabled is False
+    assert Path(provider.config_file('vendor_activation.json')).is_file()

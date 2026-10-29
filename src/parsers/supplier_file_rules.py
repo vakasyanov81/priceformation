@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from fnmatch import fnmatchcase
 from pathlib import Path
 
+from domain.protocols import ConfigProvider
 from parsers.base_parser.warehouse_filter import TERRITORIES_FILENAME
 from parsers.supplier_price.errors import SupplierPriceFileNameError
 from parsers.supplier_price.sources import is_excel
@@ -45,10 +46,10 @@ class PriceFile:
     name: str
 
 
-def vendor_file_rules() -> dict[str, SupplierFileRules]:
+def vendor_file_rules(config_provider: ConfigProvider) -> dict[str, SupplierFileRules]:
     """Правила имён файлов по папкам поставщиков: маски всех секций и служебные файлы."""
     rules: dict[str, SupplierFileRules] = {}
-    for folder, config in load_vendor_configs().items():
+    for folder, config in load_vendor_configs(config_provider).items():
         templates = dict.fromkeys(template for section in config.sections for template in section.file_templates)
         extra_names = (TERRITORIES_FILENAME,) if config.behavior.warehouse_cities else ()
         rules[folder] = SupplierFileRules(tuple(templates), extra_names)

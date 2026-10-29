@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Protocol
 
 from domain.protocols import ConfigProvider
@@ -47,8 +47,8 @@ class ParserFactory(Protocol):
 class GrouperFactory(Protocol):
     """Фабрика группировщика: записи прайса → CommonPriceGrouper."""
 
-    def __call__(self, row_items: list[RowItem]) -> CommonPriceGrouper:
-        """Создать группировщик для списка записей."""
+    def __call__(self, row_items: list[RowItem], *, reference_priority: Mapping[str, int]) -> CommonPriceGrouper:
+        """Создать группировщик для списка записей с очередью поставщиков-эталонов названия."""
         ...
 
 
@@ -85,7 +85,9 @@ class ParseOrchestrator:
         self._parse_all_vendors(parse_result, vendors)
         _emit(skips_messages(parse_result))
         clear_manufacturer_aliases_cache()
-        grouper = self._grouper_factory(parse_result.parsed_items)
+        grouper = self._grouper_factory(
+            parse_result.parsed_items, reference_priority=self._vendor_source.reference_priority()
+        )
         parse_result.parsed_items = grouper.group_by_params().get_row_items()
         logger.info(f'\nКоличество дублей: {len(grouper.get_double_row_items())}\n')
         elapsed = time.monotonic() - start_time

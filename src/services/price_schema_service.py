@@ -10,6 +10,7 @@ from pathlib import Path
 from python_calamine import CalamineError
 
 from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from infrastructure.data.price_backup import backup_prices, default_backup_folder
 from parsers.price_schema.diff import compare_schemas
 from parsers.price_schema.models import FileHead, PriceSchema
@@ -24,15 +25,20 @@ logger = logging.getLogger(__name__)
 class PriceSchemaService:
     """Сравнивает шапки прайсов поставщиков до и после обновления файлов."""
 
-    def __init__(self, backup_folder: Path | None = None) -> None:
-        """`backup_folder` — куда класть копию; по умолчанию временная папка ОС."""
+    def __init__(self, backup_folder: Path | None = None, config_provider: ConfigProvider | None = None) -> None:
+        """`backup_folder` — куда класть копию (по умолчанию временная папка ОС); `config_provider` — пути окружения."""
+        self._config_provider = config_provider
         self._backup = backup_folder or default_backup_folder()
         self._depth = 0
         self._copied = False
 
+    def _provider(self) -> ConfigProvider:
+        """Явно переданный провайдер или активный в момент вызова."""
+        return self._config_provider or get_config_provider()
+
     def snapshot(self) -> bool:
         """Скопировать file_prices (кроме result) в папку копии; не вышло — предупреждение и False."""
-        provider = get_config_provider()
+        provider = self._provider()
         skip = Path(provider.result_folder())
         try:
             backup_prices(Path(provider.price_folder('')), self._backup, skip=skip)
@@ -58,7 +64,7 @@ class PriceSchemaService:
         """Сравнить схемы прайсов копии и текущих файлов; предупреждения выводятся в лог и возвращаются."""
         warnings: list[str] = []
         heads: dict[Path, FileHead | None] = {}
-        for vendor in load_vendor_configs().values():
+        for vendor in load_vendor_configs(self._provider()).values():
             warnings.extend(self._vendor_warnings(vendor, heads))
         for warning in warnings:
             logger.warning(warning)
@@ -68,7 +74,7 @@ class PriceSchemaService:
         """Расхождения схем всех секций поставщика; повторы (секции на один файл) убираются."""
         warnings: dict[str, None] = {}
         for section in vendor.sections:
-            for path in _section_files(vendor.folder, section):
+            for path in _section_files(vendor.folder, section, self._provider()):
                 old_path = self._backup / vendor.folder / path.name
                 for change in _file_changes(old_path, path, section, heads):
                     warnings[_message(vendor, section, path, change)] = None
@@ -106,9 +112,9 @@ def _schema(head: FileHead, section: VendorSection) -> PriceSchema:
     return build_schema(head, start_row=section.start_row, sheet_indexes=section.sheet_indexes, columns=section.columns)
 
 
-def _section_files(folder: str, section: VendorSection) -> list[Path]:
+def _section_files(folder: str, section: VendorSection, config_provider: ConfigProvider) -> list[Path]:
     """Файлы секции в file_prices/<folder> по её шаблонам."""
-    root = Path(get_config_provider().price_folder(folder))
+    root = Path(config_provider.price_folder(folder))
     found = {path for template in section.file_templates for path in root.glob(template)}
     return sorted(path for path in found if path.is_file())
 
