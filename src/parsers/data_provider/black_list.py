@@ -4,7 +4,7 @@ black list provider
 
 from fnmatch import fnmatchcase
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_file
 
 _CONFIG_FILE = 'black_list'
@@ -46,6 +46,9 @@ class BlackListProviderBase:
 class BlackListProviderFromUserConfig(BlackListProviderBase):
     """Black list data provider from user config file."""
 
+    def __init__(self, config_provider: ConfigProvider) -> None:
+        self._config_provider = config_provider
+
     def get_black_list_data(self) -> list[str]:
         """Exact titles from black_list (no wildcard)."""
         return self._load_entries()[0]
@@ -55,7 +58,7 @@ class BlackListProviderFromUserConfig(BlackListProviderBase):
         return self._load_entries()[1]
 
     def _load_entries(self) -> tuple[list[str], list[str]]:
-        raw = read_file(get_config_provider().config_file(_CONFIG_FILE))
+        raw = read_file(self._config_provider.config_file(_CONFIG_FILE))
         return split_exact_and_masks(self.split_and_filtration(raw))
 
     @classmethod

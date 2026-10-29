@@ -9,6 +9,7 @@ from log_watch import LoggerWatcher
 from python_calamine import CalamineWorkbook
 
 from cfg import init_cfg
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import vendor_entry_for
 from parsers.vendor_config.provider import load_vendor_configs
@@ -135,14 +136,14 @@ def test_real_price_rows_have_no_parse_errors(
     """реальный прайс разбирается без ошибок строк."""
     watch = watch_logger(_ROW_LOGGER, logging.ERROR)
     orchestrator = ParseOrchestrator()
-    orchestrator.parse_all([vendor_entry_for('5')])
+    orchestrator.parse_all([vendor_entry_for('5', get_config_provider())])
     errors = [message for _level, message in watch() if 'Не удалось разобрать строку' in message]
     assert not errors, f'Обнаружены ошибки разбора: {errors}'
 
 
 def test_real_price_rows_keep_manufacturer(_four_tochki_provider: None) -> None:
     """бренд не теряется: у строк заполнен производитель (регресс на ключ `manufacturer_name`)."""
-    parsed = ParseOrchestrator().parse_all([vendor_entry_for('5')])
+    parsed = ParseOrchestrator().parse_all([vendor_entry_for('5', get_config_provider())])
     parsed_rows = parsed.parsed_items
     assert parsed_rows, 'Нет разобранных строк'
     missing = [parsed_row for parsed_row in parsed_rows if not parsed_row.identity.manufacturer]

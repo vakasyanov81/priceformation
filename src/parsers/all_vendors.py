@@ -4,6 +4,7 @@ collection all active vendors (config-driven)
 
 from __future__ import annotations
 
+from domain.protocols import ConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.registry import all_vendors_including_disabled
@@ -15,13 +16,13 @@ SupplierCode = str
 type VendorEntry = tuple[type[BaseParser], ParseConfiguration]
 
 
-def all_vendors() -> list[VendorEntry]:
+def all_vendors(config_provider: ConfigProvider) -> list[VendorEntry]:
     """Все поставщики из конфигов, включая отключённых.
 
     Отключённые тоже попадают в разбор: ``BaseParser.parse`` вернёт пусто и
     залогирует предупреждение «поставщик не активен».
     """
-    return all_vendors_including_disabled()
+    return all_vendors_including_disabled(config_provider)
 
 
 def all_vendor_supplier_info() -> dict[SupplierCode, SupplierName]:

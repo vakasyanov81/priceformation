@@ -8,6 +8,7 @@ Usage::
         ...
 """
 
+from domain.protocols import ConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -29,36 +30,38 @@ class UnknownVendorError(KeyError):
     """Поставщик с указанным ИД не найден (нет ни одной секции с таким id)."""
 
 
-def all_vendors_from_registry() -> list[VendorEntry]:
+def all_vendors_from_registry(config_provider: ConfigProvider) -> list[VendorEntry]:
     """Собрать список (BaseParser, config) только включённых поставщиков (vendors/*.json).
 
     Каждая секция каждого конфига даёт одну запись.
     Класс парсера — ``BaseParser`` во всех записях; поведение определяется
     стратегиями из конфига, которые хранятся в атрибутах ``ParseConfiguration``.
     """
-    return _vendor_entries(include_disabled=False)
+    return _vendor_entries(config_provider, include_disabled=False)
 
 
-def all_vendors_including_disabled() -> list[VendorEntry]:
+def all_vendors_including_disabled(config_provider: ConfigProvider) -> list[VendorEntry]:
     """Собрать список (BaseParser, config) всех поставщиков, включая отключённых.
 
     Отключённые нужны оркестратору: ``BaseParser.parse`` у них вернёт пустой
     список и залогирует предупреждение «поставщик не активен» вместо чтения прайса.
     """
-    return _vendor_entries(include_disabled=True)
+    return _vendor_entries(config_provider, include_disabled=True)
 
 
-def _vendor_entries(*, include_disabled: bool) -> list[VendorEntry]:
+def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) -> list[VendorEntry]:
     """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
     for config in load_vendor_configs().values():
         if not include_disabled and not config.enabled:
             continue
-        entries.extend((BaseParser, _build_parse_config(section, config)) for section in config.sections)
+        entries.extend(
+            (BaseParser, _build_parse_config(section, config, config_provider)) for section in config.sections
+        )
     return entries
 
 
-def vendor_entry_for(code: str) -> VendorEntry:
+def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     """Запись (BaseParser, config) по ИД поставщика (id секции).
 
     Ищет среди всех загруженных конфигов секцию с указанным ``id``.
@@ -67,7 +70,7 @@ def vendor_entry_for(code: str) -> VendorEntry:
     for config in load_vendor_configs().values():
         for section in config.sections:
             if section.id == code:
-                return (BaseParser, _build_parse_config(section, config))
+                return (BaseParser, _build_parse_config(section, config, config_provider))
     raise UnknownVendorError(code)
 
 
@@ -85,17 +88,18 @@ def vendor_markup_policy_for(
     return vendor_markup_policy_from_config(section)
 
 
-def make_vendor_entry(section: VendorSection, config: VendorConfig) -> VendorEntry:
+def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provider: ConfigProvider) -> VendorEntry:
     """Собрать запись вендора для секции.
 
     Args:
         section: Секция поставщика.
         config: Конфиг поставщика (folder, behavior).
+        config_provider: Провайдер путей окружения для провайдеров данных (black_list).
 
     Returns:
         (BaseParser, ParseConfiguration) с прикреплёнными метаданными.
     """
-    return (BaseParser, _build_parse_config(section, config))
+    return (BaseParser, _build_parse_config(section, config, config_provider))
 
 
 def clear_registry() -> None:
@@ -103,7 +107,9 @@ def clear_registry() -> None:
     clear_vendor_configs_cache()
 
 
-def _build_parse_config(section: VendorSection, config: VendorConfig) -> ParseConfiguration:
+def _build_parse_config(
+    section: VendorSection, config: VendorConfig, config_provider: ConfigProvider
+) -> ParseConfiguration:
     """Построить ParseConfiguration из секции конфига вендора."""
     params = parser_params_from_section(section, config.folder)
-    return make_parse_config(params, vendor_section=section, vendor_config=config)
+    return make_parse_config(params, config_provider=config_provider, vendor_section=section, vendor_config=config)

@@ -5,6 +5,7 @@ base parser config logic
 from dataclasses import dataclass
 from typing import Any, NamedTuple
 
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.vendor_config.models import VendorConfig, VendorSection
@@ -105,9 +106,8 @@ class ParseConfiguration:
 def make_parse_config(
     parser_params: ParserParams,
     *,
-    markup_rules_provider: data_provider.MarkupRulesProviderBase | None = None,
+    config_provider: ConfigProvider,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    manufacturer_aliases: data_provider.ManufacturerAliasesProviderBase | None = None,
     vendor_section: VendorSection | None = None,
     vendor_config: VendorConfig | None = None,
 ) -> ParseConfiguration:
@@ -115,9 +115,9 @@ def make_parse_config(
     folder_name = parser_params.supplier.folder_name
     return ParseConfiguration(
         BasePriceParseConfigurationParams(
-            markup_rules_provider=markup_rules_provider or data_provider.MarkupRulesProviderFromUserConfig(folder_name),
-            black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(),
-            manufacturer_aliases=manufacturer_aliases or data_provider.ManufacturerAliasesProviderFromUserConfig(),
+            markup_rules_provider=data_provider.MarkupRulesProviderFromUserConfig(folder_name),
+            black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(config_provider),
+            manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
             parser_params=parser_params,
         ),
         vendor_section,

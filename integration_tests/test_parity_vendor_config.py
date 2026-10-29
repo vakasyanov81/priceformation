@@ -13,6 +13,7 @@ import pytest
 from log_watch import LoggerWatcher
 
 from cfg import init_cfg
+from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import clear_registry, vendor_entry_for
 from services.parse_orchestrator import ParseOrchestrator
@@ -53,7 +54,7 @@ class TestFourTochkiConfigDriven:
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, f'Есть ошибки разбора строк:\n{errors}'
 
-        parsed = ParseOrchestrator().parse_all([vendor_entry_for('5')])
+        parsed = ParseOrchestrator().parse_all([vendor_entry_for('5', get_config_provider())])
         assert parsed.parsed_items, 'Нет разобранных строк'
         assert parsed.unknown_category_skips == []
 

@@ -11,19 +11,19 @@ import time
 from collections.abc import Callable, Sequence
 from typing import Protocol, cast
 
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.file_logging import clear_log_files
-from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
-from parsers.registry import vendor_entry_for
 from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
 from services.parse_result import ParseResult, UnknownCategorySkip
 from services.service_provider import ServiceProvider
 from services.vendor_parser import parser_for_vendor
+from services.vendor_source import VendorSource
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +61,12 @@ class ParseOrchestrator:
         grouper_factory: GrouperFactory | None = None,
         parser_factory: ParserFactory | None = None,
         vendors_provider: Callable[[], VendorList] | None = None,
+        config_provider: ConfigProvider | None = None,
     ) -> None:
         self._grouper_factory = grouper_factory or cast(GrouperFactory, ServiceProvider.resolve(GrouperFactory))
         self._parser_factory = parser_factory or cast(ParserFactory, ServiceProvider.resolve(ParserFactory))
-        self._vendors_provider = vendors_provider or all_vendors
+        self._vendor_source = VendorSource(config_provider)
+        self._vendors_provider = vendors_provider or self._vendor_source.all
 
     def parse_all(self, vendors: VendorList | None = None) -> ParseResult:
         """Парсит всех поставщиков (или переданный список) и группирует."""
@@ -72,7 +74,7 @@ class ParseOrchestrator:
 
     def parse_vendor(self, code: str) -> ParseResult:
         """Парсит одного поставщика по коду реестра и группирует."""
-        return self._parse_vendors([vendor_entry_for(code)])
+        return self._parse_vendors([self._vendor_source.entry_for(code)])
 
     def _parse_vendors(self, vendors: VendorList) -> ParseResult:
         """Общий цикл разбора списка поставщиков с итоговой группировкой."""
