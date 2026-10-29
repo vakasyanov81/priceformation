@@ -119,7 +119,7 @@ def make_parse_config(
         BasePriceParseConfigurationParams(
             markup_rules_provider=data_provider.MarkupRulesProviderFromUserConfig(config_provider, folder_name),
             black_list_provider=black_list_provider or data_provider.BlackListProviderFromUserConfig(config_provider),
-            manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(),
+            manufacturer_aliases=data_provider.ManufacturerAliasesProviderFromUserConfig(config_provider),
             config_provider=config_provider,
             parser_params=parser_params,
         ),

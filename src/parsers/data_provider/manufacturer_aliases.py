@@ -3,13 +3,13 @@ manufacturer aliases provider
 """
 
 import json
-from functools import lru_cache
 from typing import Any, cast
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_file
 
 _CONFIG_FILE = 'manufacturer_aliases.json'
+_ALIASES_CACHE: dict[str, dict[str, Any]] = {}
 
 
 def _filled_aliases(aliases: Any) -> Any:
@@ -58,18 +58,20 @@ def aliases_for_finder(
     return finder_map
 
 
-@lru_cache(maxsize=1)
-def load_aliases_map() -> dict[str, Any]:
-    """Load manufacturer aliases from user config; empty if the file is missing."""
-    try:
-        return ManufacturerAliasesProviderFromUserConfig().get_aliases()
-    except FileNotFoundError:
-        return {}
+def load_aliases_map(config_provider: ConfigProvider) -> dict[str, Any]:
+    """Load manufacturer aliases from user config (cached per file path); empty if the file is missing."""
+    path = config_provider.config_file(_CONFIG_FILE)
+    if path not in _ALIASES_CACHE:
+        try:
+            _ALIASES_CACHE[path] = ManufacturerAliasesProviderFromUserConfig(config_provider).get_aliases()
+        except FileNotFoundError:
+            _ALIASES_CACHE[path] = {}
+    return _ALIASES_CACHE[path]
 
 
 def clear_manufacturer_aliases_cache() -> None:
     """Drop the process-level manufacturer aliases cache."""
-    load_aliases_map.cache_clear()
+    _ALIASES_CACHE.clear()
 
 
 class ManufacturerAliasesProviderBase:
@@ -83,7 +85,10 @@ class ManufacturerAliasesProviderBase:
 class ManufacturerAliasesProviderFromUserConfig(ManufacturerAliasesProviderBase):
     """Base data provider with manufacturer aliases from user config file"""
 
+    def __init__(self, config_provider: ConfigProvider) -> None:
+        self._config_provider = config_provider
+
     def get_aliases(self) -> dict[str, Any]:
         """get manufacturer aliases"""
-        raw: str = read_file(get_config_provider().config_file(_CONFIG_FILE))
+        raw: str = read_file(self._config_provider.config_file(_CONFIG_FILE))
         return drop_blank_aliases(cast(dict[str, Any], json.loads(raw)))

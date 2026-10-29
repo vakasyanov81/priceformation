@@ -154,11 +154,10 @@ def test_grouper() -> None:
     _assert_orders(item_zapaska, item_mim)
 
 
-def test_grouper_loads_aliases_once_when_omitted() -> None:
-    """без aliases_map grouper читает карту один раз, не на каждую строку"""
-    with patch('parsers.common_price.grouper.load_aliases_map', return_value={}) as mock_load:
+def test_grouper_does_not_read_aliases_files_when_omitted() -> None:
+    """без aliases_map grouper берёт пустую карту и сам файлы настроек не читает"""
+    with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=AssertionError('read')):
         CommonPriceGrouper([_row(), _high()]).group_by_params()
-    mock_load.assert_called_once()
 
 
 def test_single_item_is_not_double() -> None:

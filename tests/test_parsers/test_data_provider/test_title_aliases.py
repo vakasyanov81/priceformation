@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -36,24 +36,24 @@ def test_invert_title_aliases() -> None:
 
 def test_load_title_aliases_missing_file() -> None:
     with patch('parsers.data_provider.title_aliases.read_file', side_effect=FileNotFoundError):
-        assert load_title_aliases(_DISK_SUPPLIER) == {}
+        assert load_title_aliases(_DISK_SUPPLIER, MagicMock()) == {}
 
 
 def test_load_aliases_inverts_supplier_section(fake_config_provider: FakeConfigProvider) -> None:
     with patch('parsers.data_provider.title_aliases.read_file', return_value=_ALIASES_JSON) as mock_read:
-        assert load_title_aliases(_DISK_SUPPLIER) == {'Replay HND': 'Replay Honda'}
-        assert load_title_aliases(_TIRE_SUPPLIER) == {'THREE-A': 'Three-A'}
-        assert load_title_aliases('unknown') == {}
+        assert load_title_aliases(_DISK_SUPPLIER, fake_config_provider) == {'Replay HND': 'Replay Honda'}
+        assert load_title_aliases(_TIRE_SUPPLIER, fake_config_provider) == {'THREE-A': 'Three-A'}
+        assert load_title_aliases('unknown', fake_config_provider) == {}
         mock_read.assert_called_with(fake_config_provider.config_file(_ALIASES_FILE))
 
 
 def test_load_title_aliases_from_real_file(fake_config_provider: FakeConfigProvider) -> None:
     config_file = Path(fake_config_provider.config_file(_ALIASES_FILE))
     config_file.write_text(_ALIASES_JSON, encoding='utf-8')
-    assert load_title_aliases(_DISK_SUPPLIER) == {'Replay HND': 'Replay Honda'}
+    assert load_title_aliases(_DISK_SUPPLIER, fake_config_provider) == {'Replay HND': 'Replay Honda'}
 
 
 def test_provider_reads_config_file(fake_config_provider: FakeConfigProvider) -> None:
     with patch('parsers.data_provider.title_aliases.read_file', return_value='{}') as mock_read:
-        assert TitleAliasesProviderFromUserConfig(_DISK_SUPPLIER).get_aliases() == {}
+        assert TitleAliasesProviderFromUserConfig(_DISK_SUPPLIER, fake_config_provider).get_aliases() == {}
         mock_read.assert_called_once_with(fake_config_provider.config_file(_ALIASES_FILE))

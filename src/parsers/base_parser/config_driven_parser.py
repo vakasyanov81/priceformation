@@ -76,6 +76,7 @@ def strategy_hooks_from_section(
             section.title,
             f'section {section.id} title',
             manufacturer_reader=manufacturer_reader,
+            config_provider=config_provider,
         ),
         rest=make_rest_strategy(behavior, f'section {section.id} rest'),
         category_fields=_category_fields(section),

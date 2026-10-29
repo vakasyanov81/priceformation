@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from domain.exceptions import ConfigValidationError
+from domain.protocols import ConfigProvider
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.base_finder import BaseFinder
 from parsers.data_provider.manufacturer_aliases import aliases_for_finder, load_aliases_map
@@ -22,17 +23,17 @@ def check_params_flags(config: TitleConfig, where: str) -> None:
         raise ConfigValidationError(f'{where}: «compose» не сочетается с «params_first»: название собирается один раз')
 
 
-def wrap_with_params(strategy: TitleStrategy, config: TitleConfig) -> TitleStrategy:
+def wrap_with_params(strategy: TitleStrategy, config: TitleConfig, config_provider: ConfigProvider) -> TitleStrategy:
     """Обернуть разбором параметров из названия (до или после сборки) и, при `compose`, сборкой шины по полям."""
     if config.params_first:
         return ParamsBeforeTitle(strategy)
     if not config.params_from_title:
         return strategy
     parsed = ParamsFromTitle(strategy)
-    return TitleFromFields(parsed, manufacturer_probe()) if config.compose else parsed
+    return TitleFromFields(parsed, manufacturer_probe(config_provider)) if config.compose else parsed
 
 
-def manufacturer_probe() -> ManufacturerProbe:
+def manufacturer_probe(config_provider: ConfigProvider) -> ManufacturerProbe:
     """Производитель в title по алиасам производителей: тот же поиск, что и у ``ManufacturerFinder``."""
-    finder = BaseFinder(AliasContainer(aliases_for_finder(load_aliases_map())))
+    finder = BaseFinder(AliasContainer(aliases_for_finder(load_aliases_map(config_provider))))
     return lambda title: finder.find_word_in_title(title)[0]

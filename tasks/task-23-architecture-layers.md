@@ -74,9 +74,8 @@
   - `load_config`, `load_supplier_prices` / `place_files`, `load_mail_config`, `load_four_tochki_warehouse_groups` — аргумент `config_provider`; `MailService(config_provider=None)`; точки композиции — `app/run_machine.py` и `services`.
   На каждый перевод есть тест на корень: отдельный `MagicMock`-провайдер вместо глобального.
   - `vendor_config` (`load_vendor_configs`, `load_common_settings`, `load_activation`, `set_vendor_enabled`, `load_reference_priority`) и вызывающие `all_vendors`, `registry`, `supplier_file_rules`, `load_supplier_prices` — аргумент `config_provider`. `lru_cache` в `provider.py` по-прежнему ключуется путём папки, поэтому владение кэшем не изменилось и разные провайдеры не смешиваются. `CommonPriceGrouper` больше не читает файлы: очередь эталонов приходит аргументом `reference_priority` (по умолчанию пусто), её даёт `VendorSource.reference_priority()` в оркестраторе. Сервисы (`VendorActivationService`, `ZapaskaService`, `MimService`, `FourTochkiService`, `PriceSchemaService`) принимают `config_provider=None` и берут активный в момент вызова; `vendor_activity` — явный аргумент.
-- **Осталось в `parsers` (2 файла с `get_config_provider()`):**
-  - `data_provider/manufacturer_aliases.py`: `load_aliases_map()` — процессный `lru_cache`, читают `title_wrap`, `title_registry`, `group_key`, `grouper`; `ManufacturerAliasesProviderFromUserConfig` строится в `make_parse_config`.
-  - `data_provider/title_aliases.py`: `load_title_aliases(supplier_name)` вызывается из `title_registry`.
+  - Алиасы: `load_aliases_map(config_provider)` (процессный кэш по пути файла вместо `lru_cache` — `ConfigProvider` как Protocol не Hashable), `ManufacturerAliasesProviderFromUserConfig(config_provider)`, `load_title_aliases(supplier_name, config_provider)`, `TitleAliasesProviderFromUserConfig(supplier_name, config_provider)`. Стратегии title получают провайдер через `make_title_strategy(..., config_provider=)` из `strategy_hooks_from_section`; загрузка карты остаётся ленивой (при построении детектора бренда). `CommonPriceGrouper` и `group_key` файлы не читают: карта приходит аргументом `aliases_map` (по умолчанию пусто), оркестратор берёт её из `VendorSource.aliases_map()`.
+- **`get_config_provider()` в `parsers` больше нет.** Вызовы в `services` и `infrastructure` оставлены за рамками задачи.
 - **Типизация `ServiceProvider` — выполнена.** `register` / `resolve` / `create` generic (`[Service]`), `cast` в `parse_orchestrator` и `price_report` удалены, аннотация в `price_schema_service` не нужна. Ключ контейнера — `Callable[..., Service]`, а не `type[Service]`: интерфейсы `ParserFactory` / `GrouperFactory` / `XlsWriterFactory` / `WriteDriverFactory` — Protocol, и mypy не принимает их как `type[T]` (`type-abstract`) без подавления. Единственный `cast` остался внутри контейнера (хранилище `dict[..., Any]`). Жизненный цикл и места `resolve` не менялись; тест на Protocol-интерфейс — `test_protocol_interface_resolves_typed`.
 - **Проверки:** после каждого коммита все девять команд из `AGENTS.md` с кодом 0. Parity (2026-10-29, повторно подтверждена после `vendor_config`): снимок разбора и writer-результатов на коммите до задачи (26624cf) и на HEAD совпал побайтно (`rows=15`, 3 книги: price, price_drom, doubles; XLSX — по содержимому листов). Скрипт снимка лежит вне репозитория (scratchpad), в репозиторий не добавлялся.
 
@@ -87,8 +86,8 @@
 - [x] Реальная команда `uv run pf get_product_types --json` возвращает код 0 и валидный JSON.
 - [x] В `parsers/` нет IMAP / HTTP / download-адаптеров; порты и типы границ не создают зависимостей `infrastructure → parsers` или `domain → верхние слои`.
 - [x] В корне `parsers/` нет россыпи `common_price_*` / `nomenclature_*` / `price_schema_*` / `supplier_price_*`.
-- [ ] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
+- [x] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
 - [x] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.
 - [x] Ошибка парсера по-прежнему пробрасывается, JSON-ошибка и код 1 сохранены; traceback покрыт тестами и не дублируется.
 - [x] Разобранные строки и содержимое writer-результатов на фикстурах совпадают с эталоном до переносов.
-- [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
+- [x] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).

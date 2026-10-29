@@ -13,7 +13,6 @@ from parsers.common_price.group_fields import (
 from parsers.common_price.model import clear_model
 from parsers.common_price.size import canon_number, size_fields
 from parsers.common_price.title_flags import valve_key
-from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.strategies.normalize import replace_homoglyphs
 
 # Позиция модели в ключе `group_key` (сверяется тестом): по ней группировщик склеивает модели с лишними словами.
@@ -72,6 +71,5 @@ def group_key(
     row_item: RowItem,
     aliases_map: dict[str, Any] | None = None,
 ) -> tuple[str, ...]:
-    """Ключ группировки."""
-    mapping = load_aliases_map() if aliases_map is None else aliases_map
-    return sanitize_value(_group_key_parts(row_item, mapping))
+    """Ключ группировки; без карты алиасов производителей — пустая карта."""
+    return sanitize_value(_group_key_parts(row_item, {} if aliases_map is None else aliases_map))
