@@ -11,9 +11,9 @@ from python_calamine import CalamineError
 
 from domain.config_context import get_config_provider
 from infrastructure.data.price_backup import backup_prices, default_backup_folder
-from parsers.price_schema import build_schema, read_file_head
-from parsers.price_schema_diff import compare_schemas
-from parsers.price_schema_models import FileHead, PriceSchema
+from parsers.price_schema.diff import compare_schemas
+from parsers.price_schema.models import FileHead, PriceSchema
+from parsers.price_schema.schema import build_schema, read_file_head
 from parsers.vendor_config.models import VendorConfig, VendorSection
 from parsers.vendor_config.provider import load_vendor_configs
 from services.service_provider import ServiceProvider

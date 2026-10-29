@@ -2,7 +2,7 @@
 
 from openpyxl.utils import get_column_letter
 
-from parsers.price_schema_models import Columns, PriceSchema, SheetSchema
+from parsers.price_schema.models import Columns, PriceSchema, SheetSchema
 
 
 def compare_schemas(old: PriceSchema, new: PriceSchema, columns: Columns) -> list[str]:

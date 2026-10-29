@@ -2,7 +2,7 @@
 
 from collections.abc import Iterator
 
-from parsers.price_schema_models import HeadRows
+from parsers.price_schema.models import HeadRows
 
 
 def column_header(rows: HeadRows, column: int) -> str:

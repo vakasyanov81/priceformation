@@ -6,8 +6,8 @@ from pathlib import Path
 
 from python_calamine import CalamineWorkbook
 
-from parsers.price_schema_header import column_header
-from parsers.price_schema_models import Columns, FileHead, PriceSchema, SheetHead, SheetSchema
+from parsers.price_schema.header import column_header
+from parsers.price_schema.models import Columns, FileHead, PriceSchema, SheetHead, SheetSchema
 
 _HEADER_ROWS_LIMIT = 100
 _JSON_SUFFIX = '.json'
