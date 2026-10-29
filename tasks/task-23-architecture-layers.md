@@ -78,7 +78,7 @@
   - `data_provider/manufacturer_aliases.py`: `load_aliases_map()` — процессный `lru_cache`, читают `title_wrap`, `title_registry`, `group_key`, `grouper`; `ManufacturerAliasesProviderFromUserConfig` строится в `make_parse_config`.
   - `data_provider/title_aliases.py`: `load_title_aliases(supplier_name)` вызывается из `title_registry`.
 - **Типизация `ServiceProvider` — выполнена.** `register` / `resolve` / `create` generic (`[Service]`), `cast` в `parse_orchestrator` и `price_report` удалены, аннотация в `price_schema_service` не нужна. Ключ контейнера — `Callable[..., Service]`, а не `type[Service]`: интерфейсы `ParserFactory` / `GrouperFactory` / `XlsWriterFactory` / `WriteDriverFactory` — Protocol, и mypy не принимает их как `type[T]` (`type-abstract`) без подавления. Единственный `cast` остался внутри контейнера (хранилище `dict[..., Any]`). Жизненный цикл и места `resolve` не менялись; тест на Protocol-интерфейс — `test_protocol_interface_resolves_typed`.
-- **Проверки:** после каждого коммита все девять команд из `AGENTS.md` с кодом 0. Сравнение с эталоном (parity) после этапов 3–6 не перезапускалось — скрипта в репозитории нет.
+- **Проверки:** после каждого коммита все девять команд из `AGENTS.md` с кодом 0. Parity (2026-10-29): снимок разбора и writer-результатов на коммите до задачи (26624cf) и на HEAD совпал побайтно (`rows=15`, 3 книги: price, price_drom, doubles; XLSX — по содержимому листов). Скрипт снимка лежит вне репозитория (scratchpad), в репозиторий не добавлялся.
 
 ## Критерии готовности
 
@@ -90,5 +90,5 @@
 - [ ] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
 - [x] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.
 - [x] Ошибка парсера по-прежнему пробрасывается, JSON-ошибка и код 1 сохранены; traceback покрыт тестами и не дублируется.
-- [ ] Разобранные строки и содержимое writer-результатов на фикстурах совпадают с эталоном до переносов.
+- [x] Разобранные строки и содержимое writer-результатов на фикстурах совпадают с эталоном до переносов.
 - [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).
