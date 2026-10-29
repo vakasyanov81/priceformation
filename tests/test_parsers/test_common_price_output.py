@@ -36,6 +36,7 @@ def test_nomenclature_title_correction() -> None:
         [row_old, row_keep],
         xls_writer=cast(type[XlsWriter], MagicMock),
         write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        config_provider=get_config_provider(),
     )
 
     with patch(
@@ -63,6 +64,7 @@ def test_write_all_prices() -> None:
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
 
@@ -97,6 +99,7 @@ def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
         [_warehouse_row('A', 5000, 3), _warehouse_row('A', 5000, 4)],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        config_provider=get_config_provider(),
     )
 
     with (
@@ -135,6 +138,7 @@ def test_write_all_prices_jsonl() -> None:
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
     jsonl_path = 'file_prices/result/price.jsonl'
@@ -164,6 +168,7 @@ def test_write_all_prices_reloads_nomenclature() -> None:
         [row],
         xls_writer=cast(type[XlsWriter], MagicMock),
         write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        config_provider=get_config_provider(),
     )
 
     with (
@@ -200,6 +205,7 @@ def test_write_doubles_report() -> None:
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 'dup'}, {_TITLE: 'cand'}]
 
@@ -233,6 +239,7 @@ def test_write_doubles_report_jsonl() -> None:
         [double_row],
         xls_writer=cast(type[XlsWriter], MagicMock),
         write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        config_provider=get_config_provider(),
     )
     jsonl_path = 'file_prices/result/doubles.jsonl'
     raw_rows = [{_TITLE: 'dup'}]
@@ -260,6 +267,7 @@ def test_write_all_prices_single_template() -> None:
         [RowItem({_TITLE: 't1'})],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
 
@@ -292,6 +300,7 @@ def test_write_all_prices_full_template() -> None:
         [RowItem({_TITLE: 't1'})],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
 
@@ -318,6 +327,7 @@ def test_write_all_prices_unknown_template() -> None:
         [],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        config_provider=get_config_provider(),
     )
 
     with pytest.raises(UnknownWriterTemplateError, match='nope'):
@@ -361,6 +371,7 @@ def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
         [_double_row('Пошк', 5000), _double_row('Автоснабжение', 6000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(exclude_in_templates=('for_drom',), priority_suppliers=('Автоснабжение',)),
     )
 
@@ -389,6 +400,7 @@ def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigP
         [_double_row('Пошк', 5000), _double_row('Мим', 4000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
         write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        config_provider=fake_config_provider,
     )
 
     with (
@@ -399,3 +411,21 @@ def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigP
 
     drom_rows = writer_cls.call_args.args[1]
     assert [row['supplier_name'] for row in drom_rows] == ['Мим']
+
+
+def test_result_folder_comes_from_injected_provider() -> None:
+    """папка результата берётся у переданного провайдера, а не у глобального локатора"""
+    injected = MagicMock()
+    injected.result_folder.return_value = '/injected/result'
+    out = CommonPriceOut(
+        [RowItem({_TITLE: 'a'})],
+        xls_writer=cast(type[XlsWriter], MagicMock()),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        config_provider=injected,
+        doubles_settings=DoublesSettings(),
+    )
+
+    with patch('parsers.common_price.output.write_template_jsonl', return_value='x.jsonl') as write:
+        out.write_doubles_report(as_jsonl=True)
+
+    assert write.call_args.args[2] == '/injected/result'

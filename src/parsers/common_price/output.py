@@ -5,7 +5,7 @@ Make parse all price and make inner and drom prices
 from pathlib import Path
 from typing import Any, Protocol
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
@@ -61,12 +61,14 @@ class CommonPriceOut:
         *,
         xls_writer: XlsWriterFactory,
         write_driver: WriteDriverFactory,
+        config_provider: ConfigProvider,
         doubles_settings: DoublesSettings | None = None,
     ) -> None:
         """init"""
         self.xls_writer = xls_writer
         self.write_driver = write_driver
         self.row_items = row_items
+        self._config_provider = config_provider
         self._doubles_settings = doubles_settings
 
     def nomenclature_title_correction(self) -> None:
@@ -116,7 +118,7 @@ class CommonPriceOut:
     def _settings(self) -> DoublesSettings:
         """Настройки дублей: переданные в конструктор или из parse_config/doubles.json."""
         if self._doubles_settings is None:
-            self._doubles_settings = load_doubles_settings(tuple(writer_templates_by_name()))
+            self._doubles_settings = load_doubles_settings(tuple(writer_templates_by_name()), self._config_provider)
         return self._doubles_settings
 
     def _rows_for(self, template: type[IWriteTemplate], doubles_settings: DoublesSettings) -> list[RowItem]:
@@ -140,7 +142,7 @@ class CommonPriceOut:
     ) -> str:
         """Записать файл шаблона (xlsx или jsonl) и вернуть путь."""
         raw_rows = _to_raw_dicts(rows)
-        folder = get_config_provider().result_folder()
+        folder = self._config_provider.result_folder()
         if as_jsonl:
             return write_template_jsonl(raw_rows, template, folder)
         writer = self.xls_writer(
