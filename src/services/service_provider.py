@@ -5,12 +5,13 @@
 """
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
-type _ServiceFactory = Callable[[], Any]
+type _Interface = Callable[..., Any]
+type _Factory[Service] = Callable[[], Service]
 
-_factories: dict[type[Any], _ServiceFactory] = {}
-_instances: dict[type[Any], Any] = {}
+_factories: dict[_Interface, Callable[[], Any]] = {}
+_instances: dict[_Interface, Any] = {}
 
 
 class ServiceNotRegisteredError(LookupError):
@@ -21,25 +22,25 @@ class ServiceProvider:
     """Простой DI-контейнер: фабрики по интерфейсу, ленивое разрешение."""
 
     @classmethod
-    def register(cls, interface: type[Any], factory: _ServiceFactory) -> None:
+    def register[Service](cls, interface: Callable[..., Service], factory: _Factory[Service]) -> None:
         """Зарегистрировать фабрику для интерфейса."""
         _factories[interface] = factory
         _instances.pop(interface, None)
 
     @classmethod
-    def resolve(cls, interface: type[Any]) -> Any:
+    def resolve[Service](cls, interface: Callable[..., Service]) -> Service:
         """Получить экземпляр интерфейса; результат кэшируется (singleton)."""
         if interface not in _instances:
             _instances[interface] = cls._factory(interface)()
-        return _instances[interface]
+        return cast(Service, _instances[interface])
 
     @classmethod
-    def create(cls, interface: type[Any]) -> Any:
+    def create[Service](cls, interface: Callable[..., Service]) -> Service:
         """Создать новый экземпляр интерфейса (transient)."""
-        return cls._factory(interface)()
+        return cast(Service, cls._factory(interface)())
 
     @classmethod
-    def _factory(cls, interface: type[Any]) -> _ServiceFactory:
+    def _factory(cls, interface: _Interface) -> Callable[[], Any]:
         try:
             return _factories[interface]
         except KeyError as exc:

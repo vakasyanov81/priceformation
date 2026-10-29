@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable, Sequence
-from typing import Protocol, cast
+from typing import Protocol
 
 from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
@@ -63,8 +63,8 @@ class ParseOrchestrator:
         vendors_provider: Callable[[], VendorList] | None = None,
         config_provider: ConfigProvider | None = None,
     ) -> None:
-        self._grouper_factory = grouper_factory or cast(GrouperFactory, ServiceProvider.resolve(GrouperFactory))
-        self._parser_factory = parser_factory or cast(ParserFactory, ServiceProvider.resolve(ParserFactory))
+        self._grouper_factory = grouper_factory or ServiceProvider.resolve(GrouperFactory)
+        self._parser_factory = parser_factory or ServiceProvider.resolve(ParserFactory)
         self._vendor_source = VendorSource(config_provider)
         self._vendors_provider = vendors_provider or self._vendor_source.all
 

@@ -1,6 +1,7 @@
 """Тесты DI-контейнера ServiceProvider."""
 
 from collections.abc import Iterator
+from typing import Protocol
 
 import pytest
 
@@ -12,6 +13,12 @@ class _SampleService:
 
     def __init__(self, marker: str = 'sample') -> None:
         self.marker = marker
+
+
+class _Greeter(Protocol):
+    """Protocol-интерфейс: проверка, что контейнер принимает не только конкретные классы."""
+
+    def __call__(self, name: str) -> str: ...
 
 
 _SERVICE_KEY: type[_SampleService] = _SampleService
@@ -99,3 +106,11 @@ def test_clear_drops_registrations() -> None:
     assert not ServiceProvider.is_configured()
     with pytest.raises(ServiceNotRegisteredError):
         ServiceProvider.resolve(_SERVICE_KEY)
+
+
+def test_protocol_interface_resolves_typed() -> None:
+    """Protocol как интерфейс: resolve/create возвращают его тип без cast."""
+    ServiceProvider.register(_Greeter, lambda: str.upper)
+    greeter: _Greeter = ServiceProvider.resolve(_Greeter)
+    assert greeter('a') == 'A'
+    assert ServiceProvider.create(_Greeter)('b') == 'B'

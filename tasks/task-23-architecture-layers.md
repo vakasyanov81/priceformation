@@ -77,7 +77,7 @@
   - `vendor_config/provider.py` (`load_vendor_configs`, `load_common_settings`; `lru_cache` по папке) и `vendor_config/activation.py`. Около 15 вызывающих мест, часть в `services` (`vendor_activity`, `vendor_activation`, `mim_service`, `price_schema_service`) и `supplier_file_rules`, `reference_priority`, `all_vendors`, `registry`. Нужно решить, как провайдер попадает в эти вызовы и кто владеет кэшем.
   - `data_provider/manufacturer_aliases.py`: `load_aliases_map()` — процессный `lru_cache`, читают `title_wrap`, `title_registry`, `group_key`, `grouper`; `ManufacturerAliasesProviderFromUserConfig` строится в `make_parse_config`.
   - `data_provider/title_aliases.py`: `load_title_aliases(supplier_name)` вызывается из `title_registry`.
-- **Не начато:** этап 7 — generic-типизация `ServiceProvider` (`register` / `resolve` / `create`, удаление `cast`).
+- **Типизация `ServiceProvider` — выполнена.** `register` / `resolve` / `create` generic (`[Service]`), `cast` в `parse_orchestrator` и `price_report` удалены, аннотация в `price_schema_service` не нужна. Ключ контейнера — `Callable[..., Service]`, а не `type[Service]`: интерфейсы `ParserFactory` / `GrouperFactory` / `XlsWriterFactory` / `WriteDriverFactory` — Protocol, и mypy не принимает их как `type[T]` (`type-abstract`) без подавления. Единственный `cast` остался внутри контейнера (хранилище `dict[..., Any]`). Жизненный цикл и места `resolve` не менялись; тест на Protocol-интерфейс — `test_protocol_interface_resolves_typed`.
 - **Проверки:** после каждого коммита все девять команд из `AGENTS.md` с кодом 0. Сравнение с эталоном (parity) после этапов 3–6 не перезапускалось — скрипта в репозитории нет.
 
 ## Критерии готовности
@@ -88,7 +88,7 @@
 - [x] В `parsers/` нет IMAP / HTTP / download-адаптеров; порты и типы границ не создают зависимостей `infrastructure → parsers` или `domain → верхние слои`.
 - [x] В корне `parsers/` нет россыпи `common_price_*` / `nomenclature_*` / `price_schema_*` / `supplier_price_*`.
 - [ ] `get_config_provider()` не вызывается в `parsers`; вызовы в `services` и `infrastructure` явно оставлены за рамками этой задачи.
-- [ ] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.
+- [x] `ServiceProvider.register` / `resolve` / `create` типизированы generic по интерфейсу; связанные `cast` удалены. Полный отказ от контейнера не объявляется выполненным.
 - [x] Ошибка парсера по-прежнему пробрасывается, JSON-ошибка и код 1 сохранены; traceback покрыт тестами и не дублируется.
 - [ ] Разобранные строки и содержимое writer-результатов на фикстурах совпадают с эталоном до переносов.
 - [ ] Проверки по AGENTS.md проходят по всему репозиторию (exit 0).

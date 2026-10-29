@@ -120,5 +120,5 @@ def _message(vendor: VendorConfig, section: VendorSection, path: Path, change: s
 
 def schema_guard() -> AbstractContextManager[None]:
     """Блок обновления прайсов: копия file_prices до него и предупреждения о смене схем после."""
-    service: PriceSchemaService = ServiceProvider.resolve(PriceSchemaService)
+    service = ServiceProvider.resolve(PriceSchemaService)
     return service.guard()
