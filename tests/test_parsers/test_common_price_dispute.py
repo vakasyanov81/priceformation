@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_dispute import dispute_note
+from parsers.common_price.dispute import dispute_note
 
 
 def _rows(*rows: tuple[Any, Any]) -> list[RowItem]:

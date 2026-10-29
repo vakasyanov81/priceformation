@@ -6,13 +6,13 @@ from operator import attrgetter, itemgetter
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_dispute import dispute_note
-from parsers.common_price_group_title import unify_group_title
-from parsers.common_price_main_double import main_double
-from parsers.common_price_model import clear_model
-from parsers.common_price_model_keys import keys_with_merged_models
-from parsers.common_price_size import canon_number, size_fields
-from parsers.common_price_title_flags import tube_model
+from parsers.common_price.dispute import dispute_note
+from parsers.common_price.group_title import unify_group_title
+from parsers.common_price.main_double import main_double
+from parsers.common_price.model import clear_model
+from parsers.common_price.model_keys import keys_with_merged_models
+from parsers.common_price.size import canon_number, size_fields
+from parsers.common_price.title_flags import tube_model
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.vendor_config.reference_priority import load_reference_priority
 

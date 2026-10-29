@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_fields import (
+from parsers.common_price.group_fields import (
     brand_key_parts,
     camera_from_field,
     camera_key,

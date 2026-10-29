@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import cast
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
+from parsers.common_price.output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
 from services.service_provider import ServiceProvider
 
 

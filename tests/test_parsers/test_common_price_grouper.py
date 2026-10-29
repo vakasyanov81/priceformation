@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.common_price.grouper import CommonPriceGrouper
 
 _PRICE_LOW = 10
 _PRICE_MID = 15
@@ -156,7 +156,7 @@ def test_grouper() -> None:
 
 def test_grouper_loads_aliases_once_when_omitted() -> None:
     """без aliases_map grouper читает карту один раз, не на каждую строку"""
-    with patch('parsers.common_price_grouper.load_aliases_map', return_value={}) as mock_load:
+    with patch('parsers.common_price.grouper.load_aliases_map', return_value={}) as mock_load:
         CommonPriceGrouper([_row(), _high()]).group_by_params()
     mock_load.assert_called_once()
 

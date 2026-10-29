@@ -4,9 +4,9 @@ from collections import defaultdict
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_key import MODEL_KEY_INDEX, group_key
-from parsers.common_price_model import model_tokens
-from parsers.common_price_model_merge import ModelEntry, Tokens, merge_models
+from parsers.common_price.group_key import MODEL_KEY_INDEX, group_key
+from parsers.common_price.model import model_tokens
+from parsers.common_price.model_merge import ModelEntry, Tokens, merge_models
 
 GroupKey = tuple[str, ...]
 KeyedItem = tuple[GroupKey, RowItem]

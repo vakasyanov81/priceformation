@@ -3,7 +3,7 @@
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_title_flags import tube_model, valve_key
+from parsers.common_price.title_flags import tube_model, valve_key
 
 
 def _row(title: str, kind: str) -> RowItem:

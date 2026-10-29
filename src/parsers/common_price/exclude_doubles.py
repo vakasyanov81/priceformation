@@ -11,7 +11,7 @@
 from collections.abc import Callable
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_warehouses import cheapest_with_summed_rest
+from parsers.common_price.warehouses import cheapest_with_summed_rest
 
 _ON_ORDER_MARKER = 'заказ'
 

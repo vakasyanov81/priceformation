@@ -12,8 +12,8 @@
 from collections.abc import Callable, Mapping
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_model import model_tokens
-from parsers.common_price_title_tail import merge_tails, split_title
+from parsers.common_price.model import model_tokens
+from parsers.common_price.title_tail import merge_tails, split_title
 
 _NO_PRIORITY = 1_000_000
 _MIN_TITLES_TO_UNIFY = 2

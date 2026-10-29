@@ -11,8 +11,8 @@ from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
 )
-from parsers.common_price_exclude_doubles import exclude_doubles
-from parsers.common_price_warehouses import merge_warehouse_rows
+from parsers.common_price.exclude_doubles import exclude_doubles
+from parsers.common_price.warehouses import merge_warehouse_rows
 from parsers.data_provider.doubles_settings import DoublesSettings, load_doubles_settings
 from parsers.writer.ixlsx_driver import IXlsDriver
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl

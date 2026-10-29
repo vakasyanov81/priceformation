@@ -25,7 +25,7 @@ from app.run_argv import (
 from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
-from parsers.common_price_output import jsonl_output_files
+from parsers.common_price.output import jsonl_output_files
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.strategies.product_types import CANONICAL_TYPES

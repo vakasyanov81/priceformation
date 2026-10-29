@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_size import canon_diameter, canon_number, size_fields
+from parsers.common_price.size import canon_diameter, canon_number, size_fields
 
 
 def _row(**fields: Any) -> RowItem:

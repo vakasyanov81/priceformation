@@ -3,16 +3,16 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_group_fields import (
+from parsers.common_price.group_fields import (
     brand_key_parts,
     camera_key,
     disk_extras_key,
     sidewall,
     yes_flag,
 )
-from parsers.common_price_model import clear_model
-from parsers.common_price_size import canon_number, size_fields
-from parsers.common_price_title_flags import valve_key
+from parsers.common_price.model import clear_model
+from parsers.common_price.size import canon_number, size_fields
+from parsers.common_price.title_flags import valve_key
 from parsers.data_provider.manufacturer_aliases import load_aliases_map
 from parsers.strategies.normalize import replace_homoglyphs
 

@@ -138,7 +138,7 @@ def test_parse_all_clears_aliases_cache() -> None:
     orchestrator = ParseOrchestrator()
     with (
         patch(f'{_MOD}.clear_manufacturer_aliases_cache') as mock_clear,
-        patch('parsers.common_price_grouper.load_aliases_map', return_value={}) as mock_load,
+        patch('parsers.common_price.grouper.load_aliases_map', return_value={}) as mock_load,
     ):
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])

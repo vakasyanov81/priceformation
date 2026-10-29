@@ -17,7 +17,7 @@ from parsers.all_vendors import all_vendors
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.markup_policy import MarkupPolicy
-from parsers.common_price_grouper import CommonPriceGrouper
+from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from parsers.registry import vendor_entry_for
 from services.parse_logging import LogMessage, parser_messages, skips_messages

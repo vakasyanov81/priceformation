@@ -9,7 +9,7 @@ import pytest
 from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.common_price_output import CommonPriceOut, jsonl_output_files
+from parsers.common_price.output import CommonPriceOut, jsonl_output_files
 from parsers.data_provider.doubles_settings import DOUBLES_CONFIG_FILE, DoublesSettings
 from parsers.writer.jsonl_writer import RESULT_META_FILE
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
@@ -39,7 +39,7 @@ def test_nomenclature_title_correction() -> None:
     )
 
     with patch(
-        'parsers.common_price_output.get_nomenclature_corrected_title',
+        'parsers.common_price.output.get_nomenclature_corrected_title',
         side_effect=lambda title: f'fixed-{title}' if title == 'old' else title,
     ):
         out.nomenclature_title_correction()
@@ -69,9 +69,9 @@ def test_write_all_prices() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price_output.all_writer_templates', return_value=[template]),
+        patch('parsers.common_price.output.all_writer_templates', return_value=[template]),
         patch(
-            'parsers.common_price_output._to_raw_dicts',
+            'parsers.common_price.output._to_raw_dicts',
             return_value=raw_rows,
         ) as mock_raw,
     ):
@@ -102,7 +102,7 @@ def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction'),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price_output.all_writer_templates', return_value=[ForInner, ForDrom]),
+        patch('parsers.common_price.output.all_writer_templates', return_value=[ForInner, ForDrom]),
     ):
         out.write_all_prices()
 
@@ -144,9 +144,9 @@ def test_write_all_prices_jsonl() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
         patch.object(out, 'write_doubles_report', return_value=doubles_path) as mock_doubles,
-        patch('parsers.common_price_output.all_writer_templates', return_value=[template]),
-        patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price_output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
+        patch('parsers.common_price.output.all_writer_templates', return_value=[template]),
+        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
+        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
     ):
         written = out.write_all_prices(as_jsonl=True)
 
@@ -171,7 +171,7 @@ def test_write_all_prices_reloads_nomenclature() -> None:
             'parsers.base_parser.nomenclature_correction.load_file',
             side_effect=[{'old': 'A'}, {'old': 'B'}],
         ),
-        patch('parsers.common_price_output.all_writer_templates', return_value=[]),
+        patch('parsers.common_price.output.all_writer_templates', return_value=[]),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
     ):
         out.write_all_prices()
@@ -206,7 +206,7 @@ def test_write_doubles_report() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
         patch(
-            'parsers.common_price_output._to_raw_dicts',
+            'parsers.common_price.output._to_raw_dicts',
             return_value=raw_rows,
         ) as mock_raw,
     ):
@@ -238,8 +238,8 @@ def test_write_doubles_report_jsonl() -> None:
     raw_rows = [{_TITLE: 'dup'}]
 
     with (
-        patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price_output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
+        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
+        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
     ):
         report_path = out.write_doubles_report(as_jsonl=True)
 
@@ -266,7 +266,7 @@ def test_write_all_prices_single_template() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction'),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
+        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_drom')
 
@@ -298,7 +298,7 @@ def test_write_all_prices_full_template() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction'),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price_output._to_raw_dicts', return_value=raw_rows),
+        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_full')
 
@@ -366,7 +366,7 @@ def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
 
     with (
         patch.object(out, 'nomenclature_title_correction'),
-        patch('parsers.common_price_output.all_writer_templates', return_value=[ForInner, ForDrom]),
+        patch('parsers.common_price.output.all_writer_templates', return_value=[ForInner, ForDrom]),
     ):
         out.write_all_prices()
 

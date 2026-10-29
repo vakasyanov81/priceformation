@@ -3,7 +3,7 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price_warehouses import merge_warehouse_rows
+from parsers.common_price.warehouses import merge_warehouse_rows
 
 _NSK: dict[str, Any] = {'warehouse_group': 'novosibirsk', 'warehouse_name': 'Новосибирск'}
 

@@ -1,8 +1,8 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
 from parsers.base_parser.base_parser import make_parser
-from parsers.common_price_grouper import CommonPriceGrouper
-from parsers.common_price_output import WriteDriverFactory, XlsWriterFactory
+from parsers.common_price.grouper import CommonPriceGrouper
+from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.doubles_service import DoublesService

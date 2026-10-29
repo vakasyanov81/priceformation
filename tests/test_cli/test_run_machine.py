@@ -24,7 +24,7 @@ from app.run_argv import (
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
-from parsers.common_price_output import jsonl_output_files
+from parsers.common_price.output import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
