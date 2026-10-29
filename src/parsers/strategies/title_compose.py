@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_brand import brand_label, model_label
-from parsers.nomenclature_labels import camera_label, run_flat_label, season_marks_label, xl_label
-from parsers.nomenclature_title import TireTitleTokens, compose_disk_title, load_velocity
+from parsers.nomenclature.brand import brand_label, model_label
+from parsers.nomenclature.labels import camera_label, run_flat_label, season_marks_label, xl_label
+from parsers.nomenclature.title import TireTitleTokens, compose_disk_title, load_velocity
 from parsers.strategies._four_tochki_disk_helper import disk_name_suffix, fill_disk_thickness
 from parsers.strategies._tire_title_parser import TireTitleParts, parse_tire_title
 from parsers.strategies.product_type import ProductTypeClassifier
@@ -25,7 +25,7 @@ class TitleFromFields:
     ``XL``, ``M+S``, ``3PMSF`` и ``TL`` — свойства шины, а не шум: остаются, если были в названии поставщика
     или в надписи на боковине.
 
-    Диск собирается по шаблону Форточек (``nomenclature_title.compose_disk_title``): размер, крепёж, ``ET``, DIA,
+    Диск собирается по шаблону Форточек (``nomenclature.title.compose_disk_title``): размер, крепёж, ``ET``, DIA,
     цвет, бренд, модель — из полей, хвост (толщина, усиление, завод в скобках) — из текста поставщика.
     Камера и ободная лента: ``Камера|Ободная лента <размер> [бренд] [модель]``
     (``tube_title.compose_tube_title_from_text``); название кольца не меняется. Шина без разобранного размера

@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_brand import brand_label, model_label
-from parsers.nomenclature_disk_labels import color_label, disk_diameter, disk_width, et_label
-from parsers.nomenclature_labels import axis_label, layering_label, season_marks_label, xl_label
+from parsers.nomenclature.brand import brand_label, model_label
+from parsers.nomenclature.disk_labels import color_label, disk_diameter, disk_width, et_label
+from parsers.nomenclature.labels import axis_label, layering_label, season_marks_label, xl_label
 
 
 def join_title_parts(*parts: object) -> str:

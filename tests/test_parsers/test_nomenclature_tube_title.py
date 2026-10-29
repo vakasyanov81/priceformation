@@ -2,7 +2,7 @@
 
 import pytest
 
-from parsers.nomenclature_tube_title import compose_tube_title, tube_size_label
+from parsers.nomenclature.tube_title import compose_tube_title, tube_size_label
 
 
 @pytest.mark.parametrize(

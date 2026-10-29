@@ -2,7 +2,7 @@
 
 import pytest
 
-from parsers.nomenclature_disk_labels import color_label
+from parsers.nomenclature.disk_labels import color_label
 
 
 @pytest.mark.parametrize(

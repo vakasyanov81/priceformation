@@ -5,7 +5,7 @@
 (``НКШЗ``/``БШК``/``ОШЗ``/``ЯШЗ``/``ВолШЗ``) спрятан в хвосте названия,
 а ``PR`` слипается с размером (``7.00 R16LT14PR``) или отрывается от числа
 (``8 PR``). Разбираем название на параметры и собираем заново в каноническом порядке
-(``nomenclature_title.TireTitleTokens``): ``размер бренд модель нагрузка/скорость PR камера ось``.
+(``nomenclature.title.TireTitleTokens``): ``размер бренд модель нагрузка/скорость PR камера ось``.
 Из назначения в название идёт только ось из словаря (``Рулевая``/``Ведущая``/…), прочее (шип, завод,
 ``об/л``, ``спецшина``) в название не входит.
 
@@ -35,7 +35,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from parsers.nomenclature_title import TireTitleTokens
+from parsers.nomenclature.title import TireTitleTokens
 from parsers.strategies._tire_size_parts import SizeParts, find_size
 from parsers.strategies._tire_title_fields import resolve_fields
 from parsers.strategies._tire_title_service import Service

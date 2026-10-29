@@ -10,8 +10,8 @@ from collections.abc import Iterable
 from itertools import chain, islice
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_labels import AXIS_NAMES, CAMERA_CODES
-from parsers.nomenclature_title import load_velocity
+from parsers.nomenclature.labels import AXIS_NAMES, CAMERA_CODES
+from parsers.nomenclature.title import load_velocity
 
 _LAYERING = re.compile(r'\d+PR')
 _FIXED_RANKS = {

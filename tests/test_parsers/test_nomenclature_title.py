@@ -5,8 +5,8 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_brand import brand_label, model_label
-from parsers.nomenclature_title import (
+from parsers.nomenclature.brand import brand_label, model_label
+from parsers.nomenclature.title import (
     TireTitleTokens,
     compose_tire_title,
     join_size_parts,

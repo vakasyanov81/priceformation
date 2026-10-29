@@ -1,6 +1,6 @@
 """Сборка названия камеры и ободной ленты."""
 
-from parsers.nomenclature_title import join_size_parts, join_title_parts
+from parsers.nomenclature.title import join_size_parts, join_title_parts
 
 
 def tube_size_label(width: str, height_percent: str, diameter: str, ext_diameter: str, width_max: str = '') -> str:

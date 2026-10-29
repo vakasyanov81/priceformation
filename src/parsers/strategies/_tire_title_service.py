@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import NamedTuple
 
-from parsers.nomenclature_labels import season_marks_label, xl_label
+from parsers.nomenclature.labels import season_marks_label, xl_label
 from parsers.strategies._tire_title_tokens import TokenMatcher, take_speed, take_token
 
 _PR = re.compile(r'^\d+\s*PR$', re.IGNORECASE)

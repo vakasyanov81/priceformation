@@ -9,8 +9,8 @@ from collections.abc import Callable, Mapping
 from typing import ClassVar
 
 from domain.row_item.row_item import RowItem
-from parsers.nomenclature_labels import camera_label
-from parsers.nomenclature_title import compose_disk_title, compose_tire_title, join_size_parts
+from parsers.nomenclature.labels import camera_label
+from parsers.nomenclature.title import compose_disk_title, compose_tire_title, join_size_parts
 from parsers.strategies._autosnab_helper import fill_from_title
 from parsers.strategies._four_tochki_disk_helper import disk_name_suffix, fill_disk_thickness
 from parsers.strategies._four_tochki_tire_helper import get_prepared_title as compose_four_tochki
