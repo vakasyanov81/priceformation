@@ -18,6 +18,7 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
+from domain.protocols import ConfigProvider
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.supplier_file_rules import plan_files, vendor_file_rules
 from parsers.supplier_price.errors import SupplierPricesMappingError, UnknownSupplierCodeError
@@ -52,12 +53,12 @@ def _mapping_paths(paths: object) -> PriceSources:
     raise SupplierPricesMappingError(_MSG_NONEMPTY)
 
 
-def load_supplier_prices(mapping: Mapping[str, PriceSources]) -> list[str]:
+def load_supplier_prices(mapping: Mapping[str, PriceSources], config_provider: ConfigProvider) -> list[str]:
     """Разложить файлы по папкам поставщиков; вернуть пути положенных файлов."""
     targets = _supplier_folders(mapping)
     with unpacked_dir() as unpack_dir:
         uploads = [_plan_upload(folder, sources, unpack_dir) for folder, sources in targets]
-        return [dest for upload in uploads for dest in place_files(upload)]
+        return [dest for upload in uploads for dest in place_files(upload, config_provider)]
 
 
 def catalog_entry_for(

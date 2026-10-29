@@ -4,7 +4,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from parsers.supplier_file_rules import PriceFile, SupplierFileRules
 from parsers.supplier_price.sources import is_excel
 
@@ -18,9 +18,9 @@ class SupplierUpload:
     files: list[PriceFile]
 
 
-def place_files(upload: SupplierUpload) -> list[str]:
+def place_files(upload: SupplierUpload, config_provider: ConfigProvider) -> list[str]:
     """Положить файлы в папку поставщика; при новых Excel-прайсах удалить прежние."""
-    dest_dir = Path(get_config_provider().price_folder(upload.folder))
+    dest_dir = Path(config_provider.price_folder(upload.folder))
     dest_dir.mkdir(parents=True, exist_ok=True)
     if any(is_excel(price_file.name) for price_file in upload.files):
         _remove_stale_excel(upload, dest_dir)

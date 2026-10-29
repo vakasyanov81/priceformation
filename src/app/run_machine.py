@@ -22,6 +22,7 @@ from app.run_argv import (
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
+from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.exception_logging import log_exception_once
 from infrastructure.logging.json_mode import quiet_console
@@ -164,7 +165,7 @@ def _command_payload(
         return {
             _JSON_OK: True,
             _JSON_ACTION: LOAD_CONFIG,
-            _JSON_FILES: load_config(payload_arg or ''),
+            _JSON_FILES: load_config(payload_arg or '', get_config_provider()),
         }
     if command in _DOWNLOAD_COMMANDS:
         return _json_download(command)
@@ -287,7 +288,7 @@ def _json_load_prices(raw: str | None) -> dict[str, object]:
     return {
         'ok': True,
         'action': LOAD_SUPPLIER_PRICES,
-        _JSON_FILES: load_supplier_prices(mapping),
+        _JSON_FILES: load_supplier_prices(mapping, get_config_provider()),
         'suppliers': {key: catalog_entry_for(key, catalog)['sup_title'] for key in mapping},
     }
 

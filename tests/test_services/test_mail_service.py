@@ -63,7 +63,7 @@ def _wire(
         save=MagicMock(),
         client=client,
     )
-    monkeypatch.setattr(mail_service, 'load_mail_config', lambda: config)
+    monkeypatch.setattr(mail_service, 'load_mail_config', lambda _provider: config)
     monkeypatch.setattr(mail_service, 'get_mail_credentials', lambda: _CREDENTIALS)
     monkeypatch.setattr(mail_service, 'connect', wired.connect)
     monkeypatch.setattr(mail_service, 'list_price_folders', wired.folders)
@@ -218,3 +218,20 @@ def test_fetch_prices_loads_active_file_vendor(
 
     assert len(mail_service.MailService().fetch_prices()) == 1
     wired.find.assert_called_once()
+
+
+def test_fetch_prices_passes_injected_provider_to_mail_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """MailService отдаёт настройкам почты переданный провайдер, а не глобальный"""
+    injected = MagicMock()
+    seen: list[object] = []
+
+    def fake_load(provider: object) -> None:
+        seen.append(provider)
+        raise RuntimeError('stop')
+
+    monkeypatch.setattr(mail_service, 'load_mail_config', fake_load)
+
+    with pytest.raises(RuntimeError, match='stop'):
+        mail_service.MailService(injected).fetch_prices()
+
+    assert seen == [injected]

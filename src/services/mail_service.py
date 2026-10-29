@@ -8,6 +8,7 @@ from pathlib import Path
 
 from domain.config_context import get_config_provider
 from domain.mail import ImapClient, PriceDownloadError
+from domain.protocols import ConfigProvider
 from infrastructure.config.mail_credentials import get_mail_credentials
 from infrastructure.mail.download import download_price
 from infrastructure.mail.imap import connect, list_price_folders, save_price
@@ -50,9 +51,12 @@ class _MailSession:
 class MailService:
     """Скачивает свежие прайсы поставщиков из настроенного почтового ящика."""
 
+    def __init__(self, config_provider: ConfigProvider | None = None) -> None:
+        self._config_provider = config_provider
+
     def fetch_prices(self) -> list[MailFetchResult]:
         """Скачать по одному свежему прайсу на каждый активный профиль."""
-        config = load_mail_config()
+        config = load_mail_config(self._config_provider or get_config_provider())
         account = config.account
         client = connect(account.host, account.port, account.folder, get_mail_credentials())
         with _MailSession(client) as inbox:

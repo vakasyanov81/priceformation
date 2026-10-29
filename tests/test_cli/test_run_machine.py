@@ -23,6 +23,7 @@ from app.run_argv import (
     ZAPASKA_LOAD_API_DATA,
 )
 from app.run_machine import fail_unknown_result_template, machine_json
+from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from infrastructure.logging.log_paths import LogPaths
@@ -580,7 +581,7 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
         'suppliers': {'1': 'Пошк'},
     }
     mock_parse.assert_called_once_with(raw)
-    mock_load.assert_called_once_with({'1': '/incoming/any.xls'})
+    mock_load.assert_called_once_with({'1': '/incoming/any.xls'}, get_config_provider())
 
 
 def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str]) -> None:
@@ -633,7 +634,7 @@ def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
         'action': LOAD_CONFIG,
         'files': dests,
     }
-    mock_load.assert_called_once_with(raw)
+    mock_load.assert_called_once_with(raw, get_config_provider())
 
 
 def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
@@ -646,7 +647,7 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 0
     _assert_elapsed(payload)
     assert payload['files'] == dests
-    mock_load.assert_called_once_with(raw)
+    mock_load.assert_called_once_with(raw, get_config_provider())
 
 
 def test_json_load_config_without_path_is_empty(capsys: pytest.CaptureFixture[str]) -> None:
@@ -656,7 +657,7 @@ def test_json_load_config_without_path_is_empty(capsys: pytest.CaptureFixture[st
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    mock_load.assert_called_once_with('')
+    mock_load.assert_called_once_with('', get_config_provider())
 
 
 def test_json_load_supplier_prices_without_raw_is_empty(capsys: pytest.CaptureFixture[str]) -> None:

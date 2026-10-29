@@ -4,7 +4,7 @@ import json
 import shutil
 from pathlib import Path
 
-from domain.config_context import get_config_provider
+from domain.protocols import ConfigProvider
 from parsers.load_config_errors import (
     ConfigFileNotFoundError,
     InvalidConfigJsonError,
@@ -21,13 +21,13 @@ _MSG_PATH = 'Ожидается полный путь к файлу или па�
 _MSG_EMPTY = 'В папке нет файлов настроек: {0}'
 
 
-def load_config(source_raw: str) -> list[str]:
+def load_config(source_raw: str, config_provider: ConfigProvider) -> list[str]:
     """Переместить файл или файлы из папки в parse_config, заменив существующие."""
     sources = _resolve_sources(source_raw)
     for source in sources:
         _ensure_allowed(source)
         _validate_json(source)
-    return [_move_config(config_file, _destination(config_file)) for config_file in sources]
+    return [_move_config(config_file, _destination(config_file, config_provider)) for config_file in sources]
 
 
 def _resolve_sources(source_raw: str) -> list[Path]:
@@ -48,14 +48,14 @@ def _files_in_folder(folder: Path) -> list[Path]:
     return sources
 
 
-def _destination(source: Path) -> Path:
+def _destination(source: Path, config_provider: ConfigProvider) -> Path:
     name = source.stem + source.suffix.lower()
     # Preserve vendors/ subfolder: если source внутри папки vendors,
     # кладём в parse_config/vendors/<filename>.
     for parent in source.parents:
         if parent.name == 'vendors':
-            return Path(get_config_provider().config_file(f'vendors/{name}'))
-    return Path(get_config_provider().config_file(name))
+            return Path(config_provider.config_file(f'vendors/{name}'))
+    return Path(config_provider.config_file(name))
 
 
 def _ensure_allowed(source: Path) -> None:

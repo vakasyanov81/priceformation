@@ -3,14 +3,14 @@
 import json
 import shutil
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from cfg import init_cfg
-from domain.config_context import set_config_provider
+from domain.config_context import get_config_provider, set_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.file_config_provider import FileConfigProvider
 from parsers.load_supplier_prices import load_supplier_prices, parse_prices_json
@@ -22,6 +22,7 @@ from parsers.supplier_price.errors import (
     SupplierPricesMappingError,
     UnknownSupplierCodeError,
 )
+from parsers.supplier_price.sources import PriceSources
 
 _CATALOG = {
     '1': {'sup_code': 'poshk', 'sup_title': 'Пошк'},
@@ -64,6 +65,11 @@ def _write_source(tmp_path: Path, name: str, file_bytes: bytes) -> Path:
     return source
 
 
+def _load(mapping: Mapping[str, PriceSources]) -> list[str]:
+    """load_supplier_prices с активным провайдером путей."""
+    return load_supplier_prices(mapping, get_config_provider())
+
+
 def test_parse_prices_json_object() -> None:
     """валидный JSON-объект строк."""
     assert parse_prices_json('{"1": "/incoming/a.xls"}') == {'1': '/incoming/a.xls'}
@@ -97,7 +103,7 @@ def test_load_moves_and_renames(tmp_path: Path, prices_root: Path) -> None:
     """файл перемещается в папку поставщика как price.xls."""
     source = _write_source(tmp_path, 'any_price_name.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'1': str(source)})
+        dests = _load({'1': str(source)})
     dest = prices_root / 'poshk' / 'price.xls'
     assert dests == [str(dest)]
     assert dest.read_bytes() == _XLS_BYTES
@@ -108,7 +114,7 @@ def test_load_xlsx_keeps_extension(tmp_path: Path, prices_root: Path) -> None:
     """xlsx сохраняет расширение."""
     source = _write_source(tmp_path, 'any.xlsx', _XLSX_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'1': str(source)})
+        _load({'1': str(source)})
     dest = prices_root / 'poshk' / 'price.xlsx'
     assert dest.read_bytes() == _XLSX_BYTES
     assert not source.exists()
@@ -118,7 +124,7 @@ def test_load_uppercase_extension(tmp_path: Path, prices_root: Path) -> None:
     """XLS → price.xls."""
     source = _write_source(tmp_path, 'any.XLS', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'1': str(source)})
+        _load({'1': str(source)})
     assert (prices_root / 'poshk' / 'price.xls').is_file()
 
 
@@ -126,7 +132,7 @@ def test_load_creates_supplier_folder(tmp_path: Path, prices_root: Path) -> None
     """папка поставщика создаётся."""
     source = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'3': str(source)})
+        _load({'3': str(source)})
     assert (prices_root / 'pioner' / 'price.xls').is_file()
 
 
@@ -140,7 +146,7 @@ def test_load_replaces_other_extension(tmp_path: Path, prices_root: Path) -> Non
     rest.write_bytes(b'rest')
     source = _write_source(tmp_path, 'new.xlsx', _XLSX_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'1': str(source)})
+        _load({'1': str(source)})
     assert not old_xls.exists()
     assert (dest_dir / 'price.xlsx').read_bytes() == _XLSX_BYTES
     assert rest.read_bytes() == b'rest'
@@ -153,7 +159,7 @@ def test_load_already_in_place(prices_root: Path) -> None:
     dest = dest_dir / 'price.xls'
     dest.write_bytes(_XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dest_paths = load_supplier_prices({'1': str(dest)})
+        dest_paths = _load({'1': str(dest)})
     assert dest_paths == [str(dest)]
     assert dest.read_bytes() == _XLS_BYTES
 
@@ -163,7 +169,7 @@ def test_load_two_suppliers(tmp_path: Path, prices_root: Path) -> None:
     first = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     second = _write_source(tmp_path, 'b.xlsx', _XLSX_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'1': str(first), '3': str(second)})
+        dests = _load({'1': str(first), '3': str(second)})
     assert dests == [
         str(prices_root / 'poshk' / 'price.xls'),
         str(prices_root / 'pioner' / 'price.xlsx'),
@@ -174,7 +180,7 @@ def test_load_rejects_extension(tmp_path: Path, prices_root: Path) -> None:
     """csv нельзя."""
     source = _write_source(tmp_path, 'a.csv', b'csv')
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError, match='csv'):
-        load_supplier_prices({'1': str(source)})
+        _load({'1': str(source)})
     assert source.exists()
 
 
@@ -185,7 +191,7 @@ def test_load_rejects_json_not_in_templates(tmp_path: Path, prices_root: Path) -
         patch(_CATALOG_PATCH, return_value=_CATALOG),
         pytest.raises(SupplierPriceFileNameError, match=r'a\.json.*price\*\.xls'),
     ):
-        load_supplier_prices({'1': str(source)})
+        _load({'1': str(source)})
     assert source.exists()
 
 
@@ -193,14 +199,14 @@ def test_load_missing_file(tmp_path: Path, prices_root: Path) -> None:
     """нет файла."""
     missing = tmp_path / 'incoming' / 'gone.xls'
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(SupplierPriceFileNotFoundError):
-        load_supplier_prices({'1': str(missing)})
+        _load({'1': str(missing)})
 
 
 def test_load_unknown_supplier(tmp_path: Path, prices_root: Path) -> None:
     """неизвестный ИД — до проверки файла."""
     source = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(UnknownSupplierCodeError, match='99'):
-        load_supplier_prices({'99': str(source)})
+        _load({'99': str(source)})
     assert source.exists()
 
 
@@ -208,7 +214,7 @@ def test_load_by_sup_code(tmp_path: Path, prices_root: Path) -> None:
     """ключ — sup_code, не ИД."""
     source = _write_source(tmp_path, 'any.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'poshk': str(source)})
+        dests = _load({'poshk': str(source)})
     dest = prices_root / 'poshk' / 'price.xls'
     assert dests == [str(dest)]
     assert dest.read_bytes() == _XLS_BYTES
@@ -220,7 +226,7 @@ def test_load_mixed_id_and_sup_code(tmp_path: Path, prices_root: Path) -> None:
     first = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     second = _write_source(tmp_path, 'b.xlsx', _XLSX_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'1': str(first), 'pioner': str(second)})
+        dests = _load({'1': str(first), 'pioner': str(second)})
     assert dests == [
         str(prices_root / 'poshk' / 'price.xls'),
         str(prices_root / 'pioner' / 'price.xlsx'),
@@ -231,7 +237,7 @@ def test_load_unknown_sup_code(tmp_path: Path, prices_root: Path) -> None:
     """неизвестный sup_code — до проверки файла."""
     source = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(UnknownSupplierCodeError, match='nope'):
-        load_supplier_prices({'nope': str(source)})
+        _load({'nope': str(source)})
     assert source.exists()
 
 
@@ -240,7 +246,7 @@ def test_load_validates_all_before_move(tmp_path: Path, prices_root: Path) -> No
     good = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     bad = _write_source(tmp_path, 'b.csv', b'csv')
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError):
-        load_supplier_prices({'1': str(good), '3': str(bad)})
+        _load({'1': str(good), '3': str(bad)})
     assert good.exists()
     assert not (prices_root / 'poshk' / 'price.xls').exists()
 
@@ -248,7 +254,7 @@ def test_load_validates_all_before_move(tmp_path: Path, prices_root: Path) -> No
 def test_load_empty_mapping(prices_root: Path) -> None:
     """пустая карта — пустой список."""
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        assert load_supplier_prices({}) == []
+        assert _load({}) == []
 
 
 def test_load_supplier_prices_creates_nested_supplier_folder(tmp_path: Path) -> None:
@@ -259,7 +265,7 @@ def test_load_supplier_prices_creates_nested_supplier_folder(tmp_path: Path) -> 
     source = _write_source(tmp_path, 'poshk.xlsx', _XLSX_BYTES)
 
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        found = load_supplier_prices({'1': str(source)})
+        found = _load({'1': str(source)})
 
     price_file = root / 'file_prices' / 'poshk' / 'price.xlsx'
     assert found == [str(price_file)]
@@ -280,7 +286,7 @@ def test_load_missing_file_message_has_path(tmp_path: Path, prices_root: Path) -
         patch(_CATALOG_PATCH, return_value=_CATALOG),
         pytest.raises(SupplierPriceFileNotFoundError, match=r'gone\.xls'),
     ):
-        load_supplier_prices({'1': str(missing)})
+        _load({'1': str(missing)})
 
 
 def _write_zip(tmp_path: Path, name: str, members: dict[str, bytes]) -> Path:
@@ -309,7 +315,7 @@ def test_load_price_with_territories(tmp_path: Path, prices_root: Path) -> None:
     price = _write_source(tmp_path, 'Прайс МИМ.xlsx', _XLSX_BYTES)
     territories = _write_source(tmp_path, 'territories.json', b'[]')
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'4': (str(price), str(territories))})
+        dests = _load({'4': (str(price), str(territories))})
     dest_dir = prices_root / 'mim'
     assert dests == [str(dest_dir / 'territories.json'), str(dest_dir / 'price.xlsx')]
     assert (dest_dir / 'price.xlsx').read_bytes() == _XLSX_BYTES
@@ -324,7 +330,7 @@ def test_load_price_keeps_old_territories(tmp_path: Path, prices_root: Path) -> 
     (dest_dir / 'price_old.xls').write_bytes(b'old')
     source = _write_source(tmp_path, 'new.xlsx', _XLSX_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'4': str(source)})
+        _load({'4': str(source)})
     assert sorted(path.name for path in dest_dir.iterdir()) == ['price.xlsx', 'territories.json']
     assert (dest_dir / 'territories.json').read_bytes() == b'[1]'
 
@@ -337,7 +343,7 @@ def test_load_only_json_keeps_excel_prices(tmp_path: Path, prices_root: Path) ->
     (dest_dir / 'territories.json').write_bytes(b'[1]')
     source = _write_source(tmp_path, 'territories.json', b'[2]')
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'4': str(source)})
+        _load({'4': str(source)})
     assert (dest_dir / 'price.xlsx').read_bytes() == b'old-price'
     assert (dest_dir / 'territories.json').read_bytes() == b'[2]'
 
@@ -350,7 +356,7 @@ def test_load_several_excel_get_numbered_names(tmp_path: Path, prices_root: Path
     kept = _write_source(tmp_path, 'price_trucks.xlsx', b'd')
     sources = [str(path) for path in (first, second, third, kept)]
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'1': sources})
+        _load({'1': sources})
     dest_dir = prices_root / 'poshk'
     assert sorted(path.name for path in dest_dir.iterdir()) == [
         'price.xls',
@@ -369,7 +375,7 @@ def test_load_generated_name_skips_taken(tmp_path: Path, prices_root: Path) -> N
     exact = _write_source(tmp_path, 'price.xlsx', b'exact')
     other = _write_source(tmp_path, 'other.xlsx', b'other')
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'1': [str(other), str(exact)]})
+        _load({'1': [str(other), str(exact)]})
     dest_dir = prices_root / 'poshk'
     assert (dest_dir / 'price.xlsx').read_bytes() == b'exact'
     assert (dest_dir / 'price_2.xlsx').read_bytes() == b'other'
@@ -383,7 +389,7 @@ def test_load_single_template_rejects_second_excel(tmp_path: Path, prices_root: 
         patch(_CATALOG_PATCH, return_value=_CATALOG),
         pytest.raises(SupplierPriceFileNameError, match=r'b\.xlsx.*STK|b\.xlsx.*stk'),
     ):
-        load_supplier_prices({'7': [str(first), str(second)]})
+        _load({'7': [str(first), str(second)]})
     assert first.exists()
     assert not (prices_root / 'stk').exists()
 
@@ -392,7 +398,7 @@ def test_load_xls_for_xlsx_only_supplier(tmp_path: Path, prices_root: Path) -> N
     """xls поставщику с маской price.xlsx — ошибка: разбор его не прочитает."""
     source = _write_source(tmp_path, 'a.xls', _XLS_BYTES)
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(SupplierPriceFileNameError):
-        load_supplier_prices({'7': str(source)})
+        _load({'7': str(source)})
 
 
 def test_load_json_templates_keep_names(tmp_path: Path, prices_root: Path) -> None:
@@ -400,7 +406,7 @@ def test_load_json_templates_keep_names(tmp_path: Path, prices_root: Path) -> No
     disk = _write_source(tmp_path, 'disk.json', b'{"d": 1}')
     tire = _write_source(tmp_path, 'tire.json', b'{"t": 1}')
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'2': [str(disk), str(tire)]})
+        _load({'2': [str(disk), str(tire)]})
     assert (prices_root / 'zapaska' / 'disk.json').read_bytes() == b'{"d": 1}'
     assert (prices_root / 'zapaska' / 'tire.json').read_bytes() == b'{"t": 1}'
 
@@ -419,7 +425,7 @@ def test_load_zip_flattens_and_skips_service_files(tmp_path: Path, prices_root: 
         },
     )
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        load_supplier_prices({'4': str(archive)})
+        _load({'4': str(archive)})
     dest_dir = prices_root / 'mim'
     assert sorted(path.name for path in dest_dir.iterdir()) == ['price.xlsx', 'territories.json']
     assert (dest_dir / 'price.xlsx').read_bytes() == _XLSX_BYTES
@@ -429,7 +435,7 @@ def test_load_zip_member_path_stays_inside(tmp_path: Path, prices_root: Path) ->
     """запись архива с `../` кладётся по имени файла, а не по пути из архива."""
     archive = _write_zip(tmp_path, 'evil.zip', {'../../price.xlsx': _XLSX_BYTES})
     with patch(_CATALOG_PATCH, return_value=_CATALOG):
-        dests = load_supplier_prices({'1': str(archive)})
+        dests = _load({'1': str(archive)})
     assert dests == [str(prices_root / 'poshk' / 'price.xlsx')]
     assert not (tmp_path / 'price.xlsx').exists()
 
@@ -441,7 +447,7 @@ def test_load_zip_duplicate_names(tmp_path: Path, prices_root: Path) -> None:
         patch(_CATALOG_PATCH, return_value=_CATALOG),
         pytest.raises(SupplierPriceFileNameError, match=r'territories\.json'),
     ):
-        load_supplier_prices({'4': str(archive)})
+        _load({'4': str(archive)})
     assert not (prices_root / 'mim').exists()
 
 
@@ -449,21 +455,21 @@ def test_load_zip_rejects_inner_extension(tmp_path: Path, prices_root: Path) -> 
     """csv в архиве — ошибка расширения с именем файла."""
     archive = _write_zip(tmp_path, 'p.zip', {'list.csv': b'csv'})
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError, match=r'list\.csv'):
-        load_supplier_prices({'1': str(archive)})
+        _load({'1': str(archive)})
 
 
 def test_load_empty_zip(tmp_path: Path, prices_root: Path) -> None:
     """архив без файлов."""
     archive = _write_zip(tmp_path, 'empty.zip', {'folder/': b''})
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(SupplierPriceFileNotFoundError, match='empty'):
-        load_supplier_prices({'1': str(archive)})
+        _load({'1': str(archive)})
 
 
 def test_load_broken_zip(tmp_path: Path, prices_root: Path) -> None:
     """файл .zip, который не архив."""
     archive = _write_source(tmp_path, 'broken.zip', b'not a zip')
     with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError, match='broken'):
-        load_supplier_prices({'1': str(archive)})
+        _load({'1': str(archive)})
 
 
 def test_load_zip_temp_folder_removed(tmp_path: Path, prices_root: Path) -> None:
@@ -476,7 +482,7 @@ def test_load_zip_temp_folder_removed(tmp_path: Path, prices_root: Path) -> None
         patch('tempfile.tempdir', str(unpack_root)),
         pytest.raises(InvalidPriceExtensionError),
     ):
-        load_supplier_prices({'1': str(archive)})
+        _load({'1': str(archive)})
     assert list(unpack_root.iterdir()) == []
 
 
@@ -507,3 +513,16 @@ def test_vendor_file_rules_from_configs(tmp_path: Path) -> None:
     assert rules['zapaska'] == SupplierFileRules(('disk.json', 'tire.json'))
     assert rules['poshk'] == SupplierFileRules(_DEFAULT_TEMPLATES)
     assert rules['mim'] == SupplierFileRules(_DEFAULT_TEMPLATES, ('territories.json',))
+
+
+def test_place_files_folder_comes_from_injected_provider(tmp_path: Path) -> None:
+    """файлы кладутся в папку переданного провайдера, а не глобального"""
+    source = tmp_path / 'price.xlsx'
+    source.write_bytes(b'x')
+    dest = tmp_path / 'custom_prices'
+    injected = MagicMock()
+    injected.price_folder.return_value = str(dest)
+
+    found = load_supplier_prices({'1': str(source)}, injected)
+
+    assert found == [str(dest / 'price.xlsx')]
