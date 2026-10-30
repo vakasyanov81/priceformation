@@ -14,11 +14,13 @@ from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
+from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.registry import UnknownVendorError, make_vendor_entry
 from parsers.vendor_config.models import VendorConfig, VendorSection
 from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
 from services.vendor_parser import parser_for_vendor
+from services.vendor_source import VendorSource
 
 _MOD = 'services.parse_orchestrator'
 _ORCHESTRATOR_LOGGER = 'services.parse_orchestrator'
@@ -26,6 +28,16 @@ _ROW_LOGGER = 'parsers.base_parser.log_parser_process'
 
 
 fake_result = [RowItem({'title': 1})]
+
+
+def _orchestrator(
+    *, parser_factory: Any = parser_for_vendor, vendor_source: VendorSource | None = None
+) -> ParseOrchestrator:
+    return ParseOrchestrator(
+        parser_factory=parser_factory,
+        grouper_factory=CommonPriceGrouper,
+        vendor_source=vendor_source or VendorSource(),
+    )
 
 
 class FakeParser:
@@ -96,28 +108,41 @@ class FakeParserWithBlackListSkips:
 
 def test_parse_all() -> None:
     """парсинг списка вендоров и группировка результата"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
 
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
     assert parsed.parsed_items == fake_result
 
 
-def test_parse_all_uses_vendors_provider() -> None:
-    """parse_all без списка берёт поставщиков из vendors_provider"""
-    providers = MagicMock()
-    providers.return_value = [(cast(type[BaseParser], FakeParser), None)]
-    orchestrator = ParseOrchestrator(vendors_provider=providers)
+def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:
+    """Фабрика получает запись поставщика как есть, а её парсер выполняет разбор."""
+    parser = FakeParser()
+    factory = MagicMock(return_value=parser)
+    vendor_cls = cast(type[BaseParser], FakeParser)
+    orchestrator = _orchestrator(parser_factory=factory)
+
+    parsed = orchestrator.parse_all([(vendor_cls, None)])
+
+    factory.assert_called_once_with(vendor_cls, None)
+    assert parsed.parsed_items == fake_result
+
+
+def test_parse_all_uses_vendor_source() -> None:
+    """parse_all без списка берёт поставщиков из vendor_source"""
+    vendor_source = MagicMock()
+    vendor_source.all.return_value = [(cast(type[BaseParser], FakeParser), None)]
+    orchestrator = _orchestrator(vendor_source=vendor_source)
 
     parsed = orchestrator.parse_all()
 
-    providers.assert_called_once_with()
+    vendor_source.all.assert_called_once_with()
     assert parsed.parsed_items == fake_result
 
 
 def test_parse_vendor_by_code() -> None:
     """parse_vendor разбирает одного поставщика по коду реестра"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     with patch('services.vendor_source.vendor_entry_for', return_value=(cast(type[BaseParser], FakeParser), None)):
         parsed = orchestrator.parse_vendor('poshk')
 
@@ -126,7 +151,7 @@ def test_parse_vendor_by_code() -> None:
 
 def test_parse_vendor_unknown_code() -> None:
     """неизвестный код поставщика → UnknownVendorError"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     with (
         patch('services.vendor_source.vendor_entry_for', side_effect=UnknownVendorError('nope')),
         pytest.raises(UnknownVendorError),
@@ -136,7 +161,7 @@ def test_parse_vendor_unknown_code() -> None:
 
 def test_parse_all_clears_aliases_cache() -> None:
     """каждый прогон сбрасывает кэш aliases и читает карту заново"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     with (
         patch(f'{_MOD}.clear_manufacturer_aliases_cache') as mock_clear,
         patch('services.vendor_source.load_aliases_map', return_value={}) as mock_load,
@@ -150,7 +175,7 @@ def test_parse_all_clears_aliases_cache() -> None:
 def test_parse_all_passes_config() -> None:
     """vendor_cls получает переданный vendor_config, не None."""
     vendor_config = MagicMock(vendor_section=None, vendor_config=None)
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     with patch.object(orchestrator, '_parse_supplier') as mock_parse:
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), vendor_config)])
 
@@ -164,7 +189,7 @@ def test_parse_vendor_parse_error_is_logged(watch_logger: LoggerWatcher) -> None
     parser = MagicMock()
     parser.parse.side_effect = RuntimeError('boom')
     parsed = ParseResult()
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.ERROR)
 
     with pytest.raises(RuntimeError, match='boom'):
@@ -178,7 +203,7 @@ def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
     parser = MagicMock()
     parser.parse.side_effect = RuntimeError('boom')
     parsed = ParseResult()
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.ERROR)
 
     with pytest.raises(RuntimeError, match='boom'):
@@ -193,7 +218,7 @@ def test_parse_vendor_without_skips() -> None:
     parser.parse.return_value = []
     parser.stats = ParserStats()
     parsed = ParseResult()
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
 
     orchestrator._parse_supplier(parsed, parser)
 
@@ -204,7 +229,7 @@ def test_parse_vendor_without_skips() -> None:
 
 def test_skipped_categories_logged(watch_logger: LoggerWatcher) -> None:
     """пропуски неизвестных категорий печатаются в консоль"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
 
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParserWithSkips), None)])
@@ -226,7 +251,7 @@ _BLACK_LIST_SKIP_LOG = '\nОтброшено 3 позиций по правил�
 
 def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
     """отброшенные по black_list позиции печатаются в консоль"""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.INFO)
 
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParserWithBlackListSkips), None)])
@@ -267,7 +292,7 @@ def _disabled_vendor_entry() -> tuple[type[BaseParser], ParseConfiguration]:
 
 def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
     vendor_entry = _disabled_vendor_entry()
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ROW_LOGGER, logging.WARNING)
 
     parsed = orchestrator.parse_all([vendor_entry])
@@ -360,7 +385,7 @@ def test_parser_for_vendor_enabled_without_metadata_falls_back() -> None:
 
 def test_black_list_skips_accumulate_across_vendors() -> None:
     """Пропуски black_list суммируются по всем поставщикам."""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
 
     parsed = orchestrator.parse_all(
         [
@@ -374,7 +399,7 @@ def test_black_list_skips_accumulate_across_vendors() -> None:
 
 def test_parse_vendor_passes_code_to_registry() -> None:
     """parse_vendor передаёт код поставщика в реестр без изменений."""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entry = (cast(type[BaseParser], FakeParser), None)
 
     with patch('services.vendor_source.vendor_entry_for', return_value=entry) as mock_entry:
@@ -385,7 +410,7 @@ def test_parse_vendor_passes_code_to_registry() -> None:
 
 def test_parse_vendors_logs_elapsed(watch_logger: LoggerWatcher) -> None:
     """Длительность разбора считается как разность времени старта и конца."""
-    orchestrator = ParseOrchestrator()
+    orchestrator = _orchestrator()
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.INFO)
     ticks = iter([100.0, 101.23])
 
@@ -413,7 +438,7 @@ def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> 
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.INFO)
     vendor = (cast(type[BaseParser], FakeParserWithTypeCorrections), None)
 
-    parsed = ParseOrchestrator().parse_all([vendor, vendor])
+    parsed = _orchestrator().parse_all([vendor, vendor])
 
     assert parsed.type_corrections == 4
     assert 'Тип товара скорректирован по названию строки, расхождений с поставщиком: 4' in texts_at(
@@ -440,7 +465,7 @@ def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) 
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
     vendor = (cast(type[BaseParser], FakeParserWithTitlesNotComposed), None)
 
-    parsed = ParseOrchestrator().parse_all([vendor, vendor])
+    parsed = _orchestrator().parse_all([vendor, vendor])
 
     assert parsed.titles_not_composed == 6
     warnings = [text for text in texts_at(entries(), logging.WARNING) if 'не собрано из полей' in text]
@@ -453,8 +478,8 @@ def test_logs_cleared_before_parse(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
     monkeypatch.setattr('services.parse_orchestrator.clear_log_files', lambda: calls.append('cleared'))
 
-    ParseOrchestrator().parse_all([])
-    ParseOrchestrator().parse_all([])
+    _orchestrator().parse_all([])
+    _orchestrator().parse_all([])
 
     assert calls == ['cleared', 'cleared']
 
@@ -462,7 +487,7 @@ def test_logs_cleared_before_parse(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_parse_vendor_uses_injected_config_provider() -> None:
     """явно переданный провайдер уходит в реестр, а не подменяется глобальным"""
     injected = MagicMock()
-    orchestrator = ParseOrchestrator(config_provider=injected)
+    orchestrator = _orchestrator(vendor_source=VendorSource(injected))
     entry = (cast(type[BaseParser], FakeParser), None)
 
     with patch('services.vendor_source.vendor_entry_for', return_value=entry) as mock_entry:

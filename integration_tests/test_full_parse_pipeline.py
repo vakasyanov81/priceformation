@@ -19,6 +19,7 @@ from domain.config_context import get_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import clear_registry
 from services.parse_orchestrator import ParseOrchestrator
+from services.service_provider import ServiceProvider
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
@@ -57,7 +58,7 @@ class TestFullParsePipeline:
         строит config-driven парсеры, разбирает прайсы.
         """
         watch = watch_logger(_ROW_LOGGER, logging.ERROR)
-        parse_output = ParseOrchestrator().parse_all()
+        parse_output = ServiceProvider.resolve(ParseOrchestrator).parse_all()
 
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, 'Ошибки разбора: {}'.format('; '.join(errors))
@@ -89,7 +90,7 @@ class TestFullParsePipeline:
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""
         titles_by_group: dict[int | None, set[str | None]] = {}
-        for row_item in ParseOrchestrator().parse_all().parsed_items:
+        for row_item in ServiceProvider.resolve(ParseOrchestrator).parse_all().parsed_items:
             group_titles = titles_by_group.setdefault(row_item.duplicate.group_by_params, set())
             group_titles.add(row_item.identity.title)
 

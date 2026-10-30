@@ -1,6 +1,5 @@
 """JSON-режим обновления всех поставщиков: API и почта, ответ по каждому источнику."""
 
-import contextlib
 import json
 import types
 from unittest.mock import MagicMock, patch
@@ -13,10 +12,10 @@ from domain.exceptions import CoreExceptionError
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
 from services.mim_service import MimService
+from services.price_schema_service import PriceSchemaService
 from services.zapaska_service import ZapaskaService
 
 _RESOLVE = 'app.run_machine.ServiceProvider.resolve'
-_SCHEMA_GUARD = 'app.run_machine.schema_guard'
 _MAIL_FILE = 'file_prices/stk/price.xlsx'
 _Services = dict[type, MagicMock]
 _Capsys = pytest.CaptureFixture[str]
@@ -37,14 +36,12 @@ def _services(
         FourTochkiService: MagicMock(),
         MimService: MagicMock(),
         MailService: mail,
+        PriceSchemaService: MagicMock(),
     }
 
 
 def _run(services: _Services, capsys: _Capsys) -> dict[str, object]:
-    with (
-        patch(_RESOLVE, side_effect=services.__getitem__),
-        patch(_SCHEMA_GUARD, return_value=contextlib.nullcontext()),
-    ):
+    with patch(_RESOLVE, side_effect=services.__getitem__):
         machine_json(UPDATE_ALL_SUPPLIER_PRICES)
     payload: dict[str, object] = json.loads(capsys.readouterr().out)
     return payload

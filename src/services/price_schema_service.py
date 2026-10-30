@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Generator
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from pathlib import Path
 
 from python_calamine import CalamineError
@@ -17,7 +17,6 @@ from parsers.price_schema.models import FileHead, PriceSchema
 from parsers.price_schema.schema import build_schema, read_file_head
 from parsers.vendor_config.models import VendorConfig, VendorSection
 from parsers.vendor_config.provider import load_vendor_configs
-from services.service_provider import ServiceProvider
 
 logger = logging.getLogger(__name__)
 
@@ -122,9 +121,3 @@ def _section_files(folder: str, section: VendorSection, config_provider: ConfigP
 def _message(vendor: VendorConfig, section: VendorSection, path: Path, change: str) -> str:
     """Предупреждение для пользователя."""
     return f'Поставщик «{section.name}» ({vendor.folder}/{path.name}): изменилась схема прайса — {change}'
-
-
-def schema_guard() -> AbstractContextManager[None]:
-    """Блок обновления прайсов: копия file_prices до него и предупреждения о смене схем после."""
-    service = ServiceProvider.resolve(PriceSchemaService)
-    return service.guard()

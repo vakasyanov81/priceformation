@@ -14,6 +14,7 @@ from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import vendor_entry_for
 from parsers.vendor_config.provider import load_vendor_configs
 from services.parse_orchestrator import ParseOrchestrator
+from services.service_provider import ServiceProvider
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
@@ -135,7 +136,7 @@ def test_real_price_rows_have_no_parse_errors(
 ) -> None:
     """реальный прайс разбирается без ошибок строк."""
     watch = watch_logger(_ROW_LOGGER, logging.ERROR)
-    orchestrator = ParseOrchestrator()
+    orchestrator = ServiceProvider.resolve(ParseOrchestrator)
     orchestrator.parse_all([vendor_entry_for('5', get_config_provider())])
     errors = [message for _level, message in watch() if 'Не удалось разобрать строку' in message]
     assert not errors, f'Обнаружены ошибки разбора: {errors}'
@@ -143,7 +144,7 @@ def test_real_price_rows_have_no_parse_errors(
 
 def test_real_price_rows_keep_manufacturer(_four_tochki_provider: None) -> None:
     """бренд не теряется: у строк заполнен производитель (регресс на ключ `manufacturer_name`)."""
-    parsed = ParseOrchestrator().parse_all([vendor_entry_for('5', get_config_provider())])
+    parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
     parsed_rows = parsed.parsed_items
     assert parsed_rows, 'Нет разобранных строк'
     missing = [parsed_row for parsed_row in parsed_rows if not parsed_row.identity.manufacturer]

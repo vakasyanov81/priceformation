@@ -215,7 +215,11 @@ def test_json_parse_error_has_single_traceback_in_log(tmp_path: Path, capsys: py
     setup_logging(paths)
     parser = MagicMock()
     parser.parse.side_effect = RuntimeError('boom')
-    orchestrator = ParseOrchestrator()
+    orchestrator = ParseOrchestrator(
+        parser_factory=MagicMock(),
+        grouper_factory=MagicMock(),
+        vendor_source=MagicMock(),
+    )
     orchestrator_mock = MagicMock()
     orchestrator_mock.parse_all.side_effect = lambda *_args, **_kwargs: orchestrator._parse_supplier(
         ParseResult(), parser

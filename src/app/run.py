@@ -55,7 +55,7 @@ from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
-from services.price_schema_service import schema_guard
+from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.zapaska_service import ZapaskaService
 
@@ -139,21 +139,21 @@ def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
 
 def run_upload_zapaska_data() -> None:
     """Load zapaska data from api"""
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         ServiceProvider.resolve(ZapaskaService).upload_data()
     logger.info('*** Данные успешно загружены. ***\n')
 
 
 def run_upload_four_tochki_data() -> None:
     """Load Four Tochki data from api"""
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         upload_four_tochki_data()
     logger.info('*** Данные Форточек успешно загружены. ***\n')
 
 
 def run_upload_mim_data() -> None:
     """Load MIM data from api"""
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         ServiceProvider.resolve(MimService).upload_data()
     logger.info('*** Данные МИМ успешно загружены. ***\n')
 
@@ -166,7 +166,7 @@ def run_report_doubles() -> None:
 
 def run_fetch_mail_prices() -> None:
     """Download supplier prices from the mail box."""
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         fetched = ServiceProvider.resolve(MailService).fetch_prices()
     logger.info(f'*** Прайсы из почты получены: {len(fetched)}. ***\n')
 
@@ -178,7 +178,7 @@ def run_update_all_supplier_prices() -> None:
     поднимается ошибка домена, чтобы код возврата не скрывал частичный сбой.
     Схемы прайсов сравниваются один раз: копия до первого источника, проверка после последнего.
     """
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         updates = (
             run_upload_zapaska_data,
             run_upload_four_tochki_data,

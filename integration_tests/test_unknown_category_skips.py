@@ -18,6 +18,7 @@ from cfg import init_cfg
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import clear_registry
 from services.parse_orchestrator import ParseOrchestrator
+from services.service_provider import ServiceProvider
 
 _ORCHESTRATOR_LOGGER = 'services.parse_orchestrator'
 _CASE_ROOT = Path(__file__).resolve().parent / 'unknown_category_case'
@@ -54,7 +55,7 @@ def test_unknown_categories_recorded_and_warned(
     """Неизвестные категории записываются в результат и печатаются предупреждением."""
     entries = watch_logger(_ORCHESTRATOR_LOGGER, logging.WARNING)
 
-    parsed = ParseOrchestrator().parse_all()
+    parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
 
     assert parsed.unknown_category_skips == [(_SUPPLIER, category) for category in _UNKNOWN_CATEGORIES]
     categories_label = ', '.join(_UNKNOWN_CATEGORIES)
