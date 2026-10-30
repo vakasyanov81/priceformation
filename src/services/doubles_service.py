@@ -25,11 +25,11 @@ class DoublesService:
     def __init__(
         self,
         *,
-        orchestrator: ParseOrchestrator | None = None,
-        report_service: PriceReportService | None = None,
+        orchestrator: ParseOrchestrator,
+        report_service: PriceReportService,
     ) -> None:
-        self._orchestrator = orchestrator or ParseOrchestrator()
-        self._report_service = report_service or PriceReportService()
+        self._orchestrator = orchestrator
+        self._report_service = report_service
 
     def make_report(self, *, as_jsonl: bool = False) -> DoublesReport:
         """Разобрать всех поставщиков и записать отчёт о дублях."""

@@ -38,7 +38,7 @@ from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.price_report import PriceReportService
-from services.price_schema_service import schema_guard
+from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService, VendorState
 
@@ -233,7 +233,7 @@ def upload_four_tochki_data() -> None:
 def _json_update_all() -> Mapping[str, Any]:
     """Все источники подряд: ошибка одного не отменяет остальные; ответ — итог по каждому источнику."""
     errors: _Errors = {}
-    with schema_guard():
+    with ServiceProvider.resolve(PriceSchemaService).guard():
         for source, update in (
             ('zapaska', _upload_zapaska),
             ('four_tochki', upload_four_tochki_data),

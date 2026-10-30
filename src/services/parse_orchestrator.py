@@ -8,21 +8,17 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
-from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.file_logging import clear_log_files
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
-from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
 from services.parse_result import ParseResult, UnknownCategorySkip
-from services.service_provider import ServiceProvider
-from services.vendor_parser import parser_for_vendor
 from services.vendor_source import VendorSource
 
 logger = logging.getLogger(__name__)
@@ -36,9 +32,7 @@ class ParserFactory(Protocol):
     def __call__(
         self,
         parser_cls: type[BaseParser],
-        parse_config: ParseConfiguration,
-        *,
-        markup_policy: MarkupPolicy | None = None,
+        parse_config: ParseConfiguration | None,
     ) -> BaseParser:
         """Собрать парсер поставщика."""
         ...
@@ -64,19 +58,17 @@ class ParseOrchestrator:
     def __init__(
         self,
         *,
-        grouper_factory: GrouperFactory | None = None,
-        parser_factory: ParserFactory | None = None,
-        vendors_provider: Callable[[], VendorList] | None = None,
-        config_provider: ConfigProvider | None = None,
+        parser_factory: ParserFactory,
+        grouper_factory: GrouperFactory,
+        vendor_source: VendorSource,
     ) -> None:
-        self._grouper_factory = grouper_factory or ServiceProvider.resolve(GrouperFactory)
-        self._parser_factory = parser_factory or ServiceProvider.resolve(ParserFactory)
-        self._vendor_source = VendorSource(config_provider)
-        self._vendors_provider = vendors_provider or self._vendor_source.all
+        self._parser_factory = parser_factory
+        self._grouper_factory = grouper_factory
+        self._vendor_source = vendor_source
 
     def parse_all(self, vendors: VendorList | None = None) -> ParseResult:
         """Парсит всех поставщиков (или переданный список) и группирует."""
-        return self._parse_vendors(self._vendors_provider() if vendors is None else vendors)
+        return self._parse_vendors(self._vendor_source.all() if vendors is None else vendors)
 
     def parse_vendor(self, code: str) -> ParseResult:
         """Парсит одного поставщика по коду реестра и группирует."""
@@ -105,7 +97,7 @@ class ParseOrchestrator:
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
         """Проход по списку поставщиков: разбор каждого через фабрику парсеров."""
         for vendor_cls, vendor_config in vendors:
-            self._parse_supplier(parse_result, parser_for_vendor(vendor_cls, vendor_config))
+            self._parse_supplier(parse_result, self._parser_factory(vendor_cls, vendor_config))
 
     def _parse_supplier(self, parse_result: ParseResult, parser: BaseParser) -> None:
         """Парсит прайс одного поставщика и добавляет записи к результату."""

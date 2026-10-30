@@ -1,6 +1,6 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
-from parsers.base_parser.base_parser import make_parser
+from domain.config_context import get_config_provider
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
@@ -15,6 +15,8 @@ from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService
+from services.vendor_parser import parser_for_vendor
+from services.vendor_source import VendorSource
 from services.zapaska_service import ZapaskaService
 
 
@@ -27,7 +29,7 @@ def configure_services() -> None:
 
 def _register_factories() -> None:
     """Фабрики парсеров, группировщика и писателей."""
-    ServiceProvider.register(ParserFactory, lambda: make_parser)
+    ServiceProvider.register(ParserFactory, lambda: parser_for_vendor)
     ServiceProvider.register(GrouperFactory, lambda: CommonPriceGrouper)
     ServiceProvider.register(XlsWriterFactory, lambda: XlsWriter)
     ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterDriver)
@@ -35,11 +37,33 @@ def _register_factories() -> None:
 
 def _register_services() -> None:
     """Сервисы оркестрации: разбор, отчёты, запаска, форточки, активация поставщиков."""
-    ServiceProvider.register(ParseOrchestrator, ParseOrchestrator)
-    ServiceProvider.register(PriceReportService, PriceReportService)
-    ServiceProvider.register(DoublesService, DoublesService)
+    ServiceProvider.register(
+        ParseOrchestrator,
+        lambda: ParseOrchestrator(
+            parser_factory=ServiceProvider.resolve(ParserFactory),
+            grouper_factory=ServiceProvider.resolve(GrouperFactory),
+            vendor_source=VendorSource(),
+        ),
+    )
+    ServiceProvider.register(PriceReportService, _price_report_service)
+    ServiceProvider.register(
+        DoublesService,
+        lambda: DoublesService(
+            orchestrator=ServiceProvider.resolve(ParseOrchestrator),
+            report_service=ServiceProvider.resolve(PriceReportService),
+        ),
+    )
     ServiceProvider.register(HelpService, HelpService)
     ServiceProvider.register(VendorActivationService, VendorActivationService)
+
+
+def _price_report_service() -> PriceReportService:
+    """Собрать writer-фабрики при создании сервиса, пути окружения читать при записи."""
+    return PriceReportService.from_factories(
+        xls_writer=ServiceProvider.resolve(XlsWriterFactory),
+        write_driver=ServiceProvider.resolve(WriteDriverFactory),
+        config_provider=get_config_provider,
+    )
 
 
 def _register_update_services() -> None:
