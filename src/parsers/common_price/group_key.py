@@ -15,9 +15,13 @@ from parsers.common_price.size import canon_number, size_fields
 from parsers.common_price.title_flags import valve_key
 from parsers.nomenclature.labels import layering_label
 from parsers.strategies.normalize import replace_homoglyphs
+from parsers.strategies.product_types import SPECIAL, TRUCK
 
 # Позиция модели в ключе `group_key` (сверяется тестом): по ней группировщик склеивает модели с лишними словами.
 MODEL_KEY_INDEX = 6
+
+# Типы, где слойность не отличает шину: поставщики пишут её не всегда (`162A6 TT` и `162A6 12PR TT` — одна шина).
+_LAYERING_IGNORED_TYPES = frozenset((TRUCK.lower(), SPECIAL.lower()))
 
 
 def sanitize_value(price_list_values: list[Any]) -> tuple[str, ...]:
@@ -46,6 +50,13 @@ def define_intimacy(row_item: RowItem) -> str | None:
     return None
 
 
+def _layering_key(row_item: RowItem) -> str:
+    """Слойность `<N>PR` для ключа; у грузовых шин и спецшин не учитывается."""
+    if (row_item.vendor.type_production or '').lower() in _LAYERING_IGNORED_TYPES:
+        return ''
+    return layering_label(row_item.tire.layering)
+
+
 def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any]:
     """Значения полей для ключа группировки."""
     mark, brand, mark_group, key_brand = brand_key_parts(row_item, aliases_map)
@@ -57,7 +68,7 @@ def _group_key_parts(row_item: RowItem, aliases_map: dict[str, Any]) -> list[Any
         row_item.tire.index_load,
         clear_model(row_item.identity.model, mark, brand),
         mark_group,
-        layering_label(row_item.tire.layering),
+        _layering_key(row_item),
         key_brand,
         camera_key(row_item, intimacy),
         canon_number(row_item.disk.disk_thickness),

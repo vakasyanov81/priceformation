@@ -26,6 +26,8 @@ class TitleService:
         source_title = row_item.identity.title
         prepared_title = self.get_prepared_title(row_item)
         title_is_prepared = source_title == prepared_title
+        if source_title and prepared_title and not title_is_prepared:
+            row_item.set_field('source_title', source_title)
         row_item.set_field('title', prepared_title or source_title)
         if is_markdown_title(source_title) or is_markdown_title(row_item.identity.title):
             row_item.set_field('marked_down', True)

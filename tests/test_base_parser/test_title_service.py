@@ -60,3 +60,26 @@ def test_is_valid_title_delegates_to_filter() -> None:
 
     assert TitleService(None, title_filter).is_valid_title('x') is False
     title_filter.is_valid_title.assert_called_once_with('x')
+
+
+def test_set_prepared_title_keeps_source_title_when_rebuilt() -> None:
+    title_filter = MagicMock()
+    title_filter.get_prepared_title.return_value = _PREPARED
+    row = RowItem({'title': _SOURCE})
+
+    TitleService(None, title_filter).set_prepared_title(row)
+
+    assert row.vendor.source_title == _SOURCE
+    assert row.original_title == _SOURCE
+    assert row.identity.title == _PREPARED
+
+
+def test_set_prepared_title_without_changes_has_no_source_title() -> None:
+    title_filter = MagicMock()
+    title_filter.get_prepared_title.return_value = _SOURCE
+    row = RowItem({'title': _SOURCE})
+
+    TitleService(None, title_filter).set_prepared_title(row)
+
+    assert row.vendor.source_title is None
+    assert row.original_title == _SOURCE

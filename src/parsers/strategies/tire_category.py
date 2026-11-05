@@ -52,8 +52,8 @@ class TireSizeCategory:
         return cls()
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str:
-        """Определить категорию по названию строки."""
-        return _category_by_title(row_item.identity.title)
+        """Определить категорию по названию из прайса: в собранном названии слов вида шины («сельхозшина») нет."""
+        return _category_by_title(row_item.original_title)
 
 
 def _category_by_title(raw_title: str | None) -> str:

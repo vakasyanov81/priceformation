@@ -106,6 +106,7 @@ class RowItem:
     type_corrected = RowField('type_corrected')
     title_conflict = RowField('title_conflict')
     title_not_composed = RowField('title_not_composed')
+    source_title = RowField('source_title')
 
     rest_count = RowField('rest_count')
     reserve_count = RowField('reserve_count')
@@ -237,6 +238,11 @@ class RowItem:
         """codes"""
         codes = [self.identity.code, self.identity.code_man, self.identity.code_art]
         return list({code for code in codes if code})
+
+    @property
+    def original_title(self) -> str | None:
+        """Название из прайса поставщика: до сборки каноническим названием, если оно отличается от `title`."""
+        return self.vendor.source_title or self.identity.title
 
     @property
     def hash_title(self) -> str | None:

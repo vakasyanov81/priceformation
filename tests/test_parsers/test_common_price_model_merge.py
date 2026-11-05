@@ -1,5 +1,6 @@
 """tests for model merge by token sets."""
 
+from parsers.common_price.model import clear_model, model_tokens
 from parsers.common_price.model_merge import ModelEntry, merge_models
 
 
@@ -48,3 +49,12 @@ def test_unrelated_models_stay_apart() -> None:
 def test_models_without_words_are_skipped() -> None:
     entries = [('', frozenset[str]()), *_entries('x')]
     assert merge_models(entries) == {'x': 'x'}
+
+
+def test_transliterated_cyrillic_model_joins_longer_latin_one() -> None:
+    """`Бел-298` и `Escortera DN500 BEL-298` — одна шина: короткая модель входит в длинную."""
+    long_model, short_model = 'Escortera DN500 BEL-298', 'Бел-298'
+    entries = [(clear_model(model), model_tokens(model)) for model in (long_model, short_model)]
+    merged = merge_models(entries)
+    long_key = clear_model(long_model)
+    assert merged[clear_model(short_model)] == merged[long_key] == long_key

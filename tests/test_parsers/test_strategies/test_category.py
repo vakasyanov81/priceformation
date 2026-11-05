@@ -346,3 +346,12 @@ def test_header_rows_initial_state_is_empty() -> None:
     assert strategy.current_manufacturer() is None
     assert strategy.is_zero_rest_category() is False
     assert strategy.resolve(RowItem({'title': '11.00R20 Taitong', 'price_opt': 24000})) == 'Прочие'
+
+
+def test_tire_size_category_reads_original_title_not_composed() -> None:
+    """Слово «сельхозшина» есть только в названии поставщика: собранное название категорию уже не покажет."""
+    row = RowItem({'title': '360/70 R24 Бел-89  БШК сельхозшина, шт'})
+    row.set_field('source_title', row.identity.title)
+    row.set_field('title', '360/70R24 Белшина Бел-89 TT')
+
+    assert TireSizeCategory.from_config(_config()).resolve(row) == 'Спецшина'
