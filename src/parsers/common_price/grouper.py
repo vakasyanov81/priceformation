@@ -8,7 +8,7 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price.dispute import dispute_note
 from parsers.common_price.group_title import unify_group_title
-from parsers.common_price.main_double import main_double
+from parsers.common_price.main_double import is_doubtful_price, main_double
 from parsers.common_price.model import clear_model
 from parsers.common_price.model_keys import keys_with_merged_models
 from parsers.common_price.size import canon_number, size_fields
@@ -38,6 +38,8 @@ def _mark_double_items(row_items: list[RowItem]) -> None:
             row_item.set_field('double_candidate', True)
         else:
             row_item.set_field('is_double', True)
+            if is_doubtful_price(row_item, min_price_item):
+                row_item.set_field('doubtful_price', True)
         if dispute:
             row_item.set_field('disputed', dispute)
 

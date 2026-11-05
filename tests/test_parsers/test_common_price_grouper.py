@@ -465,3 +465,15 @@ def test_equally_near_unrelated_models_are_not_merged() -> None:
 def test_merged_models_do_not_cross_other_key_parts() -> None:
     """Слияние моделей работает только внутри одного размера."""
     _assert_split(_tire('Gravity'), _tire('Gravity SUV', width='225'))
+
+
+def test_doubtful_price_marks_only_far_doubles() -> None:
+    """дубль дальше 5% от главного — сомнительный; близкий и сам главный — нет"""
+    main = _row(price_markup=100)
+    near = _row(price_markup=104)
+    far = _row(price_markup=105)
+    cheap_far = _row(price_markup=105, available='x')
+    CommonPriceGrouper([main, near, far, cheap_far]).get_double_row_items()
+    assert not main.duplicate.doubtful_price
+    assert not near.duplicate.doubtful_price
+    assert far.duplicate.doubtful_price

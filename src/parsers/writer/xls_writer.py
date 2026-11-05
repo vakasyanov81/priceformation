@@ -143,7 +143,7 @@ class XlsWriter:
         row_item: PriceRow,
         row_index: int,
         helpers: list[ColumnHelper],
-        color: RowColor | None = None,
+        color: RowColor = (None, None),
     ) -> None:
         """write row item"""
         for col_index, col in enumerate(helpers):
@@ -151,7 +151,8 @@ class XlsWriter:
             if not has_value(cell):
                 continue
 
-            cell_color = color[0] if color and color[1] == col_index else None
+            # индекс колонки None в настройке цвета — красим всю строку
+            cell_color = color[0] if color[1] in {None, col_index} else None
             self.driver.write(
                 row_index + 1,
                 col_index,

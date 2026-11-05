@@ -156,6 +156,7 @@ class RowItem:
     double_candidate = RowField('double_candidate')
     is_double = RowField('is_double')
     disputed = RowField('disputed')
+    doubtful_price = RowField('doubtful_price')
 
     def __init__(self, raw_row: dict[str, Any] | None = None):
         """init"""
