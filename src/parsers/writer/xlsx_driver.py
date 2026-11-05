@@ -60,6 +60,7 @@ class XlsxWriterDriver(IXlsDriver):
         self.col_max_length: dict[int, int] = {}
         self._file_name: str | None = None
         self.row_index_at = 1
+        self._column_formats: dict[int, str] = {}
 
     def init_workbook(self, _folder: str, _file_name: str) -> Any:
         if not self.work_book:
@@ -91,6 +92,7 @@ class XlsxWriterDriver(IXlsDriver):
         """
         if self.work_sheet is None:
             raise WorksheetNotInitializedError()
+        self._column_formats.update(column_format)
         for index, c_format in column_format.items():
             self.work_sheet.column_dimensions[number_to_excel_column(index)].number_format = c_format
 
@@ -110,6 +112,9 @@ class XlsxWriterDriver(IXlsDriver):
         cell = self.work_sheet.cell(row=row_idx, column=col_idx, value=cell_content)
         if style:
             cell.font = style
+        # формат колонки наследуют только ячейки без своего стиля; закрашенные (с fill) — нет,
+        # и числа в них выравнивались иначе, чем в соседних строках, — задаём формат ячейке явно
+        cell.number_format = self._column_formats.get(col_idx, cell.number_format)
         if _color:
             cell.fill = solid_fill(_color)
 

@@ -155,3 +155,19 @@ def _assert_saved_sheet(path: Path) -> None:
     assert sheet.column_dimensions['A'].width == len(_BODY_TEXT) + _WIDTH_PAD
     assert sheet.column_dimensions['B'].width == len(_OTHER) + _WIDTH_PAD
     assert sheet.column_dimensions['A'].number_format == _TEXT_FORMAT
+
+
+def test_column_format_is_set_on_every_cell_of_column(tmp_path: Any) -> None:
+    """закрашенная и обычная ячейка колонки получают один формат: иначе выравнивание чисел разное"""
+    driver = XlsxWriterDriver()
+    driver.init_workbook(f'{tmp_path}/', _FILE_NAME)
+    driver.add_sheet(_SHEET)
+    driver.set_column_format({_COL_A: _TEXT_FORMAT})
+    driver.write(1, 0, 1)
+    driver.write(2, 0, 2, _color=_FILL_HEX)
+    driver.write(2, 1, 3)
+    sheet = driver.work_sheet
+    assert sheet is not None
+    assert sheet.cell(row=2, column=_COL_A).number_format == _TEXT_FORMAT
+    assert sheet.cell(row=3, column=_COL_A).number_format == _TEXT_FORMAT
+    assert sheet.cell(row=3, column=_COL_A + 1).number_format == 'General'
