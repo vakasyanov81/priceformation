@@ -29,6 +29,7 @@ class StrategyHooks:
     product_type: ProductTypeClassifier | None = None
     min_rest: int = 4
     find_manufacturer_on_enrich: bool = True
+    manufacturer_column_first: bool = False
     zero_rest_without_category: bool = False
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE
     warehouse_filter: CityWarehouseFilter | None = None

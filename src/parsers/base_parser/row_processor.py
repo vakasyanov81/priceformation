@@ -26,10 +26,12 @@ def apply_min_rest(row_item: RowItem, rest: Any, min_rest: int) -> None:
         row_item.set_field('rest_count', 0)
 
 
-def apply_manufacturer(row_item: RowItem, find_on_enrich: bool, manufacturer_finder: Any) -> None:
+def apply_manufacturer(
+    row_item: RowItem, find_on_enrich: bool, manufacturer_finder: Any, column_first: bool = False
+) -> None:
     """Применить производителя, если включено."""
     if find_on_enrich:
-        manufacturer_finder.process(row_item)
+        manufacturer_finder.process(row_item, column_first)
 
 
 def correction_category(row_item: RowItem, category_finder: Any) -> None:

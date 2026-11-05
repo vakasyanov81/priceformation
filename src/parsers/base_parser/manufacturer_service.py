@@ -15,8 +15,11 @@ class ManufacturerService:
 
     def apply_manufacturer(self, row_item: RowItem) -> None:
         find_on_enrich = True if self._hooks is None else self._hooks.find_manufacturer_on_enrich
-        apply_manufacturer(row_item, find_on_enrich, self._settings.manufacturer_finder())
+        apply_manufacturer(row_item, find_on_enrich, self._settings.manufacturer_finder(), self._column_first())
 
     def apply_manufacturer_after_pipeline(self, row_item: RowItem) -> None:
         """Найти производителя по финальному title, независимо от ``find_manufacturer_on_enrich``."""
-        apply_manufacturer(row_item, True, self._settings.manufacturer_finder())
+        apply_manufacturer(row_item, True, self._settings.manufacturer_finder(), self._column_first())
+
+    def _column_first(self) -> bool:
+        return self._hooks is not None and self._hooks.manufacturer_column_first

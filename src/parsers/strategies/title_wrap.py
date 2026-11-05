@@ -23,14 +23,18 @@ def check_params_flags(config: TitleConfig, where: str) -> None:
         raise ConfigValidationError(f'{where}: «compose» не сочетается с «params_first»: название собирается один раз')
 
 
-def wrap_with_params(strategy: TitleStrategy, config: TitleConfig, config_provider: ConfigProvider) -> TitleStrategy:
+def wrap_with_params(
+    strategy: TitleStrategy, config: TitleConfig, config_provider: ConfigProvider, column_first: bool = False
+) -> TitleStrategy:
     """Обернуть разбором параметров из названия (до или после сборки) и, при `compose`, сборкой шины по полям."""
     if config.params_first:
         return ParamsBeforeTitle(strategy)
     if not config.params_from_title:
         return strategy
     parsed = ParamsFromTitle(strategy)
-    return TitleFromFields(parsed, manufacturer_probe(config_provider)) if config.compose else parsed
+    if not config.compose:
+        return parsed
+    return TitleFromFields(parsed, manufacturer_probe(config_provider), column_first=column_first)
 
 
 def manufacturer_probe(config_provider: ConfigProvider) -> ManufacturerProbe:
