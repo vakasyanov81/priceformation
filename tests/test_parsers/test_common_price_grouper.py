@@ -469,10 +469,10 @@ def test_merged_models_do_not_cross_other_key_parts() -> None:
 
 def test_doubtful_price_marks_only_far_doubles() -> None:
     """дубль дальше 5% от главного — сомнительный; близкий и сам главный — нет"""
-    main = _row(price_markup=100)
-    near = _row(price_markup=104)
-    far = _row(price_markup=105)
-    cheap_far = _row(price_markup=105, available='x')
+    main = _row(price_markup=100, price_opt=100)
+    near = _row(price_markup=104, price_opt=104)
+    far = _row(price_markup=105, price_opt=105)
+    cheap_far = _row(price_markup=105, price_opt=105, available='x')
     CommonPriceGrouper([main, near, far, cheap_far]).get_double_row_items()
     assert not main.duplicate.doubtful_price
     assert not near.duplicate.doubtful_price
