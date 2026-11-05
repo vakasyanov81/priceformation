@@ -27,8 +27,8 @@ _DOUBTFUL_PRICE_DEVIATION = 0.05
 
 
 def is_doubtful_price(row_item: RowItem, main_item: RowItem) -> bool:
-    """Цена дубля отклоняется от цены главного дубля на 5% и более (в любую сторону)."""
-    main_price = main_item.pricing.price_markup
+    """Закупочная цена дубля отклоняется от закупочной цены главного дубля на 5% и более (в любую сторону)."""
+    main_price = main_item.pricing.price_opt
     if not main_price:
         return False
-    return abs(row_item.pricing.price_markup - main_price) / main_price >= _DOUBTFUL_PRICE_DEVIATION
+    return abs(row_item.pricing.price_opt - main_price) / main_price >= _DOUBTFUL_PRICE_DEVIATION
