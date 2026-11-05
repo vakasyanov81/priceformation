@@ -5,7 +5,7 @@ tests write price for internal use
 import datetime
 from typing import Any
 
-from parsers.writer.row_style import row_color
+from parsers.writer.row_style import RowColor, cell_color, row_colors
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
 from tests.fakes.fake_driver import FakeXlwtDriver
@@ -31,10 +31,19 @@ def test_xls_write_for_inner(tmp_path: Any) -> None:
     assert fake_driver.body == result_body_inner
 
 
-def test_inner_colors_doubles_whole_row_and_suppliers_first_cell() -> None:
-    """в общем прайсе дубли красятся как в отчёте дублей, остальные — цветом поставщика в первой ячейке"""
-    colors = ForInner().colors()
-    assert row_color(colors, {'double_candidate': True, 'supplier_name': 'Мим'}) == ('#ccffcc', None)
-    assert row_color(colors, {'doubtful_price': True, 'double_candidate': True}) == ('#ff9999', None)
-    assert row_color(colors, {'supplier_name': 'Мим'}) == ('#f7d5d2', 0)
-    assert 'legend' not in colors
+def _row_cells(colors: list[RowColor]) -> list[str | None]:
+    """цвета первой, второй и шестой ячейки строки"""
+    indexes = (0, 1, 5)
+    return [cell_color(colors, index) for index in indexes]
+
+
+def test_inner_colors_supplier_first_cell_and_doubles_rest_of_row() -> None:
+    """в общем прайсе первая ячейка — цвет поставщика, остальные — подсветка дублей, как в отчёте дублей"""
+    template_colors = ForInner().colors()
+    main = row_colors(template_colors, {'double_candidate': True, 'supplier_name': 'Мим'})
+    assert _row_cells(main) == ['#f7d5d2', '#ccffcc', '#ccffcc']
+    doubtful = row_colors(template_colors, {'doubtful_price': True, 'double_candidate': True, 'supplier_name': 'Мим'})
+    assert _row_cells(doubtful) == ['#f7d5d2', '#ff9999', '#ff9999']
+    plain = row_colors(template_colors, {'supplier_name': 'Мим'})
+    assert _row_cells(plain) == ['#f7d5d2', None, None]
+    assert 'legend' not in template_colors

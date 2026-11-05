@@ -34,16 +34,16 @@ def _make_writer(template: type[IWriteTemplate]) -> XlsWriter:
 @pytest.mark.parametrize(
     ('product', 'expected'),
     [
-        ({'supplier_name': 'Мим'}, (_MIM_COLOR, _COLOR_COLUMN)),
-        ({'supplier_name': 'Пошк'}, (_POSHK_COLOR, _COLOR_COLUMN)),
-        ({'supplier_name': 'Unknown'}, (None, None)),
-        ({'supplier_name': ''}, (None, None)),
-        ({}, (None, None)),
+        ({'supplier_name': 'Мим'}, [(_MIM_COLOR, _COLOR_COLUMN)]),
+        ({'supplier_name': 'Пошк'}, [(_POSHK_COLOR, _COLOR_COLUMN)]),
+        ({'supplier_name': 'Unknown'}, []),
+        ({'supplier_name': ''}, []),
+        ({}, []),
     ],
 )
 def test_get_color_from_inner_map(
     product: dict[str, Any],
-    expected: tuple[str | None, int | None],
+    expected: list[tuple[str, int | None]],
 ) -> None:
     writer = _make_writer(ForInner)
     assert writer._get_color(product) == expected
@@ -51,20 +51,20 @@ def test_get_color_from_inner_map(
 
 def test_get_color_from_inner_write_data() -> None:
     writer = _make_writer(ForInner)
-    assert writer._get_color(write_data[0]) == (_MIM_COLOR, _COLOR_COLUMN)
+    assert writer._get_color(write_data[0]) == [(_MIM_COLOR, _COLOR_COLUMN)]
 
 
 def test_get_color_without_template_colors() -> None:
     writer = _make_writer(FixtureTemplate)
-    assert writer._get_color(write_data[0]) == (None, None)
+    assert writer._get_color(write_data[0]) == []
 
 
 def test_get_color_without_value_map() -> None:
     writer = _make_writer(ColorsWithoutMapTemplate)
-    assert writer._get_color({'supplier_name': 'Мим'}) == (None, None)
+    assert writer._get_color({'supplier_name': 'Мим'}) == []
 
 
 def test_get_color_empty_column_name_is_no_color() -> None:
     """Пустое имя колонки цвета отключает окраску даже при ключе '' в строке."""
     writer = _make_writer(_EmptyColorColumnTemplate)
-    assert writer._get_color({'': 'x'}) == (None, None)
+    assert writer._get_color({'': 'x'}) == []

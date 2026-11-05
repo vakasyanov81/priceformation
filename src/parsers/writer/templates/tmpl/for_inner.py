@@ -81,11 +81,10 @@ class ForInner(IWriteTemplate):
         {'Год выпуска': {'field': RowItem.production_year.name}},
     ]
 
-    # дубли красят всю строку, остальные — только первую ячейку цветом поставщика;
+    # первая ячейка — цвет поставщика, остальные ячейки строки — подсветка дублей;
     # легенды нет: строки над шапкой общего прайса сломали бы его разбор у потребителей
     __COLOR__: ClassVar[WriteColors] = {
         'rules': [
-            *DOUBLES_COLOR_RULES,
             {
                 'by_column': RowItem.supplier_name.name,
                 'with_map': {
@@ -96,6 +95,7 @@ class ForInner(IWriteTemplate):
                 },
                 'set_to_column_index': 0,
             },
+            *DOUBLES_COLOR_RULES,
         ],
     }
 

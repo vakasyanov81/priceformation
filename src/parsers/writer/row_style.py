@@ -6,7 +6,7 @@ from typing import Any
 
 from parsers.writer.ixlsx_driver import IXlsDriver
 
-type RowColor = tuple[str | None, int | None]
+type RowColor = tuple[str, int | None]
 type PriceRow = dict[str, Any]
 
 
@@ -23,23 +23,27 @@ def write_legend(driver: IXlsDriver, legend: list[tuple[str, str]]) -> int:
     return len(legend) + 1
 
 
-def _rule_color(product: PriceRow, colors: dict[str, Any]) -> RowColor:
-    """цвет по одному правилу by_column/with_map"""
+def _rule_color(product: PriceRow, colors: dict[str, Any]) -> RowColor | None:
+    """цвет по одному правилу by_column/with_map; None — правило к строке не подходит"""
     column_name = colors.get('by_column')
     column_value = product.get(column_name) if column_name else None
     color_map = colors.get('with_map')
     if not column_value or not color_map:
-        return None, None
-    return color_map.get(column_value), colors.get('set_to_column_index')
+        return None
+    color = color_map.get(column_value)
+    return (color, colors.get('set_to_column_index')) if color else None
 
 
-def row_color(colors: dict[str, Any], product: PriceRow) -> RowColor:
-    """Цвет строки: либо одно правило, либо `rules` — первое сработавшее."""
-    rules = colors.get('rules')
-    if rules is None:
-        return _rule_color(product, colors)
-    for rule in rules:
-        color = _rule_color(product, rule)
-        if color[0]:
+def row_colors(colors: dict[str, Any], product: PriceRow) -> list[RowColor]:
+    """Цвета строки по порядку правил (либо одно правило, либо `rules`); приоритет у более раннего."""
+    rules = colors.get('rules') or [colors]
+    matched = (_rule_color(product, rule) for rule in rules)
+    return [color for color in matched if color]
+
+
+def cell_color(colors: list[RowColor], col_index: int) -> str | None:
+    """Цвет ячейки: первое правило, которое красит всю строку (индекс None) или эту колонку."""
+    for color, color_index in colors:
+        if color_index in {None, col_index}:
             return color
-    return None, None
+    return None

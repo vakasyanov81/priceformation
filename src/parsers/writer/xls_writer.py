@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from parsers.writer.ixlsx_driver import IXlsDriver
-from parsers.writer.row_style import PriceRow, RowColor, row_color, write_legend
+from parsers.writer.row_style import PriceRow, RowColor, cell_color, row_colors, write_legend
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 
@@ -116,16 +116,16 @@ class XlsWriter:
         """get column names"""
         return [ColumnHelper(col).name for col in self.template.columns()]
 
-    def _get_color(self, product: PriceRow) -> RowColor:
-        """get color"""
-        return row_color(self.template.colors(), product)
+    def _get_color(self, product: PriceRow) -> list[RowColor]:
+        """get colors: правила, подошедшие строке, по приоритету"""
+        return row_colors(self.template.colors(), product)
 
     def _write_row(
         self,
         row_item: PriceRow,
         row_index: int,
         helpers: list[ColumnHelper],
-        color: RowColor = (None, None),
+        colors: list[RowColor] | None = None,
     ) -> None:
         """write row item"""
         for col_index, col in enumerate(helpers):
@@ -134,10 +134,9 @@ class XlsWriter:
                 continue
 
             # индекс колонки None в настройке цвета — красим всю строку
-            cell_color = color[0] if color[1] in {None, col_index} else None
             self.driver.write(
                 row_index + 1,
                 col_index,
                 cell,
-                _color=cell_color,
+                _color=cell_color(colors or [], col_index),
             )
