@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from domain.row_item.row_item import RowItem
 from parsers.nomenclature.brand import brand_label, model_label
 from parsers.nomenclature.labels import camera_label, run_flat_label, season_marks_label, xl_label
@@ -14,6 +16,9 @@ from parsers.strategies.protocols import ManufacturerProbe, TitleStrategy
 from parsers.strategies.tube_title import compose_tube_title_from_text
 
 _TIRE_TYPES = frozenset((PASSENGER, LIGHT_TRUCK, TRUCK, SPECIAL, MOTO))
+_BRACKETS = re.compile(r'\([^)]*\)')
+# Владелец бренда в скобках сразу за брендом: `Gislaved (Bridgestone) SpikeControl` → модель начинается со скобок.
+_OWNER_IN_BRACKETS = re.compile(r'^(\([^)]+\))\s*')
 
 
 class TitleFromFields:
@@ -70,10 +75,10 @@ class TitleFromFields:
 
     def _compose(self, row_item: RowItem, parts: TireTitleParts, title: str) -> str:
         tire = row_item.tire
-        model = model_label(row_item) or parts.model_name
+        owner, model = self._owner_and_model(row_item, parts)
         return TireTitleTokens(
             parts.size_with_alt(),
-            self._brand(row_item, parts, title),
+            ' '.join(filter(None, (self._brand(row_item, parts, title), owner))),
             model,
             load_velocity=load_velocity(row_item) or f'{parts.load}{parts.velocity}',
             xl=xl_label(title, tire.inscription_on_the_side),
@@ -84,13 +89,27 @@ class TitleFromFields:
             run_flat='' if run_flat_label(None, model) else run_flat_label(tire.run_flat, title),
         ).compose()
 
+    def _owner_and_model(self, row_item: RowItem, parts: TireTitleParts) -> tuple[str, str]:
+        """Владелец бренда в скобках и модель без него: из поля модели, иначе из разбора названия."""
+        owner, parts_model = self._split_owner(parts.model_name)
+        column_owner, column_model = self._split_owner(model_label(row_item))
+        return owner or column_owner, column_model or parts_model
+
+    def _split_owner(self, model: str) -> tuple[str, str]:
+        """(владелец бренда в скобках, модель без него); владелец — только если в скобках известный производитель."""
+        match = _OWNER_IN_BRACKETS.match(model)
+        if match is None or not self._manufacturer_probe(match.group(1)):
+            return '', model
+        return match.group(1), model[match.end() :]
+
     def _brand(self, row_item: RowItem, parts: TireTitleParts, title: str) -> str:
         """Бренд для названия: производитель, которого найдёт ``ManufacturerFinder`` в тексте поставщика.
 
-        Разбор по алиасам, а не поле: колонка поставщика может нести владельца в скобках
-        (``Ikon (Nokian Tyres)``), а после сборки он из названия пропадёт и производитель позиции сменится.
+        Разбор по алиасам, а не поле: колонка может нести лишнее. Владелец в скобках (``Gislaved (Bridgestone)``)
+        в бренд не входит: поиск смотрит на слово до скобок, а сами скобки остаются в названии.
         """
-        return self._manufacturer_probe(title) or row_item.identity.manufacturer or parts.brand
+        column = _BRACKETS.sub('', row_item.identity.manufacturer or '').strip()
+        return self._manufacturer_probe(title) or column or parts.brand
 
 
 def _has_disk_fields(row_item: RowItem) -> bool:

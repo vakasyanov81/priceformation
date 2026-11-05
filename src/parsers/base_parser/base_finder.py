@@ -2,6 +2,7 @@
 find word in title
 """
 
+import re
 from functools import lru_cache
 
 from domain.row_item.row_item import RowItem
@@ -13,6 +14,24 @@ from .alias_container import AliasContainer
 def str_lower(_str: str) -> str:
     """cached lowered string"""
     return _str.lower()
+
+
+_BRACKETS = re.compile(r'\([^)]*\)')
+
+
+def blank_brackets(title: str) -> str:
+    """Название с текстом в скобках, заменённым пробелами той же длины (позиции совпадений не сдвигаются).
+
+    В скобках поставщик пишет владельца бренда (`Gislaved (Bridgestone)`): производитель позиции — слово перед ними.
+    """
+    return _BRACKETS.sub(lambda match: ' ' * len(match.group()), title)
+
+
+def _haystacks(title: str | None) -> tuple[str | None, ...]:
+    """Где искать производителя: сначала вне скобок, затем и в них (завод — единственное упоминание бренда)."""
+    if not title or '(' not in title:
+        return (title,)
+    return blank_brackets(title), title
 
 
 def replace_alias_in_title(row_item: RowItem, old_man: str, new_man: str) -> None:
@@ -77,11 +96,14 @@ class BaseFinder:
     def _search(self, title: str | None) -> tuple[str | None, str | None]:
         """Полный перебор алиасов по title."""
         self._title = title
-        self._title_lower = title.lower() if title else title
-        correct_alias, incorrect_alias = self._find_from_lower_list(self._correct_lowers, return_correct=True)
-        if correct_alias:
-            return correct_alias, incorrect_alias
-        return self._find_from_lower_list(self._incorrect_lowers)
+        found: tuple[str | None, str | None] = (None, None)
+        for haystack in _haystacks(title):
+            self._title_lower = haystack.lower() if haystack else haystack
+            correct, incorrect = self._find_from_lower_list(self._correct_lowers, return_correct=True)
+            found = (correct, incorrect) if correct else self._find_from_lower_list(self._incorrect_lowers)
+            if found[0]:
+                break
+        return found
 
     def _find_from_lower_list(
         self,
