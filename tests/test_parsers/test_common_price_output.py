@@ -410,6 +410,28 @@ def test_doubles_report_puts_priority_supplier_first_within_group() -> None:
     assert [row['supplier_name'] for row in rows] == ['Автоснабжение', 'Пошк', 'Мим', 'Автоснабжение']
 
 
+def test_doubles_report_puts_groups_with_priority_supplier_on_top() -> None:
+    """Группа с приоритетным поставщиком идёт выше групп без него, даже если её номер больше."""
+    writer_cls = MagicMock()
+    plain = _double_row('Пошк', 5000)
+    plain.set_field('group_by_params', 1)
+    priority = _double_row('Автоснабжение', 6000)
+    priority.set_field('group_by_params', 2)
+    out = CommonPriceOut(
+        [plain, _double_row('Мим', 4000), priority],
+        xls_writer=cast(type[XlsWriter], writer_cls),
+        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        config_provider=get_config_provider(),
+        doubles_settings=DoublesSettings(priority_suppliers=('Автоснабжение',)),
+    )
+
+    with patch.object(out, 'nomenclature_title_correction'):
+        out.write_doubles_report()
+
+    rows = writer_cls.call_args.args[1]
+    assert rows[0]['supplier_name'] == 'Автоснабжение'
+
+
 def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigProvider) -> None:
     """Без переданных настроек читается parse_config/doubles.json."""
     path = Path(fake_config_provider.config_file(DOUBLES_CONFIG_FILE))

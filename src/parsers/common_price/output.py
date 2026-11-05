@@ -11,6 +11,7 @@ from parsers.base_parser.nomenclature_correction import (
     clear_nomenclature_cache,
     get_nomenclature_corrected_title,
 )
+from parsers.common_price.doubles_order import priority_first
 from parsers.common_price.exclude_doubles import exclude_doubles
 from parsers.common_price.warehouses import merge_warehouse_rows
 from parsers.data_provider.doubles_settings import DoublesSettings, load_doubles_settings
@@ -25,17 +26,6 @@ from parsers.writer.templates.all_templates import (
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.xls_writer import XlsWriter
-
-
-def _priority_first(rows: list[RowItem], priority_suppliers: tuple[str, ...]) -> list[RowItem]:
-    """Внутри группы дублей приоритетные поставщики идут первыми (по порядку списка), остальное — как было."""
-    rank = {supplier: index for index, supplier in enumerate(priority_suppliers)}
-
-    def sort_key(row: RowItem) -> tuple[int, int]:
-        supplier_rank = rank.get(row.vendor.supplier_name or '', len(rank))
-        return row.duplicate.group_by_params or 0, supplier_rank
-
-    return sorted(rows, key=sort_key)
 
 
 class WriteDriverFactory(Protocol):
@@ -125,7 +115,7 @@ class CommonPriceOut:
             if row_item.duplicate.is_double or row_item.duplicate.double_candidate
         ]
         return self._write_with_template(
-            _priority_first(doubles, self._settings().priority_suppliers),
+            priority_first(doubles, self._settings().priority_suppliers),
             ForDoubles,
             as_jsonl=as_jsonl,
         )
