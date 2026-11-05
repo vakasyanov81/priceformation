@@ -120,3 +120,4 @@ class VendorMeta:
     type_corrected: bool | None = None
     title_conflict: bool | None = None
     title_not_composed: bool | None = None
+    source_title: str | None = None
