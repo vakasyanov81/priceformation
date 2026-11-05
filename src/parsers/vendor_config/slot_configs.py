@@ -145,6 +145,8 @@ class BehaviorConfig:
 
     `warehouse_cities` — оставить остатки только на складах этих городов (пусто — без фильтра).
     `order_from_warehouse_name` — «под заказ» и срок доставки берутся из названия склада.
+    `manufacturer_column_first` — производитель берётся из колонки `manufacturer_name`; из названия — только
+    если колонка пуста (Форточки). По умолчанию название приоритетнее колонки.
     `api_types` — id категорий, выгружаемых по API поставщика (МИМ); пусто — набор по умолчанию.
     """
 
@@ -154,6 +156,7 @@ class BehaviorConfig:
     zero_rest_without_category: bool = False
     collect_missing_recommended: bool = False
     find_manufacturer_on_enrich: bool = True
+    manufacturer_column_first: bool = False
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE
     warehouse_cities: tuple[str, ...] = ()
     order_from_warehouse_name: bool = False
@@ -170,6 +173,7 @@ class BehaviorConfig:
             zero_rest_without_category=read_flag(payload, 'zero_rest_without_category', where),
             collect_missing_recommended=read_flag(payload, 'collect_missing_recommended', where),
             find_manufacturer_on_enrich=read_flag(payload, 'find_manufacturer_on_enrich', where, True),
+            manufacturer_column_first=read_flag(payload, 'manufacturer_column_first', where),
             pipeline=read_str_list(payload, 'pipeline', where, DEFAULT_PIPELINE),
             warehouse_cities=read_str_list(payload, 'warehouse_cities', where, ()),
             order_from_warehouse_name=read_flag(payload, 'order_from_warehouse_name', where),

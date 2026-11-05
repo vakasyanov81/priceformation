@@ -38,4 +38,18 @@ def test_apply_after_pipeline_ignores_enrich_flag() -> None:
 
     service.apply_manufacturer_after_pipeline(row)
 
-    finder.process.assert_called_once_with(row)
+    finder.process.assert_called_once_with(row, False)
+
+
+@pytest.mark.parametrize(
+    ('hooks', 'column_first'), [(None, False), (StrategyHooks(manufacturer_column_first=True), True)]
+)
+def test_column_first_flag_reaches_finder(hooks: StrategyHooks | None, column_first: bool) -> None:
+    service, finder = _service(hooks)
+    row = RowItem({'title': _TITLE})
+
+    service.apply_manufacturer(row)
+    service.apply_manufacturer_after_pipeline(row)
+
+    finder.process.assert_called_with(row, column_first)
+    assert finder.process.call_count == 2

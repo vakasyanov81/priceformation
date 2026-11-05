@@ -22,6 +22,7 @@
       "absolute_markup_rules": { "min_absolute_markup": 500, "mode": "delta" }
     }
   },
+  "behavior": { "manufacturer_column_first": true },
   "sections": [
     {
       "sheet_info": "Вкладка (шины) #1",

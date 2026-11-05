@@ -344,3 +344,39 @@ def test_tube_without_size_keeps_supplier_text_and_is_marked() -> None:
 
     assert _compose(row) == 'Камера УК-14-02 ОШЗ'
     assert row.vendor.title_not_composed is True
+
+
+_NORDMAN_TITLE = '195/55R15 89R XL Nordman RS2 (Character Snow 2) TL'
+
+
+_IKON_FINDER = BaseFinder(AliasContainer({'Ikon Tyres': ('ikon',), 'Nordman': ()}))
+
+
+def _ikon_probe(title: str | None) -> str | None:
+    return _IKON_FINDER.find_word_in_title(title)[0]
+
+
+def _nordman_row(manufacturer: str) -> RowItem:
+    return RowItem(
+        {'title': _NORDMAN_TITLE, 'manufacturer_name': manufacturer, 'model': 'Nordman RS2 (Character Snow 2)'},
+    )
+
+
+def test_column_first_brand_comes_from_manufacturer_column() -> None:
+    """Колонка `Ikon` приоритетнее модели `Nordman` из названия: бренд — Ikon Tyres, модель остаётся целой."""
+    composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
+
+    title = composer.prepare(_nordman_row('Ikon'))
+
+    assert title is not None
+    assert 'Ikon Tyres Nordman RS2' in title
+
+
+def test_column_first_brand_from_title_when_column_empty() -> None:
+    """Колонка пуста — производителя определяет поиск по названию."""
+    composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
+
+    title = composer.prepare(_nordman_row(''))
+
+    assert title is not None
+    assert 'Nordman' in title

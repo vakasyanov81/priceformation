@@ -43,11 +43,13 @@ class TitleFromFields:
         inner: TitleStrategy,
         manufacturer_probe: ManufacturerProbe | None = None,
         classifier: ProductTypeClassifier | None = None,
+        column_first: bool = False,
     ) -> None:
         """Обернуть стратегию, готовящую название и поля; ``manufacturer_probe`` ищет производителя в названии."""
         self._inner = inner
         self._manufacturer_probe = manufacturer_probe or _no_manufacturer
         self._classifier = classifier or ProductTypeClassifier()
+        self._column_first = column_first
 
     def prepare(self, row_item: RowItem) -> str | None:
         """Подготовить название вложенной стратегией и собрать из него и полей шины каноническое."""
@@ -109,6 +111,9 @@ class TitleFromFields:
         в бренд не входит: поиск смотрит на слово до скобок, а сами скобки остаются в названии.
         """
         column = _BRACKETS.sub('', row_item.identity.manufacturer or '').strip()
+        if self._column_first:
+            # Колонка поставщика приоритетнее названия: модель (`Nordman RS2`) не должна становиться брендом.
+            return self._manufacturer_probe(column) or column or self._manufacturer_probe(title) or parts.brand
         return self._manufacturer_probe(title) or column or parts.brand
 
 

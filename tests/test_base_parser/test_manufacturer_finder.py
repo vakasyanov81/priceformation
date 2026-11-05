@@ -192,3 +192,23 @@ map_manufacturer = {
     'Remain': (),
     'Replay': (),
 }
+
+
+def test_column_first_keeps_column_manufacturer_over_title() -> None:
+    """column_first: непустая колонка (с нормализацией алиаса) приоритетнее найденного в названии."""
+    finder = ManufacturerFinder({'Ikon Tyres': ['Ikon'], 'Nordman': []})
+    row_item = RowItem({'title': '195/55R15 Nordman RS2 89R', 'manufacturer_name': 'Ikon'})
+
+    finder.process(row_item, column_first=True)
+
+    assert row_item.identity.manufacturer == 'Ikon Tyres'
+
+
+def test_column_first_searches_title_when_column_empty() -> None:
+    """column_first: пустая колонка — производитель ищется в названии."""
+    finder = ManufacturerFinder({'Ikon Tyres': ['Ikon'], 'Nordman': []})
+    row_item = RowItem({'title': '195/55R15 Nordman RS2 89R', 'manufacturer_name': ''})
+
+    finder.process(row_item, column_first=True)
+
+    assert row_item.identity.manufacturer == 'Nordman'

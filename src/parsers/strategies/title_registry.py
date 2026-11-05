@@ -63,13 +63,14 @@ def make_title_strategy(
     manufacturer_reader: ManufacturerReader | None = None,
     *,
     config_provider: ConfigProvider,
+    column_first: bool = False,
 ) -> TitleStrategy:
     """Собрать стратегию title по слоту конфига; при `aliases` — обернуть картой."""
     check_params_flags(config, where)
     strategy = _build_strategy(config, where, manufacturer_reader, config_provider)
     if config.aliases:
         strategy = TitleWithAliases(strategy, load_title_aliases(supplier_name, config_provider))
-    strategy = wrap_with_params(strategy, config, config_provider)
+    strategy = wrap_with_params(strategy, config, config_provider, column_first)
     if config.markers:
         strategy = TitleWithMarkers(strategy, config.markers)
     return strategy

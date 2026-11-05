@@ -20,8 +20,12 @@ class ManufacturerFinder:
         self.aliases = AliasContainer(aliases_for_finder(aliases or {}))
         self._finder = BaseFinder(self.aliases)
 
-    def process(self, row_item: RowItem) -> None:
-        """process"""
+    def process(self, row_item: RowItem, column_first: bool = False) -> None:
+        """Поставить производителя; ``column_first`` — колонка приоритетнее названия, название — если колонка пуста."""
+
+        if column_first and row_item.identity.manufacturer:
+            self.correction_manufacturer(row_item)
+            return
 
         manufacturer, bad_manufacturer = self._finder.find_word_in_title(row_item.identity.title)
 
