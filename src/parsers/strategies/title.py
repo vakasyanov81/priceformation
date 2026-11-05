@@ -80,6 +80,9 @@ class NormalizeSizeChunks:
         return chunks
 
 
+_DIAGONAL = '-'
+
+
 class TireCompose:
     """Сборка title шины; вариант задаёт набор полей."""
 
@@ -108,7 +111,9 @@ class TireCompose:
         height_percent = row_item.tire.height_percent or ''
         diameter = row_item.tire.diameter or ''
         profile = f'/{height_percent}' if height_percent else ''
-        size = join_size_parts(row_item.tire.width, profile, f'R{diameter}' if diameter else '')
+        # диагональная шина (тип конструкции «-») пишется через дефис: 11.2-20, а не 11.2R20
+        construct = _DIAGONAL if row_item.tire.construction_type == _DIAGONAL else 'R'
+        size = join_size_parts(row_item.tire.width, profile, f'{construct}{diameter}' if diameter else '')
         return compose_tire_title(
             row_item,
             size,
