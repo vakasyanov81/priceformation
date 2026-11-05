@@ -52,6 +52,12 @@ class GrouperFactory(Protocol):
         ...
 
 
+def _doubles_summary(doubles: list[RowItem]) -> str:
+    """Строка итога по дублям: всего и сколько из них сомнительных по цене."""
+    doubtful = sum(1 for row in doubles if row.duplicate.doubtful_price)
+    return f'\nКоличество дублей: {len(doubles)}, из них сомнительных (цена ±5%): {doubtful}\n'
+
+
 class ParseOrchestrator:
     """Парсит прайс-листы поставщиков и группирует результат."""
 
@@ -89,7 +95,7 @@ class ParseOrchestrator:
             reference_priority=self._vendor_source.reference_priority(),
         )
         parse_result.parsed_items = grouper.group_by_params().get_row_items()
-        logger.info(f'\nКоличество дублей: {len(grouper.get_double_row_items())}\n')
+        logger.info(_doubles_summary(grouper.get_double_row_items()))
         elapsed = time.monotonic() - start_time
         logger.info(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n')
         return parse_result
