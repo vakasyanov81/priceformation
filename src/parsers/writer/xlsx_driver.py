@@ -78,11 +78,11 @@ class XlsxWriterDriver(IXlsDriver):
         self.work_sheet = sheet
         return self
 
-    def write_head(self, names: list[str]) -> None:
+    def write_head(self, names: list[str], row: int = 0) -> None:
         """write head"""
 
         for col_idx, name in enumerate(names):
-            self.write(0, col_idx, name, style=Font(bold=True))
+            self.write(row, col_idx, name, style=Font(bold=True))
 
     def set_column_format(self, column_format: dict[int, str]) -> None:
         """

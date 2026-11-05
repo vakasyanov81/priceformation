@@ -12,8 +12,8 @@ class IXlsDriver:
         """add sheet with sheet name"""
         raise NotImplementedError
 
-    def write_head(self, names: list[str]) -> None:
-        """write head"""
+    def write_head(self, names: list[str], row: int = 0) -> None:
+        """write head at row (0 — первая строка листа)"""
         raise NotImplementedError
 
     def set_column_format(self, column_format: dict[int, str]) -> None:

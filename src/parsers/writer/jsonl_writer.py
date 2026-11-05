@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import Any
 
 from parsers.writer.jsonl_codes import VALUES_KEY, apply_value_codes, read_value_codes
+from parsers.writer.row_style import PriceRow
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-from parsers.writer.xls_writer import PriceRow, cell_value, has_value, make_exclude
+from parsers.writer.xls_writer import cell_value, has_value, make_exclude
 
 RESULT_META_FILE = 'result_meta.json'
 _SEPARATORS = (',', ':')
