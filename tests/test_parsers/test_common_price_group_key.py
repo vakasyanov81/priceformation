@@ -531,3 +531,8 @@ def test_group_key_layering_written_differently_is_same_group(layering: Any) -> 
 
 def test_group_key_different_layering_is_different_group() -> None:
     assert group_key(_row(layering='8')) != group_key(_row(layering='10'))
+
+
+def test_model_tokens_transliterate_cyrillic_words() -> None:
+    """`Бел-298` — кириллическая запись `BEL-298`: слова для слияния моделей совпадают."""
+    assert model_tokens('Бел-298') == model_tokens('BEL-298') == frozenset(('bel298',))
