@@ -2,10 +2,24 @@
 write template for internal use
 """
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from domain.row_item.row_item import RowItem
 from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColors, WriteColumns, WriteExclude
+
+MAIN_DOUBLE_COLOR = '#ccffcc'
+DOUBTFUL_COLOR = '#ff9999'
+
+# Сомнительный дубль (цена отклоняется от главного на 5%+) — красным, главный дубль — светло-зелёным;
+# красим всю строку, красный проверяется раньше зелёного.
+DOUBLES_COLOR_RULES: list[dict[str, Any]] = [
+    {'by_column': RowItem.doubtful_price.name, 'with_map': {True: DOUBTFUL_COLOR}, 'set_to_column_index': None},
+    {'by_column': RowItem.double_candidate.name, 'with_map': {True: MAIN_DOUBLE_COLOR}, 'set_to_column_index': None},
+]
+DOUBLES_LEGEND: list[tuple[str, str]] = [
+    (MAIN_DOUBLE_COLOR, 'Главный дубль группы'),
+    (DOUBTFUL_COLOR, 'Сомнительный дубль: цена отклоняется от главного на 5% и более'),
+]
 
 
 class ForInner(IWriteTemplate):
@@ -67,15 +81,22 @@ class ForInner(IWriteTemplate):
         {'Год выпуска': {'field': RowItem.production_year.name}},
     ]
 
+    # дубли красят всю строку, остальные — только первую ячейку цветом поставщика;
+    # легенды нет: строки над шапкой общего прайса сломали бы его разбор у потребителей
     __COLOR__: ClassVar[WriteColors] = {
-        'by_column': RowItem.supplier_name.name,
-        'with_map': {
-            'Пошк': '#d9e2f3',
-            'Мим': '#f7d5d2',
-            'Запаска (остатки)': '#99706d',
-            'Форточки': '#658c68',
-        },
-        'set_to_column_index': 0,
+        'rules': [
+            *DOUBLES_COLOR_RULES,
+            {
+                'by_column': RowItem.supplier_name.name,
+                'with_map': {
+                    'Пошк': '#d9e2f3',
+                    'Мим': '#f7d5d2',
+                    'Запаска (остатки)': '#99706d',
+                    'Форточки': '#658c68',
+                },
+                'set_to_column_index': 0,
+            },
+        ],
     }
 
     __FILE__ = 'price_{now}.xlsx'

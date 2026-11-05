@@ -36,7 +36,7 @@ def _make_writer(template: type[IWriteTemplate]) -> XlsWriter:
     [
         ({'supplier_name': 'Мим'}, (_MIM_COLOR, _COLOR_COLUMN)),
         ({'supplier_name': 'Пошк'}, (_POSHK_COLOR, _COLOR_COLUMN)),
-        ({'supplier_name': 'Unknown'}, (None, _COLOR_COLUMN)),
+        ({'supplier_name': 'Unknown'}, (None, None)),
         ({'supplier_name': ''}, (None, None)),
         ({}, (None, None)),
     ],
