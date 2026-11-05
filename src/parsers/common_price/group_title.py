@@ -1,8 +1,8 @@
 """Одно название на группу дублей: название эталона плюс признаки шины, которые есть у других позиций группы.
 
-Эталон — позиция с самой полной моделью (``Road Runner PS-1`` полнее ``Road Runner``); среди равных по полноте
-побеждает поставщик раньше в ``title_reference_order`` (``vendors/_common.json``), дальше — название
-по алфавиту, чтобы результат не зависел от порядка прайсов. Название эталона уже собрано каноническим
+Эталон — позиция поставщика раньше в ``title_reference_order`` (``vendors/_common.json``); среди позиций одного
+поставщика (и поставщиков вне очереди) побеждает самая полная модель (``Road Runner PS-1`` полнее ``Road Runner``),
+дальше — название по алфавиту, чтобы результат не зависел от порядка прайсов. Название эталона уже собрано каноническим
 сборщиком, поэтому его не пересобирают:
 к хвосту после нагрузки+скорости добавляются ``XL``, камерность, ``M+S``, ``3PMSF`` и ось, найденные хотя бы
 у одной позиции группы (у поставщика без этого токена в прайсе название всё равно совпадёт с остальными).
@@ -32,13 +32,13 @@ def unify_group_title(group: list[RowItem], priority: Mapping[str, int]) -> None
 
 
 def _reference_key(group: list[RowItem], priority: Mapping[str, int]) -> _SortKey:
-    """Ключ выбора эталона: полнее модель (нет моделей — длиннее название), выше очередь, название по алфавиту."""
+    """Ключ выбора эталона: выше очередь, полнее модель (нет моделей — длиннее название), название по алфавиту."""
     has_models = any(_model_size(row_item) for row_item in group)
 
     def key(row_item: RowItem) -> tuple[int, int, str]:
         title = row_item.identity.title or ''
         fullness = _model_size(row_item) if has_models else len(title.split())
-        return -fullness, priority.get(row_item.vendor.supplier_name or '', _NO_PRIORITY), title
+        return priority.get(row_item.vendor.supplier_name or '', _NO_PRIORITY), -fullness, title
 
     return key
 

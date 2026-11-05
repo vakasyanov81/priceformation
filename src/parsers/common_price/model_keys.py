@@ -1,5 +1,6 @@
 """Ключи группировки позиций с канонической моделью: модели с лишними словами склеены."""
 
+import re
 from collections import defaultdict
 from typing import Any
 
@@ -7,6 +8,8 @@ from domain.row_item.row_item import RowItem
 from parsers.common_price.group_key import MODEL_KEY_INDEX, group_key
 from parsers.common_price.model import model_tokens
 from parsers.common_price.model_merge import ModelEntry, Tokens, merge_models
+
+_ALIAS_SUFFIX = re.compile(r'\s*\(([^()]*\s[^()]*)\)\s*$')
 
 GroupKey = tuple[str, ...]
 KeyedItem = tuple[GroupKey, RowItem]
@@ -37,8 +40,15 @@ def _model_entry(key: GroupKey, row_item: RowItem) -> ModelEntry:
 
 
 def _tokens(row_item: RowItem) -> Tokens:
+    """Слова модели для слияния; название-синоним в скобках (из двух и более слов) в них не входит.
+
+    `Character Ice 8 SUV (Nordman 8 SUV)` — сама `Character Ice 8 SUV`, а `Nordman 8 SUV` — другое название шины,
+    поэтому короткая `Nordman 8 SUV` не должна склеиваться с длинной по общим словам. Скобки с одним словом
+    (`Grant (НК-241)`) — код модели, он остаётся в словах.
+    """
     identity = row_item.identity
-    return model_tokens(identity.model, identity.manufacturer, identity.brand)
+    model = _ALIAS_SUFFIX.sub('', identity.model) if identity.model else identity.model
+    return model_tokens(model, identity.manufacturer, identity.brand)
 
 
 def _core_key(key: GroupKey) -> GroupKey:
