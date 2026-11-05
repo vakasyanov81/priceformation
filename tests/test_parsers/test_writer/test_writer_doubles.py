@@ -15,6 +15,7 @@ _GROUP_COL = 19
 _IS_DOUBLE_COL = 20
 _CANDIDATE_COL = 21
 _DISPUTED_COL = 22
+_COLUMNS_IN_ROW = len(result_body_inner) + 2
 _DOUBLE_HEAD = ['Группа по параметрам', 'Дубль', 'Главный дубль', 'Спорная']
 
 
@@ -66,3 +67,17 @@ def test_xls_write_for_doubles_disputed(tmp_path: Any) -> None:
 
     assert fake_driver.head[-4:] == _DOUBLE_HEAD
     assert fake_driver.body[f'cell(1,{_DISPUTED_COL})'] == 'шип'
+
+
+def test_xls_write_for_doubles_doubtful_row_is_red(tmp_path: Any) -> None:
+    """сомнительный дубль — красятся все ячейки строки, обычный дубль — без цвета"""
+    doubtful = {**write_data[0], 'group_by_params': 1, 'is_double': True, 'doubtful_price': True}
+    plain = {**write_data[0], 'group_by_params': 1, 'is_double': True}
+    fake_driver = FakeXlwtDriver()
+    rows = [doubtful, plain]
+    result_folder = str(tmp_path)
+    XlsWriter(fake_driver, rows, template=ForDoubles, result_folder=result_folder).write()
+    colored = fake_driver.cell_colors
+    assert set(colored.values()) == {'#ff9999'}
+    assert all(key.startswith('cell(1,') for key in colored)
+    assert len(colored) == _COLUMNS_IN_ROW

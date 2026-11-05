@@ -20,3 +20,15 @@ def main_double(row_items: list[RowItem]) -> RowItem:
     freshest = max(map(_freshness, candidates))
     fresh = [row_item for row_item in candidates if _freshness(row_item) == freshest]
     return min(fresh, key=lambda row_item: row_item.pricing.price_markup)
+
+
+# Дубль, чья цена отличается от цены главного дубля на эту долю и больше, считается сомнительным.
+_DOUBTFUL_PRICE_DEVIATION = 0.05
+
+
+def is_doubtful_price(row_item: RowItem, main_item: RowItem) -> bool:
+    """Цена дубля отклоняется от цены главного дубля на 5% и более (в любую сторону)."""
+    main_price = main_item.pricing.price_markup
+    if not main_price:
+        return False
+    return abs(row_item.pricing.price_markup - main_price) / main_price >= _DOUBTFUL_PRICE_DEVIATION

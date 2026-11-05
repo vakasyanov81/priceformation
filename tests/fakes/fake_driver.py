@@ -19,6 +19,7 @@ class FakeXlwtDriver(IXlsDriver):
         self.width: dict[int, int] = {}
         self.head: list[str] = []
         self.body: dict[str, Any] = {}
+        self.cell_colors: dict[str, str] = {}
         self.file_name: str | None = None
         self.folder: str | None = None
 
@@ -40,6 +41,8 @@ class FakeXlwtDriver(IXlsDriver):
     ) -> None:
         """write"""
         self.body[f'cell({row_idx},{col_idx})'] = cell_content
+        if _color:
+            self.cell_colors[f'cell({row_idx},{col_idx})'] = _color
 
     def init_workbook(self, _folder: str, _file_name: str) -> None:
         self.file_name = _file_name

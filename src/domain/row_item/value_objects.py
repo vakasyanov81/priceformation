@@ -108,6 +108,7 @@ class DuplicateInfo:
     is_double: bool | None = None
     double_candidate: bool | None = None
     disputed: str | None = None
+    doubtful_price: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)

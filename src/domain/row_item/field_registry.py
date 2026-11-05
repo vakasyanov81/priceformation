@@ -116,6 +116,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
     FieldSpec('double_candidate', DUPLICATE, 'double_candidate', row_format.boolean),
     FieldSpec('is_double', DUPLICATE, 'is_double', row_format.boolean),
     FieldSpec('disputed', DUPLICATE, 'disputed', row_format.text),
+    FieldSpec('doubtful_price', DUPLICATE, 'doubtful_price', row_format.boolean),
     # ==== Поставщик и тип товара
     FieldSpec('supplier_name', VENDOR, 'supplier_name', row_format.text),
     FieldSpec('type_production', VENDOR, 'type_production', row_format.text),
