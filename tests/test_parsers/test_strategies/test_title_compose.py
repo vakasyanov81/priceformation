@@ -5,22 +5,33 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.base_parser.alias_container import AliasContainer
+from parsers.base_parser.base_finder import BaseFinder
 from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title_compose import TitleFromFields, titles_not_composed_message
 from parsers.strategies.title_params import ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
-_ALIASES = {'ikon (nokian tyres)': 'Nokian', 'nordman': 'Nordman', 'gislaved': 'Gislaved', 'cordiant': 'Cordiant'}
+_FINDER = BaseFinder(
+    AliasContainer(
+        {
+            'Ikon Tyres': ('ikon (nokian tyres)',),
+            'Nokian': ('nokian tyres',),
+            'Nordman': (),
+            'Gislaved': (),
+            'Cordiant': (),
+            'Bridgestone': (),
+        },
+    ),
+)
 
 _PROVIDER = MagicMock(config_file=MagicMock(return_value='/nonexistent/aliases.json'))
 
 
 def _probe(title: str | None) -> str | None:
-    """Производитель по алиасам: самое позднее найденное слово из таблицы, как у поиска по названию."""
-    lower = (title or '').lower()
-    found = {lower.rfind(alias): name for alias, name in _ALIASES.items()}
-    return found[max(found)] if max(found) >= 0 else None
+    """Производитель по алиасам — тем же поиском, что и ``ManufacturerFinder``."""
+    return _FINDER.find_word_in_title(title)[0]
 
 
 def _compose(row: RowItem) -> str | None:
@@ -47,8 +58,8 @@ def _compose(row: RowItem) -> str | None:
                 'manufacturer_name': 'Ikon (Nokian Tyres)',
                 'model': 'Autograph Ice 9',
             },
-            '255/35R19 Nokian Autograph Ice 9 96T XL',
-            id='zapaska-owner-in-brackets-replaced-by-manufacturer',
+            '255/35R19 Ikon Tyres Autograph Ice 9 96T XL',
+            id='zapaska-owner-dropped-when-brand-is-canonical',
         ),
         pytest.param(
             {'title': '275/45R20 Gislaved ArcticControl 110T XL FR', 'model': 'ArcticControl'},
@@ -110,14 +121,25 @@ def test_compose_tire_title(fields: dict[str, str], expected: str) -> None:
     assert _compose(RowItem(fields)) == expected
 
 
-def test_brand_is_the_manufacturer_found_in_supplier_text() -> None:
-    """Бренд — производитель, которого найдёт поиск по алиасам в тексте поставщика, а не колонка с владельцем."""
-    row = RowItem({'title': '215/65R16 Cordiant (Bridgestone) Sno-Max 7000 98T', 'manufacturer_name': 'Cordiant'})
+@pytest.mark.parametrize(
+    ('raw', 'expected'),
+    [
+        (
+            '175/70R13    Gislaved (Bridgestone) SpikeControl  82T шип',
+            '175/70R13 Gislaved (Bridgestone) SpikeControl 82T',
+        ),
+        (
+            '175/70R13    Cordiant (Bridgestone) Sno-Max 7000  82T шип',
+            '175/70R13 Cordiant (Bridgestone) Sno-Max 7000 82T',
+        ),
+    ],
+)
+def test_owner_in_brackets_stays_in_title_and_is_not_the_brand(raw: str, expected: str) -> None:
+    """Владелец в скобках остаётся в названии, но брендом становится слово перед скобками."""
+    title = _compose(RowItem({'title': raw}))
 
-    title = TitleFromFields(NormalizeTitle(), lambda _title: 'Bridgestone').prepare(row)
-
-    assert title is not None
-    assert title.startswith('215/65R16 Bridgestone ')
+    assert title == expected
+    assert _probe(title) == expected.split()[1]
 
 
 def test_brand_without_probe_comes_from_manufacturer_field_then_title() -> None:
