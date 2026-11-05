@@ -209,7 +209,7 @@ def test_write_skips_falsy_default_value(tmp_path: Any) -> None:
 
 
 def test_get_color_without_map(tmp_path: Any) -> None:
-    """_get_color возвращает (None, None), если нет карты цветов."""
+    """_get_color возвращает пустой список, если нет карты цветов."""
     from .fixtures import ColorsWithoutMapTemplate
 
     fake_driver = FakeXlwtDriver()
@@ -220,7 +220,7 @@ def test_get_color_without_map(tmp_path: Any) -> None:
         result_folder=str(tmp_path),
     )
     color = writer._get_color(write_data[0])
-    assert color == (None, None)
+    assert color == []
 
 
 def test_write_row_empty_value_skips(tmp_path: Any) -> None:
@@ -337,9 +337,9 @@ def test_get_color_requires_existing_column(tmp_path: Any) -> None:
         template=FixtureTemplate,
         result_folder=str(tmp_path),
     )
-    assert writer._get_color({}) == (None, None)
-    assert writer._get_color({**write_data[0], 'supplier_name': ''}) == (None, None)
-    assert writer._get_color({**write_data[0], 'supplier_name': 'Мим'}) == (None, None)
+    assert writer._get_color({}) == []
+    assert writer._get_color({**write_data[0], 'supplier_name': ''}) == []
+    assert writer._get_color({**write_data[0], 'supplier_name': 'Мим'}) == []
 
 
 def test_write_applies_template_exclude(tmp_path: Any) -> None:
