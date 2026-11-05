@@ -110,6 +110,18 @@ def test_tire_compose_mim_truck_size() -> None:
     assert strategy.prepare(row) == '295/75R22.5'
 
 
+@pytest.mark.parametrize(
+    ('construction', 'expected'),
+    [('-', '11.2-20'), ('R', '11.2R20'), (None, '11.2R20'), ('L-', '11.2R20')],
+)
+def test_tire_compose_mim_truck_construction(construction: str | None, expected: str) -> None:
+    """диагональная шина (`-`) пишется через дефис, остальные конструкции — как прежде через R"""
+    strategy = TireCompose('mim_truck')
+    row = RowItem({'width': '11.2', 'diameter': '20', 'construction_type': construction})
+
+    assert strategy.prepare(row) == expected
+
+
 def test_tire_compose_four_tochki_delegates() -> None:
     strategy = TireCompose('four_tochki')
     row = RowItem({'width': '205', 'diameter': 'R18'})
