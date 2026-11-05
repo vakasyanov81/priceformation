@@ -494,3 +494,22 @@ def test_parse_vendor_uses_injected_config_provider() -> None:
         orchestrator.parse_vendor('poshk')
 
     mock_entry.assert_called_once_with('poshk', injected)
+
+
+def test_parse_all_logs_doubtful_doubles_count(watch_logger: LoggerWatcher) -> None:
+    """В итоге разбора на экран выводится, сколько из дублей сомнительных по цене."""
+    doubtful = RowItem({'title': 1})
+    doubtful.set_field('is_double', True)
+    doubtful.set_field('doubtful_price', True)
+    plain = RowItem({'title': 2})
+    plain.set_field('is_double', True)
+    grouper = MagicMock()
+    grouper.group_by_params.return_value.get_row_items.return_value = [doubtful, plain]
+    grouper.get_double_row_items.return_value = [doubtful, plain]
+    orchestrator = _orchestrator()
+    orchestrator._grouper_factory = MagicMock(return_value=grouper)
+    entries = watch_logger(_ORCHESTRATOR_LOGGER)
+
+    orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
+
+    assert '\nКоличество дублей: 2, из них сомнительных (цена ±5%): 1\n' in texts_at(entries(), logging.INFO)
