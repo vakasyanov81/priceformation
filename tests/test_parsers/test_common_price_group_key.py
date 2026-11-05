@@ -536,3 +536,11 @@ def test_group_key_different_layering_is_different_group() -> None:
 def test_model_tokens_transliterate_cyrillic_words() -> None:
     """`Бел-298` — кириллическая запись `BEL-298`: слова для слияния моделей совпадают."""
     assert model_tokens('Бел-298') == model_tokens('BEL-298') == frozenset(('bel298',))
+
+
+@pytest.mark.parametrize('type_production', ['Спецшина', 'Грузовая шина'])
+def test_group_key_layering_ignored_for_special_and_truck(type_production: str) -> None:
+    """у спецшины и грузовой слойность не в ключе: `162A6 TT` и `162A6 12PR TT` — одна группа"""
+    with_layering = _row(type_production=type_production, layering='12')
+    assert group_key(with_layering) == group_key(_row(type_production=type_production))
+    assert group_key(with_layering) == group_key(_row(type_production=type_production, layering='16'))
