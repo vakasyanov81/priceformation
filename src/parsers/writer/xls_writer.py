@@ -7,11 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from parsers.writer.ixlsx_driver import IXlsDriver
+from parsers.writer.row_style import PriceRow, RowColor, row_color, write_legend
 from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 
-type RowColor = tuple[str | None, int | None]
-type PriceRow = dict[str, Any]
 type CellValue = str | int | float | None
 
 
@@ -91,15 +90,15 @@ class XlsWriter:
 
     def write(self) -> None:
         """Create result folder, fill workbook, save."""
-        folder = Path(self._result_folder)
-        folder.mkdir(parents=True, exist_ok=True)
-        self.driver.init_workbook(str(folder), self.get_file_name())
+        Path(self._result_folder).mkdir(parents=True, exist_ok=True)
+        self.driver.init_workbook(self._result_folder, self.get_file_name())
         self.driver.add_sheet('price')
         self.driver.set_column_format(self.template.get_columns_format())
-        self.driver.write_head(self.col_names())
-        filtered_data = make_exclude(self.parse_result, self.exclude)
+        legend = self.template.colors().get('legend') or []
+        offset = write_legend(self.driver, legend)
+        self.driver.write_head(self.col_names(), offset)
         helpers = [ColumnHelper(col) for col in self.template.columns()]
-        for row_index, product in enumerate(filtered_data):
+        for row_index, product in enumerate(make_exclude(self.parse_result, self.exclude), start=offset):
             self._write_row(product, row_index, helpers, self._get_color(product))
         self.driver.save()
 
@@ -119,24 +118,7 @@ class XlsWriter:
 
     def _get_color(self, product: PriceRow) -> RowColor:
         """get color"""
-        colors = self.template.colors()
-        if not colors:
-            return None, None
-
-        column_name = colors.get('by_column')
-        if not column_name or column_name not in product:
-            return None, None
-
-        column_value = product.get(column_name)
-        if not column_value:
-            return None, None
-
-        color_map = colors.get('with_map')
-        if not color_map:
-            return None, None
-
-        index = colors.get('set_to_column_index')
-        return color_map.get(column_value), index
+        return row_color(self.template.colors(), product)
 
     def _write_row(
         self,

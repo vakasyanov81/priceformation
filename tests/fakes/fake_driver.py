@@ -27,7 +27,7 @@ class FakeXlwtDriver(IXlsDriver):
         self.sheet_name = sheet_name
         return self
 
-    def write_head(self, names: list[str]) -> None:
+    def write_head(self, names: list[str], row: int = 0) -> None:
         """write head"""
         self.head = names
 

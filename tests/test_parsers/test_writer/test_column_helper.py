@@ -83,7 +83,7 @@ def test_column_helper_reads_options_of_nested_column(template: type[IWriteTempl
         (ForInner, {6: '@', 8: '@'}),
         (ForDrom, {6: '@'}),
         (ForFull, {}),
-        (ForDoubles, {6: '@', 8: '@'}),
+        (ForDoubles, {7: '@', 9: '@'}),
     ],
 )
 def test_template_price_columns_are_text(

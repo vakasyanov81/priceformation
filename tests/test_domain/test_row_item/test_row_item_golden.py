@@ -231,6 +231,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Год выпуска', None),
     ],
     'ForDoubles': [
+        ('Группа по параметрам', 77),
         ('Тип товара', 'Автошина*'),
         ('Бренд', 'crossleader'),
         ('Номенклатура', '225/40R18 Crossleader 92Y'),
@@ -250,9 +251,7 @@ GOLDEN_TEMPLATE_VALUES: dict[str, ColumnCells] = {
         ('Уценка', None),
         ('Завод', None),
         ('Год выпуска', None),
-        ('Группа по параметрам', 77),
         ('Дубль', None),
-        ('Главный дубль', True),
         ('Спорная', 'по размеру'),
     ],
 }
