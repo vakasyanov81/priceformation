@@ -2,12 +2,12 @@
 find word in title
 """
 
-import re
 from functools import lru_cache
 
 from domain.row_item.row_item import RowItem
 
 from .alias_container import AliasContainer
+from .alias_search import find_bounded, find_bracket_alias, haystacks
 
 
 @lru_cache
@@ -16,55 +16,11 @@ def str_lower(_str: str) -> str:
     return _str.lower()
 
 
-_BRACKETS = re.compile(r'\([^)]*\)')
-
-
-def blank_brackets(title: str) -> str:
-    """Название с текстом в скобках, заменённым пробелами той же длины (позиции совпадений не сдвигаются).
-
-    В скобках поставщик пишет владельца бренда (`Gislaved (Bridgestone)`): производитель позиции — слово перед ними.
-    """
-    return _BRACKETS.sub(lambda match: ' ' * len(match.group()), title)
-
-
-def _haystacks(title: str | None) -> tuple[str | None, ...]:
-    """Где искать производителя: сначала вне скобок, затем и в них (завод — единственное упоминание бренда)."""
-    if not title or '(' not in title:
-        return (title,)
-    return blank_brackets(title), title
-
-
 def replace_alias_in_title(row_item: RowItem, old_man: str, new_man: str) -> None:
     """replace manufacturer in title chunks"""
     title = row_item.identity.title
     if title:
         row_item.set_field('title', title.replace(old_man, new_man))
-
-
-def _has_word_boundaries(title_lower: str, position: int, alias_len: int) -> bool:
-    """Слева и справа от алиаса — не буква и не цифра."""
-    before = title_lower[position - 1] if position > 0 else ''
-    after_index = position + alias_len
-    after = title_lower[after_index] if after_index < len(title_lower) else ''
-    return not (before.isalnum() or after.isalnum())
-
-
-def find_bounded(title_lower: str, lower_alias: str) -> int:
-    """Найти алиас как отдельное слово: границы — не буква и не цифра.
-
-    Раньше алиас искался только между пробелами/на краях title, поэтому
-    бренды, склеенные с дефисом или скобками (``NORTEC-16``, ``АЛТАЙШИНА-111``),
-    не находились, хотя есть в списке производителей.
-    """
-    if not title_lower or not lower_alias:
-        return -1
-    alias_len = len(lower_alias)
-    position = title_lower.find(lower_alias)
-    while position != -1:
-        if _has_word_boundaries(title_lower, position, alias_len):
-            return position
-        position = title_lower.find(lower_alias, position + 1)
-    return -1
 
 
 class BaseFinder:
@@ -81,6 +37,9 @@ class BaseFinder:
         self._incorrect_lowers: list[str] = self.alias_container.incorrect_words_lower
         self._correct_lowers: list[str] = self.alias_container.all_correct_words_lower
         self._aliases: dict[str, str] = self.alias_container.reversed_map
+        self._bracket_aliases = tuple(
+            alias for alias in (*self._correct_lowers, *self._incorrect_lowers) if '(' in alias
+        )
 
     @property
     def title_lower(self) -> str | None:
@@ -96,8 +55,11 @@ class BaseFinder:
     def _search(self, title: str | None) -> tuple[str | None, str | None]:
         """Полный перебор алиасов по title."""
         self._title = title
+        bracketed = find_bracket_alias(title, self._bracket_aliases, self._aliases)
+        if bracketed:
+            return bracketed
         found: tuple[str | None, str | None] = (None, None)
-        for haystack in _haystacks(title):
+        for haystack in haystacks(title):
             self._title_lower = haystack.lower() if haystack else haystack
             correct, incorrect = self._find_from_lower_list(self._correct_lowers, return_correct=True)
             found = (correct, incorrect) if correct else self._find_from_lower_list(self._incorrect_lowers)

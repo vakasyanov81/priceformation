@@ -5,33 +5,33 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.base_parser.base_finder import blank_brackets
+from parsers.base_parser.alias_container import AliasContainer
+from parsers.base_parser.base_finder import BaseFinder
 from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title_compose import TitleFromFields, titles_not_composed_message
 from parsers.strategies.title_params import ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.slot_configs import TitleConfig
 
-_ALIASES = {
-    'ikon': 'Ikon',
-    'nokian tyres': 'Nokian',
-    'nordman': 'Nordman',
-    'gislaved': 'Gislaved',
-    'cordiant': 'Cordiant',
-    'bridgestone': 'Bridgestone',
-}
+_FINDER = BaseFinder(
+    AliasContainer(
+        {
+            'Ikon Tyres': ('ikon (nokian tyres)',),
+            'Nokian': ('nokian tyres',),
+            'Nordman': (),
+            'Gislaved': (),
+            'Cordiant': (),
+            'Bridgestone': (),
+        },
+    ),
+)
 
 _PROVIDER = MagicMock(config_file=MagicMock(return_value='/nonexistent/aliases.json'))
 
 
 def _probe(title: str | None) -> str | None:
-    """Производитель по алиасам, как у поиска по названию: сначала вне скобок, затем в них."""
-    for text in (blank_brackets(title or ''), title or ''):
-        lower = text.lower()
-        found = {lower.rfind(alias): name for alias, name in _ALIASES.items()}
-        if max(found) >= 0:
-            return found[max(found)]
-    return None
+    """Производитель по алиасам — тем же поиском, что и ``ManufacturerFinder``."""
+    return _FINDER.find_word_in_title(title)[0]
 
 
 def _compose(row: RowItem) -> str | None:
@@ -58,8 +58,8 @@ def _compose(row: RowItem) -> str | None:
                 'manufacturer_name': 'Ikon (Nokian Tyres)',
                 'model': 'Autograph Ice 9',
             },
-            '255/35R19 Ikon (Nokian Tyres) Autograph Ice 9 96T XL',
-            id='zapaska-owner-in-brackets-kept-brand-is-first-word',
+            '255/35R19 Ikon Tyres Autograph Ice 9 96T XL',
+            id='zapaska-owner-dropped-when-brand-is-canonical',
         ),
         pytest.param(
             {'title': '275/45R20 Gislaved ArcticControl 110T XL FR', 'model': 'ArcticControl'},

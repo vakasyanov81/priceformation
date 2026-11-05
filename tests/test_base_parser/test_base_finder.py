@@ -1,7 +1,8 @@
 """tests for BaseFinder alias search."""
 
 from parsers.base_parser.alias_container import AliasContainer
-from parsers.base_parser.base_finder import BaseFinder, _has_word_boundaries, find_bounded
+from parsers.base_parser.alias_search import _has_word_boundaries, find_bounded
+from parsers.base_parser.base_finder import BaseFinder
 
 
 def test_find_uses_first_alias_occurrence() -> None:

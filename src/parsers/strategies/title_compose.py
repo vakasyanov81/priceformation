@@ -78,7 +78,7 @@ class TitleFromFields:
         owner, model = self._owner_and_model(row_item, parts)
         return TireTitleTokens(
             parts.size_with_alt(),
-            ' '.join(filter(None, (self._brand(row_item, parts, title), owner))),
+            _brand_with_owner(self._brand(row_item, parts, title), parts.brand, owner),
             model,
             load_velocity=load_velocity(row_item) or f'{parts.load}{parts.velocity}',
             xl=xl_label(title, tire.inscription_on_the_side),
@@ -110,6 +110,13 @@ class TitleFromFields:
         """
         column = _BRACKETS.sub('', row_item.identity.manufacturer or '').strip()
         return self._manufacturer_probe(title) or column or parts.brand
+
+
+def _brand_with_owner(brand: str, supplier_brand: str, owner: str) -> str:
+    """Бренд и владелец в скобках; бренд — каноническое имя с владельцем (`Ikon Tyres`) — скобки не нужны."""
+    if owner and brand.lower() == supplier_brand.lower():
+        return f'{brand} {owner}'
+    return brand
 
 
 def _has_disk_fields(row_item: RowItem) -> bool:
