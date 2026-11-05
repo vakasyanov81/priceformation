@@ -521,3 +521,13 @@ def test_model_tokens(model: str | None, expected: tuple[str, ...]) -> None:
 
 def test_model_tokens_strip_brand_prefix() -> None:
     assert model_tokens('Кама Alga НК-531', 'Кама') == frozenset(('alga', 'hk531'))
+
+
+@pytest.mark.parametrize('layering', ['8', '8PR', 'PR8', 8])
+def test_group_key_layering_written_differently_is_same_group(layering: Any) -> None:
+    """слойность `8`, `8PR`, `PR8` — одна шина: ключ берёт каноническое `8PR`, а не сырое поле"""
+    assert group_key(_row(layering=layering)) == group_key(_row(layering='8PR'))
+
+
+def test_group_key_different_layering_is_different_group() -> None:
+    assert group_key(_row(layering='8')) != group_key(_row(layering='10'))
