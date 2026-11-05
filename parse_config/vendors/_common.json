@@ -1,5 +1,5 @@
 {
-  "title_reference_order": ["four_tochki", "autosnab54_ru", "zapaska", "mim", "stk", "pioner", "poshk"],
+  "title_reference_order": ["autosnab54_ru", "four_tochki", "zapaska", "mim", "stk", "pioner", "poshk"],
   "defaults": {
     "file_templates": ["price*.xls", "price*.xlsx"],
     "category": {

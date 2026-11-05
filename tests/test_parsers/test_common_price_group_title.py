@@ -32,24 +32,24 @@ def _titles(group: list[RowItem]) -> set[str | None]:
     return {row_item.identity.title for row_item in group}
 
 
-def test_reference_is_the_item_with_the_fullest_model() -> None:
-    """Название берётся у позиции с самой полной моделью, даже если её поставщик ниже в очереди."""
+def test_reference_is_the_item_of_the_first_supplier_in_the_queue() -> None:
+    """Название берётся у позиции поставщика раньше в очереди, даже если у другого модель полнее."""
     short = _tire('Форточки', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
     full = _tire('Мим', '205/65R15 Cordiant ROAD RUNNER PS-1 94H', 'ROAD RUNNER PS-1')
 
     unify_group_title([short, full], _PRIORITY)
 
+    assert _titles([short, full]) == {'205/65R15 Cordiant Road Runner 94H'}
+
+
+def test_fullest_model_decides_within_one_supplier() -> None:
+    """Позиции одного поставщика: эталон — с самой полной моделью."""
+    short = _tire('Мим', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
+    full = _tire('Мим', '205/65R15 Cordiant ROAD RUNNER PS-1 94H', 'ROAD RUNNER PS-1')
+
+    unify_group_title([short, full], _PRIORITY)
+
     assert _titles([short, full]) == {'205/65R15 Cordiant ROAD RUNNER PS-1 94H'}
-
-
-def test_priority_decides_between_equally_full_models() -> None:
-    """Модели одной полноты (`ROAD RUNNER` / `Road Runner`): написание — у поставщика с меньшим местом в очереди."""
-    mim = _tire('Мим', '205/65R15 Cordiant ROAD RUNNER 94H', 'ROAD RUNNER')
-    zapaska = _tire('Запаска', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
-
-    unify_group_title([mim, zapaska], _PRIORITY)
-
-    assert _titles([mim, zapaska]) == {'205/65R15 Cordiant Road Runner 94H'}
 
 
 def test_supplier_without_priority_goes_last() -> None:
@@ -123,3 +123,28 @@ def test_grouper_unifies_titles_of_one_group_only() -> None:
 
     assert left.identity.title == right.identity.title == '205/65R15 Cordiant Road Runner 94H XL'
     assert foreign.identity.title == '215/65R16 Cordiant Road Runner 98H'
+
+
+def test_model_with_alias_name_in_brackets_is_not_merged_with_the_alias() -> None:
+    """`Nordman 8 SUV` и `Character Ice 8 SUV (Nordman 8 SUV)` — разные модели: в одну группу не попадают."""
+    short = _tire('Автоснабжение', '235/55R17 Nordman 8 SUV 103T', 'Nordman 8 SUV')
+    full = _tire(
+        'Форточки', '235/55R17 Character Ice 8 SUV (Nordman 8 SUV) 103T', 'Character Ice 8 SUV (Nordman 8 SUV)'
+    )
+    plain = _tire('Запаска', '235/55R17 Character Ice 8 SUV 103T', 'Character Ice 8 SUV')
+
+    CommonPriceGrouper([short, full, plain], _ALIASES, _PRIORITY).group_by_params()
+
+    assert short.duplicate.group_by_params != full.duplicate.group_by_params
+    assert full.duplicate.group_by_params == plain.duplicate.group_by_params
+    assert short.identity.title == '235/55R17 Nordman 8 SUV 103T'
+
+
+def test_single_word_code_in_brackets_still_merges() -> None:
+    """Код модели в скобках (`Grant (НК-241)`) слияния не мешает."""
+    code = _tire('Мим', '205/65R15 Cordiant НК-241 94H', 'НК-241')
+    named = _tire('Запаска', '205/65R15 Cordiant Grant (НК-241) 94H', 'Grant (НК-241)')
+
+    CommonPriceGrouper([code, named], _ALIASES, _PRIORITY).group_by_params()
+
+    assert code.duplicate.group_by_params == named.duplicate.group_by_params
