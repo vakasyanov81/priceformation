@@ -76,7 +76,7 @@
     "Henan": ["Хенан"],
     "Hifly": [],
     "iFree": [],
-    "Ikon": ["Ikon (Nokian Tyres)", "Ikon Tyres"],
+    "Ikon Tyres": ["Ikon (Nokian Tyres)", "Ikon Tyres", "Character Ice", ""],
     "Inroad": [],
     "Jantsa": [],
     "K7": [],
@@ -207,5 +207,5 @@
     "УрШЗ": [],
     "ЧКПЗ": [],
     "Altyres": [],
-    "ЯШЗ": ["Яр. ШЗ", "Яр.ШЗ"]
+    "ЯШЗ": ["Яр. ШЗ", "Яр.ШЗ", "Ярославский ШЗ"]
 }
