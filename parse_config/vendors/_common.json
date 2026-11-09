@@ -12,7 +12,7 @@
     "pricing": {
       "rules": {
         "markup_rules": [
-          { "min": 0, "max": 999999999, "percent": 0.06 }
+          { "min": 0, "max": 999999999, "percent": 0.09 }
         ]
       }
     },
