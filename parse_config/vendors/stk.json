@@ -7,7 +7,14 @@
     "strategy": "tire_size_category"
   },
   "title": { "strategy": "poshk_stk_tire_compose" },
-  "pricing": { "policy": "map_on_opt" },
+  "pricing": {
+    "policy": "map_on_opt",
+    "rules": {
+      "markup_rules": [
+        { "min": 0, "max": 999999999, "percent": 0.06 }
+      ]
+    }
+  },
   "sections": [
     {
       "sheet_indexes": [0],
