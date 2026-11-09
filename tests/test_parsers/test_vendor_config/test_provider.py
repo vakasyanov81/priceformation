@@ -8,6 +8,7 @@ import pytest
 from domain.exceptions import ConfigValidationError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.vendor_config.activation import set_vendor_enabled
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import (
     clear_vendor_configs_cache,
     load_vendor_configs,
@@ -19,6 +20,12 @@ MIM_JSON = (
     '{"code": "mim", "name": "Мим", "start_row": 2, '
     '"file_templates": ["*.xls"], "sections": [{"columns": {"1": "manufacturer_name"}}]}'
 )
+
+
+def _markup_shelves(config: VendorConfig) -> list[tuple[float, float, float]]:
+    """Полки шкалы наценки первой секции: (min, max, процент)."""
+    rules = config.sections[0].pricing.rules
+    return [(rule.min, rule.max, rule.percent_markup) for rule in rules.markup_rules.values()]
 
 
 def _vendors_dir(provider: FakeConfigProvider) -> Path:
@@ -145,6 +152,24 @@ def test_common_defaults_apply_to_every_vendor(fake_config_provider: FakeConfigP
     assert config.sections[0].start_row == 2
     assert config.behavior.min_rest == 0
     assert config.sections[0].title.params_from_title is True
+
+
+def test_common_markup_rules_apply_until_vendor_sets_own(fake_config_provider: FakeConfigProvider) -> None:
+    """Общая шкала `markup_rules` действует у поставщика без своей; своя заменяет общую целиком."""
+    folder = _vendors_dir(fake_config_provider)
+    folder.joinpath('_common.json').write_text(
+        '{"defaults": {"pricing": {"rules": {"markup_rules": [{"min": 0, "max": 100, "percent": 0.06}]}}}}',
+        encoding='utf-8',
+    )
+    folder.joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
+    own_rules = '"pricing": {"rules": {"markup_rules": [{"min": 50, "max": 200, "percent": 0.2}]}}, "code"'
+    poshk_json = MIM_JSON.replace('"code"', own_rules, 1)
+    folder.joinpath('poshk.json').write_text(poshk_json, encoding='utf-8')
+
+    configs = load_vendor_configs(fake_config_provider)
+
+    assert _markup_shelves(configs['mim']) == [(0, 100, 0.06)]
+    assert _markup_shelves(configs['poshk']) == [(50, 200, 0.2)]
 
 
 def test_common_file_errors_name_file(fake_config_provider: FakeConfigProvider) -> None:

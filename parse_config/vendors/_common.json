@@ -9,6 +9,13 @@
       }
     },
     "title": { "params_from_title": true },
+    "pricing": {
+      "rules": {
+        "markup_rules": [
+          { "min": 0, "max": 999999999, "percent": 0.06 }
+        ]
+      }
+    },
     "behavior": { "min_rest": 4 }
   }
 }
