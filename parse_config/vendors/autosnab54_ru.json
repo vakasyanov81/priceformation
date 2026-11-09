@@ -15,7 +15,8 @@
         "3": "season",
         "4": "spike",
         "5": "price_opt",
-        "6": "rest_count"
+        "6": "rest_count",
+        "7": "available"
       }
     }
   ]
