@@ -143,6 +143,16 @@ def test_vendor_markup_policy_from_config() -> None:
     assert policy is not None
 
 
+def test_stk_markup_is_six_percent_on_opt() -> None:
+    """STK: карта % из `pricing.rules` конфига — 6% на закуп, РРЦ не учитывается."""
+    clear_registry()
+    _, config = vendor_entry_for('7', get_config_provider())
+    policy = vendor_markup_policy_for(BaseParser, config)
+    assert policy is not None
+    assert policy.markup_percent_for_opt(1000) == pytest.approx(0.06)
+    assert policy.apply(1000, 1500) == pytest.approx(1060)
+
+
 def test_supplier_info_in_config() -> None:
     """ParseConfiguration несёт верные данные поставщика."""
     clear_registry()
