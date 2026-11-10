@@ -11,9 +11,8 @@
 from collections.abc import Callable
 
 from domain.row_item.row_item import RowItem
+from parsers.common_price.availability import is_on_order
 from parsers.common_price.warehouses import cheapest_with_summed_rest
-
-_ON_ORDER_MARKER = 'заказ'
 
 type _Narrow = Callable[[list[RowItem]], list[RowItem]]
 
@@ -53,11 +52,6 @@ def pick_double(rows: list[RowItem], priority_suppliers: tuple[str, ...] = ()) -
     for narrow in narrows:
         candidates = narrow(candidates) or candidates
     return cheapest_with_summed_rest(candidates)
-
-
-def is_on_order(row_item: RowItem) -> bool:
-    """Под заказ — в «Наличии» поставщика есть слово «заказ»; пусто — в наличии."""
-    return _ON_ORDER_MARKER in (row_item.stock.available or '').lower()
 
 
 def _double_group(row_item: RowItem) -> int | None:

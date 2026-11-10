@@ -3,7 +3,8 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price.exclude_doubles import exclude_doubles, is_on_order, pick_double
+from parsers.common_price.availability import is_on_order
+from parsers.common_price.exclude_doubles import exclude_doubles, pick_double
 
 _AUTOSNAB = 'Автоснабжение'
 _POSHK = 'Пошк'

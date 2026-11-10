@@ -1,9 +1,11 @@
-"""Выбор главного дубля: обычный товар, свежая партия, цена."""
+"""Выбор главного дубля: наличие, обычный товар, свежая партия, цена."""
 
 from typing import Any
 
 from domain.row_item.row_item import RowItem
 from parsers.common_price.main_double import main_double
+
+_ON_ORDER = 'Под заказ'
 
 
 def _row(price: int, **fields: Any) -> RowItem:
@@ -12,6 +14,34 @@ def _row(price: int, **fields: Any) -> RowItem:
 
 def test_cheapest_wins_among_equal_rows() -> None:
     cheap, dear = _row(10), _row(20)
+    assert main_double([dear, cheap]) is cheap
+
+
+def test_in_stock_beats_cheaper_on_order() -> None:
+    """Под заказ дешевле, но главным становится позиция в наличии."""
+    on_order = _row(10, available=_ON_ORDER)
+    in_stock = _row(20)
+    assert main_double([on_order, in_stock]) is in_stock
+
+
+def test_in_stock_beats_fresher_on_order_batch() -> None:
+    """Наличие важнее свежести партии: старая позиция в наличии главнее новой под заказ."""
+    old_in_stock = _row(10, production_year=2022)
+    fresh_on_order = _row(20, production_year=2023, available=_ON_ORDER)
+    assert main_double([old_in_stock, fresh_on_order]) is old_in_stock
+
+
+def test_cheapest_in_stock_wins() -> None:
+    """Несколько позиций в наличии — главная самая дешёвая."""
+    dear = _row(20, available='В наличии')
+    cheap = _row(10, available='В наличии')
+    assert main_double([dear, cheap]) is cheap
+
+
+def test_all_on_order_keeps_previous_order() -> None:
+    """Все под заказ — наличие никого не выделяет, главный самый дешёвый."""
+    dear = _row(20, available=_ON_ORDER)
+    cheap = _row(10, available=_ON_ORDER)
     assert main_double([dear, cheap]) is cheap
 
 
