@@ -3,13 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 from domain.config_context import set_config_provider
-from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.configure import configure_services, ensure_services_configured
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
+from services.grouper_factory import grouper_factory
 from services.help_service import HelpService
 from services.mail_service import MailService
 from services.mim_service import MimService
@@ -28,7 +28,7 @@ def test_configure_registers_factories() -> None:
     configure_services()
     assert ServiceProvider.is_configured()
     assert ServiceProvider.resolve(ParserFactory) is parser_for_vendor
-    assert ServiceProvider.resolve(GrouperFactory) is CommonPriceGrouper
+    assert ServiceProvider.resolve(GrouperFactory) is grouper_factory
     assert ServiceProvider.resolve(XlsWriterFactory) is XlsWriter
     assert ServiceProvider.resolve(WriteDriverFactory) is XlsxWriterDriver
 
@@ -55,7 +55,7 @@ def test_configure_is_idempotent() -> None:
     configure_services()
     configure_services()
     assert ServiceProvider.resolve(ParserFactory) is parser_for_vendor
-    assert ServiceProvider.resolve(GrouperFactory) is CommonPriceGrouper
+    assert ServiceProvider.resolve(GrouperFactory) is grouper_factory
     assert isinstance(ServiceProvider.resolve(ParseOrchestrator), ParseOrchestrator)
 
 
@@ -90,6 +90,7 @@ def test_singleton_orchestrator_uses_current_config_provider() -> None:
     configure_services()
     orchestrator = ServiceProvider.resolve(ParseOrchestrator)
     provider = MagicMock()
+    provider.config_file.return_value = '/nonexistent/doubles.json'
     set_config_provider(provider)
     entry = (MagicMock(), None)
 

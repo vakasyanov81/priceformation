@@ -209,6 +209,7 @@ fabric.properties
 # Buggy:
 .vscode/
 .cursor/
+.codegraph/
 
 # Used for testing:
 ex.py

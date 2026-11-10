@@ -47,6 +47,8 @@ def cheapest_with_summed_rest(rows: list[RowItem]) -> RowItem:
         return rows[0]
     cheapest_price = min(row.pricing.price_markup for row in rows)
     cheapest = [row for row in rows if row.pricing.price_markup == cheapest_price]
+    if len(cheapest) == 1:
+        return cheapest[0]
     total_rest = sum(row.stock.rest_count or 0 for row in cheapest)
     merged = deepcopy(cheapest[0])
     merged.set_field('rest_count', total_rest)

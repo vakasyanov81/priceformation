@@ -3,7 +3,9 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price.exclude_doubles import exclude_doubles, is_on_order, pick_double
+from parsers.common_price.availability import is_on_order
+from parsers.common_price.double_selection import pick_double
+from parsers.common_price.exclude_doubles import exclude_doubles
 
 _AUTOSNAB = 'Автоснабжение'
 _POSHK = 'Пошк'
@@ -94,6 +96,23 @@ def test_row_without_rest_is_not_picked() -> None:
     rows = [_double(_AUTOSNAB, 4000, None), _double(_POSHK, 6000, 2)]
 
     assert pick_double(rows, (_AUTOSNAB,)).vendor.supplier_name == _POSHK
+
+
+def test_regular_item_beats_cheaper_markdown() -> None:
+    """Уценка не выбирается, пока в группе есть обычный товар."""
+    markdown = _double(_POSHK, 4000, 3, marked_down=True)
+    rows = [markdown, _double(_MIM, 6000, 1)]
+
+    assert pick_double(rows).vendor.supplier_name == _MIM
+
+
+def test_freshest_batch_beats_cheaper_old_one() -> None:
+    """Из обычных товаров главная самая свежая партия, даже если она дороже."""
+    old = _double(_POSHK, 4000, 3, production_year=2021)
+    fresh = _double(_MIM, 6000, 1, production_year=2023)
+    rows = [old, fresh]
+
+    assert pick_double(rows).vendor.supplier_name == _MIM
 
 
 def test_exclude_keeps_one_row_per_group_in_place() -> None:
