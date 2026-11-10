@@ -187,6 +187,16 @@ def test_markdown_item_is_not_main_double() -> None:
     assert not markdown.duplicate.double_candidate
 
 
+def test_priority_supplier_becomes_main_double() -> None:
+    """Приоритетный поставщик из doubles.json становится главным, даже если он дороже."""
+    priority = _high(supplier_name='Автоснабжение')
+    cheap = _row(supplier_name='Пошк')
+    CommonPriceGrouper([priority, cheap], priority_suppliers=('Автоснабжение',)).group_by_params()
+
+    assert priority.duplicate.double_candidate is True
+    assert cheap.duplicate.is_double is True
+
+
 def test_all_markdown_group_keeps_cheapest_as_main() -> None:
     """Если в группе одна уценка — главным остаётся самый дешёвый, товар не пропадает."""
     cheap = _row(price_markup=_PRICE_LOW, marked_down=True)

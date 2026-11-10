@@ -1,20 +1,17 @@
 """Исключение дублей в шаблоне: из группы дублей остаётся одна строка.
 
-Порядок выбора внутри группы (``group_by_params``):
+Порядок выбора — общий с главным дублём (``double_selection.pick_double``):
 
 0. строки без остатка не выбираются, пока в группе есть строка с остатком;
 1. приоритетный поставщик (``priority_suppliers`` в ``doubles.json``, по порядку списка);
 2. в наличии важнее, чем под заказ: под заказ игнорируется, если есть позиция в наличии;
-3. наименьшая цена с наценкой; при равной цене остатки таких строк складываются.
+3. уценка не выбирается, пока есть обычный товар;
+4. из обычных выбирается самая свежая партия (без года — свежее любой даты);
+5. наименьшая цена с наценкой; при равной цене остатки таких строк складываются.
 """
 
-from collections.abc import Callable
-
 from domain.row_item.row_item import RowItem
-from parsers.common_price.availability import is_on_order
-from parsers.common_price.warehouses import cheapest_with_summed_rest
-
-type _Narrow = Callable[[list[RowItem]], list[RowItem]]
+from parsers.common_price.double_selection import pick_double
 
 
 def exclude_doubles(row_items: list[RowItem], priority_suppliers: tuple[str, ...] = ()) -> list[RowItem]:
@@ -41,37 +38,8 @@ def exclude_doubles(row_items: list[RowItem], priority_suppliers: tuple[str, ...
     return kept
 
 
-def pick_double(rows: list[RowItem], priority_suppliers: tuple[str, ...] = ()) -> RowItem:
-    """Строка группы дублей, которая остаётся в шаблоне."""
-    narrows: tuple[_Narrow, ...] = (
-        _with_rest,
-        lambda candidates: _from_priority_supplier(candidates, priority_suppliers),
-        _in_stock,
-    )
-    candidates = rows
-    for narrow in narrows:
-        candidates = narrow(candidates) or candidates
-    return cheapest_with_summed_rest(candidates)
-
-
 def _double_group(row_item: RowItem) -> int | None:
     duplicate = row_item.duplicate
     if not (duplicate.is_double or duplicate.double_candidate):
         return None
     return duplicate.group_by_params
-
-
-def _with_rest(rows: list[RowItem]) -> list[RowItem]:
-    return [row_item for row_item in rows if row_item.stock.rest_count]
-
-
-def _from_priority_supplier(rows: list[RowItem], priority_suppliers: tuple[str, ...]) -> list[RowItem]:
-    for supplier in priority_suppliers:
-        matched = [row_item for row_item in rows if row_item.vendor.supplier_name == supplier]
-        if matched:
-            return matched
-    return []
-
-
-def _in_stock(rows: list[RowItem]) -> list[RowItem]:
-    return [row_item for row_item in rows if not is_on_order(row_item)]

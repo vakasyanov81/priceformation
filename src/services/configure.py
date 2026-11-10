@@ -1,12 +1,12 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
 from domain.config_context import get_config_provider
-from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
+from services.grouper_factory import grouper_factory
 from services.help_service import HelpService
 from services.mail_service import MailService
 from services.mim_service import MimService
@@ -30,7 +30,7 @@ def configure_services() -> None:
 def _register_factories() -> None:
     """Фабрики парсеров, группировщика и писателей."""
     ServiceProvider.register(ParserFactory, lambda: parser_for_vendor)
-    ServiceProvider.register(GrouperFactory, lambda: CommonPriceGrouper)
+    ServiceProvider.register(GrouperFactory, lambda: grouper_factory)
     ServiceProvider.register(XlsWriterFactory, lambda: XlsWriter)
     ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterDriver)
 

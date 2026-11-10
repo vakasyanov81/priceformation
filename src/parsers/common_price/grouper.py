@@ -25,20 +25,20 @@ def _has_product_identity(row_item: RowItem) -> bool:
     return bool(clear_model(row_item.identity.model, row_item.identity.manufacturer, row_item.identity.brand))
 
 
-def _mark_double_items(row_items: list[RowItem]) -> None:
+def _mark_double_items(row_items: list[RowItem], priority_suppliers: tuple[str, ...]) -> None:
     """Проставить признаки дублей внутри одной группы."""
     if len(row_items) < _MIN_ITEMS_FOR_DOUBLES:
         return
 
-    min_price_item = main_double(row_items)
+    main_price_item = main_double(row_items, priority_suppliers)
     dispute = dispute_note(row_items)
 
     for row_item in row_items:
-        if row_item.duplicate.order == min_price_item.duplicate.order:
+        if row_item.duplicate.order == main_price_item.duplicate.order:
             row_item.set_field('double_candidate', True)
         else:
             row_item.set_field('is_double', True)
-            if is_doubtful_price(row_item, min_price_item):
+            if is_doubtful_price(row_item, main_price_item):
                 row_item.set_field('doubtful_price', True)
         if dispute:
             row_item.set_field('disputed', dispute)
@@ -103,10 +103,12 @@ class CommonPriceGrouper:
         row_items: list[RowItem],
         aliases_map: dict[str, Any] | None = None,
         reference_priority: Mapping[str, int] | None = None,
+        priority_suppliers: tuple[str, ...] = (),
     ):
         self.row_items = row_items
         self._aliases_map = {} if aliases_map is None else aliases_map
         self._reference_priority = {} if reference_priority is None else reference_priority
+        self._priority_suppliers = priority_suppliers
         self._is_grouped = False
 
     def group_by_params(self) -> CommonPriceGrouper:
@@ -135,7 +137,7 @@ class CommonPriceGrouper:
     def _apply_group(self, group_id: int, group_items: list[RowItem]) -> None:
         """Обработать одну группу дублей."""
         if _has_product_identity(group_items[0]):
-            _mark_double_items(group_items)
+            _mark_double_items(group_items, self._priority_suppliers)
             unify_group_title(group_items, self._reference_priority)
         for row_item in group_items:
             row_item.set_field('group_by_params', group_id)
