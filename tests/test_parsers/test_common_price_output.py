@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from domain.config_context import get_config_provider
+from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.common_price.output import CommonPriceOut, jsonl_output_files
@@ -471,3 +472,22 @@ def test_result_folder_comes_from_injected_provider() -> None:
         out.write_doubles_report(as_jsonl=True)
 
     assert write.call_args.args[2] == '/injected/result'
+
+
+@pytest.mark.parametrize('as_jsonl', [False, True])
+def test_invalid_later_template_prevents_all_writes(as_jsonl: bool) -> None:
+    """Ошибка второго шаблона не оставляет готовый файл первого."""
+    writer = MagicMock()
+    driver = MagicMock()
+    out = CommonPriceOut([], xls_writer=writer, write_driver=driver, config_provider=get_config_provider())
+    invalid = ForDrom().output_spec()
+    invalid.groups[0].filters['foreign_field'] = []
+    with (
+        patch.object(ForDrom, 'output_spec', return_value=invalid),
+        patch('parsers.common_price.output.write_template_jsonl') as jsonl,
+        pytest.raises(ConfigValidationError, match=r'for_drom.*filters'),
+    ):
+        out.write_all_prices(as_jsonl=as_jsonl)
+    writer.assert_not_called()
+    driver.assert_not_called()
+    jsonl.assert_not_called()

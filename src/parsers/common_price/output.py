@@ -5,6 +5,7 @@ Make parse all price and make inner and drom prices
 from pathlib import Path
 from typing import Any, Protocol
 
+from domain.product_groups import ProductGroup
 from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.nomenclature_correction import (
@@ -17,6 +18,7 @@ from parsers.common_price.warehouses import merge_warehouse_rows
 from parsers.data_provider.doubles_settings import DoublesSettings, load_doubles_settings
 from parsers.writer.ixlsx_driver import IXlsDriver
 from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
+from parsers.writer.output_validation import validate_outputs
 from parsers.writer.templates.all_templates import (
     all_writer_templates,
     get_writer_template,
@@ -91,6 +93,10 @@ class CommonPriceOut:
         :return: пути записанных файлов
         """
         templates = _templates_to_write(result_template)
+        validate_outputs(
+            [template().output_spec() for template in (*templates, ForDoubles)],
+            {ProductGroup.TIRE_AND_DISK},
+        )
         doubles_settings = self._settings()
         clear_nomenclature_cache()
         self.nomenclature_title_correction()
@@ -146,6 +152,7 @@ class CommonPriceOut:
         as_jsonl: bool = False,
     ) -> str:
         """Записать файл шаблона (xlsx или jsonl) и вернуть путь."""
+        validate_outputs([template().output_spec()], {ProductGroup.TIRE_AND_DISK})
         raw_rows = _to_raw_dicts(rows)
         folder = self._config_provider.result_folder()
         if as_jsonl:
