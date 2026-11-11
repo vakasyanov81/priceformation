@@ -9,6 +9,13 @@ from services.parse_statistics import GroupStatistics, TireAndDiskDiagnostics
 
 
 @dataclass
+class ParseSelection:
+    """Определённый выбор сохраняется и при отказе до получения результата."""
+
+    groups: tuple[ProductGroup, ...] = ()
+
+
+@dataclass
 class ParseResult:
     """Пакеты выбранных групп и накопленные пропуски; отсутствующая группа не создаётся."""
 

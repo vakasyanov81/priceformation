@@ -21,6 +21,7 @@ from app.parse_report_build import (
     stats_from_result,
     warnings_from_result,
 )
+from app.parse_report_groups import groups_from_result
 from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
@@ -47,7 +48,7 @@ def test_dump_json_roundtrip() -> None:
     """ok-отчёт сериализуется в JSON с ожидаемыми ключами."""
     payload = ok_payload(
         action='parse',
-        positions=[{'title': _TITLE}],
+        groups={'tire_and_disk': {'positions': [{'title': _TITLE}], 'stats': {}}},
         stats=empty_stats(0),
         warnings=[],
         files=[_RESULT_A],
@@ -85,13 +86,9 @@ def test_empty_stats_exact() -> None:
         'items': 0,
         'priced_items': 0,
         'doubles': 0,
-        'unknown_category_skips': 0,
         'black_list_skips': 0,
-        'type_corrections': 0,
-        'title_conflicts': 0,
+        'unrouted_rows': 0,
         'elapsed_seconds': _ROUNDED,
-        'percent_markup': {'min': 0, 'max': 0},
-        'absolute_markup': {'min': 0, 'max': 0},
     }
 
 
@@ -99,7 +96,7 @@ def test_ok_payload_exact() -> None:
     """Успешный ответ: полный набор ключей схемы JsonReport."""
     payload = ok_payload(
         action='parse',
-        positions=[{'title': _TITLE}],
+        groups={'tire_and_disk': {'positions': [{'title': _TITLE}], 'stats': {}}},
         stats=empty_stats(0),
         warnings=['w'],
         files=[_RESULT_A],
@@ -109,7 +106,7 @@ def test_ok_payload_exact() -> None:
         'ok': True,
         'version': REPORT_VERSION,
         'action': 'parse',
-        'positions': [{'title': _TITLE}],
+        'groups': {'tire_and_disk': {'positions': [{'title': _TITLE}], 'stats': {}}},
         'stats': empty_stats(0),
         'warnings': ['w'],
         'files': [_RESULT_A],
@@ -126,7 +123,7 @@ def test_error_payload_stable_keys() -> None:
         'ok': False,
         'version': REPORT_VERSION,
         'action': 'parse',
-        'positions': [],
+        'groups': {},
         'stats': empty_stats(0),
         'warnings': [],
         'files': [],
@@ -218,6 +215,10 @@ def test_row_items_without_errors() -> None:
 def _result_with_rows(rows: list[RowItem]) -> ParseResult:
     parsed = ParseResult()
     parsed.add_package(TireAndDiskResult(tuple(rows)))
+    parsed.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(
+        priced_items=sum(bool(row.pricing.price_opt) for row in rows),
+        doubles=sum(1 for row in rows if row.duplicate.is_double or row.duplicate.double_candidate),
+    )
     return parsed
 
 
@@ -226,7 +227,7 @@ def _result_with_skips() -> ParseResult:
     row.set_field('is_double', True)
     parsed = _result_with_rows([row])
     parsed.tire_and_disk_diagnostics.unknown_category_skips.append(('МИМ', _SUV))
-    parsed.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(black_list_skips=3)
+    parsed.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(priced_items=1, doubles=1, black_list_skips=3)
     parsed.tire_and_disk_diagnostics.type_corrections = 2
     parsed.tire_and_disk_diagnostics.title_conflicts = 4
     return parsed
@@ -235,7 +236,7 @@ def _result_with_skips() -> ParseResult:
 def test_stats_and_warnings_from_result() -> None:
     """счётчики и тексты предупреждений из ParseResult."""
     parsed = _result_with_skips()
-    assert stats_from_result(parsed, _ELAPSED) == {
+    assert groups_from_result(parsed, all_result=False)['tire_and_disk']['stats'] == {
         'items': 1,
         'priced_items': 1,
         'doubles': 1,
@@ -243,7 +244,6 @@ def test_stats_and_warnings_from_result() -> None:
         'black_list_skips': 3,
         'type_corrections': 2,
         'title_conflicts': 4,
-        'elapsed_seconds': _ROUNDED,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 20.0, 'max': 20.0},
     }
@@ -258,7 +258,7 @@ def test_stats_markup_range_across_rows() -> None:
     first = RowItem({'title': 'a', 'price_opt': 100, 'price_markup': 120, 'percent_markup': 20})
     second = RowItem({'title': 'b', 'price_opt': 200, 'price_markup': 300, 'percent_markup': 50})
     parsed = _result_with_rows([first, second])
-    assert stats_from_result(parsed, 0.0) == {
+    assert groups_from_result(parsed, all_result=False)['tire_and_disk']['stats'] == {
         'items': 2,
         'priced_items': 2,
         'doubles': 0,
@@ -266,7 +266,6 @@ def test_stats_markup_range_across_rows() -> None:
         'black_list_skips': 0,
         'type_corrections': 0,
         'title_conflicts': 0,
-        'elapsed_seconds': 0.0,
         'percent_markup': {'min': 20.0, 'max': 50.0},
         'absolute_markup': {'min': 20.0, 'max': 100.0},
     }
@@ -276,7 +275,7 @@ def test_stats_skip_unpriced_rows() -> None:
     """Строка без price_opt попадает в items, но не в наценку и priced_items."""
     row = RowItem({'title': 'no price', 'price_opt': 0, 'price_markup': 120})
     parsed = _result_with_rows([row])
-    assert stats_from_result(parsed, 0.0) == {
+    assert groups_from_result(parsed, all_result=False)['tire_and_disk']['stats'] == {
         'items': 1,
         'priced_items': 0,
         'doubles': 0,
@@ -284,7 +283,6 @@ def test_stats_skip_unpriced_rows() -> None:
         'black_list_skips': 0,
         'type_corrections': 0,
         'title_conflicts': 0,
-        'elapsed_seconds': 0.0,
         'percent_markup': {'min': 0, 'max': 0},
         'absolute_markup': {'min': 0, 'max': 0},
     }
@@ -327,7 +325,7 @@ def test_report_from_result_subset_rows() -> None:
     report = report_from_result('doubles', parsed, [_RESULT_D], 0.5, rows=[keep], all_result=True)
     assert report['ok'] is True
     assert report['action'] == 'doubles'
-    assert len(report['positions']) == 1
+    assert len(report['groups']['tire_and_disk']['positions']) == 1
     assert report['stats']['items'] == 2
     assert report['files'] == [_RESULT_D]
 
@@ -336,7 +334,7 @@ def test_report_stats_only() -> None:
     """без all_result в JSON только статистика процесса."""
     parsed = _result_with_rows([_priced_row()])
     report = report_from_result('parse', parsed, [_RESULT_A], 0.4)
-    assert report['positions'] == []
+    assert report['groups']['tire_and_disk']['positions'] == []
     assert report['stats']['items'] == 1
     assert report['stats']['elapsed_seconds'] == 0.4
     assert report['files'] == [_RESULT_A]

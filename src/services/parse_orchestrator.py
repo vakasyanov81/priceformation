@@ -21,7 +21,7 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
-from services.parse_result import ParseResult
+from services.parse_result import ParseResult, ParseSelection
 from services.parse_statistics import GroupStatistics, UnknownCategorySkip
 from services.vendor_source import VendorSource
 
@@ -76,9 +76,19 @@ class ParseOrchestrator:
         self._grouper_factory = grouper_factory
         self._vendor_source = vendor_source
 
-    def parse_all(self, vendors: VendorList | None = None) -> ParseResult:
+    def parse_all(self, vendors: VendorList | None = None, *, selection: ParseSelection | None = None) -> ParseResult:
         """Парсит всех поставщиков (или переданный список) и группирует."""
-        return self._parse_vendors(self._vendor_source.all() if vendors is None else vendors)
+        if selection is not None:
+            selection.groups = ()
+        selected = self._vendor_source.all() if vendors is None else vendors
+        if selection is not None:
+            selection.groups = tuple(
+                dict.fromkeys(
+                    ProductGroup.TIRE_AND_DISK if config is None else config.product_group or ProductGroup.TIRE_AND_DISK
+                    for _, config in selected
+                )
+            )
+        return self._parse_vendors(selected)
 
     def parse_vendor(self, code: str) -> ParseResult:
         """Парсит одного поставщика по коду реестра и группирует."""

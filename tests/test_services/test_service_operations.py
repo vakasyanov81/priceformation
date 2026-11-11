@@ -9,6 +9,7 @@ from infrastructure.config.fake_config_provider import FakeConfigProvider
 from services.doubles_service import DoublesReport, DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.four_tochki_service import load_remote_vendor_data as load_four_tochki_data
+from services.parse_result import ParseResult
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
 
@@ -95,6 +96,17 @@ def test_make_report_defaults_to_xlsx() -> None:
     service.make_report()
 
     reporter.write_doubles.assert_called_once_with([], as_jsonl=False)
+
+
+def test_make_report_without_selected_groups_creates_no_file() -> None:
+    """Отсутствие выбранных групп не создаёт даже пустой отчёт дублей."""
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = ParseResult()
+    reporter = MagicMock()
+    report = DoublesService(orchestrator=orchestrator, report_service=reporter).make_report(as_jsonl=True)
+    assert report.path is None
+    assert report.doubles == []
+    reporter.write_doubles.assert_not_called()
 
 
 def test_writer_factory_receives_items() -> None:

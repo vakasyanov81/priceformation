@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from domain.row_item.row_item import RowItem
 from services.parse_orchestrator import ParseOrchestrator
-from services.parse_result import ParseResult
+from services.parse_result import ParseResult, ParseSelection
 from services.price_report import PriceReportService
 
 
@@ -16,7 +16,7 @@ class DoublesReport:
 
     parse_result: ParseResult
     doubles: list[RowItem]
-    path: str
+    path: str | None
 
 
 class DoublesService:
@@ -31,9 +31,13 @@ class DoublesService:
         self._orchestrator = orchestrator
         self._report_service = report_service
 
-    def make_report(self, *, as_jsonl: bool = False) -> DoublesReport:
+    def make_report(self, *, as_jsonl: bool = False, selection: ParseSelection | None = None) -> DoublesReport:
         """Разобрать всех поставщиков и записать отчёт о дублях."""
-        parse_result = self._orchestrator.parse_all()
+        parse_result = (
+            self._orchestrator.parse_all() if selection is None else self._orchestrator.parse_all(selection=selection)
+        )
+        if not parse_result.groups:
+            return DoublesReport(parse_result=parse_result, doubles=[], path=None)
         doubles = [
             row for row in parse_result.tire_and_disk_items if row.duplicate.is_double or row.duplicate.double_candidate
         ]

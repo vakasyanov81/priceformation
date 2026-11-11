@@ -37,6 +37,7 @@ from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
+from services.parse_statistics import GroupStatistics
 from services.price_report import PriceReportService
 from services.vendor_activation import VendorActivationService, VendorState
 from services.zapaska_service import ZapaskaService
@@ -68,6 +69,10 @@ def _result_with_row() -> ParseResult:
 def _mark_result(rows: list[RowItem]) -> ParseResult:
     common = ParseResult()
     common.add_package(TireAndDiskResult(tuple(rows)))
+    common.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(
+        priced_items=sum(bool(row.pricing.price_opt) for row in rows),
+        doubles=sum(1 for row in rows if row.duplicate.is_double or row.duplicate.double_candidate),
+    )
     return common
 
 
@@ -88,7 +93,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     _assert_elapsed(payload)
     assert payload['ok'] is True
     assert payload['action'] == PARSE
-    assert payload['positions'] == []
+    assert payload['groups']['tire_and_disk']['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
     reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template=None, as_jsonl=True)
@@ -134,7 +139,7 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     noisy_logger = logging.getLogger(_NOISY_LOGGER)
     json_mode_seen: list[bool] = []
 
-    def noisy_parse_all() -> ParseResult:
+    def noisy_parse_all(**_kwargs: object) -> ParseResult:
         json_mode_seen.append(json_mode_active())
         noisy_logger.info(_LOG_NOISE)
         noisy_logger.error(_LOG_NOISE)
@@ -180,7 +185,8 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    assert payload['positions'][0]['title'] == _TITLE
+    positions = payload['groups']['tire_and_disk']['positions']
+    assert positions[0]['title'] == _TITLE
     assert payload['stats']['items'] == 1
 
 
@@ -336,10 +342,10 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 0
     _assert_elapsed(payload)
     assert payload['action'] == DOUBLES
-    assert payload['positions'] == []
+    assert payload['groups']['tire_and_disk']['positions'] == []
     assert payload['stats']['doubles'] == 1
     assert payload['files'] == jsonl_output_files([_DOUBLE_PATH])
-    doubles_service.make_report.assert_called_once_with(as_jsonl=True)
+    assert doubles_service.make_report.call_args.kwargs['as_jsonl'] is True
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
@@ -359,7 +365,7 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES, all_result=True)
     payload = json.loads(capsys.readouterr().out)
-    titles = {position['title'] for position in payload['positions']}
+    titles = {position['title'] for position in payload['groups']['tire_and_disk']['positions']}
     assert code == 0
     _assert_elapsed(payload)
     assert titles == {'dup', 'cand'}
