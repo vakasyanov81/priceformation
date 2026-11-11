@@ -56,20 +56,20 @@ def test_section_inherits_vendor_fields() -> None:
 
 
 def test_xls_columns_get_integer_keys() -> None:
-    """Колонки секции дополняют колонки поставщика; ключи xls — целые."""
+    """Колонки секции заменяют карту поставщика; ключи xls — целые."""
     sections = [{'columns': {'1': 'manufacturer_name'}}]
     config = _config(columns={'2': 'title'}, sections=sections)
 
     assert config.columns == {2: 'title'}
-    assert config.sections[0].columns == {2: 'title', 1: 'manufacturer_name'}
+    assert config.sections[0].columns == {1: 'manufacturer_name'}
 
 
 def test_section_column_overrides_vendor_column() -> None:
-    """Та же колонка в секции заменяет поле поставщика."""
+    """Карта секции заменяет всю карту, включая несовпадающие колонки."""
     sections = [{'columns': {'1': 'model'}}]
     config = _config(columns={'1': 'title', '2': 'code'}, sections=sections)
 
-    assert config.sections[0].columns == {1: 'model', 2: 'code'}
+    assert config.sections[0].columns == {1: 'model'}
 
 
 def test_json_reader_keeps_text_column_keys() -> None:
@@ -80,7 +80,7 @@ def test_json_reader_keeps_text_column_keys() -> None:
     )
 
     assert config.columns == {'article': 'code_art'}
-    assert config.sections[0].columns == {'article': 'code_art', 'name': 'title'}
+    assert config.sections[0].columns == {'name': 'title'}
 
 
 def test_json_columns_list_maps_same_named_keys() -> None:
@@ -515,7 +515,7 @@ def test_vendor_config_reads_all_fields() -> None:
                 name='Лист',
                 start_row=5,
                 file_templates=('a.xls',),
-                columns={2: 'title', 0: 'code'},
+                columns={0: 'code'},
                 sheet_info='лист',
                 sheet_indexes=(0, 1),
                 category=CategoryConfig(strategy='fixed', fixed_value='Диск', field_name='type'),
