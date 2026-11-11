@@ -6,11 +6,8 @@ from app.parse_report import JsonReport, ok_payload
 from domain.config_context import get_config_provider
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
-from parsers.base_parser.category_finder import skipped_unknown_categories_message
 from parsers.base_parser.parse_statistic import ParseResultStatistic
-from parsers.data_provider.black_list import skipped_black_list_message
-from parsers.strategies.product_types import type_corrections_message
-from parsers.strategies.title_conflicts import title_conflicts_message
+from services.parse_logging import skips_messages
 from services.parse_result import ParseResult
 
 
@@ -23,10 +20,10 @@ def stats_from_result(parse_result: ParseResult, elapsed: float) -> dict[str, An
         'items': len(parse_result.tire_and_disk_items),
         'priced_items': statistic.count_items(),
         'doubles': _double_count(parse_result.tire_and_disk_items),
-        'unknown_category_skips': len(parse_result.unknown_category_skips),
-        'black_list_skips': parse_result.black_list_skips,
-        'type_corrections': parse_result.type_corrections,
-        'title_conflicts': parse_result.title_conflicts,
+        'unknown_category_skips': len(parse_result.tire_and_disk_diagnostics.unknown_category_skips),
+        'black_list_skips': sum(stats.black_list_skips for stats in parse_result.statistics.values()),
+        'type_corrections': parse_result.tire_and_disk_diagnostics.type_corrections,
+        'title_conflicts': parse_result.tire_and_disk_diagnostics.title_conflicts,
         'elapsed_seconds': round(elapsed, 2),
         'percent_markup': {'min': percent[0], 'max': percent[1]},
         'absolute_markup': {'min': absolute[0], 'max': absolute[1]},
@@ -34,21 +31,8 @@ def stats_from_result(parse_result: ParseResult, elapsed: float) -> dict[str, An
 
 
 def warnings_from_result(parse_result: ParseResult) -> list[str]:
-    """Тексты предупреждений разбора (категории, black_list)."""
-    collected: list[str] = []
-    category = skipped_unknown_categories_message(parse_result.unknown_category_skips)
-    if category:
-        collected.append(category.strip())
-    black_list = skipped_black_list_message(parse_result.black_list_skips)
-    if black_list:
-        collected.append(black_list.strip())
-    corrections = type_corrections_message(parse_result.type_corrections)
-    if corrections:
-        collected.append(corrections.strip())
-    conflicts = title_conflicts_message(parse_result.title_conflicts)
-    if conflicts:
-        collected.append(conflicts.strip())
-    return collected
+    """Предупреждения сохраняют контекст группы как в консольной сводке."""
+    return [message.strip() for _, message in skips_messages(parse_result)]
 
 
 def row_items_to_json(rows: list[RowItem]) -> list[dict[str, Any]]:

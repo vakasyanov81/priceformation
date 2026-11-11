@@ -63,7 +63,7 @@ class TestFullParsePipeline:
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, 'Ошибки разбора: {}'.format('; '.join(errors))
         assert len(parse_output.tire_and_disk_items) > 0
-        assert parse_output.unknown_category_skips == []
+        assert parse_output.tire_and_disk_diagnostics.unknown_category_skips == []
 
     def test_json_vendor_uses_json_reader(
         self,

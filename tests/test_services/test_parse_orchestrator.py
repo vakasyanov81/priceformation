@@ -120,6 +120,39 @@ def test_parse_all() -> None:
     assert parsed.tire_and_disk_items == fake_result
 
 
+def test_shared_routing_counts_unassigned_rows_once() -> None:
+    """Две секции одного маршрута не удваивают общий счётчик неназначенных строк."""
+    shared = MagicMock(unrouted_rows=3)
+    other = MagicMock(unrouted_rows=2)
+    first_config = MagicMock(routing=shared, vendor_section=None, vendor_config=None)
+    second_config = MagicMock(routing=other, vendor_section=None, vendor_config=None)
+    vendor = cast(type[BaseParser], FakeParser)
+
+    vendors = [(vendor, first_config), (vendor, first_config), (vendor, second_config)]
+    parsed = _orchestrator().parse_all(vendors)
+
+    assert parsed.unrouted_rows == 5
+    assert parsed.total_statistics().item_count == 3
+
+
+def test_tire_statistics_describe_grouped_package() -> None:
+    """Число оплачиваемых позиций и дублей считается после группировки своего пакета."""
+    fields = {'model': 'Модель шины', 'price_opt': 100}
+    rows = [RowItem(fields), RowItem(fields), RowItem({'model': 'Другая модель'})]
+    parser = MagicMock()
+    parser.parse.return_value = TireAndDiskResult(tuple(rows))
+    parser.stats = ParserStats(black_list_skips=2)
+
+    orchestrator = _orchestrator(parser_factory=MagicMock(return_value=parser))
+    parsed = orchestrator.parse_all([(BaseParser, None)])
+
+    counters = parsed.statistics[ProductGroup.TIRE_AND_DISK]
+    assert counters.item_count == 3
+    assert counters.priced_items == 2
+    assert counters.doubles == 1
+    assert counters.black_list_skips == 2
+
+
 def test_other_group_is_not_sent_to_tire_and_disk_grouper() -> None:
     """До появления своих правил другая модель не проходит через шинную группировку."""
     parser = MagicMock()
@@ -132,6 +165,21 @@ def test_other_group_is_not_sent_to_tire_and_disk_grouper() -> None:
         orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
     orchestrator._grouper_factory.assert_not_called()
+
+
+def test_other_package_keeps_only_common_counters() -> None:
+    """Сбор результата не объявляет шинные исправления статистикой другой модели."""
+    parser = MagicMock()
+    parser.parse.return_value = TestGroupResult(())
+    parser.stats = ParserStats(black_list_skips=3, type_corrections=2, unknown_category_skips=['SUV'])
+    parsed = ParseResult()
+
+    _orchestrator()._parse_supplier(parsed, parser)
+
+    assert parsed.tire_and_disk_diagnostics.type_corrections == 0
+    assert parsed.tire_and_disk_diagnostics.unknown_category_skips == []
+    assert parsed.total_statistics().black_list_skips == 3
+    assert set(parsed.statistics) == {ProductGroup.BATTERIES}
 
 
 def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:
@@ -221,6 +269,7 @@ def test_parse_all_passes_config() -> None:
 def test_parse_vendor_parse_error_is_logged(watch_logger: LoggerWatcher) -> None:
     """ошибка parse логируется и пробрасывается"""
     parser = MagicMock()
+    parser.product_group = ProductGroup.TIRE_AND_DISK
     parser.parse.side_effect = RuntimeError('boom')
     parsed = ParseResult()
     orchestrator = _orchestrator()
@@ -229,13 +278,16 @@ def test_parse_vendor_parse_error_is_logged(watch_logger: LoggerWatcher) -> None
     with pytest.raises(RuntimeError, match='boom'):
         orchestrator._parse_supplier(parsed, parser)
 
-    assert texts_at(entries(), logging.ERROR) == [f'Ошибка разбора прайса поставщика {parser!r} // boom']
+    assert texts_at(entries(), logging.ERROR) == [
+        f'Ошибка разбора прайса поставщика {parser!r} [tire_and_disk] // boom'
+    ]
     assert parsed.groups == {}
 
 
 def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
     """прочие ошибки логируются и пробрасываются"""
     parser = MagicMock()
+    parser.product_group = ProductGroup.TIRE_AND_DISK
     parser.parse.side_effect = RuntimeError('boom')
     parsed = ParseResult()
     orchestrator = _orchestrator()
@@ -244,7 +296,9 @@ def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
     with pytest.raises(RuntimeError, match='boom'):
         orchestrator._parse_supplier(parsed, parser)
 
-    assert texts_at(entries(), logging.ERROR) == [f'Ошибка разбора прайса поставщика {parser!r} // boom']
+    assert texts_at(entries(), logging.ERROR) == [
+        f'Ошибка разбора прайса поставщика {parser!r} [tire_and_disk] // boom'
+    ]
 
 
 def test_parse_vendor_without_skips() -> None:
@@ -259,8 +313,8 @@ def test_parse_vendor_without_skips() -> None:
 
     assert ProductGroup.TIRE_AND_DISK in parsed.groups
     assert not parsed.tire_and_disk_items
-    assert not parsed.unknown_category_skips
-    assert parsed.black_list_skips == 0
+    assert not parsed.tire_and_disk_diagnostics.unknown_category_skips
+    assert parsed.total_statistics().black_list_skips == 0
 
 
 def test_no_selected_vendors_leave_groups_absent() -> None:
@@ -283,13 +337,13 @@ def test_skipped_categories_logged(watch_logger: LoggerWatcher) -> None:
     assert 'Пропущено 2 позиций' in message
     assert 'Запаска (шины)' in message
     assert 'Foo, SUV' in message
-    assert parsed.unknown_category_skips == [
+    assert parsed.tire_and_disk_diagnostics.unknown_category_skips == [
         ('Запаска (шины)', 'SUV'),
         ('Запаска (шины)', 'Foo'),
     ]
 
 
-_BLACK_LIST_SKIP_LOG = '\nОтброшено 3 позиций по правилам black_list.'
+_BLACK_LIST_SKIP_LOG = '[tire_and_disk] \nОтброшено 3 позиций по правилам black_list.'
 
 
 def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
@@ -300,7 +354,7 @@ def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParserWithBlackListSkips), None)])
 
     assert _BLACK_LIST_SKIP_LOG in texts_at(entries(), logging.INFO)
-    assert parsed.black_list_skips == 3
+    assert parsed.total_statistics().black_list_skips == 3
 
 
 @pytest.mark.usefixtures('example_vendors_provider')
@@ -341,7 +395,7 @@ def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
     parsed = orchestrator.parse_all([vendor_entry])
 
     assert not parsed.tire_and_disk_items
-    assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable не активен']
+    assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable [tire_and_disk] не активен']
 
 
 def _config_driven_vendor_entry(
@@ -437,7 +491,7 @@ def test_black_list_skips_accumulate_across_vendors() -> None:
         ]
     )
 
-    assert parsed.black_list_skips == 6
+    assert parsed.total_statistics().black_list_skips == 6
 
 
 def test_parse_vendor_passes_code_to_registry() -> None:
@@ -483,8 +537,8 @@ def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> 
 
     parsed = _orchestrator().parse_all([vendor, vendor])
 
-    assert parsed.type_corrections == 4
-    assert 'Тип товара скорректирован по названию строки, расхождений с поставщиком: 4' in texts_at(
+    assert parsed.tire_and_disk_diagnostics.type_corrections == 4
+    assert '[tire_and_disk] Тип товара скорректирован по названию строки, расхождений с поставщиком: 4' in texts_at(
         entries(),
         logging.INFO,
     )
@@ -510,7 +564,7 @@ def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) 
 
     parsed = _orchestrator().parse_all([vendor, vendor])
 
-    assert parsed.titles_not_composed == 6
+    assert parsed.tire_and_disk_diagnostics.titles_not_composed == 6
     warnings = [text for text in texts_at(entries(), logging.WARNING) if 'не собрано из полей' in text]
     assert len(warnings) == 2
     assert all(text.endswith('позиций: 3') for text in warnings)
@@ -555,4 +609,6 @@ def test_parse_all_logs_doubtful_doubles_count(watch_logger: LoggerWatcher) -> N
 
     orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
-    assert '\nКоличество дублей: 2, из них сомнительных (цена ±5%): 1\n' in texts_at(entries(), logging.INFO)
+    assert '[tire_and_disk] \nКоличество дублей: 2, из них сомнительных (цена ±5%): 1\n' in texts_at(
+        entries(), logging.INFO
+    )

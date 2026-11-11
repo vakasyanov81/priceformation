@@ -5,7 +5,9 @@ import pytest
 from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
+from parsers.base_parser.parse_statistic import ParserStats
 from services.parse_result import ParseResult
+from services.parse_statistics import GroupStatistics, TireAndDiskDiagnostics
 from tests.test_domain.group_handler_examples import TestGroupResult, TestPosition
 
 
@@ -61,3 +63,39 @@ def test_package_rejects_merge_with_another_model() -> None:
     """Нетипизированный код не может объединить несовместимые доменные модели."""
     with pytest.raises(TypeError, match='той же моделью'):
         TireAndDiskResult().merge(TestGroupResult(()))
+
+
+def test_common_statistics_sum_selected_packages_only() -> None:
+    """Итоги двух моделей не читают шинные поля чужих позиций или невыбранные группы."""
+    parsed = ParseResult()
+    parsed.add_package(TireAndDiskResult((RowItem(),)))
+    parsed.add_package(TestGroupResult((TestPosition('Другая модель'),)))
+    parsed.statistics = {
+        ProductGroup.TIRE_AND_DISK: GroupStatistics(priced_items=1, doubles=1, black_list_skips=2),
+        ProductGroup.BATTERIES: GroupStatistics(black_list_skips=3),
+    }
+
+    expected = GroupStatistics(item_count=2, priced_items=1, doubles=1, black_list_skips=5)
+    assert parsed.total_statistics() == expected
+    assert not hasattr(parsed.statistics[ProductGroup.BATTERIES], 'type_corrections')
+    assert not hasattr(parsed.statistics[ProductGroup.BATTERIES], 'unknown_category_skips')
+    parsed.groups.pop(ProductGroup.BATTERIES)
+    assert parsed.total_statistics().black_list_skips == 2
+
+
+def test_diagnostics_accumulate_without_sharing_parser_state() -> None:
+    """Сброс счётчиков парсера после секции не меняет уже собранную диагностику."""
+    counters = ParserStats(type_corrections=2, title_conflicts=1, homoglyph_fixes=3, homoglyph_suspects=4)
+    skips = [('Поставщик / секция', 'SUV')]
+    diagnostics = TireAndDiskDiagnostics()
+
+    diagnostics.accumulate(counters, skips)
+    diagnostics.accumulate(counters, skips)
+    counters.type_corrections = 0
+    skips.clear()
+
+    assert diagnostics.type_corrections == 4
+    assert diagnostics.title_conflicts == 2
+    assert diagnostics.homoglyph_fixes == 6
+    assert diagnostics.homoglyph_suspects == 8
+    assert diagnostics.unknown_category_skips == [('Поставщик / секция', 'SUV'), ('Поставщик / секция', 'SUV')]

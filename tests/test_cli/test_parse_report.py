@@ -22,8 +22,10 @@ from app.parse_report_build import (
     warnings_from_result,
 )
 from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from services.parse_result import ParseResult
+from services.parse_statistics import GroupStatistics
 
 _TITLE = 'шина test'
 _OPT = 100
@@ -223,10 +225,10 @@ def _result_with_skips() -> ParseResult:
     row = _priced_row()
     row.set_field('is_double', True)
     parsed = _result_with_rows([row])
-    parsed.unknown_category_skips.append(('МИМ', _SUV))
-    parsed.black_list_skips = 3
-    parsed.type_corrections = 2
-    parsed.title_conflicts = 4
+    parsed.tire_and_disk_diagnostics.unknown_category_skips.append(('МИМ', _SUV))
+    parsed.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(black_list_skips=3)
+    parsed.tire_and_disk_diagnostics.type_corrections = 2
+    parsed.tire_and_disk_diagnostics.title_conflicts = 4
     return parsed
 
 
@@ -301,7 +303,7 @@ def test_empty_result_stats() -> None:
 def test_warnings_category_only() -> None:
     """только неизвестные категории."""
     parsed = ParseResult()
-    parsed.unknown_category_skips.append(('МИМ', _SUV))
+    parsed.tire_and_disk_diagnostics.unknown_category_skips.append(('МИМ', _SUV))
     warnings = warnings_from_result(parsed)
     assert len(warnings) == 1
     assert _SUV in warnings[0]
@@ -310,7 +312,7 @@ def test_warnings_category_only() -> None:
 def test_warnings_black_list_only() -> None:
     """только black_list."""
     parsed = ParseResult()
-    parsed.black_list_skips = 2
+    parsed.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(black_list_skips=2)
     warnings = warnings_from_result(parsed)
     assert len(warnings) == 1
     assert 'black_list' in warnings[0]

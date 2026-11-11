@@ -3,6 +3,7 @@
 from typing import Any, Protocol
 
 from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.file_reader import FileReader
@@ -50,7 +51,7 @@ class BaseParser:
         self.parsed_items: list[RowItem] = []
         self._package = TireAndDiskResult()
         self.settings = group_handler.settings if group_handler else ParserSettings(parse_config)
-        self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
+        self._logger = LoggerParseProcess(f'{self!r} [tire_and_disk]')
         self.stats = group_handler.stats if group_handler else ParserStats()
         self.price_files = PriceFiles(
             self.settings.parser_params(),
@@ -70,6 +71,11 @@ class BaseParser:
     def __repr__(self) -> str:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
         return self.settings.title()
+
+    @property
+    def product_group(self) -> ProductGroup:
+        """Группа определяет модель обработчика и контекст диагностики."""
+        return self.group_handler.product_group
 
     def parse(self) -> TireAndDiskResult:
         if not self.settings.is_active:

@@ -21,7 +21,8 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
 from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
-from services.parse_result import ParseResult, UnknownCategorySkip
+from services.parse_result import ParseResult
+from services.parse_statistics import GroupStatistics, UnknownCategorySkip
 from services.vendor_source import VendorSource
 
 logger = logging.getLogger(__name__)
@@ -109,13 +110,18 @@ class ParseOrchestrator:
             )
             grouped = grouper.group_by_params().get_row_items()
             parse_result.replace_package(TireAndDiskResult(tuple(grouped)))
-            logger.info(_doubles_summary(grouper.get_double_row_items()))
+            counters = parse_result.statistics.setdefault(group, GroupStatistics())
+            counters.item_count = len(grouped)
+            counters.priced_items = sum(bool(row.pricing.price_opt) for row in grouped)
+            counters.doubles = sum(bool(row.duplicate.is_double) for row in grouped)
+            logger.info('[%s] %s', group.value, _doubles_summary(grouper.get_double_row_items()))
 
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
         """Собрать все группы и стратегии до чтения первого прайса, затем разобрать поставщиков."""
         parsers = [self._parser_factory(vendor_cls, vendor_config) for vendor_cls, vendor_config in vendors]
         for parser in parsers:
             self._parse_supplier(parse_result, parser)
+        parse_result.unrouted_rows = _unrouted_rows(vendors)
 
     def _parse_supplier(self, parse_result: ParseResult, parser: BaseParser) -> None:
         """Парсит прайс одного поставщика и добавляет пакет его группы к результату."""
@@ -126,14 +132,11 @@ class ParseOrchestrator:
             raise
         else:
             parse_result.add_package(parsed)
-            parse_result.unknown_category_skips.extend(_parser_unknown_skips(parser))
-            parse_result.black_list_skips += parser.stats.black_list_skips
-            parse_result.type_corrections += parser.stats.type_corrections
-            parse_result.title_conflicts += parser.stats.title_conflicts
-            parse_result.titles_not_composed += parser.stats.titles_not_composed
-            parse_result.homoglyph_fixes += parser.stats.homoglyph_fixes
-            parse_result.homoglyph_suspects += parser.stats.homoglyph_suspects
-            _emit(parser_messages(parser))
+            counters = parse_result.statistics.setdefault(parsed.product_group, GroupStatistics())
+            counters.black_list_skips += parser.stats.black_list_skips
+            if parsed.product_group is ProductGroup.TIRE_AND_DISK:
+                parse_result.tire_and_disk_diagnostics.accumulate(parser.stats, _parser_unknown_skips(parser))
+            _emit(parser_messages(parser, parsed.product_group))
 
 
 def _emit(messages: list[LogMessage]) -> None:
@@ -149,3 +152,10 @@ def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
         return []
     supplier = parser.settings.parser_params().supplier.name
     return [(supplier, category) for category in skips]
+
+
+def _unrouted_rows(vendors: VendorList) -> int:
+    """Общий маршрут нескольких секций учитывается один раз за запуск."""
+    configs = (config for _, config in vendors if config is not None)
+    routings = {config.routing for config in configs if config.routing is not None}
+    return sum(routing.unrouted_rows for routing in routings)

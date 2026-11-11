@@ -57,7 +57,7 @@ class TestFourTochkiConfigDriven:
 
         parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
         assert parsed.tire_and_disk_items, 'Нет разобранных строк'
-        assert parsed.unknown_category_skips == []
+        assert parsed.tire_and_disk_diagnostics.unknown_category_skips == []
 
     def test_all_vendors_catalog_has_eight_entries(
         self,

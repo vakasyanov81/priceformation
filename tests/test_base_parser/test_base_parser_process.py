@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.price_files import PriceFiles
@@ -72,6 +73,12 @@ def test_process_without_files_returns_zero() -> None:
     parser.price_files.files = None
     assert parser.process() == 0
     assert parser.parsed_items == []
+
+
+def test_diagnostic_group_matches_handler() -> None:
+    """Контекст ошибки берётся из обработчика той же модели, что и пакет результата."""
+    parser = _parser({})
+    assert parser.product_group is ProductGroup.TIRE_AND_DISK
 
 
 def test_process_sums_rows_from_two_files() -> None:

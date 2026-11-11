@@ -24,6 +24,7 @@ from app.run_argv import (
 )
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.config_context import get_config_provider
+from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
@@ -60,20 +61,13 @@ def _assert_elapsed(payload: dict[str, object]) -> None:
     assert elapsed >= 0
 
 
-def _result_with_row() -> MagicMock:
-    row = RowItem(_PRICE_FIELDS)
-    common = MagicMock()
-    common.tire_and_disk_items = [row]
-    common.unknown_category_skips = []
-    common.black_list_skips = 0
-    return common
+def _result_with_row() -> ParseResult:
+    return _mark_result([RowItem(_PRICE_FIELDS)])
 
 
-def _mark_result(rows: list[RowItem]) -> MagicMock:
-    common = MagicMock()
-    common.tire_and_disk_items = rows
-    common.unknown_category_skips = []
-    common.black_list_skips = 0
+def _mark_result(rows: list[RowItem]) -> ParseResult:
+    common = ParseResult()
+    common.add_package(TireAndDiskResult(tuple(rows)))
     return common
 
 
@@ -140,7 +134,7 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     noisy_logger = logging.getLogger(_NOISY_LOGGER)
     json_mode_seen: list[bool] = []
 
-    def noisy_parse_all() -> MagicMock:
+    def noisy_parse_all() -> ParseResult:
         json_mode_seen.append(json_mode_active())
         noisy_logger.info(_LOG_NOISE)
         noisy_logger.error(_LOG_NOISE)

@@ -57,7 +57,9 @@ def test_unknown_categories_recorded_and_warned(
 
     parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
 
-    assert parsed.unknown_category_skips == [(_SUPPLIER, category) for category in _UNKNOWN_CATEGORIES]
+    assert parsed.tire_and_disk_diagnostics.unknown_category_skips == [
+        (_SUPPLIER, category) for category in _UNKNOWN_CATEGORIES
+    ]
     categories_label = ', '.join(_UNKNOWN_CATEGORIES)
     warnings = texts_at(entries(), logging.WARNING)
     assert any('Пропущено 2 позиций' in message for message in warnings)
