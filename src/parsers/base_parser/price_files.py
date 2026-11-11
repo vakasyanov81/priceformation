@@ -1,12 +1,15 @@
-"""Прайс-файлы поставщика: список файлов, чтение сырых строк, маппинг в RowItem."""
+"""Прайс-файлы поставщика: список файлов, чтение строк и маппинг через фабрику модели."""
 
+from collections.abc import Callable
 from typing import Any
 
 from domain.exceptions import SupplierNotHavePricesError
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.protocols import FileReaderProtocol
 from parsers.xls_reader import IXlsReader
+
+type RawFields = dict[str, Any]
+type PositionFactory[TPosition] = Callable[[RawFields], TPosition]
 
 
 class PriceFiles:
@@ -23,16 +26,18 @@ class PriceFiles:
             self.files = self._find_files()
         return self.files
 
-    def read_rows(self, paths: list[str]) -> list[dict[str, Any]]:
-        raw_rows: list[dict[str, Any]] = []
+    def read_rows(self, paths: list[str]) -> list[RawFields]:
+        raw_rows: list[RawFields] = []
         for price_file in paths:
             raw_rows.extend(self.raw_parse(price_file))
         return raw_rows
 
-    def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
-        return [self.settings.parser_params().row_item_adaptor(row_item) for row_item in raw_rows]
+    def map_items[TPosition](
+        self, raw_rows: list[RawFields], position_factory: PositionFactory[TPosition]
+    ) -> list[TPosition]:
+        return [position_factory(row_item) for row_item in raw_rows]
 
-    def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
+    def raw_parse(self, full_file_xls_path: str) -> list[RawFields]:
         return self.file_reader.raw_parse(full_file_xls_path, self.settings.parser_params())
 
     def get_data_reader(self, full_file_xls_path: str) -> IXlsReader:

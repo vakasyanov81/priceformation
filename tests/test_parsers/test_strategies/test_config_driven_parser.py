@@ -8,6 +8,7 @@ from log_watch import LoggerWatcher
 
 from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
@@ -23,7 +24,9 @@ from parsers.base_parser.config_driven_parser import (
 )
 from parsers.base_parser.file_reader import FileReader, data_reader_for
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
+from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 from parsers.json_reader import JsonPriceReader
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.product_type import ProductTypeClassifier
@@ -46,7 +49,6 @@ _TEST_PARAMS = ParserParams(
     stop_words=(),
     file_templates=('*.xls',),
     sheet_indexes=(),
-    row_item_adaptor=RowItem,
 )
 
 
@@ -58,6 +60,12 @@ def _mock_parse_config() -> ParseConfiguration:
     mock.config_provider = get_config_provider()
     mock.manufacturer_aliases.return_value = {}
     return mock
+
+
+def _parser_with_hooks(hooks: StrategyHooks) -> BaseParser:
+    parse_config = _mock_parse_config()
+    group_handler = TireAndDiskHandler(settings=ParserSettings(parse_config), strategy_hooks=hooks)
+    return BaseParser(parse_config=parse_config, group_handler=group_handler)
 
 
 def _section(
@@ -93,7 +101,6 @@ def test_parser_params_from_section_full() -> None:
         stop_words=(),
         file_templates=('price*.xls',),
         sheet_indexes=(0,),
-        row_item_adaptor=RowItem,
     )
 
 
@@ -125,6 +132,7 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
 
     parser = make_config_driven_parser(section, vendor_config, _mock_parse_config())
 
+    assert parser.group_handler.product_group is ProductGroup.TIRE_AND_DISK
     assert parser.pipeline.hooks is not None
     assert parser.pipeline.hooks.min_rest == vendor_config.behavior.min_rest
     file_reader = parser.price_files.file_reader
@@ -200,7 +208,7 @@ def test_category_strategy_is_called() -> None:
     strategy.resolve.return_value = 'Автошина'
     hooks = StrategyHooks(category=strategy)
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Шина'})
     category = parser.enricher.categories.category_for(row)
@@ -217,7 +225,7 @@ def test_manufacturer_correction_survives_title_recompose() -> None:
     strategy = MagicMock()
     strategy.prepare.return_value = '10-16.5 Toptrust L-2 10 TL'
     hooks = StrategyHooks(title=strategy, pipeline=('title',))
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     parser.settings._manufacturer_finder = ManufacturerFinder({'TopTrust': ()})
 
     row = RowItem({'title': '10-16.5 Toptrust L-2 10 TL', 'manufacturer_name': 'TopTrust'})
@@ -232,7 +240,7 @@ def test_manufacturer_found_after_pipeline_when_enrich_disabled() -> None:
     strategy = MagicMock()
     strategy.prepare.return_value = '195/75R16 Triangle TR652'
     hooks = StrategyHooks(title=strategy, find_manufacturer_on_enrich=False, pipeline=('title',))
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     parser.settings._manufacturer_finder = ManufacturerFinder({'Triangle': ()})
 
     row = RowItem({'title': '195/75R16 TR652'})
@@ -286,7 +294,7 @@ def test_title_strategy_is_called() -> None:
     strategy.prepare.return_value = '385/65R22.5'
     hooks = StrategyHooks(title=strategy)
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': '385/65 R22.5'})
     prepared_title = parser.enricher.titles.get_prepared_title(row)
@@ -300,7 +308,7 @@ def test_rest_strategy_is_called() -> None:
     strategy.item_rest.return_value = 3
     hooks = StrategyHooks(rest=strategy, min_rest=4)
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'rest_count': 3})
     parser.row_filters.skip_by_min_rest(row)
@@ -314,7 +322,7 @@ def test_rest_strategy_passes_large_rest() -> None:
     strategy.item_rest.return_value = 5
     hooks = StrategyHooks(rest=strategy, min_rest=4)
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'rest_count': 5})
     parser.row_filters.skip_by_min_rest(row)
@@ -325,7 +333,7 @@ def test_find_manufacturer_from_hooks() -> None:
     """find_manufacturer_on_enrich берётся из StrategyHooks."""
     hooks = StrategyHooks(find_manufacturer_on_enrich=False)
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder
 
@@ -356,7 +364,7 @@ def test_pipeline_default_order() -> None:
         pipeline=('title', 'min_rest', 'category', 'markup'),
     )
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     title_filter = MagicMock()
     parser.enricher.titles.title_filter = title_filter
     title_filter.get_prepared_title.return_value = 'Стандарт'
@@ -383,7 +391,7 @@ def test_pipeline_custom_order() -> None:
         pipeline=('category', 'min_rest', 'markup', 'title'),
     )
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     title_filter = MagicMock()
     parser.enricher.titles.title_filter = title_filter
     title_filter.get_prepared_title.return_value = 'Стандарт'
@@ -409,7 +417,7 @@ def test_zero_rest_when_category_unknown() -> None:
         zero_rest_without_category=True,
         pipeline=('category',),
     )
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
     parser.pipeline.process_row(row)
@@ -426,7 +434,7 @@ def test_rest_kept_without_category_when_flag_disabled() -> None:
         find_manufacturer_on_enrich=False,
         pipeline=('category',),
     )
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
     parser.pipeline.process_row(row)
@@ -445,7 +453,7 @@ def test_pipeline_skips_missing_step() -> None:
         pipeline=('category', 'unknown_step', 'markup'),
     )
 
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
     row_processor = MagicMock()
     parser.pipeline.row_processor = row_processor
 
@@ -486,7 +494,7 @@ def test_pipeline_applies_category_fields() -> None:
         category_fields=CategoryFields({'Грузовая шина': {'season': 'Всесезонная'}}),
         pipeline=('category',),
     )
-    parser = BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
     parser.pipeline.process_row(row)
@@ -520,7 +528,7 @@ def _classifier_parser(declared: str) -> BaseParser:
         product_type=ProductTypeClassifier(),
         pipeline=('category',),
     )
-    return BaseParser(parse_config=_mock_parse_config(), strategy_hooks=hooks)
+    return _parser_with_hooks(hooks)
 
 
 def test_apply_category_marks_concrete_mismatch() -> None:

@@ -16,7 +16,6 @@ _GIVEN = ['given_disks.xls']
 def _price_files(found: list[str] | None = None) -> tuple[PriceFiles, MagicMock]:
     settings = MagicMock()
     settings.parser_params.return_value.supplier.name = _SUPPLIER_NAME
-    settings.parser_params.return_value.row_item_adaptor = RowItem
     reader = MagicMock()
     reader.price_files.return_value = found or []
     return PriceFiles(settings, reader), reader
@@ -53,9 +52,9 @@ def test_read_rows_collects_rows_from_all_files() -> None:
     assert rows == [{'title': 'a'}, {'title': 'b'}]
 
 
-def test_map_items_builds_row_items_with_adaptor() -> None:
+def test_map_items_uses_injected_position_factory() -> None:
     price_files, _reader = _price_files()
 
-    mapped = price_files.map_items([{'title': 'a'}])
+    mapped = price_files.map_items([{'title': 'a'}], RowItem)
 
     assert [row.identity.title for row in mapped] == ['a']

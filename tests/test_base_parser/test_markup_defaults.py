@@ -55,7 +55,6 @@ def _base_params() -> BasePriceParseConfigurationParams:
             stop_words=(),
             file_templates=(),
             sheet_indexes=(),
-            row_item_adaptor=RowItem,
         ),
     )
 

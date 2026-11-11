@@ -26,7 +26,6 @@ def _parser_params() -> ParserParams:
         stop_words=(),
         file_templates=(),
         sheet_indexes=(0,),
-        row_item_adaptor=RowItem,
     )
 
 

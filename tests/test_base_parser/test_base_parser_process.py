@@ -10,6 +10,8 @@ from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.row_enricher import RowEnricher
 from parsers.base_parser.row_pipeline import RowPipeline
 
+type RawRowsByFile = dict[str, list[dict[str, Any]]]
+
 _FIRST_FILE = 'brand_kind_cat_tires.xls'
 _SECOND_FILE = 'brand_kind_cat_disks.xls'
 _FIRST_COUNT = 2
@@ -20,19 +22,13 @@ _TOTAL_COUNT = 3
 class _CannedPriceFiles(PriceFiles):
     """Коллаборатор, отдающий заготовленные строки по файлам без чтения xls."""
 
-    def __init__(self, rows_by_file: dict[str, list[RowItem]]) -> None:
+    def __init__(self, rows_by_file: RawRowsByFile) -> None:
         super().__init__(ParserSettings(), MagicMock())
         self._rows_by_file = rows_by_file
         self.files = list(rows_by_file)
 
     def raw_parse(self, full_file_xls_path: str) -> list[dict[str, Any]]:
-        return [{'file': full_file_xls_path}]
-
-    def map_items(self, raw_rows: list[dict[str, Any]]) -> list[RowItem]:
-        mapped_rows: list[RowItem] = []
-        for raw in raw_rows:
-            mapped_rows.extend(self._rows_by_file[str(raw['file'])])
-        return mapped_rows
+        return self._rows_by_file[full_file_xls_path]
 
 
 class _PassThroughEnricher(RowEnricher):
@@ -49,7 +45,7 @@ class _NoRowSteps(RowPipeline):
         """Ничего не делает."""
 
 
-def _parser(rows_by_file: dict[str, list[RowItem]]) -> BaseParser:
+def _parser(rows_by_file: RawRowsByFile) -> BaseParser:
     """Парсер с заготовленными файлами; enrich и построчные шаги отключены."""
     parser = BaseParser(_parse_config())
     parser.price_files = _CannedPriceFiles(rows_by_file)
@@ -75,8 +71,8 @@ def test_process_without_files_returns_zero() -> None:
 
 
 def test_process_sums_rows_from_two_files() -> None:
-    first_rows = [RowItem({}) for _ in range(_FIRST_COUNT)]
-    second_rows = [RowItem({}) for _ in range(_SECOND_COUNT)]
+    first_rows: list[dict[str, Any]] = [{} for _ in range(_FIRST_COUNT)]
+    second_rows: list[dict[str, Any]] = [{} for _ in range(_SECOND_COUNT)]
     parser = _parser(
         {
             _FIRST_FILE: first_rows,
@@ -85,12 +81,13 @@ def test_process_sums_rows_from_two_files() -> None:
     )
 
     assert parser.process() == _TOTAL_COUNT
-    assert parser.parsed_items == first_rows + second_rows
+    assert len(parser.parsed_items) == _TOTAL_COUNT
+    assert all(isinstance(row, RowItem) for row in parser.parsed_items)
 
 
 def test_process_accumulates_across_calls() -> None:
     """Повторный process() добавляет строки, а не перезаписывает результат."""
-    parser = _parser({_FIRST_FILE: [RowItem({}), RowItem({})]})
+    parser = _parser({_FIRST_FILE: [{}, {}]})
     parser.process()
     parser.process()
     assert len(parser.parsed_items) == 4

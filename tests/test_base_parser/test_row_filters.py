@@ -47,7 +47,6 @@ def _base_params() -> BasePriceParseConfigurationParams:
             stop_words=(),
             file_templates=(),
             sheet_indexes=(),
-            row_item_adaptor=RowItem,
         ),
     )
 
@@ -206,7 +205,6 @@ def _params_with_sheet_info(sheet_info: str) -> BasePriceParseConfigurationParam
             stop_words=base.parser_params.stop_words,
             file_templates=base.parser_params.file_templates,
             sheet_indexes=base.parser_params.sheet_indexes,
-            row_item_adaptor=base.parser_params.row_item_adaptor,
         ),
     )
 

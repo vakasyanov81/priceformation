@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 from domain.protocols import ConfigProvider
-from domain.row_item.row_item import RowItem
 from parsers import data_provider
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.section_models import VendorSection
@@ -39,7 +38,6 @@ class ParserParams:
     stop_words: tuple[str, ...]
     file_templates: tuple[str, ...]
     sheet_indexes: tuple[int, ...]
-    row_item_adaptor: type[RowItem]
 
 
 class BasePriceParseConfigurationParams(NamedTuple):

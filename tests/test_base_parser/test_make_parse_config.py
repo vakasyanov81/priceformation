@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     ParseParamsSupplier,
     ParserParams,
@@ -23,7 +22,6 @@ def _parser_params() -> ParserParams:
         stop_words=(),
         file_templates=(),
         sheet_indexes=(),
-        row_item_adaptor=RowItem,
     )
 
 

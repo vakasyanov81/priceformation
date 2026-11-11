@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.config_context import get_config_provider
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -113,7 +112,6 @@ def test_legacy_config_without_vendor_is_enabled_and_has_no_markup_policy() -> N
         stop_words=(),
         file_templates=(),
         sheet_indexes=(),
-        row_item_adaptor=RowItem,
     )
 
     config = make_parse_config(parser_params, config_provider=MagicMock())
