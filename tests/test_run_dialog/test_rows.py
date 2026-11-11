@@ -2,11 +2,15 @@
 
 from app.run_dialog.items import MENU_ITEMS
 from app.run_dialog.rows import build_rows
+from domain.product_groups import ProductGroup
 from services.vendor_activation import VendorState
 
 
 def _vendors() -> list[VendorState]:
-    return [VendorState('stk', 'STK', False), VendorState('mim', 'Мим', True)]
+    return [
+        VendorState('stk', 'STK', False, (ProductGroup.TIRE_AND_DISK, ProductGroup.BATTERIES)),
+        VendorState('mim', 'Мим', True),
+    ]
 
 
 def test_rows_collapsed_hides_vendors() -> None:
@@ -23,8 +27,8 @@ def test_rows_expanded_lists_vendors_after_header() -> None:
     rows = build_rows(_vendors(), expanded=True)
     texts = [row.text for row in rows]
     assert '3 — Активация поставщиков ▼' in texts
-    assert '    [] STK' in texts
-    assert '    [*] Мим' in texts
+    assert '    [] STK (шины + диски, аккумуляторы)' in texts
+    assert '    [*] Мим (шины + диски)' in texts
     header = next(index for index, row in enumerate(rows) if row.expandable)
     assert rows[header + 1].folder == 'stk'
     assert rows[-1].action is MENU_ITEMS[-1].action

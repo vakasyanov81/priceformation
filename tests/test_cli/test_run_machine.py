@@ -24,6 +24,7 @@ from app.run_argv import (
 )
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.config_context import get_config_provider
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from infrastructure.logging.log_paths import LogPaths
@@ -514,7 +515,7 @@ def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
     vendor_service = MagicMock()
     vendor_service.list_vendors.return_value = [
         VendorState('poshk', 'Пошк', True),
-        VendorState('mim', 'МИМ', False),
+        VendorState('mim', 'МИМ', False, (ProductGroup.BATTERIES,)),
     ]
     with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
         code = machine_json(GET_VENDORS)
@@ -525,8 +526,8 @@ def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
         'ok': True,
         'action': GET_VENDORS,
         'vendors': [
-            {'folder': 'poshk', 'name': 'Пошк', 'enabled': True},
-            {'folder': 'mim', 'name': 'МИМ', 'enabled': False},
+            {'folder': 'poshk', 'name': 'Пошк', 'enabled': True, 'product_groups': ['tire_and_disk']},
+            {'folder': 'mim', 'name': 'МИМ', 'enabled': False, 'product_groups': ['batteries']},
         ],
     }
 
@@ -544,7 +545,7 @@ def test_json_toggle_vendor(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload == {
         'ok': True,
         'action': TOGGLE_VENDOR,
-        'vendor': {'folder': 'poshk', 'name': 'Пошк', 'enabled': False},
+        'vendor': {'folder': 'poshk', 'name': 'Пошк', 'enabled': False, 'product_groups': ['tire_and_disk']},
     }
     vendor_service.toggle.assert_called_once_with('poshk')
 

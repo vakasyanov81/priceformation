@@ -201,7 +201,12 @@ def _toggle_vendor_payload(folder: str | None) -> Mapping[str, Any]:
 
 
 def _vendor_json(state: VendorState) -> dict[str, Any]:
-    return {'folder': state.folder, 'name': state.name, 'enabled': state.enabled}
+    return {
+        'folder': state.folder,
+        'name': state.name,
+        'enabled': state.enabled,
+        'product_groups': list(state.product_groups),
+    }
 
 
 def _json_download(command: str) -> Mapping[str, Any]:

@@ -43,4 +43,5 @@ def _activation_row(expanded: bool) -> MenuRow:
 def _vendor_row(vendor: VendorState) -> MenuRow:
     """Строка поставщика: [*] активен, [] не активен."""
     mark = '[*]' if vendor.enabled else '[]'
-    return MenuRow(f'    {mark} {vendor.name}', folder=vendor.folder)
+    groups = ', '.join(group.display_name for group in vendor.product_groups)
+    return MenuRow(f'    {mark} {vendor.name} ({groups})', folder=vendor.folder)
