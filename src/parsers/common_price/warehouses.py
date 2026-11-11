@@ -2,9 +2,10 @@
 
 from copy import deepcopy
 
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 
-type _MergeKey = tuple[str, str, str]
+type _MergeKey = tuple[ProductGroup, str, str, str]
 
 
 def merge_warehouse_rows(row_items: list[RowItem]) -> list[RowItem]:
@@ -33,12 +34,12 @@ def merge_warehouse_rows(row_items: list[RowItem]) -> list[RowItem]:
 
 
 def _merge_key(row_item: RowItem) -> _MergeKey | None:
-    """Поставщик, код позиции и группа склада; склад без группы не объединяем."""
+    """Товарная группа, поставщик, код позиции и группа склада; склад без группы не объединяем."""
     group = row_item.stock.warehouse_group
     code = row_item.identity.code
     if not group or not code:
         return None
-    return row_item.vendor.supplier_name or '', code, group
+    return row_item.product_group, row_item.vendor.supplier_name or '', code, group
 
 
 def cheapest_with_summed_rest(rows: list[RowItem]) -> RowItem:

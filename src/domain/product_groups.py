@@ -1,6 +1,7 @@
 """Идентификаторы товарных групп, независимые от категорий и размещения результата."""
 
 from enum import StrEnum, unique
+from typing import NamedTuple
 
 
 @unique
@@ -17,3 +18,10 @@ class ProductGroup(StrEnum):
             ProductGroup.TIRE_AND_DISK: 'шины + диски',
             ProductGroup.BATTERIES: 'аккумуляторы',
         }[self]
+
+
+class DuplicateGroupKey(NamedTuple):
+    """Внешний адрес группы дублей; локальный номер уникален только внутри товарной группы."""
+
+    product_group: ProductGroup
+    local_group_id: int
