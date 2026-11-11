@@ -1,9 +1,10 @@
 """Модели конфигурации поставщика: parse_config/vendors/<folder>.json."""
 
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import Any, Literal
 
 from domain.exceptions import ConfigValidationError
+from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object
 from parsers.vendor_config.columns import COLUMNS_KEY, read_columns
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
@@ -41,6 +42,11 @@ class VendorSection:
     title: TitleConfig = field(default_factory=TitleConfig)
     pricing: PricingConfig = field(default_factory=PricingConfig)
 
+    @property
+    def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
+        """Существующие слоты и колонки секции относятся только к шинам и дискам."""
+        return ProductGroup.TIRE_AND_DISK
+
     @classmethod
     def from_dict(cls, raw: Any, where: str, vendor: VendorConfig, inherited: RawConfig) -> VendorSection:
         """Разобрать секцию поверх настроек поставщика `inherited`: объекты сливаются, значения заменяются."""
@@ -66,6 +72,19 @@ class VendorSection:
 
 
 @dataclass(frozen=True, slots=True)
+class TireAndDiskConfig:
+    """Разрешённые настройки текущей группы; аккумуляторных слотов здесь нет."""
+
+    sections: tuple[VendorSection, ...]
+    behavior: BehaviorConfig
+
+    @property
+    def id(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
+        """Идентификатор закреплён за моделью настроек и не передаётся снаружи."""
+        return ProductGroup.TIRE_AND_DISK
+
+
+@dataclass(frozen=True, slots=True)
 class VendorConfig:
     """Конфиг одного поставщика (одна папка в file_prices)."""
 
@@ -83,6 +102,11 @@ class VendorConfig:
     sections: tuple[VendorSection, ...] = ()
     source: str = SOURCE_FILE
     enabled: bool = True
+
+    @property
+    def product_groups(self) -> tuple[TireAndDiskConfig]:
+        """Представить старую схему единственной группой без повторного разбора настроек."""
+        return (TireAndDiskConfig(self.sections, self.behavior),)
 
     @classmethod
     def from_dict(cls, raw: Any, folder: str, where: str) -> VendorConfig:
