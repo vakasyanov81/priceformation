@@ -117,3 +117,16 @@ def test_api_block_inherits_vendor_slots_but_not_file_keys() -> None:
     assert payload['title'] == {'variant': 'four_tochki', 'params_first': True}
     assert 'columns' not in payload
     assert 'api' not in payload
+
+
+def test_api_groups_do_not_inherit_file_groups_or_defaults() -> None:
+    """Группы и общие настройки чтения принадлежат выбранному источнику."""
+    file_groups = [{'id': 'batteries'}]
+    api_sections = [{'id': 'api_tires'}]
+    raw = _vendor(source='api', product_groups=file_groups, defaults={'start_row': 9})
+    raw['api']['product_groups'] = [{'id': 'tire_and_disk', 'sections': api_sections}]
+    payload = select_source(raw, 'vendor.json')
+    assert payload['product_groups'] == raw['api']['product_groups']
+    assert 'defaults' not in payload
+    del raw['api']['product_groups']
+    assert 'product_groups' not in select_source(raw, 'vendor.json')

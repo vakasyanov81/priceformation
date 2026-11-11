@@ -1,21 +1,51 @@
 {
-  "title_reference_order": ["autosnab54_ru", "four_tochki", "zapaska", "mim", "stk", "pioner", "poshk"],
+  "title_reference_order": [
+    "autosnab54_ru",
+    "four_tochki",
+    "zapaska",
+    "mim",
+    "stk",
+    "pioner",
+    "poshk"
+  ],
   "defaults": {
-    "file_templates": ["price*.xls", "price*.xlsx"],
-    "category": {
-      "size_fields": {
-        "Грузовая шина": { "season": "Всесезонная" },
-        "Спецшина": { "season": "Всесезонная" }
+    "file_templates": [
+      "price*.xls",
+      "price*.xlsx"
+    ]
+  },
+  "product_groups": [
+    {
+      "id": "tire_and_disk",
+      "defaults": {
+        "category": {
+          "size_fields": {
+            "Грузовая шина": {
+              "season": "Всесезонная"
+            },
+            "Спецшина": {
+              "season": "Всесезонная"
+            }
+          }
+        },
+        "title": {
+          "params_from_title": true
+        },
+        "pricing": {
+          "rules": {
+            "markup_rules": [
+              {
+                "min": 0,
+                "max": 999999999,
+                "percent": 0.09
+              }
+            ]
+          }
+        },
+        "behavior": {
+          "min_rest": 4
+        }
       }
-    },
-    "title": { "params_from_title": true },
-    "pricing": {
-      "rules": {
-        "markup_rules": [
-          { "min": 0, "max": 999999999, "percent": 0.09 }
-        ]
-      }
-    },
-    "behavior": { "min_rest": 4 }
-  }
+    }
+  ]
 }

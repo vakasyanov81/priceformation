@@ -9,8 +9,45 @@ from parsers.vendor_config.group_fields import READING_KEYS, object_list
 from parsers.vendor_config.group_schema import LEGACY_KEYS
 from parsers.vendor_config.group_validation import MODEL_KEYS
 from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.source import SOURCE_API, SOURCE_FILE, select_source
 
 _DEFAULTS = 'defaults'
+_SOURCE = 'source'
+
+
+def migrate_vendor_sources(
+    raw: object,
+    folder: str,
+    where: str,
+    *,
+    common: CommonVendorSettings | None = None,
+    section_ids: tuple[str, ...] | None = None,
+) -> RawConfig:
+    """Перенести оба источника, сохранив выбранный и независимые настройки API."""
+    payload = as_config_object(raw, where)
+    select_source(payload, where)
+    migrated = migrate_vendor_config(
+        select_source({**payload, _SOURCE: SOURCE_FILE}, where),
+        folder,
+        where,
+        common=common,
+        section_ids=section_ids,
+    )
+    if 'api' in payload:
+        api = migrate_vendor_config(
+            select_source({**payload, _SOURCE: SOURCE_API}, where),
+            folder,
+            where,
+            common=common,
+            section_ids=section_ids,
+        )
+        for key in ('code', 'name', _SOURCE):
+            api.pop(key, None)
+        migrated['api'] = api
+    source = payload.get(_SOURCE)
+    if source is not None:
+        migrated[_SOURCE] = source
+    return migrated
 
 
 def _settings_for(payload: RawConfig, keys: tuple[str, ...]) -> RawConfig:

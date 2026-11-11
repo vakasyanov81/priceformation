@@ -186,4 +186,4 @@ def test_all_vendors_returns_all_enabled() -> None:
     # autosnab (1 секция) + poshk (1) + four_tochki (2) + mim (3) + zapaska (2) = 9
     assert len(entries) == 9
     ids = {config.vendor_section.id for _, config in entries if config.vendor_section}
-    assert ids == {'6', '1', '5', '4', '2', '22'}
+    assert ids == {'6', '1', '5', '55', '4', '42', '43', '2', '22'}

@@ -521,6 +521,7 @@ def test_vendor_config_reads_all_fields() -> None:
                 category=CategoryConfig(strategy='fixed', fixed_value='Диск', field_name='type'),
                 title=TitleConfig(variant='v1', aliases=True),
                 pricing=PricingConfig(threshold=10),
+                behavior=BehaviorConfig(min_rest=9, rest='on_request'),
             ),
         ),
     )

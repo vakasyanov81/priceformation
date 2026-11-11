@@ -1,35 +1,78 @@
 {
   "code": "3",
   "name": "Пионер",
-  "start_row": 12,
-  "category": {
-    "strategy": "header_rows",
-    "zero_rest_categories": ["прочие"],
-    "calculate_type": true
-  },
-  "title": { "strategy": "manufacturer_from_category", "compose": true },
-  "pricing": {
-    "policy": "map_on_opt",
-    "rules": {
-      "markup_rules": [
-        { "min": 0, "max": 1000, "percent": 0.20 },
-        { "min": 1001, "max": 2000, "percent": 0.18 },
-        { "min": 5000, "max": 15000, "percent": 0.12 },
-        { "min": 15001, "max": 99999, "percent": 0.07 },
-        { "min": 100000, "max": 500000, "percent": 0.05 }
-      ]
-    }
-  },
-  "behavior": {
-    "min_rest": 2,
-    "rest": "minus_reserve",
-    "find_manufacturer_on_enrich": false,
-    "pipeline": ["category", "min_rest", "markup", "title"]
-  },
-  "sections": [
+  "product_groups": [
     {
-      "sheet_indexes": [0],
-      "columns": { "1": "title", "2": "price_opt", "4": "rest_count", "5": "reserve_count" }
+      "sections": [
+        {
+          "sheet_indexes": [
+            0
+          ],
+          "columns": {
+            "1": "title",
+            "2": "price_opt",
+            "4": "rest_count",
+            "5": "reserve_count"
+          },
+          "id": "3"
+        }
+      ],
+      "category": {
+        "strategy": "header_rows",
+        "zero_rest_categories": [
+          "прочие"
+        ],
+        "calculate_type": true
+      },
+      "title": {
+        "strategy": "manufacturer_from_category",
+        "compose": true
+      },
+      "pricing": {
+        "policy": "map_on_opt",
+        "rules": {
+          "markup_rules": [
+            {
+              "min": 0,
+              "max": 1000,
+              "percent": 0.2
+            },
+            {
+              "min": 1001,
+              "max": 2000,
+              "percent": 0.18
+            },
+            {
+              "min": 5000,
+              "max": 15000,
+              "percent": 0.12
+            },
+            {
+              "min": 15001,
+              "max": 99999,
+              "percent": 0.07
+            },
+            {
+              "min": 100000,
+              "max": 500000,
+              "percent": 0.05
+            }
+          ]
+        }
+      },
+      "behavior": {
+        "min_rest": 2,
+        "rest": "minus_reserve",
+        "find_manufacturer_on_enrich": false,
+        "pipeline": [
+          "category",
+          "min_rest",
+          "markup",
+          "title"
+        ]
+      },
+      "start_row": 12,
+      "id": "tire_and_disk"
     }
   ]
 }

@@ -26,7 +26,7 @@ READER_JSON = 'json'
 _READERS = (READER_XLS, READER_JSON)
 DEFAULT_START_ROW = 1
 # Настройки поставщика, которые секция наследует (и дополняет своими).
-_INHERITED_KEYS = ('start_row', 'file_templates', COLUMNS_KEY, 'category', 'title', 'pricing')
+_INHERITED_KEYS = ('start_row', 'file_templates', COLUMNS_KEY, 'category', 'title', 'pricing', 'behavior')
 
 
 @dataclass(frozen=True, slots=True)

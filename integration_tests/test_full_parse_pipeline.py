@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Iterator
 from pathlib import Path
@@ -46,6 +47,13 @@ def _fixture_config_provider() -> Iterator[None]:
 
 class TestFullParsePipeline:
     """Полный прогон разбора всех включённых поставщиков."""
+
+    def test_migrated_configs_preserve_positions(self, _fixture_config_provider: None) -> None:
+        """Все поля позиций совпадают со старой схемой после исправления behavior и назначения ID."""
+        baseline = _CONFIG_DIR / 'four_tochki_positions.json'
+        expected = json.loads(baseline.read_text(encoding='utf-8'))
+        parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
+        assert [row.to_dict() for row in parsed.tire_and_disk_items] == expected
 
     def test_all_enabled_vendors_parse_without_errors(
         self,

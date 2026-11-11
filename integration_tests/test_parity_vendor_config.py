@@ -23,6 +23,10 @@ _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
 _CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
 _ROW_LOGGER = 'parsers.base_parser.row_enricher'
+_MIM_IDS = ('4', '42', '43')
+_FOUR_TOCHKI_IDS = ('5', '55')
+_OTHER_IDS = ('1', '2', '22', '3', '6', '7')
+_SECTION_IDS = frozenset((*_OTHER_IDS, *_MIM_IDS, *_FOUR_TOCHKI_IDS))
 
 
 @pytest.fixture
@@ -59,18 +63,17 @@ class TestFourTochkiConfigDriven:
         assert parsed.tire_and_disk_items, 'Нет разобранных строк'
         assert parsed.tire_and_disk_diagnostics.unknown_category_skips == []
 
-    def test_all_vendors_catalog_has_eight_entries(
+    def test_catalog_contains_every_section(
         self,
         _four_tochki_provider: None,
     ) -> None:
-        """Каталог содержит 8 записей — проверка что реестр читает все конфиги."""
+        """Каталог содержит отдельную запись каждой из 11 секций."""
         from parsers.all_vendors import all_vendor_supplier_info
 
         supplier_info = all_vendor_supplier_info(get_config_provider())
-        assert len(supplier_info) == 8, f'Ожидалось 8 записей, получено {len(supplier_info)}'
         # Коды: 1-пошк, 2-запаска(диски), 22-запаска(шины), 3-пионер,
-        # 4-мим, 5-форточки, 6-автоснабжение, 7-STK
-        assert set(supplier_info) == {'1', '2', '22', '3', '4', '5', '6', '7'}
+        # 4/42/43-мим, 5/55-форточки, 6-автоснабжение, 7-STK
+        assert set(supplier_info) == _SECTION_IDS
 
     def test_parse_all_warns_about_disabled_vendors(
         self,
@@ -96,18 +99,19 @@ class TestFourTochkiConfigDriven:
 
 
 class TestSupplierCatalog:
-    """Проверка that внешние ИД каталога не изменились."""
+    """Проверка внешних ИД каталога после устранения коллизий секций."""
 
-    def test_get_suppliers_returns_eight_entries(
+    def test_suppliers_have_unique_sections(
         self,
         _four_tochki_provider: None,
     ) -> None:
-        """8 записей поставщиков."""
+        """Все 11 секций доступны по согласованным уникальным ключам."""
         from parsers.all_vendors import all_vendor_supplier_catalog
 
         catalog = all_vendor_supplier_catalog(get_config_provider())
-        assert len(catalog) == 8, f'Ожидалось 8 записей, получено {len(catalog)}'
-        assert set(catalog) == {'1', '2', '22', '3', '4', '5', '6', '7'}
+        assert set(catalog) == _SECTION_IDS
+        assert catalog['55']['sup_code'] == 'four_tochki'
+        assert catalog['42']['sup_code'] == catalog['43']['sup_code'] == 'mim'
 
     def test_zapaska_has_two_ids(
         self,

@@ -504,7 +504,8 @@ def test_vendor_file_rules_from_configs(tmp_path: Path) -> None:
     shutil.copytree(_EXAMPLE_CONFIG, config_folder)
     mim_path = config_folder / 'vendors' / 'mim.json'
     mim = json.loads(mim_path.read_text(encoding='utf-8'))
-    mim.setdefault('behavior', {})['warehouse_cities'] = ['Новосибирск']
+    group = mim['product_groups'][0]
+    group.setdefault('behavior', {})['warehouse_cities'] = ['Новосибирск']
     mim_path.write_text(json.dumps(mim, ensure_ascii=False), encoding='utf-8')
     provider = FakeConfigProvider(tmp_path, config_folder=config_folder)
     set_config_provider(provider)
