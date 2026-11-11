@@ -19,8 +19,10 @@ from parsers.base_parser.config_driven_parser import (
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.group_availability import ensure_groups_available, ensure_section_available
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
+from parsers.vendor_config.section_models import VendorSection
 
 # Type aliases (re-exported for convenience)
 VendorEntry = tuple[type[BaseParser], ParseConfiguration]
@@ -55,6 +57,7 @@ def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) 
     for config in load_vendor_configs(config_provider).values():
         if not include_disabled and not config.enabled:
             continue
+        ensure_groups_available(config)
         entries.extend(
             (BaseParser, _build_parse_config(section, config, config_provider)) for section in config.sections
         )
@@ -68,6 +71,7 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     Возвращает первую найденную (включая отключённых).
     """
     for config in load_vendor_configs(config_provider).values():
+        ensure_section_available(config, code)
         for section in config.sections:
             if section.id == code:
                 return (BaseParser, _build_parse_config(section, config, config_provider))

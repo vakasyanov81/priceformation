@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
@@ -26,7 +24,8 @@ from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.registry import make_category_strategy
 from parsers.strategies.rest_registry import make_rest_strategy
 from parsers.strategies.title_registry import make_title_strategy
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
 
@@ -125,7 +124,7 @@ def make_config_driven_parser(
         section, vendor_config.behavior, parse_config.config_provider, vendor_config.folder
     )
     policy = vendor_markup_policy_from_config(section)
-    data_reader: type[Any] = data_reader_for(vendor_config.reader)
+    data_reader = data_reader_for(vendor_config.reader)
     return BaseParser(
         parse_config=parse_config,
         row_processor=RowProcessor(markup_policy=policy),

@@ -28,7 +28,8 @@ from parsers.json_reader import JsonPriceReader
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.product_types import LIGHT_TRUCK, PASSENGER, TRUCK
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import (
     BehaviorConfig,
     CategoryConfig,

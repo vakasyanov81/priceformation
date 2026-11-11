@@ -15,8 +15,9 @@ from infrastructure.data.price_backup import backup_prices, default_backup_folde
 from parsers.price_schema.diff import compare_schemas
 from parsers.price_schema.models import FileHead, PriceSchema
 from parsers.price_schema.schema import build_schema, read_file_head
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import load_vendor_configs
+from parsers.vendor_config.section_models import VendorSection
 
 logger = logging.getLogger(__name__)
 

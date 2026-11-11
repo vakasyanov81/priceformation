@@ -8,7 +8,8 @@ from typing import Any, NamedTuple
 from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
 from parsers import data_provider
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 
 
 class ParseConfigNotSetError(RuntimeError):

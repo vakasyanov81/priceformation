@@ -1,14 +1,16 @@
 """Модели конфигурации поставщика: parse_config/vendors/<folder>.json."""
 
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal
+from typing import Any
 
 from domain.exceptions import ConfigValidationError
-from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object
 from parsers.vendor_config.columns import COLUMNS_KEY, read_columns
-from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
-from parsers.vendor_config.merge import merge_config
+from parsers.vendor_config.fields import read_int, read_str_list, read_text
+from parsers.vendor_config.group_loading import read_group
+from parsers.vendor_config.group_models import GroupConfig, TireAndDiskConfig
+from parsers.vendor_config.group_schema import read_group_payloads
+from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import (
     BehaviorConfig,
     CategoryConfig,
@@ -20,68 +22,9 @@ from parsers.vendor_config.source import SOURCE_FILE
 READER_XLS = 'xls'
 READER_JSON = 'json'
 _READERS = (READER_XLS, READER_JSON)
-_MSG_COLUMNS = 'не заданы «columns»: ни в секции, ни у поставщика'
-_MSG_TEMPLATES = 'не задан «file_templates»: ни в секции, ни у поставщика'
 DEFAULT_START_ROW = 1
 # Настройки поставщика, которые секция наследует (и дополняет своими).
 _INHERITED_KEYS = ('start_row', 'file_templates', COLUMNS_KEY, 'category', 'title', 'pricing')
-
-
-@dataclass(frozen=True, slots=True)
-class VendorSection:
-    """Один лист/файл поставщика: колонки, идентификаторы каталога и слоты."""
-
-    id: str
-    name: str
-    start_row: int
-    file_templates: tuple[str, ...]
-    columns: dict[int | str, str]
-    sheet_info: str = ''
-    sheet_indexes: tuple[int, ...] = ()
-    category: CategoryConfig = field(default_factory=CategoryConfig)
-    title: TitleConfig = field(default_factory=TitleConfig)
-    pricing: PricingConfig = field(default_factory=PricingConfig)
-
-    @property
-    def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
-        """Существующие слоты и колонки секции относятся только к шинам и дискам."""
-        return ProductGroup.TIRE_AND_DISK
-
-    @classmethod
-    def from_dict(cls, raw: Any, where: str, vendor: VendorConfig, inherited: RawConfig) -> VendorSection:
-        """Разобрать секцию поверх настроек поставщика `inherited`: объекты сливаются, значения заменяются."""
-        payload = merge_config(inherited, as_config_object(raw, where))
-        file_templates = read_str_list(payload, 'file_templates', where, ())
-        if not file_templates:
-            raise ConfigValidationError(f'{where}: {_MSG_TEMPLATES}')
-        columns = read_columns(payload, where, reads_json=vendor.reader == READER_JSON)
-        if not columns:
-            raise ConfigValidationError(f'{where}: {_MSG_COLUMNS}')
-        return cls(
-            id=read_text(payload, 'id', where, vendor.code),
-            name=read_text(payload, 'name', where, vendor.name),
-            start_row=read_int(payload, 'start_row', where, DEFAULT_START_ROW),
-            file_templates=file_templates,
-            columns=columns,
-            sheet_info=read_text(payload, 'sheet_info', where, ''),
-            sheet_indexes=read_int_list(payload, 'sheet_indexes', where),
-            category=CategoryConfig.from_dict(read_object(payload, 'category', where), f'{where} → category'),
-            title=TitleConfig.from_dict(read_object(payload, 'title', where), f'{where} → title'),
-            pricing=PricingConfig.from_dict(read_object(payload, 'pricing', where), f'{where} → pricing'),
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class TireAndDiskConfig:
-    """Разрешённые настройки текущей группы; аккумуляторных слотов здесь нет."""
-
-    sections: tuple[VendorSection, ...]
-    behavior: BehaviorConfig
-
-    @property
-    def id(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
-        """Идентификатор закреплён за моделью настроек и не передаётся снаружи."""
-        return ProductGroup.TIRE_AND_DISK
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,16 +45,19 @@ class VendorConfig:
     sections: tuple[VendorSection, ...] = ()
     source: str = SOURCE_FILE
     enabled: bool = True
+    configured_groups: tuple[GroupConfig, ...] = ()
 
     @property
-    def product_groups(self) -> tuple[TireAndDiskConfig]:
+    def product_groups(self) -> tuple[GroupConfig, ...]:
         """Представить старую схему единственной группой без повторного разбора настроек."""
-        return (TireAndDiskConfig(self.sections, self.behavior),)
+        return self.configured_groups or (TireAndDiskConfig(self.sections, self.behavior),)
 
     @classmethod
     def from_dict(cls, raw: Any, folder: str, where: str) -> VendorConfig:
         """Разобрать конфиг; `folder` — имя файла без расширения, `where` — путь до ключа в ошибках."""
         payload = as_config_object(raw, where)
+        if 'product_groups' in payload:
+            return _read_grouped_vendor(payload, folder, where)
         reader = read_text(payload, 'reader', where, READER_XLS)
         if reader not in _READERS:
             raise ConfigValidationError(f'{where}: «reader» должен быть «xls» или «json», получено {reader!r}')
@@ -142,4 +88,28 @@ def _read_sections(payload: RawConfig, where: str, vendor: VendorConfig) -> tupl
     return tuple(
         VendorSection.from_dict(section, f'{where} → sections[{index}]', vendor, inherited)
         for index, section in enumerate(sections_raw)
+    )
+
+
+def _read_grouped_vendor(payload: RawConfig, folder: str, where: str) -> VendorConfig:
+    """Собрать независимые группы; старые атрибуты временно представляют только шинную группу."""
+    declarations = read_group_payloads(payload, where)
+    reader = read_text(payload, 'reader', where, READER_XLS)
+    if reader not in _READERS:
+        raise ConfigValidationError(f'{where} → reader: допустимы xls или json')
+    vendor = VendorConfig(
+        folder=folder,
+        code=read_text(payload, 'code', where),
+        name=read_text(payload, 'name', where),
+        start_row=DEFAULT_START_ROW,
+        reader=reader,
+        source=read_text(payload, 'source', where, SOURCE_FILE),
+    )
+    groups = tuple(read_group(declaration, vendor) for declaration in declarations)
+    tires = next((group for group in groups if isinstance(group, TireAndDiskConfig)), None)
+    return replace(
+        vendor,
+        configured_groups=groups,
+        sections=() if tires is None else tires.sections,
+        behavior=BehaviorConfig() if tires is None else tires.behavior,
     )

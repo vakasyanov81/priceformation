@@ -26,7 +26,8 @@ from parsers.registry import (
     vendor_entry_for,
     vendor_markup_policy_for,
 )
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 
 pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 

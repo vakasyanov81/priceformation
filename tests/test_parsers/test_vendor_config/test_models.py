@@ -6,7 +6,8 @@ import pytest
 
 from domain.exceptions import ConfigValidationError
 from parsers.data_provider.models import ABSOLUTE_MODE_DELTA, AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import (
     DEFAULT_PIPELINE,
     BehaviorConfig,

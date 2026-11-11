@@ -16,7 +16,8 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.registry import UnknownVendorError, make_vendor_entry
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
 from services.vendor_parser import parser_for_vendor

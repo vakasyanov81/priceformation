@@ -15,6 +15,7 @@ from parsers.vendor_config.activation import apply_activation, load_activation
 from parsers.vendor_config.common import COMMON_FILE_STEM, CommonVendorSettings
 from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_identity import validate_group_section_ids
 from parsers.vendor_config.source import select_source
 
 _VENDORS_FOLDER = 'vendors'
@@ -34,7 +35,12 @@ def _load_common(folder: str) -> CommonVendorSettings:
 
 def _read_vendor(path: Path, defaults: RawConfig) -> VendorConfig:
     """Конфиг одного поставщика поверх общих настроек; `enabled` в нём запрещён — статус в vendor_activation.json."""
-    raw_config = merge_config(defaults, select_source(read_json_file(str(path)), path.name))
+    selected = select_source(read_json_file(str(path)), path.name)
+    if 'product_groups' in selected and defaults:
+        raise ConfigValidationError(
+            f'{path.name} → product_groups: сначала перенесите defaults из _common.json в настройки групп'
+        )
+    raw_config = merge_config(defaults, selected)
     if _ENABLED_KEY in raw_config:
         raise ConfigValidationError(f'{path.name}: «enabled» перенесён в vendor_activation.json, уберите поле')
     return VendorConfig.from_dict(raw_config, path.stem, path.name)
@@ -47,11 +53,13 @@ def _load_folder(folder: str) -> dict[str, VendorConfig]:
     if not directory.is_dir():
         return {}
     defaults = _load_common(folder).defaults
-    return {
+    configs = {
         path.stem: _read_vendor(path, defaults)
         for path in sorted(directory.glob(f'*{_JSON_SUFFIX}'))
         if not path.name.startswith(_SERVICE_PREFIX)
     }
+    validate_group_section_ids(configs)
+    return configs
 
 
 def _vendors_folder(config_provider: ConfigProvider) -> str:
