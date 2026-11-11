@@ -1,4 +1,4 @@
-"""Позиция прайса: value objects поверх плоского словаря сериализации.
+"""Позиция группы tire_and_disk: value objects поверх плоского словаря сериализации.
 
 Плоский словарь — контракт сериализации: его видят шаблоны колонок, jsonl и
 JSON-отчёт, поэтому `to_dict()` отдаёт ровно те же ключи и в том же порядке,
@@ -15,8 +15,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
+from domain.product_groups import ProductGroup
 from domain.row_item import row_item_formatter as row_format
 from domain.row_item.field_registry import FieldSpec, spec_of
 from domain.row_item.value_objects import (
@@ -72,7 +73,7 @@ class RowField:
 
 @dataclass(eq=False, init=False)
 class RowItem:
-    """Позиция прайса: value objects, вендорские колонки и ошибки разбора."""
+    """Позиция шин, дисков, камер и лент: value objects, колонки и ошибки разбора."""
 
     identity: ProductIdentity
     tire: TireDimensions
@@ -227,6 +228,11 @@ class RowItem:
         if getattr(current, spec.attribute) == attr_value:
             return
         setattr(self, spec.group, replace(current, **{spec.attribute: attr_value}))
+
+    @property
+    def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
+        """Группа модели, независимая от категории товара и входных колонок."""
+        return ProductGroup.TIRE_AND_DISK
 
     @property
     def parse_errors(self) -> dict[str, Any]:
