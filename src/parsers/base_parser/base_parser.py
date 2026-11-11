@@ -2,6 +2,7 @@
 
 from typing import Any, Protocol
 
+from domain.product_group_result import TireAndDiskResult
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.file_reader import FileReader
@@ -24,7 +25,7 @@ class Parser(Protocol):
 
     def get_parsed_items(self) -> list[RowItem]: ...
 
-    def parse(self) -> list[RowItem]: ...
+    def parse(self) -> TireAndDiskResult: ...
 
 
 def _default_file_reader(settings: ParserSettings, data_reader: type[Any] | None) -> FileReader:
@@ -47,6 +48,7 @@ class BaseParser:
         group_handler: TireAndDiskHandler | None = None,
     ) -> None:
         self.parsed_items: list[RowItem] = []
+        self._package = TireAndDiskResult()
         self.settings = group_handler.settings if group_handler else ParserSettings(parse_config)
         self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self.stats = group_handler.stats if group_handler else ParserStats()
@@ -69,16 +71,15 @@ class BaseParser:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
         return self.settings.title()
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         if not self.settings.is_active:
             self._logger.log_disable_status()
-            return []
+            return TireAndDiskResult()
         self.price_files.resolve()
         self._logger.log_start()
         self.process()
-        parsed = self.get_parsed_items()
-        self._logger.log_finish(ParseResultStatistic(parsed))
-        return parsed
+        self._logger.log_finish(ParseResultStatistic(self.get_parsed_items()))
+        return self._package
 
     def get_parsed_items(self) -> list[RowItem]:
         return self.parsed_items
@@ -93,8 +94,8 @@ class BaseParser:
         self.group_handler.row_filters = self.row_filters
         self.group_handler.enricher = self.enricher
         self.group_handler.pipeline = self.pipeline
-        package = self.group_handler.process(self.parsed_items)
-        self.parsed_items = list(package.positions)
+        self._package = self.group_handler.process(self.parsed_items)
+        self.parsed_items = list(self._package.positions)
         return raw_count
 
 

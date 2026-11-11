@@ -118,15 +118,15 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
 
     parsed = parser.parse()
 
-    assert len(parsed) == 2, f'Ожидалось 2 строки, получено {len(parsed)}'
+    assert len(parsed.positions) == 2, f'Ожидалось 2 строки, получено {len(parsed.positions)}'
 
-    row0 = parsed[0]
+    row0 = parsed.positions[0]
     assert row0.identity.title == '205/55R16'
     assert row0.pricing.price_opt == 5000
     assert row0.stock.rest_count == 10
     assert row0.pricing.price_markup == 6000  # 5000 + 20%
 
-    row1 = parsed[1]
+    row1 = parsed.positions[1]
     assert row1.identity.title == '195/65R15'
     assert row1.pricing.price_opt == 3500
     assert row1.stock.rest_count == 5

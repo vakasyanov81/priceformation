@@ -302,7 +302,7 @@ def _json_parse(all_result: bool, result_template: str | None) -> JsonReport:
     started = time.monotonic()
     parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
     files = ServiceProvider.resolve(PriceReportService).write_prices(
-        parse_result.parsed_items,
+        parse_result.tire_and_disk_items,
         template=result_template,
         as_jsonl=True,
     )

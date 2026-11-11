@@ -16,13 +16,13 @@ from services.parse_result import ParseResult
 
 def stats_from_result(parse_result: ParseResult, elapsed: float) -> dict[str, Any]:
     """Счётчики и вилка наценки по результату разбора."""
-    statistic = ParseResultStatistic(parse_result.parsed_items)
+    statistic = ParseResultStatistic(parse_result.tire_and_disk_items)
     percent = statistic.real_percents_markup()
     absolute = statistic.real_absolute_markup()
     return {
-        'items': len(parse_result.parsed_items),
+        'items': len(parse_result.tire_and_disk_items),
         'priced_items': statistic.count_items(),
-        'doubles': _double_count(parse_result.parsed_items),
+        'doubles': _double_count(parse_result.tire_and_disk_items),
         'unknown_category_skips': len(parse_result.unknown_category_skips),
         'black_list_skips': parse_result.black_list_skips,
         'type_corrections': parse_result.type_corrections,
@@ -67,7 +67,7 @@ def report_from_result(
     """Успешный отчёт по уже разобранному результату.
     Без all_result позиции не включаются — только статистика процесса.
     """
-    selected = parse_result.parsed_items if rows is None else rows
+    selected = parse_result.tire_and_disk_items if rows is None else rows
     positions = row_items_to_json(selected) if all_result else []
     enabled, disabled = split_vendor_supplier_info(get_config_provider())
     payload = ok_payload(

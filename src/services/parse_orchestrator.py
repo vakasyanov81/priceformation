@@ -11,6 +11,8 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
+from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.file_logging import clear_log_files
 from parsers.base_parser.base_parser import BaseParser
@@ -89,31 +91,34 @@ class ParseOrchestrator:
         self._parse_all_vendors(parse_result, vendors)
         _emit(skips_messages(parse_result))
         clear_manufacturer_aliases_cache()
-        grouper = self._grouper_factory(
-            parse_result.parsed_items,
-            aliases_map=self._vendor_source.aliases_map(),
-            reference_priority=self._vendor_source.reference_priority(),
-        )
-        parse_result.parsed_items = grouper.group_by_params().get_row_items()
-        logger.info(_doubles_summary(grouper.get_double_row_items()))
+        if ProductGroup.TIRE_AND_DISK in parse_result.groups:
+            grouper = self._grouper_factory(
+                parse_result.tire_and_disk_items,
+                aliases_map=self._vendor_source.aliases_map(),
+                reference_priority=self._vendor_source.reference_priority(),
+            )
+            grouped = grouper.group_by_params().get_row_items()
+            parse_result.replace_package(TireAndDiskResult(tuple(grouped)))
+            logger.info(_doubles_summary(grouper.get_double_row_items()))
         elapsed = time.monotonic() - start_time
         logger.info(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n')
         return parse_result
 
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
-        """Проход по списку поставщиков: разбор каждого через фабрику парсеров."""
-        for vendor_cls, vendor_config in vendors:
-            self._parse_supplier(parse_result, self._parser_factory(vendor_cls, vendor_config))
+        """Собрать все группы и стратегии до чтения первого прайса, затем разобрать поставщиков."""
+        parsers = [self._parser_factory(vendor_cls, vendor_config) for vendor_cls, vendor_config in vendors]
+        for parser in parsers:
+            self._parse_supplier(parse_result, parser)
 
     def _parse_supplier(self, parse_result: ParseResult, parser: BaseParser) -> None:
-        """Парсит прайс одного поставщика и добавляет записи к результату."""
+        """Парсит прайс одного поставщика и добавляет пакет его группы к результату."""
         try:
             parsed = parser.parse()
         except Exception as exc:
             log_parse_failure(logger, parser, exc)
             raise
         else:
-            parse_result.parsed_items.extend(parsed)
+            parse_result.add_package(parsed)
             parse_result.unknown_category_skips.extend(_parser_unknown_skips(parser))
             parse_result.black_list_skips += parser.stats.black_list_skips
             parse_result.type_corrections += parser.stats.type_corrections

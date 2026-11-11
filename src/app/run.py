@@ -134,7 +134,7 @@ def response_processing() -> bool:
 def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
     """Make common price list by price list supplier's"""
     parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
-    ServiceProvider.resolve(PriceReportService).write_prices(parse_result.parsed_items, template=result_template)
+    ServiceProvider.resolve(PriceReportService).write_prices(parse_result.tire_and_disk_items, template=result_template)
 
 
 def run_upload_zapaska_data() -> None:

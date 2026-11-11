@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from domain.product_group_handler import InputFields, OutputFields
-from domain.product_group_result import ProductGroupResult, TireAndDiskResult
+from domain.product_group_result import ProductGroupResult, ProductPosition, TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 
@@ -59,6 +59,11 @@ class TestGroupResult:
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:
         return ProductGroup.BATTERIES
+
+    def merge(self, other: ProductGroupResult[ProductPosition]) -> TestGroupResult:
+        if not isinstance(other, TestGroupResult):
+            raise TypeError('Тестовый пакет объединяется только с той же моделью')
+        return TestGroupResult(self.positions + other.positions)
 
 
 class OtherHandlerExample:

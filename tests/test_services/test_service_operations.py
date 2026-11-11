@@ -85,7 +85,7 @@ def test_write_doubles_factory_receives_items() -> None:
 def test_make_report_defaults_to_xlsx() -> None:
     """Без флага make_report просит xlsx (as_jsonl=False), а не jsonl."""
     parsed = MagicMock()
-    parsed.parsed_items = []
+    parsed.tire_and_disk_items = []
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
@@ -118,7 +118,7 @@ def test_make_report_filters_doubles() -> None:
     candidate.set_field('double_candidate', True)
     unique = _row_item('uniq')
     parsed = MagicMock()
-    parsed.parsed_items = [double_row, candidate, unique]
+    parsed.tire_and_disk_items = [double_row, candidate, unique]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
@@ -132,7 +132,7 @@ def test_make_report_filters_doubles() -> None:
     assert report.doubles == [double_row, candidate]
     assert report.path == _REPORT_PATH
     orchestrator.parse_all.assert_called_once_with()
-    reporter.write_doubles.assert_called_once_with(parsed.parsed_items, as_jsonl=True)
+    reporter.write_doubles.assert_called_once_with(parsed.tire_and_disk_items, as_jsonl=True)
 
 
 def test_upload_zapaska_data() -> None:

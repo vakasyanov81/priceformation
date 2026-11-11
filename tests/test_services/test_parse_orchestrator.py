@@ -9,6 +9,9 @@ import pytest
 from log_watch import LoggerWatcher, texts_at
 
 from domain.config_context import get_config_provider
+from domain.exceptions import ConfigValidationError
+from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.all_vendors import split_vendor_supplier_info
 from parsers.base_parser.base_parser import BaseParser
@@ -55,9 +58,9 @@ class FakeParser:
         self.parse_config = parse_config
         self.stats = ParserStats()
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         """fake parse"""
-        return list(fake_result)
+        return TireAndDiskResult(tuple(fake_result))
 
 
 class _SkipSupplier:
@@ -83,9 +86,9 @@ class FakeParserWithSkips:
         self.stats = ParserStats(unknown_category_skips=['SUV', 'Foo'])
         self.settings = SimpleNamespace(parser_params=_SkipParserParams)
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         """fake parse"""
-        return []
+        return TireAndDiskResult()
 
 
 class FakeParserWithBlackListSkips:
@@ -102,9 +105,9 @@ class FakeParserWithBlackListSkips:
         self.parse_config = parse_config
         self.stats = ParserStats(black_list_skips=3)
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         """fake parse"""
-        return []
+        return TireAndDiskResult()
 
 
 def test_parse_all() -> None:
@@ -113,7 +116,7 @@ def test_parse_all() -> None:
 
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
-    assert parsed.parsed_items == fake_result
+    assert parsed.tire_and_disk_items == fake_result
 
 
 def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:
@@ -126,7 +129,22 @@ def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:
     parsed = orchestrator.parse_all([(vendor_cls, None)])
 
     factory.assert_called_once_with(vendor_cls, None)
-    assert parsed.parsed_items == fake_result
+    assert parsed.tire_and_disk_items == fake_result
+
+
+def test_all_parser_factories_run_before_any_price_read() -> None:
+    """Ошибка сборки любой выбранной группы не даёт начать чтение прайсов."""
+    first_parser = MagicMock()
+    first_parser.parse.return_value = TireAndDiskResult()
+    first_parser.stats = ParserStats()
+    factory = MagicMock(side_effect=[first_parser, ConfigValidationError('группа недоступна')])
+    vendor_cls = cast(type[BaseParser], FakeParser)
+
+    with pytest.raises(ConfigValidationError, match='группа недоступна'):
+        _orchestrator(parser_factory=factory).parse_all([(vendor_cls, None), (vendor_cls, None)])
+
+    assert factory.call_count == 2
+    first_parser.parse.assert_not_called()
 
 
 def test_parse_all_uses_vendor_source() -> None:
@@ -138,7 +156,7 @@ def test_parse_all_uses_vendor_source() -> None:
     parsed = orchestrator.parse_all()
 
     vendor_source.all.assert_called_once_with()
-    assert parsed.parsed_items == fake_result
+    assert parsed.tire_and_disk_items == fake_result
 
 
 def test_parse_vendor_by_code() -> None:
@@ -147,7 +165,7 @@ def test_parse_vendor_by_code() -> None:
     with patch('services.vendor_source.vendor_entry_for', return_value=(cast(type[BaseParser], FakeParser), None)):
         parsed = orchestrator.parse_vendor('poshk')
 
-    assert parsed.parsed_items == fake_result
+    assert parsed.tire_and_disk_items == fake_result
 
 
 def test_parse_vendor_unknown_code() -> None:
@@ -197,6 +215,7 @@ def test_parse_vendor_parse_error_is_logged(watch_logger: LoggerWatcher) -> None
         orchestrator._parse_supplier(parsed, parser)
 
     assert texts_at(entries(), logging.ERROR) == [f'Ошибка разбора прайса поставщика {parser!r} // boom']
+    assert parsed.groups == {}
 
 
 def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
@@ -216,16 +235,24 @@ def test_parse_vendor_reraises(watch_logger: LoggerWatcher) -> None:
 def test_parse_vendor_without_skips() -> None:
     """парсер без пропусков не добавляет их в результат разбора"""
     parser = MagicMock()
-    parser.parse.return_value = []
+    parser.parse.return_value = TireAndDiskResult()
     parser.stats = ParserStats()
     parsed = ParseResult()
     orchestrator = _orchestrator()
 
     orchestrator._parse_supplier(parsed, parser)
 
-    assert not parsed.parsed_items
+    assert ProductGroup.TIRE_AND_DISK in parsed.groups
+    assert not parsed.tire_and_disk_items
     assert not parsed.unknown_category_skips
     assert parsed.black_list_skips == 0
+
+
+def test_no_selected_vendors_leave_groups_absent() -> None:
+    """Пустой список выбранных поставщиков не объявляет группу с пустым пакетом."""
+    parsed = _orchestrator().parse_all([])
+
+    assert parsed.groups == {}
 
 
 def test_skipped_categories_logged(watch_logger: LoggerWatcher) -> None:
@@ -298,7 +325,7 @@ def test_disabled_vendor_is_skipped(watch_logger: LoggerWatcher) -> None:
 
     parsed = orchestrator.parse_all([vendor_entry])
 
-    assert not parsed.parsed_items
+    assert not parsed.tire_and_disk_items
     assert texts_at(entries(), logging.WARNING) == ['Поставщик TestDisable не активен']
 
 
@@ -429,9 +456,9 @@ class FakeParserWithTypeCorrections(FakeParser):
         super().__init__(parse_config, **kwargs)
         self.stats = ParserStats(type_corrections=2)
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         """fake parse"""
-        return []
+        return TireAndDiskResult()
 
 
 def test_type_corrections_accumulate_and_logged(watch_logger: LoggerWatcher) -> None:
@@ -456,9 +483,9 @@ class FakeParserWithTitlesNotComposed(FakeParser):
         super().__init__(parse_config, **kwargs)
         self.stats = ParserStats(titles_not_composed=3)
 
-    def parse(self) -> list[RowItem]:
+    def parse(self) -> TireAndDiskResult:
         """fake parse"""
-        return []
+        return TireAndDiskResult()
 
 
 def test_titles_not_composed_accumulate_and_logged(watch_logger: LoggerWatcher) -> None:

@@ -56,7 +56,7 @@ class TestFourTochkiConfigDriven:
         assert not errors, f'Есть ошибки разбора строк:\n{errors}'
 
         parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
-        assert parsed.parsed_items, 'Нет разобранных строк'
+        assert parsed.tire_and_disk_items, 'Нет разобранных строк'
         assert parsed.unknown_category_skips == []
 
     def test_all_vendors_catalog_has_eight_entries(

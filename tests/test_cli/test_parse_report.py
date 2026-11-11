@@ -21,6 +21,7 @@ from app.parse_report_build import (
     stats_from_result,
     warnings_from_result,
 )
+from domain.product_group_result import TireAndDiskResult
 from domain.row_item.row_item import RowItem
 from services.parse_result import ParseResult
 
@@ -212,11 +213,16 @@ def test_row_items_without_errors() -> None:
     assert 'parse_errors' not in payload
 
 
-def _result_with_skips() -> ParseResult:
+def _result_with_rows(rows: list[RowItem]) -> ParseResult:
     parsed = ParseResult()
+    parsed.add_package(TireAndDiskResult(tuple(rows)))
+    return parsed
+
+
+def _result_with_skips() -> ParseResult:
     row = _priced_row()
     row.set_field('is_double', True)
-    parsed.parsed_items = [row]
+    parsed = _result_with_rows([row])
     parsed.unknown_category_skips.append(('МИМ', _SUV))
     parsed.black_list_skips = 3
     parsed.type_corrections = 2
@@ -247,11 +253,9 @@ def test_stats_and_warnings_from_result() -> None:
 
 def test_stats_markup_range_across_rows() -> None:
     """вилка наценки считается по всем строкам с ценой."""
-    parsed = ParseResult()
     first = RowItem({'title': 'a', 'price_opt': 100, 'price_markup': 120, 'percent_markup': 20})
     second = RowItem({'title': 'b', 'price_opt': 200, 'price_markup': 300, 'percent_markup': 50})
-    parsed.parsed_items.append(first)
-    parsed.parsed_items.append(second)
+    parsed = _result_with_rows([first, second])
     assert stats_from_result(parsed, 0.0) == {
         'items': 2,
         'priced_items': 2,
@@ -268,8 +272,8 @@ def test_stats_markup_range_across_rows() -> None:
 
 def test_stats_skip_unpriced_rows() -> None:
     """Строка без price_opt попадает в items, но не в наценку и priced_items."""
-    parsed = ParseResult()
-    parsed.parsed_items.append(RowItem({'title': 'no price', 'price_opt': 0, 'price_markup': 120}))
+    row = RowItem({'title': 'no price', 'price_opt': 0, 'price_markup': 120})
+    parsed = _result_with_rows([row])
     assert stats_from_result(parsed, 0.0) == {
         'items': 1,
         'priced_items': 0,
@@ -314,11 +318,10 @@ def test_warnings_black_list_only() -> None:
 
 def test_report_from_result_subset_rows() -> None:
     """rows= ограничивает positions, stats считаются по всему разбору."""
-    parsed = ParseResult()
     keep = _priced_row()
     keep.set_field('is_double', True)
     skip = RowItem({'title': 'other', 'price_opt': _OPT, 'price_markup': _MARKUP})
-    parsed.parsed_items.extend([keep, skip])
+    parsed = _result_with_rows([keep, skip])
     report = report_from_result('doubles', parsed, [_RESULT_D], 0.5, rows=[keep], all_result=True)
     assert report['ok'] is True
     assert report['action'] == 'doubles'
@@ -329,8 +332,7 @@ def test_report_from_result_subset_rows() -> None:
 
 def test_report_stats_only() -> None:
     """без all_result в JSON только статистика процесса."""
-    parsed = ParseResult()
-    parsed.parsed_items.append(_priced_row())
+    parsed = _result_with_rows([_priced_row()])
     report = report_from_result('parse', parsed, [_RESULT_A], 0.4)
     assert report['positions'] == []
     assert report['stats']['items'] == 1

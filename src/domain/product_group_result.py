@@ -23,6 +23,10 @@ class ProductGroupResult[TPosition: ProductPosition](Protocol):
     @property
     def positions(self) -> tuple[TPosition, ...]: ...
 
+    def merge(self, other: ProductGroupResult[ProductPosition]) -> ProductGroupResult[ProductPosition]:
+        """Объединить пакеты той же модели, отклонив другую группу или модель."""
+        ...
+
 
 @final
 @dataclass(frozen=True)
@@ -45,3 +49,8 @@ class TireAndDiskResult:
     def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
         """Идентификатор нельзя передать отдельно от модели или заменить."""
         return ProductGroup.TIRE_AND_DISK
+
+    def merge(self, other: ProductGroupResult[ProductPosition]) -> TireAndDiskResult:
+        if not isinstance(other, TireAndDiskResult):
+            raise TypeError('Пакет tire_and_disk объединяется только с той же моделью')
+        return TireAndDiskResult(self.positions + other.positions)

@@ -62,7 +62,7 @@ class TestFullParsePipeline:
 
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, 'Ошибки разбора: {}'.format('; '.join(errors))
-        assert len(parse_output.parsed_items) > 0
+        assert len(parse_output.tire_and_disk_items) > 0
         assert parse_output.unknown_category_skips == []
 
     def test_json_vendor_uses_json_reader(
@@ -90,7 +90,7 @@ class TestFullParsePipeline:
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""
         titles_by_group: dict[int | None, set[str | None]] = {}
-        for row_item in ServiceProvider.resolve(ParseOrchestrator).parse_all().parsed_items:
+        for row_item in ServiceProvider.resolve(ParseOrchestrator).parse_all().tire_and_disk_items:
             group_titles = titles_by_group.setdefault(row_item.duplicate.group_by_params, set())
             group_titles.add(row_item.identity.title)
 

@@ -63,7 +63,7 @@ def _assert_elapsed(payload: dict[str, object]) -> None:
 def _result_with_row() -> MagicMock:
     row = RowItem(_PRICE_FIELDS)
     common = MagicMock()
-    common.parsed_items = [row]
+    common.tire_and_disk_items = [row]
     common.unknown_category_skips = []
     common.black_list_skips = 0
     return common
@@ -71,7 +71,7 @@ def _result_with_row() -> MagicMock:
 
 def _mark_result(rows: list[RowItem]) -> MagicMock:
     common = MagicMock()
-    common.parsed_items = rows
+    common.tire_and_disk_items = rows
     common.unknown_category_skips = []
     common.black_list_skips = 0
     return common
@@ -97,7 +97,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template=None, as_jsonl=True)
+    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template=None, as_jsonl=True)
 
 
 def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
@@ -115,7 +115,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
+    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template='for_drom', as_jsonl=True)
 
 
 def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]) -> None:
@@ -131,7 +131,7 @@ def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]
     ):
         code = machine_json(PARSE, result_template='for_drom')
     assert code == 0
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
+    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template='for_drom', as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:

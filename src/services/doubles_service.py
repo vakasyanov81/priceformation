@@ -35,7 +35,7 @@ class DoublesService:
         """Разобрать всех поставщиков и записать отчёт о дублях."""
         parse_result = self._orchestrator.parse_all()
         doubles = [
-            row for row in parse_result.parsed_items if row.duplicate.is_double or row.duplicate.double_candidate
+            row for row in parse_result.tire_and_disk_items if row.duplicate.is_double or row.duplicate.double_candidate
         ]
-        path = self._report_service.write_doubles(parse_result.parsed_items, as_jsonl=as_jsonl)
+        path = self._report_service.write_doubles(parse_result.tire_and_disk_items, as_jsonl=as_jsonl)
         return DoublesReport(parse_result=parse_result, doubles=doubles, path=path)

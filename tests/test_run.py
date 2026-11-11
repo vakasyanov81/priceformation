@@ -41,7 +41,7 @@ def test_response_exit() -> None:
 def test_run_make_price() -> None:
     """сборка общего прайса и запись через сервисы"""
     parsed = MagicMock()
-    parsed.parsed_items = [1]
+    parsed.tire_and_disk_items = [1]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
