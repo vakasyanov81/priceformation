@@ -13,7 +13,7 @@ from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
 from parsers.base_parser.row_processor import RowProcessor
-from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler, count_type_corrections, finish_processing
+from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 
 
 class Parser(Protocol):
@@ -50,7 +50,9 @@ class BaseParser:
         self.settings = group_handler.settings if group_handler else ParserSettings(parse_config)
         self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self.stats = group_handler.stats if group_handler else ParserStats()
-        self.price_files = PriceFiles(self.settings, file_reader or _default_file_reader(self.settings, data_reader))
+        self.price_files = PriceFiles(
+            self.settings.parser_params(), file_reader or _default_file_reader(self.settings, data_reader)
+        )
         self.group_handler = group_handler or TireAndDiskHandler(
             settings=self.settings,
             stats=self.stats,
@@ -69,11 +71,9 @@ class BaseParser:
         if not self.settings.is_active:
             self._logger.log_disable_status()
             return []
-        self.enricher.categories.lookup.reset()
         self.price_files.resolve()
         self._logger.log_start()
         self.process()
-        self.after_process()
         parsed = self.get_parsed_items()
         self._logger.log_finish(ParseResultStatistic(parsed))
         return parsed
@@ -82,29 +82,18 @@ class BaseParser:
         return self.parsed_items
 
     def process(self) -> int:
-        """read → map → filter → enrich → vendor hook. Count before filters."""
+        """Прочитать файлы, отобразить позиции и передать их обработчику группы."""
         files = self.price_files.files or []
         self._logger.log_list_files(files)
-        raw_rows = self.price_files.read_rows(files)
-        mapped = self.price_files.map_items(raw_rows, self.group_handler.create_position)
+        mapped = self.price_files.read_positions(files, self.group_handler.create_position)
         raw_count = len(mapped)
         self.parsed_items += mapped
         self.group_handler.row_filters = self.row_filters
         self.group_handler.enricher = self.enricher
         self.group_handler.pipeline = self.pipeline
-        self.parsed_items = self.group_handler.process_rows(self.parsed_items)
+        package = self.group_handler.process(self.parsed_items)
+        self.parsed_items = list(package.positions)
         return raw_count
-
-    def after_process(self) -> None:
-        self.parsed_items = finish_processing(self.parsed_items, self.stats)
-
-    def count_type_corrections(self) -> int:
-        """Число позиций итогового результата с исправленным типом.
-
-        Считается после ``drop_empty_rest``: расхождения у позиций, отброшенных
-        без цены закупки или остатка, в прайс не попадают и в счётчик не входят.
-        """
-        return count_type_corrections(self.parsed_items)
 
 
 def make_parser[TParser: BaseParser](

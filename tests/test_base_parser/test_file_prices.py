@@ -60,9 +60,6 @@ class _SilentParser(BaseParser):
     def process(self) -> int:
         return 0
 
-    def after_process(self) -> None:
-        """Skip percent markup in file-source tests."""
-
 
 def test_file_prices_source_uses_config_provider(tmp_path: Any, fake_config_provider: FakeConfigProvider) -> None:
     """список прайсов берётся из папки провайдера, не из файлов проекта."""

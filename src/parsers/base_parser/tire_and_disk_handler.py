@@ -81,6 +81,8 @@ class TireAndDiskHandler:
         return row_items
 
     def process(self, positions: Sequence[RowItem]) -> TireAndDiskResult:
+        """Обработать строки секции: сбросить кэш категорий, прогнать фильтры и завершить расчёт."""
+        self.enricher.categories.lookup.reset()
         return TireAndDiskResult(tuple(finish_processing(self.process_rows(positions), self.stats)))
 
     def group(self, package: ProductGroupResult[RowItem]) -> TireAndDiskResult:

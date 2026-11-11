@@ -584,9 +584,8 @@ def test_type_corrections_counts_only_rows_kept_in_price() -> None:
     dropped = RowItem({'title': '275/65R20 112T', 'price_opt': 0, 'rest_count': 0})
     for row_item in (kept, dropped):
         parser.pipeline.process_row(row_item)
-    parser.parsed_items = [kept, dropped]
 
-    parser.after_process()
+    parser.group_handler.process([kept, dropped])
 
     assert kept.vendor.type_corrected is True
     assert dropped.vendor.type_corrected is True
@@ -598,9 +597,8 @@ def test_apply_category_matching_does_not_count() -> None:
     parser = _classifier_parser(TRUCK)
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось', 'price_opt': 100, 'rest_count': 4})
     parser.pipeline.process_row(row)
-    parser.parsed_items = [row]
 
-    parser.after_process()
+    parser.group_handler.process([row])
 
     assert parser.stats.type_corrections == 0
 
