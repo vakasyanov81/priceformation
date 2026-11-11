@@ -25,6 +25,7 @@ from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
 from services.vendor_parser import parser_for_vendor
 from services.vendor_source import VendorSource
+from tests.test_domain.group_handler_examples import TestGroupResult, TestPosition
 
 _MOD = 'services.parse_orchestrator'
 _ORCHESTRATOR_LOGGER = 'services.parse_orchestrator'
@@ -117,6 +118,20 @@ def test_parse_all() -> None:
     parsed = orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
 
     assert parsed.tire_and_disk_items == fake_result
+
+
+def test_other_group_is_not_sent_to_tire_and_disk_grouper() -> None:
+    """До появления своих правил другая модель не проходит через шинную группировку."""
+    parser = MagicMock()
+    parser.parse.return_value = TestGroupResult((TestPosition('Позиция другой модели'),))
+    parser.stats = ParserStats()
+    orchestrator = _orchestrator(parser_factory=MagicMock(return_value=parser))
+    orchestrator._grouper_factory = MagicMock()
+
+    with pytest.raises(ConfigValidationError, match='Группировка группы batteries ещё не реализована'):
+        orchestrator.parse_all([(cast(type[BaseParser], FakeParser), None)])
+
+    orchestrator._grouper_factory.assert_not_called()
 
 
 def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:

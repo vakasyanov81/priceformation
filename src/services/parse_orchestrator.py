@@ -11,6 +11,7 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
+from domain.exceptions import ConfigValidationError
 from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
@@ -91,7 +92,16 @@ class ParseOrchestrator:
         self._parse_all_vendors(parse_result, vendors)
         _emit(skips_messages(parse_result))
         clear_manufacturer_aliases_cache()
-        if ProductGroup.TIRE_AND_DISK in parse_result.groups:
+        self._group_packages(parse_result)
+        elapsed = time.monotonic() - start_time
+        logger.info(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n')
+        return parse_result
+
+    def _group_packages(self, parse_result: ParseResult) -> None:
+        """Обработать каждый пакет только правилами его товарной группы."""
+        for group in parse_result.groups:
+            if group is not ProductGroup.TIRE_AND_DISK:
+                raise ConfigValidationError(f'Группировка группы {group.value} ещё не реализована')
             grouper = self._grouper_factory(
                 parse_result.tire_and_disk_items,
                 aliases_map=self._vendor_source.aliases_map(),
@@ -100,9 +110,6 @@ class ParseOrchestrator:
             grouped = grouper.group_by_params().get_row_items()
             parse_result.replace_package(TireAndDiskResult(tuple(grouped)))
             logger.info(_doubles_summary(grouper.get_double_row_items()))
-        elapsed = time.monotonic() - start_time
-        logger.info(f'\n===== Окончание разбора прайсов ({elapsed:.2f} сек) ========\n')
-        return parse_result
 
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
         """Собрать все группы и стратегии до чтения первого прайса, затем разобрать поставщиков."""
