@@ -225,3 +225,38 @@ def test_grouped_vendor_rejects_unmigrated_common_defaults(fake_config_provider:
 
     with pytest.raises(ConfigValidationError, match=r'_common\.json'):
         load_vendor_configs(fake_config_provider)
+
+
+@pytest.mark.parametrize(
+    ('slot', 'key', 'strategy_name'),
+    [
+        ('category', 'strategy', 'tire_compose'),
+        ('title', 'strategy', 'fixed'),
+        ('pricing', 'policy', 'unknown'),
+        ('behavior', 'rest', 'unknown'),
+        ('behavior', 'pipeline', ['unknown']),
+    ],
+)
+@pytest.mark.parametrize('in_section', [False, True])
+def test_strategy_names_checked_at_loading(slot: str, key: str, strategy_name: object, in_section: bool) -> None:
+    """Чужое имя отклоняется загрузчиком, включая секционное переопределение."""
+    group = _tire_group()
+    settings = {slot: {key: strategy_name}}
+    if in_section:
+        group['sections'] = [{'id': 'tires', **settings}]
+    else:
+        group.update(settings)
+    with pytest.raises(ConfigValidationError) as caught:
+        _grouped_config([group])
+    message = str(caught.value)
+    assert 'demo.json → product_groups[0]' in message
+    assert f'{slot} → {key}' in message
+    assert ('sections[0]' in message) is in_section
+
+
+def test_overridden_invalid_strategy_still_rejected() -> None:
+    """Позднее переопределение не скрывает ошибку исходного уровня."""
+    group = {**_tire_group(), 'title': {'strategy': 'unknown'}}
+    group['sections'] = [{'id': 'tires', 'title': {'strategy': 'default'}}]
+    with pytest.raises(ConfigValidationError, match='title → strategy'):
+        _grouped_config([group])

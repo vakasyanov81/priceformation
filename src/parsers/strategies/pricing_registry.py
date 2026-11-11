@@ -13,8 +13,9 @@ from parsers.base_parser.markup_policy import (
 )
 from parsers.strategies.pricing import PercentByThresholdMarkupPolicy, RecommendedRangeMarkupPolicy
 from parsers.vendor_config.slot_configs import PricingConfig
+from parsers.vendor_config.strategy_names import PRICING_POLICIES
 
-_AVAILABLE = 'base, identity, map_on_opt, recommended_or_map, recommended_range, percent_by_threshold'
+_AVAILABLE = ', '.join(PRICING_POLICIES)
 
 # Политики, которым правила `rules` и карта `%` передаются одинаково.
 _RULE_POLICIES: dict[str, type[MarkupPolicy]] = {

@@ -27,13 +27,11 @@ from parsers.strategies.title import (
 from parsers.strategies.title_markers import TitleWithMarkers
 from parsers.strategies.title_wrap import check_params_flags, manufacturer_probe, wrap_with_params
 from parsers.vendor_config.slot_configs import TitleConfig
+from parsers.vendor_config.strategy_names import TITLE_STRATEGIES
 
 _TIRE_VARIANTS = ('mim_simple', 'mim_truck', 'four_tochki')
 _DISK_VARIANTS = ('four_tochki',)
-_AVAILABLE = (
-    'default, normalize_title, normalize_size_chunks, poshk_stk_tire_compose, tire_compose, '
-    'disk_compose, fill_fields_from_title, manufacturer_from_category'
-)
+_AVAILABLE = ', '.join(TITLE_STRATEGIES)
 _SIMPLE_STRATEGIES: dict[str, type[TitleStrategy]] = {
     'default': DefaultTitle,
     'normalize_title': NormalizeTitle,

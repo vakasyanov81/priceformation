@@ -6,6 +6,7 @@ from parsers.data_provider.json_fields import RawConfig, read_object
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_str_list
 from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, PricingConfig, TitleConfig
+from parsers.vendor_config.strategy_names import validate_strategy_names
 
 MODEL_KEYS = ('columns', 'category', 'title', 'pricing', 'behavior')
 
@@ -24,6 +25,7 @@ def validate_group_settings(payload: RawConfig, where: str, group: ProductGroup,
             if key in payload:
                 raise ConfigValidationError(f'{where} → {key}: поля и стратегии batteries ещё не определены')
         return
+    validate_strategy_names(payload, where)
     read_columns(payload, where, reads_json=reads_json)
     CategoryConfig.from_dict(read_object(payload, 'category', where), f'{where} → category')
     TitleConfig.from_dict(read_object(payload, 'title', where), f'{where} → title')
