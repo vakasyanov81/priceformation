@@ -1,105 +1,64 @@
-"""JSONL-результат по шаблону записи (те же колонки, что у xlsx)."""
-
-from __future__ import annotations
+"""Независимые JSONL-потоки групп и реестр схем v2."""
 
 import datetime
-import json
 from pathlib import Path
-from typing import Any
 
-from parsers.writer.jsonl_codes import VALUES_KEY, apply_value_codes, read_value_codes
+from parsers.writer.jsonl_meta import RESULT_META_FILE, FileRegistry
+from parsers.writer.jsonl_packing import PackedFile, pack_rows
+from parsers.writer.jsonl_publish import publish_jsonl
+from parsers.writer.output_paths import jsonl_name
+from parsers.writer.output_plan import SheetPlan, WorkbookPlan
 from parsers.writer.row_style import PriceRow
-from parsers.writer.templates.column_helper import ColumnHelper
 from parsers.writer.templates.iwrite_template import IWriteTemplate
-from parsers.writer.xls_writer import cell_value, has_value, make_exclude
-
-RESULT_META_FILE = 'result_meta.json'
-_SEPARATORS = (',', ':')
-
-type JsonlColumns = list[ColumnHelper]
-type NameToKey = dict[str, str]
-type KeyToName = dict[str, str]
+from parsers.writer.xls_writer import make_exclude
 
 
-def write_template_jsonl(
-    rows: list[PriceRow],
-    template: type[IWriteTemplate],
-    result_folder: str,
-) -> str:
-    """Записать позиции в .jsonl и вернуть абсолютный путь."""
+def write_template_jsonl(rows: list[PriceRow], template: type[IWriteTemplate], result_folder: str) -> str:
+    """Совместимый вход для одногрупповых шаблонов; метаданные всегда v2."""
     instance = template()
-    folder = Path(result_folder)
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / _jsonl_file_name(instance)
-    _write_jsonl(path, make_exclude(rows, instance.exclude()), instance)
-    return str(path.resolve())
+    group = instance.output_spec().groups[0]
+    filtered = make_exclude(rows, group.filters)
+    sheet = SheetPlan(group, tuple(filtered), frozenset(('title',)))
+    book = WorkbookPlan(instance.template_id, _template_name(instance), (sheet,))
+    return write_plan_jsonl((book,), result_folder)[0]
 
 
-def _jsonl_file_name(template: IWriteTemplate) -> str:
-    current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-    xlsx_name = template.get_file_name().format(now=current_date)
-    return Path(xlsx_name).with_suffix('.jsonl').name
+def write_plan_jsonl(books: tuple[WorkbookPlan, ...], result_folder: str) -> list[str]:
+    """Записать по потоку на группу независимо от размещения листов XLSX."""
+    packed = _pack_books(books)
+    streams = {name: stream[0] for name, stream in packed.items()}
+    schemas: FileRegistry = {name: stream[1] for name, stream in packed.items()}
+    return publish_jsonl(Path(result_folder), streams, schemas)
 
 
-def _write_jsonl(path: Path, rows: list[PriceRow], template: IWriteTemplate) -> None:
-    columns = [column for column in map(ColumnHelper, template.columns()) if not column.skip]
-    keys = _extend_meta(path.parent, columns)
-    compact = [_compact_row(product, columns, keys) for product in rows]
-    apply_value_codes(compact, columns, keys, path.parent / RESULT_META_FILE)
-    with path.open('w', encoding='utf-8') as stream:
-        for packed in compact:
-            stream.write(json.dumps(packed, ensure_ascii=False, default=str, separators=_SEPARATORS))
-            stream.write('\n')
+def _pack_books(books: tuple[WorkbookPlan, ...]) -> dict[str, PackedFile]:
+    packed = {}
+    for book in books:
+        for sheet in book.sheets:
+            name = jsonl_name(book.file_name, book.mode, sheet.settings.id)
+            packed[name] = _pack_sheet(book.template_id, sheet)
+    return packed
 
 
-def _extend_meta(folder: Path, columns: JsonlColumns) -> NameToKey:
-    """Дописать колонки в result_meta.json, вернуть имя колонки → ключ."""
-    by_name = {name: key for key, name in _read_meta(folder).items()}
-    _assign_keys(by_name, columns)
-    payload: dict[str, Any] = {key: name for name, key in by_name.items()}
-    codebook = read_value_codes(folder / RESULT_META_FILE)
-    if codebook:
-        payload[VALUES_KEY] = codebook
-    (folder / RESULT_META_FILE).write_text(
-        json.dumps(payload, ensure_ascii=False),
-        encoding='utf-8',
+def _pack_sheet(template_id: str, sheet: SheetPlan) -> PackedFile:
+    rows = [dict(row) for row in sheet.rows]
+    packed, schema = pack_rows(rows, sheet.settings.columns, sheet.title_fields)
+    schema.update(
+        template_id=template_id, product_group=sheet.settings.id, schema_version=sheet.settings.schema_version
     )
-    return by_name
+    return packed, schema
 
 
-def _assign_keys(by_name: NameToKey, columns: JsonlColumns) -> None:
-    used = [int(key) for key in by_name.values()]
-    next_index = max(used, default=0) + 1
-    for column in columns:
-        name = column.name
-        if name in by_name:
-            continue
-        by_name[name] = str(next_index)
-        next_index += 1
+def _template_name(template: IWriteTemplate) -> str:
+    name = template.get_file_name().format(now=datetime.date.today().isoformat())
+    return Path(name).with_suffix('.jsonl').name
 
 
-def _read_meta(folder: Path) -> KeyToName:
-    path = folder / RESULT_META_FILE
-    if not path.exists():
-        return {}
-    loaded = json.loads(path.read_text(encoding='utf-8'))
-    columns: KeyToName = {}
-    for key, column_name in loaded.items():
-        if not str(key).isdigit():
-            continue
-        columns[str(key)] = str(column_name)
-    return columns
-
-
-def _compact_row(
-    product: PriceRow,
-    columns: JsonlColumns,
-    name_to_key: NameToKey,
-) -> dict[str, Any]:
-    payload: dict[str, Any] = {}
-    for column in columns:
-        cell = cell_value(column, product)
-        if not has_value(cell):
-            continue
-        payload[name_to_key[column.name]] = cell
-    return payload
+def jsonl_output_files(written: list[str]) -> list[str]:
+    """Пути jsonl и файл метаинформации колонок в той же папке."""
+    if not written:
+        return written
+    meta = str(Path(written[0]).parent / RESULT_META_FILE)
+    if meta in written:
+        return written
+    return [*written, meta]

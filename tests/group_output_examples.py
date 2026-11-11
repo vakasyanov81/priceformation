@@ -17,6 +17,10 @@ class OtherOutputSource:
     def fields(self) -> frozenset[str]:
         return frozenset(('label',))
 
+    @property
+    def title_fields(self) -> frozenset[str]:
+        return frozenset(())
+
     def prepare(self, _template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
         return tuple(
             {'label': position.label}

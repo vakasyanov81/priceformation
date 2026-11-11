@@ -345,7 +345,10 @@ def test_drom_meta_matches_golden(tmp_path: Path) -> None:
     meta_path = tmp_path / 'result_meta.json'
     loaded = json.loads(meta_path.read_text(encoding='utf-8'))
     numbers = map(str, range(1, len(GOLDEN_DROM_HEAD) + 1))
-    assert loaded == dict(zip(numbers, GOLDEN_DROM_HEAD, strict=True))
+    assert loaded['version'] == 2
+    schema = next(iter(loaded['files'].values()))
+    assert schema['columns'] == dict(zip(numbers, GOLDEN_DROM_HEAD, strict=True))
+    assert schema['value_codes'] == {}
 
 
 def _inner_row(type_corrected: bool) -> dict[str, Any]:

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from domain.product_groups import ProductGroup
 from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
+from parsers.writer.jsonl_writer import write_plan_jsonl
 from parsers.writer.output_plan import GroupOutputSource, WorkbookPlan, prepare_output_plan
 from parsers.writer.templates.group_output import TemplateOutput
 from parsers.writer.templates.sheet_template import SheetTemplate
@@ -25,9 +26,12 @@ class GroupFileWriter:
         *,
         selected: Set[ProductGroup] | None = None,
         current_date: str | None = None,
+        as_jsonl: bool = False,
     ) -> list[str]:
         """Подготовить весь план до создания драйверов и файлов."""
         books = prepare_output_plan(outputs, sources, selected=selected, current_date=current_date)
+        if as_jsonl:
+            return write_plan_jsonl(books, self._result_folder)
         return [self._write_book(book) for book in books]
 
     def _write_book(self, book: WorkbookPlan) -> str:

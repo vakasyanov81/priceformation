@@ -28,10 +28,10 @@ from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.exception_logging import log_exception_once
 from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
-from parsers.common_price.output import jsonl_output_files
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.strategies.product_types import CANONICAL_TYPES
+from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
 from services.configure import ensure_services_configured

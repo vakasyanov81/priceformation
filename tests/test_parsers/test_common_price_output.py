@@ -12,9 +12,10 @@ from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.common_price.output import CommonPriceOut, jsonl_output_files
+from parsers.common_price.output import CommonPriceOut
 from parsers.data_provider.doubles_settings import DOUBLES_CONFIG_FILE, DoublesSettings
-from parsers.writer.jsonl_writer import RESULT_META_FILE
+from parsers.writer.jsonl_meta import RESULT_META_FILE
+from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
 from parsers.writer.templates.iwrite_template import IWriteTemplate
@@ -141,37 +142,20 @@ def _warehouse_row(code: str, price: float, rest: int) -> RowItem:
     )
 
 
-def test_write_all_prices_jsonl() -> None:
-    """as_jsonl пишет jsonl и не трогает xlsx writer."""
-    rows = [RowItem({_TITLE: 't1'})]
-    writer_cls = MagicMock()
-    driver_cls = MagicMock()
-    template = ForInner
+def test_write_all_prices_jsonl(fake_config_provider: FakeConfigProvider) -> None:
+    """CLI пишет реальные потоки и реестр v2, не создавая XLSX."""
     out = CommonPriceOut(
-        rows,
-        xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
-        config_provider=get_config_provider(),
+        [RowItem({_TITLE: 't1'})],
+        xls_writer=MagicMock(),
+        write_driver=MagicMock(),
+        config_provider=fake_config_provider,
+        doubles_settings=DoublesSettings(),
     )
-    raw_rows = [{_TITLE: 't1'}]
-    jsonl_path = 'file_prices/result/price.jsonl'
-
-    doubles_path = 'file_prices/result/doubles.jsonl'
-
-    with (
-        patch.object(out, 'nomenclature_title_correction') as mock_corr,
-        patch.object(out, 'write_doubles_report', return_value=doubles_path) as mock_doubles,
-        patch('parsers.common_price.output.all_writer_templates', return_value=[template]),
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
-    ):
-        written = out.write_all_prices(as_jsonl=True)
-
-    mock_corr.assert_called_once()
-    writer_cls.assert_not_called()
-    mock_jsonl.assert_called_once_with(raw_rows, template, _result_folder())
-    mock_doubles.assert_called_once_with(as_jsonl=True, current_date=date.today().isoformat())
-    assert written == jsonl_output_files([jsonl_path, doubles_path])
+    with patch.object(out, 'nomenclature_title_correction'):
+        written = out.write_all_prices(as_jsonl=True, result_template='for_inner')
+    assert len(written) == 3
+    assert all(Path(path).exists() for path in written)
+    assert Path(written[1]).read_text(encoding='utf-8') == ''
 
 
 def test_write_all_prices_reloads_nomenclature() -> None:
@@ -249,15 +233,13 @@ def test_write_doubles_report_jsonl() -> None:
         config_provider=get_config_provider(),
     )
     jsonl_path = 'file_prices/result/doubles.jsonl'
-    raw_rows = [{_TITLE: 'dup'}]
 
-    with (
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
-    ):
+    with patch('parsers.common_price.output.write_plan_jsonl', return_value=[jsonl_path]) as mock_jsonl:
         report_path = out.write_doubles_report(as_jsonl=True)
-
-    mock_jsonl.assert_called_once_with(raw_rows, ForDoubles, _result_folder())
+    books = mock_jsonl.call_args.args[0]
+    sheet = books[0].sheets[0]
+    assert sheet.rows[0]['title'] == 'dup'
+    assert mock_jsonl.call_args.args[1] == _result_folder()
     assert report_path == jsonl_path
 
 
@@ -476,10 +458,10 @@ def test_result_folder_comes_from_injected_provider() -> None:
         doubles_settings=DoublesSettings(),
     )
 
-    with patch('parsers.common_price.output.write_template_jsonl', return_value='x.jsonl') as write:
+    with patch('parsers.common_price.output.write_plan_jsonl', return_value=['x.jsonl']) as write:
         out.write_doubles_report(as_jsonl=True)
 
-    assert write.call_args.args[2] == '/injected/result'
+    assert write.call_args.args[1] == '/injected/result'
 
 
 @pytest.mark.parametrize('as_jsonl', [False, True])
@@ -492,7 +474,7 @@ def test_invalid_later_template_prevents_all_writes(as_jsonl: bool) -> None:
     invalid.groups[0].filters['foreign_field'] = []
     with (
         patch.object(ForDrom, 'output_spec', return_value=invalid),
-        patch('parsers.common_price.output.write_template_jsonl') as jsonl,
+        patch('parsers.common_price.output.write_plan_jsonl') as jsonl,
         pytest.raises(ConfigValidationError, match=r'for_drom.*filters'),
     ):
         out.write_all_prices(as_jsonl=as_jsonl)

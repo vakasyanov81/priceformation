@@ -30,7 +30,7 @@ from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from infrastructure.logging.log_paths import LogPaths
 from infrastructure.logging.log_setup import setup_logging
-from parsers.common_price.output import jsonl_output_files
+from parsers.writer.jsonl_writer import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService

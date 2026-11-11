@@ -29,6 +29,7 @@ class GroupOutput:
     formatting: WriteColors
     merge_warehouses: bool = False
     file_name: str | None = None
+    schema_version: int = 1
 
 
 @dataclass(frozen=True)

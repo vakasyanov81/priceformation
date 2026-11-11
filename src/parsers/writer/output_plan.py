@@ -19,6 +19,9 @@ class GroupOutputSource(Protocol):
     @property
     def fields(self) -> Set[str]: ...
 
+    @property
+    def title_fields(self) -> frozenset[str]: ...
+
     def prepare(self, template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
         """Применить правила к позициям своей модели, затем сериализовать."""
         ...
@@ -30,6 +33,7 @@ class SheetPlan:
 
     settings: GroupOutput
     rows: tuple[OutputFields, ...]
+    title_fields: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -39,6 +43,7 @@ class WorkbookPlan:
     template_id: str
     file_name: str
     sheets: tuple[SheetPlan, ...]
+    mode: OutputMode = OutputMode.SEPARATE_FILES
 
 
 def prepare_output_plan(
@@ -67,12 +72,10 @@ def _prepare_template(
     selected: Set[ProductGroup],
     current_date: str,
 ) -> list[WorkbookPlan]:
-    sheets = tuple(
-        SheetPlan(group, sources[group.id].prepare(output.template_id, group))
-        for group in output.groups
-        if group.id in selected
-    )
-    return _place_sheets(output, sheets, current_date)
+    groups = (group for group in output.groups if group.id in selected)
+    template_id = output.template_id
+    sheets = [_prepare_sheet(template_id, group, sources[group.id]) for group in groups]
+    return _place_sheets(output, tuple(sheets), current_date)
 
 
 def _place_sheets(output: TemplateOutput, sheets: tuple[SheetPlan, ...], current_date: str) -> list[WorkbookPlan]:
@@ -80,7 +83,7 @@ def _place_sheets(output: TemplateOutput, sheets: tuple[SheetPlan, ...], current
         return []
     if output.mode == OutputMode.WORKBOOK_SHEETS:
         name = output_file_name(output.file_name or '', current_date, output.template_id)
-        return [WorkbookPlan(output.template_id, name, sheets)]
+        return [WorkbookPlan(output.template_id, name, sheets, output.mode)]
     return [
         WorkbookPlan(
             output.template_id,
@@ -89,3 +92,7 @@ def _place_sheets(output: TemplateOutput, sheets: tuple[SheetPlan, ...], current
         )
         for sheet in sheets
     ]
+
+
+def _prepare_sheet(template_id: str, group: GroupOutput, source: GroupOutputSource) -> SheetPlan:
+    return SheetPlan(group, source.prepare(template_id, group), source.title_fields)

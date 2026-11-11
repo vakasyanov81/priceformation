@@ -13,7 +13,7 @@ def register_paths(output: TemplateOutput, group: GroupOutput, current_date: str
     name = output_file_name(pattern or '', current_date, where)
     owner = where if output.mode == OutputMode.SEPARATE_FILES else f'Шаблон {output.template_id}'
     _register_path(name, owner, paths, shared=output.mode == OutputMode.WORKBOOK_SHEETS)
-    _register_path(_jsonl_name(name, output.mode, group.id), where, paths)
+    _register_path(jsonl_name(name, output.mode, group.id), where, paths)
 
 
 def _register_path(name: str, owner: str, paths: dict[str, str], *, shared: bool = False) -> None:
@@ -24,7 +24,7 @@ def _register_path(name: str, owner: str, paths: dict[str, str], *, shared: bool
     paths[key] = owner
 
 
-def _jsonl_name(name: str, mode: OutputMode, group: object) -> str:
+def jsonl_name(name: str, mode: OutputMode, group: object) -> str:
     stem = Path(name).stem
     if mode == OutputMode.SEPARATE_FILES:
         return f'{stem}.jsonl'

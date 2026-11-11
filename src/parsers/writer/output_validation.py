@@ -6,6 +6,7 @@ from datetime import date
 from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from domain.row_item.field_registry import FIELD_KEYS
+from parsers.writer.jsonl_schema import positive_integer
 from parsers.writer.output_paths import register_paths
 from parsers.writer.output_structure import validate_structure
 from parsers.writer.templates.group_output import GroupOutput, TemplateOutput
@@ -36,6 +37,8 @@ def validate_outputs(
 
 
 def _validate_group(group: GroupOutput, schemas: Mapping[ProductGroup, Set[str]], where: str) -> None:
+    if not positive_integer(group.schema_version):
+        raise ConfigValidationError(f'{where} → schema_version: требуется положительное целое число')
     fields = schemas.get(group.id)
     if fields is None:
         raise ConfigValidationError(f'{where}: нет доступного преобразователя группы')

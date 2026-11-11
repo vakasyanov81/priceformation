@@ -6,6 +6,7 @@ from domain.product_group_handler import OutputFields
 from domain.product_group_result import TireAndDiskResult
 from domain.row_item.field_registry import FIELD_KEYS
 from domain.row_item.row_item import RowItem
+from parsers.common_price.doubles_order import priority_first
 from parsers.common_price.exclude_doubles import exclude_doubles
 from parsers.common_price.warehouses import merge_warehouse_rows
 from parsers.data_provider.doubles_settings import DoublesSettings
@@ -29,6 +30,10 @@ class TireOutputSource:
     def fields(self) -> frozenset[str]:
         return frozenset(FIELD_KEYS)
 
+    @property
+    def title_fields(self) -> frozenset[str]:
+        return frozenset(('title',))
+
     def prepare(self, template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
         return tuple(row.to_dict() for row in self.positions_for(template_id, settings))
 
@@ -42,3 +47,9 @@ class TireOutputSource:
         if self.doubles.excludes_in(template_id):
             rows = exclude_doubles(rows, self.doubles.priority_suppliers)
         return [row for row in rows if _keep_position(row, settings.filters)]
+
+
+def double_positions(rows: list[RowItem], settings: DoublesSettings) -> list[RowItem]:
+    """Отобрать и упорядочить кандидатов отчёта дублей внутри шинной группы."""
+    doubles = [row for row in rows if row.duplicate.is_double or row.duplicate.double_candidate]
+    return priority_first(doubles, settings.priority_suppliers)
