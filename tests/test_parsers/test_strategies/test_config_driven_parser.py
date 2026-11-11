@@ -28,6 +28,7 @@ from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 from parsers.json_reader import JsonPriceReader
+from parsers.registry import make_vendor_entry
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.product_types import LIGHT_TRUCK, PASSENGER, TRUCK
@@ -58,6 +59,7 @@ def _mock_parse_config() -> ParseConfiguration:
     mock.parser_params = _TEST_PARAMS
     mock.supplier = _TEST_PARAMS.supplier
     mock.config_provider = get_config_provider()
+    mock.routing = None
     mock.manufacturer_aliases.return_value = {}
     return mock
 
@@ -138,6 +140,52 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
     file_reader = parser.price_files.file_reader
     assert isinstance(file_reader, FileReader)
     assert file_reader.data_reader is JsonPriceReader
+
+
+def test_group_sections_keep_independent_columns_and_behavior() -> None:
+    """Каждая секция получает итоговые настройки своей группы, а не общее поведение поставщика."""
+    vendor_config = VendorConfig.from_dict(
+        {
+            'code': 'demo',
+            'name': 'Поставщик',
+            'product_groups': [
+                {
+                    'id': 'tire_and_disk',
+                    'file_templates': ['tires*.xlsx'],
+                    'columns': {'0': 'title'},
+                    'behavior': {'min_rest': 3},
+                    'sections': [
+                        {'id': 'tires'},
+                        {'id': 'disks', 'columns': {'1': 'model'}, 'behavior': {'min_rest': 8}},
+                    ],
+                },
+                {
+                    'id': 'batteries',
+                    'file_templates': ['batteries*.xlsx'],
+                    'sections': [{'id': 'batteries'}],
+                },
+            ],
+        },
+        'demo',
+        'demo.json',
+    )
+    tire_group = vendor_config.product_groups[0]
+
+    parsers = []
+    for section in tire_group.sections:
+        assert isinstance(section, VendorSection)
+        _, parse_config = make_vendor_entry(section, vendor_config, get_config_provider())
+        parsers.append(make_config_driven_parser(section, vendor_config, parse_config))
+
+    columns = [parser.price_files.parser_params.columns for parser in parsers]
+    min_rests = []
+    for parser in parsers:
+        hooks = parser.pipeline.hooks
+        assert hooks is not None
+        min_rests.append(hooks.min_rest)
+    assert columns == [{0: 'title'}, {1: 'model'}]
+    assert min_rests == [3, 8]
+    assert all(parser.group_handler.product_group is ProductGroup.TIRE_AND_DISK for parser in parsers)
 
 
 def test_strategy_hooks_without_cities_have_no_warehouse_filter() -> None:

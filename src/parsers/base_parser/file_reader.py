@@ -1,11 +1,15 @@
 """Чтение файлов прайсов и маппинг строк."""
 
+from collections.abc import Sequence
 from typing import Any
 
 from parsers.base_parser.price_source import PriceSource
 from parsers.json_reader import JsonPriceReader
+from parsers.json_reader import read_raw_tables as read_json_raw_tables
+from parsers.raw_table import RawTable
 from parsers.vendor_config.models import READER_JSON
 from parsers.xls_reader import IXlsReader, XlsReader
+from parsers.xls_reader import read_raw_tables as read_xls_raw_tables
 
 
 def data_reader_for(reader: str) -> type[Any]:
@@ -30,6 +34,19 @@ class FileReader:
     def raw_parse(self, path: str, parser_params: Any) -> list[dict[str, Any]]:
         reader = self.get_data_reader(path, parser_params)
         return reader.parse(parser_params.sheet_indexes)
+
+    def raw_tables(self, path: str, sheet_indexes: Sequence[int]) -> list[RawTable]:
+        reader = self.data_reader.get_instance(path, {'start_row': 0, 'columns': {}})
+        if isinstance(reader, XlsReader):
+            return read_xls_raw_tables(reader, sheet_indexes)
+        if isinstance(reader, JsonPriceReader):
+            return read_json_raw_tables(reader)
+        tables = reader.raw_tables(sheet_indexes)
+        if not isinstance(tables, list):
+            raise TypeError('Читатель исходных таблиц вернул неверный тип')
+        if not all(isinstance(table, RawTable) for table in tables):
+            raise TypeError('Читатель исходных таблиц вернул неверный тип')
+        return [table for table in tables if isinstance(table, RawTable)]
 
     def get_data_reader(self, path: str, parser_params: Any) -> IXlsReader:
         return self.data_reader.get_instance(

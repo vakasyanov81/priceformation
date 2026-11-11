@@ -58,11 +58,11 @@ def strategy_hooks_from_section(
     config_provider: ConfigProvider,
     folder: str = '',
 ) -> StrategyHooks:
-    """Собрать ``StrategyHooks`` из секции и поведения поставщика.
+    """Собрать ``StrategyHooks`` из итоговых настроек секции.
 
     Args:
         section: Секция поставщика.
-        behavior: Поведение поставщика (из ``VendorConfig.behavior``).
+        behavior: Разрешённое наследованием поведение секции.
         config_provider: Провайдер путей окружения (список складов поставщика).
         folder: Папка поставщика; нужна для фильтра складов по городу (``warehouse_cities``).
     """
@@ -110,9 +110,7 @@ def make_tire_and_disk_handler(
     parse_config: ParseConfiguration,
 ) -> TireAndDiskHandler:
     """Собрать модель, стратегии и pipeline группы шин и дисков."""
-    hooks = strategy_hooks_from_section(
-        section, vendor_config.behavior, parse_config.config_provider, vendor_config.folder
-    )
+    hooks = strategy_hooks_from_section(section, section.behavior, parse_config.config_provider, vendor_config.folder)
     policy = vendor_markup_policy_from_config(section)
     return make_handler(
         parse_config,

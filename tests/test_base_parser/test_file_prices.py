@@ -53,7 +53,7 @@ class _SilentParser(BaseParser):
         parse_params.supplier.name = _SUPPLIER_NAME
         parse_params.sheet_info = ''
         parse_params.file_templates = [_TEMPLATE]
-        parse_config = MagicMock(parser_params=parse_params, is_enabled=True)
+        parse_config = MagicMock(parser_params=parse_params, is_enabled=True, routing=None)
         super().__init__(parse_config, file_reader=FileReader(price_source=price_source))
         self.price_files.files = file_prices
 

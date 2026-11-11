@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from domain.row_item.row_item import RowItem
-from parsers.json_reader import JsonPriceNotListError, JsonPriceReader, columns_from_params
+from parsers.json_reader import JsonPriceNotListError, JsonPriceReader, columns_from_params, read_raw_tables
 
 _DISK_COLUMNS: dict[str, str] = {
     'cae': 'code_art',
@@ -88,3 +88,14 @@ def test_json_price_reader_missing_file_raises() -> None:
 def test_column_map_drops_int_keys() -> None:
     mapped = columns_from_params({'columns': {0: 'title', 'cae': 'code_art'}})
     assert mapped == {'cae': 'code_art'}
+
+
+def test_json_raw_tables_preserve_source_keys_and_row_numbers(tmp_path: Path) -> None:
+    reader = _reader(_write_json(tmp_path, 'disk.json', [_DISK_ROW]), _DISK_COLUMNS)
+
+    tables = read_raw_tables(reader)
+
+    assert len(tables) == 1
+    assert tables[0].sheet_index is None
+    assert tables[0].rows[0].row_number == 1
+    assert tables[0].rows[0].fields == _DISK_ROW

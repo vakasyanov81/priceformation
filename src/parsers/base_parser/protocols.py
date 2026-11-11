@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Protocol
 
 from domain.row_item.row_item import RowItem
+from parsers.raw_table import RawTable
 
 if TYPE_CHECKING:
     from parsers.xls_reader import IXlsReader
@@ -21,6 +23,8 @@ class FileReaderProtocol(Protocol):
     """Чтение файлов прайсов и маппинг строк."""
 
     def raw_parse(self, path: str, parser_params: Any) -> list[dict[str, Any]]: ...
+
+    def raw_tables(self, path: str, sheet_indexes: Sequence[int]) -> list[RawTable]: ...
 
     def get_data_reader(self, path: str, parser_params: Any) -> IXlsReader: ...
 

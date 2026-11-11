@@ -10,6 +10,7 @@ from typing import Any, cast
 from python_calamine import CalamineWorkbook
 
 from domain.exceptions import CoreExceptionError, make_raise
+from parsers.raw_table import RawRow, RawTable
 from parsers.xls_reader_row import (
     is_empty_row,
     is_end_row,
@@ -140,3 +141,26 @@ class MaxRowsReachedError(CoreExceptionError):
 
     def __init__(self, max_rows_count: int) -> None:
         super().__init__(f'maximum rows ({max_rows_count}) reached')
+
+
+def read_raw_tables(reader: XlsReader, sheet_indexes: Sequence[int]) -> list[RawTable]:
+    """Прочитать выбранные листы без strip и отображения колонок."""
+    sheet_names = reader._sheet_names()
+    selected = sheet_indexes or list(range(len(sheet_names)))
+    return [_raw_table(reader, index, sheet_names[index]) for index in selected]
+
+
+def _raw_table(reader: XlsReader, sheet_index: int, sheet_name: str) -> RawTable:
+    sheet = reader._load_sheet(sheet_name)
+    if len(sheet) > reader.reader_params.max_rows:
+        raise MaxRowsReachedError(reader.reader_params.max_rows)
+    end_col = min(sheet_cols(sheet), reader.reader_params.max_columns) if sheet else 0
+    rows = []
+    for row_number, source_row in enumerate(sheet, start=1):
+        rows.append(_raw_row(source_row[:end_col], row_number))
+    return RawTable(sheet_index=sheet_index, rows=tuple(rows))
+
+
+def _raw_row(source_row: Row, row_number: int) -> RawRow:
+    fields = {str(column): cell for column, cell in enumerate(source_row)}
+    return RawRow(fields, row_number)

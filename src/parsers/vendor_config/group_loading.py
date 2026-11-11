@@ -11,6 +11,7 @@ from parsers.vendor_config.group_models import BatteryConfig, BatterySection, Gr
 from parsers.vendor_config.group_schema import GroupPayload
 from parsers.vendor_config.group_validation import validate_group_settings
 from parsers.vendor_config.merge import merge_config
+from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import DEFAULT_START_ROW, VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
@@ -27,7 +28,7 @@ def read_group(declaration: GroupPayload, vendor: VendorConfig) -> GroupConfig:
         read_text(section, 'id', f'{where}.id')
         if 'product_group' in section:
             raise ConfigValidationError(f'{where} → product_group: группа определяется вложенностью')
-        validate_group_settings(section, where, declaration.id, reads_json=vendor.reader == 'json')
+        validate_group_settings(section, where, declaration.id, reads_json=vendor.reader == 'json', section_level=True)
         if declaration.id is ProductGroup.TIRE_AND_DISK:
             parsed_tires.append(VendorSection.from_dict(section, where, vendor, declaration.settings))
         else:
@@ -46,11 +47,16 @@ def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, 
     templates = read_str_list(payload, 'file_templates', where, ())
     if not templates:
         raise ConfigValidationError(f'{where} → file_templates: требуется непустой список')
+    sheet_indexes = read_int_list(section, 'sheet_indexes', where)
+    if vendor.reader == 'json' and sheet_indexes:
+        raise ConfigValidationError(f'{where} → sheet_indexes: JSON не содержит листов')
     return BatterySection(
         id=read_text(section, 'id', where),
         name=read_text(section, 'name', where, vendor.name),
         start_row=read_int(payload, 'start_row', where, DEFAULT_START_ROW),
         file_templates=templates,
         sheet_info=read_text(section, 'sheet_info', where, ''),
-        sheet_indexes=read_int_list(section, 'sheet_indexes', where),
+        sheet_indexes=sheet_indexes,
+        row_selector=RowSelector.from_section(section, where),
+        config_path=where,
     )

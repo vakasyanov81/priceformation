@@ -51,7 +51,9 @@ class BaseParser:
         self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
         self.stats = group_handler.stats if group_handler else ParserStats()
         self.price_files = PriceFiles(
-            self.settings.parser_params(), file_reader or _default_file_reader(self.settings, data_reader)
+            self.settings.parser_params(),
+            file_reader or _default_file_reader(self.settings, data_reader),
+            self.settings.parse_config().routing,
         )
         self.group_handler = group_handler or TireAndDiskHandler(
             settings=self.settings,

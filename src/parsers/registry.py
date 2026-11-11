@@ -19,7 +19,9 @@ from parsers.base_parser.config_driven_parser import (
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
+from parsers.base_parser.routing import VendorRouting
 from parsers.vendor_config.group_availability import ensure_groups_available, ensure_section_available
+from parsers.vendor_config.group_models import TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
 from parsers.vendor_config.section_models import VendorSection
@@ -51,6 +53,21 @@ def all_vendors_including_disabled(config_provider: ConfigProvider) -> list[Vend
     return _vendor_entries(config_provider, include_disabled=True)
 
 
+def _supported_sections(config: VendorConfig) -> tuple[VendorSection, ...]:
+    """Секции реализованных групп; доступность неподдержанных проверяется отдельно."""
+    sections: list[VendorSection] = []
+    for group in config.product_groups:
+        if isinstance(group, TireAndDiskConfig):
+            sections.extend(group.sections)
+    return tuple(sections)
+
+
+def _routing_for(config: VendorConfig) -> VendorRouting | None:
+    """Новая схема и явные селекторы используют совместную маршрутизацию поставщика."""
+    has_selectors = any(section.row_selector for group in config.product_groups for section in group.sections)
+    return VendorRouting(config) if config.configured_groups or has_selectors else None
+
+
 def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) -> list[VendorEntry]:
     """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
@@ -58,8 +75,10 @@ def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) 
         if not include_disabled and not config.enabled:
             continue
         ensure_groups_available(config)
+        routing = _routing_for(config)
         entries.extend(
-            (BaseParser, _build_parse_config(section, config, config_provider)) for section in config.sections
+            (BaseParser, _build_parse_config(section, config, config_provider, routing))
+            for section in _supported_sections(config)
         )
     return entries
 
@@ -72,9 +91,10 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     """
     for config in load_vendor_configs(config_provider).values():
         ensure_section_available(config, code)
-        for section in config.sections:
+        for section in _supported_sections(config):
             if section.id == code:
-                return (BaseParser, _build_parse_config(section, config, config_provider))
+                routing = _routing_for(config)
+                return (BaseParser, _build_parse_config(section, config, config_provider, routing))
     raise UnknownVendorError(code)
 
 
@@ -103,7 +123,8 @@ def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provi
     Returns:
         (BaseParser, ParseConfiguration) с прикреплёнными метаданными.
     """
-    return (BaseParser, _build_parse_config(section, config, config_provider))
+    routing = _routing_for(config)
+    return (BaseParser, _build_parse_config(section, config, config_provider, routing))
 
 
 def clear_registry() -> None:
@@ -112,8 +133,13 @@ def clear_registry() -> None:
 
 
 def _build_parse_config(
-    section: VendorSection, config: VendorConfig, config_provider: ConfigProvider
+    section: VendorSection,
+    config: VendorConfig,
+    config_provider: ConfigProvider,
+    routing: VendorRouting | None = None,
 ) -> ParseConfiguration:
     """Построить ParseConfiguration из секции конфига вендора."""
     params = parser_params_from_section(section, config.folder)
-    return make_parse_config(params, config_provider=config_provider, vendor_section=section, vendor_config=config)
+    return make_parse_config(
+        params, config_provider=config_provider, vendor_section=section, vendor_config=config, routing=routing
+    )

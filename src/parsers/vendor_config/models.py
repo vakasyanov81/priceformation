@@ -63,6 +63,8 @@ class VendorConfig:
         common = common or CommonVendorSettings()
         if 'product_groups' in payload:
             return _read_grouped_vendor(payload, folder, where, common)
+        if 'row_selector' in payload:
+            raise ConfigValidationError(f'{where} → row_selector: селектор задаётся только в секции')
         payload = merge_config(legacy_defaults(common), payload)
         reader = read_text(payload, 'reader', where, READER_XLS)
         if reader not in _READERS:

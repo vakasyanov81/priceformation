@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from typing import Any
 
+from parsers.raw_table import RawRow, RawTable
 from parsers.xls_reader import IXlsReader
 
 
@@ -27,3 +28,12 @@ class FakeXlsReader(IXlsReader):
 
         self.sheet_indexes = sheet_indexes
         return self.parse_result() if callable(self.parse_result) else self.parse_result
+
+    def raw_tables(self, sheet_indexes: Sequence[int] | None = None) -> list[RawTable]:
+        source_rows: list[dict[str, Any]] | None = (
+            self.parse_result() if callable(self.parse_result) else self.parse_result
+        )
+        rows: list[RawRow] = []
+        for index, row in enumerate(source_rows or [], start=1):
+            rows.append(RawRow(dict(row), index))
+        return [RawTable(0, tuple(rows))]

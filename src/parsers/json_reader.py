@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from domain.exceptions import CoreExceptionError
+from parsers.raw_table import RawRow, RawTable
 from parsers.xls_reader import IXlsReader
 
 type JsonRow = dict[str, Any]
@@ -63,3 +64,11 @@ def _load_json_rows(file_path: str) -> JsonRows:
     if not isinstance(loaded, list):
         raise JsonPriceNotListError()
     return cast(JsonRows, loaded)
+
+
+def read_raw_tables(reader: JsonPriceReader) -> list[RawTable]:
+    """Прочитать входной JSON-массив без переименования ключей."""
+    raw_rows = []
+    for index, row in enumerate(_load_json_rows(reader._file_path), start=1):
+        raw_rows.append(RawRow(dict(row), index))
+    return [RawTable(sheet_index=None, rows=tuple(raw_rows))]

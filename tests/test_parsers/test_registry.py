@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.config_context import get_config_provider
+from domain.product_groups import ProductGroup
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -99,6 +100,7 @@ def test_make_vendor_entry_attaches_section_and_config() -> None:
 
     assert config.vendor_section is section
     assert config.vendor_config is vendor_cfg
+    assert config.product_group is ProductGroup.TIRE_AND_DISK
     assert config.parser_params.supplier.folder_name == 'my_folder'
 
 

@@ -5,6 +5,7 @@ from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, read_object
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_str_list
+from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, PricingConfig, TitleConfig
 from parsers.vendor_config.strategy_names import validate_strategy_names
 
@@ -17,9 +18,12 @@ def validate_reading_settings(payload: RawConfig, where: str) -> None:
     read_str_list(payload, 'file_templates', where, ())
 
 
-def validate_group_settings(payload: RawConfig, where: str, group: ProductGroup, *, reads_json: bool) -> None:
+def validate_group_settings(
+    payload: RawConfig, where: str, group: ProductGroup, *, reads_json: bool, section_level: bool = False
+) -> None:
     """Проверить исходный уровень, даже если следующий уровень его полностью заменит."""
     validate_reading_settings(payload, where)
+    _validate_row_selector(payload, where, section_level)
     if group is ProductGroup.BATTERIES:
         for key in MODEL_KEYS:
             if key in payload:
@@ -31,3 +35,11 @@ def validate_group_settings(payload: RawConfig, where: str, group: ProductGroup,
     TitleConfig.from_dict(read_object(payload, 'title', where), f'{where} → title')
     PricingConfig.from_dict(read_object(payload, 'pricing', where), f'{where} → pricing')
     BehaviorConfig.from_dict(read_object(payload, 'behavior', where), f'{where} → behavior')
+
+
+def _validate_row_selector(payload: RawConfig, where: str, section_level: bool) -> None:
+    if 'row_selector' not in payload:
+        return
+    if not section_level:
+        raise ConfigValidationError(f'{where} → row_selector: селектор задаётся только в секции и не наследуется')
+    RowSelector.from_dict(payload.get('row_selector'), f'{where} → row_selector')

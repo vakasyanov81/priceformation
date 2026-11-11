@@ -1,9 +1,10 @@
 """Раздельные типизированные настройки товарных групп."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from domain.product_groups import ProductGroup
+from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
@@ -31,6 +32,8 @@ class BatterySection:
     file_templates: tuple[str, ...]
     sheet_info: str = ''
     sheet_indexes: tuple[int, ...] = ()
+    row_selector: RowSelector | None = None
+    config_path: str = field(default='', compare=False, repr=False)
 
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:

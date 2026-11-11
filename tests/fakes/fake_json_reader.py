@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import Any, ClassVar
 
 from parsers.json_reader import JsonRows, columns_from_params, rename_fields
+from parsers.raw_table import RawRow, RawTable
 from parsers.xls_reader import IXlsReader
 
 
@@ -25,3 +26,9 @@ class FakeJsonPriceReader(IXlsReader):
         rows = [dict(row) for row in self.raw_rows]
         rename_fields(rows, self._columns)
         return rows
+
+    def raw_tables(self, sheet_indexes: Sequence[int] | None = None) -> list[RawTable]:
+        rows = []
+        for index, row in enumerate(self.raw_rows, start=1):
+            rows.append(RawRow(dict(row), index))
+        return [RawTable(None, tuple(rows))]
