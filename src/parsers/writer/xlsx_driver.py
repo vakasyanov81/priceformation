@@ -72,11 +72,18 @@ class XlsxWriterDriver(IXlsDriver):
     def add_sheet(self, sheet_name: str) -> XlsxWriterDriver:
         if self.work_book is None:
             raise WorkbookNotInitializedError()
-        sheet = self.work_book.active
-        if sheet is None:
-            raise WorksheetNotInitializedError()
-        sheet.title = sheet_name
+        if self.work_sheet is None:
+            sheet = self.work_book.active
+            if sheet is None:
+                raise WorksheetNotInitializedError()
+            sheet.title = sheet_name
+        else:
+            sheet = self.work_book.create_sheet(sheet_name)
         self.work_sheet = sheet
+        self.current_col_index = 0
+        self.current_row_index = 0
+        self.col_max_length = {}
+        self._column_formats = {}
         return self
 
     def write_head(self, names: list[str], row: int = 0) -> None:
@@ -124,12 +131,11 @@ class XlsxWriterDriver(IXlsDriver):
         known_max = self.col_max_length.get(col_idx)
         if known_max is None or known_max < content_length:
             self.col_max_length[col_idx] = content_length
+            self.work_sheet.column_dimensions[number_to_excel_column(col_idx)].width = content_length + 4
 
     def save(self) -> None:
         """save file"""
         if self.work_sheet is None or self.work_book is None or self._file_name is None:
             raise WorkbookNotInitializedError()
-        for col_index, max_len in self.col_max_length.items():
-            self.work_sheet.column_dimensions[number_to_excel_column(col_index)].width = max_len + 4
         self.work_book.save(self._file_name)
         self.work_book.close()

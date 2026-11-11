@@ -6,6 +6,7 @@ from typing import Any
 import openpyxl
 import pytest
 from openpyxl.styles import Font
+from openpyxl.worksheet.worksheet import Worksheet
 
 from parsers.writer.xlsx_driver import (
     WorkbookNotInitializedError,
@@ -171,3 +172,54 @@ def test_column_format_is_set_on_every_cell_of_column(tmp_path: Any) -> None:
     assert sheet.cell(row=2, column=_COL_A).number_format == _TEXT_FORMAT
     assert sheet.cell(row=3, column=_COL_A).number_format == _TEXT_FORMAT
     assert sheet.cell(row=3, column=_COL_A + 1).number_format == 'General'
+
+
+def _driver_with_first_sheet(tmp_path: Path) -> XlsxWriterDriver:
+    """Заполнить первый лист с форматом и заливкой."""
+    driver = XlsxWriterDriver()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    driver.add_sheet(_SHEET)
+    driver.set_column_format({_COL_A: _TEXT_FORMAT})
+    driver.write_head([_HEAD_A, _HEAD_B])
+    driver.write(2, 0, _BODY_TEXT, _color=_FILL_HEX)
+    return driver
+
+
+def test_multiple_sheets_keep_independent_content_and_styles(tmp_path: Path) -> None:
+    """Новый лист не переименовывает старый и не наследует его состояние."""
+    driver = _driver_with_first_sheet(tmp_path)
+    driver.add_sheet(_OTHER)
+    assert driver.current_col_index == 0
+    assert driver.current_row_index == 0
+    assert driver.col_max_length == {}
+    driver.write_head([_SHORT])
+    driver.write(1, 0, 1)
+    driver.add_sheet('Пустой')
+    driver.save()
+    _assert_independent_sheets(tmp_path / _FILE_NAME)
+
+
+def _assert_independent_sheets(path: Path) -> None:
+    """Проверить независимость листов после сохранения и повторного открытия."""
+    book = openpyxl.load_workbook(path)
+    try:
+        assert book.sheetnames == [_SHEET, _OTHER, 'Пустой']
+        first = book[_SHEET]
+        second = book[_OTHER]
+        expected_first = [(_HEAD_A, _HEAD_B), (None, None), (_BODY_TEXT, None)]
+        assert list(first.values) == expected_first
+        assert list(second.values) == [(_SHORT,), (1,)]
+        _assert_independent_styles(first, second)
+        assert list(book['Пустой'].values) == []
+    finally:
+        book.close()
+
+
+def _assert_independent_styles(first: Worksheet, second: Worksheet) -> None:
+    """Формат, заливка и ширина первого листа не переходят на второй."""
+    assert first['A3'].number_format == _TEXT_FORMAT
+    assert str(first['A3'].fill.fgColor.rgb).endswith(_FILL_HEX)
+    assert second['A2'].number_format == 'General'
+    assert second['A2'].fill.fill_type is None
+    assert first.column_dimensions['A'].width == len(_BODY_TEXT) + _WIDTH_PAD
+    assert second.column_dimensions['A'].width == len(_SHORT) + _WIDTH_PAD

@@ -10,7 +10,8 @@ from collections.abc import Callable
 
 from domain.protocols import ConfigProvider
 from domain.row_item.row_item import RowItem
-from parsers.common_price.output import CommonPriceOut, WriteDriverFactory, XlsWriterFactory
+from parsers.common_price.output import CommonPriceOut
+from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 
 
 class PriceReportService:

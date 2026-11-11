@@ -30,6 +30,10 @@ class TireOutputSource:
         return frozenset(FIELD_KEYS)
 
     def prepare(self, template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
+        return tuple(row.to_dict() for row in self.positions_for(template_id, settings))
+
+    def positions_for(self, template_id: str, settings: GroupOutput) -> list[RowItem]:
+        """Применить правила вывода к модели до передачи её сериализатору."""
         if settings.id != self.package.product_group:
             raise ValueError('Преобразователь tire_and_disk получил настройки другой группы')
         rows = list(self.package.positions)
@@ -37,4 +41,4 @@ class TireOutputSource:
             rows = merge_warehouse_rows(rows)
         if self.doubles.excludes_in(template_id):
             rows = exclude_doubles(rows, self.doubles.priority_suppliers)
-        return tuple(row.to_dict() for row in rows if _keep_position(row, settings.filters))
+        return [row for row in rows if _keep_position(row, settings.filters)]

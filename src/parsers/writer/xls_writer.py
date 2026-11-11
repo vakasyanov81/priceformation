@@ -77,13 +77,13 @@ class XlsWriter:
         self,
         driver: IXlsDriver,
         parse_result: list[PriceRow],
-        template: type[IWriteTemplate],
+        template: type[IWriteTemplate] | IWriteTemplate,
         *,
         result_folder: str,
     ) -> None:
         """init"""
         self.driver: IXlsDriver = driver
-        self.template: IWriteTemplate = template()
+        self.template = template() if isinstance(template, type) else template
         self.exclude = self.template.exclude()
         self.parse_result = parse_result
         self._result_folder = result_folder
@@ -92,7 +92,7 @@ class XlsWriter:
         """Create result folder, fill workbook, save."""
         Path(self._result_folder).mkdir(parents=True, exist_ok=True)
         self.driver.init_workbook(self._result_folder, self.get_file_name())
-        self.driver.add_sheet('price')
+        self.driver.add_sheet(self.template.get_sheet_name())
         self.driver.set_column_format(self.template.get_columns_format())
         legend = self.template.colors().get('legend') or []
         offset = write_legend(self.driver, legend)
@@ -104,9 +104,8 @@ class XlsWriter:
 
     def get_file_name(self) -> str:
         """get file name for writing"""
-        file_template = self.template.get_file_name()
         current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-        return file_template.format(now=current_date)
+        return self.template.resolve_file_name(current_date)
 
     def get_result_path(self) -> str:
         """Absolute path of the written file."""

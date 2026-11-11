@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from domain.config_context import set_config_provider
-from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
+from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.configure import configure_services, ensure_services_configured

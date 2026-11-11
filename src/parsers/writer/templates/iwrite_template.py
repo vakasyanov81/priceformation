@@ -47,6 +47,14 @@ class IWriteTemplate(TemplateColumns):
         """get file name pattern"""
         return self.__FILE__
 
+    def resolve_file_name(self, current_date: str) -> str:
+        """Подставить дату в имя старого шаблона."""
+        return self.get_file_name().format(now=current_date)
+
+    def get_sheet_name(self) -> str:
+        """Название листа старого одногруппового шаблона."""
+        return 'price'
+
     def colors(self) -> dict[str, Any]:
         """get colors"""
         return dict(self.__COLOR__)

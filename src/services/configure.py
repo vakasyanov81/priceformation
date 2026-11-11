@@ -1,7 +1,7 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
 from domain.config_context import get_config_provider
-from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
+from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsx_driver import XlsxWriterDriver
 from services.doubles_service import DoublesService
