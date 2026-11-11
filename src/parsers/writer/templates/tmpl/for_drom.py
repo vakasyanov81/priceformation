@@ -11,6 +11,8 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumn
 class ForDrom(IWriteTemplate):
     """write template for drom.ru"""
 
+    template_id = 'for_drom'
+
     __COLUMNS__: ClassVar[WriteColumns] = [
         {'Тип товара': {'style': {'width': 40}, 'field': RowItem.type_production.name}},
         {'Бренд': {'style': {'width': 30}, 'field': RowItem.manufacturer.name}},

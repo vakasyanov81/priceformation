@@ -64,5 +64,7 @@ _SPECS: tuple[tuple[str, str], ...] = (
 class ForFull(IWriteTemplate):
     """write template with all parsed fields for CLI"""
 
+    template_id = 'for_full'
+
     __COLUMNS__: ClassVar[WriteColumns] = [{title: {'field': field}} for title, field in _SPECS]
     __FILE__ = 'price_full_{now}.xlsx'

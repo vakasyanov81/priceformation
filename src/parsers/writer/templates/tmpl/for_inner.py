@@ -25,6 +25,8 @@ DOUBLES_LEGEND: list[tuple[str, str]] = [
 class ForInner(IWriteTemplate):
     """write template for internal use"""
 
+    template_id = 'for_inner'
+
     __COLUMNS__: ClassVar[WriteColumns] = [
         {
             'Тип товара': {
