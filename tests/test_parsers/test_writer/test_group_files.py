@@ -127,9 +127,31 @@ def test_unknown_field_of_second_model_fails_before_creating_folder(tmp_path: Pa
     assert not folder.exists()
 
 
-def test_workbook_mode_rejected_before_creating_folder(tmp_path: Path) -> None:
-    output = replace(_output(), mode=OutputMode.WORKBOOK_SHEETS)
-    folder = tmp_path / 'result'
-    with pytest.raises(ConfigValidationError, match='workbook_sheets'):
-        _writer(folder).write([output], _sources())
-    assert not folder.exists()
+@pytest.mark.parametrize(
+    'empty_other, expected',
+    [(False, [('Метка',), ('Шина',)]), (True, [('Метка',)])],
+)
+def test_workbook_sheets_keep_models_and_styles_independent(
+    tmp_path: Path, empty_other: bool, expected: list[tuple[str]]
+) -> None:
+    output = _output()
+    groups = tuple(replace(group, file_name=None) for group in output.groups)
+    output = replace(output, mode=OutputMode.WORKBOOK_SHEETS, groups=groups, file_name='all_{now}.xlsx')
+    sources = _sources()
+    if empty_other:
+        sources[OTHER] = OtherOutputSource(TestGroupResult(()))
+    paths = _writer(tmp_path).write([output], sources, current_date=DATE)
+    assert paths == [str(tmp_path / f'all_{DATE}.xlsx')]
+    book = openpyxl.load_workbook(paths[0])
+    try:
+        assert book.sheetnames == ['Шины', 'Тестовая модель']
+        tires = book['Шины']
+        other = book['Тестовая модель']
+        assert list(tires.values) == [('Шинное название',), ('Шина',)]
+        assert list(other.values) == expected
+        assert tires['A2'].number_format == '@'
+        assert tires['A2'].fill.fgColor.rgb == '0000FF00'
+        assert other['A2'].number_format == 'General'
+        assert other['A2'].fill.fill_type is None
+    finally:
+        book.close()

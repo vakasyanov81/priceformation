@@ -92,15 +92,19 @@ class XlsWriter:
         """Create result folder, fill workbook, save."""
         Path(self._result_folder).mkdir(parents=True, exist_ok=True)
         self.driver.init_workbook(self._result_folder, self.get_file_name())
+        self.write_sheet()
+        self.driver.save()
+
+    def write_sheet(self) -> None:
+        """Заполнить отдельный лист уже открытой книги без сохранения."""
         self.driver.add_sheet(self.template.get_sheet_name())
         self.driver.set_column_format(self.template.get_columns_format())
         legend = self.template.colors().get('legend') or []
         offset = write_legend(self.driver, legend)
-        self.driver.write_head(self.col_names(), offset)
         helpers = [ColumnHelper(col) for col in self.template.columns()]
+        self.driver.write_head([col.name for col in helpers], offset)
         for row_index, product in enumerate(make_exclude(self.parse_result, self.exclude), start=offset):
             self._write_row(product, row_index, helpers, self._get_color(product))
-        self.driver.save()
 
     def get_file_name(self) -> str:
         """get file name for writing"""
@@ -110,10 +114,6 @@ class XlsWriter:
     def get_result_path(self) -> str:
         """Absolute path of the written file."""
         return str(Path(self._result_folder, self.get_file_name()).resolve())
-
-    def col_names(self) -> list[str]:
-        """get column names"""
-        return [ColumnHelper(col).name for col in self.template.columns()]
 
     def _get_color(self, product: PriceRow) -> list[RowColor]:
         """get colors: правила, подошедшие строке, по приоритету"""
