@@ -10,10 +10,8 @@ from pathlib import Path
 from domain.exceptions import ConfigValidationError
 from domain.protocols import ConfigProvider
 from infrastructure.data.file_reader import read_json_file
-from parsers.data_provider.json_fields import RawConfig
 from parsers.vendor_config.activation import apply_activation, load_activation
 from parsers.vendor_config.common import COMMON_FILE_STEM, CommonVendorSettings
-from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.section_identity import validate_group_section_ids
 from parsers.vendor_config.source import select_source
@@ -33,17 +31,12 @@ def _load_common(folder: str) -> CommonVendorSettings:
     return CommonVendorSettings.from_dict(read_json_file(str(path)), path.name)
 
 
-def _read_vendor(path: Path, defaults: RawConfig) -> VendorConfig:
+def _read_vendor(path: Path, common: CommonVendorSettings) -> VendorConfig:
     """Конфиг одного поставщика поверх общих настроек; `enabled` в нём запрещён — статус в vendor_activation.json."""
     selected = select_source(read_json_file(str(path)), path.name)
-    if 'product_groups' in selected and defaults:
-        raise ConfigValidationError(
-            f'{path.name} → product_groups: сначала перенесите defaults из _common.json в настройки групп'
-        )
-    raw_config = merge_config(defaults, selected)
-    if _ENABLED_KEY in raw_config:
+    if _ENABLED_KEY in selected or _ENABLED_KEY in common.defaults:
         raise ConfigValidationError(f'{path.name}: «enabled» перенесён в vendor_activation.json, уберите поле')
-    return VendorConfig.from_dict(raw_config, path.stem, path.name)
+    return VendorConfig.from_dict(selected, path.stem, path.name, common=common)
 
 
 @lru_cache(maxsize=1)
@@ -52,9 +45,9 @@ def _load_folder(folder: str) -> dict[str, VendorConfig]:
     directory = Path(folder)
     if not directory.is_dir():
         return {}
-    defaults = _load_common(folder).defaults
+    common = _load_common(folder)
     configs = {
-        path.stem: _read_vendor(path, defaults)
+        path.stem: _read_vendor(path, common)
         for path in sorted(directory.glob(f'*{_JSON_SUFFIX}'))
         if not path.name.startswith(_SERVICE_PREFIX)
     }

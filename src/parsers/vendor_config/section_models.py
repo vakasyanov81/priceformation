@@ -9,7 +9,7 @@ from parsers.data_provider.json_fields import RawConfig, as_config_object, read_
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
 from parsers.vendor_config.merge import merge_config
-from parsers.vendor_config.slot_configs import CategoryConfig, PricingConfig, TitleConfig
+from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, PricingConfig, TitleConfig
 
 if TYPE_CHECKING:
     from parsers.vendor_config.models import VendorConfig
@@ -34,6 +34,7 @@ class VendorSection:
     category: CategoryConfig = field(default_factory=CategoryConfig)
     title: TitleConfig = field(default_factory=TitleConfig)
     pricing: PricingConfig = field(default_factory=PricingConfig)
+    behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
 
     @property
     def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
@@ -61,4 +62,5 @@ class VendorSection:
             category=CategoryConfig.from_dict(read_object(payload, 'category', where), f'{where} → category'),
             title=TitleConfig.from_dict(read_object(payload, 'title', where), f'{where} → title'),
             pricing=PricingConfig.from_dict(read_object(payload, 'pricing', where), f'{where} → pricing'),
+            behavior=BehaviorConfig.from_dict(read_object(payload, 'behavior', where), f'{where} → behavior'),
         )

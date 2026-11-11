@@ -6,10 +6,12 @@ from typing import Any
 from domain.exceptions import ConfigValidationError
 from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object
 from parsers.vendor_config.columns import COLUMNS_KEY, read_columns
+from parsers.vendor_config.common import CommonVendorSettings, legacy_defaults
 from parsers.vendor_config.fields import read_int, read_str_list, read_text
 from parsers.vendor_config.group_loading import read_group
 from parsers.vendor_config.group_models import GroupConfig, TireAndDiskConfig
 from parsers.vendor_config.group_schema import read_group_payloads
+from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import (
     BehaviorConfig,
@@ -53,11 +55,15 @@ class VendorConfig:
         return self.configured_groups or (TireAndDiskConfig(self.sections, self.behavior),)
 
     @classmethod
-    def from_dict(cls, raw: Any, folder: str, where: str) -> VendorConfig:
+    def from_dict(
+        cls, raw: Any, folder: str, where: str, *, common: CommonVendorSettings | None = None
+    ) -> VendorConfig:
         """Разобрать конфиг; `folder` — имя файла без расширения, `where` — путь до ключа в ошибках."""
         payload = as_config_object(raw, where)
+        common = common or CommonVendorSettings()
         if 'product_groups' in payload:
-            return _read_grouped_vendor(payload, folder, where)
+            return _read_grouped_vendor(payload, folder, where, common)
+        payload = merge_config(legacy_defaults(common), payload)
         reader = read_text(payload, 'reader', where, READER_XLS)
         if reader not in _READERS:
             raise ConfigValidationError(f'{where}: «reader» должен быть «xls» или «json», получено {reader!r}')
@@ -91,12 +97,12 @@ def _read_sections(payload: RawConfig, where: str, vendor: VendorConfig) -> tupl
     )
 
 
-def _read_grouped_vendor(payload: RawConfig, folder: str, where: str) -> VendorConfig:
+def _read_grouped_vendor(payload: RawConfig, folder: str, where: str, common: CommonVendorSettings) -> VendorConfig:
     """Собрать независимые группы; старые атрибуты временно представляют только шинную группу."""
-    declarations = read_group_payloads(payload, where)
     reader = read_text(payload, 'reader', where, READER_XLS)
     if reader not in _READERS:
         raise ConfigValidationError(f'{where} → reader: допустимы xls или json')
+    declarations = read_group_payloads(payload, where, common, reads_json=reader == READER_JSON)
     vendor = VendorConfig(
         folder=folder,
         code=read_text(payload, 'code', where),

@@ -4,6 +4,7 @@ from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, as_config_object, read_object
 from parsers.vendor_config.fields import read_text
+from parsers.vendor_config.group_validation import validate_reading_settings
 
 READING_KEYS = ('start_row', 'file_templates')
 type GroupObjects = tuple[RawConfig, ...]
@@ -15,6 +16,7 @@ def reading_defaults(payload: RawConfig, where: str) -> RawConfig:
     for key in defaults:
         if key not in READING_KEYS:
             raise ConfigValidationError(f'{where} → defaults → {key}: допустимы только настройки чтения')
+    validate_reading_settings(defaults, f'{where} → defaults')
     return defaults
 
 

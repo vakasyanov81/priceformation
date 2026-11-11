@@ -9,6 +9,7 @@ from parsers.vendor_config.fields import read_int, read_int_list, read_str_list,
 from parsers.vendor_config.group_fields import object_list
 from parsers.vendor_config.group_models import BatteryConfig, BatterySection, GroupConfig, TireAndDiskConfig
 from parsers.vendor_config.group_schema import GroupPayload
+from parsers.vendor_config.group_validation import validate_group_settings
 from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.section_models import DEFAULT_START_ROW, VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
@@ -26,6 +27,7 @@ def read_group(declaration: GroupPayload, vendor: VendorConfig) -> GroupConfig:
         read_text(section, 'id', f'{where}.id')
         if 'product_group' in section:
             raise ConfigValidationError(f'{where} → product_group: группа определяется вложенностью')
+        validate_group_settings(section, where, declaration.id, reads_json=vendor.reader == 'json')
         if declaration.id is ProductGroup.TIRE_AND_DISK:
             parsed_tires.append(VendorSection.from_dict(section, where, vendor, declaration.settings))
         else:
@@ -41,9 +43,6 @@ def read_group(declaration: GroupPayload, vendor: VendorConfig) -> GroupConfig:
 def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, vendor: VendorConfig) -> BatterySection:
     """Прочитать только определённые контрактом настройки чтения аккумуляторов."""
     payload = merge_config(inherited, section)
-    for key in ('columns', 'category', 'title', 'pricing', 'behavior'):
-        if key in payload:
-            raise ConfigValidationError(f'{where} → {key}: поля и стратегии batteries ещё не определены')
     templates = read_str_list(payload, 'file_templates', where, ())
     if not templates:
         raise ConfigValidationError(f'{where} → file_templates: требуется непустой список')
