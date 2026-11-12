@@ -71,6 +71,7 @@ def test_single_battery_can_be_published(stock: int) -> None:
         ({'price_recommended': None}, 'price_recommended'),
         ({'rest_count': 0}, 'остаток 0'),
         ({'rest_count': None}, 'остаток None'),
+        ({'rest_count': '?'}, 'остаток None'),
     ],
 )
 def test_unpublishable_offer_is_excluded_with_context(
@@ -85,11 +86,14 @@ def test_unpublishable_offer_is_excluded_with_context(
     assert issue in caplog.text
 
 
-@pytest.mark.parametrize('title', ['XTREME +EFBX 60', 'Неизвестная линейка 60', 'prefix XTREME Arctic 60'])
-def test_unknown_line_is_an_error_with_offer_context(title: str) -> None:
+@pytest.mark.parametrize(
+    'title', ['XTREME Classic 132 пр (A.4, конус, AL)', 'Неизвестная линейка 60', 'prefix XTREME Arctic 60']
+)
+def test_unknown_line_preserves_title_without_inventing_model(title: str) -> None:
     battery_handler = _battery_handler()
-    with pytest.raises(ValueError, match=r'\[batteries\] plant, код 001:.*линейка'):
-        battery_handler.process([battery_handler.create_position(_fields(title=title))])
+    parsed = battery_handler.process_fields([_fields(title=title)])
+    assert parsed.positions[0].identity.title == title
+    assert parsed.positions[0].identity.model is None
 
 
 def test_line_matching_normalizes_case_and_spaces_without_removing_words() -> None:
@@ -150,3 +154,24 @@ def test_zero_recommended_price_is_known_and_never_replaced_by_purchase_price() 
     parsed = battery_handler.process_fields([_fields(price_recommended=0)])
     assert parsed.positions[0].offer.sale_price == Decimal(0)
     assert parsed.positions[0].offer.price_opt == Decimal('4000.10')
+
+
+@pytest.mark.parametrize(
+    'raw, expected',
+    [
+        ('*12', 12),
+        (' *12 ', 12),
+        ('ъъъ0,5', None),
+    ],
+)
+def test_plant_warranty_is_normalized_before_model_creation(raw: str, expected: int | None) -> None:
+    fields = _fields(warranty_months=raw)
+    original = fields.copy()
+    position = _battery_handler().create_position(fields)
+    assert position.offer.warranty_months == expected
+    assert fields == original
+
+
+def test_unlisted_declared_model_is_preserved() -> None:
+    parsed = _battery_handler().process_fields([_fields(title='Новая серия 60', model='Новая серия')])
+    assert parsed.positions[0].identity.model == 'Новая серия'

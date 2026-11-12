@@ -46,7 +46,9 @@ def integer(raw: object) -> int | None:
 
 
 def stock(raw: object) -> int | None:
-    """Пороговые остатки приводятся как у шин: >30 и более 30 становятся 30."""
+    """Пороговые остатки дают нижнюю границу, знак вопроса — неизвестный остаток."""
+    if isinstance(raw, str) and raw.strip() == '?':
+        return None
     if isinstance(raw, str):
         raw = raw.lower()
         for marker in _STOCK_MARKERS:

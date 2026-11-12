@@ -242,3 +242,8 @@ def test_registry_conversions_agree_with_typed_model(plant_fields: dict[str, obj
         raw = plant_fields.get(key)
         expected[key] = converter(raw)
     assert actual == expected
+
+
+@pytest.mark.parametrize('raw', ['?', ' ? '])
+def test_question_mark_stock_preserves_unknown(raw: str) -> None:
+    assert BatteryItem.from_fields({'rest_count': raw}).offer.rest_count is None

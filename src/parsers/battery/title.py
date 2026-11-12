@@ -1,4 +1,4 @@
-"""Нормализация названия и выделение линейки из явного списка."""
+"""Нормализация названия и необязательное распознавание известных линеек."""
 
 from dataclasses import replace
 
@@ -6,10 +6,12 @@ from domain.battery.item import BatteryItem
 
 
 def normalize_title(position: BatteryItem, lines: tuple[str, ...]) -> BatteryItem:
-    """Сохранить слова названия; линейку искать целиком в начале с границей слова."""
+    """Сохранить любое название; список линеек служит подсказкой для заполнения модели."""
     title = ' '.join((position.identity.title or '').split())
     matches = [line for line in lines if _matches(title, line)]
-    if len(matches) != 1:
+    if not matches:
+        return replace(position, identity=replace(position.identity, title=title))
+    if len(matches) > 1:
         raise ValueError(f'ожидается одна известная линейка, найдены {matches}: {title!r}')
     model = matches[0]
     declared = position.identity.model

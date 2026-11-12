@@ -11,6 +11,7 @@ from domain.product_group_result import ProductGroupResult
 from domain.product_groups import ProductGroup
 from parsers.battery.grouping import group_batteries
 from parsers.battery.output_fields import battery_fields
+from parsers.battery.plant_fields import normalize_fields
 from parsers.battery.processing import log_skipped, publication_issue
 from parsers.battery.title import normalize_title
 from parsers.vendor_config.battery_settings import BatterySettings
@@ -29,7 +30,7 @@ class BatteryHandler:
 
     def create_position(self, fields: InputFields) -> BatteryItem:
         try:
-            return BatteryItem.from_fields({**fields, 'supplier_name': self._supplier})
+            return BatteryItem.from_fields({**normalize_fields(fields), 'supplier_name': self._supplier})
         except ValueError as exc:
             offer_code = fields.get('code')
             raise ValueError(f'[batteries] {self._supplier}, код {offer_code}: {exc}') from exc
