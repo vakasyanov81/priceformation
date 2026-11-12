@@ -16,6 +16,16 @@ from tests.fakes.fake_driver import FakeXlwtDriver
 from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemplate, write_data
 
 
+@pytest.mark.parametrize('field', ['price_opt', 'price_markup', 'price_recommended', 'sale_price'])
+@pytest.mark.parametrize('price', [1500.0, 1500.25])
+def test_price_output_preserves_only_significant_fraction(field: str, price: float) -> None:
+    """Целая цена выводится целым числом, дробная сохраняется без округления."""
+    actual = writer_mod.get_value({'Цена': {'field': field}}, {field: price})
+
+    assert actual == price
+    assert str(actual) == str(price).removesuffix('.0')
+
+
 def test_true_value_replaces_true_with_text() -> None:
     """true_value: True в поле → заданный текст; False и пусто остаются пустыми."""
     column = {'Уценка': {'field': 'marked_down', 'true_value': 'Да'}}
