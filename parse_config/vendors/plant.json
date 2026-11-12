@@ -56,7 +56,13 @@
             0
           ]
         }
-      ]
+      ],
+      "section_selector": {
+        "column": "1",
+        "keywords": [
+          "АКБ"
+        ]
+      }
     }
   ]
 }

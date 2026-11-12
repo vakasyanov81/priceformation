@@ -40,10 +40,10 @@ def _validate_start_row(path: str, table: RawTable, sections: list[RouteSection]
 
 
 def _validate_required_selectors(path: str, table: RawTable, sections: list[RouteSection]) -> None:
-    missing = [section for section in sections if section.row_selector is None]
+    missing = [section for section in sections if not _has_selector(section)]
     if len(sections) > 1 and missing:
         raise ConfigValidationError(
-            f'Общий лист {path}, {table.sheet_index}: каждая секция должна задать row_selector; '
+            f'Общий лист {path}, {table.sheet_index}: каждая секция должна задать row_selector или section_selector; '
             + ', '.join(section.config_path for section in sections)
         )
 
@@ -66,3 +66,7 @@ def _selector_overlap(first: RouteSection, second: RouteSection) -> set[str]:
     if first_selector.column != second_selector.column:
         return set()
     return set(first_selector.accepted_values) & set(second_selector.accepted_values)
+
+
+def _has_selector(section: RouteSection) -> bool:
+    return section.row_selector is not None or section.section_selector is not None

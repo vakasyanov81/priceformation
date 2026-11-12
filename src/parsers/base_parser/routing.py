@@ -1,7 +1,6 @@
 """Совместная маршрутизация файлов, листов и исходных строк всех секций поставщика."""
 
 from collections import defaultdict
-from collections.abc import Iterator
 from pathlib import Path
 
 from domain.exceptions import SupplierNotHavePricesError
@@ -15,6 +14,7 @@ from parsers.base_parser.routing_rows import (
     selects_table,
 )
 from parsers.base_parser.routing_validation import ensure_sheet_indexes, validate_table
+from parsers.base_parser.section_selection import section_candidates
 from parsers.raw_table import RawRow, RawTable
 from parsers.vendor_config.group_models import BatterySection
 from parsers.vendor_config.models import VendorConfig
@@ -127,22 +127,13 @@ def _route_table(
     if not sections:
         return 0
     validate_table(path, table, sections)
-    data_rows = _data_rows(table, sections[0].start_row)
     unrouted = 0
-    for row in data_rows:
-        if not _assign_row(config, path, table, row, sections, section_rows):
+    for row, candidates in section_candidates(table, sections):
+        if not _assign_row(config, path, table, row, candidates, section_rows):
             unrouted += 1
     if unrouted:
         log_unrouted(config, path, table, unrouted)
     return unrouted
-
-
-def _data_rows(table: RawTable, start_row: int) -> Iterator[RawRow]:
-    for row in table.rows:
-        if row.row_number < start_row:
-            continue
-        if any(row.fields.values()):
-            yield row
 
 
 def _assign_row(

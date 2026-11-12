@@ -7,6 +7,7 @@ from parsers.vendor_config.battery_settings import validate_battery_settings
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_str_list
 from parsers.vendor_config.row_selector import RowSelector
+from parsers.vendor_config.section_selector import SectionSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, PricingConfig, TitleConfig
 from parsers.vendor_config.strategy_names import validate_strategy_names
 
@@ -25,6 +26,7 @@ def validate_group_settings(
     """Проверить исходный уровень, даже если следующий уровень его полностью заменит."""
     validate_reading_settings(payload, where)
     _validate_row_selector(payload, where, section_level)
+    SectionSelector.from_payload(payload, where)
     if group is ProductGroup.BATTERIES:
         validate_battery_settings(payload, where, reads_json=reads_json)
         return

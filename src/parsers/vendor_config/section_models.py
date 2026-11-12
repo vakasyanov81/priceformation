@@ -10,6 +10,7 @@ from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
 from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.row_selector import RowSelector
+from parsers.vendor_config.section_selector import SectionSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, PricingConfig, TitleConfig
 
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class VendorSection:
     pricing: PricingConfig = field(default_factory=PricingConfig)
     behavior: BehaviorConfig = field(default_factory=BehaviorConfig)
     row_selector: RowSelector | None = None
+    section_selector: SectionSelector | None = None
     config_path: str = field(default='', compare=False, repr=False)
 
     @property
@@ -71,5 +73,6 @@ class VendorSection:
             pricing=PricingConfig.from_dict(read_object(payload, 'pricing', where), f'{where} → pricing'),
             behavior=BehaviorConfig.from_dict(read_object(payload, 'behavior', where), f'{where} → behavior'),
             row_selector=RowSelector.from_section(section, where),
+            section_selector=SectionSelector.from_payload(payload, where),
             config_path=where,
         )

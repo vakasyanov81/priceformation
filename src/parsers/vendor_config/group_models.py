@@ -9,6 +9,7 @@ from domain.product_groups import ProductGroup
 from parsers.vendor_config.battery_settings import BatterySettings
 from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import VendorSection
+from parsers.vendor_config.section_selector import SectionSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
 
@@ -36,6 +37,7 @@ class BatterySection:
     sheet_info: str = ''
     sheet_indexes: tuple[int, ...] = ()
     row_selector: RowSelector | None = None
+    section_selector: SectionSelector | None = None
     config_path: str = field(default='', compare=False, repr=False)
     columns: Mapping[int | str, str] = field(default_factory=lambda: MappingProxyType({}))
     processing: BatterySettings = field(default_factory=BatterySettings)

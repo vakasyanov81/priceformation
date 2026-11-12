@@ -15,6 +15,7 @@ from parsers.vendor_config.group_validation import validate_group_settings
 from parsers.vendor_config.merge import merge_config
 from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import DEFAULT_START_ROW, VendorSection
+from parsers.vendor_config.section_selector import SectionSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
 if TYPE_CHECKING:
@@ -60,6 +61,7 @@ def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, 
         sheet_info=read_text(section, 'sheet_info', where, ''),
         sheet_indexes=sheet_indexes,
         row_selector=RowSelector.from_section(section, where),
+        section_selector=SectionSelector.from_payload(payload, where),
         config_path=where,
         columns=read_columns(payload, where, reads_json=vendor.reader == 'json', group=ProductGroup.BATTERIES),
         processing=BatterySettings.from_dict(payload, where),
