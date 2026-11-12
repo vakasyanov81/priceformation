@@ -1,7 +1,9 @@
 """Разбор письма: заголовки, дата, вложения, отправитель."""
 
+import json
 from email import message_from_bytes, message_from_string
 from email.message import EmailMessage, Message
+from pathlib import Path
 
 import pytest
 
@@ -14,6 +16,7 @@ from parsers.mail.message import (
     sender_matches,
     subject_matches,
 )
+from parsers.mail.models import MailConfig
 
 _ENCODED_PRICE = '=?utf-8?B?0L/RgNCw0LnRgQ==?='  # «прайс»
 
@@ -29,6 +32,22 @@ def _multipart(sender: str, subject: str, filename: str, payload: bytes) -> Mess
     message.set_content('тело')
     message.add_attachment(payload, maintype='application', subtype='octet-stream', filename=filename)
     return message_from_string(message.as_string())
+
+
+@pytest.mark.parametrize('date', ['10.11.2026', '12.11.2026'])
+def test_plant_profile_matches_changing_date(date: str) -> None:
+    """Профиль Плант находит прайс независимо от даты в теме и имени вложения."""
+    path = Path('tests/parse_config_example/mail.json')
+    config = MailConfig.from_dict(json.loads(path.read_text()), str(path))
+    profile = config.profiles['plant']
+    subject = f'Прайс на аккумуляторы "План- Т" ТД СибЭлектроисточник {date}'
+    filename = f'ПРАЙС 200 PLAN-T.PRO СЭИ {date}.xls'
+    message = _multipart(profile.sender, subject, filename, b'price')
+
+    assert sender_matches(message, profile.sender, sender_is_domain=profile.sender_is_domain)
+    assert profile.subject_keyword is not None
+    assert subject_matches(message, profile.subject_keyword)
+    assert [name for name, _part in matching_attachments(message, profile.attachment_glob)] == [filename]
 
 
 def test_decode_header_value_none() -> None:

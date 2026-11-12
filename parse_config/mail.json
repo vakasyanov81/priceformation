@@ -5,6 +5,12 @@
     "folder": "Price"
   },
   "profiles": {
+    "plant": {
+      "enabled": 1,
+      "sender": "${MAIL_SENDER_PLANT}",
+      "subject_keyword": "Прайс на аккумуляторы",
+      "attachment_glob": "ПРАЙС 200 PLAN-T.PRO СЭИ *.xls*"
+    },
     "pioner": {
       "enabled": 1,
       "sender": "${MAIL_SENDER_PIONER}",

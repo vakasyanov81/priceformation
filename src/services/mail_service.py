@@ -19,8 +19,6 @@ from services.vendor_activity import skip_mail_fetch
 
 logger = logging.getLogger(__name__)
 
-_PRICE_FILENAME = 'price.xlsx'
-
 
 @dataclass(frozen=True, slots=True)
 class MailFetchResult:
@@ -89,7 +87,7 @@ def _save_found(folder: str, found: FoundPrice) -> MailFetchResult | None:
     except PriceDownloadError as exc:
         logger.warning(f'Прайс поставщика «{folder}» не скачан: {exc}')
         return None
-    destination = _destination(folder)
+    destination = _destination(folder, found.filename)
     save_price(destination, payload)
     return MailFetchResult(
         folder=folder,
@@ -107,6 +105,7 @@ def _price_payload(found: FoundPrice) -> bytes:
     return download_price(found.link)
 
 
-def _destination(folder: str) -> Path:
-    """Путь сохранения прайса: file_prices/<папка>/price.xlsx."""
-    return Path(get_config_provider().price_folder(folder)) / _PRICE_FILENAME
+def _destination(folder: str, filename: str) -> Path:
+    """Путь сохранения с расширением вложения: file_prices/<папка>/price.xls[x]."""
+    extension = Path(filename).suffix.lower()
+    return Path(get_config_provider().price_folder(folder)) / f'price{extension}'
