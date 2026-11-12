@@ -15,8 +15,10 @@ from infrastructure.data.price_backup import backup_prices, default_backup_folde
 from parsers.price_schema.diff import compare_schemas
 from parsers.price_schema.models import FileHead, PriceSchema
 from parsers.price_schema.schema import build_schema, read_file_head
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.group_models import BatterySection
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import load_vendor_configs
+from parsers.vendor_config.section_models import VendorSection
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +71,15 @@ class PriceSchemaService:
             logger.warning(warning)
         return warnings
 
+    def _sections(self, vendor: VendorConfig) -> Generator[VendorSection | BatterySection]:
+        """Секции всех объявленных групп без смешивания моделей настроек."""
+        for group in vendor.product_groups:
+            yield from group.sections
+
     def _vendor_warnings(self, vendor: VendorConfig, heads: dict[Path, FileHead | None]) -> list[str]:
         """Расхождения схем всех секций поставщика; повторы (секции на один файл) убираются."""
         warnings: dict[str, None] = {}
-        for section in vendor.sections:
+        for section in self._sections(vendor):
             for path in _section_files(vendor.folder, section, self._provider()):
                 old_path = self._backup / vendor.folder / path.name
                 for change in _file_changes(old_path, path, section, heads):
@@ -83,7 +90,7 @@ class PriceSchemaService:
 def _file_changes(
     old_path: Path,
     new_path: Path,
-    section: VendorSection,
+    section: VendorSection | BatterySection,
     heads: dict[Path, FileHead | None],
 ) -> list[str]:
     """Расхождения одного файла; нет копии или файл не читается — нечего сравнивать."""
@@ -92,7 +99,7 @@ def _file_changes(
     old_head, new_head = _head(old_path, heads), _head(new_path, heads)
     if old_head is None or new_head is None:
         return []
-    return compare_schemas(_schema(old_head, section), _schema(new_head, section), section.columns)
+    return compare_schemas(_schema(old_head, section), _schema(new_head, section), _columns(section))
 
 
 def _head(path: Path, heads: dict[Path, FileHead | None]) -> FileHead | None:
@@ -106,18 +113,31 @@ def _head(path: Path, heads: dict[Path, FileHead | None]) -> FileHead | None:
     return heads[path]
 
 
-def _schema(head: FileHead, section: VendorSection) -> PriceSchema:
+def _schema(head: FileHead, section: VendorSection | BatterySection) -> PriceSchema:
     """Схема файла для секции."""
-    return build_schema(head, start_row=section.start_row, sheet_indexes=section.sheet_indexes, columns=section.columns)
+    return build_schema(
+        head, start_row=section.start_row, sheet_indexes=section.sheet_indexes, columns=_columns(section)
+    )
 
 
-def _section_files(folder: str, section: VendorSection, config_provider: ConfigProvider) -> list[Path]:
+def _section_files(folder: str, section: VendorSection | BatterySection, config_provider: ConfigProvider) -> list[Path]:
     """Файлы секции в file_prices/<folder> по её шаблонам."""
     root = Path(config_provider.price_folder(folder))
     found = {path for template in section.file_templates for path in root.glob(template)}
     return sorted(path for path in found if path.is_file())
 
 
-def _message(vendor: VendorConfig, section: VendorSection, path: Path, change: str) -> str:
+def _message(vendor: VendorConfig, section: VendorSection | BatterySection, path: Path, change: str) -> str:
     """Предупреждение для пользователя."""
-    return f'Поставщик «{section.name}» ({vendor.folder}/{path.name}): изменилась схема прайса — {change}'
+    location = f'{vendor.folder}/{path.name}'
+    group = section.product_group
+    return (
+        f'Поставщик «{section.name}» ({location}), '
+        f'группа «{group.display_name}» ({group.value}): '
+        f'изменилась схема прайса — {change}'
+    )
+
+
+def _columns(section: VendorSection | BatterySection) -> dict[int | str, str]:
+    """У каждой группы собственные колонки; пустое объявление проверяет только листы."""
+    return dict(section.columns)

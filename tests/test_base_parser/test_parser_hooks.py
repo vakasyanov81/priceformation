@@ -19,8 +19,10 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.category_service import CategoryLookup, CategoryService
 from parsers.base_parser.markup_policy import IdentityMarkupPolicy
+from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 from parsers.base_parser.title_service import TitleService
 
 _OPT = 100
@@ -67,7 +69,6 @@ def _base_params() -> BasePriceParseConfigurationParams:
             stop_words=(),
             file_templates=(),
             sheet_indexes=(),
-            row_item_adaptor=RowItem,
         ),
     )
 
@@ -213,7 +214,9 @@ def test_pipeline_min_rest_step_runs_rest_strategy() -> None:
     strategy = MagicMock()
     strategy.item_rest.return_value = _REST_LOW
     hooks = StrategyHooks(rest=strategy, min_rest=4, pipeline=('min_rest',))
-    parser = BaseParser(parse_config=ParseConfiguration(_base_params()), strategy_hooks=hooks)
+    parse_config = ParseConfiguration(_base_params())
+    group_handler = TireAndDiskHandler(settings=ParserSettings(parse_config), strategy_hooks=hooks)
+    parser = BaseParser(parse_config=parse_config, group_handler=group_handler)
 
     row = RowItem({'rest_count': _REST_LOW})
     parser.pipeline.process_row(row)

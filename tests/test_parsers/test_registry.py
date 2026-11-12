@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.config_context import get_config_provider
-from domain.row_item.row_item import RowItem
+from domain.product_groups import ProductGroup
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
@@ -26,7 +26,8 @@ from parsers.registry import (
     vendor_entry_for,
     vendor_markup_policy_for,
 )
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 
 pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 
@@ -86,7 +87,12 @@ def test_entries_carry_folder_and_vendor_config() -> None:
 
 def test_make_vendor_entry_attaches_section_and_config() -> None:
     """make_vendor_entry привязывает секцию и конфиг и берёт папку из folder."""
-    vendor_cfg = VendorConfig(folder='my_folder', enabled=True, code='c', name='n', start_row=1)
+    vendor_cfg = VendorConfig(
+        folder='my_folder',
+        enabled=True,
+        code='c',
+        name='n',
+    )
     section = VendorSection(
         id='c',
         name='n',
@@ -99,6 +105,7 @@ def test_make_vendor_entry_attaches_section_and_config() -> None:
 
     assert config.vendor_section is section
     assert config.vendor_config is vendor_cfg
+    assert config.product_group is ProductGroup.TIRE_AND_DISK
     assert config.parser_params.supplier.folder_name == 'my_folder'
 
 
@@ -112,7 +119,6 @@ def test_legacy_config_without_vendor_is_enabled_and_has_no_markup_policy() -> N
         stop_words=(),
         file_templates=(),
         sheet_indexes=(),
-        row_item_adaptor=RowItem,
     )
 
     config = make_parse_config(parser_params, config_provider=MagicMock())
@@ -185,4 +191,4 @@ def test_all_vendors_returns_all_enabled() -> None:
     # autosnab (1 секция) + poshk (1) + four_tochki (2) + mim (3) + zapaska (2) = 9
     assert len(entries) == 9
     ids = {config.vendor_section.id for _, config in entries if config.vendor_section}
-    assert ids == {'6', '1', '5', '4', '2', '22'}
+    assert ids == {'6', '1', '5', '55', '4', '42', '43', '2', '22'}

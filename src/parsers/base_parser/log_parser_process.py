@@ -4,7 +4,7 @@ logging parse process
 
 import logging
 
-from .parse_statistic import ParseResultStatistic
+from .parse_statistic import ResultStatistic
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class LoggerParseProcess:
 
         logger.info(f'{self.parser_repr} // старт')
 
-    def log_finish(self, result_statistic: ParseResultStatistic | None = None) -> None:
+    def log_finish(self, result_statistic: ResultStatistic | None = None) -> None:
         """logging finish parse process"""
         if result_statistic:
             min_percent, max_percent = result_statistic.real_percents_markup()

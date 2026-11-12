@@ -22,9 +22,9 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
 )
 from parsers.base_parser.category_service import CategoryLookup, CategoryService
-from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.row_filters import DEFAULT_MIN_REST, drop_empty_rest
+from parsers.base_parser.tire_and_disk_handler import finish_processing
 
 _SUPPLIER = ParseParamsSupplier(folder_name='test', name='Тест', code='99')
 _TITLE = 'ok title'
@@ -47,7 +47,6 @@ def _base_params() -> BasePriceParseConfigurationParams:
             stop_words=(),
             file_templates=(),
             sheet_indexes=(),
-            row_item_adaptor=RowItem,
         ),
     )
 
@@ -145,15 +144,15 @@ def test_enrich_counts_blacklist_after_title() -> None:
     assert parser.stats.black_list_skips == 1
 
 
-def test_after_process_counts_titles_not_composed() -> None:
-    """Итог разбора считает позиции, у которых название шины не собралось из полей."""
+def test_group_process_counts_titles_not_composed() -> None:
+    """Обработчик группы считает позиции, у которых название шины не собралось из полей."""
     parser = _parser()
-    parser.parsed_items = [
+    rows = [
         RowItem({'title': _TITLE, 'rest_count': _REST, 'price_opt': _PRICE, 'title_not_composed': True}),
         RowItem({'title': _TITLE, 'rest_count': _REST, 'price_opt': _PRICE}),
     ]
 
-    parser.after_process()
+    finish_processing(rows, parser.stats)
 
     assert parser.stats.titles_not_composed == 1
 
@@ -206,7 +205,6 @@ def _params_with_sheet_info(sheet_info: str) -> BasePriceParseConfigurationParam
             stop_words=base.parser_params.stop_words,
             file_templates=base.parser_params.file_templates,
             sheet_indexes=base.parser_params.sheet_indexes,
-            row_item_adaptor=base.parser_params.row_item_adaptor,
         ),
     )
 
@@ -285,7 +283,7 @@ class _NoPriceFiles(PriceFiles):
     """Коллаборатор без файлов: parse() не лезет в папку поставщика."""
 
     def __init__(self) -> None:
-        super().__init__(ParserSettings(), MagicMock())
+        super().__init__(MagicMock(), MagicMock())
 
     def resolve(self) -> list[str]:
         self.files = []

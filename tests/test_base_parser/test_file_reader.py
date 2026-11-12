@@ -1,10 +1,14 @@
 """tests for FileReader.raw_parse: путь файла и вкладки доходят до читателя."""
 
+import json
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, ClassVar
 from unittest.mock import MagicMock
 
 from parsers.base_parser.file_reader import FileReader
+from parsers.json_reader import JsonPriceReader
+from parsers.xls_reader import XlsReader
 
 _PATH = 'prices/vendor.xls'
 _START_ROW = 3
@@ -45,3 +49,26 @@ def test_raw_parse_passes_path_and_sheet_indexes() -> None:
     assert instance.file_path == _PATH
     assert instance.reader_params == {'start_row': _START_ROW - 1, 'columns': _COLUMNS}
     assert instance.parsed_indexes == _SHEET_INDEXES
+
+
+def test_raw_tables_use_real_xls_adapter() -> None:
+    path = Path(__file__).parents[1] / 'test_parsers' / 'fixtures' / 'price.xlsx'
+    reader = FileReader(data_reader=XlsReader, price_source=MagicMock())
+
+    tables = reader.raw_tables(str(path), (1,))
+
+    first_row = tables[0].rows[0]
+    assert len(tables) == 1
+    assert tables[0].sheet_index == 1
+    assert first_row.fields['1'] == 'Наименование'
+
+
+def test_raw_tables_use_real_json_adapter(tmp_path: Path) -> None:
+    path = tmp_path / 'price.json'
+    path.write_text(json.dumps([{'kind': 'шина'}]), encoding='utf-8')
+    reader = FileReader(data_reader=JsonPriceReader, price_source=MagicMock())
+
+    tables = reader.raw_tables(str(path), ())
+
+    assert tables[0].sheet_index is None
+    assert tables[0].rows[0].fields == {'kind': 'шина'}

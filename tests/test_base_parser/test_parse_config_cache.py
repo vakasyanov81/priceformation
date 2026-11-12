@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.config_context import get_config_provider
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfiguration,
@@ -27,7 +26,6 @@ def _parser_params() -> ParserParams:
         stop_words=(),
         file_templates=(),
         sheet_indexes=(0,),
-        row_item_adaptor=RowItem,
     )
 
 

@@ -14,12 +14,11 @@ _GIVEN = ['given_disks.xls']
 
 
 def _price_files(found: list[str] | None = None) -> tuple[PriceFiles, MagicMock]:
-    settings = MagicMock()
-    settings.parser_params.return_value.supplier.name = _SUPPLIER_NAME
-    settings.parser_params.return_value.row_item_adaptor = RowItem
+    parser_params = MagicMock()
+    parser_params.supplier.name = _SUPPLIER_NAME
     reader = MagicMock()
     reader.price_files.return_value = found or []
-    return PriceFiles(settings, reader), reader
+    return PriceFiles(parser_params, reader), reader
 
 
 def test_resolve_finds_files_in_supplier_folder() -> None:
@@ -53,9 +52,11 @@ def test_read_rows_collects_rows_from_all_files() -> None:
     assert rows == [{'title': 'a'}, {'title': 'b'}]
 
 
-def test_map_items_builds_row_items_with_adaptor() -> None:
-    price_files, _reader = _price_files()
+def test_read_positions_reads_files_and_maps_rows() -> None:
+    """Чтение и отображение колонок — одна операция, модель задаёт фабрика."""
+    price_files, reader = _price_files()
+    reader.raw_parse.side_effect = [[{'title': 'a'}], [{'title': 'b'}]]
 
-    mapped = price_files.map_items([{'title': 'a'}])
+    positions = price_files.read_positions(['x_tires.xls', 'x_disks.xls'], RowItem)
 
-    assert [row.identity.title for row in mapped] == ['a']
+    assert [row.identity.title for row in positions] == ['a', 'b']

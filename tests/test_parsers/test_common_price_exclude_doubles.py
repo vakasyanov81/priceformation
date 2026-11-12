@@ -1,5 +1,6 @@
 """Исключение дублей в шаблоне: одна строка на группу дублей."""
 
+from dataclasses import replace
 from typing import Any
 
 from domain.row_item.row_item import RowItem
@@ -138,6 +139,23 @@ def test_main_double_is_part_of_group() -> None:
     kept = exclude_doubles([_double(_POSHK, 5000, 1), candidate])
 
     assert [row.vendor.supplier_name for row in kept] == [_MIM]
+
+
+def test_unassigned_duplicates_remain_separate_from_zero_group() -> None:
+    """Отсутствие номера не объединяет строки и не совпадает с допустимым номером ноль."""
+    unassigned = _double(_POSHK, 5000, 2)
+    unassigned.duplicate = replace(unassigned.duplicate, group_by_params=None)
+    another = _double(_MIM, 5000, 3)
+    another.duplicate = replace(another.duplicate, group_by_params=None)
+    zero_group = [
+        _double(_POSHK, 6000, 1, group=0),
+        _double(_MIM, 4000, 4, group=0),
+    ]
+
+    kept = exclude_doubles([unassigned, *zero_group, another])
+
+    assert kept == [unassigned, zero_group[1], another]
+    assert [row.stock.rest_count for row in kept] == [2, 4, 3]
 
 
 def test_on_order_detected_by_word_in_available() -> None:

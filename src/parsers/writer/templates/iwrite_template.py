@@ -2,13 +2,16 @@
 write template interface
 """
 
+from copy import deepcopy
 from typing import Any, ClassVar
 
-from parsers.writer.templates.column_helper import ColumnHelper
+from domain.product_groups import ProductGroup
+from parsers.writer.templates import group_output
+from parsers.writer.templates.column_template import TemplateColumns
 
-type WriteColumns = list[dict[str, Any]]
-type WriteColors = dict[str, Any]
-type WriteExclude = dict[str, Any]
+type WriteColumns = group_output.WriteColumns
+type WriteColors = group_output.WriteColors
+type WriteExclude = group_output.WriteExclude
 
 # Настройки, которые шаблон задаёт классом. Имена в __COLUMNS__-стиле придуманы
 # исторически, но новые опечатки в них ловятся на импорте, а не на записи
@@ -17,7 +20,7 @@ DEFAULT_TEMPLATE_FILE = 'default_result.xls'
 EMPTY_COLUMN = 'empty_column'
 
 
-class IWriteTemplate:
+class IWriteTemplate(TemplateColumns):
     """interface for writing template
 
     Настройки объявлены явно, с пустыми дефолтами: подкласс, который задал
@@ -25,18 +28,16 @@ class IWriteTemplate:
     молча пишет файл без колонок.
     """
 
+    template_id: ClassVar[str] = 'default'
+
     __EMPTY_COLUMN__ = EMPTY_COLUMN
 
-    __COLUMNS__: ClassVar[WriteColumns] = []
     __FILE__: ClassVar[str] = DEFAULT_TEMPLATE_FILE
     __EXCLUDE__: ClassVar[WriteExclude] = {}
     __COLOR__: ClassVar[WriteColors] = {}
     __MERGE_WAREHOUSES__: ClassVar[bool] = False
 
     """ write template interface """
-
-    def __init__(self) -> None:
-        self._columns_formated: dict[str, ColumnHelper] | None = None
 
     def exclude(self) -> dict[str, Any]:
         """get exclude"""
@@ -46,27 +47,31 @@ class IWriteTemplate:
         """get file name pattern"""
         return self.__FILE__
 
-    def columns(self) -> list[dict[str, Any]]:
-        """get columns"""
-        return list(self.__COLUMNS__)
+    def resolve_file_name(self, current_date: str) -> str:
+        """Подставить дату в имя старого шаблона."""
+        return self.get_file_name().format(now=current_date)
+
+    def get_sheet_name(self) -> str:
+        """Название листа старого одногруппового шаблона."""
+        return 'price'
 
     def colors(self) -> dict[str, Any]:
         """get colors"""
         return dict(self.__COLOR__)
 
-    def get_columns(self) -> dict[str, ColumnHelper]:
-        """cached columns as ColumnHelper map"""
-        if self._columns_formated is None:
-            self._columns_formated = {}
-            for column in self.columns():
-                column_helper = ColumnHelper(column)
-                self._columns_formated[column_helper.name] = column_helper
-        return self._columns_formated
+    def output_spec(self) -> group_output.TemplateOutput:
+        """Описать текущий шинный шаблон для группового плана записи.
 
-    def get_columns_format(self) -> dict[int, str]:
-        """{1: "@ or 0.00 or ..."}"""
-        formats = {}
-        for index, col in enumerate(self.get_columns().values(), start=1):
-            if col.format:
-                formats[index] = col.format
-        return formats
+        Копии вложенных настроек принадлежат описанию и не меняют шаблон.
+        Многогрупповой шаблон переопределяет этот метод.
+        """
+        group = group_output.GroupOutput(
+            id=ProductGroup.TIRE_AND_DISK,
+            sheet_name='price',
+            columns=deepcopy(self.columns()),
+            filters=deepcopy(self.exclude()),
+            formatting=deepcopy(self.colors()),
+            merge_warehouses=self.__MERGE_WAREHOUSES__,
+            file_name=self.get_file_name(),
+        )
+        return group_output.TemplateOutput(self.template_id, group_output.OutputMode.SEPARATE_FILES, (group,))

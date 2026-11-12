@@ -1,23 +1,38 @@
 {
   "code": "6",
   "name": "Автоснабжение",
-  "start_row": 2,
-  "title": { "strategy": "fill_fields_from_title", "compose": true },
-  "pricing": { "policy": "identity" },
-  "behavior": { "min_rest": 0 },
-  "sections": [
+  "product_groups": [
     {
-      "sheet_indexes": [0],
-      "columns": {
-        "0": "type_production",
-        "1": "manufacturer_name",
-        "2": "title",
-        "3": "season",
-        "4": "spike",
-        "5": "price_opt",
-        "6": "rest_count",
-        "7": "available"
-      }
+      "sections": [
+        {
+          "sheet_indexes": [
+            0
+          ],
+          "columns": {
+            "0": "type_production",
+            "1": "manufacturer_name",
+            "2": "title",
+            "3": "season",
+            "4": "spike",
+            "5": "price_opt",
+            "6": "rest_count",
+            "7": "available"
+          },
+          "id": "6"
+        }
+      ],
+      "title": {
+        "strategy": "fill_fields_from_title",
+        "compose": true
+      },
+      "pricing": {
+        "policy": "identity"
+      },
+      "behavior": {
+        "min_rest": 0
+      },
+      "start_row": 2,
+      "id": "tire_and_disk"
     }
   ]
 }

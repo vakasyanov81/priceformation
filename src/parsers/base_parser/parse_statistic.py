@@ -3,6 +3,7 @@ statistic for price formation result
 """
 
 from dataclasses import dataclass, field
+from typing import Protocol
 
 from domain.row_item.row_item import RowItem
 
@@ -25,6 +26,22 @@ class ParserStats:
     titles_not_composed: int = 0
     homoglyph_fixes: int = 0
     homoglyph_suspects: int = 0
+
+
+class ResultStatistic(Protocol):
+    """Общие показатели завершённого разбора без зависимости от модели товара."""
+
+    def real_percents_markup(self) -> tuple[float, float]:
+        """Минимальная и максимальная наценка в процентах."""
+        ...
+
+    def real_absolute_markup(self) -> tuple[float, float]:
+        """Минимальная и максимальная наценка в рублях."""
+        ...
+
+    def count_items(self) -> int:
+        """Количество обработанных позиций."""
+        ...
 
 
 class ParseResultStatistic:

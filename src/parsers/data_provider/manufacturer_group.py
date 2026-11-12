@@ -29,9 +29,8 @@ def manufacturer_group(
     name = (manufacturer or '').strip()
     if not name or not aliases_map:
         return name.lower()
-    map_id = id(aliases_map)
-    if map_id != _GROUP_CACHE[0]:
-        _GROUP_CACHE[0] = map_id
+    if aliases_map is not _GROUP_CACHE[0]:
         _GROUP_CACHE[1] = _build_lookup(aliases_map)
+        _GROUP_CACHE[0] = aliases_map
     grouped = cast(dict[str, str], _GROUP_CACHE[1])
     return grouped.get(name.lower(), name.lower())

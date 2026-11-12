@@ -29,7 +29,7 @@ def all_vendor_supplier_info(config_provider: ConfigProvider) -> dict[SupplierCo
     """Все поставщики: код → название, без учёта enabled."""
     supplier_info: dict[SupplierCode, SupplierName] = {}
     for config in load_vendor_configs(config_provider).values():
-        for section in config.sections:
+        for section in config.all_sections:
             supplier_info[section.id] = section.name
     return supplier_info
 
@@ -38,7 +38,7 @@ def all_vendor_supplier_catalog(config_provider: ConfigProvider) -> dict[Supplie
     """Все поставщики: код → folder (folder_name) и название (sup_title)."""
     catalog: dict[SupplierCode, dict[str, str]] = {}
     for config in load_vendor_configs(config_provider).values():
-        for section in config.sections:
+        for section in config.all_sections:
             catalog[section.id] = {
                 'sup_code': config.folder,
                 'sup_title': section.name,
@@ -53,7 +53,7 @@ def split_vendor_supplier_info(
     enabled: dict[SupplierCode, SupplierName] = {}
     disabled: dict[SupplierCode, SupplierName] = {}
     for config in load_vendor_configs(config_provider).values():
-        for section in config.sections:
+        for section in config.all_sections:
             target = enabled if config.enabled else disabled
             target[section.id] = section.name
     return enabled, disabled

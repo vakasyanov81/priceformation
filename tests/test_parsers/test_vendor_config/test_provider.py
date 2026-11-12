@@ -16,9 +16,19 @@ from parsers.vendor_config.provider import (
 
 FOLDER = 'vendors'
 ACTIVATION_FILE = 'vendor_activation.json'
-MIM_JSON = (
-    '{"code": "mim", "name": "Мим", "start_row": 2, '
-    '"file_templates": ["*.xls"], "sections": [{"columns": {"1": "manufacturer_name"}}]}'
+MIM_JSON = json.dumps(
+    {
+        'code': 'mim',
+        'name': 'Мим',
+        'product_groups': [
+            {
+                'id': 'tire_and_disk',
+                'start_row': 2,
+                'file_templates': ['*.xls'],
+                'sections': [{'id': 'mim', 'columns': {'1': 'manufacturer_name'}}],
+            }
+        ],
+    }
 )
 
 
@@ -141,7 +151,8 @@ def test_common_defaults_apply_to_every_vendor(fake_config_provider: FakeConfigP
     """Общие настройки `_common.json` действуют у поставщика, пока он не задал своё значение."""
     folder = _vendors_dir(fake_config_provider)
     folder.joinpath('_common.json').write_text(
-        '{"defaults": {"start_row": 7, "behavior": {"min_rest": 0}, "title": {"params_from_title": true}}}',
+        '{"defaults": {"start_row": 7}, "product_groups": [{"id": "tire_and_disk", '
+        '"defaults": {"behavior": {"min_rest": 0}, "title": {"params_from_title": true}}}]}',
         encoding='utf-8',
     )
     folder.joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
@@ -150,7 +161,7 @@ def test_common_defaults_apply_to_every_vendor(fake_config_provider: FakeConfigP
 
     assert set(load_vendor_configs(fake_config_provider)) == {'mim'}
     assert config.sections[0].start_row == 2
-    assert config.behavior.min_rest == 0
+    assert config.sections[0].behavior.min_rest == 0
     assert config.sections[0].title.params_from_title is True
 
 
@@ -158,12 +169,15 @@ def test_common_markup_rules_apply_until_vendor_sets_own(fake_config_provider: F
     """Общая шкала `markup_rules` действует у поставщика без своей; своя заменяет общую целиком."""
     folder = _vendors_dir(fake_config_provider)
     folder.joinpath('_common.json').write_text(
-        '{"defaults": {"pricing": {"rules": {"markup_rules": [{"min": 0, "max": 100, "percent": 0.06}]}}}}',
+        '{"product_groups": [{"id": "tire_and_disk", "defaults": {"pricing": {"rules": '
+        '{"markup_rules": [{"min": 0, "max": 100, "percent": 0.06}]}}}}]}',
         encoding='utf-8',
     )
     folder.joinpath('mim.json').write_text(MIM_JSON, encoding='utf-8')
-    own_rules = '"pricing": {"rules": {"markup_rules": [{"min": 50, "max": 200, "percent": 0.2}]}}, "code"'
-    poshk_json = MIM_JSON.replace('"code"', own_rules, 1)
+    own_rules = (
+        '"pricing": {"rules": {"markup_rules": [{"min": 50, "max": 200, "percent": 0.2}]}}, "id": "tire_and_disk"'
+    )
+    poshk_json = MIM_JSON.replace('"mim"', '"poshk"').replace('"id": "tire_and_disk"', own_rules, 1)
     folder.joinpath('poshk.json').write_text(poshk_json, encoding='utf-8')
 
     configs = load_vendor_configs(fake_config_provider)

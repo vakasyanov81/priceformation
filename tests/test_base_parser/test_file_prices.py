@@ -53,15 +53,12 @@ class _SilentParser(BaseParser):
         parse_params.supplier.name = _SUPPLIER_NAME
         parse_params.sheet_info = ''
         parse_params.file_templates = [_TEMPLATE]
-        parse_config = MagicMock(parser_params=parse_params, is_enabled=True)
+        parse_config = MagicMock(parser_params=parse_params, is_enabled=True, routing=None)
         super().__init__(parse_config, file_reader=FileReader(price_source=price_source))
         self.price_files.files = file_prices
 
     def process(self) -> int:
         return 0
-
-    def after_process(self) -> None:
-        """Skip percent markup in file-source tests."""
 
 
 def test_file_prices_source_uses_config_provider(tmp_path: Any, fake_config_provider: FakeConfigProvider) -> None:

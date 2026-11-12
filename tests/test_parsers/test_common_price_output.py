@@ -1,24 +1,31 @@
 """tests for CommonPriceOut"""
 
+from datetime import date
 from pathlib import Path
 from typing import cast
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
 from domain.config_context import get_config_provider
+from domain.exceptions import ConfigValidationError
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.common_price.output import CommonPriceOut, jsonl_output_files
+from parsers.common_price.output import CommonPriceOut
 from parsers.data_provider.doubles_settings import DOUBLES_CONFIG_FILE, DoublesSettings
-from parsers.writer.jsonl_writer import RESULT_META_FILE
+from parsers.writer.jsonl_meta import RESULT_META_FILE
+from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError
+from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
+from parsers.writer.templates.iwrite_template import IWriteTemplate
+from parsers.writer.templates.sheet_template import SheetTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 
 _TITLE = 'title'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
@@ -28,6 +35,17 @@ def _result_folder() -> str:
     return get_config_provider().result_folder()
 
 
+def _assert_sheet_template(actual: IWriteTemplate, expected: type[IWriteTemplate]) -> None:
+    assert isinstance(actual, SheetTemplate)
+    original = expected()
+    assert actual.columns() == original.columns()
+    assert actual.colors() == original.colors()
+    assert actual.get_columns_format() == original.get_columns_format()
+    assert actual.get_sheet_name() == 'price'
+    assert actual.get_file_name() == original.resolve_file_name(date.today().isoformat())
+    assert not actual.exclude()
+
+
 def test_nomenclature_title_correction() -> None:
     """корректирует title у каждой позиции"""
     row_old = RowItem({_TITLE: 'old'})
@@ -35,7 +53,7 @@ def test_nomenclature_title_correction() -> None:
     out = CommonPriceOut(
         [row_old, row_keep],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -63,7 +81,7 @@ def test_write_all_prices() -> None:
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
@@ -72,22 +90,18 @@ def test_write_all_prices() -> None:
         patch.object(out, 'nomenclature_title_correction') as mock_corr,
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
         patch('parsers.common_price.output.all_writer_templates', return_value=[template]),
-        patch(
-            'parsers.common_price.output._to_raw_dicts',
-            return_value=raw_rows,
-        ) as mock_raw,
     ):
         written = out.write_all_prices()
 
     mock_corr.assert_called_once()
-    mock_raw.assert_called_once_with(rows)
     driver_cls.assert_called_once_with()
     writer_cls.assert_called_once_with(
         driver_instance,
         raw_rows,
-        template,
+        ANY,
         result_folder=_result_folder(),
     )
+    _assert_sheet_template(writer_cls.call_args.args[2], template)
     writer_instance.write.assert_called_once()
     assert written == ['file_prices/result/inner.xlsx', _REPORT_PATH]
 
@@ -98,7 +112,7 @@ def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
     out = CommonPriceOut(
         [_warehouse_row('A', 5000, 3), _warehouse_row('A', 5000, 4)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
     )
 
@@ -128,37 +142,20 @@ def _warehouse_row(code: str, price: float, rest: int) -> RowItem:
     )
 
 
-def test_write_all_prices_jsonl() -> None:
-    """as_jsonl пишет jsonl и не трогает xlsx writer."""
-    rows = [RowItem({_TITLE: 't1'})]
-    writer_cls = MagicMock()
-    driver_cls = MagicMock()
-    template = ForInner
+def test_write_all_prices_jsonl(fake_config_provider: FakeConfigProvider) -> None:
+    """CLI пишет реальные потоки и реестр v2, не создавая XLSX."""
     out = CommonPriceOut(
-        rows,
-        xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
-        config_provider=get_config_provider(),
+        [RowItem({_TITLE: 't1'})],
+        xls_writer=MagicMock(),
+        write_driver=MagicMock(),
+        config_provider=fake_config_provider,
+        doubles_settings=DoublesSettings(),
     )
-    raw_rows = [{_TITLE: 't1'}]
-    jsonl_path = 'file_prices/result/price.jsonl'
-
-    doubles_path = 'file_prices/result/doubles.jsonl'
-
-    with (
-        patch.object(out, 'nomenclature_title_correction') as mock_corr,
-        patch.object(out, 'write_doubles_report', return_value=doubles_path) as mock_doubles,
-        patch('parsers.common_price.output.all_writer_templates', return_value=[template]),
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
-    ):
-        written = out.write_all_prices(as_jsonl=True)
-
-    mock_corr.assert_called_once()
-    writer_cls.assert_not_called()
-    mock_jsonl.assert_called_once_with(raw_rows, template, _result_folder())
-    mock_doubles.assert_called_once_with(as_jsonl=True)
-    assert written == jsonl_output_files([jsonl_path, doubles_path])
+    with patch.object(out, 'nomenclature_title_correction'):
+        written = out.write_all_prices(as_jsonl=True, result_template='for_inner')
+    assert len(written) == 3
+    assert all(Path(path).exists() for path in written)
+    assert Path(written[1]).read_text(encoding='utf-8') == ''
 
 
 def test_write_all_prices_reloads_nomenclature() -> None:
@@ -167,7 +164,7 @@ def test_write_all_prices_reloads_nomenclature() -> None:
     out = CommonPriceOut(
         [row],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -204,29 +201,23 @@ def test_write_doubles_report() -> None:
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
-    raw_rows = [{_TITLE: 'dup'}, {_TITLE: 'cand'}]
+    raw_rows = [double_row.to_dict(), candidate.to_dict()]
 
-    with (
-        patch.object(out, 'nomenclature_title_correction') as mock_corr,
-        patch(
-            'parsers.common_price.output._to_raw_dicts',
-            return_value=raw_rows,
-        ) as mock_raw,
-    ):
+    with patch.object(out, 'nomenclature_title_correction') as mock_corr:
         report_path = out.write_doubles_report()
 
     mock_corr.assert_not_called()
-    mock_raw.assert_called_once_with([double_row, candidate])
     driver_cls.assert_called_once_with()
     writer_cls.assert_called_once_with(
         driver_instance,
         raw_rows,
-        ForDoubles,
+        ANY,
         result_folder=_result_folder(),
     )
+    _assert_sheet_template(writer_cls.call_args.args[2], ForDoubles)
     writer_instance.write.assert_called_once()
     assert report_path == _REPORT_PATH
 
@@ -238,19 +229,17 @@ def test_write_doubles_report_jsonl() -> None:
     out = CommonPriceOut(
         [double_row],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
     jsonl_path = 'file_prices/result/doubles.jsonl'
-    raw_rows = [{_TITLE: 'dup'}]
 
-    with (
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
-        patch('parsers.common_price.output.write_template_jsonl', return_value=jsonl_path) as mock_jsonl,
-    ):
+    with patch('parsers.common_price.output.write_plan_jsonl', return_value=[jsonl_path]) as mock_jsonl:
         report_path = out.write_doubles_report(as_jsonl=True)
-
-    mock_jsonl.assert_called_once_with(raw_rows, ForDoubles, _result_folder())
+    books = mock_jsonl.call_args.args[0]
+    sheet = books[0].sheets[0]
+    assert sheet.rows[0]['title'] == 'dup'
+    assert mock_jsonl.call_args.args[1] == _result_folder()
     assert report_path == jsonl_path
 
 
@@ -264,26 +253,26 @@ def test_write_all_prices_single_template() -> None:
     driver_instance = MagicMock()
     driver_cls.return_value = driver_instance
     out = CommonPriceOut(
-        [RowItem({_TITLE: 't1'})],
+        [RowItem({_TITLE: 't1', 'rest_count': 1})],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
-    raw_rows = [{_TITLE: 't1'}]
+    raw_rows = [{_TITLE: 't1', 'rest_count': 1}]
 
     with (
         patch.object(out, 'nomenclature_title_correction'),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_drom')
 
     writer_cls.assert_called_once_with(
         driver_instance,
         raw_rows,
-        ForDrom,
+        ANY,
         result_folder=_result_folder(),
     )
+    _assert_sheet_template(writer_cls.call_args.args[2], ForDrom)
     assert written == ['file_prices/result/drom.xlsx', _REPORT_PATH]
 
 
@@ -299,7 +288,7 @@ def test_write_all_prices_full_template() -> None:
     out = CommonPriceOut(
         [RowItem({_TITLE: 't1'})],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
@@ -307,16 +296,16 @@ def test_write_all_prices_full_template() -> None:
     with (
         patch.object(out, 'nomenclature_title_correction'),
         patch.object(out, 'write_doubles_report', return_value=_REPORT_PATH),
-        patch('parsers.common_price.output._to_raw_dicts', return_value=raw_rows),
     ):
         written = out.write_all_prices(result_template='for_full')
 
     writer_cls.assert_called_once_with(
         driver_instance,
         raw_rows,
-        ForFull,
+        ANY,
         result_folder=_result_folder(),
     )
+    _assert_sheet_template(writer_cls.call_args.args[2], ForFull)
     assert written == ['file_prices/result/full.xlsx', _REPORT_PATH]
 
 
@@ -326,7 +315,7 @@ def test_write_all_prices_unknown_template() -> None:
     out = CommonPriceOut(
         [],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -370,7 +359,7 @@ def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Автоснабжение', 6000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(exclude_in_templates=('for_drom',), priority_suppliers=('Автоснабжение',)),
     )
@@ -384,7 +373,9 @@ def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
     (inner_rows, inner_tmpl), (drom_rows, drom_tmpl), (doubles_rows, doubles_tmpl) = (
         call.args[1:3] for call in writer_cls.call_args_list
     )
-    assert (inner_tmpl, drom_tmpl, doubles_tmpl) == (ForInner, ForDrom, ForDoubles)
+    _assert_sheet_template(inner_tmpl, ForInner)
+    _assert_sheet_template(drom_tmpl, ForDrom)
+    _assert_sheet_template(doubles_tmpl, ForDoubles)
     assert len(inner_rows) == 2
     assert [row['supplier_name'] for row in drom_rows] == ['Автоснабжение']
     assert len(doubles_rows) == 2
@@ -398,7 +389,7 @@ def test_doubles_report_puts_priority_supplier_first_within_group() -> None:
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Мим', 4000), _double_row('Автоснабжение', 6000), other_group],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(priority_suppliers=('Автоснабжение',)),
     )
@@ -420,7 +411,7 @@ def test_doubles_report_puts_groups_with_priority_supplier_on_top() -> None:
     out = CommonPriceOut(
         [plain, _double_row('Мим', 4000), priority],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(priority_suppliers=('Автоснабжение',)),
     )
@@ -441,7 +432,7 @@ def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigP
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Мим', 4000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=fake_config_provider,
     )
 
@@ -462,12 +453,75 @@ def test_result_folder_comes_from_injected_provider() -> None:
     out = CommonPriceOut(
         [RowItem({_TITLE: 'a'})],
         xls_writer=cast(type[XlsWriter], MagicMock()),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=injected,
         doubles_settings=DoublesSettings(),
     )
 
-    with patch('parsers.common_price.output.write_template_jsonl', return_value='x.jsonl') as write:
+    with patch('parsers.common_price.output.write_plan_jsonl', return_value=['x.jsonl']) as write:
         out.write_doubles_report(as_jsonl=True)
 
-    assert write.call_args.args[2] == '/injected/result'
+    assert write.call_args.args[1] == '/injected/result'
+
+
+@pytest.mark.parametrize('as_jsonl', [False, True])
+def test_invalid_later_template_prevents_all_writes(as_jsonl: bool) -> None:
+    """Ошибка второго шаблона не оставляет готовый файл первого."""
+    writer = MagicMock()
+    driver = MagicMock()
+    out = CommonPriceOut([], xls_writer=writer, write_driver=driver, config_provider=get_config_provider())
+    invalid = ForDrom().output_spec()
+    invalid.groups[0].filters['foreign_field'] = []
+    with (
+        patch.object(ForDrom, 'output_spec', return_value=invalid),
+        patch('parsers.common_price.output.write_plan_jsonl') as jsonl,
+        pytest.raises(ConfigValidationError, match=r'for_drom.*filters'),
+    ):
+        out.write_all_prices(as_jsonl=as_jsonl)
+    writer.assert_not_called()
+    driver.assert_not_called()
+    jsonl.assert_not_called()
+
+
+def test_xlsx_uses_group_description_and_one_date(fake_config_provider: FakeConfigProvider) -> None:
+    """План определяет реальные файл, лист, колонки и фильтры, а не старые атрибуты шаблона."""
+    import openpyxl
+
+    group = GroupOutput(
+        ProductGroup.TIRE_AND_DISK,
+        'Свой лист',
+        [{'Своё название': {'field': 'title'}}],
+        {'title': ['убрать']},
+        {},
+        file_name='custom_{now}.xlsx',
+    )
+    output = TemplateOutput('for_inner', OutputMode.SEPARATE_FILES, (group,))
+    doubles_output = ForDoubles().output_spec()
+    out = CommonPriceOut(
+        [RowItem({'title': 'оставить'}), RowItem({'title': 'убрать'})],
+        xls_writer=XlsWriter,
+        write_driver=XlsxWriterAdapter,
+        config_provider=fake_config_provider,
+        doubles_settings=DoublesSettings(),
+    )
+    with (
+        patch.object(ForInner, 'output_spec', return_value=output),
+        patch.object(ForDoubles, 'output_spec', return_value=doubles_output),
+        patch('parsers.common_price.output.all_writer_templates', return_value=[ForInner]),
+        patch('parsers.common_price.output.date') as clock,
+        patch.object(out, 'nomenclature_title_correction'),
+    ):
+        clock.today.return_value = date(2000, 1, 2)
+        paths = out.write_all_prices()
+    clock.today.assert_called_once_with()
+    assert [Path(path).name for path in paths] == [
+        'custom_2000-01-02.xlsx',
+        ForDoubles().resolve_file_name('2000-01-02'),
+    ]
+    assert all(Path(path).is_file() for path in paths)
+    book = openpyxl.load_workbook(paths[0])
+    try:
+        assert book.sheetnames == ['Свой лист']
+        assert list(book['Свой лист'].values) == [('Своё название',), ('оставить',)]
+    finally:
+        book.close()

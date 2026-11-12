@@ -3,12 +3,15 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from services.doubles_service import DoublesReport, DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.four_tochki_service import load_remote_vendor_data as load_four_tochki_data
+from services.parse_result import ParseResult
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
 
@@ -85,16 +88,27 @@ def test_write_doubles_factory_receives_items() -> None:
 def test_make_report_defaults_to_xlsx() -> None:
     """Без флага make_report просит xlsx (as_jsonl=False), а не jsonl."""
     parsed = MagicMock()
-    parsed.parsed_items = []
+    parsed.tire_and_disk_items = []
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_doubles.return_value = _REPORT_PATH
+    reporter.write_result.return_value = [_REPORT_PATH]
     service = DoublesService(orchestrator=orchestrator, report_service=reporter)
 
     service.make_report()
 
-    reporter.write_doubles.assert_called_once_with([], as_jsonl=False)
+    reporter.write_result.assert_called_once_with(parsed, template='for_doubles', as_jsonl=False)
+
+
+def test_make_report_without_selected_groups_creates_no_file() -> None:
+    """Отсутствие выбранных групп не создаёт даже пустой отчёт дублей."""
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = ParseResult()
+    reporter = MagicMock()
+    report = DoublesService(orchestrator=orchestrator, report_service=reporter).make_report(as_jsonl=True)
+    assert report.path is None
+    assert report.doubles == []
+    reporter.write_result.assert_not_called()
 
 
 def test_writer_factory_receives_items() -> None:
@@ -118,11 +132,11 @@ def test_make_report_filters_doubles() -> None:
     candidate.set_field('double_candidate', True)
     unique = _row_item('uniq')
     parsed = MagicMock()
-    parsed.parsed_items = [double_row, candidate, unique]
+    parsed.tire_and_disk_items = [double_row, candidate, unique]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_doubles.return_value = _REPORT_PATH
+    reporter.write_result.return_value = [_REPORT_PATH]
     service = DoublesService(orchestrator=orchestrator, report_service=reporter)
 
     report = service.make_report(as_jsonl=True)
@@ -132,7 +146,7 @@ def test_make_report_filters_doubles() -> None:
     assert report.doubles == [double_row, candidate]
     assert report.path == _REPORT_PATH
     orchestrator.parse_all.assert_called_once_with()
-    reporter.write_doubles.assert_called_once_with(parsed.parsed_items, as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_doubles', as_jsonl=True)
 
 
 def test_upload_zapaska_data() -> None:
@@ -178,3 +192,26 @@ def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
         api=api,
         warehouses=(FourTochkiWarehouse(id=1423, name='Новосибирск', group='novosibirsk', merge_group='novosibirsk'),),
     )
+
+
+def test_write_result_logs_start_before_writing_and_elapsed(caplog: pytest.LogCaptureFixture) -> None:
+    """Запись объявляется до подготовки данных, время включает сохранение файлов."""
+    service = PriceReportService(
+        writer_factory=MagicMock(), group_writer_factory=MagicMock(), config_provider=MagicMock()
+    )
+    start_message = 'Начало формирования и сохранения итоговых прайсов'
+
+    def prepare_sources(*_args: object) -> dict[object, object]:
+        assert start_message in caplog.text
+        return {}
+
+    with (
+        caplog.at_level('INFO', logger='services.price_report'),
+        patch('services.price_report.output_sources', side_effect=prepare_sources),
+        patch('services.price_report.write_group_prices', return_value=[_REPORT_PATH]),
+        patch('services.price_report.time.monotonic', side_effect=[10.0, 12.5]),
+    ):
+        written = service.write_result(ParseResult())
+
+    assert written == [_REPORT_PATH]
+    assert 'Итоговые прайсы сформированы и сохранены (2.50 сек), файлов: 1' in caplog.text

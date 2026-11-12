@@ -8,7 +8,7 @@ import pytest
 
 from domain.config_context import get_config_provider
 from domain.exceptions import CoreExceptionError
-from parsers.xls_reader import MaxRowsReachedError, ParamsHelper, XlsReader
+from parsers.xls_reader import MaxRowsReachedError, ParamsHelper, XlsReader, read_raw_tables
 from parsers.xls_reader_row import __SKIPPED_EMPTY_ROW__
 
 _PROJECT_ROOT = get_config_provider().project_root
@@ -258,3 +258,20 @@ def test_next_row_values_past_sheet_end_is_empty_row() -> None:
     assert reader.cur_row_values == [None]
     assert reader.skipped_empty_rows == 1
     assert _read_until_end(reader, sheet) == []
+
+
+def test_raw_tables_keep_source_values_sheet_and_row_numbers() -> None:
+    reader = make_reader()
+
+    tables = read_raw_tables(reader, [1])
+    rows = tables[0].rows
+    header = rows[0]
+    first_data_row = rows[1]
+
+    assert len(tables) == 1
+    assert tables[0].sheet_index == 1
+    assert header.row_number == 1
+    assert header.fields['1'] == 'Наименование'
+    assert first_data_row.row_number == 2
+    assert first_data_row.fields['1'] == SHEET_2[0]['col_1']
+    assert 'col_1' not in first_data_row.fields

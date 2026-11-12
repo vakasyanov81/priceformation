@@ -1,23 +1,39 @@
 {
   "code": "9",
   "name": "Тест",
-  "start_row": 0,
   "reader": "json",
-  "file_templates": ["tire.json"],
-  "pricing": {"policy": "identity"},
-  "sections": [
+  "product_groups": [
     {
-      "id": "9",
-      "name": "Тест (шины)",
-      "file_templates": ["tire.json"],
-      "columns": {
-        "name": "title",
-        "price": "price_opt",
-        "rest": "rest_count",
-        "category": "type_production"
+      "id": "tire_and_disk",
+      "start_row": 0,
+      "file_templates": [
+        "tire.json"
+      ],
+      "pricing": {
+        "policy": "identity"
       },
-      "category": {"strategy": "column_canonical", "unknown_skip": true},
-      "title": {"strategy": "default"}
+      "sections": [
+        {
+          "id": "9",
+          "name": "Тест (шины)",
+          "file_templates": [
+            "tire.json"
+          ],
+          "columns": {
+            "name": "title",
+            "price": "price_opt",
+            "rest": "rest_count",
+            "category": "type_production"
+          },
+          "category": {
+            "strategy": "column_canonical",
+            "unknown_skip": true
+          },
+          "title": {
+            "strategy": "default"
+          }
+        }
+      ]
     }
   ]
 }

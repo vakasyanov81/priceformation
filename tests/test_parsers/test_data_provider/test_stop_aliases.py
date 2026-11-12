@@ -103,6 +103,13 @@ def test_manufacturer_group_lookup_once_per_map() -> None:
         assert finder.call_count == 1
 
 
+def test_manufacturer_group_does_not_reuse_discarded_map() -> None:
+    """Новая временная карта не получает результат удалённой карты с тем же id."""
+    for index in range(100):
+        brand = f'brand_{index}'
+        assert manufacturer_group('alias', {brand: ['alias']}) == brand
+
+
 def test_load_aliases_map_missing_file() -> None:
     clear_manufacturer_aliases_cache()
     with patch('parsers.data_provider.manufacturer_aliases.read_file', side_effect=FileNotFoundError):

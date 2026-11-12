@@ -58,6 +58,20 @@
 ### Запуск приложения
 Точка входа — `src/app/run.py`, объявлена в `pyproject.toml [project.scripts]` как `priceformation` и короткий алиас `pf`. Поэтому запуск: `uv run pf` (меню) или `uv run pf parse --json`; в justfile — `just run`. Штатные файлы запуска: `src/run.sh`, `src/run.bat` (с `--no-dev --locked`, для запуска без тестовых зависимостей). Пути окружения считаются от `__file__` (`infrastructure/config/file_config_provider.py`), поэтому cwd значения не имеет.
 
+## Agent skills
+
+### Issue tracker
+
+Задачи и спецификации — GitHub Issues. Перед работой с задачами читать `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Стандартные пять ролей triage. Перед разбором задач читать `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: корневой `CONTEXT.md` и `docs/adr/`. Перед исследованием кодовой базы читать `docs/agents/domain.md`.
+
 ## Коммиты
 Не коммитить автоматически: `git commit` — только после явного подтверждения пользователя. Закончив правку и проверки, показать итог и спросить, коммитить ли; разрешение на один коммит не распространяется на следующие.
 

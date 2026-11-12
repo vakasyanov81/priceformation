@@ -15,12 +15,16 @@ from parsers.base_parser.base_parser_config import (
     make_parse_config,
 )
 from parsers.base_parser.config_driven_parser import (
-    parser_params_from_section,
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.base_parser.routing import VendorRouting
+from parsers.base_parser.section_params import parser_params_from_section
+from parsers.vendor_config.group_availability import ensure_groups_available, ensure_section_available
+from parsers.vendor_config.group_models import BatterySection
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
+from parsers.vendor_config.section_models import VendorSection
 
 # Type aliases (re-exported for convenience)
 VendorEntry = tuple[type[BaseParser], ParseConfiguration]
@@ -55,8 +59,11 @@ def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) 
     for config in load_vendor_configs(config_provider).values():
         if not include_disabled and not config.enabled:
             continue
+        ensure_groups_available(config)
+        routing = VendorRouting(config)
         entries.extend(
-            (BaseParser, _build_parse_config(section, config, config_provider)) for section in config.sections
+            (BaseParser, _build_parse_config(section, config, config_provider, routing))
+            for section in config.all_sections
         )
     return entries
 
@@ -68,9 +75,11 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     Возвращает первую найденную (включая отключённых).
     """
     for config in load_vendor_configs(config_provider).values():
-        for section in config.sections:
+        ensure_section_available(config, code)
+        for section in config.all_sections:
             if section.id == code:
-                return (BaseParser, _build_parse_config(section, config, config_provider))
+                routing = VendorRouting(config)
+                return (BaseParser, _build_parse_config(section, config, config_provider, routing))
     raise UnknownVendorError(code)
 
 
@@ -83,12 +92,14 @@ def vendor_markup_policy_for(
     Всегда читает ``pricing`` из ``vendor_section`` конфига.
     """
     section = vendor_config.vendor_section
-    if section is None:
+    if section is None or isinstance(section, BatterySection):
         return None
     return vendor_markup_policy_from_config(section)
 
 
-def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provider: ConfigProvider) -> VendorEntry:
+def make_vendor_entry(
+    section: VendorSection | BatterySection, config: VendorConfig, config_provider: ConfigProvider
+) -> VendorEntry:
     """Собрать запись вендора для секции.
 
     Args:
@@ -99,7 +110,8 @@ def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provi
     Returns:
         (BaseParser, ParseConfiguration) с прикреплёнными метаданными.
     """
-    return (BaseParser, _build_parse_config(section, config, config_provider))
+    routing = VendorRouting(config) if config.product_groups else None
+    return (BaseParser, _build_parse_config(section, config, config_provider, routing))
 
 
 def clear_registry() -> None:
@@ -108,8 +120,13 @@ def clear_registry() -> None:
 
 
 def _build_parse_config(
-    section: VendorSection, config: VendorConfig, config_provider: ConfigProvider
+    section: VendorSection | BatterySection,
+    config: VendorConfig,
+    config_provider: ConfigProvider,
+    routing: VendorRouting | None = None,
 ) -> ParseConfiguration:
     """Построить ParseConfiguration из секции конфига вендора."""
     params = parser_params_from_section(section, config.folder)
-    return make_parse_config(params, config_provider=config_provider, vendor_section=section, vendor_config=config)
+    return make_parse_config(
+        params, config_provider=config_provider, vendor_section=section, vendor_config=config, routing=routing
+    )

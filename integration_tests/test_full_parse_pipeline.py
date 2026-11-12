@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Iterator
 from pathlib import Path
@@ -47,6 +48,13 @@ def _fixture_config_provider() -> Iterator[None]:
 class TestFullParsePipeline:
     """Полный прогон разбора всех включённых поставщиков."""
 
+    def test_migrated_configs_preserve_positions(self, _fixture_config_provider: None) -> None:
+        """Все поля позиций совпадают со старой схемой после исправления behavior и назначения ID."""
+        baseline = _CONFIG_DIR / 'four_tochki_positions.json'
+        expected = json.loads(baseline.read_text(encoding='utf-8'))
+        parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
+        assert [row.to_dict() for row in parsed.tire_and_disk_items] == expected
+
     def test_all_enabled_vendors_parse_without_errors(
         self,
         _fixture_config_provider: None,
@@ -62,8 +70,8 @@ class TestFullParsePipeline:
 
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, 'Ошибки разбора: {}'.format('; '.join(errors))
-        assert len(parse_output.parsed_items) > 0
-        assert parse_output.unknown_category_skips == []
+        assert len(parse_output.tire_and_disk_items) > 0
+        assert parse_output.tire_and_disk_diagnostics.unknown_category_skips == []
 
     def test_json_vendor_uses_json_reader(
         self,
@@ -78,7 +86,9 @@ class TestFullParsePipeline:
         _entry, parse_config = vendor_entry_for('22', get_config_provider())  # zapaska tires
         section = parse_config.vendor_section
         vendor_cfg = parse_config.vendor_config
-        assert section is not None
+        from parsers.vendor_config.section_models import VendorSection
+
+        assert isinstance(section, VendorSection)
         assert vendor_cfg is not None
 
         parser = make_config_driven_parser(section, vendor_cfg, parse_config)
@@ -90,7 +100,7 @@ class TestFullParsePipeline:
     def test_every_group_has_one_title(self, _fixture_config_provider: None) -> None:
         """В каждой группе по параметрам после разбора ровно одно название."""
         titles_by_group: dict[int | None, set[str | None]] = {}
-        for row_item in ServiceProvider.resolve(ParseOrchestrator).parse_all().parsed_items:
+        for row_item in ServiceProvider.resolve(ParseOrchestrator).parse_all().tire_and_disk_items:
             group_titles = titles_by_group.setdefault(row_item.duplicate.group_by_params, set())
             group_titles.add(row_item.identity.title)
 

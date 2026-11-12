@@ -8,8 +8,9 @@ from domain.exceptions import ConfigValidationError
 from parsers.strategies.protocols import RestStrategy
 from parsers.strategies.rest import CountRest, MinusReserveRest
 from parsers.vendor_config.slot_configs import BehaviorConfig
+from parsers.vendor_config.strategy_names import REST_STRATEGIES
 
-_AVAILABLE = 'count, minus_reserve'
+_AVAILABLE = ', '.join(REST_STRATEGIES)
 _REST_STRATEGIES: dict[str, type[RestStrategy]] = {
     'count': CountRest,
     'minus_reserve': MinusReserveRest,

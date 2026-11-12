@@ -17,19 +17,25 @@ from parsers.vendor_config.slot_configs import BehaviorConfig, CategoryConfig, P
 FOLDER = 'mim'
 WHERE = 'mim.json'
 
-MINIMAL: dict[str, Any] = {
-    'code': 'mim',
-    'name': 'Мим',
-    'start_row': 2,
-    'file_templates': ['*.xls'],
-    'columns': {'2': 'title'},
-    'sections': [{'columns': {'1': 'manufacturer_name'}}],
-}
+GROUP_PATH = f'{WHERE} → product_groups[0]'
 
 
-def _raw(**overrides: Any) -> dict[str, Any]:
-    """Минимальный валидный конфиг с перекрытыми ключами."""
-    return {**MINIMAL, **overrides}
+def _raw(**group: Any) -> dict[str, Any]:
+    """Валидный поставщик с переопределениями своей группы и явными ID секций."""
+    return {
+        'code': 'mim',
+        'name': 'Мим',
+        'product_groups': [
+            {
+                'id': 'tire_and_disk',
+                'start_row': 2,
+                'file_templates': ['*.xls'],
+                'columns': {'2': 'title'},
+                'sections': [{'id': 'mim', 'columns': {'1': 'manufacturer_name'}}],
+                **group,
+            }
+        ],
+    }
 
 
 # (конфиг, фрагмент пути, который обязан быть в сообщении)
@@ -37,68 +43,68 @@ PATH_CASES = [
     # корень и ключи верхнего уровня
     ({**_raw(), 'reader': 5}, f'{WHERE} → reader'),
     ({**_raw(), 'name': 5}, f'{WHERE} → name'),
-    ({**_raw(), 'start_row': 'x'}, f'{WHERE} → start_row'),
-    ({**_raw(), 'file_templates': 'x'}, f'{WHERE} → file_templates'),
-    ({**_raw(), 'columns': 'x'}, WHERE),
-    ({**_raw(), 'columns': {'brand': 'title'}}, f'{WHERE} → brand'),
-    ({**_raw(), 'columns': {'9': 'nope'}}, f'{WHERE} → columns[9]'),
+    (_raw(start_row='x'), f'{GROUP_PATH} → start_row'),
+    (_raw(file_templates='x'), f'{GROUP_PATH} → file_templates'),
+    (_raw(columns='x'), GROUP_PATH),
+    (_raw(columns={'brand': 'title'}), f'{GROUP_PATH} → brand'),
+    (_raw(columns={'9': 'nope'}), f'{GROUP_PATH} → columns[9]'),
     # pricing
-    ({**_raw(), 'pricing': 'x'}, f'{WHERE} → pricing'),
-    ({**_raw(), 'pricing': {'policy': 5}}, f'{WHERE} → pricing → policy'),
-    ({**_raw(), 'pricing': {'rules': 'x'}}, f'{WHERE} → pricing → rules'),
+    (_raw(pricing='x'), f'{GROUP_PATH} → pricing'),
+    (_raw(pricing={'policy': 5}), f'{GROUP_PATH} → pricing → policy'),
+    (_raw(pricing={'rules': 'x'}), f'{GROUP_PATH} → pricing → rules'),
     (
-        {**_raw(), 'pricing': {'rules': {'threshold': 'x'}}},
-        f'{WHERE} → pricing → rules',
+        _raw(pricing={'rules': {'threshold': 'x'}}),
+        f'{GROUP_PATH} → pricing → rules',
     ),
-    ({**_raw(), 'pricing': {'rules': {'low': 'x'}}}, f'{WHERE} → pricing → rules'),
-    ({**_raw(), 'pricing': {'rules': {'high': 'x'}}}, f'{WHERE} → pricing → rules'),
+    (_raw(pricing={'rules': {'low': 'x'}}), f'{GROUP_PATH} → pricing → rules'),
+    (_raw(pricing={'rules': {'high': 'x'}}), f'{GROUP_PATH} → pricing → rules'),
     (
-        {**_raw(), 'pricing': {'rules': {'min_recommended_percent_markup': 'x'}}},
-        f'{WHERE} → pricing → rules',
-    ),
-    (
-        {**_raw(), 'pricing': {'rules': {'max_recommended_percent_markup': 'x'}}},
-        f'{WHERE} → pricing → rules',
+        _raw(pricing={'rules': {'min_recommended_percent_markup': 'x'}}),
+        f'{GROUP_PATH} → pricing → rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'replace_small_recommended': 1}}},
-        f'{WHERE} → pricing → rules',
+        _raw(pricing={'rules': {'max_recommended_percent_markup': 'x'}}),
+        f'{GROUP_PATH} → pricing → rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'markup_rules': 'x'}}},
-        f'{WHERE} → pricing → rules → markup_rules',
+        _raw(pricing={'rules': {'replace_small_recommended': 1}}),
+        f'{GROUP_PATH} → pricing → rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'markup_rules': {'r': 'x'}}}},
-        f'{WHERE} → pricing → rules → markup_rules',
+        _raw(pricing={'rules': {'markup_rules': 'x'}}),
+        f'{GROUP_PATH} → pricing → rules → markup_rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'markup_rules': {'r': {'max': 'x'}}}}},
-        f'{WHERE} → pricing → rules → markup_rules.r',
+        _raw(pricing={'rules': {'markup_rules': {'r': 'x'}}}),
+        f'{GROUP_PATH} → pricing → rules → markup_rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'absolute_markup_rules': 'x'}}},
-        f'{WHERE} → pricing → rules → absolute_markup_rules',
+        _raw(pricing={'rules': {'markup_rules': {'r': {'max': 'x'}}}}),
+        f'{GROUP_PATH} → pricing → rules → markup_rules.r',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'absolute_markup_rules': {'min_absolute_markup': 'x'}}}},
-        f'{WHERE} → pricing → rules → absolute_markup_rules',
+        _raw(pricing={'rules': {'absolute_markup_rules': 'x'}}),
+        f'{GROUP_PATH} → pricing → rules → absolute_markup_rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'absolute_markup_rules': {'markup_percent': 'x'}}}},
-        f'{WHERE} → pricing → rules → absolute_markup_rules',
+        _raw(pricing={'rules': {'absolute_markup_rules': {'min_absolute_markup': 'x'}}}),
+        f'{GROUP_PATH} → pricing → rules → absolute_markup_rules',
     ),
     (
-        {**_raw(), 'pricing': {'rules': {'absolute_markup_rules': {'mode': 'bad'}}}},
-        f'{WHERE} → pricing → rules → absolute_markup_rules',
+        _raw(pricing={'rules': {'absolute_markup_rules': {'markup_percent': 'x'}}}),
+        f'{GROUP_PATH} → pricing → rules → absolute_markup_rules',
+    ),
+    (
+        _raw(pricing={'rules': {'absolute_markup_rules': {'mode': 'bad'}}}),
+        f'{GROUP_PATH} → pricing → rules → absolute_markup_rules',
     ),
     # behavior
-    ({**_raw(), 'behavior': 'x'}, f'{WHERE} → behavior'),
-    ({**_raw(), 'behavior': {'min_rest': 'x'}}, f'{WHERE} → behavior → min_rest'),
-    ({**_raw(), 'behavior': {'rest': 5}}, f'{WHERE} → behavior → rest'),
-    ({**_raw(), 'behavior': {'pipeline': 'x'}}, f'{WHERE} → behavior → pipeline'),
+    (_raw(behavior='x'), f'{GROUP_PATH} → behavior'),
+    (_raw(behavior={'min_rest': 'x'}), f'{GROUP_PATH} → behavior → min_rest'),
+    (_raw(behavior={'rest': 5}), f'{GROUP_PATH} → behavior → rest'),
+    (_raw(behavior={'pipeline': 'x'}), f'{GROUP_PATH} → behavior → pipeline'),
     *[
-        ({**_raw(), 'behavior': {key: 'x'}}, f'{WHERE} → behavior: «{key}»')
+        (_raw(behavior={key: 'x'}), f'{GROUP_PATH} → behavior: «{key}»')
         for key in (
             'skip_markup_without_opt',
             'zero_rest_without_category',
@@ -107,85 +113,85 @@ PATH_CASES = [
         )
     ],
     # category
-    ({**_raw(), 'category': 'x'}, f'{WHERE} → category'),
-    ({**_raw(), 'category': {'strategy': 5}}, f'{WHERE} → category → strategy'),
-    ({**_raw(), 'category': {'value': 5}}, f'{WHERE} → category → value'),
-    ({**_raw(), 'category': {'field': 5}}, f'{WHERE} → category → field'),
-    ({**_raw(), 'category': {'map': 'x'}}, f'{WHERE} → category: «map»'),
-    ({**_raw(), 'category': {'default': 5}}, f'{WHERE} → category → default'),
-    ({**_raw(), 'category': {'unknown_skip': 'x'}}, f'{WHERE} → category: «unknown_skip»'),
+    (_raw(category='x'), f'{GROUP_PATH} → category'),
+    (_raw(category={'strategy': 5}), f'{GROUP_PATH} → category → strategy'),
+    (_raw(category={'value': 5}), f'{GROUP_PATH} → category → value'),
+    (_raw(category={'field': 5}), f'{GROUP_PATH} → category → field'),
+    (_raw(category={'map': 'x'}), f'{GROUP_PATH} → category: «map»'),
+    (_raw(category={'default': 5}), f'{GROUP_PATH} → category → default'),
+    (_raw(category={'unknown_skip': 'x'}), f'{GROUP_PATH} → category: «unknown_skip»'),
     (
-        {**_raw(), 'category': {'zero_rest_categories': 'x'}},
-        f'{WHERE} → category → zero_rest_categories',
+        _raw(category={'zero_rest_categories': 'x'}),
+        f'{GROUP_PATH} → category → zero_rest_categories',
     ),
     # size_fields категории: путь доходит до категории и поля
-    ({**_raw(), 'category': {'size_fields': 'x'}}, f'{WHERE} → category → size_fields'),
+    (_raw(category={'size_fields': 'x'}), f'{GROUP_PATH} → category → size_fields'),
     (
-        {**_raw(), 'category': {'size_fields': {'Грузовая шина': 'x'}}},
-        f'{WHERE} → category → size_fields → Грузовая шина',
+        _raw(category={'size_fields': {'Грузовая шина': 'x'}}),
+        f'{GROUP_PATH} → category → size_fields → Грузовая шина',
     ),
     (
-        {**_raw(), 'category': {'size_fields': {'': {'season': 'Всесезонная'}}}},
-        f'{WHERE} → category → size_fields',
+        _raw(category={'size_fields': {'': {'season': 'Всесезонная'}}}),
+        f'{GROUP_PATH} → category → size_fields',
     ),
     (
-        {**_raw(), 'category': {'size_fields': {'Спецшина': {'nope': 'x'}}}},
-        f'{WHERE} → category → size_fields → Спецшина',
+        _raw(category={'size_fields': {'Спецшина': {'nope': 'x'}}}),
+        f'{GROUP_PATH} → category → size_fields → Спецшина',
     ),
     (
-        {**_raw(), 'category': {'size_fields': {'Спецшина': {'season': 5}}}},
-        f'{WHERE} → category → size_fields → Спецшина → season',
+        _raw(category={'size_fields': {'Спецшина': {'season': 5}}}),
+        f'{GROUP_PATH} → category → size_fields → Спецшина → season',
     ),
-    ({**_raw(), 'category': {'calculate_type': 'x'}}, f'{WHERE} → category'),
+    (_raw(category={'calculate_type': 'x'}), f'{GROUP_PATH} → category'),
     # title
-    ({**_raw(), 'title': 'x'}, f'{WHERE} → title'),
-    ({**_raw(), 'title': {'strategy': 5}}, f'{WHERE} → title → strategy'),
-    ({**_raw(), 'title': {'variant': 5}}, f'{WHERE} → title → variant'),
-    ({**_raw(), 'title': {'aliases': 'x'}}, f'{WHERE} → title: «aliases»'),
-    ({**_raw(), 'title': {'fallback_brand': 5}}, f'{WHERE} → title → fallback_brand'),
+    (_raw(title='x'), f'{GROUP_PATH} → title'),
+    (_raw(title={'strategy': 5}), f'{GROUP_PATH} → title → strategy'),
+    (_raw(title={'variant': 5}), f'{GROUP_PATH} → title → variant'),
+    (_raw(title={'aliases': 'x'}), f'{GROUP_PATH} → title: «aliases»'),
+    (_raw(title={'fallback_brand': 5}), f'{GROUP_PATH} → title → fallback_brand'),
     # маркеры title: путь доходит до маркера и поля
-    ({**_raw(), 'title': {'markers': 'x'}}, f'{WHERE} → title → markers'),
-    ({**_raw(), 'title': {'markers': {'шип': 'x'}}}, f'{WHERE} → title → markers → шип'),
-    ({**_raw(), 'title': {'markers': {'': {'season': 'зима'}}}}, f'{WHERE} → title → markers'),
+    (_raw(title={'markers': 'x'}), f'{GROUP_PATH} → title → markers'),
+    (_raw(title={'markers': {'шип': 'x'}}), f'{GROUP_PATH} → title → markers → шип'),
+    (_raw(title={'markers': {'': {'season': 'зима'}}}), f'{GROUP_PATH} → title → markers'),
     (
-        {**_raw(), 'title': {'markers': {'шип': {'nope': 'x'}}}},
-        f'{WHERE} → title → markers → шип',
+        _raw(title={'markers': {'шип': {'nope': 'x'}}}),
+        f'{GROUP_PATH} → title → markers → шип',
     ),
     (
-        {**_raw(), 'title': {'markers': {'шип': {'season': 5}}}},
-        f'{WHERE} → title → markers → шип → season',
+        _raw(title={'markers': {'шип': {'season': 5}}}),
+        f'{GROUP_PATH} → title → markers → шип → season',
     ),
     # секции: путь обязан доходить до sections[i]
-    ({**_raw(), 'sections': [[]]}, f'{WHERE} → sections[0]'),
-    ({**_raw(), 'sections': [{'id': 5}]}, f'{WHERE} → sections[0] → id'),
-    ({**_raw(), 'sections': [{'name': 5}]}, f'{WHERE} → sections[0] → name'),
-    ({**_raw(), 'sections': [{'start_row': 'x'}]}, f'{WHERE} → sections[0] → start_row'),
-    ({**_raw(), 'sections': [{'file_templates': 'x'}]}, f'{WHERE} → sections[0] → file_templates'),
-    ({**_raw(), 'sections': [{'columns': 'x'}]}, f'{WHERE} → sections[0]'),
-    ({**_raw(), 'sections': [{'columns': {'0': 'nope'}}]}, f'{WHERE} → sections[0] → columns[0]'),
-    ({**_raw(), 'sections': [{'columns': {'brand': 'title'}}]}, f'{WHERE} → sections[0] → brand'),
-    ({**_raw(), 'sections': [{'sheet_info': 5}]}, f'{WHERE} → sections[0] → sheet_info'),
-    ({**_raw(), 'sections': [{'sheet_indexes': 'x'}]}, f'{WHERE} → sections[0]'),
-    ({**_raw(), 'sections': [{'sheet_indexes': [1.5]}]}, f'{WHERE} → sections[0] → sheet_indexes'),
+    (_raw(sections=[[]]), f'{GROUP_PATH} → sections[0]'),
+    (_raw(sections=[{'id': 5}]), f'{GROUP_PATH} → sections[0].id'),
+    (_raw(sections=[{'id': 'mim', 'name': 5}]), f'{GROUP_PATH} → sections[0] → name'),
+    (_raw(sections=[{'id': 'mim', 'start_row': 'x'}]), f'{GROUP_PATH} → sections[0] → start_row'),
+    (_raw(sections=[{'id': 'mim', 'file_templates': 'x'}]), f'{GROUP_PATH} → sections[0] → file_templates'),
+    (_raw(sections=[{'id': 'mim', 'columns': 'x'}]), f'{GROUP_PATH} → sections[0]'),
+    (_raw(sections=[{'id': 'mim', 'columns': {'0': 'nope'}}]), f'{GROUP_PATH} → sections[0] → columns[0]'),
+    (_raw(sections=[{'id': 'mim', 'columns': {'brand': 'title'}}]), f'{GROUP_PATH} → sections[0] → brand'),
+    (_raw(sections=[{'id': 'mim', 'sheet_info': 5}]), f'{GROUP_PATH} → sections[0] → sheet_info'),
+    (_raw(sections=[{'id': 'mim', 'sheet_indexes': 'x'}]), f'{GROUP_PATH} → sections[0]'),
+    (_raw(sections=[{'id': 'mim', 'sheet_indexes': [1.5]}]), f'{GROUP_PATH} → sections[0] → sheet_indexes'),
     # слоты внутри секции: путь не должен обрываться на sections[i]
-    ({**_raw(), 'sections': [{'category': 'x'}]}, f'{WHERE} → sections[0] → category'),
+    (_raw(sections=[{'id': 'mim', 'category': 'x'}]), f'{GROUP_PATH} → sections[0] → category'),
     (
-        {**_raw(), 'sections': [{'category': {'unknown_skip': 'x'}}]},
-        f'{WHERE} → sections[0] → category: «unknown_skip»',
+        _raw(sections=[{'id': 'mim', 'category': {'unknown_skip': 'x'}}]),
+        f'{GROUP_PATH} → sections[0] → category: «unknown_skip»',
     ),
-    ({**_raw(), 'sections': [{'title': 'x'}]}, f'{WHERE} → sections[0] → title'),
+    (_raw(sections=[{'id': 'mim', 'title': 'x'}]), f'{GROUP_PATH} → sections[0] → title'),
     (
-        {**_raw(), 'sections': [{'title': {'aliases': 'x'}}]},
-        f'{WHERE} → sections[0] → title: «aliases»',
+        _raw(sections=[{'id': 'mim', 'title': {'aliases': 'x'}}]),
+        f'{GROUP_PATH} → sections[0] → title: «aliases»',
     ),
-    ({**_raw(), 'sections': [{'pricing': 'x'}]}, f'{WHERE} → sections[0] → pricing'),
+    (_raw(sections=[{'id': 'mim', 'pricing': 'x'}]), f'{GROUP_PATH} → sections[0] → pricing'),
     (
-        {**_raw(), 'sections': [{'pricing': {'policy': 5}}]},
-        f'{WHERE} → sections[0] → pricing → policy',
+        _raw(sections=[{'id': 'mim', 'pricing': {'policy': 5}}]),
+        f'{GROUP_PATH} → sections[0] → pricing → policy',
     ),
     (
-        {**_raw(), 'sections': [{'pricing': {'rules': {'threshold': 'x'}}}]},
-        f'{WHERE} → sections[0] → pricing → rules',
+        _raw(sections=[{'id': 'mim', 'pricing': {'rules': {'threshold': 'x'}}}]),
+        f'{GROUP_PATH} → sections[0] → pricing → rules',
     ),
 ]
 

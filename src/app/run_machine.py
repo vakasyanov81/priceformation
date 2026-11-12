@@ -5,8 +5,9 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from app.parse_report import JsonReport, emit_json, error_payload
+from app.parse_report import emit_json, error_payload
 from app.parse_report_build import report_from_result
+from app.parse_report_types import JsonReport
 from app.run_argv import (
     DOUBLES,
     FETCH_MAIL_PRICES,
@@ -22,21 +23,21 @@ from app.run_argv import (
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
+from cfg.services import ensure_services_configured
 from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.exception_logging import log_exception_once
 from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
-from parsers.common_price.output import jsonl_output_files
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.strategies.product_types import CANONICAL_TYPES
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
-from services.configure import ensure_services_configured
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
+from services.parse_result import ParseSelection
 from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
@@ -122,8 +123,9 @@ def _emit_command(
     payload_arg: str | None,
 ) -> int:
     started = time.monotonic()
+    selection = ParseSelection()
     try:
-        emit_json(_command_payload(command, all_result, result_template, payload_arg), started=started)
+        emit_json(_command_payload(command, all_result, result_template, payload_arg, selection), started=started)
     except KeyboardInterrupt:
         emit_json(
             error_payload(
@@ -131,6 +133,7 @@ def _emit_command(
                 'KeyboardInterrupt',
                 _INTERRUPT,
                 compact=command in _COMPACT_ERROR_COMMANDS,
+                groups=tuple(group.value for group in selection.groups),
             ),
             started=started,
         )
@@ -143,6 +146,7 @@ def _emit_command(
                 type(exc).__name__,
                 str(exc),
                 compact=command in _COMPACT_ERROR_COMMANDS,
+                groups=tuple(group.value for group in selection.groups),
             ),
             started=started,
         )
@@ -155,6 +159,7 @@ def _command_payload(
     all_result: bool,
     result_template: str | None,
     payload_arg: str | None,
+    selection: ParseSelection,
 ) -> Mapping[str, Any]:
     reference = _reference_payload(command, payload_arg)
     if reference is not None:
@@ -169,7 +174,7 @@ def _command_payload(
         }
     if command in _DOWNLOAD_COMMANDS:
         return _json_download(command)
-    return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template)
+    return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template, selection)
 
 
 def _reference_payload(command: str, payload_arg: str | None) -> Mapping[str, Any] | None:
@@ -201,7 +206,12 @@ def _toggle_vendor_payload(folder: str | None) -> Mapping[str, Any]:
 
 
 def _vendor_json(state: VendorState) -> dict[str, Any]:
-    return {'folder': state.folder, 'name': state.name, 'enabled': state.enabled}
+    return {
+        'folder': state.folder,
+        'name': state.name,
+        'enabled': state.enabled,
+        'product_groups': list(state.product_groups),
+    }
 
 
 def _json_download(command: str) -> Mapping[str, Any]:
@@ -293,24 +303,28 @@ def _json_load_prices(raw: str | None) -> dict[str, object]:
     }
 
 
-def _json_parse(all_result: bool, result_template: str | None) -> JsonReport:
+def _json_parse(all_result: bool, result_template: str | None, selection: ParseSelection) -> JsonReport:
     started = time.monotonic()
-    parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
-    files = ServiceProvider.resolve(PriceReportService).write_prices(
-        parse_result.parsed_items,
-        template=result_template,
-        as_jsonl=True,
-    )
+    parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all(selection=selection)
+    selection.groups = tuple(parse_result.groups)
+    files = []
+    if parse_result.groups:
+        files = ServiceProvider.resolve(PriceReportService).write_result(
+            parse_result,
+            template=result_template,
+            as_jsonl=True,
+        )
     return report_from_result(PARSE, parse_result, files, time.monotonic() - started, all_result=all_result)
 
 
-def _json_doubles(all_result: bool, _result_template: str | None) -> JsonReport:
+def _json_doubles(all_result: bool, _result_template: str | None, selection: ParseSelection) -> JsonReport:
     started = time.monotonic()
-    report = ServiceProvider.resolve(doubles_service.DoublesService).make_report(as_jsonl=True)
+    report = ServiceProvider.resolve(doubles_service.DoublesService).make_report(as_jsonl=True, selection=selection)
+    selection.groups = tuple(report.parse_result.groups)
     return report_from_result(
         DOUBLES,
         report.parse_result,
-        jsonl_output_files([report.path]),
+        report.files,
         time.monotonic() - started,
         rows=report.doubles,
         all_result=all_result,

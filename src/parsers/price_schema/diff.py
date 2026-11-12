@@ -1,6 +1,6 @@
 """Сравнение схем прайса: понятные русские описания расхождений."""
 
-from openpyxl.utils import get_column_letter
+from xlsxwriter.utility import xl_col_to_name
 
 from parsers.price_schema.models import Columns, PriceSchema, SheetSchema
 
@@ -26,7 +26,7 @@ def _sheet_changes(index: int, old: SheetSchema, new: SheetSchema, columns: Colu
     for column in sorted(old.headers.keys() | new.headers.keys()):
         change = _header_change(old.headers.get(column), new.headers.get(column))
         if change:
-            place = f'вкладка «{new.name}», колонка {get_column_letter(column + 1)}'
+            place = f'вкладка «{new.name}», колонка {xl_col_to_name(column)}'
             changes.append(f'{place}: {change}{_usage(column, columns)}')
     return changes
 

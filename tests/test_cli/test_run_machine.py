@@ -24,17 +24,20 @@ from app.run_argv import (
 )
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.config_context import get_config_provider
+from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.json_mode import json_mode_active
 from infrastructure.logging.log_paths import LogPaths
 from infrastructure.logging.log_setup import setup_logging
-from parsers.common_price.output import jsonl_output_files
+from parsers.writer.jsonl_writer import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
+from services.parse_statistics import GroupStatistics
 from services.price_report import PriceReportService
 from services.vendor_activation import VendorActivationService, VendorState
 from services.zapaska_service import ZapaskaService
@@ -59,20 +62,17 @@ def _assert_elapsed(payload: dict[str, object]) -> None:
     assert elapsed >= 0
 
 
-def _result_with_row() -> MagicMock:
-    row = RowItem(_PRICE_FIELDS)
-    common = MagicMock()
-    common.parsed_items = [row]
-    common.unknown_category_skips = []
-    common.black_list_skips = 0
-    return common
+def _result_with_row() -> ParseResult:
+    return _mark_result([RowItem(_PRICE_FIELDS)])
 
 
-def _mark_result(rows: list[RowItem]) -> MagicMock:
-    common = MagicMock()
-    common.parsed_items = rows
-    common.unknown_category_skips = []
-    common.black_list_skips = 0
+def _mark_result(rows: list[RowItem]) -> ParseResult:
+    common = ParseResult()
+    common.add_package(TireAndDiskResult(tuple(rows)))
+    common.statistics[ProductGroup.TIRE_AND_DISK] = GroupStatistics(
+        priced_items=sum(bool(row.pricing.price_opt) for row in rows),
+        doubles=sum(1 for row in rows if row.duplicate.is_double or row.duplicate.double_candidate),
+    )
     return common
 
 
@@ -82,7 +82,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -93,10 +93,10 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     _assert_elapsed(payload)
     assert payload['ok'] is True
     assert payload['action'] == PARSE
-    assert payload['positions'] == []
+    assert payload['groups']['tire_and_disk']['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template=None, as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template=None, as_jsonl=True)
 
 
 def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
@@ -105,7 +105,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -114,7 +114,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_drom', as_jsonl=True)
 
 
 def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]) -> None:
@@ -123,14 +123,14 @@ def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = create_autospec(PriceReportService)
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
         code = machine_json(PARSE, result_template='for_drom')
     assert code == 0
-    reporter.write_prices.assert_called_once_with(parsed.parsed_items, template='for_drom', as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_drom', as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
@@ -139,7 +139,7 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     noisy_logger = logging.getLogger(_NOISY_LOGGER)
     json_mode_seen: list[bool] = []
 
-    def noisy_parse_all() -> MagicMock:
+    def noisy_parse_all(**_kwargs: object) -> ParseResult:
         json_mode_seen.append(json_mode_active())
         noisy_logger.info(_LOG_NOISE)
         noisy_logger.error(_LOG_NOISE)
@@ -148,7 +148,7 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.side_effect = noisy_parse_all
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -176,7 +176,7 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -185,7 +185,8 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    assert payload['positions'][0]['title'] == _TITLE
+    positions = payload['groups']['tire_and_disk']['positions']
+    assert positions[0]['title'] == _TITLE
     assert payload['stats']['items'] == 1
 
 
@@ -289,7 +290,7 @@ def test_json_parse_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixtur
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with (
         patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
         patch(
@@ -312,6 +313,7 @@ def test_json_doubles_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixt
         parse_result=parsed,
         doubles=[double_row],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with (
         patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
@@ -334,6 +336,7 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
         parse_result=parsed,
         doubles=[double_row],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES)
@@ -341,10 +344,10 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 0
     _assert_elapsed(payload)
     assert payload['action'] == DOUBLES
-    assert payload['positions'] == []
+    assert payload['groups']['tire_and_disk']['positions'] == []
     assert payload['stats']['doubles'] == 1
     assert payload['files'] == jsonl_output_files([_DOUBLE_PATH])
-    doubles_service.make_report.assert_called_once_with(as_jsonl=True)
+    assert doubles_service.make_report.call_args.kwargs['as_jsonl'] is True
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
@@ -360,11 +363,12 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
         parse_result=parsed,
         doubles=[double_row, candidate],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES, all_result=True)
     payload = json.loads(capsys.readouterr().out)
-    titles = {position['title'] for position in payload['positions']}
+    titles = {position['title'] for position in payload['groups']['tire_and_disk']['positions']}
     assert code == 0
     _assert_elapsed(payload)
     assert titles == {'dup', 'cand'}
@@ -514,7 +518,7 @@ def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
     vendor_service = MagicMock()
     vendor_service.list_vendors.return_value = [
         VendorState('poshk', 'Пошк', True),
-        VendorState('mim', 'МИМ', False),
+        VendorState('mim', 'МИМ', False, (ProductGroup.BATTERIES,)),
     ]
     with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
         code = machine_json(GET_VENDORS)
@@ -525,8 +529,8 @@ def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
         'ok': True,
         'action': GET_VENDORS,
         'vendors': [
-            {'folder': 'poshk', 'name': 'Пошк', 'enabled': True},
-            {'folder': 'mim', 'name': 'МИМ', 'enabled': False},
+            {'folder': 'poshk', 'name': 'Пошк', 'enabled': True, 'product_groups': ['tire_and_disk']},
+            {'folder': 'mim', 'name': 'МИМ', 'enabled': False, 'product_groups': ['batteries']},
         ],
     }
 
@@ -544,7 +548,7 @@ def test_json_toggle_vendor(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload == {
         'ok': True,
         'action': TOGGLE_VENDOR,
-        'vendor': {'folder': 'poshk', 'name': 'Пошк', 'enabled': False},
+        'vendor': {'folder': 'poshk', 'name': 'Пошк', 'enabled': False, 'product_groups': ['tire_and_disk']},
     }
     vendor_service.toggle.assert_called_once_with('poshk')
 

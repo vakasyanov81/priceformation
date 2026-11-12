@@ -145,7 +145,7 @@ def test_real_price_rows_have_no_parse_errors(
 def test_real_price_rows_keep_manufacturer(_four_tochki_provider: None) -> None:
     """бренд не теряется: у строк заполнен производитель (регресс на ключ `manufacturer_name`)."""
     parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
-    parsed_rows = parsed.parsed_items
+    parsed_rows = parsed.tire_and_disk_items
     assert parsed_rows, 'Нет разобранных строк'
     missing = [parsed_row for parsed_row in parsed_rows if not parsed_row.identity.manufacturer]
     assert not missing, f'Потерян бренд у {len(missing)} строк из {len(parsed_rows)}'

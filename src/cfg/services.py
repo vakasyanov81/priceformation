@@ -1,9 +1,10 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
+from cfg.vendor_parser import parser_for_vendor
 from domain.config_context import get_config_provider
-from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
+from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.grouper_factory import grouper_factory
@@ -15,7 +16,6 @@ from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService
-from services.vendor_parser import parser_for_vendor
 from services.vendor_source import VendorSource
 from services.zapaska_service import ZapaskaService
 
@@ -32,7 +32,7 @@ def _register_factories() -> None:
     ServiceProvider.register(ParserFactory, lambda: parser_for_vendor)
     ServiceProvider.register(GrouperFactory, lambda: grouper_factory)
     ServiceProvider.register(XlsWriterFactory, lambda: XlsWriter)
-    ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterDriver)
+    ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterAdapter)
 
 
 def _register_services() -> None:

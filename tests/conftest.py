@@ -8,6 +8,7 @@ import pytest
 from log_watch import LoggerWatch, LoggerWatcher, records_of
 
 from cfg import init_cfg
+from cfg.services import configure_services
 from domain.config_context import get_config_provider, set_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache
@@ -16,7 +17,6 @@ from parsers.data_provider.manufacturer_aliases import (
 )
 from parsers.mail.provider import clear_mail_config_cache
 from parsers.vendor_config.provider import clear_vendor_configs_cache
-from services.configure import configure_services
 from services.service_provider import ServiceProvider
 
 _ROOT = Path(__file__).resolve().parent

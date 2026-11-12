@@ -41,7 +41,7 @@ def test_main_exits_on_quit() -> None:
 def test_main_make_price_then_exit() -> None:
     """выбор 1 вызывает полный путь формирования прайса, затем выход."""
     parsed = MagicMock()
-    parsed.parsed_items = [_PARSED_ROW]
+    parsed.tire_and_disk_items = [_PARSED_ROW]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
@@ -60,7 +60,7 @@ def test_main_make_price_then_exit() -> None:
             main()
 
         orchestrator.parse_all.assert_called_once()
-        reporter.write_prices.assert_called_once_with([_PARSED_ROW], template=None)
+        reporter.write_result.assert_called_once_with(parsed, template=None)
 
 
 def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
@@ -83,7 +83,7 @@ def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
 def test_response_make_price_via_try_call() -> None:
     """response_processing проходит через try_call до run_make_price_by_supplier."""
     parsed = MagicMock()
-    parsed.parsed_items = []
+    parsed.tire_and_disk_items = []
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
@@ -100,7 +100,7 @@ def test_response_make_price_via_try_call() -> None:
         assert response_processing() is True
 
         orchestrator.parse_all.assert_called_once()
-        reporter.write_prices.assert_called_once_with([], template=None)
+        reporter.write_result.assert_called_once_with(parsed, template=None)
 
 
 def test_response_supplier_error_exits() -> None:

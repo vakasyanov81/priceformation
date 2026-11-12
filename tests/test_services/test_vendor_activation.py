@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from domain.product_groups import ProductGroup
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.vendor_config.provider import clear_vendor_configs_cache
 from services.vendor_activation import VendorActivationService, VendorState
@@ -12,9 +13,18 @@ _ACTIVATION_FILE = 'vendor_activation.json'
 
 
 def _config(code: str, name: str) -> str:
-    return (
-        f'{{"code": "{code}", "name": "{name}", '
-        '"start_row": 1, "file_templates": ["*.xls"], "sections": [{"columns": {"1": "title"}}]}'
+    return json.dumps(
+        {
+            'code': code,
+            'name': name,
+            'product_groups': [
+                {
+                    'id': 'tire_and_disk',
+                    'file_templates': ['*.xls'],
+                    'sections': [{'id': code, 'columns': {'1': 'title'}}],
+                }
+            ],
+        }
     )
 
 
@@ -65,8 +75,7 @@ def test_service_uses_injected_provider(tmp_path: Path) -> None:
     vendors = Path(provider.config_file('vendors'))
     vendors.mkdir(parents=True)
     vendors.joinpath('mim.json').write_text(
-        '{"code": "mim", "name": "Мим", "start_row": 2, "file_templates": ["*.xls"],'
-        ' "sections": [{"columns": {"1": "manufacturer_name"}}]}',
+        _config('mim', 'Мим'),
         encoding='utf-8',
     )
     service = VendorActivationService(config_provider=provider)
@@ -74,3 +83,31 @@ def test_service_uses_injected_provider(tmp_path: Path) -> None:
     assert [state.folder for state in service.list_vendors()] == ['mim']
     assert service.toggle('mim').enabled is False
     assert Path(provider.config_file('vendor_activation.json')).is_file()
+
+
+def test_groups_survive_vendor_toggle(fake_config_provider: FakeConfigProvider) -> None:
+    """Обе группы видны без запуска парсера; активация остаётся общей для поставщика."""
+    raw = {
+        'code': 'demo',
+        'name': 'Демо',
+        'product_groups': [
+            {
+                'id': 'tire_and_disk',
+                'file_templates': ['tires.xlsx'],
+                'columns': {'0': 'title'},
+                'sections': [{'id': 'demo_tires'}],
+            },
+            {'id': 'batteries', 'file_templates': ['battery.xlsx'], 'sections': [{'id': 'demo_batteries'}]},
+        ],
+    }
+    source = json.dumps(raw)
+    _write_vendors(fake_config_provider, {'demo.json': source})
+    service = VendorActivationService()
+    groups = (ProductGroup.TIRE_AND_DISK, ProductGroup.BATTERIES)
+
+    assert service.list_vendors() == [VendorState('demo', 'Демо', True, groups)]
+    assert service.toggle('demo') == VendorState('demo', 'Демо', False, groups)
+    assert service.list_vendors() == [VendorState('demo', 'Демо', False, groups)]
+    activation = Path(fake_config_provider.config_file(_ACTIVATION_FILE))
+    assert json.loads(activation.read_text(encoding='utf-8')) == {'demo': 0}
+    assert Path(fake_config_provider.config_file('vendors/demo.json')).read_text(encoding='utf-8') == source

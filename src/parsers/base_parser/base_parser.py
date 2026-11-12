@@ -2,6 +2,8 @@
 
 from typing import Any, Protocol
 
+from domain.product_group_result import TireAndDiskResult
+from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.file_reader import FileReader
@@ -11,13 +13,9 @@ from parsers.base_parser.markup_policy import MarkupPolicy, make_markup_policy
 from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatistic
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
-from parsers.base_parser.price_markup import fill_absolute_markup, fill_percent_markup
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
-from parsers.base_parser.row_enricher import make_row_enricher
-from parsers.base_parser.row_filters import RowFilters, drop_empty_rest
-from parsers.base_parser.row_pipeline import RowPipeline
 from parsers.base_parser.row_processor import RowProcessor
-from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 
 
 class Parser(Protocol):
@@ -28,7 +26,7 @@ class Parser(Protocol):
 
     def get_parsed_items(self) -> list[RowItem]: ...
 
-    def parse(self) -> list[RowItem]: ...
+    def parse(self) -> TireAndDiskResult: ...
 
 
 def _default_file_reader(settings: ParserSettings, data_reader: type[Any] | None) -> FileReader:
@@ -48,65 +46,63 @@ class BaseParser:
         data_reader: type[Any] | None = None,
         row_processor: RowProcessorProtocol | None = None,
         title_filter: TitleFilterProtocol | None = None,
-        strategy_hooks: StrategyHooks | None = None,
+        group_handler: TireAndDiskHandler | None = None,
     ) -> None:
         self.parsed_items: list[RowItem] = []
-        self.settings = ParserSettings(parse_config)
-        self._logger = LoggerParseProcess(repr(self))  # raises ParseConfigNotSetError if config is None
-        self.stats = ParserStats()
-        self.price_files = PriceFiles(self.settings, file_reader or _default_file_reader(self.settings, data_reader))
-        self.row_filters = RowFilters(strategy_hooks)
-        self.enricher = make_row_enricher(self.settings, self.stats, strategy_hooks, title_filter)
-        self.pipeline = RowPipeline(strategy_hooks, self.row_filters, self.enricher, row_processor or RowProcessor())
+        self._package = TireAndDiskResult()
+        self.settings = group_handler.settings if group_handler else ParserSettings(parse_config)
+        self._logger = LoggerParseProcess(f'{self!r} [tire_and_disk]')
+        self.stats = group_handler.stats if group_handler else ParserStats()
+        self.price_files = PriceFiles(
+            self.settings.parser_params(),
+            file_reader or _default_file_reader(self.settings, data_reader),
+            self.settings.parse_config().routing,
+        )
+        self.group_handler = group_handler or TireAndDiskHandler(
+            settings=self.settings,
+            stats=self.stats,
+            row_processor=row_processor,
+            title_filter=title_filter,
+        )
+        self.row_filters = self.group_handler.row_filters
+        self.enricher = self.group_handler.enricher
+        self.pipeline = self.group_handler.pipeline
 
     def __repr__(self) -> str:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
         return self.settings.title()
 
-    def parse(self) -> list[RowItem]:
+    @property
+    def product_group(self) -> ProductGroup:
+        """Группа определяет модель обработчика и контекст диагностики."""
+        return self.group_handler.product_group
+
+    def parse(self) -> TireAndDiskResult:
         if not self.settings.is_active:
             self._logger.log_disable_status()
-            return []
-        self.enricher.categories.lookup.reset()
+            return TireAndDiskResult()
         self.price_files.resolve()
         self._logger.log_start()
         self.process()
-        self.after_process()
-        parsed = self.get_parsed_items()
-        self._logger.log_finish(ParseResultStatistic(parsed))
-        return parsed
+        self._logger.log_finish(ParseResultStatistic(self.get_parsed_items()))
+        return self._package
 
     def get_parsed_items(self) -> list[RowItem]:
         return self.parsed_items
 
     def process(self) -> int:
-        """read → map → filter → enrich → vendor hook. Count before filters."""
+        """Прочитать файлы, отобразить позиции и передать их обработчику группы."""
         files = self.price_files.files or []
         self._logger.log_list_files(files)
-        mapped = self.price_files.map_items(self.price_files.read_rows(files))
+        mapped = self.price_files.read_positions(files, self.group_handler.create_position)
         raw_count = len(mapped)
         self.parsed_items += mapped
-        self.parsed_items = self.row_filters.filter_warehouses(self.parsed_items)
-        self.parsed_items = self.enricher.keep(self.parsed_items)
-        self.parsed_items = self.enricher.enrich(self.parsed_items)
-        self.pipeline.run(self.parsed_items)
+        self.group_handler.row_filters = self.row_filters
+        self.group_handler.enricher = self.enricher
+        self.group_handler.pipeline = self.pipeline
+        self._package = self.group_handler.process(self.parsed_items)
+        self.parsed_items = list(self._package.positions)
         return raw_count
-
-    def after_process(self) -> None:
-        self.parsed_items = drop_empty_rest(self.parsed_items)
-        fill_percent_markup(self.parsed_items)
-        fill_absolute_markup(self.parsed_items)
-        self.stats.type_corrections = self.count_type_corrections()
-        self.stats.title_conflicts = sum(1 for row_item in self.parsed_items if row_item.vendor.title_conflict)
-        self.stats.titles_not_composed = sum(1 for row_item in self.parsed_items if row_item.vendor.title_not_composed)
-
-    def count_type_corrections(self) -> int:
-        """Число позиций итогового результата с исправленным типом.
-
-        Считается после ``drop_empty_rest``: расхождения у позиций, отброшенных
-        без цены закупки или остатка, в прайс не попадают и в счётчик не входят.
-        """
-        return sum(1 for row_item in self.parsed_items if row_item.vendor.type_corrected)
 
 
 def make_parser[TParser: BaseParser](

@@ -1,5 +1,6 @@
 """tests for writer templates collection"""
 
+import re
 from typing import ClassVar
 
 import pytest
@@ -13,10 +14,11 @@ from parsers.writer.templates.all_templates import (
     writer_templates_by_name,
 )
 from parsers.writer.templates.iwrite_template import DEFAULT_TEMPLATE_FILE, IWriteTemplate, WriteColumns
+from parsers.writer.templates.tmpl.for_batteries import ForBatteries
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
-from parsers.writer.xlsx_driver import solid_fill
+from parsers.writer.templates.tmpl.for_product_groups import ForProductGroups
 
 
 class _NoFormat(IWriteTemplate):
@@ -35,13 +37,19 @@ def test_all_writer_templates_order() -> None:
 
 def test_extra_writer_templates() -> None:
     """полный шаблон доступен только явно."""
-    assert extra_writer_templates() == [ForFull]
+    assert extra_writer_templates() == [ForFull, ForBatteries, ForProductGroups]
 
 
 def test_writer_template_cli_names() -> None:
     """имена CLI совпадают с модулями шаблонов."""
     names = writer_templates_by_name()
-    assert names == {'for_inner': ForInner, 'for_drom': ForDrom, 'for_full': ForFull}
+    assert names == {
+        'for_inner': ForInner,
+        'for_drom': ForDrom,
+        'for_full': ForFull,
+        'for_batteries': ForBatteries,
+        'for_product_groups': ForProductGroups,
+    }
     assert writer_template_name(ForDrom) == 'for_drom'
     assert writer_template_name(ForFull) == 'for_full'
 
@@ -56,7 +64,10 @@ def test_get_writer_template_unknown() -> None:
     """неизвестное имя — точный текст ошибки со списком через ', '."""
     with pytest.raises(UnknownWriterTemplateError, match='nope') as error:
         get_writer_template('nope')
-    assert str(error.value) == "Шаблон 'nope' не существует. Доступны: for_inner, for_drom, for_full"
+    assert (
+        str(error.value)
+        == "Шаблон 'nope' не существует. Доступны: for_inner, for_drom, for_full, for_batteries, for_product_groups"
+    )
 
 
 def test_get_columns_format_empty_without_format() -> None:
@@ -84,6 +95,6 @@ def test_misspelled_template_setting_is_not_silently_ignored() -> None:
 
 @pytest.mark.parametrize('template', [ForInner, ForDrom, ForFull])
 def test_template_colors_are_valid_hex(template: type[IWriteTemplate]) -> None:
-    """Цвета шаблонов — валидный #RRGGBB; именованные (blue) роняют запись xlsx."""
+    """Палитра шаблонов задаётся шестизначными RGB-цветами."""
     for color in template().colors().get('with_map', {}).values():
-        solid_fill(color)  # недопустимый цвет бросит ValueError
+        assert re.fullmatch(r'#?[0-9a-fA-F]{6}', color)

@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from domain.config_context import get_config_provider
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
     ParseConfigNotSetError,
@@ -29,7 +28,6 @@ def _config(sheet_info: str = '') -> ParseConfiguration:
         stop_words=(),
         file_templates=(),
         sheet_indexes=(0,),
-        row_item_adaptor=RowItem,
     )
     aliases_provider = MagicMock()
     aliases_provider.get_aliases.return_value = {}
@@ -70,7 +68,12 @@ def test_is_active_without_vendor_config() -> None:
 
 
 def _vendor_config(enabled: bool) -> VendorConfig:
-    return VendorConfig(folder='f', enabled=enabled, code='c', name='n', start_row=1)
+    return VendorConfig(
+        folder='f',
+        enabled=enabled,
+        code='c',
+        name='n',
+    )
 
 
 @pytest.mark.parametrize('enabled', [True, False])

@@ -6,32 +6,12 @@ import json
 import sys
 import time
 from collections.abc import Mapping
-from typing import Any, TextIO, TypedDict
+from typing import Any, TextIO
 
-REPORT_VERSION = 1
+from app.parse_report_types import JsonError, JsonGroup, JsonReport
+
+REPORT_VERSION = 2
 _OK_KEY = 'ok'
-
-
-class JsonError(TypedDict):
-    """Ошибка запуска."""
-
-    kind: str
-    message: str
-
-
-class JsonReport(TypedDict):
-    """Стабильная схема ответа CLI."""
-
-    ok: bool
-    version: int
-    action: str
-    positions: list[dict[str, Any]]
-    stats: dict[str, Any]
-    warnings: list[str]
-    files: list[str]
-    suppliers: dict[str, str]
-    disabled_suppliers: dict[str, str]
-    error: JsonError | None
 
 
 def dump_json(payload: Mapping[str, Any]) -> str:
@@ -58,20 +38,16 @@ def empty_stats(elapsed: float) -> dict[str, Any]:
         'items': 0,
         'priced_items': 0,
         'doubles': 0,
-        'unknown_category_skips': 0,
         'black_list_skips': 0,
-        'type_corrections': 0,
-        'title_conflicts': 0,
+        'unrouted_rows': 0,
         'elapsed_seconds': round(elapsed, 2),
-        'percent_markup': {'min': 0, 'max': 0},
-        'absolute_markup': {'min': 0, 'max': 0},
     }
 
 
 def ok_payload(
     *,
     action: str,
-    positions: list[dict[str, Any]],
+    groups: dict[str, JsonGroup],
     stats: dict[str, Any],
     warnings: list[str],
     files: list[str],
@@ -82,7 +58,7 @@ def ok_payload(
         'ok': True,
         'version': REPORT_VERSION,
         'action': action,
-        'positions': positions,
+        'groups': groups,
         'stats': stats,
         'warnings': warnings,
         'files': files,
@@ -98,6 +74,7 @@ def error_payload(
     message: str,
     *,
     compact: bool = False,
+    groups: tuple[str, ...] = (),
 ) -> Mapping[str, Any]:
     """Собрать ответ об ошибке. compact — только ok/action/error (не разбор)."""
     error: JsonError = {'kind': kind, 'message': message}
@@ -107,7 +84,13 @@ def error_payload(
         'ok': False,
         'version': REPORT_VERSION,
         'action': action,
-        'positions': [],
+        'groups': {
+            group: {
+                'positions': [],
+                'stats': dict.fromkeys(('items', 'priced_items', 'doubles', 'black_list_skips'), 0),
+            }
+            for group in groups
+        },
         'stats': empty_stats(0),
         'warnings': [],
         'files': [],

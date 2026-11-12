@@ -1,6 +1,7 @@
 """Копия file_prices до обновления и предупреждения о смене схемы прайса после."""
 
 import logging
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,6 +9,7 @@ import openpyxl
 from log_watch import LoggerWatcher, texts_at
 
 from infrastructure.config.fake_config_provider import FakeConfigProvider
+from parsers.vendor_config.group_models import BatteryConfig, BatterySection
 from parsers.vendor_config.models import VendorConfig
 from services.price_schema_service import PriceSchemaService
 
@@ -16,10 +18,15 @@ _VENDOR = {
     'enabled': 1,
     'code': '4',
     'name': 'Мим',
-    'start_row': 2,
-    'file_templates': ['price*.xlsx'],
-    'sections': [
-        {'name': 'Мим', 'sheet_indexes': [0], 'columns': {'0': 'code', '1': 'title'}},
+    'product_groups': [
+        {
+            'id': 'tire_and_disk',
+            'start_row': 2,
+            'file_templates': ['price*.xlsx'],
+            'sections': [
+                {'id': '4', 'sheet_indexes': [0], 'columns': {'0': 'code', '1': 'title'}},
+            ],
+        }
     ],
 }
 
@@ -58,7 +65,8 @@ def test_changed_header_gives_warning(
     warnings = _run(service)
 
     expected = (
-        'Поставщик «Мим» (mim/price.xlsx): изменилась схема прайса — '
+        'Поставщик «Мим» (mim/price.xlsx), '
+        'группа «шины + диски» (tire_and_disk): изменилась схема прайса — '
         'вкладка «Sheet», колонка B: заголовок «Наименование» → «Название» (используется как «title»)'
     )
     assert warnings == [expected]
@@ -139,3 +147,30 @@ def test_snapshot_failure_skips_check(
     assert updated
     check.assert_not_called()
     assert 'Не удалось сделать копию прайсов (занято)' in texts_at(entries(), logging.WARNING)[0]
+
+
+def test_schema_checks_declared_battery_sheets(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:
+    """Просмотр схемы проверяет маршруты обеих групп, не требуя аккумуляторного обработчика."""
+    vendor = VendorConfig.from_dict(_VENDOR, 'mim', 'mim.json')
+    battery = BatterySection('battery', 'АКБ', 2, ('battery.xlsx',), sheet_indexes=(0,))
+    vendor = replace(vendor, product_groups=(*vendor.product_groups, BatteryConfig((battery,))))
+    root = Path(fake_config_provider.price_folder('mim'))
+    _write_price(root / 'price.xlsx', ['RN', 'Наименование'])
+    _write_price(root / 'battery.xlsx', ['АКБ'])
+    service = _service(tmp_path)
+    service.snapshot()
+    _write_price(root / 'price.xlsx', ['RN', 'Название'])
+    book = openpyxl.Workbook()
+    sheet = book.active
+    assert sheet is not None
+    sheet.title = 'Аккумуляторы'
+    book.save(root / 'battery.xlsx')
+
+    with patch('services.price_schema_service.load_vendor_configs', return_value={'mim': vendor}):
+        warnings = service.check()
+
+    assert len(warnings) == 2
+    assert 'tire_and_disk' in warnings[0]
+    assert 'title' in warnings[0]
+    assert 'batteries' in warnings[1]
+    assert 'Аккумуляторы' in warnings[1]

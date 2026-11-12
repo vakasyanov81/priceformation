@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from domain.exceptions import ConfigValidationError
+from parsers.vendor_config import strategy_names
 from parsers.vendor_config.slot_configs import BehaviorConfig
 
-PIPELINE_STEPS = ('title', 'min_rest', 'category', 'markup')
+PIPELINE_STEPS = strategy_names.PIPELINE_STEPS
 _AVAILABLE = ', '.join(PIPELINE_STEPS)
 
 

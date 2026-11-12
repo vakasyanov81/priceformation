@@ -2,13 +2,19 @@
 base parser config logic
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
+
+if TYPE_CHECKING:
+    from parsers.base_parser.routing import VendorRouting
 
 from domain.protocols import ConfigProvider
-from domain.row_item.row_item import RowItem
 from parsers import data_provider
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.group_models import BatterySection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 
 
 class ParseConfigNotSetError(RuntimeError):
@@ -38,7 +44,6 @@ class ParserParams:
     stop_words: tuple[str, ...]
     file_templates: tuple[str, ...]
     sheet_indexes: tuple[int, ...]
-    row_item_adaptor: type[RowItem]
 
 
 class BasePriceParseConfigurationParams(NamedTuple):
@@ -57,12 +62,15 @@ class ParseConfiguration:
     def __init__(
         self,
         parse_config: BasePriceParseConfigurationParams,
-        vendor_section: VendorSection | None = None,
+        vendor_section: VendorSection | BatterySection | None = None,
         vendor_config: VendorConfig | None = None,
+        routing: VendorRouting | None = None,
     ):
         """Секция и конфиг вендора заданы у config-driven поставщика, у легаси-вендора — None."""
         self.vendor_section = vendor_section
         self.vendor_config = vendor_config
+        self.product_group = vendor_section.product_group if vendor_section else None
+        self.routing = routing
         self.parse_config: BasePriceParseConfigurationParams = parse_config
         self.parser_params = parse_config.parser_params
         self.config_provider = parse_config.config_provider
@@ -110,8 +118,9 @@ def make_parse_config(
     *,
     config_provider: ConfigProvider,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    vendor_section: VendorSection | None = None,
+    vendor_section: VendorSection | BatterySection | None = None,
     vendor_config: VendorConfig | None = None,
+    routing: VendorRouting | None = None,
 ) -> ParseConfiguration:
     """ParseConfiguration with default FromUserConfig providers."""
     folder_name = parser_params.supplier.folder_name
@@ -125,4 +134,5 @@ def make_parse_config(
         ),
         vendor_section,
         vendor_config,
+        routing,
     )

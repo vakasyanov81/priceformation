@@ -1,38 +1,48 @@
 {
   "code": "7",
   "name": "STK",
-  "start_row": 12,
-  "file_templates": [
-    "price.xlsx"
-  ],
-  "pricing": {
-    "policy": "map_on_opt",
-    "rules": {
-      "markup_rules": [
-        { "min": 0, "max": 999999999, "percent": 0.06 }
-      ]
-    }
-  },
-  "category": {
-    "strategy": "tire_size_category"
-  },
-  "title": {
-    "reference_priority": 5,
-    "strategy": "poshk_stk_tire_compose",
-    "params_from_title": true
-  },
-  "sections": [
+  "product_groups": [
     {
-      "sheet_indexes": [
-        0
+      "sections": [
+        {
+          "sheet_indexes": [
+            0
+          ],
+          "columns": {
+            "0": "code",
+            "1": "title",
+            "2": "price_opt",
+            "4": "price_recommended",
+            "5": "rest_count"
+          },
+          "id": "7"
+        }
       ],
-      "columns": {
-        "0": "code",
-        "1": "title",
-        "2": "price_opt",
-        "4": "price_recommended",
-        "5": "rest_count"
-      }
+      "category": {
+        "strategy": "tire_size_category"
+      },
+      "title": {
+        "reference_priority": 5,
+        "strategy": "poshk_stk_tire_compose",
+        "params_from_title": true
+      },
+      "pricing": {
+        "policy": "map_on_opt",
+        "rules": {
+          "markup_rules": [
+            {
+              "min": 0,
+              "max": 999999999,
+              "percent": 0.06
+            }
+          ]
+        }
+      },
+      "start_row": 12,
+      "file_templates": [
+        "price.xlsx"
+      ],
+      "id": "tire_and_disk"
     }
   ]
 }

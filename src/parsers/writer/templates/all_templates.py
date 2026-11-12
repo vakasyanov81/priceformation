@@ -4,9 +4,11 @@ collection all active templates for writing
 
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 
+from .tmpl.for_batteries import ForBatteries
 from .tmpl.for_drom import ForDrom
 from .tmpl.for_full import ForFull
 from .tmpl.for_inner import ForInner
+from .tmpl.for_product_groups import ForProductGroups
 
 
 class UnknownWriterTemplateError(ValueError):
@@ -25,7 +27,7 @@ def all_writer_templates() -> list[type[IWriteTemplate]]:
 
 def extra_writer_templates() -> list[type[IWriteTemplate]]:
     """Шаблоны только по явному --result-template."""
-    return [ForFull]
+    return [ForFull, ForBatteries, ForProductGroups]
 
 
 def writer_template_name(template: type[IWriteTemplate]) -> str:

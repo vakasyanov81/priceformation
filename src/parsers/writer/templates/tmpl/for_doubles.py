@@ -12,6 +12,8 @@ from parsers.writer.templates.tmpl.for_inner import DOUBLES_COLOR_RULES, DOUBLES
 class ForDoubles(ForInner):
     """write template for duplicates report"""
 
+    template_id = 'for_doubles'
+
     __COLUMNS__: ClassVar[WriteColumns] = [
         {'Группа по параметрам': {'field': RowItem.group_by_params.name}},
         *ForInner.__COLUMNS__,

@@ -1,12 +1,14 @@
 """Разбор конфига поставщика: наследование секций, слоты и валидация."""
 
+from copy import deepcopy
 from typing import Any
 
 import pytest
 
 from domain.exceptions import ConfigValidationError
 from parsers.data_provider.models import ABSOLUTE_MODE_DELTA, AbsoluteMarkUpRules, MarkUpRule, MarkupRulesConfig
-from parsers.vendor_config.models import VendorConfig, VendorSection
+from parsers.vendor_config.models import VendorConfig
+from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import (
     DEFAULT_PIPELINE,
     BehaviorConfig,
@@ -21,14 +23,21 @@ WHERE = 'mim.json'
 MINIMAL: dict[str, Any] = {
     'code': 'mim',
     'name': 'Мим',
-    'start_row': 2,
-    'file_templates': ['*.xls'],
-    'sections': [{'columns': {'1': 'manufacturer_name'}}],
+    'product_groups': [
+        {
+            'id': 'tire_and_disk',
+            'start_row': 2,
+            'file_templates': ['*.xls'],
+            'sections': [{'id': 'mim', 'columns': {'1': 'manufacturer_name'}}],
+        }
+    ],
 }
 
 
 def _config(**overrides: Any) -> VendorConfig:
-    raw = {**MINIMAL, **overrides}
+    raw = deepcopy(MINIMAL)
+    raw['reader'] = overrides.pop('reader', 'xls')
+    raw['product_groups'][0].update(overrides)
     return VendorConfig.from_dict(raw, FOLDER, WHERE)
 
 
@@ -39,12 +48,12 @@ def test_vendor_fields_parsed() -> None:
     assert config.enabled is True
     assert config.code == 'mim'
     assert config.name == 'Мим'
-    assert config.start_row == 2
-    assert config.file_templates == ('*.xls',)
+    assert config.sections[0].start_row == 2
+    assert config.sections[0].file_templates == ('*.xls',)
     assert config.reader == 'xls'
 
 
-def test_section_inherits_vendor_fields() -> None:
+def test_section_inherits_group_fields() -> None:
     section = _config().sections[0]
 
     assert section.id == 'mim'
@@ -55,36 +64,34 @@ def test_section_inherits_vendor_fields() -> None:
 
 
 def test_xls_columns_get_integer_keys() -> None:
-    """Колонки секции дополняют колонки поставщика; ключи xls — целые."""
-    sections = [{'columns': {'1': 'manufacturer_name'}}]
+    """Колонки секции заменяют карту поставщика; ключи xls — целые."""
+    sections = [{'id': 'mim', 'columns': {'1': 'manufacturer_name'}}]
     config = _config(columns={'2': 'title'}, sections=sections)
 
-    assert config.columns == {2: 'title'}
-    assert config.sections[0].columns == {2: 'title', 1: 'manufacturer_name'}
+    assert config.sections[0].columns == {1: 'manufacturer_name'}
 
 
 def test_section_column_overrides_vendor_column() -> None:
-    """Та же колонка в секции заменяет поле поставщика."""
-    sections = [{'columns': {'1': 'model'}}]
+    """Карта секции заменяет всю карту, включая несовпадающие колонки."""
+    sections = [{'id': 'mim', 'columns': {'1': 'model'}}]
     config = _config(columns={'1': 'title', '2': 'code'}, sections=sections)
 
-    assert config.sections[0].columns == {1: 'model', 2: 'code'}
+    assert config.sections[0].columns == {1: 'model'}
 
 
 def test_json_reader_keeps_text_column_keys() -> None:
     config = _config(
         reader='json',
         columns={'article': 'code_art'},
-        sections=[{'columns': {'name': 'title'}}],
+        sections=[{'id': 'mim', 'columns': {'name': 'title'}}],
     )
 
-    assert config.columns == {'article': 'code_art'}
-    assert config.sections[0].columns == {'article': 'code_art', 'name': 'title'}
+    assert config.sections[0].columns == {'name': 'title'}
 
 
 def test_json_columns_list_maps_same_named_keys() -> None:
     """Список колонок у json: ключ записи совпадает с полем позиции и заменяет колонки поставщика."""
-    sections = [{'columns': ['code', 'title']}]
+    sections = [{'id': 'mim', 'columns': ['code', 'title']}]
     config = _config(reader='json', columns={'article': 'code_art'}, sections=sections)
 
     assert config.sections[0].columns == {'code': 'code', 'title': 'title'}
@@ -92,16 +99,17 @@ def test_json_columns_list_maps_same_named_keys() -> None:
 
 def test_json_columns_list_rejects_unknown_field() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестное поле «nope»'):
-        _config(reader='json', sections=[{'columns': ['code', 'nope']}])
+        _config(reader='json', sections=[{'id': 'mim', 'columns': ['code', 'nope']}])
 
 
-def test_section_slot_merges_with_vendor_slot() -> None:
+def test_section_slot_merges_with_group_slot() -> None:
     """Слот секции дополняет слот поставщика по ключам: заданное в секции заменяет, остальное наследуется."""
     config = _config(
         title={'strategy': 'tire_compose', 'variant': 'four_tochki'},
         pricing={'policy': 'base', 'rules': {'min_recommended_percent_markup': 0.1}},
         sections=[
             {
+                'id': 'mim',
                 'columns': {'0': 'title'},
                 'title': {'params_first': True},
                 'pricing': {'rules': {'markup_rules': [{'min': 0, 'max': 10, 'percent': 0.5}]}},
@@ -117,13 +125,14 @@ def test_section_slot_merges_with_vendor_slot() -> None:
     assert rules.markup_rules == {'0': MarkUpRule(min=0, max=10, percent_markup=0.5)}
 
 
-def test_section_markup_rules_replace_vendor_rules() -> None:
+def test_section_markup_rules_replace_group_rules() -> None:
     """Шкала наценки секции заменяет шкалу поставщика целиком, а не смешивается с ней."""
     vendor_rules = {'low': {'min': 0, 'max': 10, 'percent': 0.5}}
     section_rules = {'high': {'min': 10, 'max': 20, 'percent': 0.2}}
+    section_pricing_raw = {'rules': {'markup_rules': section_rules}}
     config = _config(
         pricing={'rules': {'markup_rules': vendor_rules}},
-        sections=[{'columns': {'0': 'title'}, 'pricing': {'rules': {'markup_rules': section_rules}}}],
+        sections=[{'id': 'mim', 'columns': {'0': 'title'}, 'pricing': section_pricing_raw}],
     )
 
     section_pricing = config.sections[0].pricing
@@ -132,14 +141,14 @@ def test_section_markup_rules_replace_vendor_rules() -> None:
 
 def test_start_row_defaults_to_first_row() -> None:
     """Без start_row данные читаются с первой строки."""
-    raw = dict(MINIMAL)
-    raw.pop('start_row')
+    raw = deepcopy(MINIMAL)
+    raw['product_groups'][0].pop('start_row')
 
     assert VendorConfig.from_dict(raw, FOLDER, WHERE).sections[0].start_row == 1
 
 
 def test_behaviour_defaults() -> None:
-    behavior = _config().behavior
+    behavior = _config().sections[0].behavior
 
     assert behavior.min_rest == 4
     assert behavior.rest == 'count'
@@ -148,21 +157,21 @@ def test_behaviour_defaults() -> None:
     assert behavior.collect_missing_recommended is False
 
 
-def test_top_level_slots_parsed() -> None:
+def test_group_slots_parsed() -> None:
     config = _config(
-        pricing={'policy': 'absolute', 'rules': {'markup_rules': {'k': {'min': 0, 'markup': 10}}}},
-        behavior={'min_rest': 2, 'rest': 'on_request', 'pipeline': ['title']},
+        pricing={'policy': 'map_on_opt', 'rules': {'markup_rules': {'k': {'min': 0, 'markup': 10}}}},
+        behavior={'min_rest': 2, 'rest': 'count', 'pipeline': ['title']},
         category={'strategy': 'fixed', 'value': 'Шины'},
-        title={'strategy': 'title_keywords'},
+        title={'strategy': 'normalize_title'},
     )
 
-    assert config.pricing.policy == 'absolute'
-    assert isinstance(config.pricing.rules, MarkupRulesConfig)
-    assert config.behavior.min_rest == 2
-    assert config.behavior.rest == 'on_request'
-    assert config.behavior.pipeline == ('title',)
-    assert config.category.fixed_value == 'Шины'
-    assert config.title.strategy == 'title_keywords'
+    assert config.sections[0].pricing.policy == 'map_on_opt'
+    assert isinstance(config.sections[0].pricing.rules, MarkupRulesConfig)
+    assert config.sections[0].behavior.min_rest == 2
+    assert config.sections[0].behavior.rest == 'count'
+    assert config.sections[0].behavior.pipeline == ('title',)
+    assert config.sections[0].category.fixed_value == 'Шины'
+    assert config.sections[0].title.strategy == 'normalize_title'
 
 
 def test_section_slots_and_overrides_parsed() -> None:
@@ -176,8 +185,8 @@ def test_section_slots_and_overrides_parsed() -> None:
                 'columns': {'0': 'code'},
                 'sheet_info': 'диск',
                 'sheet_indexes': [0, 1],
-                'category': {'strategy': 'field', 'field': 'type'},
-                'title': {'strategy': 'title_keywords', 'variant': 'v1', 'aliases': True},
+                'category': {'strategy': 'field_map', 'field': 'type'},
+                'title': {'strategy': 'normalize_title', 'variant': 'v1', 'aliases': True},
                 'pricing': {'policy': 'percent_by_threshold', 'rules': {'threshold': 100, 'low': 5, 'high': 10}},
             }
         ]
@@ -199,17 +208,17 @@ def test_section_slots_and_overrides_parsed() -> None:
     assert section.pricing.high == 10
 
 
-def test_section_inherits_vendor_slots() -> None:
+def test_section_inherits_group_slots() -> None:
     config = _config(
-        pricing={'policy': 'absolute'},
+        pricing={'policy': 'map_on_opt'},
         category={'strategy': 'fixed', 'value': 'Диск'},
-        title={'strategy': 'title_keywords'},
+        title={'strategy': 'normalize_title'},
     )
     section = config.sections[0]
 
-    assert section.pricing.policy == 'absolute'
+    assert section.pricing.policy == 'map_on_opt'
     assert section.category.fixed_value == 'Диск'
-    assert section.title.strategy == 'title_keywords'
+    assert section.title.strategy == 'normalize_title'
 
 
 def test_root_must_be_object() -> None:
@@ -225,35 +234,41 @@ def test_required_key_missing_rejected() -> None:
 
 
 def test_invalid_reader_rejected() -> None:
-    with pytest.raises(ConfigValidationError, match='«reader»'):
+    with pytest.raises(ConfigValidationError, match='reader'):
         _config(reader='csv')
 
 
 def test_sections_must_be_non_empty_list() -> None:
-    with pytest.raises(ConfigValidationError, match='«sections»'):
+    with pytest.raises(ConfigValidationError, match='sections'):
         _config(sections=[])
-    with pytest.raises(ConfigValidationError, match='«sections»'):
+    with pytest.raises(ConfigValidationError, match='sections'):
         _config(sections='нет')
 
 
 def test_section_requires_columns() -> None:
     with pytest.raises(ConfigValidationError, match='не заданы «columns»'):
-        _config(sections=[{}])
+        _config(
+            sections=[
+                {
+                    'id': 'mim',
+                }
+            ]
+        )
 
 
 def test_section_rejects_empty_templates_override() -> None:
     with pytest.raises(ConfigValidationError, match='не задан «file_templates»'):
-        _config(sections=[{'file_templates': [], 'columns': {'0': 'code'}}])
+        _config(sections=[{'id': 'mim', 'file_templates': [], 'columns': {'0': 'code'}}])
 
 
 def test_xls_column_key_must_be_integer() -> None:
     with pytest.raises(ConfigValidationError, match='должен быть целым'):
-        _config(sections=[{'columns': {'brand': 'manufacturer_name'}}])
+        _config(sections=[{'id': 'mim', 'columns': {'brand': 'manufacturer_name'}}])
 
 
 def test_unknown_column_field_rejected() -> None:
     with pytest.raises(ConfigValidationError, match='неизвестное поле «manufacturer»'):
-        _config(sections=[{'columns': {'0': 'manufacturer'}}])
+        _config(sections=[{'id': 'mim', 'columns': {'0': 'manufacturer'}}])
 
 
 def test_unknown_column_field_rejected_for_json_reader() -> None:
@@ -262,9 +277,10 @@ def test_unknown_column_field_rejected_for_json_reader() -> None:
 
 
 def test_known_column_field_accepted() -> None:
-    config = _config(reader='json', columns={'brand': 'manufacturer_name'})
+    columns = {'brand': 'manufacturer_name'}
+    config = _config(reader='json', sections=[{'id': 'mim', 'columns': columns}])
 
-    assert config.columns == {'brand': 'manufacturer_name'}
+    assert config.sections[0].columns == {'brand': 'manufacturer_name'}
 
 
 def test_slot_must_be_object() -> None:
@@ -468,60 +484,6 @@ def test_section_without_keys_equals_inherited_defaults() -> None:
         start_row=2,
         file_templates=('*.xls',),
         columns={1: 'manufacturer_name'},
-    )
-
-
-def test_vendor_config_reads_all_fields() -> None:
-    """Конфиг целиком, включая слоты и секции, равен ожидаемому объекту."""
-    config = _config(
-        columns={'2': 'title'},
-        pricing={'policy': 'absolute'},
-        behavior={'min_rest': 9, 'rest': 'on_request'},
-        category={'strategy': 'field', 'field': 'type'},
-        title={'strategy': 'title_keywords', 'variant': 'v1', 'aliases': True},
-        sections=[
-            {
-                'id': 'sec',
-                'name': 'Лист',
-                'start_row': 5,
-                'file_templates': ['a.xls'],
-                'columns': {'0': 'code'},
-                'sheet_info': 'лист',
-                'sheet_indexes': [0, 1],
-                'category': {'strategy': 'fixed', 'value': 'Диск'},
-                'title': {'strategy': 'default', 'aliases': True},
-                'pricing': {'policy': 'base', 'rules': {'threshold': 10}},
-            }
-        ],
-    )
-
-    assert config == VendorConfig(
-        folder=FOLDER,
-        enabled=True,
-        code='mim',
-        name='Мим',
-        start_row=2,
-        file_templates=('*.xls',),
-        reader='xls',
-        columns={2: 'title'},
-        pricing=PricingConfig(policy='absolute'),
-        behavior=BehaviorConfig(min_rest=9, rest='on_request'),
-        category=CategoryConfig(strategy='field', field_name='type'),
-        title=TitleConfig(strategy='title_keywords', variant='v1', aliases=True),
-        sections=(
-            VendorSection(
-                id='sec',
-                name='Лист',
-                start_row=5,
-                file_templates=('a.xls',),
-                columns={2: 'title', 0: 'code'},
-                sheet_info='лист',
-                sheet_indexes=(0, 1),
-                category=CategoryConfig(strategy='fixed', fixed_value='Диск', field_name='type'),
-                title=TitleConfig(variant='v1', aliases=True),
-                pricing=PricingConfig(threshold=10),
-            ),
-        ),
     )
 
 

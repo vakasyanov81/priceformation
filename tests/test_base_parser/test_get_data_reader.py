@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from domain.config_context import get_config_provider
-from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     BasePriceParseConfigurationParams,
@@ -33,7 +32,6 @@ def _parse_config() -> ParseConfiguration:
                 stop_words=(),
                 file_templates=(),
                 sheet_indexes=(0,),
-                row_item_adaptor=RowItem,
             ),
         )
     )

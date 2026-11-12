@@ -10,6 +10,7 @@
 5. наименьшая цена с наценкой; при равной цене остатки таких строк складываются.
 """
 
+from domain.product_groups import DuplicateGroupKey
 from domain.row_item.row_item import RowItem
 from parsers.common_price.double_selection import pick_double
 
@@ -20,14 +21,14 @@ def exclude_doubles(row_items: list[RowItem], priority_suppliers: tuple[str, ...
     Строка группы встаёт на место первой строки группы. Новые объекты при сложении
     остатков — исходные позиции не меняются (их пишут другие шаблоны).
     """
-    groups: dict[int, list[RowItem]] = {}
+    groups: dict[DuplicateGroupKey, list[RowItem]] = {}
     for row_item in row_items:
         group_id = _double_group(row_item)
         if group_id is not None:
             groups.setdefault(group_id, []).append(row_item)
 
     kept: list[RowItem] = []
-    emitted: set[int] = set()
+    emitted: set[DuplicateGroupKey] = set()
     for row_item in row_items:
         group_id = _double_group(row_item)
         if group_id is None:
@@ -38,8 +39,8 @@ def exclude_doubles(row_items: list[RowItem], priority_suppliers: tuple[str, ...
     return kept
 
 
-def _double_group(row_item: RowItem) -> int | None:
+def _double_group(row_item: RowItem) -> DuplicateGroupKey | None:
     duplicate = row_item.duplicate
-    if not (duplicate.is_double or duplicate.double_candidate):
+    if not (duplicate.is_double or duplicate.double_candidate) or duplicate.group_by_params is None:
         return None
-    return duplicate.group_by_params
+    return DuplicateGroupKey(row_item.product_group, duplicate.group_by_params)

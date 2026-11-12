@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 from domain.row_item.row_item import RowItem
-from parsers.writer.jsonl_writer import RESULT_META_FILE, write_template_jsonl
+from parsers.writer.jsonl_meta import RESULT_META_FILE
+from parsers.writer.jsonl_writer import write_template_jsonl
 from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_inner import ForInner
@@ -78,19 +79,14 @@ class _RawValueTemplate(IWriteTemplate):
 
 def _load_meta(folder: Path) -> dict[str, str]:
     loaded = json.loads((folder / RESULT_META_FILE).read_text(encoding='utf-8'))
-    columns: dict[str, str] = {}
-    for key, column_name in loaded.items():
-        if not str(key).isdigit():
-            continue
-        columns[str(key)] = str(column_name)
+    columns: dict[str, str] = next(reversed(loaded['files'].values()))['columns']
     return columns
 
 
 def _load_values(folder: Path) -> dict[str, Any]:
     loaded = json.loads((folder / RESULT_META_FILE).read_text(encoding='utf-8'))
-    raw = loaded.get('values', {})
-    assert isinstance(raw, dict)
-    return raw
+    codes: dict[str, Any] = next(reversed(loaded['files'].values()))['value_codes']
+    return codes
 
 
 def _first_row(path: str) -> dict[str, Any]:
@@ -133,18 +129,14 @@ def test_jsonl_inner_compact_keys(tmp_path: Path) -> None:
     assert 'Номенклатура' not in payload
 
 
-def test_jsonl_shared_keys_across_templates(tmp_path: Path) -> None:
-    """колонка с тем же именем получает тот же ключ во всех jsonl папки."""
-    inner_path = write_template_jsonl(write_data, ForInner, str(tmp_path))
-    drom_path = write_template_jsonl(write_data, ForDrom, str(tmp_path))
-    meta = _load_meta(tmp_path)
-    inner_row = _first_row(inner_path)
-    drom_row = _first_row(drom_path)
-    type_key = _meta_key(meta, _TYPE_NAME)
-    price_key = _meta_key(meta, _PRICE_NAME)
-    assert inner_row[type_key] == drom_row[type_key] == 'Автошина'
-    assert inner_row[price_key] == drom_row[price_key] == 3980.0
-    assert meta['1'] == _TYPE_NAME
+def test_jsonl_local_keys_across_templates(tmp_path: Path) -> None:
+    """Разные шаблоны сохраняют собственный порядок колонок и схемы."""
+    write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
+    first = _load_meta(tmp_path)
+    write_template_jsonl(write_data, ForInner, str(tmp_path))
+    second = _load_meta(tmp_path)
+    assert first['1'] == 'Номенклатура'
+    assert second['1'] == _TYPE_NAME
 
 
 def test_jsonl_drom_skips_empty_rest(tmp_path: Path) -> None:
@@ -312,53 +304,12 @@ def test_meta_json_keeps_cyrillic(tmp_path: Path) -> None:
     assert '\\u' not in text
 
 
-def _write_meta(folder: Path, payload: dict[str, Any]) -> None:
-    (folder / RESULT_META_FILE).write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
-
-
-def test_meta_extends_partial_keys(tmp_path: Path) -> None:
-    """Новые колонки дописываются после уже известных, нечисловые ключи мета выбрасываются."""
-    _write_meta(tmp_path, {'note': 'ручной', '1': 'Номенклатура'})
-    path = write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
-    assert _first_row(path) == {'1': _TITLE, '2': 3980.0, '3': 4.0}
-    assert _load_meta(tmp_path) == {'1': 'Номенклатура', '2': _PRICE_NAME, '3': 'Остаток'}
-
-
-def test_meta_keeps_key_order_of_existing_meta(tmp_path: Path) -> None:
-    """Нечисловые ключи в начале мета пропускаются, а не обрывают разбор."""
-    _write_meta(
-        tmp_path,
-        {'values': {}, 'note': 1, '1': 'Остаток', '2': _PRICE_NAME, '3': 'Номенклатура'},
-    )
-    path = write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
-    assert _first_row(path) == {'1': 4.0, '2': 3980.0, '3': _TITLE}
-
-
-def test_meta_drops_unusable_stored_codes(tmp_path: Path) -> None:
-    """Код, не короче значения, из мета не переиспользуется."""
-    _write_meta(tmp_path, {'values': {'@1': 'да'}})
-    path = write_template_jsonl(_repeat_pair(season='да'), _RepeatFieldsTemplate, str(tmp_path))
-    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
-    assert _first_row(path)[season_key] == 'да'
-    assert not _load_values(tmp_path)
-
-
-def test_meta_reuses_stored_code_index(tmp_path: Path) -> None:
-    """Новый код продолжает нумерацию сохранённой, а не начинается с @1."""
-    _write_meta(tmp_path, {'values': {'@1': 'Автошина', '@2': 'Зимняя', '@3': '225'}})
-    path = write_template_jsonl(_repeat_pair(season='Зимняя'), _RepeatFieldsTemplate, str(tmp_path))
-    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
-    assert _first_row(path)[season_key] == '@2'
-    assert _load_values(tmp_path) == {'@1': 'Автошина', '@2': 'Зимняя'}
-
-
-def test_meta_drops_values_without_codes(tmp_path: Path) -> None:
-    """Непригодные сохранённые коды вычищаются из мета, а не висят вечно."""
-    _write_meta(tmp_path, {'values': {'@1': '225'}})
-    path = write_template_jsonl(_repeat_pair(season='Зимняя'), _RepeatFieldsTemplate, str(tmp_path))
-    season_key = _meta_key(_load_meta(tmp_path), 'Сезон')
-    assert _first_row(path)[season_key] == '@1'
-    assert _load_values(tmp_path) == {'@1': 'Зимняя'}
+def test_repeat_write_rebuilds_codes(tmp_path: Path) -> None:
+    """Повторный запуск не переиспользует старые коды и строки."""
+    write_template_jsonl(_repeat_pair(season='Зимняя'), _RepeatFieldsTemplate, str(tmp_path))
+    path = write_template_jsonl(_repeat_pair(season='Летняя'), _RepeatFieldsTemplate, str(tmp_path))
+    assert len(Path(path).read_text(encoding='utf-8').splitlines()) == 2
+    assert _load_values(tmp_path) == {'@1': 'Летняя'}
 
 
 def test_repeated_title_is_not_coded(tmp_path: Path) -> None:

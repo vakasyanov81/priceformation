@@ -2,11 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from cfg.services import configure_services, ensure_services_configured
+from cfg.vendor_parser import parser_for_vendor
 from domain.config_context import set_config_provider
-from parsers.common_price.output import WriteDriverFactory, XlsWriterFactory
+from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
-from services.configure import configure_services, ensure_services_configured
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.grouper_factory import grouper_factory
@@ -18,7 +19,6 @@ from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService
-from services.vendor_parser import parser_for_vendor
 from services.zapaska_service import ZapaskaService
 
 
@@ -30,7 +30,7 @@ def test_configure_registers_factories() -> None:
     assert ServiceProvider.resolve(ParserFactory) is parser_for_vendor
     assert ServiceProvider.resolve(GrouperFactory) is grouper_factory
     assert ServiceProvider.resolve(XlsWriterFactory) is XlsWriter
-    assert ServiceProvider.resolve(WriteDriverFactory) is XlsxWriterDriver
+    assert ServiceProvider.resolve(WriteDriverFactory) is XlsxWriterAdapter
 
 
 def test_configure_registers_services() -> None:
@@ -136,7 +136,7 @@ def test_writer_factories_resolved_at_report_service_creation() -> None:
         report.write_doubles([])
 
     assert output.call_args.kwargs['xls_writer'] is XlsWriter
-    assert output.call_args.kwargs['write_driver'] is XlsxWriterDriver
+    assert output.call_args.kwargs['write_driver'] is XlsxWriterAdapter
     assert output.call_args.kwargs['config_provider'] is provider
 
 

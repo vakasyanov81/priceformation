@@ -41,7 +41,7 @@ def test_response_exit() -> None:
 def test_run_make_price() -> None:
     """сборка общего прайса и запись через сервисы"""
     parsed = MagicMock()
-    parsed.parsed_items = [1]
+    parsed.tire_and_disk_items = [1]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
@@ -54,9 +54,9 @@ def test_run_make_price() -> None:
 
         run_make_price_by_supplier()
         orchestrator.parse_all.assert_called_once()
-        reporter.write_prices.assert_called_once_with([1], template=None)
+        reporter.write_result.assert_called_once_with(parsed, template=None)
         run_make_price_by_supplier(result_template='for_drom')
-        reporter.write_prices.assert_called_with([1], template='for_drom')
+        reporter.write_result.assert_called_with(parsed, template='for_drom')
 
 
 def test_run_upload_zapaska(watch_logger: LoggerWatcher) -> None:

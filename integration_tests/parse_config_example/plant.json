@@ -1,0 +1,68 @@
+{
+  "code": "plant",
+  "name": "План-Т",
+  "reader": "xls",
+  "product_groups": [
+    {
+      "id": "batteries",
+      "file_templates": [
+        "ПРАЙС 200 PLAN-T.PRO*.xls"
+      ],
+      "start_row": 6,
+      "title": {
+        "strategy": "plant",
+        "lines": [
+          "XTREME +EFB",
+          "XTREME Arctic"
+        ]
+      },
+      "pricing": {
+        "policy": "recommended"
+      },
+      "behavior": {
+        "rest": "count",
+        "min_rest": 1
+      },
+      "columns": {
+        "1": "title",
+        "2": "rest_count",
+        "3": "capacity_ah",
+        "4": "starting_current_a",
+        "5": "length_mm",
+        "6": "width_mm",
+        "7": "height_mm",
+        "8": "size_type",
+        "9": "terminal_type",
+        "10": "polarity",
+        "11": "serviceable",
+        "12": "weight",
+        "13": "bottom_mount",
+        "14": "warranty_months",
+        "15": "efb",
+        "16": "agm",
+        "17": "manufacturer_name",
+        "18": "price_group",
+        "19": "certificate_url",
+        "20": "code_art",
+        "21": "code",
+        "22": "code_man",
+        "23": "price_opt",
+        "24": "price_recommended"
+      },
+      "sections": [
+        {
+          "id": "plant_batteries",
+          "sheet_indexes": [
+            0
+          ]
+        }
+      ],
+      "section_selector": {
+        "column": "1",
+        "keywords": [
+          "АКБ"
+        ]
+      }
+    }
+  ]
+}
