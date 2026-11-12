@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from domain.battery.case import BatteryCase
+from domain.battery.duplicate import BatteryDuplicate
 from domain.battery.field_registry import validate_fields
 from domain.battery.identity import BatteryIdentity
 from domain.battery.offer import BatteryOffer
@@ -20,6 +21,8 @@ class BatteryItem:
     electrical: BatteryParameters = field(default_factory=BatteryParameters)
     case: BatteryCase = field(default_factory=BatteryCase)
     offer: BatteryOffer = field(default_factory=BatteryOffer)
+
+    duplicate: BatteryDuplicate = field(default_factory=BatteryDuplicate)
 
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:

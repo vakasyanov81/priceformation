@@ -121,8 +121,7 @@ def test_explicit_line_can_match_complete_title() -> None:
 def test_grouping_and_output_are_not_silently_replaced() -> None:
     battery_handler = _battery_handler()
     assert battery_handler.process([]) == BatteryResult()
-    with pytest.raises(NotImplementedError, match=r'8\.4'):
-        battery_handler.group(BatteryResult())
+    assert battery_handler.group(BatteryResult()) == BatteryResult()
     with pytest.raises(NotImplementedError, match=r'8\.5'):
         battery_handler.prepare_output(BatteryResult())
 
