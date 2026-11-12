@@ -157,7 +157,7 @@ def test_upload_zapaska_data() -> None:
         patch('services.zapaska_service.get_zapaska_api_config', return_value=api),
         patch('services.zapaska_service.load_remote_vendor_data') as mock_load,
     ):
-        ZapaskaService().upload_data()
+        assert ZapaskaService().upload_data() is True
     mock_load.assert_called_once_with(api=api)
 
 
@@ -171,7 +171,7 @@ def test_upload_four_tochki_data() -> None:
         patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups),
         patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,
     ):
-        FourTochkiService().upload_data()
+        assert FourTochkiService().upload_data() is True
     mock_load.assert_called_once_with(api=api, groups=groups)
 
 

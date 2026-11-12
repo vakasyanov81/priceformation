@@ -17,9 +17,9 @@ _RESOLVE = 'app.run.ServiceProvider.resolve'
 
 
 def test_run_fetch_mail_prices(watch_logger: LoggerWatcher) -> None:
-    """выгрузка прайсов из почты через сервис и сообщение о количестве файлов"""
+    """выгрузка прайсов из почты через сервис и сообщение о количестве файлов и поставщиках"""
     mail_service = MagicMock()
-    mail_service.fetch_prices.return_value = [MagicMock(), MagicMock()]
+    mail_service.fetch_prices.return_value = [MagicMock(folder='stk'), MagicMock(folder='pioner')]
     entries = watch_logger(_RUN_LOGGER)
 
     with patch(
@@ -31,7 +31,7 @@ def test_run_fetch_mail_prices(watch_logger: LoggerWatcher) -> None:
         run_fetch_mail_prices()
 
     mail_service.fetch_prices.assert_called_once_with()
-    assert texts_at(entries(), logging.INFO) == ['*** Прайсы из почты получены: 2. ***\n']
+    assert texts_at(entries(), logging.INFO) == ['*** Прайсы из почты получены: 2 (stk, pioner). ***\n']
 
 
 def test_response_update_all_supplier_prices() -> None:
@@ -46,9 +46,13 @@ def test_response_update_all_supplier_prices() -> None:
         assert mock_try.call_args.args[0].__name__ == 'run_update_all_supplier_prices'
 
 
-def test_run_update_all_prices_order() -> None:
-    """запаска, Форточки, МИМ и почта вызываются по порядку, каждый через try_call"""
+def test_run_update_all_prices_order(watch_logger: LoggerWatcher) -> None:
+    """источники вызываются по порядку; сводка API содержит только реально загруженных поставщиков"""
     calls = MagicMock()
+    calls.zapaska.return_value = True
+    calls.four_tochki.return_value = False
+    calls.mim.return_value = True
+    entries = watch_logger(_RUN_LOGGER)
     with (
         patch(_RESOLVE, side_effect={PriceSchemaService: MagicMock()}.__getitem__),
         patch('app.run.run_upload_zapaska_data', calls.zapaska),
@@ -60,6 +64,7 @@ def test_run_update_all_prices_order() -> None:
 
         run_update_all_supplier_prices()
         assert [call[0] for call in calls.mock_calls] == ['zapaska', 'four_tochki', 'mim', 'mail']
+    assert texts_at(entries(), logging.INFO) == ['*** Прайсы по API получены: 2 (zapaska, mim). ***\n']
 
 
 def test_update_all_single_schema_guard() -> None:
@@ -84,7 +89,7 @@ def test_update_all_raises_on_failed_source() -> None:
     """сбой одного источника не отменяет остальные, но итог — ошибка домена, а не тихий успех"""
     mim = MagicMock()
 
-    def run_upload_zapaska_data() -> None:
+    def run_upload_zapaska_data(*, log_success: bool = True) -> None:
         raise CoreExceptionError('zapaska down')
 
     with (
@@ -99,4 +104,4 @@ def test_update_all_raises_on_failed_source() -> None:
 
         with pytest.raises(CoreExceptionError, match='run_upload_zapaska_data'):
             run_update_all_supplier_prices()
-    mim.assert_called_once_with()
+    mim.assert_called_once_with(log_success=False)

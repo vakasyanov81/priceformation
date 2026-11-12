@@ -17,8 +17,9 @@ class ZapaskaService:
     def __init__(self, config_provider: ConfigProvider | None = None) -> None:
         self._config_provider = config_provider
 
-    def upload_data(self) -> None:
-        """Загрузить удалённые данные в локальную базу."""
+    def upload_data(self) -> bool:
+        """Загрузить удалённые данные в локальную базу; вернуть False, если поставщик отключён."""
         if skip_disabled_upload(_VENDOR_FOLDER, self._config_provider or get_config_provider()):
-            return
+            return False
         load_remote_vendor_data(api=get_zapaska_api_config())
+        return True

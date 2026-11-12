@@ -15,6 +15,7 @@ _RUN_LOGGER = 'app.run'
 def test_run_upload_mim(watch_logger: LoggerWatcher) -> None:
     """загрузка данных МИМ через сервис и сообщение об успехе"""
     mim_service = MagicMock()
+    mim_service.upload_data.return_value = True
     entries = watch_logger(_RUN_LOGGER)
     with patch(
         'app.run.ServiceProvider.resolve',
@@ -25,4 +26,20 @@ def test_run_upload_mim(watch_logger: LoggerWatcher) -> None:
         run_upload_mim_data()
 
     mim_service.upload_data.assert_called_once_with()
-    assert texts_at(entries(), logging.INFO) == ['*** Данные МИМ успешно загружены. ***\n']
+    assert texts_at(entries(), logging.INFO) == ['*** Данные МИМ (API) успешно загружены. ***\n']
+
+
+def test_run_upload_mim_disabled(watch_logger: LoggerWatcher) -> None:
+    """отключённый МИМ не даёт сообщения об успешной загрузке"""
+    mim_service = MagicMock()
+    mim_service.upload_data.return_value = False
+    entries = watch_logger(_RUN_LOGGER)
+    with patch(
+        'app.run.ServiceProvider.resolve',
+        side_effect={MimService: mim_service, PriceSchemaService: MagicMock()}.__getitem__,
+    ):
+        from app.run import run_upload_mim_data
+
+        run_upload_mim_data()
+
+    assert texts_at(entries(), logging.INFO) == []

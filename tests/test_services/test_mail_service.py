@@ -11,6 +11,7 @@ from log_watch import LoggerWatcher, texts_at
 from domain.mail import PriceDownloadError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.mail_credentials import MailCredentials
+from infrastructure.logging.console import FILE_ONLY
 from infrastructure.mail.imap import save_price
 from parsers.mail.client import FoundPrice
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
@@ -217,6 +218,7 @@ def test_fetch_prices_skips_failed_download(
 def test_fetch_prices_skips_vendor_not_using_mail(
     monkeypatch: pytest.MonkeyPatch,
     watch_logger: LoggerWatcher,
+    caplog: pytest.LogCaptureFixture,
     *,
     enabled: bool,
     source: str,
@@ -231,7 +233,10 @@ def test_fetch_prices_skips_vendor_not_using_mail(
     assert not mail_service.MailService().fetch_prices()
     wired.find.assert_not_called()
     wired.save.assert_not_called()
-    assert len(texts_at(entries(), logging.INFO)) == 1
+    assert len(texts_at(entries(), logging.INFO)) == int(not enabled)
+    if not enabled:
+        record = next(record for record in caplog.records if record.name == 'services.vendor_activity')
+        assert getattr(record, FILE_ONLY, False) is True
 
 
 def test_fetch_prices_loads_active_file_vendor(
