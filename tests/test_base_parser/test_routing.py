@@ -8,11 +8,11 @@ from typing import Any
 import pytest
 
 from domain.exceptions import ConfigValidationError
-from parsers.base_parser.config_driven_parser import parser_params_from_section
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.protocols import FileReaderProtocol
 from parsers.base_parser.routing import VendorRouting
 from parsers.base_parser.routing_rows import RowRoutingError
+from parsers.base_parser.section_params import parser_params_from_section
 from parsers.raw_table import RawRow, RawTable
 from parsers.vendor_config.group_models import TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig

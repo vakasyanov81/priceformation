@@ -11,15 +11,15 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
-from domain.exceptions import ConfigValidationError
-from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.logging.file_logging import clear_log_files
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import ParseConfiguration
+from parsers.base_parser.supplier_parser import SupplierParser
 from parsers.common_price.grouper import CommonPriceGrouper
 from parsers.data_provider.manufacturer_aliases import clear_manufacturer_aliases_cache
+from services.group_processing import group_packages
 from services.parse_logging import LogMessage, log_parse_failure, parser_messages, skips_messages
 from services.parse_result import ParseResult, ParseSelection
 from services.parse_statistics import GroupStatistics, UnknownCategorySkip
@@ -37,7 +37,7 @@ class ParserFactory(Protocol):
         self,
         parser_cls: type[BaseParser],
         parse_config: ParseConfiguration | None,
-    ) -> BaseParser:
+    ) -> SupplierParser:
         """Собрать парсер поставщика."""
         ...
 
@@ -54,12 +54,6 @@ class GrouperFactory(Protocol):
     ) -> CommonPriceGrouper:
         """Создать группировщик для списка записей с очередью поставщиков-эталонов названия."""
         ...
-
-
-def _doubles_summary(doubles: list[RowItem]) -> str:
-    """Строка итога по дублям: всего и сколько из них сомнительных по цене."""
-    doubtful = sum(1 for row in doubles if row.duplicate.doubtful_price)
-    return f'\nКоличество дублей: {len(doubles)}, из них сомнительных (цена ±5%): {doubtful}\n'
 
 
 class ParseOrchestrator:
@@ -109,22 +103,8 @@ class ParseOrchestrator:
         return parse_result
 
     def _group_packages(self, parse_result: ParseResult) -> None:
-        """Обработать каждый пакет только правилами его товарной группы."""
-        for group in parse_result.groups:
-            if group is not ProductGroup.TIRE_AND_DISK:
-                raise ConfigValidationError(f'Группировка группы {group.value} ещё не реализована')
-            grouper = self._grouper_factory(
-                parse_result.tire_and_disk_items,
-                aliases_map=self._vendor_source.aliases_map(),
-                reference_priority=self._vendor_source.reference_priority(),
-            )
-            grouped = grouper.group_by_params().get_row_items()
-            parse_result.replace_package(TireAndDiskResult(tuple(grouped)))
-            counters = parse_result.statistics.setdefault(group, GroupStatistics())
-            counters.item_count = len(grouped)
-            counters.priced_items = sum(bool(row.pricing.price_opt) for row in grouped)
-            counters.doubles = sum(bool(row.duplicate.is_double) for row in grouped)
-            logger.info('[%s] %s', group.value, _doubles_summary(grouper.get_double_row_items()))
+        """Передать пакеты обработке собственных моделей."""
+        group_packages(parse_result, self._grouper_factory, self._vendor_source, logger)
 
     def _parse_all_vendors(self, parse_result: ParseResult, vendors: VendorList) -> None:
         """Собрать все группы и стратегии до чтения первого прайса, затем разобрать поставщиков."""
@@ -133,7 +113,7 @@ class ParseOrchestrator:
             self._parse_supplier(parse_result, parser)
         parse_result.unrouted_rows = _unrouted_rows(vendors)
 
-    def _parse_supplier(self, parse_result: ParseResult, parser: BaseParser) -> None:
+    def _parse_supplier(self, parse_result: ParseResult, parser: SupplierParser) -> None:
         """Парсит прайс одного поставщика и добавляет пакет его группы к результату."""
         try:
             parsed = parser.parse()
@@ -155,7 +135,7 @@ def _emit(messages: list[LogMessage]) -> None:
         logger.log(level, text)
 
 
-def _parser_unknown_skips(parser: BaseParser) -> list[UnknownCategorySkip]:
+def _parser_unknown_skips(parser: SupplierParser) -> list[UnknownCategorySkip]:
     """Пропуски неизвестных категорий парсера с именем поставщика."""
     skips = parser.stats.unknown_category_skips
     if not skips:

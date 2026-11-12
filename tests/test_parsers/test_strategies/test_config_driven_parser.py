@@ -18,13 +18,13 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.config_driven_parser import (
     make_config_driven_parser,
-    parser_params_from_section,
     strategy_hooks_from_section,
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.file_reader import FileReader, data_reader_for
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.section_params import parser_params_from_section
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 from parsers.json_reader import JsonPriceReader

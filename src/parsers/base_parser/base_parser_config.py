@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 from domain.protocols import ConfigProvider
 from parsers import data_provider
+from parsers.vendor_config.group_models import BatterySection
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.section_models import VendorSection
 
@@ -61,7 +62,7 @@ class ParseConfiguration:
     def __init__(
         self,
         parse_config: BasePriceParseConfigurationParams,
-        vendor_section: VendorSection | None = None,
+        vendor_section: VendorSection | BatterySection | None = None,
         vendor_config: VendorConfig | None = None,
         routing: VendorRouting | None = None,
     ):
@@ -117,7 +118,7 @@ def make_parse_config(
     *,
     config_provider: ConfigProvider,
     black_list_provider: data_provider.BlackListProviderBase | None = None,
-    vendor_section: VendorSection | None = None,
+    vendor_section: VendorSection | BatterySection | None = None,
     vendor_config: VendorConfig | None = None,
     routing: VendorRouting | None = None,
 ) -> ParseConfiguration:

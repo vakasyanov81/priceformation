@@ -23,6 +23,7 @@ from app.run_argv import (
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
+from cfg.services import ensure_services_configured
 from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError, CoreExceptionError
 from infrastructure.logging.exception_logging import log_exception_once
@@ -34,7 +35,6 @@ from parsers.strategies.product_types import CANONICAL_TYPES
 from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
-from services.configure import ensure_services_configured
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
@@ -310,8 +310,8 @@ def _json_parse(all_result: bool, result_template: str | None, selection: ParseS
     selection.groups = tuple(parse_result.groups)
     files = []
     if parse_result.groups:
-        files = ServiceProvider.resolve(PriceReportService).write_prices(
-            parse_result.tire_and_disk_items,
+        files = ServiceProvider.resolve(PriceReportService).write_result(
+            parse_result,
             template=result_template,
             as_jsonl=True,
         )

@@ -4,10 +4,12 @@ from functools import singledispatch
 from typing import Any
 
 from app.parse_report_types import JsonGroup
-from domain.product_group_result import TireAndDiskResult
+from domain.battery.result import BatteryResult
+from domain.product_group_result import ProductGroupResult, ProductPosition, TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.parse_statistic import ParseResultStatistic
+from parsers.battery.output_fields import battery_fields
 from services.parse_result import ParseResult
 from services.parse_statistics import GroupStatistics
 
@@ -29,6 +31,11 @@ def _tire_positions(package: TireAndDiskResult) -> list[dict[str, Any]]:
     return positions
 
 
+@positions_to_json.register
+def _battery_positions(package: BatteryResult) -> list[dict[str, Any]]:
+    return [dict(battery_fields(row)) for row in package.positions]
+
+
 def groups_from_result(
     parsed: ParseResult,
     *,
@@ -45,10 +52,18 @@ def groups_from_result(
         if group is ProductGroup.TIRE_AND_DISK:
             stats.update(_tire_statistics(parsed))
         groups[group.value] = {
-            'positions': positions_to_json(selected) if all_result else [],
+            'positions': _report_positions(selected, all_result, rows is not None),
             'stats': stats,
         }
     return groups
+
+
+def _report_positions(
+    package: ProductGroupResult[ProductPosition], all_result: bool, only_tires: bool
+) -> list[dict[str, Any]]:
+    if not all_result or (only_tires and package.product_group is not ProductGroup.TIRE_AND_DISK):
+        return []
+    return positions_to_json(package)
 
 
 def _common_statistics(parsed: ParseResult, group: ProductGroup) -> dict[str, Any]:

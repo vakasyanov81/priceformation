@@ -8,7 +8,7 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumn
 
 
 class ForBatteries(IWriteTemplate):
-    """Шаблон подключается к CLI после сквозной проверки двух групп."""
+    """Полный прайс аккумуляторов, доступный в CLI и штатной групповой записи."""
 
     template_id = 'for_batteries'
     __FILE__ = 'price_batteries_{now}.xlsx'

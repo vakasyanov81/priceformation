@@ -48,7 +48,7 @@ class BatterySection:
 
 @dataclass(frozen=True, slots=True)
 class BatteryConfig:
-    """Объявление аккумуляторов, не означающее готовность их обработчика."""
+    """Настройки аккумуляторных секций с собственной моделью и обработкой."""
 
     sections: tuple[BatterySection, ...]
 

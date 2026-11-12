@@ -10,8 +10,6 @@ from domain.protocols import ConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.base_parser_config import (
     ParseConfiguration,
-    ParseParamsSupplier,
-    ParserParams,
 )
 from parsers.base_parser.file_reader import data_reader_for
 from parsers.base_parser.markup_policy import MarkupPolicy
@@ -27,24 +25,6 @@ from parsers.strategies.title_registry import make_title_strategy
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
-
-
-def parser_params_from_section(section: VendorSection, folder: str) -> ParserParams:
-    """Собрать ``ParserParams`` из секции конфига.
-
-    Args:
-        section: Секция поставщика (один лист/файл).
-        folder: Имя папки поставщика (``file_prices/<folder>/``).
-    """
-    return ParserParams(
-        supplier=ParseParamsSupplier(folder_name=folder, name=section.name, code=section.id),
-        start_row=section.start_row,
-        sheet_info=section.sheet_info,
-        columns=dict(section.columns.items()),
-        stop_words=(),
-        file_templates=section.file_templates,
-        sheet_indexes=section.sheet_indexes,
-    )
 
 
 def vendor_markup_policy_from_config(section: VendorSection) -> MarkupPolicy:

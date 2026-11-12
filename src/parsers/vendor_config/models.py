@@ -8,7 +8,7 @@ from parsers.data_provider.json_fields import RawConfig, as_config_object
 from parsers.vendor_config.common import CommonVendorSettings
 from parsers.vendor_config.fields import read_text
 from parsers.vendor_config.group_loading import read_group
-from parsers.vendor_config.group_models import GroupConfig, TireAndDiskConfig
+from parsers.vendor_config.group_models import BatterySection, GroupConfig, TireAndDiskConfig
 from parsers.vendor_config.group_schema import read_group_payloads
 from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.source import SOURCE_FILE
@@ -32,13 +32,18 @@ class VendorConfig:
 
     @property
     def sections(self) -> tuple[VendorSection, ...]:
-        """Шинные секции для существующих каталогов; пусто у поставщика без этой группы."""
+        """Шинные секции для потребителей шинной модели."""
         return tuple(
             section
             for group in self.product_groups
             if isinstance(group, TireAndDiskConfig)
             for section in group.sections
         )
+
+    @property
+    def all_sections(self) -> tuple[VendorSection | BatterySection, ...]:
+        """Все секции поставщика для общего реестра и каталогов."""
+        return tuple(section for group in self.product_groups for section in group.sections)
 
     @classmethod
     def from_dict(

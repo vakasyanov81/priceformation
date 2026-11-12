@@ -15,13 +15,13 @@ from parsers.base_parser.base_parser_config import (
     make_parse_config,
 )
 from parsers.base_parser.config_driven_parser import (
-    parser_params_from_section,
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.base_parser.routing import VendorRouting
+from parsers.base_parser.section_params import parser_params_from_section
 from parsers.vendor_config.group_availability import ensure_groups_available, ensure_section_available
-from parsers.vendor_config.group_models import TireAndDiskConfig
+from parsers.vendor_config.group_models import BatterySection
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
 from parsers.vendor_config.section_models import VendorSection
@@ -53,15 +53,6 @@ def all_vendors_including_disabled(config_provider: ConfigProvider) -> list[Vend
     return _vendor_entries(config_provider, include_disabled=True)
 
 
-def _supported_sections(config: VendorConfig) -> tuple[VendorSection, ...]:
-    """Секции реализованных групп; доступность неподдержанных проверяется отдельно."""
-    sections: list[VendorSection] = []
-    for group in config.product_groups:
-        if isinstance(group, TireAndDiskConfig):
-            sections.extend(group.sections)
-    return tuple(sections)
-
-
 def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) -> list[VendorEntry]:
     """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
@@ -72,7 +63,7 @@ def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) 
         routing = VendorRouting(config)
         entries.extend(
             (BaseParser, _build_parse_config(section, config, config_provider, routing))
-            for section in _supported_sections(config)
+            for section in config.all_sections
         )
     return entries
 
@@ -85,7 +76,7 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
     """
     for config in load_vendor_configs(config_provider).values():
         ensure_section_available(config, code)
-        for section in _supported_sections(config):
+        for section in config.all_sections:
             if section.id == code:
                 routing = VendorRouting(config)
                 return (BaseParser, _build_parse_config(section, config, config_provider, routing))
@@ -101,12 +92,14 @@ def vendor_markup_policy_for(
     Всегда читает ``pricing`` из ``vendor_section`` конфига.
     """
     section = vendor_config.vendor_section
-    if section is None:
+    if section is None or isinstance(section, BatterySection):
         return None
     return vendor_markup_policy_from_config(section)
 
 
-def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provider: ConfigProvider) -> VendorEntry:
+def make_vendor_entry(
+    section: VendorSection | BatterySection, config: VendorConfig, config_provider: ConfigProvider
+) -> VendorEntry:
     """Собрать запись вендора для секции.
 
     Args:
@@ -127,7 +120,7 @@ def clear_registry() -> None:
 
 
 def _build_parse_config(
-    section: VendorSection,
+    section: VendorSection | BatterySection,
     config: VendorConfig,
     config_provider: ConfigProvider,
     routing: VendorRouting | None = None,

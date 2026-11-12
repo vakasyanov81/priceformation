@@ -103,7 +103,7 @@ def test_empty_parse_creates_no_files(capsys: pytest.CaptureFixture[str]) -> Non
     assert report['version'] == 2
     assert report['groups'] == {}
     assert report['files'] == []
-    reporter.write_prices.assert_not_called()
+    reporter.write_result.assert_not_called()
 
 
 @pytest.mark.parametrize('during_write', [False, True])
@@ -121,7 +121,7 @@ def test_known_selection_on_failure(during_write: bool, capsys: pytest.CaptureFi
     orchestrator = MagicMock()
     orchestrator.parse_all.side_effect = parse_all
     reporter = MagicMock()
-    reporter.write_prices.side_effect = ValueError('ошибка записи')
+    reporter.write_result.side_effect = ValueError('ошибка записи')
     with patch(
         'app.run_machine.ServiceProvider.resolve',
         side_effect={

@@ -7,12 +7,12 @@ import pytest
 from log_watch import LoggerWatch, LoggerWatcher, records_of
 
 from cfg import init_cfg
+from cfg.services import configure_services
 from domain.config_context import get_config_provider, set_config_provider
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache
 from parsers.data_provider.manufacturer_aliases import (
     clear_manufacturer_aliases_cache,
 )
-from services.configure import configure_services
 from services.service_provider import ServiceProvider
 
 

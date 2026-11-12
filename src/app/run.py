@@ -45,10 +45,10 @@ from app.run_argv import (
 from app.run_dialog import AnswerResult, ask_action, colorize_markdown
 from app.run_machine import fail_unknown_result_template, machine_json, upload_four_tochki_data
 from cfg import init_cfg
+from cfg.services import configure_services
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.result_folder import clear_result_folder
 from services.async_utils import try_call
-from services.configure import configure_services
 from services.doubles_service import DoublesService
 from services.help_service import HelpService
 from services.mail_service import MailService
@@ -134,7 +134,7 @@ def response_processing() -> bool:
 def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
     """Make common price list by price list supplier's"""
     parse_result = ServiceProvider.resolve(ParseOrchestrator).parse_all()
-    ServiceProvider.resolve(PriceReportService).write_prices(parse_result.tire_and_disk_items, template=result_template)
+    ServiceProvider.resolve(PriceReportService).write_result(parse_result, template=result_template)
 
 
 def run_upload_zapaska_data() -> None:

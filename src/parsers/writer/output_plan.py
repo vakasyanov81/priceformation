@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence, Set
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import date
+from itertools import chain
 from typing import Protocol
 
 from domain.product_group_handler import OutputFields
@@ -35,6 +36,11 @@ class SheetPlan:
     rows: tuple[OutputFields, ...]
     title_fields: frozenset[str] = frozenset()
 
+    @classmethod
+    def from_source(cls, template_id: str, group: GroupOutput, source: GroupOutputSource) -> SheetPlan:
+        """Подготовить модель к записи по правилам конкретного листа."""
+        return cls(group, source.prepare(template_id, group), source.title_fields)
+
 
 @dataclass(frozen=True)
 class WorkbookPlan:
@@ -52,6 +58,7 @@ def prepare_output_plan(
     *,
     current_date: str | None = None,
     selected: Set[ProductGroup] | None = None,
+    selections: Mapping[str, Set[ProductGroup]] | None = None,
 ) -> tuple[WorkbookPlan, ...]:
     """Проверить весь выбор до преобразования; пустой пакет сохраняет лист."""
     current_date = current_date or date.today().isoformat()
@@ -60,10 +67,20 @@ def prepare_output_plan(
     validate_outputs(
         outputs,
         selected,
-        schemas={group: source.fields for group, source in sources.items()},
+        schemas=_schemas(sources),
         current_date=current_date,
+        selections=selections,
     )
-    return tuple(book for output in outputs for book in _prepare_template(output, sources, selected, current_date))
+    selections = selections or {output.template_id: selected for output in outputs}
+    return tuple(
+        chain.from_iterable(
+            _prepare_template(output, sources, selections[output.template_id], current_date) for output in outputs
+        )
+    )
+
+
+def _schemas(sources: Mapping[ProductGroup, GroupOutputSource]) -> dict[ProductGroup, Set[str]]:
+    return {group: source.fields for group, source in sources.items()}
 
 
 def _prepare_template(
@@ -74,7 +91,7 @@ def _prepare_template(
 ) -> list[WorkbookPlan]:
     groups = (group for group in output.groups if group.id in selected)
     template_id = output.template_id
-    sheets = [_prepare_sheet(template_id, group, sources[group.id]) for group in groups]
+    sheets = [SheetPlan.from_source(template_id, group, sources[group.id]) for group in groups]
     return _place_sheets(output, tuple(sheets), current_date)
 
 
@@ -92,7 +109,3 @@ def _place_sheets(output: TemplateOutput, sheets: tuple[SheetPlan, ...], current
         )
         for sheet in sheets
     ]
-
-
-def _prepare_sheet(template_id: str, group: GroupOutput, source: GroupOutputSource) -> SheetPlan:
-    return SheetPlan(group, source.prepare(template_id, group), source.title_fields)

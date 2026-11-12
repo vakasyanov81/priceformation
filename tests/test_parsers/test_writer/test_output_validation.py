@@ -9,7 +9,7 @@ from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from parsers.writer.output_names import output_file_name, validate_sheet_name
 from parsers.writer.output_validation import validate_outputs
-from parsers.writer.templates.all_templates import all_writer_templates, extra_writer_templates
+from parsers.writer.templates.all_templates import all_writer_templates
 from parsers.writer.templates.group_output import (
     GroupOutput,
     OutputMode,
@@ -19,6 +19,7 @@ from parsers.writer.templates.group_output import (
     WriteExclude,
 )
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
+from parsers.writer.templates.tmpl.for_full import ForFull
 
 TIRES = ProductGroup.TIRE_AND_DISK
 BATTERIES = ProductGroup.BATTERIES
@@ -47,7 +48,7 @@ def _output(*groups: GroupOutput) -> TemplateOutput:
 
 def test_current_templates_pass_preflight() -> None:
     """Действующие файлы не конфликтуют и используют поля шинной схемы."""
-    templates = [*all_writer_templates(), *extra_writer_templates(), ForDoubles]
+    templates = [*all_writer_templates(), ForFull, ForDoubles]
     validate_outputs([template().output_spec() for template in templates], {TIRES})
 
 

@@ -86,7 +86,9 @@ class TestFullParsePipeline:
         _entry, parse_config = vendor_entry_for('22', get_config_provider())  # zapaska tires
         section = parse_config.vendor_section
         vendor_cfg = parse_config.vendor_config
-        assert section is not None
+        from parsers.vendor_config.section_models import VendorSection
+
+        assert isinstance(section, VendorSection)
         assert vendor_cfg is not None
 
         parser = make_config_driven_parser(section, vendor_cfg, parse_config)

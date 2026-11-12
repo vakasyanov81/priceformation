@@ -30,6 +30,10 @@ class GroupFileWriter:
     ) -> list[str]:
         """Подготовить весь план до создания драйверов и файлов."""
         books = prepare_output_plan(outputs, sources, selected=selected, current_date=current_date)
+        return self.write_plan(books, as_jsonl=as_jsonl)
+
+    def write_plan(self, books: tuple[WorkbookPlan, ...], *, as_jsonl: bool = False) -> list[str]:
+        """Записать полностью подготовленный план после проверки всех преобразователей."""
         if as_jsonl:
             return write_plan_jsonl(books, self._result_folder)
         return [self._write_book(book) for book in books]

@@ -1,5 +1,6 @@
 """Сборка графа зависимостей приложения в ServiceProvider."""
 
+from cfg.vendor_parser import parser_for_vendor
 from domain.config_context import get_config_provider
 from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
@@ -15,7 +16,6 @@ from services.price_report import PriceReportService
 from services.price_schema_service import PriceSchemaService
 from services.service_provider import ServiceProvider
 from services.vendor_activation import VendorActivationService
-from services.vendor_parser import parser_for_vendor
 from services.vendor_source import VendorSource
 from services.zapaska_service import ZapaskaService
 

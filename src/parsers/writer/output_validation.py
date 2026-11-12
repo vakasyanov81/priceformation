@@ -18,6 +18,7 @@ def validate_outputs(
     *,
     schemas: Mapping[ProductGroup, Set[str]] | None = None,
     current_date: str | None = None,
+    selections: Mapping[str, Set[ProductGroup]] | None = None,
 ) -> None:
     """Проверить покрытие выбора, схемы преобразователей и общие пути XLSX/JSONL.
 
@@ -29,11 +30,22 @@ def validate_outputs(
     paths: dict[str, str] = {}
     if len({output.template_id for output in outputs}) != len(outputs):
         raise ConfigValidationError('Повтор template_id в плане записи')
+    selections = selections or {output.template_id: selected for output in outputs}
     for output in outputs:
-        validate_structure(output, selected)
-        for group in output.groups:
-            _validate_group(group, schemas, f'Шаблон {output.template_id} → {group.id}')
-            register_paths(output, group, current_date, paths if group.id in selected else {})
+        _validate_template(output, selections[output.template_id], schemas, current_date, paths)
+
+
+def _validate_template(
+    output: TemplateOutput,
+    selected: Set[ProductGroup],
+    schemas: Mapping[ProductGroup, Set[str]],
+    current_date: str,
+    paths: dict[str, str],
+) -> None:
+    validate_structure(output, selected)
+    for group in output.groups:
+        _validate_group(group, schemas, f'Шаблон {output.template_id} → {group.id}')
+        register_paths(output, group, current_date, paths if group.id in selected else {})
 
 
 def _validate_group(group: GroupOutput, schemas: Mapping[ProductGroup, Set[str]], where: str) -> None:

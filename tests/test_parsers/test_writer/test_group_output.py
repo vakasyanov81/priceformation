@@ -3,13 +3,14 @@
 import pytest
 
 from domain.product_groups import ProductGroup
-from parsers.writer.templates.all_templates import all_writer_templates, extra_writer_templates, writer_template_name
+from parsers.writer.templates.all_templates import all_writer_templates, writer_template_name
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
 from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
+from parsers.writer.templates.tmpl.for_full import ForFull
 
 
-@pytest.mark.parametrize('template', [*all_writer_templates(), *extra_writer_templates(), ForDoubles])
+@pytest.mark.parametrize('template', [*all_writer_templates(), ForFull, ForDoubles])
 def test_existing_template_describes_tire_and_disk(template: type[IWriteTemplate]) -> None:
     """Колонки и имена существующего вывода сохраняются в групповом контракте."""
     instance = template()

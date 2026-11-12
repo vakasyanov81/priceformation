@@ -1,5 +1,6 @@
 """Подготовка пакета шин и дисков к записи по настройкам группы."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from domain.product_group_handler import OutputFields
@@ -25,6 +26,7 @@ class TireOutputSource:
 
     package: TireAndDiskResult
     doubles: DoublesSettings = field(default_factory=DoublesSettings)
+    title_correction: Callable[[str], str] | None = None
 
     @property
     def fields(self) -> frozenset[str]:
@@ -42,11 +44,20 @@ class TireOutputSource:
         if settings.id != self.package.product_group:
             raise ValueError('Преобразователь tire_and_disk получил настройки другой группы')
         rows = list(self.package.positions)
+        self._correct_titles(rows)
+        if template_id == 'for_doubles':
+            rows = double_positions(rows, self.doubles)
         if settings.merge_warehouses:
             rows = merge_warehouse_rows(rows)
         if self.doubles.excludes_in(template_id):
             rows = exclude_doubles(rows, self.doubles.priority_suppliers)
         return [row for row in rows if _keep_position(row, settings.filters)]
+
+    def _correct_titles(self, rows: list[RowItem]) -> None:
+        if self.title_correction is not None:
+            for row in rows:
+                if row.identity.title is not None:
+                    row.set_field('title', self.title_correction(row.identity.title))
 
 
 def double_positions(rows: list[RowItem], settings: DoublesSettings) -> list[RowItem]:

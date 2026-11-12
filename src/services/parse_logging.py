@@ -8,8 +8,8 @@ import logging
 
 from domain.product_groups import ProductGroup
 from infrastructure.logging.exception_logging import log_exception_once
-from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.category_finder import skipped_unknown_categories_message
+from parsers.base_parser.supplier_parser import SupplierParser
 from parsers.data_provider.black_list import skipped_black_list_message
 from parsers.strategies.product_types import type_corrections_message
 from parsers.strategies.title_compose import titles_not_composed_message
@@ -19,7 +19,7 @@ from services.parse_result import ParseResult
 type LogMessage = tuple[int, str]
 
 
-def log_parse_failure(target: logging.Logger, parser: BaseParser, exc: BaseException) -> None:
+def log_parse_failure(target: logging.Logger, parser: SupplierParser, exc: BaseException) -> None:
     """Записать ошибку разбора прайса поставщика: сообщение в консоль и файл, traceback только в файл."""
     group = parser.product_group.value
     context = f'{parser!r} [{group}]'
@@ -48,7 +48,7 @@ def _black_list_messages(parse_result: ParseResult) -> list[LogMessage]:
     return messages
 
 
-def parser_messages(parser: BaseParser, group: ProductGroup = ProductGroup.TIRE_AND_DISK) -> list[LogMessage]:
+def parser_messages(parser: SupplierParser, group: ProductGroup = ProductGroup.TIRE_AND_DISK) -> list[LogMessage]:
     """Сообщения по двойникам и несобранным названиям одного поставщика."""
     if group is not ProductGroup.TIRE_AND_DISK:
         return []
@@ -56,7 +56,7 @@ def parser_messages(parser: BaseParser, group: ProductGroup = ProductGroup.TIRE_
     return [(level, f'[{group.value}] {text}') for level, text in messages]
 
 
-def _homoglyph_messages(parser: BaseParser) -> list[LogMessage]:
+def _homoglyph_messages(parser: SupplierParser) -> list[LogMessage]:
     """Сколько кириллических двойников исправлено у поставщика и сколько смесей оставлено в логе."""
     stats = parser.stats
     if not (stats.homoglyph_fixes or stats.homoglyph_suspects):
@@ -68,7 +68,7 @@ def _homoglyph_messages(parser: BaseParser) -> list[LogMessage]:
     return [(logging.INFO, text)]
 
 
-def _titles_not_composed_messages(parser: BaseParser) -> list[LogMessage]:
+def _titles_not_composed_messages(parser: SupplierParser) -> list[LogMessage]:
     """Сколько названий шин и дисков не собрано из полей (остался нормализованный текст поставщика)."""
     message = titles_not_composed_message(parser.stats.titles_not_composed)
     return [(logging.WARNING, f'{parser!r}: {message}')] if message else []

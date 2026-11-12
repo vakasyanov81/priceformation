@@ -60,7 +60,7 @@ def test_main_make_price_then_exit() -> None:
             main()
 
         orchestrator.parse_all.assert_called_once()
-        reporter.write_prices.assert_called_once_with([_PARSED_ROW], template=None)
+        reporter.write_result.assert_called_once_with(parsed, template=None)
 
 
 def test_main_retries_invalid_menu_input(watch_logger: LoggerWatcher) -> None:
@@ -100,7 +100,7 @@ def test_response_make_price_via_try_call() -> None:
         assert response_processing() is True
 
         orchestrator.parse_all.assert_called_once()
-        reporter.write_prices.assert_called_once_with([], template=None)
+        reporter.write_result.assert_called_once_with(parsed, template=None)
 
 
 def test_response_supplier_error_exits() -> None:

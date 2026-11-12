@@ -82,7 +82,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -96,7 +96,7 @@ def test_json_parse_success(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['groups']['tire_and_disk']['positions'] == []
     assert payload['stats']['items'] == 1
     assert payload['files'] == [_PATH]
-    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template=None, as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template=None, as_jsonl=True)
 
 
 def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
@@ -105,7 +105,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -114,7 +114,7 @@ def test_json_parse_result_template(capsys: pytest.CaptureFixture[str]) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
-    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template='for_drom', as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_drom', as_jsonl=True)
 
 
 def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]) -> None:
@@ -123,14 +123,14 @@ def test_json_parse_write_prices_keyword_only(capsys: pytest.CaptureFixture[str]
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = create_autospec(PriceReportService)
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
         code = machine_json(PARSE, result_template='for_drom')
     assert code == 0
-    reporter.write_prices.assert_called_once_with(parsed.tire_and_disk_items, template='for_drom', as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_drom', as_jsonl=True)
 
 
 def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
@@ -148,7 +148,7 @@ def test_json_stdout_is_only_json(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.side_effect = noisy_parse_all
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -176,7 +176,7 @@ def test_json_parse_all_result(capsys: pytest.CaptureFixture[str]) -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with patch(
         _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
@@ -290,7 +290,7 @@ def test_json_parse_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixtur
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_prices.return_value = [_PATH]
+    reporter.write_result.return_value = [_PATH]
     with (
         patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
         patch(

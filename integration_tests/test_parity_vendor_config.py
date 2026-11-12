@@ -26,7 +26,7 @@ _ROW_LOGGER = 'parsers.base_parser.row_enricher'
 _MIM_IDS = ('4', '42', '43')
 _FOUR_TOCHKI_IDS = ('5', '55')
 _OTHER_IDS = ('1', '2', '22', '3', '6', '7')
-_SECTION_IDS = frozenset((*_OTHER_IDS, *_MIM_IDS, *_FOUR_TOCHKI_IDS))
+_SECTION_IDS = frozenset((*_OTHER_IDS, *_MIM_IDS, *_FOUR_TOCHKI_IDS, 'plant_batteries'))
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ class TestFourTochkiConfigDriven:
         self,
         _four_tochki_provider: None,
     ) -> None:
-        """Каталог содержит отдельную запись каждой из 11 секций."""
+        """Каталог содержит отдельную запись каждой из 12 секций."""
         from parsers.all_vendors import all_vendor_supplier_info
 
         supplier_info = all_vendor_supplier_info(get_config_provider())
@@ -105,7 +105,7 @@ class TestSupplierCatalog:
         self,
         _four_tochki_provider: None,
     ) -> None:
-        """Все 11 секций доступны по согласованным уникальным ключам."""
+        """Все 12 секций доступны по согласованным уникальным ключам."""
         from parsers.all_vendors import all_vendor_supplier_catalog
 
         catalog = all_vendor_supplier_catalog(get_config_provider())
