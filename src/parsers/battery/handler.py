@@ -10,13 +10,14 @@ from domain.product_group_handler import InputFields, OutputFields
 from domain.product_group_result import ProductGroupResult
 from domain.product_groups import ProductGroup
 from parsers.battery.grouping import group_batteries
+from parsers.battery.output_fields import battery_fields
 from parsers.battery.processing import log_skipped, publication_issue
 from parsers.battery.title import normalize_title
 from parsers.vendor_config.battery_settings import BatterySettings
 
 
 class BatteryHandler:
-    """Создание, обработка и группировка; вывод подключается в этапе 8.5."""
+    """Создание, обработка, группировка и выходные поля аккумуляторов."""
 
     def __init__(self, settings: BatterySettings, supplier: str) -> None:
         self._settings = settings
@@ -59,5 +60,5 @@ class BatteryHandler:
         return group_batteries(BatteryResult(package.positions))
 
     def prepare_output(self, package: ProductGroupResult[BatteryItem]) -> tuple[OutputFields, ...]:
-        """Преобразование в поля шаблонов появится вместе с реальными шаблонами в 8.5."""
-        raise NotImplementedError(f'Вывод {package.product_group} требует этапа 8.5')
+        """Проверить модель пакета и сохранить цены и остатки каждого предложения."""
+        return tuple(battery_fields(position) for position in BatteryResult(package.positions).positions)

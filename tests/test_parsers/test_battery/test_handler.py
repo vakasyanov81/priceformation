@@ -118,12 +118,11 @@ def test_explicit_line_can_match_complete_title() -> None:
     assert parsed.positions[0].identity.model == 'XTREME Arctic'
 
 
-def test_grouping_and_output_are_not_silently_replaced() -> None:
+def test_empty_package_preserves_group_through_output() -> None:
     battery_handler = _battery_handler()
     assert battery_handler.process([]) == BatteryResult()
     assert battery_handler.group(BatteryResult()) == BatteryResult()
-    with pytest.raises(NotImplementedError, match=r'8\.5'):
-        battery_handler.prepare_output(BatteryResult())
+    assert battery_handler.prepare_output(BatteryResult()) == ()
 
 
 def test_section_headers_are_excluded_before_model_creation() -> None:
