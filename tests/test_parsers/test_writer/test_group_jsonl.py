@@ -13,7 +13,7 @@ from parsers.writer.group_files import GroupFileWriter
 from parsers.writer.jsonl_meta import RESULT_META_FILE, read_registry
 from parsers.writer.templates.group_output import OutputMode
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from tests.group_output_examples import OtherOutputSource
 from tests.test_domain.group_handler_examples import TestGroupResult, TestPosition
 from tests.test_parsers.test_writer.test_group_files import DATE, OTHER, TIRES, _output, _sources
@@ -29,7 +29,7 @@ def _write(folder: Path, *, workbook: bool = False, empty: bool = False) -> list
     if empty:
         labels = ()
     sources[OTHER] = OtherOutputSource(TestGroupResult(labels))
-    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterDriver, result_folder=str(folder))
+    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(folder))
     return writer.write([output], sources, current_date=DATE, as_jsonl=True)
 
 
@@ -122,7 +122,7 @@ def test_unregistered_existing_stream_is_rejected(tmp_path: Path) -> None:
 
 def test_no_selected_groups_create_no_metadata(tmp_path: Path) -> None:
     folder = tmp_path / 'absent'
-    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterDriver, result_folder=str(folder))
+    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(folder))
     sources = _sources()
     paths = writer.write([_output()], sources, selected=set(), as_jsonl=True)
     assert not paths
@@ -209,7 +209,7 @@ def test_same_code_has_different_meanings_between_groups(tmp_path: Path) -> None
     rows = tuple(RowItem(raw_row) for _ in range(2))
     sources[TIRES] = TireOutputSource(TireAndDiskResult(rows))
     sources[OTHER] = OtherOutputSource(TestGroupResult((TestPosition('Другая модель'),) * 2))
-    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterDriver, result_folder=str(tmp_path))
+    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(tmp_path))
     paths = writer.write([output], sources, current_date=DATE, as_jsonl=True)
     registry = read_registry(tmp_path)
     tire_file, other_file = map(Path, paths)
@@ -225,7 +225,7 @@ def test_invalid_output_schema_version_prevents_files(tmp_path: Path, version: i
     output = _output()
     group = replace(output.groups[0], schema_version=version)
     output = replace(output, groups=(group, output.groups[1]))
-    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterDriver, result_folder=str(tmp_path))
+    writer = GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(tmp_path))
     with pytest.raises(ConfigValidationError, match='schema_version'):
         writer.write([output], _sources(), as_jsonl=True)
     assert not list(tmp_path.iterdir())

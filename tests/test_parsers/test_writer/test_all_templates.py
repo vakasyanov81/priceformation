@@ -1,5 +1,6 @@
 """tests for writer templates collection"""
 
+import re
 from typing import ClassVar
 
 import pytest
@@ -18,7 +19,6 @@ from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.templates.tmpl.for_product_groups import ForProductGroups
-from parsers.writer.xlsx_driver import solid_fill
 
 
 class _NoFormat(IWriteTemplate):
@@ -95,6 +95,6 @@ def test_misspelled_template_setting_is_not_silently_ignored() -> None:
 
 @pytest.mark.parametrize('template', [ForInner, ForDrom, ForFull])
 def test_template_colors_are_valid_hex(template: type[IWriteTemplate]) -> None:
-    """Цвета шаблонов — валидный #RRGGBB; именованные (blue) роняют запись xlsx."""
+    """Палитра шаблонов задаётся шестизначными RGB-цветами."""
     for color in template().colors().get('with_map', {}).values():
-        solid_fill(color)  # недопустимый цвет бросит ValueError
+        assert re.fullmatch(r'#?[0-9a-fA-F]{6}', color)

@@ -4,7 +4,7 @@ from cfg.vendor_parser import parser_for_vendor
 from domain.config_context import get_config_provider
 from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.grouper_factory import grouper_factory
@@ -32,7 +32,7 @@ def _register_factories() -> None:
     ServiceProvider.register(ParserFactory, lambda: parser_for_vendor)
     ServiceProvider.register(GrouperFactory, lambda: grouper_factory)
     ServiceProvider.register(XlsWriterFactory, lambda: XlsWriter)
-    ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterDriver)
+    ServiceProvider.register(WriteDriverFactory, lambda: XlsxWriterAdapter)
 
 
 def _register_services() -> None:

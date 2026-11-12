@@ -10,7 +10,7 @@ from parsers.writer import xls_writer as writer_mod
 from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from tests.fakes.fake_driver import FakeXlwtDriver
 
 from .fixtures import EmptyDefaultTemplate, FixtureTemplate, TwoRulesExcludeTemplate, write_data
@@ -94,7 +94,7 @@ def test_write_saves_xlsx_into_result_folder(tmp_path: Any) -> None:
     """write кладёт xlsx в result_folder; без write диск пуст."""
     result_folder = tmp_path / 'out'
     writer = XlsWriter(
-        XlsxWriterDriver(),
+        XlsxWriterAdapter(),
         write_data,
         template=FixtureTemplate,
         result_folder=str(result_folder),

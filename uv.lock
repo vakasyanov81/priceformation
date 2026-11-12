@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = "==3.14.*"
 
 [[package]]
@@ -738,9 +738,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "colorama" },
-    { name = "openpyxl" },
     { name = "python-calamine" },
     { name = "termcolor" },
+    { name = "xlsxwriter" },
 ]
 
 [package.dev-dependencies]
@@ -751,6 +751,7 @@ dev = [
     { name = "import-linter" },
     { name = "mutmut" },
     { name = "mypy" },
+    { name = "openpyxl" },
     { name = "pip-audit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -765,9 +766,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorama", specifier = "==0.4.6" },
-    { name = "openpyxl", specifier = "==3.1.5" },
     { name = "python-calamine", specifier = "==0.9.0" },
     { name = "termcolor", specifier = "==3.3.0" },
+    { name = "xlsxwriter", specifier = "==3.3.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -778,6 +779,7 @@ dev = [
     { name = "import-linter", specifier = ">=2.15" },
     { name = "mutmut", specifier = "==3.8.1" },
     { name = "mypy", specifier = "==2.4.1" },
+    { name = "openpyxl", specifier = "==3.1.5" },
     { name = "pip-audit", specifier = "==2.10.1" },
     { name = "pytest", specifier = "==9.2.0" },
     { name = "pytest-cov", specifier = "==7.1.0" },
@@ -1186,4 +1188,13 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0f/89/9b0637ac41f0d90ac1236ff8dacd887e0f8e3a9853abfd51e2a1319c215a/wemake_python_styleguide-1.8.1.tar.gz", hash = "sha256:a217caaf1cffe2d1168b13c405a204e82fe6c1bfc9f7d0b125dd4ce16624bc5f", size = 163479, upload-time = "2026-09-12T07:17:25.229Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/79/9f/c953aab9187aa58669829607791731e5f3aa4b1d2b8d8051baa49dda44df/wemake_python_styleguide-1.8.1-py3-none-any.whl", hash = "sha256:811355a393536583236fa25409dc639809c1bd209f66dab012eb15e9f589784e", size = 227803, upload-time = "2026-09-12T07:17:26.397Z" },
+]
+
+[[package]]
+name = "xlsxwriter"
+version = "3.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/fb/31bdbf3737222d92ef7d2db4d50089b2253dbbb63ceb6d20a4447f6b7ed0/xlsxwriter-3.3.1.tar.gz", hash = "sha256:0867761912cceac76f97ffa76eeda18c623ae9217f601be8512f55b1af4bdb6e", size = 223040, upload-time = "2026-10-28T22:52:46.592Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/88/eb/1e6af9959a567901a7e7c7cef2e75883e487df223ed67f9a8977ff863bd8/xlsxwriter-3.3.1-py3-none-any.whl", hash = "sha256:8e2c89e59d733fe59e112317218c64fbbc276d90a8c144ebd6f7fa15e7ab184a", size = 180583, upload-time = "2026-10-28T22:52:45.048Z" },
 ]

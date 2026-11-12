@@ -4,12 +4,21 @@ import json
 from pathlib import Path
 
 import openpyxl
+import pytest
 
 from parsers.price_schema.diff import compare_schemas
 from parsers.price_schema.models import FileHead, PriceSchema, SheetHead
 from parsers.price_schema.schema import build_schema, read_file_head
 
 _COLUMNS: dict[int | str, str] = {0: 'code', 2: 'title'}
+_EXCEL_COLUMN_CASES = (
+    (0, 'A'),
+    (25, 'Z'),
+    (26, 'AA'),
+    (701, 'ZZ'),
+    (702, 'AAA'),
+    (16383, 'XFD'),
+)
 
 
 def _head(*rows: tuple[object, ...], name: str = 'Лист') -> FileHead:
@@ -107,3 +116,16 @@ def test_read_file_head_xlsx_and_json(tmp_path: Path) -> None:
     assert xlsx_head.sheets[0].name == 'Шины'
     assert xlsx_head.sheets[0].rows[0] == ('Артикул', 'Цена')
     assert sorted(json_head.json_keys) == ['a', 'b']
+
+
+@pytest.mark.parametrize('column, label', _EXCEL_COLUMN_CASES)
+def test_header_change_names_excel_column(column: int, label: str) -> None:
+    """В сообщении о схеме сохраняются буквы колонок, включая границы алфавита."""
+    columns: dict[int | str, str] = {column: 'title'}
+    padding = (None,) * column
+    before = _head((*padding, 'Название'))
+    after = _head((*padding, 'Наименование'))
+    old = build_schema(before, start_row=2, sheet_indexes=(0,), columns=columns)
+    new = build_schema(after, start_row=2, sheet_indexes=(0,), columns=columns)
+    expected = f'вкладка «Лист», колонка {label}: заголовок «Название» → «Наименование» (используется как «title»)'
+    assert compare_schemas(old, new, columns) == [expected]

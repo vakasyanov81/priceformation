@@ -25,7 +25,7 @@ from parsers.writer.templates.tmpl.for_drom import ForDrom
 from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 
 _TITLE = 'title'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
@@ -53,7 +53,7 @@ def test_nomenclature_title_correction() -> None:
     out = CommonPriceOut(
         [row_old, row_keep],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -81,7 +81,7 @@ def test_write_all_prices() -> None:
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
@@ -112,7 +112,7 @@ def test_drom_gets_merged_warehouses_and_inner_keeps_own_rows() -> None:
     out = CommonPriceOut(
         [_warehouse_row('A', 5000, 3), _warehouse_row('A', 5000, 4)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
     )
 
@@ -164,7 +164,7 @@ def test_write_all_prices_reloads_nomenclature() -> None:
     out = CommonPriceOut(
         [row],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -201,7 +201,7 @@ def test_write_doubles_report() -> None:
     out = CommonPriceOut(
         rows,
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [double_row.to_dict(), candidate.to_dict()]
@@ -229,7 +229,7 @@ def test_write_doubles_report_jsonl() -> None:
     out = CommonPriceOut(
         [double_row],
         xls_writer=cast(type[XlsWriter], MagicMock),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
     jsonl_path = 'file_prices/result/doubles.jsonl'
@@ -255,7 +255,7 @@ def test_write_all_prices_single_template() -> None:
     out = CommonPriceOut(
         [RowItem({_TITLE: 't1', 'rest_count': 1})],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1', 'rest_count': 1}]
@@ -288,7 +288,7 @@ def test_write_all_prices_full_template() -> None:
     out = CommonPriceOut(
         [RowItem({_TITLE: 't1'})],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], driver_cls),
+        write_driver=cast(type[XlsxWriterAdapter], driver_cls),
         config_provider=get_config_provider(),
     )
     raw_rows = [{_TITLE: 't1'}]
@@ -315,7 +315,7 @@ def test_write_all_prices_unknown_template() -> None:
     out = CommonPriceOut(
         [],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
     )
 
@@ -359,7 +359,7 @@ def test_drom_excludes_doubles_by_settings_and_inner_keeps_them() -> None:
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Автоснабжение', 6000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(exclude_in_templates=('for_drom',), priority_suppliers=('Автоснабжение',)),
     )
@@ -389,7 +389,7 @@ def test_doubles_report_puts_priority_supplier_first_within_group() -> None:
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Мим', 4000), _double_row('Автоснабжение', 6000), other_group],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(priority_suppliers=('Автоснабжение',)),
     )
@@ -411,7 +411,7 @@ def test_doubles_report_puts_groups_with_priority_supplier_on_top() -> None:
     out = CommonPriceOut(
         [plain, _double_row('Мим', 4000), priority],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=get_config_provider(),
         doubles_settings=DoublesSettings(priority_suppliers=('Автоснабжение',)),
     )
@@ -432,7 +432,7 @@ def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigP
     out = CommonPriceOut(
         [_double_row('Пошк', 5000), _double_row('Мим', 4000)],
         xls_writer=cast(type[XlsWriter], writer_cls),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=fake_config_provider,
     )
 
@@ -453,7 +453,7 @@ def test_result_folder_comes_from_injected_provider() -> None:
     out = CommonPriceOut(
         [RowItem({_TITLE: 'a'})],
         xls_writer=cast(type[XlsWriter], MagicMock()),
-        write_driver=cast(type[XlsxWriterDriver], MagicMock()),
+        write_driver=cast(type[XlsxWriterAdapter], MagicMock()),
         config_provider=injected,
         doubles_settings=DoublesSettings(),
     )
@@ -500,7 +500,7 @@ def test_xlsx_uses_group_description_and_one_date(fake_config_provider: FakeConf
     out = CommonPriceOut(
         [RowItem({'title': 'оставить'}), RowItem({'title': 'убрать'})],
         xls_writer=XlsWriter,
-        write_driver=XlsxWriterDriver,
+        write_driver=XlsxWriterAdapter,
         config_provider=fake_config_provider,
         doubles_settings=DoublesSettings(),
     )

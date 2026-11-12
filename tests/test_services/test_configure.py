@@ -7,7 +7,7 @@ from cfg.vendor_parser import parser_for_vendor
 from domain.config_context import set_config_provider
 from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.grouper_factory import grouper_factory
@@ -30,7 +30,7 @@ def test_configure_registers_factories() -> None:
     assert ServiceProvider.resolve(ParserFactory) is parser_for_vendor
     assert ServiceProvider.resolve(GrouperFactory) is grouper_factory
     assert ServiceProvider.resolve(XlsWriterFactory) is XlsWriter
-    assert ServiceProvider.resolve(WriteDriverFactory) is XlsxWriterDriver
+    assert ServiceProvider.resolve(WriteDriverFactory) is XlsxWriterAdapter
 
 
 def test_configure_registers_services() -> None:
@@ -136,7 +136,7 @@ def test_writer_factories_resolved_at_report_service_creation() -> None:
         report.write_doubles([])
 
     assert output.call_args.kwargs['xls_writer'] is XlsWriter
-    assert output.call_args.kwargs['write_driver'] is XlsxWriterDriver
+    assert output.call_args.kwargs['write_driver'] is XlsxWriterAdapter
     assert output.call_args.kwargs['config_provider'] is provider
 
 

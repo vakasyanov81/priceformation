@@ -92,7 +92,7 @@ def test_group_formats_remain_independent(
     if TIRES not in empty_groups:
         assert tires[_FIRST_CELL].number_format == '@'
         assert tires['B2'].number_format == '#,##0.00'
-        assert tires[_FIRST_CELL].fill.fgColor.rgb == '0000FF00'
+        assert tires[_FIRST_CELL].fill.fgColor.rgb == 'FF00FF00'
     if OTHER not in empty_groups:
         assert other[_FIRST_CELL].number_format == '@'
         assert other[_FIRST_CELL].fill.fill_type is None

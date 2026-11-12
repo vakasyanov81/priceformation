@@ -16,7 +16,7 @@ from parsers.writer.group_files import GroupFileWriter
 from parsers.writer.output_plan import GroupOutputSource
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
 from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsx_driver import XlsxWriterDriver
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from tests.group_output_examples import OtherOutputSource
 from tests.test_domain.group_handler_examples import TestGroupResult, TestPosition
 
@@ -54,7 +54,7 @@ def _sources() -> dict[ProductGroup, GroupOutputSource]:
 
 
 def _writer(folder: Path) -> GroupFileWriter:
-    return GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterDriver, result_folder=str(folder))
+    return GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(folder))
 
 
 def test_two_models_write_two_independent_books(tmp_path: Path) -> None:
@@ -72,7 +72,7 @@ def test_two_models_write_two_independent_books(tmp_path: Path) -> None:
         assert list(tire_sheet.values) == [('Шинное название',), ('Шина',)]
         assert list(other_sheet.values) == [('Метка',), ('Шина',)]
         assert tire_sheet['A2'].number_format == '@'
-        assert tire_sheet['A2'].fill.fgColor.rgb == '0000FF00'
+        assert tire_sheet['A2'].fill.fgColor.rgb == 'FF00FF00'
         assert other_sheet['A2'].number_format == 'General'
         assert other_sheet['A2'].fill.fill_type is None
     finally:
@@ -150,7 +150,7 @@ def test_workbook_sheets_keep_models_and_styles_independent(
         assert list(tires.values) == [('Шинное название',), ('Шина',)]
         assert list(other.values) == expected
         assert tires['A2'].number_format == '@'
-        assert tires['A2'].fill.fgColor.rgb == '0000FF00'
+        assert tires['A2'].fill.fgColor.rgb == 'FF00FF00'
         assert other['A2'].number_format == 'General'
         assert other['A2'].fill.fill_type is None
     finally:
