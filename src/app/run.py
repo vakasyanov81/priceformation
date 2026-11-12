@@ -29,6 +29,7 @@ JSON печатается в stdout, логи в этом режиме не вы
 import logging
 import pydoc
 import sys
+from collections.abc import Callable
 
 from app.run_argv import (
     DOUBLES,
@@ -48,7 +49,7 @@ from cfg import init_cfg
 from cfg.services import configure_services
 from domain.exceptions import CoreExceptionError
 from infrastructure.config.result_folder import clear_result_folder
-from services.async_utils import try_call
+from services.async_utils import try_call, try_call_with_result
 from services.doubles_service import DoublesService
 from services.help_service import HelpService
 from services.mail_service import MailService
@@ -102,7 +103,7 @@ def _run_machine(argv: list[str]) -> int:
 
 def _machine_human(command: str, result_template: str | None) -> int:
     """Те же действия, что в меню, без JSON."""
-    handlers = {
+    handlers: dict[str, Callable[..., object]] = {
         PARSE: run_make_price_by_supplier,
         DOUBLES: run_report_doubles,
         ZAPASKA_LOAD_API_DATA: run_upload_zapaska_data,
@@ -137,25 +138,31 @@ def run_make_price_by_supplier(*, result_template: str | None = None) -> None:
     ServiceProvider.resolve(PriceReportService).write_result(parse_result, template=result_template)
 
 
-def run_upload_zapaska_data() -> None:
+def run_upload_zapaska_data(*, log_success: bool = True) -> bool:
     """Load zapaska data from api"""
     with ServiceProvider.resolve(PriceSchemaService).guard():
-        ServiceProvider.resolve(ZapaskaService).upload_data()
-    logger.info('*** Данные успешно загружены. ***\n')
+        uploaded = ServiceProvider.resolve(ZapaskaService).upload_data()
+    if uploaded and log_success:
+        logger.info('*** Данные Запаски (API) успешно загружены. ***\n')
+    return uploaded
 
 
-def run_upload_four_tochki_data() -> None:
+def run_upload_four_tochki_data(*, log_success: bool = True) -> bool:
     """Load Four Tochki data from api"""
     with ServiceProvider.resolve(PriceSchemaService).guard():
-        upload_four_tochki_data()
-    logger.info('*** Данные Форточек успешно загружены. ***\n')
+        uploaded = upload_four_tochki_data()
+    if uploaded and log_success:
+        logger.info('*** Данные Форточек (API) успешно загружены. ***\n')
+    return uploaded
 
 
-def run_upload_mim_data() -> None:
+def run_upload_mim_data(*, log_success: bool = True) -> bool:
     """Load MIM data from api"""
     with ServiceProvider.resolve(PriceSchemaService).guard():
-        ServiceProvider.resolve(MimService).upload_data()
-    logger.info('*** Данные МИМ успешно загружены. ***\n')
+        uploaded = ServiceProvider.resolve(MimService).upload_data()
+    if uploaded and log_success:
+        logger.info('*** Данные МИМ (API) успешно загружены. ***\n')
+    return uploaded
 
 
 def run_report_doubles() -> None:
@@ -164,11 +171,38 @@ def run_report_doubles() -> None:
     logger.info(f'*** Отчёт о дублях сформирован. ***\n{report.path}\n')
 
 
+def _log_prices_received(source: str, folders: list[str]) -> None:
+    suppliers = ', '.join(folders)
+    logger.info(f'*** Прайсы {source} получены: {len(folders)} ({suppliers}). ***\n')
+
+
 def run_fetch_mail_prices() -> None:
     """Download supplier prices from the mail box."""
     with ServiceProvider.resolve(PriceSchemaService).guard():
         fetched = ServiceProvider.resolve(MailService).fetch_prices()
-    logger.info(f'*** Прайсы из почты получены: {len(fetched)}. ***\n')
+    _log_prices_received('из почты', [price.folder for price in fetched])
+
+
+def _try_api_update(update: Callable[..., bool]) -> tuple[bool, bool | None]:
+    """Вернуть отсутствие ошибки и факт загрузки, подавив отдельное сообщение поставщика."""
+    return try_call_with_result(update, log_success=False)
+
+
+def _update_api_sources() -> tuple[list[str], list[str]]:
+    """Обновить API-источники и вернуть загруженные папки и имена источников с ошибкой."""
+    uploaded_folders: list[str] = []
+    failed: list[str] = []
+    for folder, update in (
+        ('zapaska', run_upload_zapaska_data),
+        ('four_tochki', run_upload_four_tochki_data),
+        ('mim', run_upload_mim_data),
+    ):
+        outcome = _try_api_update(update)
+        if outcome[1]:
+            uploaded_folders.append(folder)
+        if not outcome[0]:
+            failed.append(update.__name__)
+    return uploaded_folders, failed
 
 
 def run_update_all_supplier_prices() -> None:
@@ -179,13 +213,10 @@ def run_update_all_supplier_prices() -> None:
     Схемы прайсов сравниваются один раз: копия до первого источника, проверка после последнего.
     """
     with ServiceProvider.resolve(PriceSchemaService).guard():
-        updates = (
-            run_upload_zapaska_data,
-            run_upload_four_tochki_data,
-            run_upload_mim_data,
-            run_fetch_mail_prices,
-        )
-        failed = [update.__name__ for update in updates if not try_call(update)]
+        uploaded, failed = _update_api_sources()
+        if not try_call(run_fetch_mail_prices):
+            failed.append(run_fetch_mail_prices.__name__)
+    _log_prices_received('по API', uploaded)
     if failed:
         names = ', '.join(failed)
         raise CoreExceptionError(f'Не обновлены источники прайсов: {names}')

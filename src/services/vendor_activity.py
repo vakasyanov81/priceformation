@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from domain.protocols import ConfigProvider
+from infrastructure.logging.console import FILE_ONLY
 from parsers.vendor_config.provider import load_vendor_configs
 from parsers.vendor_config.source import SOURCE_API
 
@@ -21,22 +22,22 @@ def skip_disabled_upload(folder: str, config_provider: ConfigProvider) -> bool:
     """Вернуть True и написать в лог, если поставщик отключён и данные по API грузить не нужно."""
     if is_vendor_enabled(folder, config_provider):
         return False
-    logger.info(f'Поставщик «{folder}» отключён в настройках, данные по API не загружаются.')
+    logger.info(
+        f'Поставщик «{folder}» отключён в настройках, данные по API не загружаются.',
+        extra={FILE_ONLY: True},
+    )
     return True
 
 
 def skip_mail_fetch(folder: str, config_provider: ConfigProvider) -> bool:
-    """Вернуть True и написать в лог, если прайс поставщика по почте получать не нужно.
-
-    Не нужно, когда поставщик отключён или в настройках выбран разбор по API.
-    """
+    """Вернуть True, если прайс по почте не нужен; отключение поставщика записать в лог."""
     config = load_vendor_configs(config_provider).get(folder)
     if config is None:
         return False
     if not config.enabled:
-        logger.info(f'Поставщик «{folder}» отключён в настройках, прайс из почты не получается.')
+        logger.info(
+            f'Поставщик «{folder}» отключён в настройках, прайс из почты не получается.',
+            extra={FILE_ONLY: True},
+        )
         return True
-    if config.source == SOURCE_API:
-        logger.info(f'Поставщик «{folder}» работает по API, прайс из почты не получается.')
-        return True
-    return False
+    return config.source == SOURCE_API

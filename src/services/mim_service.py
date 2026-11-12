@@ -19,15 +19,16 @@ class MimService:
     def __init__(self, config_provider: ConfigProvider | None = None) -> None:
         self._config_provider = config_provider
 
-    def upload_data(self) -> None:
-        """Загрузить удалённые данные в file_prices/mim."""
+    def upload_data(self) -> bool:
+        """Загрузить удалённые данные в file_prices/mim; вернуть False, если поставщик отключён."""
         provider = self._config_provider or get_config_provider()
         if skip_disabled_upload(_VENDOR_FOLDER, provider):
-            return
+            return False
         api = get_mim_api_config()
         types = resolve_types(_configured_types(provider))
         request = MimApiRequest(host=api.host, token=api.token, types=types)
         load_remote_vendor_data(api=request)
+        return True
 
 
 def _configured_types(config_provider: ConfigProvider) -> tuple[int, ...]:

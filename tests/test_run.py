@@ -13,6 +13,7 @@ from services.price_schema_service import PriceSchemaService
 from services.zapaska_service import ZapaskaService
 
 _ASK_ACTION = 'app.run.ask_action'
+_RESOLVE = 'app.run.ServiceProvider.resolve'
 _REPORT_PATH = 'file_prices/result/doubles.xlsx'
 _RUN_LOGGER = 'app.run'
 
@@ -47,7 +48,7 @@ def test_run_make_price() -> None:
     reporter = MagicMock()
 
     with patch(
-        'app.run.ServiceProvider.resolve',
+        _RESOLVE,
         side_effect={ParseOrchestrator: orchestrator, PriceReportService: reporter}.__getitem__,
     ):
         from app.run import run_make_price_by_supplier
@@ -62,9 +63,10 @@ def test_run_make_price() -> None:
 def test_run_upload_zapaska(watch_logger: LoggerWatcher) -> None:
     """загрузка данных запаски через сервис и сообщение об успехе"""
     zapaska_service = MagicMock()
+    zapaska_service.upload_data.return_value = True
     entries = watch_logger(_RUN_LOGGER)
     with patch(
-        'app.run.ServiceProvider.resolve',
+        _RESOLVE,
         side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__,
     ):
         from app.run import run_upload_zapaska_data
@@ -72,7 +74,23 @@ def test_run_upload_zapaska(watch_logger: LoggerWatcher) -> None:
         run_upload_zapaska_data()
 
     zapaska_service.upload_data.assert_called_once_with()
-    assert texts_at(entries(), logging.INFO) == ['*** Данные успешно загружены. ***\n']
+    assert texts_at(entries(), logging.INFO) == ['*** Данные Запаски (API) успешно загружены. ***\n']
+
+
+def test_run_upload_zapaska_disabled(watch_logger: LoggerWatcher) -> None:
+    """отключённая запаска не даёт сообщения об успешной загрузке"""
+    zapaska_service = MagicMock()
+    zapaska_service.upload_data.return_value = False
+    entries = watch_logger(_RUN_LOGGER)
+    with patch(
+        _RESOLVE,
+        side_effect={ZapaskaService: zapaska_service, PriceSchemaService: MagicMock()}.__getitem__,
+    ):
+        from app.run import run_upload_zapaska_data
+
+        run_upload_zapaska_data()
+
+    assert texts_at(entries(), logging.INFO) == []
 
 
 def test_run_report_doubles(watch_logger: LoggerWatcher) -> None:
@@ -84,7 +102,7 @@ def test_run_report_doubles(watch_logger: LoggerWatcher) -> None:
     entries = watch_logger(_RUN_LOGGER)
 
     with patch(
-        'app.run.ServiceProvider.resolve',
+        _RESOLVE,
         side_effect={DoublesService: doubles_service}.__getitem__,
     ):
         from app.run import run_report_doubles

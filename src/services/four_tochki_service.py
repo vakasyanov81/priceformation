@@ -31,9 +31,10 @@ class FourTochkiService:
     def __init__(self, config_provider: ConfigProvider | None = None) -> None:
         self._config_provider = config_provider
 
-    def upload_data(self) -> None:
-        """Загрузить удалённые данные в file_prices/four_tochki."""
+    def upload_data(self) -> bool:
+        """Загрузить удалённые данные в file_prices/four_tochki; вернуть False, если поставщик отключён."""
         provider = self._config_provider or get_config_provider()
         if skip_disabled_upload(_VENDOR_FOLDER, provider):
-            return
+            return False
         load_remote_vendor_data(api=get_four_tochki_api_config(), groups=load_four_tochki_warehouse_groups(provider))
+        return True

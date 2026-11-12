@@ -50,7 +50,7 @@ _JSON_OK = 'ok'
 _JSON_ACTION = 'action'
 _JSON_FILES = 'files'
 _Errors = dict[str, str]
-_Update = Callable[[], None]
+_Update = Callable[[], bool | None]
 _UPDATE_ALL_SOURCES = ('zapaska', 'four_tochki', 'mim', 'mail')
 _DOWNLOAD_COMMANDS = frozenset(
     (
@@ -235,9 +235,9 @@ def _json_download(command: str) -> Mapping[str, Any]:
     }
 
 
-def upload_four_tochki_data() -> None:
+def upload_four_tochki_data() -> bool:
     """Выгрузить данные Форточек по API в file_prices/four_tochki."""
-    ServiceProvider.resolve(four_tochki_service.FourTochkiService).upload_data()
+    return ServiceProvider.resolve(four_tochki_service.FourTochkiService).upload_data()
 
 
 def _json_update_all() -> Mapping[str, Any]:

@@ -14,7 +14,7 @@ _RUN_LOGGER = 'app.run'
 def test_run_upload_four_tochki(watch_logger: LoggerWatcher) -> None:
     """загрузка данных Форточек через сервис и сообщение об успехе"""
     entries = watch_logger(_RUN_LOGGER)
-    upload = MagicMock()
+    upload = MagicMock(return_value=True)
     with (
         patch('app.run.upload_four_tochki_data', upload),
         patch('app.run.ServiceProvider.resolve', side_effect={PriceSchemaService: MagicMock()}.__getitem__),
@@ -24,4 +24,19 @@ def test_run_upload_four_tochki(watch_logger: LoggerWatcher) -> None:
         run_upload_four_tochki_data()
 
     upload.assert_called_once_with()
-    assert texts_at(entries(), logging.INFO) == ['*** Данные Форточек успешно загружены. ***\n']
+    assert texts_at(entries(), logging.INFO) == ['*** Данные Форточек (API) успешно загружены. ***\n']
+
+
+def test_run_upload_four_tochki_disabled(watch_logger: LoggerWatcher) -> None:
+    """отключённые Форточки не дают сообщения об успешной загрузке"""
+    entries = watch_logger(_RUN_LOGGER)
+    upload = MagicMock(return_value=False)
+    with (
+        patch('app.run.upload_four_tochki_data', upload),
+        patch('app.run.ServiceProvider.resolve', side_effect={PriceSchemaService: MagicMock()}.__getitem__),
+    ):
+        from app.run import run_upload_four_tochki_data
+
+        run_upload_four_tochki_data()
+
+    assert texts_at(entries(), logging.INFO) == []
