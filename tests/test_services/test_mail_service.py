@@ -11,6 +11,7 @@ from log_watch import LoggerWatcher, texts_at
 from domain.mail import PriceDownloadError
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.mail_credentials import MailCredentials
+from infrastructure.mail.imap import save_price
 from parsers.mail.client import FoundPrice
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
 from parsers.vendor_config.models import VendorConfig
@@ -95,6 +96,33 @@ def test_fetch_prices_saves_each_enabled_profile(
     assert entry.folder == 'pioner'
     assert entry.subject == 'Прайс'
     assert entry.path == str(destination)
+
+
+@pytest.mark.parametrize('extension', ['xls', 'XLS', 'xlsx'])
+def test_fetch_prices_preserves_attachment_extension(
+    fake_config_provider: FakeConfigProvider,
+    monkeypatch: pytest.MonkeyPatch,
+    extension: str,
+) -> None:
+    """Вложение XLS остаётся XLS; старый прайс другого формата удаляется."""
+    config = MailConfig(account=_ACCOUNT, profiles={'plant': _profile('plant@example.ru')})
+    found = FoundPrice(
+        subject='Прайс на аккумуляторы', date='10.11.2026', filename=f'ПРАЙС 200.{extension}', payload=b'xls'
+    )
+    _wire(monkeypatch, config, found)
+    monkeypatch.setattr(mail_service, 'save_price', save_price)
+    folder = Path(fake_config_provider.price_folder('plant'))
+    folder.mkdir(parents=True, exist_ok=True)
+    stale_name = 'price.xls' if extension == 'xlsx' else 'price.xlsx'
+    stale = folder / stale_name
+    stale.write_bytes(b'old')
+
+    fetched = mail_service.MailService().fetch_prices()
+
+    destination = folder / f'price.{extension.lower()}'
+    assert fetched[0].path == str(destination)
+    assert destination.read_bytes() == b'xls'
+    assert not stale.exists()
 
 
 def test_fetch_prices_reports_missing_letter(

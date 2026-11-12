@@ -1,0 +1,15 @@
+{
+  "imap": {
+    "host": "imap.example.ru",
+    "port": 993,
+    "folder": "Price"
+  },
+  "profiles": {
+    "plant": {
+      "enabled": 1,
+      "sender": "plant@example.ru",
+      "subject_keyword": "Прайс на аккумуляторы",
+      "attachment_glob": "ПРАЙС 200 PLAN-T.PRO СЭИ *.xls*"
+    }
+  }
+}

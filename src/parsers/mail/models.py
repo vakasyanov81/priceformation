@@ -1,7 +1,7 @@
 """Типизированная модель parse_config/mail.json.
 
 Ключ профиля — папка поставщика в ``file_prices``; прайс кладётся в
-``file_prices/<папка>/price.xlsx``. Адрес ящика и доступы в модели не входят:
+``file_prices/<папка>/price.xls[x]``. Адрес ящика и доступы в модели не входят:
 логин и пароль берутся отдельно (см. infrastructure/config/mail_credentials.py).
 """
 
