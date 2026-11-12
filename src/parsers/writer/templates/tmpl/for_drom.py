@@ -26,7 +26,7 @@ class ForDrom(IWriteTemplate):
         {'Состояние': {'field': RowItem.condition.name, 'default_value': 'Новое'}},
     ]
 
-    __FILE__ = 'price_drom_{now}.xlsx'
+    __FILE__ = 'price_drom_tire_{now}.xlsx'
     __MERGE_WAREHOUSES__ = True
 
     __EXCLUDE__: ClassVar[WriteExclude] = {RowItem.rest_count.name: [None, '']}

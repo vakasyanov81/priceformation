@@ -75,7 +75,8 @@ file_prices/                  входные прайсы и результат
 | Файл | Для чего |
 |---|---|
 | `price_<дата>.xlsx` | прайс для внутреннего использования (`for_inner`) |
-| `price_drom_<дата>.xlsx` | прайс для drom.ru (`for_drom`) |
+| `price_drom_tire_<дата>.xlsx` | шины и диски для drom.ru (`for_drom`) |
+| `price_drom_akb_<дата>.xlsx` | аккумуляторные батареи для drom.ru (`for_drom`) |
 | `price_full_<дата>.xlsx` | полный прайс (`for_full`, только по явному запросу) |
 | `doubles_<дата>.xlsx` | отчёт о дублях (пишется при каждом `parse` и командой `doubles`) |
 

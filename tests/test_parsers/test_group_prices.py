@@ -2,6 +2,7 @@
 
 import json
 from contextlib import closing
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -100,6 +101,8 @@ def test_drom_battery_columns(fake_config_provider: FakeConfigProvider) -> None:
         as_jsonl=False,
         selected={_TIRES, _BATTERIES},
     )
+    current_date = date.today().isoformat()
+    assert Path(paths[0]).name == f'price_drom_akb_{current_date}.xlsx'
     with closing(load_workbook(paths[0])) as book:
         header, row = list(book['Аккумуляторы'].values)
         assert header == ('Тип товара', 'Бренд', 'Номенклатура', 'Цена', 'Остаток', 'Наличие', 'Состояние')

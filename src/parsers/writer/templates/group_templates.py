@@ -45,7 +45,7 @@ def _drom_batteries(group: GroupOutput) -> GroupOutput:
             {'Состояние': {'default_value': 'Новое'}},
         ],
         filters={'rest_count': [None, '']},
-        file_name='price_drom_batteries_{now}.xlsx',
+        file_name='price_drom_akb_{now}.xlsx',
     )
 
 
