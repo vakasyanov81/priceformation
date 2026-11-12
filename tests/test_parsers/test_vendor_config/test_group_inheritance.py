@@ -89,7 +89,8 @@ def test_common_settings_do_not_leak_between_groups() -> None:
     assert tires.sections[0].behavior.min_rest == 9
     assert batteries.sections[0].start_row == 3
     assert batteries.sections[0].file_templates == ('*.xlsx',)
-    assert not hasattr(batteries.sections[0], 'columns')
+    assert not batteries.sections[0].columns
+    assert batteries.sections[0].processing.min_rest == 1
     assert not hasattr(batteries.sections[0], 'behavior')
 
 
@@ -227,7 +228,7 @@ def test_common_group_cannot_define_sections() -> None:
 
 
 def test_common_battery_defaults_cannot_contain_tire_slots() -> None:
-    common = {'product_groups': [{'id': 'batteries', 'defaults': {'title': {}}}]}
+    common = {'product_groups': [{'id': 'batteries', 'defaults': {'title': {'strategy': 'default'}}}]}
 
     with pytest.raises(ConfigValidationError, match=r'_common\.json.*defaults → title'):
         _load(_vendor(), common)

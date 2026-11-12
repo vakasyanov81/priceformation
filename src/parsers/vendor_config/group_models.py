@@ -1,9 +1,12 @@
 """Раздельные типизированные настройки товарных групп."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Literal
 
 from domain.product_groups import ProductGroup
+from parsers.vendor_config.battery_settings import BatterySettings
 from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import VendorSection
 from parsers.vendor_config.slot_configs import BehaviorConfig
@@ -24,7 +27,7 @@ class TireAndDiskConfig:
 
 @dataclass(frozen=True, slots=True)
 class BatterySection:
-    """Маршрут объявленной группы без ещё не определённых аккумуляторных полей."""
+    """Маршрут и собственные настройки аккумуляторной секции."""
 
     id: str
     name: str
@@ -34,6 +37,8 @@ class BatterySection:
     sheet_indexes: tuple[int, ...] = ()
     row_selector: RowSelector | None = None
     config_path: str = field(default='', compare=False, repr=False)
+    columns: Mapping[int | str, str] = field(default_factory=lambda: MappingProxyType({}))
+    processing: BatterySettings = field(default_factory=BatterySettings)
 
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:

@@ -77,7 +77,7 @@ class VendorRouting:
             supplier=ParseParamsSupplier(folder_name=self._config.folder, name=section.name, code=section.id),
             start_row=section.start_row,
             sheet_info=section.sheet_info,
-            columns=dict(section.columns) if isinstance(section, VendorSection) else {},
+            columns=dict(section.columns),
             stop_words=(),
             file_templates=section.file_templates,
             sheet_indexes=section.sheet_indexes,

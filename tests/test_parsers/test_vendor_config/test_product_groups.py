@@ -58,7 +58,7 @@ def test_two_groups_have_separate_settings() -> None:
     assert section.id == 'batteries'
     assert section.start_row == 3
     assert section.file_templates == ('batteries*.xlsx',)
-    assert not hasattr(section, 'columns')
+    assert section.columns == {}
 
 
 def test_battery_only_config_has_no_tire_sections() -> None:
@@ -116,10 +116,19 @@ def test_section_cannot_override_group_membership() -> None:
         _grouped_config([group])
 
 
-@pytest.mark.parametrize('key', ['columns', 'category', 'title', 'pricing', 'behavior'])
-def test_batteries_cannot_use_tire_settings(key: str) -> None:
-    group = {**_battery_group(), key: {}}
-    with pytest.raises(ConfigValidationError, match='ещё не определены'):
+@pytest.mark.parametrize(
+    'key, settings',
+    [
+        ('columns', {'0': 'season'}),
+        ('category', {}),
+        ('title', {'strategy': 'default'}),
+        ('pricing', {'policy': 'base'}),
+        ('behavior', {'rest': 'warehouse'}),
+    ],
+)
+def test_batteries_cannot_use_tire_settings(key: str, settings: object) -> None:
+    group = {**_battery_group(), key: settings}
+    with pytest.raises(ConfigValidationError, match=key):
         _grouped_config([group])
 
 

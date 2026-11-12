@@ -139,5 +139,5 @@ def _message(vendor: VendorConfig, section: VendorSection | BatterySection, path
 
 
 def _columns(section: VendorSection | BatterySection) -> dict[int | str, str]:
-    """У объявленных аккумуляторов пока нет модели колонок; проверяются только листы."""
-    return section.columns if isinstance(section, VendorSection) else {}
+    """У каждой группы собственные колонки; пустое объявление проверяет только листы."""
+    return dict(section.columns)

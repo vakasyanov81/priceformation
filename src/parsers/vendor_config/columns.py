@@ -1,17 +1,21 @@
 """Колонки секции поставщика: источник (индекс листа xls или ключ JSON-записи) → поле позиции."""
 
+from domain.battery.field_registry import FIELD_KEYS as BATTERY_FIELDS
 from domain.exceptions import ConfigValidationError
-from domain.row_item.field_registry import spec_of
+from domain.product_groups import ProductGroup
+from domain.row_item.field_registry import FIELD_KEYS as TIRE_FIELDS
 from parsers.data_provider.json_fields import RawConfig
 from parsers.vendor_config.fields import read_str_list, read_str_map
 
 COLUMNS_KEY = 'columns'
-_COLUMNS_HINT = 'ожидается ключ из реестра полей RowItem'
+_COLUMNS_HINT = 'ожидается ключ из реестра полей выбранной модели'
 
 type Columns = dict[int | str, str]
 
 
-def read_columns(payload: RawConfig, where: str, *, reads_json: bool) -> Columns:
+def read_columns(
+    payload: RawConfig, where: str, *, reads_json: bool, group: ProductGroup = ProductGroup.TIRE_AND_DISK
+) -> Columns:
     """Колонки: для xls ключи — индексы колонок, для json (`reads_json`) — ключи исходной записи.
 
     Для json колонки можно задать списком: ключ записи совпадает с полем позиции (`["code", "title"]`).
@@ -22,7 +26,7 @@ def read_columns(payload: RawConfig, where: str, *, reads_json: bool) -> Columns
         parsed = _keyed_columns(payload, where)
     else:
         parsed = _indexed_columns(payload, where)
-    _ensure_known_fields(parsed, where)
+    _ensure_known_fields(parsed, where, group)
     return parsed
 
 
@@ -47,12 +51,13 @@ def _same_named_columns(payload: RawConfig, where: str) -> Columns:
     return {name: name for name in read_str_list(payload, COLUMNS_KEY, where)}
 
 
-def _ensure_known_fields(columns: Columns, where: str) -> None:
-    """Проверить, что колонка указывает на известное плоское поле позиции (реестр RowItem)."""
+def _ensure_known_fields(columns: Columns, where: str, group: ProductGroup) -> None:
+    """Проверить, что колонка указывает на поле реестра выбранной модели."""
+    allowed = BATTERY_FIELDS if group is ProductGroup.BATTERIES else TIRE_FIELDS
     for source, name in columns.items():
-        if spec_of(name) is None:
+        if name not in allowed:
             raise ConfigValidationError(
-                f'{where} → columns[{source}]: неизвестное поле «{name}»; {_COLUMNS_HINT}',
+                f'{where} → columns[{source}]: неизвестное поле «{name}» для {group.value}; {_COLUMNS_HINT}',
             )
 
 

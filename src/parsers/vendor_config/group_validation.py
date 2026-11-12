@@ -3,6 +3,7 @@
 from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, read_object
+from parsers.vendor_config.battery_settings import validate_battery_settings
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_str_list
 from parsers.vendor_config.row_selector import RowSelector
@@ -25,10 +26,13 @@ def validate_group_settings(
     validate_reading_settings(payload, where)
     _validate_row_selector(payload, where, section_level)
     if group is ProductGroup.BATTERIES:
-        for key in MODEL_KEYS:
-            if key in payload:
-                raise ConfigValidationError(f'{where} → {key}: поля и стратегии batteries ещё не определены')
+        validate_battery_settings(payload, where, reads_json=reads_json)
         return
+    _validate_tire_settings(payload, where, reads_json=reads_json)
+
+
+def _validate_tire_settings(payload: RawConfig, where: str, *, reads_json: bool) -> None:
+    """Проверить слоты и колонки шинной модели отдельно от соседних групп."""
     validate_strategy_names(payload, where)
     read_columns(payload, where, reads_json=reads_json)
     CategoryConfig.from_dict(read_object(payload, 'category', where), f'{where} → category')

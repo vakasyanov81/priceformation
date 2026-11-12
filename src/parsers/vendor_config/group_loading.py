@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, read_object
+from parsers.vendor_config.battery_settings import BatterySettings
+from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_text
 from parsers.vendor_config.group_fields import object_list
 from parsers.vendor_config.group_models import BatteryConfig, BatterySection, GroupConfig, TireAndDiskConfig
@@ -42,7 +44,7 @@ def read_group(declaration: GroupPayload, vendor: VendorConfig) -> GroupConfig:
 
 
 def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, vendor: VendorConfig) -> BatterySection:
-    """Прочитать только определённые контрактом настройки чтения аккумуляторов."""
+    """Прочитать маршрут и разрешённые наследованием аккумуляторные настройки."""
     payload = merge_config(inherited, section)
     templates = read_str_list(payload, 'file_templates', where, ())
     if not templates:
@@ -59,4 +61,6 @@ def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, 
         sheet_indexes=sheet_indexes,
         row_selector=RowSelector.from_section(section, where),
         config_path=where,
+        columns=read_columns(payload, where, reads_json=vendor.reader == 'json', group=ProductGroup.BATTERIES),
+        processing=BatterySettings.from_dict(payload, where),
     )
