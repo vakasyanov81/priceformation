@@ -10,6 +10,7 @@ from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.price_source import FilePricesSource
 from parsers.battery.handler import BatteryHandler
+from parsers.battery.statistic import BatteryResultStatistic
 
 
 class BatteryParser:
@@ -43,5 +44,5 @@ class BatteryParser:
         process_log.log_start()
         process_log.log_list_files(paths)
         package = self._group_handler.process_fields(self.price_files.read_rows(paths))
-        process_log.log_finish()
+        process_log.log_finish(BatteryResultStatistic(package.positions))
         return package
