@@ -19,7 +19,9 @@ from parsers.vendor_config.group_models import BatteryConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.writer.output_plan import prepare_output_plan
 from parsers.writer.templates.group_output import GroupOutput
+from parsers.writer.templates.group_templates import group_template_output
 from parsers.writer.templates.tmpl.for_batteries import ForBatteries
+from parsers.writer.templates.tmpl.for_drom import ForDrom
 
 
 def _source() -> BatteryOutputSource:
@@ -130,6 +132,43 @@ def test_battery_template_writes_codes_prices_and_stock(tmp_path: Path) -> None:
     assert row['Ширина, мм'] == '172'
     assert row['Высота, мм'] == '220'
     assert row['Вес'] == '24'
+    workbook.close()
+
+
+@pytest.mark.parametrize(
+    'field, title, characteristic',
+    [
+        ('capacity_ah', 'Ёмкость, А·ч', '60'),
+        ('starting_current_a', 'Пусковой ток, А', '600'),
+        ('length_mm', 'Длина, мм', '302'),
+        ('width_mm', 'Ширина, мм', '172'),
+        ('height_mm', 'Высота, мм', '220'),
+        ('terminal_type', 'Тип клемм', 'стандарт'),
+        ('size_type', 'Типоразмер', 'JIS D31'),
+        ('polarity', 'Полярность', 'обратная (0, L)'),
+        ('serviceable', 'Обслуживаемость', True),
+        ('weight', 'Вес', '13.9'),
+        ('bottom_mount', 'Нижнее крепление', 'B01'),
+        ('efb', 'EFB', True),
+        ('agm', 'AGM', True),
+    ],
+)
+def test_drom_battery_characteristics_reach_workbook(
+    tmp_path: Path, field: str, title: str, characteristic: str | bool
+) -> None:
+    """Прайс Дром сохраняет дополнительные характеристики аккумулятора."""
+    position = BatteryItem.from_fields({field: characteristic, 'rest_count': 1})
+    source = BatteryOutputSource(BatteryResult((position,)))
+    template = group_template_output(ForDrom)
+    paths = group_writer(tmp_path).write(
+        [replace(template, groups=(template.groups[1],))],
+        {ProductGroup.BATTERIES: source},
+        selected={ProductGroup.BATTERIES},
+    )
+    workbook = load_workbook(paths[0])
+    header, cells = list(workbook['Аккумуляторы'].values)
+    row = dict(zip(header, cells, strict=True))
+    assert row[title] == characteristic
     workbook.close()
 
 

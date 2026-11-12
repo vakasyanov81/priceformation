@@ -105,7 +105,28 @@ def test_drom_battery_columns(fake_config_provider: FakeConfigProvider) -> None:
     assert Path(paths[0]).name == f'price_drom_akb_{current_date}.xlsx'
     with closing(load_workbook(paths[0])) as book:
         header, row = list(book['Аккумуляторы'].values)
-        assert header == ('Тип товара', 'Бренд', 'Номенклатура', 'Цена', 'Остаток', 'Наличие', 'Состояние')
+        assert header == (
+            'Тип товара',
+            'Бренд',
+            'Номенклатура',
+            'Цена',
+            'Остаток',
+            'Наличие',
+            'Состояние',
+            'Ёмкость, А·ч',
+            'Пусковой ток, А',
+            'Длина, мм',
+            'Ширина, мм',
+            'Высота, мм',
+            'Тип клемм',
+            'Типоразмер',
+            'Полярность',
+            'Обслуживаемость',
+            'Вес',
+            'Нижнее крепление',
+            'EFB',
+            'AGM',
+        )
         assert row[0] == 'Аккумулятор'
         assert row[2] == 'АКБ'
         assert row[4] == 1
