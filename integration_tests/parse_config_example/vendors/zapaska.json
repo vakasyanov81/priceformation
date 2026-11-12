@@ -30,7 +30,13 @@
             "ET": "eet",
             "brand": "manufacturer_name",
             "name": "title",
-            "category": "type_production"
+            "category": "type_production",
+            "width": "width",
+            "diameter": "diameter",
+            "model": "model",
+            "season": "season",
+            "color": "color",
+            "ext_diameter": "ext_diameter"
           }
         },
         {
@@ -62,7 +68,13 @@
             "height": "height_percent",
             "load_index": "index_load",
             "speed_index": "index_velocity",
-            "studded": "spike"
+            "studded": "spike",
+            "width": "width",
+            "diameter": "diameter",
+            "model": "model",
+            "season": "season",
+            "color": "color",
+            "ext_diameter": "ext_diameter"
           }
         }
       ],

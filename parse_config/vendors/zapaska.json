@@ -4,19 +4,6 @@
   "reader": "json",
   "product_groups": [
     {
-      "columns": {
-        "cae": "code_art",
-        "rest": "rest_count",
-        "price": "price_opt",
-        "retail": "price_recommended",
-        "diam_center": "central_diameter",
-        "holes": "slot_count",
-        "diam_holes": "pcd1",
-        "ET": "eet",
-        "brand": "manufacturer_name",
-        "name": "title",
-        "category": "type_production"
-      },
       "sections": [
         {
           "id": "2",
@@ -27,6 +14,25 @@
           "category": {
             "strategy": "fixed",
             "value": "Диск"
+          },
+          "columns": {
+            "cae": "code_art",
+            "rest": "rest_count",
+            "price": "price_opt",
+            "retail": "price_recommended",
+            "diam_center": "central_diameter",
+            "holes": "slot_count",
+            "diam_holes": "pcd1",
+            "ET": "eet",
+            "brand": "manufacturer_name",
+            "name": "title",
+            "category": "type_production",
+            "width": "width",
+            "diameter": "diameter",
+            "model": "model",
+            "season": "season",
+            "color": "color",
+            "ext_diameter": "ext_diameter"
           }
         },
         {
@@ -40,10 +46,27 @@
             "unknown_skip": true
           },
           "columns": {
+            "cae": "code_art",
+            "rest": "rest_count",
+            "price": "price_opt",
+            "retail": "price_recommended",
+            "diam_center": "central_diameter",
+            "holes": "slot_count",
+            "diam_holes": "pcd1",
+            "ET": "eet",
+            "brand": "manufacturer_name",
+            "name": "title",
+            "category": "type_production",
             "height": "height_percent",
             "load_index": "index_load",
             "speed_index": "index_velocity",
-            "studded": "spike"
+            "studded": "spike",
+            "width": "width",
+            "diameter": "diameter",
+            "model": "model",
+            "season": "season",
+            "color": "color",
+            "ext_diameter": "ext_diameter"
           }
         }
       ],

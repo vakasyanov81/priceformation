@@ -166,7 +166,12 @@
               "tire_type",
               "price_opt",
               "price_recommended",
-              "rest_count"
+              "rest_count",
+              "available",
+              "delivery_period",
+              "warehouse_id",
+              "warehouse_name",
+              "warehouse_group"
             ],
             "category": {
               "strategy": "field_map",
@@ -204,7 +209,12 @@
               "disk_type",
               "price_opt",
               "price_recommended",
-              "rest_count"
+              "rest_count",
+              "available",
+              "delivery_period",
+              "warehouse_id",
+              "warehouse_name",
+              "warehouse_group"
             ],
             "category": {
               "strategy": "fixed",
