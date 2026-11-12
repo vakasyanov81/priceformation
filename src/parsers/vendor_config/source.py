@@ -13,7 +13,7 @@ _SOURCE_KEY = 'source'
 _API_KEY = 'api'
 # Ключи поставщика, которые в режиме API не наследуются: файловые настройки и сам блок `api`.
 _VENDOR_ONLY_KEYS = frozenset(
-    ('start_row', 'file_templates', 'reader', 'columns', 'sections', 'product_groups', 'defaults', _API_KEY),
+    ('reader', 'product_groups', 'defaults', _API_KEY),
 )
 
 

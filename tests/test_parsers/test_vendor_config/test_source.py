@@ -9,11 +9,13 @@ from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.source import select_source
 
 _XLS_SECTION: dict[str, Any] = {
+    'id': 'file_tires',
     'name': 'Файл',
     'columns': {'0': 'code'},
     'file_templates': ['price*.xlsx'],
 }
 _API_SECTION: dict[str, Any] = {
+    'id': 'api_tires',
     'name': 'API',
     'file_templates': ['tire.json'],
     'columns': {'code': 'code'},
@@ -22,13 +24,15 @@ _API_SECTION: dict[str, Any] = {
 
 def _vendor(**extra: Any) -> dict[str, Any]:
     return {
-        'enabled': 1,
         'code': '5',
         'name': 'Поставщик',
-        'start_row': 2,
-        'file_templates': ['price*.xlsx'],
-        'sections': [_XLS_SECTION],
-        'api': {'start_row': 0, 'reader': 'json', 'file_templates': ['tire.json'], 'sections': [_API_SECTION]},
+        'defaults': {'start_row': 2},
+        'product_groups': [{'id': 'tire_and_disk', 'sections': [_XLS_SECTION]}],
+        'api': {
+            'defaults': {'start_row': 1},
+            'reader': 'json',
+            'product_groups': [{'id': 'tire_and_disk', 'sections': [_API_SECTION]}],
+        },
         **extra,
     }
 
@@ -38,7 +42,7 @@ def test_file_source_is_default_and_drops_api_block() -> None:
     payload = select_source(_vendor(), 'vendor.json')
     assert 'api' not in payload
     assert 'source' not in payload
-    assert payload['sections'] == [_XLS_SECTION]
+    assert payload['product_groups'][0]['sections'] == [_XLS_SECTION]
 
 
 def test_explicit_file_source_matches_default() -> None:
@@ -50,10 +54,8 @@ def test_api_source_replaces_top_level_with_api_block() -> None:
     """source: api берёт секции и reader из блока api; старые параметры файла не переносятся."""
     payload = select_source(_vendor(source='api'), 'vendor.json')
     assert payload['reader'] == 'json'
-    assert payload['sections'] == [_API_SECTION]
-    assert payload['file_templates'] == ['tire.json']
-    assert payload['start_row'] == 0
-    assert payload['enabled'] == 1
+    assert payload['product_groups'][0]['sections'] == [_API_SECTION]
+    assert payload['defaults'] == {'start_row': 1}
     assert payload['code'] == '5'
 
 
@@ -101,24 +103,6 @@ def test_vendor_config_keeps_source(extra: dict[str, str], expected: str) -> Non
     assert config.source == expected
 
 
-def test_api_block_inherits_vendor_slots_but_not_file_keys() -> None:
-    """Режим api: слоты поставщика (наценка, название) наследуются, колонки и листы файлов — нет."""
-    raw = _vendor(
-        source='api',
-        columns={'5': 'title'},
-        pricing={'policy': 'recommended_range'},
-        title={'variant': 'four_tochki'},
-    )
-    raw['api']['title'] = {'params_first': True}
-
-    payload = select_source(raw, 'vendor.json')
-
-    assert payload['pricing'] == {'policy': 'recommended_range'}
-    assert payload['title'] == {'variant': 'four_tochki', 'params_first': True}
-    assert 'columns' not in payload
-    assert 'api' not in payload
-
-
 def test_api_groups_do_not_inherit_file_groups_or_defaults() -> None:
     """Группы и общие настройки чтения принадлежат выбранному источнику."""
     file_groups = [{'id': 'batteries'}]
@@ -127,6 +111,6 @@ def test_api_groups_do_not_inherit_file_groups_or_defaults() -> None:
     raw['api']['product_groups'] = [{'id': 'tire_and_disk', 'sections': api_sections}]
     payload = select_source(raw, 'vendor.json')
     assert payload['product_groups'] == raw['api']['product_groups']
-    assert 'defaults' not in payload
+    assert payload['defaults'] == {'start_row': 1}
     del raw['api']['product_groups']
     assert 'product_groups' not in select_source(raw, 'vendor.json')

@@ -13,9 +13,18 @@ _ACTIVATION_FILE = 'vendor_activation.json'
 
 
 def _config(code: str, name: str) -> str:
-    return (
-        f'{{"code": "{code}", "name": "{name}", '
-        '"start_row": 1, "file_templates": ["*.xls"], "sections": [{"columns": {"1": "title"}}]}'
+    return json.dumps(
+        {
+            'code': code,
+            'name': name,
+            'product_groups': [
+                {
+                    'id': 'tire_and_disk',
+                    'file_templates': ['*.xls'],
+                    'sections': [{'id': code, 'columns': {'1': 'title'}}],
+                }
+            ],
+        }
     )
 
 
@@ -66,8 +75,7 @@ def test_service_uses_injected_provider(tmp_path: Path) -> None:
     vendors = Path(provider.config_file('vendors'))
     vendors.mkdir(parents=True)
     vendors.joinpath('mim.json').write_text(
-        '{"code": "mim", "name": "Мим", "start_row": 2, "file_templates": ["*.xls"],'
-        ' "sections": [{"columns": {"1": "manufacturer_name"}}]}',
+        _config('mim', 'Мим'),
         encoding='utf-8',
     )
     service = VendorActivationService(config_provider=provider)

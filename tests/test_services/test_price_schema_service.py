@@ -18,10 +18,15 @@ _VENDOR = {
     'enabled': 1,
     'code': '4',
     'name': 'Мим',
-    'start_row': 2,
-    'file_templates': ['price*.xlsx'],
-    'sections': [
-        {'name': 'Мим', 'sheet_indexes': [0], 'columns': {'0': 'code', '1': 'title'}},
+    'product_groups': [
+        {
+            'id': 'tire_and_disk',
+            'start_row': 2,
+            'file_templates': ['price*.xlsx'],
+            'sections': [
+                {'id': '4', 'sheet_indexes': [0], 'columns': {'0': 'code', '1': 'title'}},
+            ],
+        }
     ],
 }
 
@@ -148,7 +153,7 @@ def test_schema_checks_declared_battery_sheets(tmp_path: Path, fake_config_provi
     """Просмотр схемы проверяет маршруты обеих групп, не требуя аккумуляторного обработчика."""
     vendor = VendorConfig.from_dict(_VENDOR, 'mim', 'mim.json')
     battery = BatterySection('battery', 'АКБ', 2, ('battery.xlsx',), sheet_indexes=(0,))
-    vendor = replace(vendor, configured_groups=(*vendor.product_groups, BatteryConfig((battery,))))
+    vendor = replace(vendor, product_groups=(*vendor.product_groups, BatteryConfig((battery,))))
     root = Path(fake_config_provider.price_folder('mim'))
     _write_price(root / 'price.xlsx', ['RN', 'Наименование'])
     _write_price(root / 'battery.xlsx', ['АКБ'])

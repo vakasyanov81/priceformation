@@ -246,16 +246,6 @@ def test_group_inheritance_through_file_provider(fake_config_provider: FakeConfi
     assert len(config.product_groups) == 2
 
 
-def test_new_common_settings_support_legacy_vendor() -> None:
-    vendor = {'code': 'old', 'name': 'Старый', 'sections': [{'id': 'old'}]}
-
-    config = _load(vendor, _common())
-
-    assert config.sections[0].columns == {0: 'title'}
-    assert config.sections[0].start_row == 2
-    assert config.behavior.min_rest == 9
-
-
 def test_resolved_sections_and_sources_are_independent() -> None:
     common = _common()
     defaults = common['product_groups'][0]['defaults']

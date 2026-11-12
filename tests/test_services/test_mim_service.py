@@ -6,6 +6,7 @@ import pytest
 
 from infrastructure.config.mim_api_config import MimApiConfig
 from infrastructure.remote.mim_client import MimApiRequest
+from parsers.vendor_config.group_models import TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.slot_configs import BehaviorConfig
 from services.mim_service import MimService
@@ -26,7 +27,7 @@ def _upload(configs: dict[str, VendorConfig]) -> MimApiRequest:
 
 
 def _vendor(api_types: tuple[int, ...]) -> VendorConfig:
-    return MagicMock(spec=VendorConfig, behavior=BehaviorConfig(api_types=api_types))
+    return VendorConfig('mim', '4', 'МИМ', (TireAndDiskConfig((), BehaviorConfig(api_types=api_types)),))
 
 
 def test_upload_data_takes_types_from_vendor_config() -> None:

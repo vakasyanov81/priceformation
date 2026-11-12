@@ -59,7 +59,7 @@ class VendorSection:
         if vendor.reader == READER_JSON and sheet_indexes:
             raise ConfigValidationError(f'{where} → sheet_indexes: JSON не содержит листов')
         return cls(
-            id=read_text(payload, 'id', where, vendor.code),
+            id=read_text(section, 'id', f'{where}.id'),
             name=read_text(payload, 'name', where, vendor.name),
             start_row=read_int(payload, 'start_row', where, DEFAULT_START_ROW),
             file_templates=file_templates,

@@ -127,16 +127,14 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
         enabled=True,
         code='c',
         name='n',
-        start_row=1,
         reader='json',
-        sections=(section,),
     )
 
     parser = make_config_driven_parser(section, vendor_config, _mock_parse_config())
 
     assert parser.group_handler.product_group is ProductGroup.TIRE_AND_DISK
     assert parser.pipeline.hooks is not None
-    assert parser.pipeline.hooks.min_rest == vendor_config.behavior.min_rest
+    assert parser.pipeline.hooks.min_rest == section.behavior.min_rest
     file_reader = parser.price_files.file_reader
     assert isinstance(file_reader, FileReader)
     assert file_reader.data_reader is JsonPriceReader
@@ -303,28 +301,34 @@ def test_manufacturer_from_category_reader_is_wired() -> None:
         {
             'code': '3',
             'name': 'Пионер',
-            'start_row': 12,
-            'file_templates': ['price*.xls'],
-            'behavior': {
-                'pipeline': ['category', 'min_rest', 'markup', 'title'],
-                'find_manufacturer_on_enrich': False,
-                'rest': 'minus_reserve',
-            },
-            'sections': [
+            'product_groups': [
                 {
-                    'id': '3',
-                    'name': 'Пионер',
-                    'columns': {'1': 'title', '2': 'price_opt', '4': 'rest_count', '5': 'reserve_count'},
-                    'category': {'strategy': 'header_rows', 'zero_rest_categories': ['прочие']},
-                    'title': {'strategy': 'manufacturer_from_category'},
-                    'pricing': {'policy': 'map_on_opt'},
+                    'id': 'tire_and_disk',
+                    'start_row': 12,
+                    'file_templates': ['price*.xls'],
+                    'behavior': {
+                        'pipeline': ['category', 'min_rest', 'markup', 'title'],
+                        'find_manufacturer_on_enrich': False,
+                        'rest': 'minus_reserve',
+                    },
+                    'sections': [
+                        {
+                            'id': '3',
+                            'name': 'Пионер',
+                            'columns': {'1': 'title', '2': 'price_opt', '4': 'rest_count', '5': 'reserve_count'},
+                            'category': {'strategy': 'header_rows', 'zero_rest_categories': ['прочие']},
+                            'title': {'strategy': 'manufacturer_from_category'},
+                            'pricing': {'policy': 'map_on_opt'},
+                        }
+                    ],
                 }
             ],
         },
         'pioner',
         'pioner.json',
     )
-    hooks = strategy_hooks_from_section(config.sections[0], config.behavior, get_config_provider())
+    section = config.sections[0]
+    hooks = strategy_hooks_from_section(section, section.behavior, get_config_provider())
     assert hooks.category is not None
     assert hooks.title is not None
 

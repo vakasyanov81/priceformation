@@ -87,7 +87,12 @@ def test_entries_carry_folder_and_vendor_config() -> None:
 
 def test_make_vendor_entry_attaches_section_and_config() -> None:
     """make_vendor_entry привязывает секцию и конфиг и берёт папку из folder."""
-    vendor_cfg = VendorConfig(folder='my_folder', enabled=True, code='c', name='n', start_row=1)
+    vendor_cfg = VendorConfig(
+        folder='my_folder',
+        enabled=True,
+        code='c',
+        name='n',
+    )
     section = VendorSection(
         id='c',
         name='n',

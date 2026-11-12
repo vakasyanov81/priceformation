@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import assert_type
 
 import pytest
 
@@ -10,41 +9,10 @@ from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.registry import all_vendors_from_registry, vendor_entry_for
-from parsers.vendor_config.group_models import BatteryConfig, GroupConfig, TireAndDiskConfig
+from parsers.vendor_config.group_models import BatteryConfig, TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import load_vendor_configs
 from parsers.vendor_config.section_models import VendorSection
-
-
-def test_legacy_config_exposes_resolved_group() -> None:
-    """Группа получает все разрешённые секции и поведение без изменения внешних ключей."""
-    config = VendorConfig.from_dict(
-        {
-            'code': 'demo',
-            'name': 'Поставщик',
-            'file_templates': ['*.xlsx'],
-            'behavior': {'min_rest': 7},
-            'sections': [
-                {'id': 'tires', 'columns': {'0': 'title'}},
-                {'id': 'disks', 'columns': {'1': 'model'}},
-            ],
-        },
-        'demo',
-        'demo.json',
-    )
-
-    assert_type(config.product_groups, tuple[GroupConfig, ...])
-    assert len(config.product_groups) == 1
-    group = config.product_groups[0]
-    assert isinstance(group, TireAndDiskConfig)
-    assert group.id is ProductGroup.TIRE_AND_DISK
-    assert group.sections is config.sections
-    assert group.behavior is config.behavior
-    assert group.behavior.min_rest == 7
-    assert [section.id for section in group.sections] == ['tires', 'disks']
-    expected_columns = [{0: 'title'}, {1: 'model'}]
-    assert [section.columns for section in group.sections] == expected_columns
-    assert all(section.product_group is group.id for section in group.sections)
 
 
 def test_section_group_does_not_depend_on_name() -> None:
@@ -84,7 +52,6 @@ def test_two_groups_have_separate_settings() -> None:
     assert isinstance(batteries, BatteryConfig)
     assert tires.sections == config.sections
     assert tires.behavior.min_rest == 9
-    assert config.behavior is tires.behavior
     assert batteries.id is ProductGroup.BATTERIES
     section = batteries.sections[0]
     assert section.product_group is ProductGroup.BATTERIES

@@ -68,7 +68,12 @@ def test_is_active_without_vendor_config() -> None:
 
 
 def _vendor_config(enabled: bool) -> VendorConfig:
-    return VendorConfig(folder='f', enabled=enabled, code='c', name='n', start_row=1)
+    return VendorConfig(
+        folder='f',
+        enabled=enabled,
+        code='c',
+        name='n',
+    )
 
 
 @pytest.mark.parametrize('enabled', [True, False])

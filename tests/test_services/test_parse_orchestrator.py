@@ -374,7 +374,6 @@ def _disabled_vendor_entry() -> tuple[type[BaseParser], ParseConfiguration]:
         enabled=False,
         code='99',
         name='TestDisable',
-        start_row=1,
     )
     section = VendorSection(
         id='99',
@@ -405,7 +404,12 @@ def _config_driven_vendor_entry(
     with_config: bool = True,
 ) -> tuple[VendorSection, VendorConfig, ParseConfiguration]:
     """Запись вендора с возможностью снять ``vendor_section``/``vendor_config``."""
-    vendor_cfg = VendorConfig(folder='test_folder', enabled=enabled, code='99', name='Test', start_row=1)
+    vendor_cfg = VendorConfig(
+        folder='test_folder',
+        enabled=enabled,
+        code='99',
+        name='Test',
+    )
     section = VendorSection(
         id='99',
         name='Test',

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -16,6 +17,7 @@ from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser import BaseParser
 from parsers.base_parser.config_driven_parser import make_config_driven_parser
 from parsers.base_parser.file_reader import FileReader
+from parsers.raw_table import RawRow, RawTable
 from parsers.registry import clear_registry, make_vendor_entry
 
 # Тестовые данные прайса
@@ -50,6 +52,15 @@ class _FakeDataReader:
             mapped.append(mapped_row)
         return mapped
 
+    def raw_tables(self, sheet_indexes: Sequence[int]) -> list[RawTable]:
+        """Исходные строки для общей маршрутизации; заголовок занимает первую строку."""
+        rows = []
+        for number, row in enumerate(_TEST_ROWS, start=2):
+            cells = row.values()
+            fields = {str(index): cell for index, cell in enumerate(cells)}
+            rows.append(RawRow(fields, number))
+        return [RawTable(index, tuple(rows)) for index in sheet_indexes]
+
 
 def test_new_vendor_from_json_config(tmp_path: Path) -> None:
     """Новый поставщик: JSON-конфиг → парсер → разбор → строки."""
@@ -66,26 +77,24 @@ def test_new_vendor_from_json_config(tmp_path: Path) -> None:
             {
                 'code': 't1',
                 'name': 'Тестовый поставщик',
-                'start_row': 2,
-                'file_templates': ['price*.xls*'],
-                'sections': [
+                'product_groups': [
                     {
-                        'name': 'Основной',
-                        'sheet_indexes': [0],
-                        'columns': {
-                            '0': 'title',
-                            '1': 'price_opt',
-                            '2': 'rest_count',
-                        },
-                        'pricing': {
-                            'policy': 'map_on_opt',
-                            'rules': {
-                                'markup_rules': {
-                                    'r1': {'min': 0, 'max': 10000, 'percent': 0.20},
+                        'id': 'tire_and_disk',
+                        'start_row': 2,
+                        'file_templates': ['price*.xls*'],
+                        'sections': [
+                            {
+                                'id': 't1',
+                                'name': 'Основной',
+                                'sheet_indexes': [0],
+                                'columns': {'0': 'title', '1': 'price_opt', '2': 'rest_count'},
+                                'pricing': {
+                                    'policy': 'map_on_opt',
+                                    'rules': {'markup_rules': {'r1': {'min': 0, 'max': 10000, 'percent': 0.2}}},
                                 },
-                            },
-                        },
-                    },
+                            }
+                        ],
+                    }
                 ],
             },
             ensure_ascii=False,
@@ -146,14 +155,20 @@ def test_new_vendor_has_no_python_code(tmp_path: Path) -> None:
             {
                 'code': 'm1',
                 'name': 'Минимальный',
-                'start_row': 1,
-                'file_templates': ['data.json'],
-                'sections': [
+                'product_groups': [
                     {
-                        'name': 'Раздел 1',
-                        'sheet_indexes': [0],
-                        'columns': {'0': 'code', '1': 'title'},
-                    },
+                        'id': 'tire_and_disk',
+                        'start_row': 1,
+                        'file_templates': ['data.json'],
+                        'sections': [
+                            {
+                                'id': 'm1',
+                                'name': 'Раздел 1',
+                                'sheet_indexes': [0],
+                                'columns': {'0': 'code', '1': 'title'},
+                            }
+                        ],
+                    }
                 ],
             }
         )

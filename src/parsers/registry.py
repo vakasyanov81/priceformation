@@ -62,12 +62,6 @@ def _supported_sections(config: VendorConfig) -> tuple[VendorSection, ...]:
     return tuple(sections)
 
 
-def _routing_for(config: VendorConfig) -> VendorRouting | None:
-    """Новая схема и явные селекторы используют совместную маршрутизацию поставщика."""
-    has_selectors = any(section.row_selector for group in config.product_groups for section in group.sections)
-    return VendorRouting(config) if config.configured_groups or has_selectors else None
-
-
 def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) -> list[VendorEntry]:
     """Собрать записи вендоров из конфигов; ``include_disabled`` — брать и отключённых."""
     entries: list[VendorEntry] = []
@@ -75,7 +69,7 @@ def _vendor_entries(config_provider: ConfigProvider, *, include_disabled: bool) 
         if not include_disabled and not config.enabled:
             continue
         ensure_groups_available(config)
-        routing = _routing_for(config)
+        routing = VendorRouting(config)
         entries.extend(
             (BaseParser, _build_parse_config(section, config, config_provider, routing))
             for section in _supported_sections(config)
@@ -93,7 +87,7 @@ def vendor_entry_for(code: str, config_provider: ConfigProvider) -> VendorEntry:
         ensure_section_available(config, code)
         for section in _supported_sections(config):
             if section.id == code:
-                routing = _routing_for(config)
+                routing = VendorRouting(config)
                 return (BaseParser, _build_parse_config(section, config, config_provider, routing))
     raise UnknownVendorError(code)
 
@@ -123,7 +117,7 @@ def make_vendor_entry(section: VendorSection, config: VendorConfig, config_provi
     Returns:
         (BaseParser, ParseConfiguration) с прикреплёнными метаданными.
     """
-    routing = _routing_for(config)
+    routing = VendorRouting(config) if config.product_groups else None
     return (BaseParser, _build_parse_config(section, config, config_provider, routing))
 
 

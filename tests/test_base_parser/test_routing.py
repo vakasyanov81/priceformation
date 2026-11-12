@@ -77,9 +77,8 @@ def _routing(*sections: VendorSection, reader: str = 'xls') -> VendorRouting:
         folder='demo',
         code='demo',
         name='Поставщик',
-        start_row=1,
         reader=reader,
-        configured_groups=(TireAndDiskConfig(sections, BehaviorConfig()),),
+        product_groups=(TireAndDiskConfig(sections, BehaviorConfig()),),
     )
     return VendorRouting(config)
 

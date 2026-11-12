@@ -15,7 +15,10 @@ def reading_defaults(payload: RawConfig, where: str) -> RawConfig:
     defaults = read_object(payload, 'defaults', where)
     for key in defaults:
         if key not in READING_KEYS:
-            raise ConfigValidationError(f'{where} → defaults → {key}: допустимы только настройки чтения')
+            raise ConfigValidationError(
+                f'{where} → defaults → {key}: допустимы только настройки чтения; '
+                'перенесите настройки модели в product_groups[].defaults'
+            )
     validate_reading_settings(defaults, f'{where} → defaults')
     return defaults
 

@@ -8,6 +8,8 @@ from domain.protocols import ConfigProvider
 from parsers.base_parser.warehouse_filter import TERRITORIES_FILENAME
 from parsers.supplier_price.errors import SupplierPriceFileNameError
 from parsers.supplier_price.sources import is_excel
+from parsers.vendor_config.group_models import TireAndDiskConfig
+from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.provider import load_vendor_configs
 
 _PRICE_STEM = 'price'
@@ -37,6 +39,17 @@ class SupplierFileRules:
         """Перечень масок и служебных имён для сообщения об ошибке."""
         return ', '.join((*self.templates, *self.extra_names))
 
+    @classmethod
+    def from_config(cls, config: VendorConfig) -> SupplierFileRules:
+        """Маски всех групп; служебные территории нужны только шинным складам."""
+        sections = (section for group in config.product_groups for section in group.sections)
+        templates = dict.fromkeys(template for section in sections for template in section.file_templates)
+        warehouse_cities = any(
+            group.behavior.warehouse_cities for group in config.product_groups if isinstance(group, TireAndDiskConfig)
+        )
+        extra_names = (TERRITORIES_FILENAME,) if warehouse_cities else ()
+        return cls(tuple(templates), extra_names)
+
 
 @dataclass(frozen=True, slots=True)
 class PriceFile:
@@ -50,9 +63,7 @@ def vendor_file_rules(config_provider: ConfigProvider) -> dict[str, SupplierFile
     """Правила имён файлов по папкам поставщиков: маски всех секций и служебные файлы."""
     rules: dict[str, SupplierFileRules] = {}
     for folder, config in load_vendor_configs(config_provider).items():
-        templates = dict.fromkeys(template for section in config.sections for template in section.file_templates)
-        extra_names = (TERRITORIES_FILENAME,) if config.behavior.warehouse_cities else ()
-        rules[folder] = SupplierFileRules(tuple(templates), extra_names)
+        rules[folder] = SupplierFileRules.from_config(config)
     return rules
 
 

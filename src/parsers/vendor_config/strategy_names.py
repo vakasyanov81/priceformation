@@ -38,13 +38,14 @@ def validate_strategy_names(payload: RawConfig, where: str) -> None:
     ):
         settings = read_object(payload, slot, where)
         if key in settings:
-            _require_name(read_text(settings, key, where), allowed, f'{where} → {slot} → {key}')
+            name = read_text(settings, key, f'{where} → {slot}')
+            _require_name(name, allowed, f'{where} → {slot} → {key}')
     _validate_pipeline(read_object(payload, 'behavior', where), where)
 
 
 def _validate_pipeline(behavior: RawConfig, where: str) -> None:
     """Проверить каждый шаг по исходному индексу списка."""
-    for index, step in enumerate(read_str_list(behavior, 'pipeline', where, ())):
+    for index, step in enumerate(read_str_list(behavior, 'pipeline', f'{where} → behavior', ())):
         _require_name(step, PIPELINE_STEPS, f'{where} → behavior → pipeline[{index}]')
 
 
