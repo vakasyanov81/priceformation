@@ -7,11 +7,28 @@ from domain.battery.item import BatteryItem
 from domain.product_group_handler import OutputFields, OutputValue
 
 OUTPUT_FIELDS = frozenset((*FIELD_KEYS, 'sale_price', 'group_id', 'is_main'))
+_COMPACT_NUMBER_FIELDS = frozenset(
+    (
+        'price_opt',
+        'price_recommended',
+        'sale_price',
+        'length_mm',
+        'width_mm',
+        'height_mm',
+        'weight',
+        'capacity_ah',
+        'starting_current_a',
+    ),
+)
 
 
-def output_value(cell: BatteryValue) -> OutputValue:
+def output_value(cell: BatteryValue, field_name: str) -> OutputValue:
     """Decimal передаётся строкой без потери точности в XLSX и JSONL."""
-    return str(cell) if isinstance(cell, Decimal) else cell
+    if isinstance(cell, Decimal):
+        if field_name in _COMPACT_NUMBER_FIELDS and cell == cell.to_integral_value():
+            return str(int(cell))
+        return str(cell)
+    return cell
 
 
 def battery_fields(position: BatteryItem) -> OutputFields:
@@ -48,4 +65,4 @@ def battery_fields(position: BatteryItem) -> OutputFields:
         'is_main': position.duplicate.is_main,
         'sale_price': position.offer.sale_price,
     }
-    return {key: output_value(cell) for key, cell in fields.items()}
+    return {key: output_value(cell, key) for key, cell in fields.items()}

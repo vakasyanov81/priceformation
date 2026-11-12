@@ -284,7 +284,7 @@ GOLDEN_DROM_HEAD: list[str] = [
 
 GOLDEN_DROM_JSONL = (
     '{"1":"Автошина","2":"crossleader","3":"225/40R18 Crossleader 92Y","4":"Зима","5":"Шипы",'
-    '"6":3980.0,"7":4,"8":"В наличии","9":3,"10":"Новое"}\n'
+    '"6":3980,"7":4,"8":"В наличии","9":3,"10":"Новое"}\n'
 )
 
 _ALL_TEMPLATES = (ForInner, ForDrom, ForFull, ForDoubles)

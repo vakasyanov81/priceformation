@@ -13,6 +13,8 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 
 type CellValue = str | int | float | None
 
+_PRICE_FIELDS = frozenset(('price_opt', 'price_markup', 'price_recommended', 'sale_price'))
+
 
 def get_value(column: dict[str, Any], row_item: PriceRow) -> CellValue:
     """get value for write cell"""
@@ -30,6 +32,8 @@ def cell_value(col: ColumnHelper, row_item: PriceRow) -> CellValue:
         raw_value = col.true_value
     raw_value = raw_value or col.def_value
     cell_value = _to_str(raw_value)
+    if field_name in _PRICE_FIELDS and isinstance(cell_value, float) and cell_value.is_integer():
+        cell_value = int(cell_value)
     if col.suffix and col.suffix_when and row_item.get(col.suffix_when):
         prefix = cell_value or ''
         return f'{prefix}{col.suffix}'

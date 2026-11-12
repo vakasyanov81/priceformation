@@ -31,6 +31,10 @@ def _source() -> BatteryOutputSource:
             'price_recommended': '5500.20',
             'rest_count': 1,
             'efb': False,
+            'length_mm': '302.0',
+            'width_mm': '172.0',
+            'height_mm': '220.0',
+            'weight': '24.0',
         }
     )
     return BatteryOutputSource(BatteryResult((position,)))
@@ -50,6 +54,25 @@ def test_output_preserves_decimal_precision_codes_and_unknown_values() -> None:
     assert position.offer.price_opt == Decimal('4000.10')
 
 
+@pytest.mark.parametrize(
+    'price, expected',
+    [
+        ('14500.0', '14500'),
+        ('14500.00', '14500'),
+        ('14500.25', '14500.25'),
+    ],
+)
+def test_battery_whole_prices_have_no_fraction(price: str, expected: str) -> None:
+    """Цены АКБ теряют нулевую дробную часть на границе записи."""
+    position = BatteryItem.from_fields({'price_opt': price, 'price_recommended': price})
+    source = BatteryOutputSource(BatteryResult((position,)))
+    group = ForBatteries().output_spec().groups[0]
+    row = source.prepare('for_batteries', group)[0]
+
+    assert row['price_opt'] == row['price_recommended'] == row['sale_price'] == expected
+    assert str(position.offer.price_opt) == price
+
+
 def test_output_filters_do_not_change_package() -> None:
     source = _source()
     group = ForBatteries().output_spec().groups[0]
@@ -57,6 +80,24 @@ def test_output_filters_do_not_change_package() -> None:
     assert source.prepare('for_batteries', filtered) == ()
     assert len(source.prepare('for_batteries', group)) == 1
     assert BatteryOutputSource(BatteryResult()).prepare('for_batteries', group) == ()
+
+
+@pytest.mark.parametrize('field', ['length_mm', 'width_mm', 'height_mm', 'weight', 'capacity_ah', 'starting_current_a'])
+@pytest.mark.parametrize(
+    'number, expected',
+    [
+        ('24.0', '24'),
+        ('24.00', '24'),
+        ('13.9', '13.9'),
+    ],
+)
+def test_battery_measurements_omit_zero_fraction(field: str, number: str, expected: str) -> None:
+    """Числовые характеристики выводятся без нулевой дробной части, точность сохраняется."""
+    position = BatteryItem.from_fields({field: number})
+    source = BatteryOutputSource(BatteryResult((position,)))
+    group = ForBatteries().output_spec().groups[0]
+
+    assert source.prepare('for_batteries', group)[0][field] == expected
 
 
 @pytest.mark.parametrize(
@@ -85,6 +126,10 @@ def test_battery_template_writes_codes_prices_and_stock(tmp_path: Path) -> None:
     assert row['Цена продажи'] == row['РРЦ'] == '5500.20'
     assert row['Закупочная цена'] == '4000.10'
     assert row['Остаток'] == 1
+    assert row['Длина, мм'] == '302'
+    assert row['Ширина, мм'] == '172'
+    assert row['Высота, мм'] == '220'
+    assert row['Вес'] == '24'
     workbook.close()
 
 
