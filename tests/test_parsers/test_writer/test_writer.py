@@ -26,6 +26,21 @@ def test_price_output_preserves_only_significant_fraction(field: str, price: flo
     assert str(actual) == str(price).removesuffix('.0')
 
 
+@pytest.mark.parametrize(
+    'flag, expected',
+    [
+        (True, 'Да'),
+        (False, None),
+        (None, None),
+    ],
+)
+def test_boolean_cells_use_yes_or_empty(flag: bool | None, expected: str | None) -> None:
+    """Логические значения отображаются текстом, неизвестное и ложь остаются пустыми."""
+    column = {'EFB': {'field': 'efb'}}
+
+    assert writer_mod.get_value(column, {'efb': flag}) == expected
+
+
 def test_true_value_replaces_true_with_text() -> None:
     """true_value: True в поле → заданный текст; False и пусто остаются пустыми."""
     column = {'Уценка': {'field': 'marked_down', 'true_value': 'Да'}}

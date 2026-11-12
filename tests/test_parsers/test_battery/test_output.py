@@ -132,6 +132,7 @@ def test_battery_template_writes_codes_prices_and_stock(tmp_path: Path) -> None:
     assert row['Ширина, мм'] == '172'
     assert row['Высота, мм'] == '220'
     assert row['Вес'] == '24'
+    assert row['EFB'] is None
     workbook.close()
 
 
@@ -168,7 +169,8 @@ def test_drom_battery_characteristics_reach_workbook(
     workbook = load_workbook(paths[0])
     header, cells = list(workbook['Аккумуляторы'].values)
     row = dict(zip(header, cells, strict=True))
-    assert row[title] == characteristic
+    expected = 'Да' if characteristic is True else characteristic
+    assert row[title] == expected
     workbook.close()
 
 

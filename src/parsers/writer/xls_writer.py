@@ -41,7 +41,9 @@ def cell_value(col: ColumnHelper, row_item: PriceRow) -> CellValue:
 
 
 def _to_str(raw_value: CellValue | list[str]) -> CellValue:
-    """Список — в строку через запятую; скаляр ячейки (str, число, None) остаётся как есть."""
+    """Список — через запятую, логическое значение — «Да» или пусто, остальные скаляры — без изменений."""
+    if isinstance(raw_value, bool):
+        return 'Да' if raw_value else None
     if isinstance(raw_value, list):
         filtered_items = [element for element in raw_value if element]
         return ', '.join(filtered_items)
