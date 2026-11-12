@@ -43,8 +43,14 @@ def raise_ambiguous(
 
 
 def log_unrouted(config: VendorConfig, path: str, table: RawTable, unrouted: int) -> None:
-    sheet = 'JSON' if table.sheet_index is None else str(table.sheet_index)
-    logger.warning('%s: файл %s, лист %s: unrouted_rows=%d', config.folder, path, sheet, unrouted)
+    sheet = 'JSON' if table.sheet_index is None else str(table.sheet_index + 1)
+    logger.warning(
+        '%s: файл %s, лист %s: пропущено строк — %d (не подходят под настройки отбора разделов или товаров)',
+        config.name,
+        path,
+        sheet,
+        unrouted,
+    )
 
 
 def map_row(config: VendorConfig, row: RawRow, section_params: ParserParams) -> RawFields:

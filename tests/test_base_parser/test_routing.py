@@ -114,7 +114,8 @@ def test_shared_sheet_routes_before_mapping_and_counts_unrouted(caplog: pytest.L
     assert routing.read_rows('disks') == [{'title': 'Диск Б'}]
     assert routing.unrouted_rows == 3
     assert reader.raw_calls == ['prices.xlsx']
-    assert 'unrouted_rows=3' in caplog.text
+    assert 'Поставщик: файл prices.xlsx, лист 1: пропущено строк — 3' in caplog.text
+    assert 'не подходят под настройки отбора разделов или товаров' in caplog.text
     assert caplog.records[0].levelno == logging.WARNING
 
 
