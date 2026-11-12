@@ -69,7 +69,7 @@ def test_xls_write_for_doubles(tmp_path: Any) -> None:
     assert _data_cells(fake_driver) == {
         **{_shift(key): cell for key, cell in result_body_inner.items()},
         f'cell({_FIRST_ROW},{_GROUP_COL})': 1,
-        f'cell({_FIRST_ROW},{_IS_DOUBLE_COL})': True,
+        f'cell({_FIRST_ROW},{_IS_DOUBLE_COL})': 'Да',
     }
 
 
