@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from domain.battery.result import BatteryResult
 from domain.product_group_handler import OutputFields
+from parsers.battery.doubles import double_positions
 from parsers.battery.output_fields import OUTPUT_FIELDS, battery_fields
 from parsers.writer.templates.group_output import GroupOutput, WriteExclude
 
@@ -27,11 +28,14 @@ class BatteryOutputSource:
     def title_fields(self) -> frozenset[str]:
         return frozenset(('title',))
 
-    def prepare(self, _template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
+    def prepare(self, template_id: str, settings: GroupOutput) -> tuple[OutputFields, ...]:
         """Фильтры применяются к аккумуляторным полям, включая разметку дублей."""
         if settings.id != self.package.product_group:
             raise ValueError('Преобразователь batteries получил настройки другой группы')
         if settings.merge_warehouses:
             raise ValueError('batteries: сведение складов недоступно без отдельных складских данных')
-        rows = (battery_fields(position) for position in self.package.positions)
+        positions = self.package.positions
+        if template_id == 'for_doubles':
+            positions = double_positions(positions)
+        rows = (battery_fields(position) for position in positions)
         return tuple(row for row in rows if _keep_row(row, settings.filters))

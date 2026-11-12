@@ -14,9 +14,9 @@ from parsers.data_provider.doubles_settings import load_doubles_settings
 from parsers.writer.group_files import GroupFileWriter
 from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.output_plan import GroupOutputSource, prepare_output_plan
-from parsers.writer.templates.all_templates import all_writer_templates, get_writer_template, writer_templates_by_name
+from parsers.writer.templates.all_templates import all_writer_templates, writer_templates_by_name
 from parsers.writer.templates.group_output import TemplateOutput
-from parsers.writer.templates.tmpl.for_batteries import ForBatteries
+from parsers.writer.templates.group_templates import group_template_output, named_group_output
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 
 
@@ -54,10 +54,13 @@ def write_group_prices(
     if template is None:
         outputs = _default_outputs(selected)
         selections = {output.template_id: _groups(output).intersection(selected) for output in outputs}
-        paths = writer.write_plan(prepare_output_plan(outputs, sources, selections=selections), as_jsonl=as_jsonl)
+        paths = writer.write_plan(
+            prepare_output_plan(outputs, sources, selections=selections, skip_empty=True), as_jsonl=as_jsonl
+        )
     else:
-        output = get_writer_template(template)().output_spec()
-        paths = writer.write([output], sources, selected=selected, as_jsonl=as_jsonl)
+        output = named_group_output(template)
+        plan = prepare_output_plan([output], sources, selected=selected, skip_empty=True)
+        paths = writer.write_plan(plan, as_jsonl=as_jsonl)
     return jsonl_output_files(paths) if as_jsonl else paths
 
 
@@ -66,6 +69,6 @@ def _groups(output: TemplateOutput) -> set[ProductGroup]:
 
 
 def _default_outputs(selected: Set[ProductGroup]) -> list[TemplateOutput]:
-    templates = [*all_writer_templates(), ForBatteries, ForDoubles]
-    outputs = [template().output_spec() for template in templates]
+    templates = [*all_writer_templates(), ForDoubles]
+    outputs = [group_template_output(template) for template in templates]
     return [output for output in outputs if _groups(output).intersection(selected)]

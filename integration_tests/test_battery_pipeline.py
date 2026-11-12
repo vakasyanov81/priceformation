@@ -65,9 +65,9 @@ class TestGroupOutputs:
     def test_two_groups_write_xlsx(self, supplier_root: Path, template: str | None) -> None:
         parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
         files = ServiceProvider.resolve(PriceReportService).write_result(parsed, template=template)
-        expected_files = 4 if template is None else 1
+        expected_files = 3 if template is None else 1
         assert len(files) == expected_files
-        prices = battery_rows(files, shared=bool(template))
+        prices = battery_rows(files, shared=True)
         assert len(prices) == _BATTERY_COUNT
         assert all(row['Цена продажи'] == row['РРЦ'] for row in prices)
         assert all(isinstance(row['Код'], str) for row in prices)

@@ -59,8 +59,9 @@ def prepare_output_plan(
     current_date: str | None = None,
     selected: Set[ProductGroup] | None = None,
     selections: Mapping[str, Set[ProductGroup]] | None = None,
+    skip_empty: bool = False,
 ) -> tuple[WorkbookPlan, ...]:
-    """Проверить весь выбор до преобразования; пустой пакет сохраняет лист."""
+    """Проверить весь выбор; при skip_empty пропустить группы без выходных строк."""
     current_date = current_date or date.today().isoformat()
     selected = sources.keys() if selected is None else selected
     outputs = deepcopy(outputs)
@@ -74,7 +75,8 @@ def prepare_output_plan(
     selections = selections or {output.template_id: selected for output in outputs}
     return tuple(
         chain.from_iterable(
-            _prepare_template(output, sources, selections[output.template_id], current_date) for output in outputs
+            _prepare_template(output, sources, selections[output.template_id], current_date, skip_empty)
+            for output in outputs
         )
     )
 
@@ -88,10 +90,13 @@ def _prepare_template(
     sources: Mapping[ProductGroup, GroupOutputSource],
     selected: Set[ProductGroup],
     current_date: str,
+    skip_empty: bool,
 ) -> list[WorkbookPlan]:
     groups = (group for group in output.groups if group.id in selected)
     template_id = output.template_id
     sheets = [SheetPlan.from_source(template_id, group, sources[group.id]) for group in groups]
+    if skip_empty:
+        sheets = [sheet for sheet in sheets if sheet.rows]
     return _place_sheets(output, tuple(sheets), current_date)
 
 

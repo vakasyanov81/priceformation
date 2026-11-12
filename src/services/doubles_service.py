@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from domain.row_item.row_item import RowItem
 from services.parse_orchestrator import ParseOrchestrator
@@ -17,6 +17,7 @@ class DoublesReport:
     parse_result: ParseResult
     doubles: list[RowItem]
     path: str | None
+    files: list[str] = field(default_factory=list)
 
 
 class DoublesService:
@@ -41,5 +42,6 @@ class DoublesService:
         doubles = [
             row for row in parse_result.tire_and_disk_items if row.duplicate.is_double or row.duplicate.double_candidate
         ]
-        path = self._report_service.write_doubles(parse_result.tire_and_disk_items, as_jsonl=as_jsonl)
-        return DoublesReport(parse_result=parse_result, doubles=doubles, path=path)
+        files = self._report_service.write_result(parse_result, template='for_doubles', as_jsonl=as_jsonl)
+        path = files[0] if files else None
+        return DoublesReport(parse_result=parse_result, doubles=doubles, path=path, files=files)

@@ -92,12 +92,12 @@ def test_make_report_defaults_to_xlsx() -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_doubles.return_value = _REPORT_PATH
+    reporter.write_result.return_value = [_REPORT_PATH]
     service = DoublesService(orchestrator=orchestrator, report_service=reporter)
 
     service.make_report()
 
-    reporter.write_doubles.assert_called_once_with([], as_jsonl=False)
+    reporter.write_result.assert_called_once_with(parsed, template='for_doubles', as_jsonl=False)
 
 
 def test_make_report_without_selected_groups_creates_no_file() -> None:
@@ -108,7 +108,7 @@ def test_make_report_without_selected_groups_creates_no_file() -> None:
     report = DoublesService(orchestrator=orchestrator, report_service=reporter).make_report(as_jsonl=True)
     assert report.path is None
     assert report.doubles == []
-    reporter.write_doubles.assert_not_called()
+    reporter.write_result.assert_not_called()
 
 
 def test_writer_factory_receives_items() -> None:
@@ -136,7 +136,7 @@ def test_make_report_filters_doubles() -> None:
     orchestrator = MagicMock()
     orchestrator.parse_all.return_value = parsed
     reporter = MagicMock()
-    reporter.write_doubles.return_value = _REPORT_PATH
+    reporter.write_result.return_value = [_REPORT_PATH]
     service = DoublesService(orchestrator=orchestrator, report_service=reporter)
 
     report = service.make_report(as_jsonl=True)
@@ -146,7 +146,7 @@ def test_make_report_filters_doubles() -> None:
     assert report.doubles == [double_row, candidate]
     assert report.path == _REPORT_PATH
     orchestrator.parse_all.assert_called_once_with()
-    reporter.write_doubles.assert_called_once_with(parsed.tire_and_disk_items, as_jsonl=True)
+    reporter.write_result.assert_called_once_with(parsed, template='for_doubles', as_jsonl=True)
 
 
 def test_upload_zapaska_data() -> None:

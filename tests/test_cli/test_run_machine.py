@@ -313,6 +313,7 @@ def test_json_doubles_elapsed_is_monotonic_difference(capsys: pytest.CaptureFixt
         parse_result=parsed,
         doubles=[double_row],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with (
         patch('app.run_machine.time', _fake_time(100.0, 50.0, 52.5)),
@@ -335,6 +336,7 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
         parse_result=parsed,
         doubles=[double_row],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES)
@@ -361,6 +363,7 @@ def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
         parse_result=parsed,
         doubles=[double_row, candidate],
         path=_DOUBLE_PATH,
+        files=jsonl_output_files([_DOUBLE_PATH]),
     )
     with patch(_RESOLVE, side_effect={DoublesService: doubles_service}.__getitem__):
         code = machine_json(DOUBLES, all_result=True)

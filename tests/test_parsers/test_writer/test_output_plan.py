@@ -39,6 +39,20 @@ def test_empty_package_keeps_sheet_and_date() -> None:
     assert prepare_output_plan([empty_output], sources, selected=set()) == ()
 
 
+@pytest.mark.parametrize('mode', list(OutputMode))
+def test_empty_package_has_no_output(mode: OutputMode) -> None:
+    group = _group()
+    file_name = None
+    if mode == OutputMode.WORKBOOK_SHEETS:
+        group = replace(group, file_name=None)
+        file_name = 'all.xlsx'
+    output = TemplateOutput('example', mode, (group,), file_name)
+    sources = {TIRES: TireOutputSource(TireAndDiskResult())}
+    assert prepare_output_plan([output], sources, skip_empty=True) == ()
+    assert prepare_output_plan([], {}) == ()
+    assert prepare_output_plan([output], sources, selected=set()) == ()
+
+
 @pytest.mark.parametrize('mode, expected_count', [(OutputMode.SEPARATE_FILES, 2), (OutputMode.WORKBOOK_SHEETS, 1)])
 def test_group_sources_have_independent_settings(mode: OutputMode, expected_count: int) -> None:
     tires = _group()

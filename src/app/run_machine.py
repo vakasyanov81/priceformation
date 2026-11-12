@@ -32,7 +32,6 @@ from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.strategies.product_types import CANONICAL_TYPES
-from parsers.writer.jsonl_writer import jsonl_output_files
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
 from services.mail_service import MailService
@@ -325,7 +324,7 @@ def _json_doubles(all_result: bool, _result_template: str | None, selection: Par
     return report_from_result(
         DOUBLES,
         report.parse_result,
-        jsonl_output_files([report.path] if report.path else []),
+        report.files,
         time.monotonic() - started,
         rows=report.doubles,
         all_result=all_result,
