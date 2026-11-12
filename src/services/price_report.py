@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import logging
+import time
 from collections.abc import Callable
 
 from domain.protocols import ConfigProvider
@@ -15,6 +17,8 @@ from parsers.common_price.output import CommonPriceOut
 from parsers.writer.factories import WriteDriverFactory, XlsWriterFactory
 from parsers.writer.group_files import GroupFileWriter
 from services.parse_result import ParseResult
+
+logger = logging.getLogger(__name__)
 
 
 class PriceReportService:
@@ -73,10 +77,15 @@ class PriceReportService:
         """Сохранить границы пакетов от оркестратора до выходных преобразователей."""
         if self._group_writer_factory is None or self._config_provider is None:
             raise RuntimeError('Фабрика групповой записи не настроена')
+        start_time = time.monotonic()
+        logger.info('Начало формирования и сохранения итоговых прайсов')
         sources = output_sources(parsed.groups, self._config_provider())
-        return write_group_prices(
+        paths = write_group_prices(
             self._group_writer_factory(), sources, template=template, as_jsonl=as_jsonl, selected=parsed.groups.keys()
         )
+        elapsed = time.monotonic() - start_time
+        logger.info(f'Итоговые прайсы сформированы и сохранены ({elapsed:.2f} сек), файлов: {len(paths)}\n')
+        return paths
 
     def write_doubles(self, row_items: list[RowItem], *, as_jsonl: bool = False) -> str:
         """Записать отчёт о дублях и вернуть путь файла."""

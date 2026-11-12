@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
@@ -190,3 +192,26 @@ def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
         api=api,
         warehouses=(FourTochkiWarehouse(id=1423, name='Новосибирск', group='novosibirsk', merge_group='novosibirsk'),),
     )
+
+
+def test_write_result_logs_start_before_writing_and_elapsed(caplog: pytest.LogCaptureFixture) -> None:
+    """Запись объявляется до подготовки данных, время включает сохранение файлов."""
+    service = PriceReportService(
+        writer_factory=MagicMock(), group_writer_factory=MagicMock(), config_provider=MagicMock()
+    )
+    start_message = 'Начало формирования и сохранения итоговых прайсов'
+
+    def prepare_sources(*_args: object) -> dict[object, object]:
+        assert start_message in caplog.text
+        return {}
+
+    with (
+        caplog.at_level('INFO', logger='services.price_report'),
+        patch('services.price_report.output_sources', side_effect=prepare_sources),
+        patch('services.price_report.write_group_prices', return_value=[_REPORT_PATH]),
+        patch('services.price_report.time.monotonic', side_effect=[10.0, 12.5]),
+    ):
+        written = service.write_result(ParseResult())
+
+    assert written == [_REPORT_PATH]
+    assert 'Итоговые прайсы сформированы и сохранены (2.50 сек), файлов: 1' in caplog.text

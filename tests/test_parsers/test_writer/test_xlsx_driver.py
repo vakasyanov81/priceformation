@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import openpyxl
 import pytest
@@ -223,3 +224,28 @@ def _assert_independent_styles(first: Worksheet, second: Worksheet) -> None:
     assert second['A2'].fill.fill_type is None
     assert first.column_dimensions['A'].width == len(_BODY_TEXT) + _WIDTH_PAD
     assert second.column_dimensions['A'].width == len(_SHORT) + _WIDTH_PAD
+
+
+def test_repeated_color_creates_one_fill_and_preserves_saved_styles(tmp_path: Path) -> None:
+    """Повтор цвета на разных листах не создаёт заливку для каждой ячейки."""
+    driver = XlsxWriterDriver()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    with patch('parsers.writer.xlsx_driver.solid_fill', wraps=solid_fill) as make_fill:
+        for sheet_name in (_SHEET, _OTHER):
+            driver.add_sheet(sheet_name)
+            driver.set_column_format({_COL_A: _TEXT_FORMAT})
+            for row in range(3):
+                driver.write(row, 0, _BODY_TEXT, _color='123ABC')
+                driver.write(row, 1, _OTHER, _color='456DEF')
+        assert make_fill.call_count == 2
+    driver.save()
+    book = openpyxl.load_workbook(tmp_path / _FILE_NAME)
+    try:
+        for sheet in book:
+            for row in sheet:
+                assert row[0].fill.fgColor.rgb == '00123ABC'
+                assert row[1].fill.fgColor.rgb == '00456DEF'
+                assert row[0].number_format == _TEXT_FORMAT
+                assert row[1].number_format == 'General'
+    finally:
+        book.close()

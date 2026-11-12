@@ -2,6 +2,7 @@
 write price list logic via xlsxwriter module
 """
 
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from .ixlsx_driver import IXlsDriver
 
 EXCEL_ALPHABET_SIZE = 26
 EXCEL_COLUMN_A_ORD = 65
+_FILL_CACHE_SIZE = 128
 
 
 class WorkbookNotInitializedError(RuntimeError):
@@ -44,6 +46,12 @@ def solid_fill(_color: str) -> PatternFill:
     """Solid PatternFill from #RRGGBB / RRGGBB."""
     rgb = Color(rgb=_color.lstrip('#'))
     return PatternFill(fgColor=rgb, fill_type='solid')
+
+
+@lru_cache(maxsize=_FILL_CACHE_SIZE)
+def _cached_solid_fill(color: str) -> PatternFill:
+    """Переиспользовать заливки палитры; после назначения ячейкам их не изменяем."""
+    return solid_fill(color)
 
 
 class XlsxWriterDriver(IXlsDriver):
@@ -123,7 +131,7 @@ class XlsxWriterDriver(IXlsDriver):
         # и числа в них выравнивались иначе, чем в соседних строках, — задаём формат ячейке явно
         cell.number_format = self._column_formats.get(col_idx, cell.number_format)
         if _color:
-            cell.fill = solid_fill(_color)
+            cell.fill = _cached_solid_fill(_color)
 
         self.current_col_index = col_idx
         self.current_row_index = row_idx
