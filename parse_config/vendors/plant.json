@@ -6,7 +6,7 @@
     {
       "id": "batteries",
       "file_templates": [
-        "ПРАЙС 200 PLAN-T.PRO*.xls"
+        "price.xls"
       ],
       "start_row": 6,
       "title": {
