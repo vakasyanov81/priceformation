@@ -161,17 +161,18 @@ def test_upload_zapaska_data() -> None:
     mock_load.assert_called_once_with(api=api)
 
 
-def test_upload_four_tochki_data() -> None:
+def test_upload_four_tochki_data(fake_config_provider: FakeConfigProvider) -> None:
     """upload_data вызывает загрузку данных Форточек с API-конфигом."""
     api = MagicMock()
     groups = (MagicMock(),)
     with (
         patch('services.vendor_activity.load_vendor_configs', return_value={}),
         patch('services.four_tochki_service.get_four_tochki_api_config', return_value=api),
-        patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups),
+        patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups) as load_groups,
         patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,
     ):
-        assert FourTochkiService().upload_data() is True
+        assert FourTochkiService(fake_config_provider).upload_data() is True
+    load_groups.assert_called_once_with(fake_config_provider)
     mock_load.assert_called_once_with(api=api, groups=groups)
 
 
@@ -182,11 +183,12 @@ def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
     api = MagicMock()
     groups = (FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск',), merge=True),)
     with (
-        patch('services.four_tochki_service.fetch_warehouses', return_value=_API_DIRECTORY),
+        patch('services.four_tochki_service.fetch_warehouses', return_value=_API_DIRECTORY) as fetch,
         patch('services.four_tochki_service.download_catalogs') as mock_download,
     ):
         load_four_tochki_data(api=api, groups=groups)
 
+    fetch.assert_called_once_with(api)
     mock_download.assert_called_once_with(
         dest_dir=Path(fake_config_provider.price_folder('four_tochki')),
         api=api,

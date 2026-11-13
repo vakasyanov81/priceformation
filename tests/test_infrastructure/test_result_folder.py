@@ -1,6 +1,7 @@
 """Очистка папки result."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from infrastructure.config.result_folder import clear_result_folder
@@ -28,6 +29,17 @@ def test_clear_result_folder_missing_is_noop(fake_config_provider: FakeConfigPro
     clear_result_folder()
 
     assert not missing.exists()
+
+
+def test_clear_result_folder_tolerates_disappeared_file(fake_config_provider: FakeConfigProvider) -> None:
+    """Файл мог исчезнуть после перечисления каталога, до удаления."""
+    result_dir = Path(fake_config_provider.result_folder())
+    vanished = result_dir / 'removed.xlsx'
+    with patch.object(Path, 'iterdir', return_value=iter((vanished,))):
+        clear_result_folder()
+
+    assert result_dir.is_dir()
+    assert list(result_dir.iterdir()) == []
 
 
 def test_clear_result_folder_unlinks_symlink(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:
