@@ -34,7 +34,7 @@ def test_get_catalog_sends_token_and_format() -> None:
     with patch(_HTTPS, mock_https):
         body = get_catalog(_API)
 
-    assert mock_https.call_args.args == (_TEST_HOST,)
+    mock_https.assert_called_once_with(_TEST_HOST, timeout=300)
     method, url = mock_https.return_value.request.call_args.args
     assert method == 'GET'
     assert url == '/api/v1/catalog/unload?access-token=secret&format=xlsx&gzip=true&types=1%3B3%3B4'
@@ -116,6 +116,17 @@ def test_download_catalog_writes_file_and_overwrites(tmp_path: Path) -> None:
     assert (dest / 'territories.json').read_bytes() == b'[2]'
 
 
+def test_download_catalog_passes_same_api_to_both_requests(tmp_path: Path) -> None:
+    with (
+        patch('infrastructure.remote.mim_client.get_catalog', return_value=_XML) as catalog,
+        patch('infrastructure.remote.mim_client.get_territories', return_value=b'[]') as territories,
+    ):
+        download_catalog(dest_dir=tmp_path, api=_API)
+
+    catalog.assert_called_once_with(_API)
+    territories.assert_called_once_with(_API)
+
+
 def test_download_catalog_keeps_old_file_on_error(tmp_path: Path) -> None:
     dest = tmp_path / 'mim'
     dest.mkdir()
@@ -163,7 +174,19 @@ def test_resolve_types(configured: tuple[int, ...], expected: tuple[int, ...]) -
     assert resolve_types(configured) == expected
 
 
-@pytest.mark.parametrize('configured', [(0,), (8,), (1, -1)])
-def test_resolve_types_unknown(configured: tuple[int, ...]) -> None:
-    with patch.object(CoreExceptionError, _TO_LOG), pytest.raises(MimApiTypesError, match='неверные категории'):
+_UNKNOWN_TYPES = [
+    ((0,), '[0]'),
+    ((8,), '[8]'),
+    ((1, -1), '[-1]'),
+]
+
+
+@pytest.mark.parametrize(('configured', 'unknown'), _UNKNOWN_TYPES)
+def test_resolve_types_unknown(configured: tuple[int, ...], unknown: str) -> None:
+    with (
+        patch.object(CoreExceptionError, _TO_LOG) as to_log,
+        pytest.raises(MimApiTypesError, match='неверные категории'),
+    ):
         resolve_types(configured)
+
+    assert unknown in to_log.call_args.args[0]

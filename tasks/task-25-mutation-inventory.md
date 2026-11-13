@@ -353,6 +353,8 @@
 
 ### `app.run_dialog.help_format.x_colorize_markdown__mutmut_2`
 
+Классификация 2026-11-14: Эквивалент: до первого fence False и None одинаково ложны; после первого `not in_code` оба превращаются в True и далее имеют одинаковую историю. Повторный прогон `uv run mutmut run 'app.run_dialog.navigation.*' 'app.run_dialog.help_format.*'` оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 7.
 
 ```diff
@@ -373,6 +375,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_1`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
 ```diff
@@ -389,6 +393,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_2`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
@@ -408,6 +414,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_3`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 1.
 
 ```diff
@@ -425,6 +433,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент при текущем `MENU_ITEMS`: начальное значение `activation_key` перезаписывается при обязательном пункте SHOW_HELP до возврата. Повторный прогон оставляет survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
@@ -444,6 +454,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент при текущем `MENU_ITEMS`: начальное значение `activation_key` перезаписывается при обязательном пункте SHOW_HELP до возврата. Повторный прогон оставляет survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 1.
 
 ```diff
@@ -461,6 +473,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_6`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
@@ -480,6 +494,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_7`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
 ```diff
@@ -497,6 +513,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_8`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
@@ -516,6 +534,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_9`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 1.
 
 ```diff
@@ -533,6 +553,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_10`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
@@ -552,6 +574,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_11`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
 ```diff
@@ -569,6 +593,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_12`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
@@ -588,6 +614,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_13`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
 ```diff
@@ -605,6 +633,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_14`
+
+Классификация 2026-11-14: Эквивалент при текущем `MENU_ITEMS`: EXIT — последний пункт; `continue` и `break` завершают обход с одинаковыми ключами и activation_key. Повторный прогон оставляет survived.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 1.
 
@@ -624,6 +654,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_15`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
 ```diff
@@ -640,6 +672,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_16`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 1.
 
@@ -658,6 +692,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_17`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 1.
 
 ```diff
@@ -675,6 +711,8 @@
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_18`
 
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
 ```diff
@@ -690,6 +728,8 @@
 ```
 
 ### `app.run_dialog.items.x__assign_keys__mutmut_19`
+
+Классификация 2026-11-14: Пробел теста закрыт: повторный вызов `_assign_keys` в `test_assigned_keys_reserve_activation_before_help` проверяет весь словарь и клавишу активации. Убит прогоном `uv run mutmut run 'app.run_dialog.items.*'`.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
@@ -709,6 +749,8 @@
 
 ### `app.run_dialog.line_fallback.x_ask_by_line__mutmut_3`
 
+Классификация 2026-11-14: таймаут подтверждён прогоном `uv run mutmut run 'app.run_dialog.line_fallback.*'` с ограничением mutmut. Мутант удаляет `input` и всегда получает answer=None, поэтому цикл не читает ввод и не достигает return. Исходная функция по-прежнему завершается при корректном действии; дефекта приложения нет.
+
 Статус: **timeout**; тип: `to_none`; выбрано тестов: 8.
 
 ```diff
@@ -726,6 +768,8 @@
 ```
 
 ### `app.run_dialog.line_fallback.x_ask_by_line__mutmut_4`
+
+Классификация 2026-11-14: таймаут подтверждён прогоном `uv run mutmut run 'app.run_dialog.line_fallback.*'` с ограничением mutmut. Мутант удаляет `input` и всегда получает answer=None, поэтому цикл не читает ввод и не достигает return. Исходная функция по-прежнему завершается при корректном действии; дефекта приложения нет.
 
 Статус: **timeout**; тип: `other`; выбрано тестов: 8.
 
@@ -747,6 +791,8 @@
 
 ### `app.run_dialog.navigation.x__handle_press__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент: `get` вызывается только внутри `if press.key in _STEPS`, поэтому значение по умолчанию никогда не используется. Повторный прогон `uv run mutmut run 'app.run_dialog.navigation.*' 'app.run_dialog.help_format.*'` оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 16.
 
 ```diff
@@ -764,6 +810,8 @@
 ```
 
 ### `app.run_dialog.navigation.x__handle_press__mutmut_7`
+
+Классификация 2026-11-14: Эквивалент: `get` вызывается только внутри `if press.key in _STEPS`, поэтому значение по умолчанию никогда не используется. Повторный прогон `uv run mutmut run 'app.run_dialog.navigation.*' 'app.run_dialog.help_format.*'` оставляет survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 16.
 
@@ -783,6 +831,8 @@
 
 ### `app.run_dialog.navigation.x__handle_press__mutmut_8`
 
+Классификация 2026-11-14: Эквивалент: `get` вызывается только внутри `if press.key in _STEPS`, поэтому значение по умолчанию никогда не используется. Повторный прогон `uv run mutmut run 'app.run_dialog.navigation.*' 'app.run_dialog.help_format.*'` оставляет survived.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 16.
 
 ```diff
@@ -800,6 +850,8 @@
 ```
 
 ### `app.run_dialog.navigation.x_navigate__mutmut_2`
+
+Классификация 2026-11-14: Таймаут мутанта подтверждён отдельным прогоном navigation/help_format с ограничением mutmut: присваивание `action = None` удаляет чтение клавиши и делает условие выхода постоянно ложным. Это зацикливание мутанта, а не исходного приложения.
 
 Статус: **timeout**; тип: `to_none`; выбрано тестов: 16.
 

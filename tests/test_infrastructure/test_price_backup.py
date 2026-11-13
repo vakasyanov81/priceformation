@@ -44,7 +44,7 @@ def test_backup_replaces_previous_copy(tmp_path: Path) -> None:
 
 def test_backup_missing_source_gives_empty_copy(tmp_path: Path) -> None:
     """нет папки прайсов — пустая копия, без ошибки."""
-    target = tmp_path / 'old'
+    target = tmp_path / 'nested' / 'old'
 
     backup_prices(tmp_path / 'missing', target)
 

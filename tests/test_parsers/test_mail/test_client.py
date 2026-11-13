@@ -331,11 +331,13 @@ def test_connect_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
     fake.login.return_value = ('OK', [b''])
     fake.select.return_value = ('OK', [b''])
-    monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(return_value=fake))
+    open_client = MagicMock(return_value=fake)
+    monkeypatch.setattr(imap_adapter, 'open_client', open_client)
 
     client = connect(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
 
     assert client is fake
+    open_client.assert_called_once_with('imap.example.ru', 993)
     fake.login.assert_called_once_with('user', 'secret')
     fake.select.assert_called_once_with('INBOX', True)
 

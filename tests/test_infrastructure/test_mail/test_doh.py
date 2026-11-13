@@ -190,5 +190,5 @@ def test_doh_addresses_logs_failed_providers(monkeypatch: pytest.MonkeyPatch, wa
 
     texts = [text for level, text in entries() if level == logging.WARNING]
     assert len(texts) == 2
-    assert 'cloudflare-dns.com' in texts[0]
-    assert 'google down' in texts[1]
+    assert texts[0].startswith("DoH https://cloudflare-dns.com/dns-query, хост 'imap.example.ru': ")
+    assert texts[1] == "DoH https://dns.google/resolve, хост 'imap.example.ru': OSError('google down')"
