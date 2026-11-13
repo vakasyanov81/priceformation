@@ -6,6 +6,7 @@ import pytest
 
 from domain.product_groups import ProductGroup
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.base_parser_config import ParseConfiguration
 from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseSelection
 
@@ -37,3 +38,19 @@ def test_selection_reset_before_vendor_source_failure() -> None:
     with pytest.raises(ValueError, match='конфиг'):
         orchestrator.parse_all(selection=selection)
     assert selection.groups == ()
+
+
+def test_battery_selection_available_before_parser_failure() -> None:
+    """Ошибка сборки АКБ сохраняет аккумуляторную группу вместо шинной по умолчанию."""
+    selection = ParseSelection()
+    config = MagicMock(spec=ParseConfiguration, product_group=ProductGroup.BATTERIES)
+    orchestrator = ParseOrchestrator(
+        parser_factory=MagicMock(side_effect=ValueError('стратегия')),
+        grouper_factory=MagicMock(),
+        vendor_source=MagicMock(),
+    )
+
+    with pytest.raises(ValueError, match='стратегия'):
+        orchestrator.parse_all([(BaseParser, config)], selection=selection)
+
+    assert selection.groups == (ProductGroup.BATTERIES,)

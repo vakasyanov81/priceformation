@@ -50,6 +50,24 @@
 Исторический `PriceSchemaService.__init____mutmut_3` меняет `or` на `and` при выборе
 backup_folder и убит; эквиваленты начального `_copied` — исторические `6` и `7`.
 
+## Продолжение индивидуальной классификации: оркестрация и фабрики отчётов
+
+Проверка 2026-11-14 выполнена поверх `da9893a` с новыми и усиленными тестами
+этого блока. Все 23 записи сопоставлены по удаляемым и добавляемым строкам diff
+внутри той же функции; текущие ID совпали с историческими. Исторические статусы
+не переписаны.
+
+- R7: `uv run mutmut run 'services.doubles_service.*' 'services.mail_service.*' 'services.parse_logging.*'` до усиления тестов.
+- R8: `uv run mutmut run 'services.doubles_service.*' 'services.mail_service.*' 'services.parse_logging.*' 'services.group_processing.*' 'services.parse_orchestrator.*' 'services.price_report.*'` после первых проверок дублей и почты.
+- R9: та же команда, что R8, после проверки фабрик, очереди эталонов и аккумуляторного выбора.
+- R10: `uv run mutmut run 'services.parse_orchestrator.xǁParseOrchestratorǁ_parse_supplier__mutmut_26'` после уточнения ненулевых шинных счётчиков чужой группы.
+
+Итог: 23 killed — 3 на существующих тестах, 20 после усиления.
+Всего завершена **241 из 894** записей; остаются **653**:
+652 без классификации и одна с незавершённым разбором. Девять timeout
+разобраны ранее. Код приложения не менялся. Это целевые прогоны;
+новый полный отчёт mutmut на отдельном коммите ещё не сформирован.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -14838,6 +14856,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.doubles_service.xǁDoublesServiceǁmake_report__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_make_report_passes_selection проверяет передачу того же объекта ParseSelection оркестратору; безусловная ветка parse_all() теряет этот аргумент. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
 ```diff
@@ -14855,6 +14875,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.doubles_service.xǁDoublesServiceǁmake_report__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_make_report_passes_selection проверяет передачу того же объекта ParseSelection; подмена selection на None нарушает вызов оркестратора. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
@@ -14874,6 +14896,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.doubles_service.xǁDoublesServiceǁmake_report__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_make_report_without_selected_groups_creates_no_file теперь проверяет идентичность report.parse_result результату оркестратора даже при отсутствии выбранных групп. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
 ```diff
@@ -14891,6 +14915,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.doubles_service.xǁDoublesServiceǁmake_report__mutmut_26`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_make_report_without_output_files задаёт выбранный пустой шинный пакет и writer с результатом []; путь должен оставаться None. Безусловное files[0] вызывает IndexError. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
@@ -15022,6 +15048,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.group_processing.x__group_tires__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_group_packages_passes_reference_priority проверяет передачу непустой очереди эталонов в фабрику группировки; None вместо очереди различим. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 17.
 
 ```diff
@@ -15039,6 +15067,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.group_processing.x__group_tires__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_group_packages_passes_reference_priority проверяет передачу непустой очереди эталонов в фабрику группировки; удаление аргумента различимо. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 17.
 
@@ -15059,6 +15089,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.group_processing.x__group_tires__mutmut_14`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_group_packages_passes_reference_priority передаёт group_packages выбранный шинный пакет без предварительно созданной статистики. GroupStatistics должен создаваться до обновления счётчиков; None приводит к AttributeError. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 17.
 
 ```diff
@@ -15076,6 +15108,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.group_processing.x__group_tires__mutmut_16`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_group_packages_passes_reference_priority передаёт group_packages выбранный шинный пакет без предварительно созданной статистики. Отсутствующий default setdefault создаёт None вместо GroupStatistics и приводит к AttributeError. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 17.
 
@@ -15097,6 +15131,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.mail_service.xǁMailServiceǁfetch_prices__mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующий test_fetch_prices_uses_injected_provider_for_vendor_filtering отклоняет иной провайдер при чтении конфигов поставщиков; потеря provider при передаче в _collect обнаруживается. Целевой прогон R7 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 13.
 
 ```diff
@@ -15111,6 +15147,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.mail_service.x__collect__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующий test_fetch_prices_uses_injected_provider_for_vendor_filtering отклоняет None вместо явно переданного провайдера в skip_mail_fetch. Целевой прогон R7 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
@@ -15129,6 +15167,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.mail_service.x__collect__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_fetch_prices_continues_after_skipped_vendor ставит отключённого и API-поставщика перед активным файловым. break теряет последнего; проверяются его результат, поиск письма и сохранение. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 12.
 
@@ -15264,6 +15304,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.parse_logging.x__homoglyph_messages__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующий test_parser_messages_homoglyph_counter_is_independent проверяет fixes без suspects и suspects без fixes; and теряет обе независимые сводки. Целевой прогон R7 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 20.
 
 ```diff
@@ -15284,6 +15326,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.parse_orchestrator.xǁParseOrchestratorǁ_parse_supplier__mutmut_26`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_other_package_keeps_only_common_counters теперь задаёт ненулевые homoglyph_fixes и titles_not_composed чужой группы и проверяет отсутствие шинных сообщений в caplog. Удаление product_group включает шинную сводку по умолчанию. Целевой прогон R10 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
 ```diff
@@ -15298,6 +15342,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.parse_orchestrator.xǁParseOrchestratorǁparse_all__mutmut_12`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_battery_selection_available_before_parser_failure задаёт ParseConfiguration с группой batteries и отказ фабрики; ParseSelection должен сохранить batteries. Безусловный выбор tire_and_disk нарушает результат. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 21.
 
@@ -15316,6 +15362,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.parse_orchestrator.xǁParseOrchestratorǁparse_all__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_battery_selection_available_before_parser_failure задаёт ParseConfiguration с группой batteries и отказ фабрики; and заменяет выбранную группу на tire_and_disk. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 21.
 
@@ -15337,6 +15385,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.price_report.xǁPriceReportServiceǁfrom_factories__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_from_factories_passes_nonempty_positions проверяет передачу непустого списка RowItem и зависимостей в CommonPriceOut; None вместо списка различим. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
 ```diff
@@ -15355,6 +15405,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.price_report.xǁPriceReportServiceǁfrom_factories__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_from_factories_connects_group_writer вызывает write_result у собранного сервиса и проверяет создание GroupFileWriter с переданными фабриками; None вместо фабрики останавливает запись. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
 ```diff
@@ -15370,6 +15422,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.price_report.xǁPriceReportServiceǁfrom_factories__mutmut_11`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_from_factories_connects_group_writer вызывает write_result и проверяет передачу конкретного провайдера в output_sources; None вместо функции провайдера останавливает запись. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
@@ -15387,6 +15441,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.price_report.xǁPriceReportServiceǁfrom_factories__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_from_factories_connects_group_writer вызывает write_result у собранного сервиса; удаление group_writer_factory оставляет None и останавливает запись. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -15402,6 +15458,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.price_report.xǁPriceReportServiceǁfrom_factories__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_from_factories_connects_group_writer вызывает write_result и проверяет передачу конкретного провайдера в output_sources; удаление config_provider оставляет None и останавливает запись. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
@@ -15419,6 +15477,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `services.price_report.xǁPriceReportServiceǁwrite_result__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_write_result_logs_start_before_writing_and_elapsed и test_from_factories_connects_group_writer теперь проверяют as_jsonl=False при вызове без флага; True нарушает формат записи. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 3.
 
 ```diff
@@ -15433,6 +15493,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.price_report.xǁPriceReportServiceǁwrite_result__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_write_result_requires_both_dependencies по отдельности убирает фабрику группового писателя и функцию провайдера. В обоих случаях требуется RuntimeError до подготовки источников; and пропускает проверку и приводит к TypeError. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 3.
 
@@ -15450,6 +15512,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `services.price_report.xǁPriceReportServiceǁwrite_result__mutmut_16`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_write_result_logs_start_before_writing_and_elapsed и test_from_factories_connects_group_writer проверяют передачу selected=parsed.groups.keys(); None стирает явно заданный выбор групп. Целевой прогон R9 подтвердил killed. Удаляемые и добавляемые строки diff совпадают внутри той же функции (тот же ID); исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 

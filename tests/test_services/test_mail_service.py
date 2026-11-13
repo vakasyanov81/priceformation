@@ -253,6 +253,30 @@ def test_fetch_prices_loads_active_file_vendor(
     wired.find.assert_called_once()
 
 
+def test_fetch_prices_continues_after_skipped_vendor(
+    fake_config_provider: FakeConfigProvider,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Пропуск отключённого или API-поставщика не останавливает файлового поставщика после него."""
+    config = MailConfig(
+        account=_ACCOUNT,
+        profiles={folder: _profile(f'{folder}@example.ru') for folder in ('disabled', 'api', 'pioner')},
+    )
+    wired = _wire(monkeypatch, config, _FOUND)
+    vendors = {
+        'disabled': MagicMock(spec=VendorConfig, enabled=False, source='xlsx'),
+        'api': MagicMock(spec=VendorConfig, enabled=True, source='api'),
+        'pioner': MagicMock(spec=VendorConfig, enabled=True, source='xlsx'),
+    }
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: vendors)
+
+    fetched = mail_service.MailService().fetch_prices()
+
+    assert [entry.folder for entry in fetched] == ['pioner']
+    wired.find.assert_called_once_with(wired.client, _FOLDERS, profile=config.profiles['pioner'])
+    wired.save.assert_called_once_with(Path(fake_config_provider.price_folder('pioner')) / 'price.xlsx', b'bytes')
+
+
 def test_fetch_prices_passes_injected_provider_to_mail_config(monkeypatch: pytest.MonkeyPatch) -> None:
     """MailService отдаёт настройкам почты переданный провайдер, а не глобальный"""
     injected = MagicMock()
