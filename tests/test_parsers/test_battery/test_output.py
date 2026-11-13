@@ -114,6 +114,24 @@ def test_output_rejects_inapplicable_rules(group: GroupOutput, message: str) -> 
         _source().prepare('for_batteries', group)
 
 
+def test_output_rejects_settings_of_another_group_with_exact_message() -> None:
+    group = replace(ForBatteries().output_spec().groups[0], id=ProductGroup.TIRE_AND_DISK)
+
+    with pytest.raises(ValueError) as caught:
+        _source().prepare('for_batteries', group)
+
+    assert str(caught.value) == 'Преобразователь batteries получил настройки другой группы'
+
+
+def test_output_rejects_merged_warehouses_with_exact_message() -> None:
+    group = replace(ForBatteries().output_spec().groups[0], merge_warehouses=True)
+
+    with pytest.raises(ValueError) as caught:
+        _source().prepare('for_batteries', group)
+
+    assert str(caught.value) == 'batteries: сведение складов недоступно без отдельных складских данных'
+
+
 def test_battery_template_writes_prices_and_stock(tmp_path: Path) -> None:
     template = ForBatteries().output_spec()
     sources = {ProductGroup.BATTERIES: _source()}
