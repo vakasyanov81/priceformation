@@ -219,6 +219,39 @@ XLSX после указанной последовательности и чи�
 
 Все девять команд AGENTS.md завершились с exit 0: 4170 тестов, покрытие 99,46 %.
 
+## Продолжение индивидуальной классификации: JSONL и диагностика драйвера
+
+Проверка 2026-11-14 выполнена поверх `5309d17`. Завершены все восемь
+оставшихся записей `writer.errors`, `jsonl_packing`, `jsonl_publish`,
+`jsonl_schema` и `jsonl_writer`: **5 killed** (3 на существующих тестах,
+2 после усиления) и **3 эквивалента** с индивидуальными объяснениями.
+Всего завершены **333 из 894**, остаются **561**: 559 без классификации
+и две с незавершённым разбором (`base_finder._search` и `_update_width`).
+Все девять timeout разобраны ранее.
+
+- R21: каждый из восьми исторических diff отдельно применён во временной
+  копии `src/`, `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc`,
+  с версией test_xlsxwriter_adapter.py из `5309d17`.
+  База: **259 passed**; 3 killed, 5 survived.
+- R22: тот же набор с проверкой полного сообщения ошибок драйвера.
+  База: **259 passed**; 5 killed, 3 survived. Для killed зафиксированы
+  конкретные провалы тестов, перечисленных в индивидуальных записях.
+
+Перед каждой заменой проверено единственное точное вхождение удаляемого
+блока вместе с полным контекстом; после запуска исходный файл восстановлен.
+Команда R21/R22 (repo — корень репозитория, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_writer"`.
+Номера новой генерации mutmut не использовались.
+
+Корень двух пробелов — regex без границ в тестах диагностик XLSX-драйвера:
+обрамление сообщения лишним текстом сохраняло совпадение подстроки.
+Проверки ограничены полным сообщением; код приложения не менялся.
+Эквивалентность расширения .JSONL установлена по повторному построению имени
+в jsonl_name, а не по одному survived. Исторические статусы сохранены;
+целевые прогоны не заменяют новый полный отчёт mutmut.
+
+Все девять команд AGENTS.md завершились с exit 0: 4170 тестов, покрытие 99,46 %.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -13540,6 +13573,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.errors.xǁWorkbookNotInitializedErrorǁ__init____mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: R21 — survived; R22 — killed после ограничения regex полным сообщением. test_operations_require_workbook и test_save_requires_sheet проверяют точную диагностику ошибки порядка инициализации; поиск подстроки раньше пропускал XX по краям.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 3.
 
 ```diff
@@ -13552,6 +13587,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.errors.xǁWorksheetNotInitializedErrorǁ__init____mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: R21 — survived; R22 — killed после ограничения regex полным сообщением. test_operations_require_sheet и test_operations_require_sheet_after_workbook_init проверяют точную диагностику отсутствующего листа, а не подстроку внутри изменённого сообщения.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 2.
 
@@ -13782,6 +13819,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.jsonl_packing.x__serialize_row__mutmut_3`
 
+Классификация 2026-11-14: Эквивалент: json.dumps проверяет ensure_ascii по истинности; False и None одинаково сохраняют Unicode без ASCII-экранирования. Остальные параметры и завершающий перевод строки неизменны. R21/R22: survived, 259 passed.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 64.
 
 ```diff
@@ -13797,6 +13836,8 @@ XLSX после указанной последовательности и чи�
 ## src/parsers/writer/jsonl_publish.py
 
 ### `parsers.writer.jsonl_publish.x__replace_files__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит существующим test_jsonl_stages_replacement_on_result_filesystem в R21 и R22. Каталог staging должен лежать на файловой системе результата, чтобы Path.replace не зависел от возможности переноса между файловыми системами. Тест проверяет аргумент TemporaryDirectory; реальный EXDEV в этих прогонах не воспроизводился.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 53.
 
@@ -13815,6 +13856,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.jsonl_publish.x_publish_jsonl__mutmut_19`
+
+Классификация 2026-11-14: Эквивалент: ensure_ascii=False и None одинаково отключают экранирование Unicode в json.dumps метаданных; состав реестра и публикация не меняются. R21/R22: survived, 259 passed.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 66.
 
@@ -13836,6 +13879,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.jsonl_schema.x_valid_name__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит существующим test_jsonl_rejects_parent_and_windows_paths для ../price.jsonl и folder/../price.jsonl в R21 и R22. Подмена .. разрешает родительский сегмент; это различимое нарушение проверки имён, а не эквивалент.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
 ```diff
@@ -13852,6 +13897,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.jsonl_schema.x_valid_name__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит существующим test_jsonl_rejects_parent_and_windows_paths для имени с обратной косой чертой в R21 и R22. PurePosixPath не превращает её в разделитель; запрет обеспечивается именно проверкой символа.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -13871,6 +13918,8 @@ XLSX после указанной последовательности и чи�
 ## src/parsers/writer/jsonl_writer.py
 
 ### `parsers.writer.jsonl_writer.x__template_name__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент в контракте write_template_jsonl: приватный _template_name возвращает имя только в WorkbookPlan; _pack_books затем вызывает jsonl_name, который берёт Path(name).stem и заново добавляет .jsonl. Поэтому промежуточные .jsonl и .JSONL дают одинаковые публикуемые имена и метаданные; иных потребителей _template_name нет. R21/R22: survived, 259 passed.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 

@@ -114,7 +114,7 @@ def test_operations_require_workbook(operation: str) -> None:
     """Ошибки незапущенной записи сохраняют прежний контракт."""
     driver = XlsxWriterAdapter()
     args = ['Шины'] if operation == 'add_sheet' else []
-    with pytest.raises(WorkbookNotInitializedError, match='workbook is not initialized'):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         getattr(driver, operation)(*args)
 
 
@@ -124,14 +124,14 @@ def test_operations_require_workbook(operation: str) -> None:
 )
 def test_operations_require_sheet(operation: str, args: tuple[object, ...]) -> None:
     """Нельзя записать ячейки или форматы до выбора листа."""
-    with pytest.raises(WorksheetNotInitializedError, match='worksheet is not initialized'):
+    with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         getattr(XlsxWriterAdapter(), operation)(*args)
 
 
 def test_save_requires_sheet(tmp_path: Path) -> None:
     driver = XlsxWriterAdapter()
     book = driver.init_workbook(str(tmp_path), _FILE_NAME)
-    with pytest.raises(WorkbookNotInitializedError, match='workbook is not initialized'):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         driver.save()
     book.close()
 
@@ -167,7 +167,7 @@ def test_operations_require_sheet_after_workbook_init(tmp_path: Path, operation:
     driver = XlsxWriterAdapter()
     book = driver.init_workbook(str(tmp_path), _FILE_NAME)
     try:
-        with pytest.raises(WorksheetNotInitializedError, match='worksheet is not initialized'):
+        with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
             getattr(driver, operation)(*args)
     finally:
         book.close()
