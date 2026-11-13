@@ -4,15 +4,18 @@ from decimal import Decimal
 
 from domain.battery.field_registry import FIELD_KEYS, BatteryValue
 from domain.battery.item import BatteryItem
+from domain.battery.offer import BatteryOffer
 from domain.product_group_handler import OutputFields, OutputValue
 
-OUTPUT_FIELDS = frozenset((*FIELD_KEYS, 'sale_price', 'group_id', 'is_main'))
+OUTPUT_FIELDS = frozenset((*FIELD_KEYS, 'sale_price', 'group_id', 'is_main', 'absolute_markup', 'percent_markup'))
 _COMPACT_NUMBER_FIELDS = frozenset(
     (
         'price_opt',
         'price_recommended',
         'price_markup',
         'sale_price',
+        'absolute_markup',
+        'percent_markup',
         'length_mm',
         'width_mm',
         'height_mm',
@@ -32,8 +35,20 @@ def output_value(cell: BatteryValue, field_name: str) -> OutputValue:
     return cell
 
 
+def _markup_values(offer: BatteryOffer) -> tuple[Decimal | None, Decimal | None]:
+    """Наценка от итоговой продажи; неизвестные цены не подменяются нулями."""
+    purchase = offer.price_opt
+    sale = offer.sale_price
+    if purchase is None or sale is None:
+        return None, None
+    margin = sale - purchase
+    percent = round(margin / purchase * 100, 2) if purchase else None
+    return round(margin, 2), percent
+
+
 def battery_fields(position: BatteryItem) -> OutputFields:
     """Плоские поля появляются только на границе записи."""
+    absolute, percent = _markup_values(position.offer)
     fields: dict[str, BatteryValue] = {
         'title': position.identity.title,
         'manufacturer_name': position.identity.manufacturer_name,
@@ -66,5 +81,7 @@ def battery_fields(position: BatteryItem) -> OutputFields:
         'group_id': position.duplicate.group_id,
         'is_main': position.duplicate.is_main,
         'sale_price': position.offer.sale_price,
+        'absolute_markup': absolute,
+        'percent_markup': percent,
     }
     return {key: output_value(cell, key) for key, cell in fields.items()}
