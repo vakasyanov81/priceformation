@@ -236,10 +236,19 @@ root_packages = [
     "infrastructure",
     "parsers",
     "services",
+    "tests",
+    "integration_tests",
 ]
 
+[[tool.importlinter.contracts]]
+name = "Модульные тесты не зависят от интеграционных"
+type = "forbidden"
+source_modules = ["tests"]
+forbidden_modules = ["integration_tests"]
+broken_contract_guidance = "Общие тестовые вспомогательные функции размещать в tests, не импортировать integration_tests."
+
 # Слои сверху вниз: оболочка → композиционный корень → сервисы → парсеры → инфраструктура → домен.
-# Внутри одного слоя (cfg и services) импорты разрешены, между слоями — только вниз.
+# Между слоями импорты разрешены только вниз.
 [[tool.importlinter.contracts]]
 name = "Слои: app -> cfg/services -> parsers -> infrastructure -> domain"
 type = "layers"

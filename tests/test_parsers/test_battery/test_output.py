@@ -12,7 +12,6 @@ from cfg.battery import make_battery_handler
 from domain.battery.item import BatteryItem
 from domain.battery.result import BatteryResult
 from domain.product_groups import ProductGroup
-from integration_tests.group_xlsx_examples import group_writer
 from parsers.battery.output import BatteryOutputSource
 from parsers.battery.output_fields import OUTPUT_FIELDS
 from parsers.vendor_config.group_models import BatteryConfig
@@ -22,6 +21,7 @@ from parsers.writer.templates.group_output import GroupOutput
 from parsers.writer.templates.group_templates import group_template_output
 from parsers.writer.templates.tmpl.for_batteries import ForBatteries
 from parsers.writer.templates.tmpl.for_drom import ForDrom
+from tests.group_output_examples import group_writer
 
 
 def _source() -> BatteryOutputSource:

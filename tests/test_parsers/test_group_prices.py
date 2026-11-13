@@ -14,9 +14,9 @@ from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from integration_tests.group_xlsx_examples import group_writer
 from parsers.common_price.group_output import output_sources, write_group_prices
 from parsers.writer.output_plan import GroupOutputSource
+from tests.group_output_examples import group_writer
 
 _TIRES = ProductGroup.TIRE_AND_DISK
 _BATTERIES = ProductGroup.BATTERIES
