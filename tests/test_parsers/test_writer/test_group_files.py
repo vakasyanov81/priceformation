@@ -13,7 +13,7 @@ from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.common_price.tire_output import TireOutputSource
 from parsers.writer.group_files import GroupFileWriter
-from parsers.writer.output_plan import GroupOutputSource
+from parsers.writer.output_plan import GroupOutputSource, prepare_output_plan
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
 from parsers.writer.xls_writer import XlsWriter
 from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
@@ -154,5 +154,17 @@ def test_workbook_sheets_keep_models_and_styles_independent(
         assert tires['A2'].fill.fgColor.rgb == 'FF00FF00'
         assert other['A2'].number_format == 'General'
         assert other['A2'].fill.fill_type is None
+    finally:
+        book.close()
+
+
+def test_prepared_plan_defaults_to_xlsx(tmp_path: Path) -> None:
+    """Готовый план без указания формата записывается книгами XLSX."""
+    books = prepare_output_plan([_output()], _sources(), current_date=DATE)
+    paths = _writer(tmp_path).write_plan(books)
+    assert [Path(path).suffix for path in paths] == ['.xlsx', '.xlsx']
+    book = openpyxl.load_workbook(paths[0])
+    try:
+        assert list(book['Шины'].values) == [('Шинное название',), ('Шина',)]
     finally:
         book.close()

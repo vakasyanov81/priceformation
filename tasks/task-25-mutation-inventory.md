@@ -122,6 +122,39 @@ backup_folder и убит; эквиваленты начального `_copied`
 Это прямые целевые прогоны, а не новый полный отчёт mutmut.
 Все девять команд AGENTS.md завершились с exit 0: 4159 тестов, покрытие 99,44 %.
 
+## Продолжение индивидуальной классификации: имена и резервирование файлов writer
+
+Проверка 2026-11-14 выполнена поверх `c5001be` с тестами этого блока.
+Завершены все 24 оставшиеся записи `group_files`, `jsonl_meta`, `output_names`
+и `output_paths`: **19 killed** (13 на существующих тестах, 6 после усиления)
+и **5 эквивалентов** в рамках указанных контрактов.
+Всего завершены **300 из 894**, остаются **594**: 593 без классификации
+и одна с незавершённым разбором. Все девять timeout разобраны ранее.
+
+- R14: 24 исторических diff по одному применены во временной копии `src/`
+  и `tests/` с `pyproject.toml`, `setup.cfg`, `.coveragerc` из рабочего дерева
+  до усиления тестов: база 248 passed, 13 killed, 11 survived.
+- R15: тот же набор после трёх новых сценариев и исправления входа теста
+  регистра JSONL: база 251 passed, 18 killed, 6 survived.
+- R16: после добавления диагностики пустого имени: база 252 passed;
+  `register_paths__mutmut_14` — 1 failed, 251 passed. Остальные diff повторно
+  не запускались: R15 уже дал их индивидуальные результаты.
+
+Для каждой замены проверялось единственное точное вхождение удаляемого блока
+с полным контекстом; файл восстанавливался перед следующим мутантом.
+Команда R14–R16 (repo — исходный репозиторий, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_writer"`.
+Номера текущей генерации mutmut для сопоставления не использовались.
+
+Исправлены прежние групповые выводы: добавление X к запрещённым символам
+меняет множество допустимых имён; `and → or` разрешает конфликт книг разных
+шаблонов; `write_plan` имеет наблюдаемый дефолт XLSX; отключение поиска регистра
+JSONL различимо при корректном расширении .jsonl и переименованном файле.
+Пустое имя доходит до register_paths и обязано сохраняться в диагностике.
+Корень пробелов — неполные входы тестов writer; исходный код проходит новые
+проверки и не менялся. Целевые прогоны не заменяют новый полный отчёт mutmut.
+Все девять команд AGENTS.md завершились с exit 0: 4163 теста, покрытие 99,46 %.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -13471,6 +13504,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁ_write_book__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_workbook_sheets_keep_models_and_styles_independent[True-expected1], test_workbook_sheets_keep_models_and_styles_independent[False-expected0]. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 43.
 
 ```diff
@@ -13488,6 +13523,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁ_write_book__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_workbook_sheets_keep_models_and_styles_independent[True-expected1], test_workbook_sheets_keep_models_and_styles_independent[False-expected0]. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 43.
 
@@ -13507,6 +13544,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁ_write_book__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_workbook_sheets_keep_models_and_styles_independent[False-expected0], test_workbook_sheets_keep_models_and_styles_independent[True-expected1]. Исторический survived сохранён.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 43.
 
 ```diff
@@ -13524,6 +13563,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁ_write_book__mutmut_16`
+
+Классификация 2026-11-14: Эквивалент: В корректно подготовленном плане каждая книга имеет хотя бы один лист: _place_sheets возвращает [] для отсутствующих листов. На каждом листе result_path безусловно присваивается из writer.get_result_path до возврата. Начальное None не читается; пустая книга, вручную переданная в приватный _write_book, не соответствует предусловию готового плана. Прямые запуски R14/R15 оставляют survived (248/251 passed); прохождение тестов не служит самостоятельным доказательством.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 43.
 
@@ -13543,6 +13584,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁ_write_book__mutmut_17`
 
+Классификация 2026-11-14: Эквивалент: Для готового плана _place_sheets не создаёт книг без листов. Цикл безусловно перезаписывает result_path результатом get_result_path до возврата; начальная строка XXXX не наблюдается. Вывод ограничен контрактом готового плана, а не произвольным вызовом приватного _write_book. Прямые запуски R14/R15 оставляют survived (248/251 passed); прохождение тестов не служит самостоятельным доказательством.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 43.
 
 ```diff
@@ -13560,6 +13603,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.group_files.xǁGroupFileWriterǁwrite_plan__mutmut_1`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed после усиления тестов. Конкретные провалы: test_prepared_plan_defaults_to_xlsx. Исторический survived сохранён.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 85.
 
@@ -13633,6 +13678,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.jsonl_meta.x__check_file__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_jsonl_incompatible_schema_error_names_file. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 54.
 
 ```diff
@@ -13647,6 +13694,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.jsonl_meta.x_check_existing__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed после усиления тестов. Конкретные провалы: test_registry_case_change_cannot_claim_existing_file. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 54.
 
@@ -13773,6 +13822,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_invalid_file_name_includes_template_location. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 120.
 
 ```diff
@@ -13789,6 +13840,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_13`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_invalid_file_name[price..xlsx]. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 120.
 
@@ -13808,6 +13861,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_18`
 
+Классификация 2026-11-14: Эквивалент: Для допустимого имени обязательное окончание .xlsx исключает и конечную точку, и конечное XX.XX. Остальные имена уже отклонены проверкой расширения; изменённая проверка не влияет ни на решение, ни на сообщение. Прямые запуски R14/R15 оставляют survived (248/251 passed); прохождение тестов не служит самостоятельным доказательством.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 120.
 
 ```diff
@@ -13825,6 +13880,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_19`
+
+Классификация 2026-11-14: Эквивалент: Для допустимого имени обязательно окончание .xlsx, поэтому имя не может оканчиваться ни пробелом, ни XX XX. Для остальных имён invalid уже истинен из-за расширения; сообщение ошибки не меняется. Прямые запуски R14/R15 оставляют survived (248/251 passed); прохождение тестов не служит самостоятельным доказательством.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 120.
 
@@ -13844,6 +13901,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_21`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_invalid_file_name[CON.backup.xlsx]. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 120.
 
 ```diff
@@ -13861,6 +13920,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_23`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_invalid_file_name[CON.backup.xlsx]. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 120.
 
@@ -13880,6 +13941,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_names.x_output_file_name__mutmut_33`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed после усиления тестов. Конкретные провалы: test_latin_x_is_allowed_in_output_names. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 120.
 
 ```diff
@@ -13897,6 +13960,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_names.x_validate_sheet_name__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_sheet_name_allows_excel_maximum_length. Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 131.
 
 ```diff
@@ -13913,6 +13978,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_names.x_validate_sheet_name__mutmut_22`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed после усиления тестов. Конкретные провалы: test_latin_x_is_allowed_in_output_names. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 131.
 
@@ -13932,6 +13999,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_paths.x__register_path__mutmut_1`
 
+Классификация 2026-11-14: Эквивалент: Для XLSX shared всегда передаётся явно. Дефолт используется для JSONL: повтор с тем же owner невозможен в validate_outputs, потому что template_id уникальны, а группа внутри шаблона не повторяется. При разных owner обе версии отклоняют конфликт. Это эквивалент в достижимых состояниях публичной валидации; приватный вызов с искусственно повторённым owner в вывод не входит. Прямые запуски R14/R15 оставляют survived (248/251 passed); прохождение тестов не служит самостоятельным доказательством.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 105.
 
 ```diff
@@ -13946,6 +14015,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_paths.x__register_path__mutmut_8`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed после усиления тестов. Конкретные провалы: test_workbook_path_cannot_be_shared_by_different_templates. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 105.
 
@@ -13963,6 +14034,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_paths.x_register_paths__mutmut_9`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_unselected_group_filename_is_still_validated. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 106.
 
@@ -13982,6 +14055,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_paths.x_register_paths__mutmut_14`
 
+Классификация 2026-11-14: Закрытый пробел проверки: R14 и R15 оставляли survived; после проверки исходного пустого значения имени в диагностике прямое применение исторического diff в R16 убито test_empty_group_filename_reports_original_value (1 failed, 251 passed). Структура требует не None, но допускает пустую строку до проверки имени, поэтому прежний групповой вывод о недостижимости fallback исправлен.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 106.
 
 ```diff
@@ -14000,6 +14075,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_paths.x_register_paths__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_workbook_path_cannot_be_shared_by_different_templates, test_path_collision_names_group_owner. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 106.
 
 ```diff
@@ -14017,6 +14094,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 
 ### `parsers.writer.output_paths.x_register_paths__mutmut_16`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_path_collision_names_group_owner. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 106.
 
 ```diff
@@ -14033,6 +14112,8 @@ backup_folder и убит; эквиваленты начального `_copied`
 ```
 
 ### `parsers.writer.output_paths.x_register_paths__mutmut_20`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff применён с единственным точным совпадением полного контекста в R15; killed на существующих тестах. Конкретные провалы: test_path_collision_names_group_owner, test_workbook_path_cannot_be_shared_by_different_templates. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 106.
 

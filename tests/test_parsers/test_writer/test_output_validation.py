@@ -227,3 +227,32 @@ def test_unselected_group_filename_is_still_validated() -> None:
 def test_control_character_outside_ascii_is_rejected() -> None:
     with pytest.raises(ConfigValidationError, match='sheet_name'):
         validate_sheet_name('price\x85', 'example')
+
+
+def test_latin_x_is_allowed_in_output_names() -> None:
+    """Обычная латинская X не входит в запрещённые символы имён."""
+    assert output_file_name('X_price.xlsx', '2026-11-12', 'example') == 'X_price.xlsx'
+    validate_sheet_name('X_price', 'example')
+
+
+def test_workbook_path_cannot_be_shared_by_different_templates() -> None:
+    """Общий путь разрешён листам одного шаблона, но не двум шаблонам."""
+    tires = replace(_group(), file_name=None)
+    batteries = _group(BATTERIES, columns=[{'Имя': {'field': 'label'}}], file_name=None)
+    first = TemplateOutput('first', OutputMode.WORKBOOK_SHEETS, (tires,), 'shared.xlsx')
+    second = TemplateOutput('second', OutputMode.WORKBOOK_SHEETS, (batteries,), 'shared.xlsx')
+    with pytest.raises(ConfigValidationError) as error:
+        validate_outputs(
+            [first, second],
+            {TIRES, BATTERIES},
+            schemas=SCHEMAS,
+            selections={'first': {TIRES}, 'second': {BATTERIES}},
+        )
+    assert str(error.value) == "Шаблон second → file_name: путь 'shared.xlsx' уже занят: Шаблон first"
+
+
+def test_empty_group_filename_reports_original_value() -> None:
+    """Ошибка пустого имени сохраняет значение настройки и её владельца."""
+    with pytest.raises(ConfigValidationError) as error:
+        validate_outputs([_output(_group(file_name=''))], {TIRES})
+    assert str(error.value) == "Шаблон example → tire_and_disk → file_name: недопустимое имя файла ''"

@@ -259,7 +259,9 @@ def test_registry_case_change_cannot_claim_existing_file(tmp_path: Path) -> None
     payload = json.loads(path.read_text(encoding='utf-8'))
     files = payload['files']
     name = f'tires_{DATE}.jsonl'
-    files[name.upper()] = files.pop(name)
+    foreign_name = f'TIRES_{DATE}.jsonl'
+    files[foreign_name] = files.pop(name)
+    (tmp_path / name).rename(tmp_path / foreign_name)
     path.write_text(json.dumps(payload), encoding='utf-8')
     with pytest.raises(ConfigValidationError, match='пересоздайте'):
         _write(tmp_path)
