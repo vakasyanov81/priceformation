@@ -8,7 +8,7 @@ import pytest
 
 from parsers.price_schema.diff import compare_schemas
 from parsers.price_schema.header import column_header
-from parsers.price_schema.models import FileHead, PriceSchema, SheetHead
+from parsers.price_schema.models import FileHead, PriceSchema, SheetHead, SheetSchema
 from parsers.price_schema.schema import build_schema, read_file_head
 
 _COLUMNS: dict[int | str, str] = {0: 'code', 2: 'title'}
@@ -177,6 +177,23 @@ def test_json_missing_key() -> None:
     new = _json_schema(['name', 'x'], columns)
 
     assert compare_schemas(old, new, columns) == ['в данных больше нет поля «article» (используется как «code»)']
+
+
+@pytest.mark.parametrize('json_price', (False, True))
+def test_schema_change_without_current_column_mapping(json_price: bool) -> None:
+    """Отсутствие поля в текущем отображении не мешает описать изменение сохранённой схемы."""
+    if json_price:
+        old = PriceSchema(sheets={}, json_keys=frozenset(('article',)))
+        new = PriceSchema(sheets={}, json_keys=frozenset())
+        expected = 'в данных больше нет поля «article»'
+    else:
+        before = SheetSchema('Лист', {0: 'Артикул'})
+        after = SheetSchema('Лист', {})
+        old = PriceSchema(sheets={0: before}, json_keys=frozenset())
+        new = PriceSchema(sheets={0: after}, json_keys=frozenset())
+        expected = 'вкладка «Лист», колонка A: пропал заголовок «Артикул»'
+
+    assert compare_schemas(old, new, {}) == [expected]
 
 
 def _json_schema(keys: list[str], columns: dict[int | str, str]) -> PriceSchema:
