@@ -20,16 +20,20 @@ class BatteryOffer:
     supplier_name: str | None = None
     price_group: str | None = None
     certificate_url: str | None = None
+    price_markup: Decimal | None = None
 
     def __post_init__(self) -> None:
         check_number(self.price_opt, 'price_opt', positive=False)
         check_number(self.price_recommended, 'price_recommended', positive=False)
+        check_number(self.price_markup, 'price_markup', positive=False)
         check_integer(self.rest_count, 'rest_count')
         check_integer(self.warranty_months, 'warranty_months')
 
     @property
     def sale_price(self) -> Decimal | None:
-        """Для plant цена продажи строго РРЦ; закупочная не служит подстановкой."""
+        """Рассчитанная цена продажи; до обработки используется исходная РРЦ."""
+        if self.price_markup is not None:
+            return self.price_markup
         return self.price_recommended
 
     @classmethod
@@ -43,4 +47,5 @@ class BatteryOffer:
             supplier_name=read_field(fields, 'supplier_name', text),
             price_group=read_field(fields, 'price_group', text),
             certificate_url=read_field(fields, 'certificate_url', text),
+            price_markup=read_field(fields, 'price_markup', number),
         )

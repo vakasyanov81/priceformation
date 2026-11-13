@@ -11,6 +11,7 @@ _COMPACT_NUMBER_FIELDS = frozenset(
     (
         'price_opt',
         'price_recommended',
+        'price_markup',
         'sale_price',
         'length_mm',
         'width_mm',
@@ -56,6 +57,7 @@ def battery_fields(position: BatteryItem) -> OutputFields:
         'weight': position.case.weight,
         'price_opt': position.offer.price_opt,
         'price_recommended': position.offer.price_recommended,
+        'price_markup': position.offer.price_markup,
         'rest_count': position.offer.rest_count,
         'warranty_months': position.offer.warranty_months,
         'supplier_name': position.offer.supplier_name,

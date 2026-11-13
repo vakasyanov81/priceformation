@@ -53,6 +53,35 @@ def test_battery_columns_use_own_registry(reader: str, columns: object) -> None:
     assert section.processing.min_rest == 1
 
 
+MARKUP_EXAMPLES = [(0.2, '6000'), (0.35, '6750'), (0, '5000')]
+
+
+@pytest.mark.parametrize('percent, expected', MARKUP_EXAMPLES)
+@pytest.mark.parametrize('recommended', [5000, 4900])
+def test_markup_comes_from_pricing_rules(percent: float, expected: str, recommended: int) -> None:
+    section = _section(
+        _config(
+            {
+                'columns': {'0': 'code', '1': 'title', '2': 'rest_count', '3': 'price_recommended'},
+                'pricing': {'rules': {'markup_rules': [{'min': 0, 'max': 999999999, 'percent': percent}]}},
+            }
+        )
+    )
+    battery_handler = make_battery_handler(section, 'plant')
+    parsed = battery_handler.process_fields(
+        [
+            {
+                'code': '001',
+                'title': 'XTREME Arctic',
+                'rest_count': 1,
+                'price_opt': 5000,
+                'price_recommended': recommended,
+            }
+        ]
+    )
+    assert battery_handler.prepare_output(parsed)[0]['sale_price'] == expected
+
+
 @pytest.mark.parametrize(
     'setting, path',
     [

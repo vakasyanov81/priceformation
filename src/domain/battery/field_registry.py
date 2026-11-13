@@ -37,6 +37,7 @@ _NUMBER_FIELDS = (
     'weight',
     'price_opt',
     'price_recommended',
+    'price_markup',
 )
 _FLAG_FIELDS = ('efb', 'agm', 'serviceable')
 
