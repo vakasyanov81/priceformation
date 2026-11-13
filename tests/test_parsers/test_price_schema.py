@@ -7,6 +7,7 @@ import openpyxl
 import pytest
 
 from parsers.price_schema.diff import compare_schemas
+from parsers.price_schema.header import column_header
 from parsers.price_schema.models import FileHead, PriceSchema, SheetHead
 from parsers.price_schema.schema import build_schema, read_file_head
 
@@ -73,6 +74,49 @@ def test_short_header_row_has_no_column_cell() -> None:
     schema = _schema(_head(('Артикул',)), start_row=2)
 
     assert schema.sheets[0].headers == {0: 'Артикул'}
+
+
+def test_column_at_row_length_has_no_header() -> None:
+    """Индекс сразу после последней ячейки означает отсутствующий заголовок."""
+    assert column_header((('Артикул',),), 1) == ''
+
+
+def test_header_normalizes_spaces_between_words() -> None:
+    """Несколько слов заголовка разделяются одним пробелом."""
+    assert column_header((('  Цена\t поставщика  ',),), 0) == 'Цена поставщика'
+
+
+def test_empty_sheet_selection_uses_all_sheets() -> None:
+    """Пустой выбор вкладок включает каждую имеющуюся вкладку."""
+    first = SheetHead('Первый', (('Код',),))
+    second = SheetHead('Второй', (('Артикул',),))
+    head = FileHead(sheets=(first, second))
+    schema = build_schema(head, start_row=2, sheet_indexes=(), columns={0: 'code'})
+    assert set(schema.sheets) == {0, 1}
+    assert schema.sheets[0].headers == {0: 'Код'}
+    assert schema.sheets[1].headers == {0: 'Артикул'}
+
+
+def test_json_scalar_has_no_record_keys(tmp_path: Path) -> None:
+    """JSON без списка записей не создаёт схему колонок."""
+    path = tmp_path / 'scalar.json'
+    path.write_text('123', encoding='utf-8')
+    assert read_file_head(path).json_keys == frozenset()
+
+
+def test_xlsx_head_stops_at_hundred_rows(tmp_path: Path) -> None:
+    """Чтение шапки ограничено первыми ста строками прайса."""
+    book = openpyxl.Workbook()
+    sheet = book.active
+    assert sheet is not None
+    for number in range(1, 102):
+        sheet.append([f'Строка {number}'])
+    path = tmp_path / 'long.xlsx'
+    book.save(path)
+
+    rows = read_file_head(path).sheets[0].rows
+    assert len(rows) == 100
+    assert rows[-1] == ('Строка 100',)
 
 
 def test_same_schema_no_changes() -> None:
