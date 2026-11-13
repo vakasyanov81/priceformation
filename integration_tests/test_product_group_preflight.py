@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 from domain.exceptions import ConfigValidationError
-from integration_tests.group_xlsx_examples import DATE, group_writer, output_sources, output_template
+from integration_tests.group_xlsx_examples import DATE, output_sources, output_template
 from integration_tests.product_group_examples import supplier_price
 from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.price_files import PriceFiles
@@ -16,6 +16,7 @@ from parsers.base_parser.routing_rows import RowRoutingError
 from parsers.base_parser.section_params import parser_params_from_section
 from parsers.vendor_config.models import VendorConfig
 from parsers.writer.templates.group_output import OutputMode, TemplateOutput
+from tests.group_output_examples import group_writer
 
 _TITLE = 'title'
 _ID = 'id'

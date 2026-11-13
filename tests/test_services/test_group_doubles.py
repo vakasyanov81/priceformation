@@ -10,10 +10,10 @@ from openpyxl import load_workbook
 
 from domain.product_groups import ProductGroup
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from integration_tests.group_xlsx_examples import group_writer
 from services.doubles_service import DoublesService
 from services.parse_result import ParseResult
 from services.price_report import PriceReportService
+from tests.group_output_examples import group_writer
 from tests.test_parsers.test_group_doubles import duplicate_packages
 
 

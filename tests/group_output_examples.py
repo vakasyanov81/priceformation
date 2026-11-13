@@ -1,9 +1,13 @@
 """Преобразователь второй модели только для тестов группового вывода."""
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from domain.product_group_handler import OutputFields
+from parsers.writer.group_files import GroupFileWriter
 from parsers.writer.templates.group_output import GroupOutput
+from parsers.writer.xls_writer import XlsWriter
+from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from tests.test_domain.group_handler_examples import TestGroupResult
 
 
@@ -27,3 +31,8 @@ class OtherOutputSource:
             for position in self.package.positions
             if position.label not in settings.filters.get('label', ())
         )
+
+
+def group_writer(folder: Path) -> GroupFileWriter:
+    """Рабочие писатель и драйвер без подмены файлового IO."""
+    return GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(folder))

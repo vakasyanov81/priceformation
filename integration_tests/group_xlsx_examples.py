@@ -8,11 +8,8 @@ from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from integration_tests.product_group_examples import OtherStrategy, TireStrategy, read_group, supplier_price
 from parsers.common_price.tire_output import TireOutputSource
-from parsers.writer.group_files import GroupFileWriter
 from parsers.writer.output_plan import GroupOutputSource
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
-from parsers.writer.xls_writer import XlsWriter
-from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 from tests.group_output_examples import OtherOutputSource
 from tests.test_domain.group_handler_examples import TestGroupResult, TestPosition
 
@@ -60,8 +57,3 @@ def output_template(mode: OutputMode) -> TemplateOutput:
             'integration', mode, (replace(tires, file_name=None), replace(other, file_name=None)), 'all_{now}.xlsx'
         )
     return TemplateOutput('integration', mode, (tires, other))
-
-
-def group_writer(folder: Path) -> GroupFileWriter:
-    """Рабочие писатель и драйвер без подмены файлового IO."""
-    return GroupFileWriter(xls_writer=XlsWriter, write_driver=XlsxWriterAdapter, result_folder=str(folder))

@@ -10,8 +10,9 @@ from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from domain.product_groups import ProductGroup
-from integration_tests.group_xlsx_examples import DATE, OTHER, TIRES, group_writer, output_sources, output_template
+from integration_tests.group_xlsx_examples import DATE, OTHER, TIRES, output_sources, output_template
 from parsers.writer.templates.group_output import OutputMode
+from tests.group_output_examples import group_writer
 
 _EMPTY_CHOICES = ((), (TIRES,), (OTHER,), (TIRES, OTHER))
 _FIRST_CELL = 'A2'
