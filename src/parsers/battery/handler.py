@@ -9,10 +9,11 @@ from domain.battery.result import BatteryResult
 from domain.product_group_handler import InputFields, OutputFields
 from domain.product_group_result import ProductGroupResult
 from domain.product_groups import ProductGroup
+from parsers.base_parser.markup_policy import MarkupPolicy
 from parsers.battery.grouping import group_batteries
 from parsers.battery.output_fields import battery_fields
 from parsers.battery.plant_fields import normalize_fields
-from parsers.battery.processing import log_skipped, publication_issue
+from parsers.battery.processing import apply_markup, log_skipped, publication_issue
 from parsers.battery.title import normalize_title
 from parsers.vendor_config.battery_settings import BatterySettings
 
@@ -23,6 +24,7 @@ class BatteryHandler:
     def __init__(self, settings: BatterySettings, supplier: str) -> None:
         self._settings = settings
         self._supplier = supplier
+        self._markup_policy = MarkupPolicy(settings.rules, tuple(settings.rules.markup_rules.values()))
 
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:
@@ -50,10 +52,11 @@ class BatteryHandler:
                 log_skipped(position, self._supplier, issue)
                 continue
             try:
-                kept.append(normalize_title(position, self._settings.lines))
+                normalized = normalize_title(position, self._settings.lines)
             except ValueError as exc:
                 offer_code = position.identity.code
                 raise ValueError(f'[batteries] {self._supplier}, код {offer_code}: {exc}') from exc
+            kept.append(apply_markup(normalized, self._markup_policy))
         return BatteryResult(tuple(kept))
 
     def group(self, package: ProductGroupResult[BatteryItem]) -> BatteryResult:

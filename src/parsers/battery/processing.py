@@ -1,10 +1,23 @@
 """Условия публикации аккумулятора и диагностика исключённых предложений."""
 
 import logging
+from dataclasses import replace
+from decimal import Decimal
 
 from domain.battery.item import BatteryItem
+from parsers.base_parser.markup_policy import MarkupPolicy
 
 logger = logging.getLogger(__name__)
+
+
+def apply_markup(position: BatteryItem, policy: MarkupPolicy) -> BatteryItem:
+    """Если РРЦ не выше закупа, применить карту процентов, сохраняя исходные цены."""
+    offer = position.offer
+    price = offer.price_recommended
+    if offer.price_opt is not None and price is not None and price <= offer.price_opt:
+        percent = Decimal(str(policy.markup_percent_for_opt(float(offer.price_opt))))
+        price = (offer.price_opt * (1 + percent)).normalize()
+    return replace(position, offer=replace(offer, price_markup=price))
 
 
 def publication_issue(position: BatteryItem, min_rest: int) -> str | None:

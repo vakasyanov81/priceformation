@@ -21,6 +21,10 @@ def _battery_handler() -> BatteryHandler:
         6,
         ('*.xls',),
         columns={1: 'title', 2: 'rest_count', 21: 'code', 24: 'price_recommended'},
+        processing=BatterySettings.from_dict(
+            {'pricing': {'rules': {'markup_rules': [{'min': 0, 'max': 999999999, 'percent': 0.2}]}}},
+            'plant.json',
+        ),
     )
     return make_battery_handler(section, 'plant')
 
@@ -61,6 +65,33 @@ def test_single_battery_can_be_published(stock: int) -> None:
     position = battery_handler.create_position(_fields(rest_count=stock, price_opt=None))
     parsed = battery_handler.process([position])
     assert parsed.positions[0].offer.sale_price == Decimal('5000.20')
+
+
+@pytest.mark.parametrize(
+    'purchase, recommended, expected',
+    [
+        ('5000', '5000', '6000'),
+        ('4000.10', '4000.10', '4800.12'),
+        ('5000', '5000.01', '5000.01'),
+        ('5000', '4999.99', '6000'),
+        ('5000', '4900', '6000'),
+        (None, '5000', '5000'),
+        ('0', '0', '0'),
+    ],
+)
+def test_nonprofitable_prices_receive_markup(purchase: str | None, recommended: str, expected: str) -> None:
+    battery_handler = _battery_handler()
+    position = battery_handler.create_position(_fields(price_opt=purchase, price_recommended=recommended))
+    parsed = battery_handler.process([position])
+    actual = parsed.positions[0]
+
+    assert actual.offer.sale_price == Decimal(expected)
+    assert actual.offer.price_opt == position.offer.price_opt
+    assert actual.offer.price_recommended == Decimal(recommended)
+    assert position.offer.sale_price == Decimal(recommended)
+    assert battery_handler.prepare_output(parsed)[0]['sale_price'] == expected
+    repeated = battery_handler.process(parsed.positions)
+    assert repeated.positions[0].offer.sale_price == Decimal(expected)
 
 
 @pytest.mark.parametrize(
@@ -149,10 +180,11 @@ def test_creation_error_preserves_field_and_supplier_context() -> None:
     assert isinstance(caught.value.__cause__, ValueError)
 
 
-def test_zero_recommended_price_is_known_and_never_replaced_by_purchase_price() -> None:
+def test_zero_recommended_price_receives_markup_on_purchase() -> None:
     battery_handler = _battery_handler()
     parsed = battery_handler.process_fields([_fields(price_recommended=0)])
-    assert parsed.positions[0].offer.sale_price == Decimal(0)
+    assert parsed.positions[0].offer.sale_price == Decimal('4800.12')
+    assert parsed.positions[0].offer.price_recommended == Decimal(0)
     assert parsed.positions[0].offer.price_opt == Decimal('4000.10')
 
 

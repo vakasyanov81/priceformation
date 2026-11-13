@@ -17,7 +17,16 @@
         ]
       },
       "pricing": {
-        "policy": "recommended"
+        "policy": "recommended",
+        "rules": {
+          "markup_rules": [
+            {
+              "min": 0,
+              "max": 999999999,
+              "percent": 0.2
+            }
+          ]
+        }
       },
       "behavior": {
         "rest": "count",

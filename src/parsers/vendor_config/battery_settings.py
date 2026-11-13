@@ -1,10 +1,11 @@
 """Собственные слоты обработки аккумуляторов без шинных настроек."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from domain.exceptions import ConfigValidationError
 from domain.product_groups import ProductGroup
 from parsers.data_provider.json_fields import RawConfig, read_object
+from parsers.data_provider.models import MarkupRulesConfig
 from parsers.vendor_config.columns import read_columns
 from parsers.vendor_config.fields import read_int, read_str_list, read_text
 
@@ -13,21 +14,26 @@ PLANT_LINES = ('XTREME +EFB', 'XTREME Arctic')
 
 @dataclass(frozen=True, slots=True)
 class BatterySettings:
-    """Линейки задаются явно; цена продажи всегда РРЦ, остаток — минимум одна штука."""
+    """Линейки задаются явно; остаток — минимум одна штука."""
 
     lines: tuple[str, ...] = PLANT_LINES
     min_rest: int = 1
+    rules: MarkupRulesConfig = field(default_factory=MarkupRulesConfig)
 
     @classmethod
     def from_dict(cls, payload: RawConfig, where: str) -> BatterySettings:
         """Проверить каждый заданный слот до наследования и сохранить типизированные настройки."""
         title = _slot(payload, 'title', ('strategy', 'lines'), where)
-        pricing = _slot(payload, 'pricing', ('policy',), where)
+        pricing = _slot(payload, 'pricing', ('policy', 'rules'), where)
         behavior = _slot(payload, 'behavior', ('min_rest', 'rest'), where)
         _require_choice(title, 'strategy', 'plant', f'{where} → title')
         _require_choice(pricing, 'policy', 'recommended', f'{where} → pricing')
         _require_choice(behavior, 'rest', 'count', f'{where} → behavior')
-        return cls(_read_lines(title, f'{where} → title'), _minimum_rest(behavior, f'{where} → behavior'))
+        return cls(
+            lines=_read_lines(title, f'{where} → title'),
+            min_rest=_minimum_rest(behavior, f'{where} → behavior'),
+            rules=MarkupRulesConfig.from_dict(read_object(pricing, 'rules', where), f'{where} → pricing → rules'),
+        )
 
 
 def validate_battery_settings(payload: RawConfig, where: str, *, reads_json: bool) -> None:
