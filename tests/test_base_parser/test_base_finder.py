@@ -99,6 +99,11 @@ def test_find_returns_first_bounded_occurrence() -> None:
     assert find_bounded('xbrand brand brand', 'brand') == 7
 
 
+def test_find_symbol_alias_after_rejected_occurrence() -> None:
+    """Небуквенный алиас может иметь допустимое совпадение сразу после отвергнутого."""
+    assert find_bounded('a++ ', '+') == 2
+
+
 def test_has_word_boundaries_rejects_alnum_before() -> None:
     """Буква/цифра перед алиасом — не граница слова."""
     assert _has_word_boundaries('ab', 1, 1) is False

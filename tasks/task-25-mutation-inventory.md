@@ -2752,6 +2752,8 @@
 
 ### `parsers.base_parser.alias_search.x_find_bounded__mutmut_12`
 
+Классификация 2026-11-14: Timeout подтверждён отдельным процессом с лимитом 2 с: `find_bounded('xbrand', 'brand')`. После отклонения позиции 1 поиск возвращает -1, но условие `!= -2` продолжает цикл; проверка границ при -1 ложна, следующий поиск снова возвращает позицию 1. Исходная функция возвращает -1.
+
 Статус: **timeout**; тип: `number`; выбрано тестов: 61.
 
 ```diff
@@ -2770,6 +2772,8 @@
 
 ### `parsers.base_parser.alias_search.x_find_bounded__mutmut_21`
 
+Классификация 2026-11-14: Timeout подтверждён отдельным процессом с лимитом 2 с на `find_bounded('xbrand', 'brand')`: повторный find без начальной позиции (или с None) снова находит позицию 1 внутри слова. Исходная функция продвигает поиск и возвращает -1.
+
 Статус: **timeout**; тип: `other`; выбрано тестов: 61.
 
 ```diff
@@ -2785,6 +2789,8 @@
 ```
 
 ### `parsers.base_parser.alias_search.x_find_bounded__mutmut_23`
+
+Классификация 2026-11-14: Timeout подтверждён отдельным процессом с лимитом 2 с на `find_bounded('xbrand', 'brand')`: повторный find без начальной позиции (или с None) снова находит позицию 1 внутри слова. Исходная функция продвигает поиск и возвращает -1.
 
 Статус: **timeout**; тип: `other`; выбрано тестов: 61.
 
@@ -2802,6 +2808,8 @@
 
 ### `parsers.base_parser.alias_search.x_find_bounded__mutmut_25`
 
+Классификация 2026-11-14: Timeout подтверждён отдельным процессом с лимитом 2 с на `find_bounded('xbrand', 'brand')`: поиск от position - 1 снова находит ту же позицию 1 внутри слова. Исходная функция возвращает -1.
+
 Статус: **timeout**; тип: `operator`; выбрано тестов: 61.
 
 ```diff
@@ -2818,6 +2826,8 @@
 
 ### `parsers.base_parser.alias_search.x_find_bounded__mutmut_26`
 
+Классификация 2026-11-14: Подтверждённый пробел теста: `find_bounded('a++ ', '+')` должен вернуть 2. Первое вхождение в позиции 1 отвергается из-за буквы слева, соседнее в позиции 2 допустимо. Шаг +2 пропускает его. Небуквенные алиасы не запрещены контрактом AliasContainer; `test_find_symbol_alias_after_rejected_occurrence` закрепляет этот случай. Убит прогоном `uv run mutmut run 'parsers.base_parser.alias_search.x_find_bounded__mutmut_26'`.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 61.
 
 ```diff
@@ -2833,6 +2843,8 @@
 ```
 
 ### `parsers.base_parser.alias_search.x_find_bracket_alias__mutmut_13`
+
+Классификация 2026-11-14: Пробел теста закрыт: `test_bracket_alias_preserves_exact_supplier_spelling` проверяет оба элемента результата при смещениях 0, 1 и 10; `test_absent_bracket_alias_allows_regular_manufacturer` проверяет отсутствие составного алиаса. Убит прогоном `uv run mutmut run 'parsers.base_parser.alias_search.*' 'parsers.base_parser.base_finder.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 88.
 
@@ -2851,6 +2863,8 @@
 
 ### `parsers.base_parser.alias_search.x_find_bracket_alias__mutmut_14`
 
+Классификация 2026-11-14: Пробел теста закрыт: `test_bracket_alias_preserves_exact_supplier_spelling` проверяет оба элемента результата при смещениях 0, 1 и 10; `test_absent_bracket_alias_allows_regular_manufacturer` проверяет отсутствие составного алиаса. Убит прогоном `uv run mutmut run 'parsers.base_parser.alias_search.*' 'parsers.base_parser.base_finder.*'`.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 88.
 
 ```diff
@@ -2867,6 +2881,8 @@
 ```
 
 ### `parsers.base_parser.alias_search.x_find_bracket_alias__mutmut_15`
+
+Классификация 2026-11-14: Пробел теста закрыт: `test_bracket_alias_preserves_exact_supplier_spelling` проверяет оба элемента результата при смещениях 0, 1 и 10; `test_absent_bracket_alias_allows_regular_manufacturer` проверяет отсутствие составного алиаса. Убит прогоном `uv run mutmut run 'parsers.base_parser.alias_search.*' 'parsers.base_parser.base_finder.*'`.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 88.
 
@@ -2886,6 +2902,8 @@
 
 ### `parsers.base_parser.base_finder.xǁBaseFinderǁ__init____mutmut_2`
 
+Классификация 2026-11-14: Эквивалент через публичный API: `_search` присваивает `_title = title` до любого чтения в `_match_lower_alias`; при попадании в кэш `_title` не читается. Начальное None или пустая строка ненаблюдаемы. Целевой прогон оставляет survived.
+
 Статус: **survived**; тип: `none_to_empty`; выбрано тестов: 90.
 
 ```diff
@@ -2903,6 +2921,8 @@
 ```
 
 ### `parsers.base_parser.base_finder.xǁBaseFinderǁ_match_lower_alias__mutmut_16`
+
+Классификация 2026-11-14: Пробел теста закрыт: `test_unbounded_alias_allows_next_manufacturer` проверяет Bridgestoneish перед Nortec. Bridgestone длиннее и проверяется первым; его вхождение внутри слова должно пропускаться с продолжением перебора. Убит прогоном `uv run mutmut run 'parsers.base_parser.base_finder.*'`.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 87.
 
@@ -2922,6 +2942,8 @@
 
 ### `parsers.base_parser.base_finder.xǁBaseFinderǁ_search__mutmut_9`
 
+Классификация 2026-11-14: Эквивалент: `haystacks` всегда возвращает непустой кортеж (один или два элемента), а каждая итерация присваивает found до break и return. Начальное значение перезаписывается. Целевой прогон оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 88.
 
 ```diff
@@ -2939,6 +2961,8 @@
 ```
 
 ### `parsers.base_parser.base_finder.xǁBaseFinderǁ_search__mutmut_25`
+
+Классификация 2026-11-14: Не классифицирован окончательно. Для непустых канонических имён найденное совпадение имеет одновременно непустые correct и исходный алиас; отсутствие совпадения даёт (None, None), поэтому условия совпадают. Но AliasContainer не запрещает пустое каноническое имя с непустым алиасом: прежде чем объявлять эквивалентность, требуется установить допустимость такого конфига. Целевой прогон оставляет survived.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 88.
 
