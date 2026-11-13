@@ -7,8 +7,48 @@ import logging
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies.homoglyph_alphabet import CYRILLIC, LATIN, convert, forced_alphabets, is_cyrillic, is_latin
 from parsers.strategies.homoglyph_tokens import fix_token
 from parsers.strategies.homoglyphs import fix_row_homoglyphs, fix_text
+
+
+@pytest.mark.parametrize(
+    ('char', 'expected'),
+    [
+        ('a', True),
+        ('Z', True),
+        ('z', True),
+        ('`', False),
+        ('{', False),
+    ],
+)
+def test_is_latin_boundaries(char: str, expected: bool) -> None:
+    assert is_latin(char) is expected
+
+
+@pytest.mark.parametrize(
+    ('char', 'expected'),
+    [
+        ('а', True),
+        ('Я', True),
+        ('я', True),
+        ('Ё', True),
+        ('ё', True),
+        ('`', False),
+    ],
+)
+def test_is_cyrillic_boundaries(char: str, expected: bool) -> None:
+    assert is_cyrillic(char) is expected
+
+
+def test_convert_uses_requested_alphabet() -> None:
+    assert convert('AС', LATIN) == 'AC'
+    assert convert('AС', CYRILLIC) == 'АС'
+
+
+def test_forced_alphabets_returns_only_known_alphabets() -> None:
+    assert forced_alphabets(['z', 'и']) == {LATIN, CYRILLIC}
+    assert forced_alphabets(['A']) == set()
 
 
 @pytest.mark.parametrize(

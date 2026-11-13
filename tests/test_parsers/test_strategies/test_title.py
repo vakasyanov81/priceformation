@@ -270,6 +270,22 @@ def test_tire_compose_mim_truck_includes_load_velocity() -> None:
     assert strategy.prepare(row) == '295/75R22.5 152M'
 
 
+def test_tire_compose_mim_truck_includes_camera_and_axis() -> None:
+    """Камерность и ось грузовой шины сохраняются в каноническом названии."""
+    strategy = TireCompose('mim_truck')
+    row = RowItem(
+        {
+            'width': '295',
+            'height_percent': '75',
+            'diameter': '22.5',
+            'intimacy': 'tt',
+            'axis': 'ведущая',
+        },
+    )
+
+    assert strategy.prepare(row) == '295/75R22.5 TT Ведущая'
+
+
 def test_normalize_size_chunks_empty_title_stays_empty() -> None:
     """Пустой title не превращается в заглушку."""
     assert NormalizeSizeChunks().prepare(RowItem({})) == ''

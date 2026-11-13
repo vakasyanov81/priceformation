@@ -110,8 +110,8 @@ def test_compose_tire_title_canonical_order() -> None:
 def test_compose_tire_title_keeps_xl_and_season_marks() -> None:
     """`XL`, `M+S` и `3PMSF` берутся из названия поставщика и надписи на боковине; `M+S` стоит сразу за камерностью."""
     row = _row(
-        title='245/45ZR17 99W XL Ingens A1 TL M+S',
-        inscription_on_the_side='3PMSF',
+        title='245/45ZR17 99W Ingens A1 TL M+S',
+        inscription_on_the_side='XL 3PMSF',
         manufacturer_name='Antares',
         model='Ingens A1',
         index_load='99',

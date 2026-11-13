@@ -181,6 +181,19 @@ def test_fields_win_over_parsed_title() -> None:
     assert _compose(row) == '11R22.5 Taitong HS103 146/143M 18PR TT Прицепная'
 
 
+def test_sidewall_marks_and_run_flat_column_stay_in_title() -> None:
+    """Свойства шины из отдельных полей не теряются при канонической сборке."""
+    row = RowItem(
+        {
+            'title': '285/70R19.5 Triangle TRD02 146/144L 18PR TL ведущая',
+            'inscription_on_the_side': 'XL M+S 3PMSF',
+            'run_flat': 'да',
+        },
+    )
+
+    assert _compose(row) == '285/70R19.5 Triangle TRD02 146/144L XL 18PR TL M+S 3PMSF RunFlat Ведущая'
+
+
 @pytest.mark.parametrize(
     'title',
     ['Уплотнительное кольцо 6x70'],
@@ -368,8 +381,7 @@ def test_column_first_brand_comes_from_manufacturer_column() -> None:
 
     title = composer.prepare(_nordman_row('Ikon'))
 
-    assert title is not None
-    assert 'Ikon Tyres Nordman RS2' in title
+    assert title == '195/55R15 Ikon Tyres Nordman RS2 (Character Snow 2) 89R XL TL'
 
 
 def test_column_first_brand_from_title_when_column_empty() -> None:
@@ -378,5 +390,14 @@ def test_column_first_brand_from_title_when_column_empty() -> None:
 
     title = composer.prepare(_nordman_row(''))
 
-    assert title is not None
-    assert 'Nordman' in title
+    assert title == '195/55R15 Nordman Nordman RS2 (Character Snow 2) 89R XL TL'
+
+
+def test_column_first_brand_falls_back_without_known_manufacturer() -> None:
+    """При пустой колонке бренд берётся из разбора, при неизвестной — сохраняется текст колонки."""
+    composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
+
+    assert composer.prepare(RowItem({'title': '205/55R16 Foo Bar 91V'})) == '205/55R16 Foo Bar 91V'
+    assert composer.prepare(RowItem({'title': '205/55R16 Ikon Bar 91V'})) == '205/55R16 Ikon Tyres Bar 91V'
+    row = RowItem({'title': '205/55R16 Foo Bar 91V', 'manufacturer_name': 'Unknown'})
+    assert composer.prepare(row) == '205/55R16 Unknown Bar 91V'

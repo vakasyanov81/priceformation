@@ -159,6 +159,15 @@ mutmut не выбрал по старому кэшу testmon, мутанты п
 `validate_table`: предварительная проверка требует селектор у каждой из нескольких
 секций общего листа, поэтому ветка с одним отсутствующим row_selector не выполняется.
 
+В третьем блоке очереди закреплены камерность и ось грузовой шины MIM, свойства
+шины из надписи на боковине и колонки RunFlat, точный выбор бренда при конфликте
+с моделью, вентиль ободной ленты и границы алфавитов homoglyph. Точечно убиты
+`TireCompose._mim_truck__mutmut_29/30`, `compose_tire_title__mutmut_32`,
+`TitleFromFields._compose__mutmut_42/49/59`, `TitleFromFields._brand__mutmut_9/10/13`,
+`convert__mutmut_3`, `forced_alphabets__mutmut_2/9`,
+`is_cyrillic__mutmut_6/9`, `is_latin__mutmut_3` и
+`compose_tube_title__mutmut_7`. Дефектов исходного кода не обнаружено.
+
 ## Мутации, которые нельзя записывать в дефекты автоматически
 
 - `dump_json`: ensure_ascii=False → None остаётся ложным значением и
