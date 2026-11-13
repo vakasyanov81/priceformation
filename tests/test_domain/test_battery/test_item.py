@@ -9,6 +9,7 @@ from typing import Literal, assert_type
 import pytest
 
 from domain.battery.case import BatteryCase
+from domain.battery.conversions import flag, integer, number, text
 from domain.battery.field_registry import FIELD_CONVERTERS, FIELD_KEYS
 from domain.battery.identity import BatteryIdentity
 from domain.battery.item import BatteryItem
@@ -247,3 +248,75 @@ def test_registry_conversions_agree_with_typed_model(plant_fields: dict[str, obj
 @pytest.mark.parametrize('raw', ['?', ' ? '])
 def test_question_mark_stock_preserves_unknown(raw: str) -> None:
     assert BatteryItem.from_fields({'rest_count': raw}).offer.rest_count is None
+
+
+@pytest.mark.parametrize(
+    'constructor, kwargs, message',
+    [
+        (BatteryCase, {'length_mm': 1}, 'length_mm: требуется конечное десятичное число'),
+        (BatteryCase, {'width_mm': 1}, 'width_mm: требуется конечное десятичное число'),
+        (BatteryCase, {'height_mm': 1}, 'height_mm: требуется конечное десятичное число'),
+        (BatteryCase, {'weight': 1}, 'weight: требуется конечное десятичное число'),
+        (BatteryCase, {'serviceable': 1}, 'serviceable: требуется bool или None'),
+        (BatteryParameters, {'starting_current_a': 1}, 'starting_current_a: требуется конечное десятичное число'),
+        (BatteryParameters, {'efb': 1}, 'efb: требуется bool или None'),
+        (BatteryParameters, {'agm': 1}, 'agm: требуется bool или None'),
+        (BatteryOffer, {'price_opt': 1}, 'price_opt: требуется конечное десятичное число'),
+        (
+            BatteryOffer,
+            {'price_recommended': 1},
+            'price_recommended: требуется конечное десятичное число',
+        ),
+        (BatteryOffer, {'price_markup': 1}, 'price_markup: требуется конечное десятичное число'),
+        (BatteryOffer, {'rest_count': -1}, 'rest_count: требуется неотрицательное целое число'),
+        (BatteryOffer, {'warranty_months': -1}, 'warranty_months: требуется неотрицательное целое число'),
+    ],
+)
+def test_direct_validation_error_identifies_exact_contract(
+    constructor: Callable[..., object],
+    kwargs: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError) as exc_info:
+        constructor(**kwargs)
+
+    assert str(exc_info.value) == message
+
+
+@pytest.mark.parametrize(
+    'converter, raw, message',
+    [
+        (flag, 'unknown', 'требуется да/нет или bool'),
+        (integer, '1.5', 'требуется целое число'),
+        (number, True, 'требуется число'),
+        (number, 'not-a-number', 'требуется число'),
+        (number, 'NaN', 'требуется конечное число'),
+        (text, True, 'требуется текст или число'),
+    ],
+)
+def test_conversion_errors_keep_exact_reason(
+    converter: Callable[[object], object],
+    raw: object,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError) as exc_info:
+        converter(raw)
+
+    assert str(exc_info.value) == message
+
+
+class NumericString:
+    def __str__(self) -> str:
+        return '12.5'
+
+
+def test_number_rejects_non_scalar_even_with_numeric_string_representation() -> None:
+    with pytest.raises(ValueError, match=r'^требуется число$'):
+        number(NumericString())
+
+
+def test_unknown_fields_error_lists_all_names_in_order() -> None:
+    with pytest.raises(ValueError) as exc_info:
+        BatteryItem.from_fields({'width': 1, 'diameter': 2})
+
+    assert str(exc_info.value) == 'Неизвестные поля batteries: diameter, width'

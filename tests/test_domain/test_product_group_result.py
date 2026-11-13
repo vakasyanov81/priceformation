@@ -6,6 +6,7 @@ from typing import Literal, assert_type
 
 import pytest
 
+from domain.battery.result import BatteryResult
 from domain.product_group_result import ProductGroupResult, ProductPosition, TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
@@ -57,8 +58,22 @@ def test_common_view_preserves_positions_without_tire_fields() -> None:
 def test_package_rejects_invalid_runtime_input(positions: object) -> None:
     """Нетипизированный вызывающий код также не может смешать модели или менять состав."""
     constructor: Callable[..., TireAndDiskResult] = TireAndDiskResult
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc_info:
         constructor(positions)
+
+    expected = (
+        'Пакет tire_and_disk принимает только RowItem'
+        if isinstance(positions, tuple)
+        else 'Позиции пакета должны быть кортежем'
+    )
+    assert str(exc_info.value) == expected
+
+
+def test_merge_rejects_battery_package_with_exact_reason() -> None:
+    with pytest.raises(TypeError) as exc_info:
+        TireAndDiskResult().merge(BatteryResult())
+
+    assert str(exc_info.value) == 'Пакет tire_and_disk объединяется только с той же моделью'
 
 
 @pytest.mark.parametrize('attribute', ['positions', 'product_group'])
