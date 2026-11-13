@@ -70,7 +70,8 @@ class TestGroupOutputs:
         prices = battery_rows(files, shared=True)
         assert len(prices) == _BATTERY_COUNT
         assert all(row['Цена продажи'] == row['РРЦ'] for row in prices)
-        assert all(isinstance(row['Код'], str) for row in prices)
+        expected_columns = {'Наценка в руб', 'Наценка в %'}
+        assert all(expected_columns <= row.keys() for row in prices)
         assert isinstance(parsed.groups[ProductGroup.BATTERIES], BatteryResult)
 
     @pytest.mark.parametrize('template', [None, 'for_product_groups'])

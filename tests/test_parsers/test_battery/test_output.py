@@ -114,7 +114,7 @@ def test_output_rejects_inapplicable_rules(group: GroupOutput, message: str) -> 
         _source().prepare('for_batteries', group)
 
 
-def test_battery_template_writes_codes_prices_and_stock(tmp_path: Path) -> None:
+def test_battery_template_writes_prices_and_stock(tmp_path: Path) -> None:
     template = ForBatteries().output_spec()
     sources = {ProductGroup.BATTERIES: _source()}
     plan = prepare_output_plan([template], sources, current_date='2026-11-12')
@@ -123,14 +123,41 @@ def test_battery_template_writes_codes_prices_and_stock(tmp_path: Path) -> None:
     workbook = load_workbook(paths[0])
     sheet = workbook['Аккумуляторы']
     header, cells = list(sheet.values)
+    assert list(header) == [
+        'Название',
+        'Производитель',
+        'Полярность',
+        'Емкость',
+        'Пусковой ток',
+        'Длина',
+        'Ширина',
+        'Высота',
+        'Типоразмер',
+        'Остаток',
+        'Закупочная цена',
+        'РРЦ',
+        'Цена продажи',
+        'Наценка в руб',
+        'Наценка в %',
+        'Клеммы',
+        'EFB',
+        'AGM',
+        'Крепление',
+        'Обслуживаемость',
+        'Вес',
+        'Гарантия',
+        'Поставщик',
+        'Ценовая группа',
+    ]
     row = dict(zip(header, cells, strict=True))
-    assert row['Код'] == '001'
+    assert row['Наценка в руб'] == '1500.10'
+    assert row['Наценка в %'] == '37.50'
     assert row['Цена продажи'] == row['РРЦ'] == '5500.20'
     assert row['Закупочная цена'] == '4000.10'
     assert row['Остаток'] == 1
-    assert row['Длина, мм'] == '302'
-    assert row['Ширина, мм'] == '172'
-    assert row['Высота, мм'] == '220'
+    assert row['Длина'] == '302'
+    assert row['Ширина'] == '172'
+    assert row['Высота'] == '220'
     assert row['Вес'] == '24'
     assert row['EFB'] is None
     workbook.close()
@@ -192,3 +219,32 @@ def test_real_plant_settings_map_all_source_columns() -> None:
     assert battery_handler.prepare_output(parsed)[0]['sale_price'] == '5000.10'
     for fixture in ('tasks/examples/plant.json', 'integration_tests/parse_config_example/plant.json'):
         assert json.loads(Path(fixture).read_text()) == raw
+
+
+@pytest.mark.parametrize(
+    'purchase, recommended, sale, absolute, percent',
+    [
+        ('100', '150', '120', '20', '20'),
+        ('100', '150', None, '50', '50'),
+        ('300', None, '400', '100', '33.33'),
+        ('100', None, '100', '0', '0'),
+        ('100', None, '90', '-10', '-10'),
+        ('0', None, '100', '100', None),
+        (None, None, '100', None, None),
+        ('100', None, None, None, None),
+    ],
+)
+def test_output_markup_uses_final_sale(
+    purchase: str | None,
+    recommended: str | None,
+    sale: str | None,
+    absolute: str | None,
+    percent: str | None,
+) -> None:
+    """Наценка считается от итоговой цены с сохранением неизвестных значений."""
+    position = BatteryItem.from_fields({'price_opt': purchase, 'price_recommended': recommended, 'price_markup': sale})
+    source = BatteryOutputSource(BatteryResult((position,)))
+    group = ForBatteries().output_spec().groups[0]
+    row = source.prepare('for_batteries', group)[0]
+    assert row['absolute_markup'] == absolute
+    assert row['percent_markup'] == percent
