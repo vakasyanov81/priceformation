@@ -28,6 +28,7 @@ def test_empty_package_keeps_sheet_and_date() -> None:
     books = prepare_output_plan([output], {TIRES: TireOutputSource(TireAndDiskResult())}, current_date='2026-11-12')
     assert books[0].file_name == 'tires_2026-11-12.xlsx'
     assert books[0].template_id == 'example'
+    assert books[0].mode is OutputMode.SEPARATE_FILES
     assert books[0].sheets[0].rows == ()
     sheet = books[0].sheets[0]
     assert sheet.settings.sheet_name == 'Шины'
@@ -70,6 +71,7 @@ def test_group_sources_have_independent_settings(mode: OutputMode, expected_coun
     books = prepare_output_plan([output], {TIRES: source, BATTERIES: other_source})
     sheets = [sheet for book in books for sheet in book.sheets]
     assert len(books) == expected_count
+    assert all(book.mode is mode for book in books)
     assert sheets[0].rows[0]['title'] == 'Шина'
     assert sheets[1].rows == ({'label': 'Другая модель'},)
     assert sheets[1].settings.columns == other.columns
@@ -82,6 +84,14 @@ def test_all_templates_validated_before_preparing_positions() -> None:
     collision = replace(output, template_id='collision')
     with pytest.raises(ConfigValidationError, match='путь'):
         prepare_output_plan([output, collision], {TIRES: source})
+    source.prepare.assert_not_called()
+
+
+def test_explicit_selection_is_validated_before_preparing_positions() -> None:
+    source = Mock(fields=frozenset(('title',)))
+    output = TemplateOutput('example', OutputMode.SEPARATE_FILES, (_group(),))
+    with pytest.raises(ConfigValidationError, match='batteries'):
+        prepare_output_plan([output], {TIRES: source}, selections={'example': {BATTERIES}})
     source.prepare.assert_not_called()
 
 

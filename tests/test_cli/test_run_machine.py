@@ -20,10 +20,12 @@ from app.run_argv import (
     MIM_LOAD_API_DATA,
     PARSE,
     TOGGLE_VENDOR,
+    UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
 )
 from app.run_machine import fail_unknown_result_template, machine_json
 from domain.config_context import get_config_provider
+from domain.exceptions import CoreExceptionError
 from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
@@ -39,6 +41,7 @@ from services.parse_orchestrator import ParseOrchestrator
 from services.parse_result import ParseResult
 from services.parse_statistics import GroupStatistics
 from services.price_report import PriceReportService
+from services.price_schema_service import PriceSchemaService
 from services.vendor_activation import VendorActivationService, VendorState
 from services.zapaska_service import ZapaskaService
 
@@ -348,6 +351,8 @@ def test_json_doubles(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload['stats']['doubles'] == 1
     assert payload['files'] == jsonl_output_files([_DOUBLE_PATH])
     assert doubles_service.make_report.call_args.kwargs['as_jsonl'] is True
+    selection = doubles_service.make_report.call_args.kwargs['selection']
+    assert selection.groups == tuple(parsed.groups)
 
 
 def test_json_doubles_all_result(capsys: pytest.CaptureFixture[str]) -> None:
@@ -502,15 +507,58 @@ def test_json_get_product_types(capsys: pytest.CaptureFixture[str]) -> None:
     }
 
 
+def test_json_update_all_reports_each_source(capsys: pytest.CaptureFixture[str]) -> None:
+    """Сводное обновление возвращает стабильные имена всех четырёх источников."""
+    schema = MagicMock()
+    with (
+        patch(_RESOLVE, side_effect={PriceSchemaService: schema}.__getitem__),
+        patch('app.run_machine._upload_zapaska'),
+        patch('app.run_machine.upload_four_tochki_data'),
+        patch('app.run_machine._upload_mim'),
+        patch('app.run_machine._fetch_mail_paths', return_value=[]),
+    ):
+        code = machine_json(UPDATE_ALL_SUPPLIER_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload == {
+        'ok': True,
+        'action': UPDATE_ALL_SUPPLIER_PRICES,
+        'sources': {'zapaska': 'ok', 'four_tochki': 'ok', 'mim': 'ok', 'mail': 'ok'},
+        'errors': {},
+        'files': [],
+    }
+
+
+def test_json_update_all_errors_use_canonical_source_names(capsys: pytest.CaptureFixture[str]) -> None:
+    """Ошибки API привязаны к именам источников из публичной схемы ответа."""
+    schema = MagicMock()
+    with (
+        patch(_RESOLVE, side_effect={PriceSchemaService: schema}.__getitem__),
+        patch('app.run_machine._upload_zapaska'),
+        patch('app.run_machine.upload_four_tochki_data', side_effect=CoreExceptionError('four failed')),
+        patch('app.run_machine._upload_mim', side_effect=CoreExceptionError('mim failed')),
+        patch('app.run_machine._fetch_mail_paths', return_value=[]),
+    ):
+        code = machine_json(UPDATE_ALL_SUPPLIER_PRICES)
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    _assert_elapsed(payload)
+    assert payload['ok'] is False
+    assert payload['sources'] == {'zapaska': 'ok', 'four_tochki': 'error', 'mim': 'error', 'mail': 'ok'}
+    assert payload['errors'] == {'four_tochki': 'four failed', 'mim': 'mim failed'}
+
+
 def test_json_get_supliers(capsys: pytest.CaptureFixture[str]) -> None:
     """get_supliers: каталог код → folder и название."""
     catalog = {'1': {'sup_code': 'poshk', 'sup_title': 'Пошк'}}
-    with patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog):
+    with patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog) as mock_catalog:
         code = machine_json(GET_SUPLIERS)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     assert 'elapsed_seconds' not in payload
     assert payload == catalog
+    mock_catalog.assert_called_once_with(get_config_provider())
 
 
 def test_json_get_vendors(capsys: pytest.CaptureFixture[str]) -> None:
@@ -576,7 +624,7 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     with (
         patch('app.run_machine.parse_prices_json', return_value={'1': '/incoming/any.xls'}) as mock_parse,
         patch('app.run_machine.load_supplier_prices', return_value=files) as mock_load,
-        patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog),
+        patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog) as mock_catalog,
     ):
         code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
     payload = json.loads(capsys.readouterr().out)
@@ -590,6 +638,7 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
     }
     mock_parse.assert_called_once_with(raw)
     mock_load.assert_called_once_with({'1': '/incoming/any.xls'}, get_config_provider())
+    mock_catalog.assert_called_once_with(get_config_provider())
 
 
 def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str]) -> None:

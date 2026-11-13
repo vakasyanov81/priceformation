@@ -50,7 +50,7 @@ def test_run_update_all_prices_order(watch_logger: LoggerWatcher) -> None:
     """источники вызываются по порядку; сводка API содержит только реально загруженных поставщиков"""
     calls = MagicMock()
     calls.zapaska.return_value = True
-    calls.four_tochki.return_value = False
+    calls.four_tochki.return_value = True
     calls.mim.return_value = True
     entries = watch_logger(_RUN_LOGGER)
     with (
@@ -64,7 +64,7 @@ def test_run_update_all_prices_order(watch_logger: LoggerWatcher) -> None:
 
         run_update_all_supplier_prices()
         assert [call[0] for call in calls.mock_calls] == ['zapaska', 'four_tochki', 'mim', 'mail']
-    assert texts_at(entries(), logging.INFO) == ['*** Прайсы по API получены: 2 (zapaska, mim). ***\n']
+    assert texts_at(entries(), logging.INFO) == ['*** Прайсы по API получены: 3 (zapaska, four_tochki, mim). ***\n']
 
 
 def test_update_all_single_schema_guard() -> None:
@@ -105,3 +105,16 @@ def test_update_all_raises_on_failed_source() -> None:
         with pytest.raises(CoreExceptionError, match='run_upload_zapaska_data'):
             run_update_all_supplier_prices()
     mim.assert_called_once_with(log_success=False)
+
+
+def test_update_all_error_names_exact() -> None:
+    with (
+        patch(_RESOLVE, side_effect={PriceSchemaService: MagicMock()}.__getitem__),
+        patch('app.run._update_api_sources', return_value=([], ['zapaska', 'mim'])),
+        patch('app.run.try_call', return_value=True),
+    ):
+        from app.run import run_update_all_supplier_prices
+
+        with pytest.raises(CoreExceptionError) as error:
+            run_update_all_supplier_prices()
+    assert str(error.value) == 'Не обновлены источники прайсов: zapaska, mim'

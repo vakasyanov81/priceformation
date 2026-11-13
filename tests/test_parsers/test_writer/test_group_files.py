@@ -140,8 +140,9 @@ def test_workbook_sheets_keep_models_and_styles_independent(
     sources = _sources()
     if empty_other:
         sources[OTHER] = OtherOutputSource(TestGroupResult(()))
-    paths = _writer(tmp_path).write([output], sources, current_date=DATE)
-    assert paths == [str(tmp_path / f'all_{DATE}.xlsx')]
+    folder = tmp_path / 'nested' / 'result'
+    paths = _writer(folder).write([output], sources, current_date=DATE)
+    assert paths == [str(folder / f'all_{DATE}.xlsx')]
     book = openpyxl.load_workbook(paths[0])
     try:
         assert book.sheetnames == ['Шины', 'Тестовая модель']

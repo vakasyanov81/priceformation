@@ -84,9 +84,11 @@ def test_sheet_name_allows_excel_maximum_length() -> None:
     'pattern',
     [
         '../x.xlsx',
+        'price..xlsx',
         '/x.xlsx',
         'a\\b.xlsx',
         'CON.xlsx',
+        'CON.backup.xlsx',
         'lpt1.xlsx',
         'price.xls',
         'a.xlsx ',
@@ -101,6 +103,12 @@ def test_sheet_name_allows_excel_maximum_length() -> None:
 def test_invalid_file_name(pattern: str) -> None:
     with pytest.raises(ConfigValidationError, match='file_name'):
         output_file_name(pattern, '2026-11-12', 'example')
+
+
+def test_invalid_file_name_includes_template_location() -> None:
+    with pytest.raises(ConfigValidationError) as error:
+        output_file_name('{other}.xlsx', '2026-11-12', 'Шаблон example')
+    assert str(error.value).startswith('Шаблон example → file_name:')
 
 
 def test_file_date_substitution() -> None:
@@ -163,6 +171,12 @@ def test_workbook_sheets_and_jsonl_paths_are_independent() -> None:
         validate_outputs([invalid], {TIRES}, schemas=SCHEMAS)
 
 
+def test_blank_template_identifier_rejected() -> None:
+    output = TemplateOutput(' ', OutputMode.SEPARATE_FILES, (_group(),))
+    with pytest.raises(ConfigValidationError, match='пустое описание'):
+        validate_outputs([output], {TIRES})
+
+
 @pytest.mark.parametrize(
     'output',
     [
@@ -179,8 +193,23 @@ def test_invalid_structure(output: TemplateOutput) -> None:
 
 
 def test_repeated_template_identifier_rejected() -> None:
-    with pytest.raises(ConfigValidationError, match='template_id'):
+    with pytest.raises(ConfigValidationError) as error:
         validate_outputs([_output(), _output()], {TIRES})
+    assert str(error.value) == 'Повтор template_id в плане записи'
+
+
+def test_path_collision_names_group_owner() -> None:
+    batteries = _group(BATTERIES, columns=[{'Имя': {'field': 'label'}}])
+    with pytest.raises(ConfigValidationError) as error:
+        validate_outputs([_output(_group(), batteries)], {TIRES, BATTERIES}, schemas=SCHEMAS)
+    assert str(error.value).startswith("Шаблон example → batteries → file_name: путь 'price_")
+    assert ".xlsx' уже занят: Шаблон example → tire_and_disk" in str(error.value)
+
+
+def test_invalid_sheet_name_includes_template_location() -> None:
+    with pytest.raises(ConfigValidationError) as error:
+        validate_outputs([_output(_group(sheet_name='a/b'))], {TIRES})
+    assert str(error.value).startswith('Шаблон example → tire_and_disk → sheet_name:')
 
 
 def test_no_selection_has_no_path_collisions() -> None:
@@ -190,8 +219,9 @@ def test_no_selection_has_no_path_collisions() -> None:
 
 
 def test_unselected_group_filename_is_still_validated() -> None:
-    with pytest.raises(ConfigValidationError, match='file_name'):
+    with pytest.raises(ConfigValidationError) as error:
         validate_outputs([_output(_group(file_name='../price.xlsx'))], set())
+    assert str(error.value).startswith('Шаблон example → tire_and_disk → file_name:')
 
 
 def test_control_character_outside_ascii_is_rejected() -> None:

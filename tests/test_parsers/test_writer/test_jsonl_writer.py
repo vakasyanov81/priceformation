@@ -3,11 +3,17 @@
 import datetime
 import json
 import re
+import tempfile
 from pathlib import Path
 from typing import Any, ClassVar
+from unittest.mock import patch
 
+import pytest
+
+from domain.exceptions import ConfigValidationError
 from domain.row_item.row_item import RowItem
-from parsers.writer.jsonl_meta import RESULT_META_FILE
+from parsers.writer.jsonl_meta import RESULT_META_FILE, check_existing
+from parsers.writer.jsonl_schema import valid_name
 from parsers.writer.jsonl_writer import write_template_jsonl
 from parsers.writer.templates.iwrite_template import IWriteTemplate, WriteColumns
 from parsers.writer.templates.tmpl.for_drom import ForDrom
@@ -336,6 +342,27 @@ def test_repeated_title_is_not_coded_when_title_is_last(tmp_path: Path) -> None:
     assert first[_meta_key(meta, 'Номенклатура')] == _TITLE
     assert first[_meta_key(meta, 'Сезон')] == '@1'
     assert _load_values(tmp_path) == {'@1': 'Зимняя'}
+
+
+def test_jsonl_stages_replacement_on_result_filesystem(tmp_path: Path) -> None:
+    """Временные файлы атомарной замены создаются в том же каталоге, что и результат."""
+    with patch('parsers.writer.jsonl_publish.TemporaryDirectory', wraps=tempfile.TemporaryDirectory) as staging:
+        write_template_jsonl(write_data, FixtureTemplate, str(tmp_path))
+    staging.assert_called_once_with(dir=tmp_path)
+
+
+@pytest.mark.parametrize('name', ['../price.jsonl', 'folder/../price.jsonl', 'folder\\price.jsonl'])
+def test_jsonl_rejects_parent_and_windows_paths(name: str) -> None:
+    assert valid_name(name) is False
+
+
+def test_jsonl_incompatible_schema_error_names_file(tmp_path: Path) -> None:
+    previous = {'price.jsonl': {'template_id': 'old', 'product_group': 'tire_and_disk', 'schema_version': 1}}
+    planned = {'price.jsonl': {'template_id': 'new', 'product_group': 'tire_and_disk', 'schema_version': 1}}
+    with pytest.raises(ConfigValidationError) as error:
+        check_existing(tmp_path, previous, planned)
+    expected_path = tmp_path / 'price.jsonl'
+    assert str(error.value).startswith(f'{expected_path}:')
 
 
 def test_jsonl_meta_keeps_cyrillic_literal(tmp_path: Path) -> None:

@@ -18,6 +18,7 @@ class FakeXlwtDriver(IXlsDriver):
         self.sheet_name: str | None = None
         self.width: dict[int, int] = {}
         self.head: list[str] = []
+        self._head_row = 0
         self.body: dict[str, Any] = {}
         self.cell_colors: dict[str, str] = {}
         self.file_name: str | None = None
@@ -30,6 +31,7 @@ class FakeXlwtDriver(IXlsDriver):
     def write_head(self, names: list[str], row: int = 0) -> None:
         """write head"""
         self.head = names
+        self._head_row = row
 
     def write(
         self,

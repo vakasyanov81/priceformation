@@ -163,6 +163,29 @@ def test_battery_template_writes_prices_and_stock(tmp_path: Path) -> None:
     workbook.close()
 
 
+def test_drom_battery_defaults_format_and_empty_stock_filter(tmp_path: Path) -> None:
+    """Дром получает доступные АКБ с фиксированными наличием, состоянием и текстовой ценой."""
+    available = BatteryItem.from_fields({'title': 'Доступен', 'rest_count': 1, 'price_markup': '5000'})
+    without_stock = BatteryItem.from_fields({'title': 'Нет остатка', 'rest_count': None})
+    source = BatteryOutputSource(BatteryResult((available, without_stock)))
+    template = group_template_output(ForDrom)
+    paths = group_writer(tmp_path).write(
+        [replace(template, groups=(template.groups[1],))],
+        {ProductGroup.BATTERIES: source},
+        selected={ProductGroup.BATTERIES},
+    )
+    workbook = load_workbook(paths[0])
+    sheet = workbook['Аккумуляторы']
+    header, cells = list(sheet.values)
+    row = dict(zip(header, cells, strict=True))
+    assert row['Номенклатура'] == 'Доступен'
+    assert row['Цена'] == '5000'
+    assert sheet['D2'].number_format == '@'
+    assert row['Наличие'] == 'В наличии'
+    assert row['Состояние'] == 'Новое'
+    workbook.close()
+
+
 @pytest.mark.parametrize(
     'field, title, characteristic',
     [

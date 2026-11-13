@@ -22,6 +22,8 @@ from app.parse_report_build import (
     warnings_from_result,
 )
 from app.parse_report_groups import groups_from_result
+from domain.battery.item import BatteryItem
+from domain.battery.result import BatteryResult
 from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
@@ -130,6 +132,18 @@ def test_error_payload_stable_keys() -> None:
         'suppliers': {},
         'disabled_suppliers': {},
         'error': {'kind': 'RuntimeError', 'message': 'boom'},
+    }
+
+
+def test_error_payload_preserves_selected_groups() -> None:
+    """Ошибка после выбора групп сохраняет их пустые позиции и полную нулевую статистику."""
+    payload = error_payload('parse', 'RuntimeError', 'boom', groups=('tire_and_disk', 'batteries'))
+    assert payload['groups'] == {
+        group: {
+            'positions': [],
+            'stats': {'items': 0, 'priced_items': 0, 'doubles': 0, 'black_list_skips': 0},
+        }
+        for group in ('tire_and_disk', 'batteries')
     }
 
 
@@ -328,6 +342,16 @@ def test_report_from_result_subset_rows() -> None:
     assert len(report['groups']['tire_and_disk']['positions']) == 1
     assert report['stats']['items'] == 2
     assert report['files'] == [_RESULT_D]
+
+
+def test_report_rows_limit_only_tire_positions() -> None:
+    """Выбор строк дублей не включает позиции других товарных групп в отчёт."""
+    parsed = _result_with_rows([_priced_row()])
+    parsed.add_package(BatteryResult((BatteryItem.from_fields({'title': 'АКБ'}),)))
+    selected_rows = [_priced_row()]
+    report = report_from_result('doubles', parsed, [_RESULT_D], 0.5, rows=selected_rows, all_result=True)
+    assert report['groups']['tire_and_disk']['positions']
+    assert report['groups']['batteries']['positions'] == []
 
 
 def test_report_stats_only() -> None:
