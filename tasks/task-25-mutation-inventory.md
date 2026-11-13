@@ -192,6 +192,33 @@ XLSX после указанной последовательности и чи�
 Это прямые целевые проверки, а не новый полный отчёт mutmut.
 Все девять команд AGENTS.md завершились с exit 0: 4170 тестов, покрытие 99,46 %.
 
+## Продолжение индивидуальной классификации: план записи и структура шаблонов
+
+Проверка 2026-11-14 выполнена на чистом дереве `e59df5b`. Завершены все
+12 записей `output_plan`, `output_structure` и `output_validation`:
+**8 killed на существующих тестах и 4 эквивалента** в контракте публичного
+`prepare_output_plan`. Всего завершены **325 из 894**, остаются **569**:
+567 без классификации и две с незавершённым разбором (`base_finder._search`
+и `_update_width`). Все девять timeout разобраны ранее.
+
+- R20: каждый из 12 исторических diff отдельно применён во временной копии
+  `src/`, `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc`.
+  Проверено единственное точное вхождение удаляемого блока с полным контекстом;
+  после каждого запуска исходный файл восстановлен. База: **259 passed**;
+  восемь мутаций — exit 1 с конкретным провалом, четыре — 259 passed, exit 0.
+  Команда (repo — корень исходного репозитория, copy — временная копия):
+  `PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_writer"`.
+
+Эквивалентность четырёх мутаций `_place_sheets` основана на предварительной
+проверке имён в `validate_outputs → register_paths`, а не только на survived:
+пустые/неверные имена отклонены до построения плана, where используется только
+в ошибках. Приватный вызов без валидации вне рассмотренного контракта.
+Остальные изменения обнаруживают проверки режима книги, явного выбора групп,
+пустого template_id и контекста диагностик. Код и тесты не менялись.
+Исторические статусы сохранены; это не новый полный отчёт mutmut.
+
+Все девять команд AGENTS.md завершились с exit 0: 4170 тестов, покрытие 99,46 %.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -14172,6 +14199,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_plan.x__place_sheets__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент в контракте публичного prepare_output_plan: аргумент where используется output_file_name только в ошибках. До _place_sheets validate_outputs → register_paths проверяет то же имя с той же датой. Настройки GroupOutput/TemplateOutput frozen, поэтому при построении книги имя остаётся допустимым и where не наблюдается. Прямой вызов приватного _place_sheets с невалидированным шаблоном вне этого контракта. R20: 259 passed, exit 0; основание эквивалентности — предварительная валидация, а не один результат тестов.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
 ```diff
@@ -14189,6 +14218,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.output_plan.x__place_sheets__mutmut_11`
+
+Классификация 2026-11-14: Эквивалент в контракте публичного prepare_output_plan: ветка fallback имени в _place_sheets недостижима. Для workbook_sheets validate_structure требует file_name не None, затем register_paths отклоняет пустую строку через output_file_name; для separate_files те же проверки выполняются для каждой группы. До построения книги доходят только непустые имена; frozen-настройки сохраняют их. Замена пустого fallback на XXXX не влияет на результат. R20: 259 passed, exit 0; прямой приватный вызов без валидации не включён в контракт.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 93.
 
@@ -14208,6 +14239,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_plan.x__place_sheets__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_group_sources_have_independent_settings[workbook_sheets-1]` (exit 1). База: 259 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
 ```diff
@@ -14225,6 +14258,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.output_plan.x__place_sheets__mutmut_28`
+
+Классификация 2026-11-14: Эквивалент в контракте публичного prepare_output_plan: аргумент where используется output_file_name только в ошибках. До _place_sheets validate_outputs → register_paths проверяет то же имя с той же датой. Настройки GroupOutput/TemplateOutput frozen, поэтому при построении книги имя остаётся допустимым и where не наблюдается. Прямой вызов приватного _place_sheets с невалидированным шаблоном вне этого контракта. R20: 259 passed, exit 0; основание эквивалентности — предварительная валидация, а не один результат тестов.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -14244,6 +14279,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_plan.x__place_sheets__mutmut_33`
 
+Классификация 2026-11-14: Эквивалент в контракте публичного prepare_output_plan: ветка fallback имени в _place_sheets недостижима. Для workbook_sheets validate_structure требует file_name не None, затем register_paths отклоняет пустую строку через output_file_name; для separate_files те же проверки выполняются для каждой группы. До построения книги доходят только непустые имена; frozen-настройки сохраняют их. Замена пустого fallback на XXXX не влияет на результат. R20: 259 passed, exit 0; прямой приватный вызов без валидации не включён в контракт.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 93.
 
 ```diff
@@ -14262,6 +14299,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_plan.x_prepare_output_plan__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_explicit_selection_is_validated_before_preparing_positions` (exit 1). База: 259 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 99.
 
 ```diff
@@ -14279,6 +14318,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.output_plan.x_prepare_output_plan__mutmut_20`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_explicit_selection_is_validated_before_preparing_positions` (exit 1). База: 259 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 99.
 
@@ -14301,6 +14342,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_structure.x__validate_sheets__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_invalid_sheet_name_includes_template_location` (exit 1). База: 259 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 116.
 
 ```diff
@@ -14318,6 +14361,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.output_structure.x_validate_structure__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_blank_template_identifier_rejected` (exit 1). База: 259 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 121.
 
@@ -14337,6 +14382,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.output_structure.x_validate_structure__mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_invalid_sheet_name_includes_template_location` (exit 1). База: 259 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 121.
 
 ```diff
@@ -14353,6 +14400,8 @@ XLSX после указанной последовательности и чи�
 ## src/parsers/writer/output_validation.py
 
 ### `parsers.writer.output_validation.x_validate_outputs__mutmut_11`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_repeated_template_identifier_rejected` (exit 1). База: 259 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 122.
 
@@ -14371,6 +14420,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.output_validation.x_validate_outputs__mutmut_12`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён с единственным совпадением полного контекста во временной копии. R20: killed на существующем тесте `test_repeated_template_identifier_rejected` (exit 1). База: 259 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 122.
 
