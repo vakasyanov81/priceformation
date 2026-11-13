@@ -107,7 +107,10 @@ def test_empty_parse_creates_no_files(capsys: pytest.CaptureFixture[str]) -> Non
 
 
 @pytest.mark.parametrize('during_write', [False, True])
-def test_known_selection_on_failure(during_write: bool, capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize('error_type', [ValueError, KeyboardInterrupt])
+def test_known_selection_on_failure(
+    during_write: bool, error_type: type[BaseException], capsys: pytest.CaptureFixture[str]
+) -> None:
     """Ошибка чтения или записи не публикует частичные позиции и пути."""
     parsed = ParseResult()
     parsed.add_package(TireAndDiskResult((RowItem({'title': 'частичный результат'}),)))
@@ -115,13 +118,13 @@ def test_known_selection_on_failure(during_write: bool, capsys: pytest.CaptureFi
     def parse_all(*, selection: ParseSelection) -> ParseResult:
         selection.groups = (ProductGroup.TIRE_AND_DISK,)
         if not during_write:
-            raise ValueError('ошибка чтения')
+            raise error_type('ошибка чтения')
         return parsed
 
     orchestrator = MagicMock()
     orchestrator.parse_all.side_effect = parse_all
     reporter = MagicMock()
-    reporter.write_result.side_effect = ValueError('ошибка записи')
+    reporter.write_result.side_effect = error_type('ошибка записи')
     with patch(
         'app.run_machine.ServiceProvider.resolve',
         side_effect={
@@ -136,3 +139,22 @@ def test_known_selection_on_failure(during_write: bool, capsys: pytest.CaptureFi
     assert report['files'] == []
     assert report['groups']['tire_and_disk']['positions'] == []
     assert report['stats']['items'] == 0
+
+
+def test_doubles_failure_preserves_returned_groups(capsys: pytest.CaptureFixture[str]) -> None:
+    """После отчёта дублей ошибка сериализации сохраняет группы результата сервиса."""
+    parsed = ParseResult()
+    parsed.add_package(TireAndDiskResult())
+    doubles = MagicMock()
+    doubles.make_report.return_value = MagicMock(parse_result=parsed)
+    with (
+        patch('app.run_machine.ServiceProvider.resolve', return_value=doubles),
+        patch('app.run_machine.report_from_result', side_effect=KeyboardInterrupt),
+    ):
+        assert machine_json('doubles') == 1
+    report = json.loads(capsys.readouterr().out)
+    assert set(report['groups']) == {'tire_and_disk'}
+    assert report['groups']['tire_and_disk']['positions'] == []
+    selection = doubles.make_report.call_args.kwargs['selection']
+    assert isinstance(selection, ParseSelection)
+    assert selection.groups == tuple(parsed.groups)

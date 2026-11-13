@@ -253,7 +253,9 @@ def test_json_error_outside_orchestrator_gets_traceback_in_log(
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload['error']['message'] == 'mail down'
-    assert Path(paths.err_file).read_text(encoding='utf-8').count(_TRACEBACK) == 1
+    error_log = Path(paths.err_file).read_text(encoding='utf-8')
+    assert error_log.count(_TRACEBACK) == 1
+    assert f'Команда {FETCH_MAIL_PRICES} завершилась ошибкой // mail down' in error_log
 
 
 def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:

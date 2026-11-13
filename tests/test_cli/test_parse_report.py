@@ -382,3 +382,8 @@ def test_report_splits_disabled_suppliers() -> None:
         report = report_from_result('parse', parsed, [_RESULT_A], 0)
     assert report['suppliers'] == {'3': 'Пионер'}
     assert report['disabled_suppliers'] == {'7': 'STK'}
+
+
+def test_result_elapsed_rounds_to_hundredths() -> None:
+    """Дробное время готового результата округляется до сотых, как нулевая статистика."""
+    assert stats_from_result(ParseResult(), _ELAPSED)['elapsed_seconds'] == _ROUNDED
