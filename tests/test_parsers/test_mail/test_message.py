@@ -112,9 +112,10 @@ def test_attachment_content_missing_payload() -> None:
     assert attachment_content(Message()) == b''
 
 
-def test_message_body_extracts_bytes() -> None:
+@pytest.mark.parametrize('body', [b'body', bytearray(b'body')])
+def test_message_body_extracts_bytes(body: bytes | bytearray) -> None:
     """Тело письма берётся из второго элемента пары FETCH."""
-    assert message_body((b'header', b'body')) == b'body'
+    assert message_body((b'header', body)) == b'body'
 
 
 def test_message_body_rejects_non_tuple() -> None:
@@ -122,9 +123,10 @@ def test_message_body_rejects_non_tuple() -> None:
     assert message_body(b'garbage') is None
 
 
-def test_message_body_rejects_short_tuple() -> None:
+@pytest.mark.parametrize('entry', [(), (b'header',)])
+def test_message_body_rejects_short_tuple(entry: tuple[bytes, ...]) -> None:
     """Слишком короткая пара не содержит тела письма."""
-    assert message_body((b'header',)) is None
+    assert message_body(entry) is None
 
 
 def test_message_body_rejects_non_bytes() -> None:

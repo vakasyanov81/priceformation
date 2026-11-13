@@ -54,7 +54,7 @@ def test_cheapest_price_shared_by_several_rows_sums_their_rests() -> None:
     """Если наименьшую цену дают несколько складов, их остатки складываются, более дорогие — нет."""
     rows = [
         _row('A', 5000, 2),
-        _row('A', 5000, 3),
+        _row('A', 5000, 3, warehouse_name='ОХ г. Новосибирск Чехова'),
         _row('A', 6000, 9),
     ]
 
@@ -62,6 +62,7 @@ def test_cheapest_price_shared_by_several_rows_sums_their_rests() -> None:
 
     assert len(merged) == 1
     assert merged[0].stock.rest_count == 5
+    assert merged[0].stock.warehouse_name == _NSK['warehouse_name']
 
 
 def test_rows_without_group_are_kept_as_is() -> None:

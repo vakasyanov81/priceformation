@@ -83,6 +83,27 @@ def test_reference_layering_and_unknown_tokens_are_kept() -> None:
     assert _titles([reference, other]) == {'205/65R15 Cordiant Road Runner 94H Extra XL 8PR TT RunFlat'}
 
 
+def test_unknown_tokens_from_other_titles_are_not_added() -> None:
+    """Незнакомые слова сохраняются только у эталона, а не собираются со всей группы."""
+    reference = _tire('Форточки', '205/65R15 Cordiant Road Runner 94H Extra', 'Road Runner')
+    other = _tire('Мим', '205/65R15 Cordiant Road Runner 94H Unknown', 'Road Runner')
+
+    unify_group_title([reference, other], _PRIORITY)
+
+    assert _titles([reference, other]) == {'205/65R15 Cordiant Road Runner 94H Extra'}
+
+
+def test_only_one_axis_is_added_to_group_title() -> None:
+    """Оси остальных позиций не накапливаются: эталон получает только первую найденную."""
+    reference = _tire('Форточки', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
+    steering = _tire('Запаска', '205/65R15 Cordiant Road Runner 94H Рулевая', 'Road Runner')
+    driving = _tire('Мим', '205/65R15 Cordiant Road Runner 94H Ведущая', 'Road Runner')
+
+    unify_group_title([reference, steering, driving], _PRIORITY)
+
+    assert _titles([reference, steering, driving]) == {'205/65R15 Cordiant Road Runner 94H Рулевая'}
+
+
 def test_title_without_load_index_is_taken_as_is() -> None:
     """Нет нагрузки+скорости в названии эталона — признаки не добавляются, берётся название эталона."""
     reference = _tire('Форточки', '205/65R15 Cordiant Road Runner', 'Road Runner', index_load='', index_velocity='')

@@ -4,6 +4,8 @@ import logging
 from types import SimpleNamespace
 from typing import Any, cast
 
+import pytest
+
 from domain.product_groups import ProductGroup
 from parsers.base_parser.base_parser import BaseParser
 from services.parse_logging import parser_messages, skips_messages
@@ -49,6 +51,20 @@ def test_parser_messages_homoglyphs_then_titles() -> None:
     assert [level for level, _ in messages] == [logging.INFO, logging.WARNING]
     assert 'исправлены: 2' in messages[0][1]
     assert 'смесь алфавитов): 1' in messages[0][1]
+
+
+@pytest.mark.parametrize(
+    ('stats', 'expected'),
+    [
+        ({'homoglyph_fixes': 2}, 'исправлены: 2, не исправлено (смесь алфавитов): 0'),
+        ({'homoglyph_suspects': 3}, 'исправлены: 0, не исправлено (смесь алфавитов): 3'),
+    ],
+)
+def test_parser_messages_homoglyph_counter_is_independent(stats: dict[str, int], expected: str) -> None:
+    messages = parser_messages(_parser(**stats))
+
+    assert len(messages) == 1
+    assert expected in messages[0][1]
 
 
 def test_foreign_group_does_not_receive_tire_diagnostics() -> None:

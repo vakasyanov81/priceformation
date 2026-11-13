@@ -27,8 +27,10 @@ class _Reader:
         self.files = files
         self.tables = tables
         self.raw_calls: list[str] = []
+        self.price_calls: list[Any] = []
 
     def price_files(self, parser_params: Any) -> list[str]:
+        self.price_calls.append(parser_params)
         return self.files
 
     def raw_tables(self, path: str, sheet_indexes: Sequence[int]) -> list[RawTable]:
@@ -114,6 +116,11 @@ def test_shared_sheet_routes_before_mapping_and_counts_unrouted(caplog: pytest.L
     assert routing.read_rows('disks') == [{'title': 'Диск Б'}]
     assert routing.unrouted_rows == 3
     assert reader.raw_calls == ['prices.xlsx']
+    assert [call.supplier.code for call in reader.price_calls] == ['tires', 'disks']
+    assert [(call.start_row, call.file_templates, call.sheet_indexes) for call in reader.price_calls] == [
+        (2, ('*.xlsx',), ()),
+        (2, ('*.xlsx',), ()),
+    ]
     assert 'Поставщик: файл prices.xlsx, лист 1: пропущено строк — 3' in caplog.text
     assert 'не подходят под настройки отбора разделов или товаров' in caplog.text
     assert caplog.records[0].levelno == logging.WARNING
@@ -197,10 +204,21 @@ def test_dynamic_overlap_reports_row_and_all_routes() -> None:
     with pytest.raises(RowRoutingError) as error:
         routing.read_rows('tires')
 
-    message = str(error.value)
-    assert 'строка 4' in message
-    assert 'tires (tire_and_disk)' in message
-    assert 'disks (tire_and_disk)' in message
+    assert str(error.value) == (
+        'Поставщик demo, файл prices.xlsx, лист 0, строка 4: '
+        'неоднозначная маршрутизация — tires (tire_and_disk), disks (tire_and_disk)'
+    )
+
+
+def test_json_unrouted_log_identifies_json_source(caplog: pytest.LogCaptureFixture) -> None:
+    routing = _routing(_section('tires', selector=_selector('kind', 'шина')), reader='json')
+    table = _table(None, _row(1, {'kind': 'другое'}))
+    reader = _Reader(['prices.json'], [table])
+    routing.resolve('tires', reader)
+
+    assert routing.read_rows('tires') == []
+    assert routing.unrouted_rows == 1
+    assert 'Поставщик: файл prices.json, лист JSON: пропущено строк — 1' in caplog.text
 
 
 def test_missing_selected_sheet_is_an_error() -> None:

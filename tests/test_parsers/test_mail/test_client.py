@@ -25,6 +25,22 @@ _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
 _CREDENTIALS = MailCredentials(login='user', password='secret')
 
 
+@pytest.mark.parametrize(
+    ('entry', 'expected'),
+    [
+        (None, None),
+        (b'garbage', None),
+        ((), None),
+        ((b'header',), None),
+        ((b'header', 'body'), None),
+        ((b'header', b'body'), b'body'),
+        ((b'header', bytearray(b'body')), b'body'),
+    ],
+)
+def test_fetch_message_body_boundaries(entry: Any, expected: bytes | None) -> None:
+    assert imap_adapter._message_body(entry) == expected
+
+
 def _profile(**overrides: Any) -> MailProfile:
     base: dict[str, Any] = {
         'sender': 'a@b.ru',

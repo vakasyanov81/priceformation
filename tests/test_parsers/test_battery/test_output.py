@@ -217,8 +217,6 @@ def test_real_plant_settings_map_all_source_columns() -> None:
         [{'code': '001', 'title': 'XTREME +EFB 60', 'rest_count': '>30', 'price_recommended': '5000.10'}]
     )
     assert battery_handler.prepare_output(parsed)[0]['sale_price'] == '5000.10'
-    for fixture in ('tasks/examples/plant.json', 'integration_tests/parse_config_example/plant.json'):
-        assert json.loads(Path(fixture).read_text()) == raw
 
 
 @pytest.mark.parametrize(

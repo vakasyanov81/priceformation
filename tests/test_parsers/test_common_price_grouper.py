@@ -438,14 +438,14 @@ def test_same_group_not_disputed(left_fields: dict[str, str], right_fields: dict
 
 
 def _tire(model: str, width: str = '215', **fields: Any) -> RowItem:
-    return _row(
-        model=model,
-        width=width,
-        type_production='Легковая шина',
-        manufacturer_name='Cordiant',
-        title=f'{width}/55R18 Cordiant {model} 99V',
-        **fields,
-    )
+    payload = {
+        'model': model,
+        'width': width,
+        'type_production': 'Легковая шина',
+        'manufacturer_name': 'Cordiant',
+        'title': f'{width}/55R18 Cordiant {model} 99V',
+    } | fields
+    return _row(**payload)
 
 
 def test_model_with_extra_words_is_double() -> None:
@@ -475,6 +475,24 @@ def test_equally_near_unrelated_models_are_not_merged() -> None:
 def test_merged_models_do_not_cross_other_key_parts() -> None:
     """Слияние моделей работает только внутри одного размера."""
     _assert_split(_tire('Gravity'), _tire('Gravity SUV', width='225'))
+
+
+@pytest.mark.parametrize(
+    'fields',
+    [
+        {'manufacturer_name': 'Nokian'},
+        {'layering': '8PR'},
+    ],
+)
+def test_merged_models_do_not_cross_fields_after_model(fields: dict[str, str]) -> None:
+    """Производитель и слойность идут после модели в ключе и тоже ограничивают слияние."""
+    short = _tire('Gravity')
+    long = _tire('Gravity SUV', price_markup=_PRICE_MID)
+    foreign = _tire('Gravity SUV PS-9', price_markup=_PRICE_HIGH, **fields)
+    CommonPriceGrouper([short, long, foreign]).group_by_params()
+
+    assert short.duplicate.group_by_params == long.duplicate.group_by_params
+    assert foreign.duplicate.group_by_params != long.duplicate.group_by_params
 
 
 def test_doubtful_price_marks_only_far_doubles() -> None:

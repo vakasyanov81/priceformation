@@ -1,6 +1,9 @@
 """tests for model merge by token sets."""
 
+from domain.row_item.row_item import RowItem
+from parsers.common_price.group_key import MODEL_KEY_INDEX
 from parsers.common_price.model import clear_model, model_tokens
+from parsers.common_price.model_keys import keys_with_merged_models
 from parsers.common_price.model_merge import ModelEntry, merge_models
 
 
@@ -49,6 +52,37 @@ def test_unrelated_models_stay_apart() -> None:
 def test_models_without_words_are_skipped() -> None:
     entries = [('', frozenset[str]()), *_entries('x')]
     assert merge_models(entries) == {'x': 'x'}
+
+
+def test_empty_model_key_is_kept_after_merging() -> None:
+    rows = [
+        RowItem({'type_production': 'легковая', 'width': '205', 'diameter': '16'}),
+        RowItem({'type_production': 'легковая', 'width': '205', 'diameter': '16', 'model': 'Gravity'}),
+    ]
+
+    keyed = keys_with_merged_models(rows, {})
+
+    empty_key = keyed[0][0]
+    model_key = keyed[1][0]
+    assert empty_key[MODEL_KEY_INDEX] == ''
+    assert empty_key[:MODEL_KEY_INDEX] + empty_key[MODEL_KEY_INDEX + 1 :] == (
+        model_key[:MODEL_KEY_INDEX] + model_key[MODEL_KEY_INDEX + 1 :]
+    )
+
+
+def test_model_key_tokens_strip_manufacturer_and_brand() -> None:
+    base = {'type_production': 'легковая', 'width': '205', 'diameter': '16'}
+    rows = [
+        RowItem(base | {'model': 'Gravity', 'manufacturer_name': 'Cordiant'}),
+        RowItem(base | {'model': 'Cordiant Gravity SUV', 'manufacturer_name': 'Cordiant'}),
+        RowItem(base | {'model': 'PS-1', 'manufacturer_name': 'Cordiant', 'brand': 'Road Runner'}),
+        RowItem(base | {'model': 'Road Runner PS-1 Extra', 'manufacturer_name': 'Cordiant', 'brand': 'Road Runner'}),
+    ]
+
+    keyed = keys_with_merged_models(rows, {})
+
+    assert keyed[0][0] == keyed[1][0]
+    assert keyed[2][0] == keyed[3][0]
 
 
 def test_transliterated_cyrillic_model_joins_longer_latin_one() -> None:

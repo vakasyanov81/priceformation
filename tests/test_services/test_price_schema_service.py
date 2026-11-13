@@ -8,8 +8,9 @@ from unittest.mock import patch
 import openpyxl
 from log_watch import LoggerWatcher, texts_at
 
+from domain.config_context import set_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.vendor_config.group_models import BatteryConfig, BatterySection
+from parsers.vendor_config.group_models import BatteryConfig, BatterySection, TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from services.price_schema_service import PriceSchemaService
 
@@ -104,6 +105,23 @@ def test_unreadable_file_is_skipped(tmp_path: Path, fake_config_provider: FakeCo
     assert _run(service) == []
 
 
+def test_snapshot_uses_backup_folder_and_excludes_result(
+    tmp_path: Path, fake_config_provider: FakeConfigProvider
+) -> None:
+    price_root = Path(fake_config_provider.price_folder('mim'))
+    price_root.mkdir(parents=True)
+    (price_root / 'price.xlsx').write_bytes(b'price')
+    result_file = Path(fake_config_provider.result_folder()) / 'result.xlsx'
+    result_file.parent.mkdir(parents=True, exist_ok=True)
+    result_file.write_bytes(b'result')
+    backup = tmp_path / 'custom-backup'
+
+    assert PriceSchemaService(backup_folder=backup).snapshot() is True
+
+    assert (backup / 'mim' / 'price.xlsx').read_bytes() == b'price'
+    assert not (backup / 'result' / 'result.xlsx').exists()
+
+
 def test_guard_nested_snapshots_once(tmp_path: Path, fake_config_provider: FakeConfigProvider) -> None:
     """вложенные блоки копируют и проверяют один раз — по внешнему блоку."""
     service = _service(tmp_path)
@@ -174,3 +192,62 @@ def test_schema_checks_declared_battery_sheets(tmp_path: Path, fake_config_provi
     assert 'title' in warnings[0]
     assert 'batteries' in warnings[1]
     assert 'Аккумуляторы' in warnings[1]
+
+
+def test_schema_check_compares_only_sheets_declared_by_section(
+    tmp_path: Path, fake_config_provider: FakeConfigProvider
+) -> None:
+    vendor = VendorConfig.from_dict(_VENDOR, 'mim', 'mim.json')
+    tire_group = vendor.product_groups[0]
+    assert isinstance(tire_group, TireAndDiskConfig)
+    section = replace(tire_group.sections[0], sheet_indexes=(1,))
+    vendor = replace(vendor, product_groups=(replace(tire_group, sections=(section,)),))
+    price = Path(fake_config_provider.price_folder('mim')) / 'price.xlsx'
+
+    def write(second_header: str, first_header: str = 'Артикул') -> None:
+        book = openpyxl.Workbook()
+        first = book.active
+        assert first is not None
+        first.append([first_header, 'Цена'])
+        second = book.create_sheet('Выбранный')
+        second.append([second_header, 'Цена'])
+        book.save(price)
+
+    price.parent.mkdir(parents=True, exist_ok=True)
+    write('Артикул')
+    service = _service(tmp_path)
+    service.snapshot()
+    write('Артикул', first_header='Изменённый')
+
+    with patch('services.price_schema_service.load_vendor_configs', return_value={'mim': vendor}):
+        assert service.check() == []
+        write('Название')
+        warnings = service.check()
+
+    assert len(warnings) == 1
+    assert 'колонка A: заголовок «Артикул» → «Название»' in warnings[0]
+
+
+def test_schema_check_uses_injected_provider_instead_of_global(tmp_path: Path) -> None:
+    global_provider = FakeConfigProvider(tmp_path / 'global')
+    injected = FakeConfigProvider(tmp_path / 'injected')
+    set_config_provider(global_provider)
+    service = PriceSchemaService(backup_folder=tmp_path / 'old', config_provider=injected)
+
+    with patch('services.price_schema_service.load_vendor_configs', return_value={}) as load_configs:
+        assert service.check() == []
+
+    load_configs.assert_called_once_with(injected)
+
+
+def test_schema_check_without_injected_provider_uses_current_global(tmp_path: Path) -> None:
+    initial = FakeConfigProvider(tmp_path / 'initial')
+    current = FakeConfigProvider(tmp_path / 'current')
+    set_config_provider(initial)
+    service = PriceSchemaService(backup_folder=tmp_path / 'old')
+    set_config_provider(current)
+
+    with patch('services.price_schema_service.load_vendor_configs', return_value={}) as load_configs:
+        assert service.check() == []
+
+    load_configs.assert_called_once_with(current)

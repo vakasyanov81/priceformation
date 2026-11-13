@@ -18,6 +18,7 @@ from parsers.base_parser.base_parser_config import (
     ParserParams,
     make_parse_config,
 )
+from parsers.base_parser.routing import VendorRouting
 from parsers.registry import (
     UnknownVendorError,
     all_vendors_from_registry,
@@ -26,8 +27,10 @@ from parsers.registry import (
     vendor_entry_for,
     vendor_markup_policy_for,
 )
+from parsers.vendor_config.group_models import TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.section_models import VendorSection
+from parsers.vendor_config.slot_configs import BehaviorConfig
 
 pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 
@@ -35,10 +38,13 @@ pytestmark = pytest.mark.usefixtures('example_vendors_provider')
 def test_all_vendors_returns_entries() -> None:
     """all_vendors_from_registry возвращает только enabled вендоров."""
     clear_registry()
-    entries = all_vendors_from_registry(get_config_provider())
+    provider = get_config_provider()
+    entries = all_vendors_from_registry(provider)
     assert len(entries) > 0
     for parser_cls, config in entries:
         assert parser_cls is BaseParser
+        assert config.config_provider is provider
+        assert isinstance(config.routing, VendorRouting)
         assert isinstance(config, ParseConfiguration)
         assert config.vendor_section is not None
         assert config.vendor_config is not None
@@ -48,9 +54,12 @@ def test_all_vendors_returns_entries() -> None:
 def test_vendor_entry_for_finds_by_id() -> None:
     """vendor_entry_for находит секцию по id."""
     clear_registry()
-    _, config = vendor_entry_for('2', get_config_provider())
+    provider = get_config_provider()
+    _, config = vendor_entry_for('2', provider)
     assert config.vendor_section.id == '2'
     assert config.vendor_section.name == 'Запаска (диски)'
+    assert config.config_provider is provider
+    assert isinstance(config.routing, VendorRouting)
 
 
 def test_vendor_entry_for_finds_tire_section() -> None:
@@ -100,9 +109,18 @@ def test_make_vendor_entry_attaches_section_and_config() -> None:
         file_templates=('p.xls',),
         columns={0: 'title'},
     )
+    vendor_cfg = VendorConfig(
+        folder=vendor_cfg.folder,
+        code=vendor_cfg.code,
+        name=vendor_cfg.name,
+        product_groups=(TireAndDiskConfig((section,), BehaviorConfig()),),
+    )
 
-    _, config = make_vendor_entry(section, vendor_cfg, get_config_provider())
+    provider = get_config_provider()
+    _, config = make_vendor_entry(section, vendor_cfg, provider)
 
+    assert config.config_provider is provider
+    assert isinstance(config.routing, VendorRouting)
     assert config.vendor_section is section
     assert config.vendor_config is vendor_cfg
     assert config.product_group is ProductGroup.TIRE_AND_DISK

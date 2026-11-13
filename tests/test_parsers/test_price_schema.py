@@ -33,6 +33,48 @@ def _changes(old: FileHead, new: FileHead, *, start_row: int = 3) -> list[str]:
     return compare_schemas(_schema(old, start_row), _schema(new, start_row), _COLUMNS)
 
 
+def test_only_selected_sheets_are_compared() -> None:
+    old = FileHead(
+        sheets=(
+            SheetHead('Первый', (('Старый', 'Цена', 'Название'),)),
+            SheetHead('Второй', (('Артикул', 'Цена', 'Название'),)),
+        )
+    )
+    new = FileHead(
+        sheets=(
+            SheetHead('Первый', (('Новый', 'Цена', 'Название'),)),
+            SheetHead('Второй', (('Артикул', 'Цена', 'Название'),)),
+        )
+    )
+    selected = (1,)
+
+    before = build_schema(old, start_row=2, sheet_indexes=selected, columns=_COLUMNS)
+    after = build_schema(new, start_row=2, sheet_indexes=selected, columns=_COLUMNS)
+
+    assert set(before.sheets) == {1}
+    assert compare_schemas(before, after, _COLUMNS) == []
+
+
+def test_sheet_index_equal_to_sheet_count_is_ignored() -> None:
+    head = FileHead(sheets=(SheetHead('Первый', ()), SheetHead('Второй', ())))
+
+    schema = build_schema(head, start_row=2, sheet_indexes=(2,), columns=_COLUMNS)
+
+    assert schema.sheets == {}
+
+
+def test_first_data_row_has_no_header_rows() -> None:
+    schema = _schema(_head(('Артикул', 'Цена', 'Название')), start_row=1)
+
+    assert schema.sheets[0].headers == {}
+
+
+def test_short_header_row_has_no_column_cell() -> None:
+    schema = _schema(_head(('Артикул',)), start_row=2)
+
+    assert schema.sheets[0].headers == {0: 'Артикул'}
+
+
 def test_same_schema_no_changes() -> None:
     """одинаковые шапки — расхождений нет, даже если заголовок над шапкой (дата) другой."""
     old = _head(('Прайс на 1 января', None, None), ('Артикул', 'Цена', 'Название'))

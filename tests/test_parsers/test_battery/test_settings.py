@@ -42,6 +42,34 @@ def _section(config: VendorConfig) -> BatterySection:
     return group.sections[0]
 
 
+def test_battery_section_reads_public_routing_fields() -> None:
+    config = _config(
+        {
+            'sections': [
+                {
+                    'id': 'second',
+                    'name': 'Аккумуляторы второй лист',
+                    'sheet_info': 'АКБ',
+                    'sheet_indexes': [1],
+                }
+            ]
+        }
+    )
+
+    section = _section(config)
+
+    assert section.name == 'Аккумуляторы второй лист'
+    assert section.sheet_info == 'АКБ'
+    assert section.sheet_indexes == (1,)
+
+
+def test_battery_section_invalid_public_field_has_full_path() -> None:
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'name': 42}]})
+
+    assert 'plant.json → product_groups[0] → sections[0] → name' in str(caught.value)
+
+
 COLUMN_EXAMPLES = [('xls', {'0': 'capacity_ah'}), ('json', ['capacity_ah'])]
 
 
@@ -50,6 +78,7 @@ def test_battery_columns_use_own_registry(reader: str, columns: object) -> None:
     section = _section(_config({'columns': columns}, reader=reader))
     expected_key = 0 if reader == 'xls' else 'capacity_ah'
     assert section.columns == {expected_key: 'capacity_ah'}
+    assert section.sheet_info == ''
     assert section.processing.min_rest == 1
 
 

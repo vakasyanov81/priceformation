@@ -268,3 +268,24 @@ def test_fetch_prices_passes_injected_provider_to_mail_config(monkeypatch: pytes
         mail_service.MailService(injected).fetch_prices()
 
     assert seen == [injected]
+
+
+def test_fetch_prices_uses_injected_provider_for_vendor_filtering(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    global_provider = FakeConfigProvider(tmp_path / 'global')
+    injected = FakeConfigProvider(tmp_path / 'injected')
+    monkeypatch.setattr('services.mail_service.get_config_provider', lambda: global_provider)
+    config = MailConfig(account=_ACCOUNT, profiles={'pioner': _profile('a@b.ru')})
+    wired = _wire(monkeypatch, config, _FOUND)
+    vendor = MagicMock(spec=VendorConfig, enabled=False, source='xlsx')
+
+    def configs_for(provider: FakeConfigProvider) -> dict[str, VendorConfig]:
+        assert provider is injected
+        return {'pioner': vendor}
+
+    monkeypatch.setattr('services.vendor_activity.load_vendor_configs', configs_for)
+
+    assert not mail_service.MailService(injected).fetch_prices()
+    wired.find.assert_not_called()

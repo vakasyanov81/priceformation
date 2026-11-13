@@ -76,6 +76,10 @@ def test_invalid_sheet_name(name: str) -> None:
         validate_sheet_name(name, 'example')
 
 
+def test_sheet_name_allows_excel_maximum_length() -> None:
+    validate_sheet_name('a' * 31, 'example')
+
+
 @pytest.mark.parametrize(
     'pattern',
     [
