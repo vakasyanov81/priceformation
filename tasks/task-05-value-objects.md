@@ -158,7 +158,7 @@ class RowItem:
 | Ф3 | `RowItem` на композиции VO + `_errors` снаружи + `extra`; слой приведения собирает VO и пишет ошибки по образцу `json_fields.py`; на все 53 поля — совместимые properties (`row.width` → `self.tire.width`). Ноль изменений в вызывающем коде | `6231901` | `src/parsers/row_item/row_item.py` |
 | Ф4 | Механический переезд вызовов `row.X` → `row.<vo>.X` по пакетам; хедж — скрипт переименования + `uv run pytest` после каждого пакета. Фактически пришлось править сигнатуры на `X | None` и возвраты `TireDimensions | None`/`DiskParameters | None` из finders — иначе `mypy` видел бы `None` вместо VO | `b78d11a` | ~32 модуля, 184 чтения, 28 записей |
 | Ф5 | Снос совместимых properties и `_key_value_store`; `to_dict()` из реестра + `extra`; `parse_errors` отдаёт копию; удаление мёртвого `from_dict` | `852fcdf` | `src/parsers/row_item/row_item.py`, `tests/` |
-| Ф6 | Полный CI-набор + прогон `mutmut` по новому пакету: выжило 5 мутантов в `row_item.py`, все закрыты (см. `MUTATION_TESTS.md`); новых `do_not_mutate_patterns` не понадобилось | — | `field_registry.py`, `row_item.py`, тесты |
+| Ф6 | Полный CI-набор + прогон `mutmut` по новому пакету: выжило 5 мутантов в `row_item.py`, все закрыты; новых `do_not_mutate_patterns` не понадобилось | — | `field_registry.py`, `row_item.py`, тесты |
 
 Динамический доступ по имени строки сохраняется: `base_finder.correction_field`
 (`base_finder.py:102`) делает `getattr`/`setattr` по `field_name`. Вместо
