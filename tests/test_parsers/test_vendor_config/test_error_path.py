@@ -38,13 +38,28 @@ def _raw(**group: Any) -> dict[str, Any]:
     }
 
 
+def _json_columns_raw() -> dict[str, Any]:
+    group = {**_raw()['product_groups'][0], 'columns': [42]}
+    return {**_raw(), 'reader': 'json', 'product_groups': [group]}
+
+
 # (конфиг, фрагмент пути, который обязан быть в сообщении)
 PATH_CASES = [
     # корень и ключи верхнего уровня
     ({**_raw(), 'reader': 5}, f'{WHERE} → reader'),
+    ({**_raw(), 'code': 5}, f'{WHERE} → code'),
+    ({**_raw(), 'source': 5}, f'{WHERE} → source'),
     ({**_raw(), 'name': 5}, f'{WHERE} → name'),
     (_raw(start_row='x'), f'{GROUP_PATH} → start_row'),
     (_raw(file_templates='x'), f'{GROUP_PATH} → file_templates'),
+    (_raw(id='unknown'), f'{GROUP_PATH}.id'),
+    (_raw(sections=[{'id': 'mim', 'row_selector': []}]), f'{GROUP_PATH} → sections[0] → row_selector'),
+    (
+        _raw(sections=[{'id': 'mim', 'row_selector': {'column': 42, 'values': ['x']}}]),
+        f'{GROUP_PATH} → sections[0] → row_selector → column',
+    ),
+    (_raw(section_selector=[]), f'{GROUP_PATH} → section_selector'),
+    (_json_columns_raw(), GROUP_PATH),
     (_raw(columns='x'), GROUP_PATH),
     (_raw(columns={'brand': 'title'}), f'{GROUP_PATH} → brand'),
     (_raw(columns={'9': 'nope'}), f'{GROUP_PATH} → columns[9]'),
@@ -103,6 +118,10 @@ PATH_CASES = [
     (_raw(behavior={'min_rest': 'x'}), f'{GROUP_PATH} → behavior → min_rest'),
     (_raw(behavior={'rest': 5}), f'{GROUP_PATH} → behavior → rest'),
     (_raw(behavior={'pipeline': 'x'}), f'{GROUP_PATH} → behavior → pipeline'),
+    (_raw(behavior={'warehouse_cities': 42}), f'{GROUP_PATH} → behavior → warehouse_cities'),
+    (_raw(behavior={'manufacturer_column_first': 'x'}), f'{GROUP_PATH} → behavior'),
+    (_raw(behavior={'order_from_warehouse_name': 'x'}), f'{GROUP_PATH} → behavior'),
+    (_raw(behavior={'api_types': 'x'}), f'{GROUP_PATH} → behavior'),
     *[
         (_raw(behavior={key: 'x'}), f'{GROUP_PATH} → behavior: «{key}»')
         for key in (
@@ -143,12 +162,14 @@ PATH_CASES = [
         f'{GROUP_PATH} → category → size_fields → Спецшина → season',
     ),
     (_raw(category={'calculate_type': 'x'}), f'{GROUP_PATH} → category'),
+    (_raw(category={'light_truck_by_diameter': 'x'}), f'{GROUP_PATH} → category'),
     # title
     (_raw(title='x'), f'{GROUP_PATH} → title'),
     (_raw(title={'strategy': 5}), f'{GROUP_PATH} → title → strategy'),
     (_raw(title={'variant': 5}), f'{GROUP_PATH} → title → variant'),
     (_raw(title={'aliases': 'x'}), f'{GROUP_PATH} → title: «aliases»'),
     (_raw(title={'fallback_brand': 5}), f'{GROUP_PATH} → title → fallback_brand'),
+    (_raw(title={'camera_by_kind': 'x'}), f'{GROUP_PATH} → title'),
     # маркеры title: путь доходит до маркера и поля
     (_raw(title={'markers': 'x'}), f'{GROUP_PATH} → title → markers'),
     (_raw(title={'markers': {'шип': 'x'}}), f'{GROUP_PATH} → title → markers → шип'),

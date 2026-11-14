@@ -591,6 +591,33 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: остальные настройки поставщиков
+
+Проверка 2026-11-14 завершает 53 записи `vendor_config`, кроме ранее разобранных
+`group_loading` и `section_models`: **43 killed** (25 после первой части
+усиления и 18 после дополнительных случаев) и **10 эквивалентов** в явно
+ограниченных цепочках. Всего завершены **600 из 894**, остаются **294**:
+290 без классификации и четыре ранее открытых разбора. Все девять timeout разобраны.
+
+- R46: каждый исторический diff отдельно до дополнительных случаев;
+  база 383 passed, 25 killed, 28 survived.
+- R47: тот же набор после проверки оставшихся путей, подсказок и дефолта;
+  база 395 passed, 43 killed, 10 survived (395 passed, exit 0).
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному совпадению полного
+удаляемого блока. Исходник восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_vendor_config" "$copy/tests/test_parsers/test_battery/test_settings.py"`.
+Номера новой генерации mutmut не использовались.
+
+Закреплены источники ошибок корня, слотов, JSON-колонок списком и селекторов,
+читаемый файл активации, полные списки допустимых групп/стратегий. Дефолт 2
+в промежуточной validate_reading_settings не влияет на модель: результат вызова
+отбрасывается, а VendorSection повторно читает значение с дефолтом 1.
+Остальные эквиваленты ограничены предварительной валидацией того же объекта
+или идентификатора; изменённый контекст повторной ошибки недостижим.
+Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -12325,6 +12352,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.activation.x_load_activation__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_root_error_names_file. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 75.
 
 ```diff
@@ -12340,6 +12369,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_11`
+
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: json.dumps проверяет ensure_ascii по истинности: False и None одинаково сохраняют Unicode. Прямой прогон R47 оставляет survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
@@ -12357,6 +12388,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_12`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_file_is_readable_sorted_unicode. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
 ```diff
@@ -12372,6 +12405,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_file_is_readable_sorted_unicode. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
@@ -12389,6 +12424,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_file_is_readable_sorted_unicode. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
 ```diff
@@ -12405,6 +12442,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_16`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_file_is_readable_sorted_unicode. Исторический survived сохранён.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 5.
 
 ```diff
@@ -12420,6 +12459,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.activation.x_set_vendor_enabled__mutmut_17`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_activation_file_is_readable_sorted_unicode. Исторический survived сохранён.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 5.
 
@@ -12439,6 +12480,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.battery_settings.xǁBatterySettingsǁfrom_dict__mutmut_20`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 116.
 
 ```diff
@@ -12457,6 +12500,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.battery_settings.xǁBatterySettingsǁfrom_dict__mutmut_97`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 116.
 
 ```diff
@@ -12472,6 +12517,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.battery_settings.xǁBatterySettingsǁfrom_dict__mutmut_102`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 116.
 
@@ -12489,6 +12536,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.battery_settings.x__minimum_rest__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 103.
 
 ```diff
@@ -12504,6 +12553,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.battery_settings.x__read_lines__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 106.
 
@@ -12521,6 +12572,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.battery_settings.x__require_choice__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 114.
 
 ```diff
@@ -12534,6 +12587,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.battery_settings.x__slot__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_invalid_battery_setting_has_source_and_slot. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 116.
 
@@ -12553,6 +12608,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.columns.x__same_named_columns__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 4.
 
 ```diff
@@ -12566,6 +12623,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.columns.x_read_columns__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 221.
 
@@ -12587,6 +12646,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.common.xǁCommonVendorSettingsǁfrom_dict__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_common_settings_error_preserves_source / test_common_settings_keep_custom_source. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 94.
 
 ```diff
@@ -12605,6 +12666,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.common.xǁCommonVendorSettingsǁfrom_dict__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_common_settings_error_preserves_source / test_common_settings_keep_custom_source. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 94.
 
 ```diff
@@ -12621,6 +12684,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.common.xǁCommonVendorSettingsǁfrom_dict__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_common_settings_error_preserves_source / test_common_settings_keep_custom_source. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 94.
 
 ```diff
@@ -12636,6 +12701,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.common.xǁCommonVendorSettingsǁfrom_dict__mutmut_20`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_common_settings_error_preserves_source / test_common_settings_keep_custom_source. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 94.
 
@@ -12657,6 +12724,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_defaults.x__read_defaults__mutmut_21`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_common_group_defaults_must_be_object_with_source. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 51.
 
 ```diff
@@ -12674,6 +12743,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.group_defaults.x__read_defaults__mutmut_35`
+
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: read_group_id уже вернул ProductGroup; повторная validate_group_settings получает тот же проверенный идентификатор, а при None лишь пропускает уже выполненную групповую проверку. Прямой прогон R47 оставляет survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 51.
 
@@ -12693,6 +12764,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_fields.x_read_group_id__mutmut_11`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_unknown_group_error_lists_allowed_ids. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 267.
 
 ```diff
@@ -12708,6 +12781,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.group_fields.x_read_group_id__mutmut_13`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_unknown_group_error_lists_allowed_ids. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 267.
 
@@ -13360,6 +13435,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_schema.x__inherit_group__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: Общие defaults прошли validate_group_settings с тем же group.id в _read_defaults; повторный вызов не может сообщить об ином входе. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 236.
 
 ```diff
@@ -13377,6 +13454,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.group_schema.x_read_group_payloads__mutmut_13`
+
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: common.defaults уже разобраны reading_defaults с common.where в CommonVendorSettings.from_dict; повторная ошибка типа на том же dict недостижима. Прямой прогон R47 оставляет survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 264.
 
@@ -13398,6 +13477,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x__validate_tire_settings__mutmut_17`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: validate_strategy_names раньше вызывает read_object для category с исходным where, поэтому неверный тип отклонён до изменённого вызова. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 205.
 
 ```diff
@@ -13416,6 +13497,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x__validate_tire_settings__mutmut_29`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: validate_strategy_names раньше вызывает read_object для title с исходным where, поэтому неверный тип отклонён до изменённого вызова. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 205.
 
 ```diff
@@ -13433,6 +13516,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x__validate_tire_settings__mutmut_41`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: validate_strategy_names раньше вызывает read_object для pricing с исходным where, поэтому неверный тип отклонён до изменённого вызова. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 205.
 
 ```diff
@@ -13449,6 +13534,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x__validate_tire_settings__mutmut_53`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: validate_strategy_names раньше вызывает read_object для behavior с исходным where, поэтому неверный тип отклонён до изменённого вызова. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 205.
 
 ```diff
@@ -13463,6 +13550,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.group_validation.x_validate_group_settings__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 248.
 
@@ -13482,6 +13571,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x_validate_group_settings__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 248.
 
 ```diff
@@ -13500,6 +13591,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.group_validation.x_validate_reading_settings__mutmut_11`
 
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: Возвращаемый дефолт read_int не используется; итоговый VendorSection отдельно читает start_row с дефолтом 1, что закреплено новым тестом. Прямой прогон R47 оставляет survived.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 273.
 
 ```diff
@@ -13516,6 +13609,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ## src/parsers/vendor_config/models.py
 
 ### `parsers.vendor_config.models.x__read_grouped_vendor__mutmut_37`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 267.
 
@@ -13534,6 +13629,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.models.x__read_grouped_vendor__mutmut_53`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 267.
 
@@ -13554,6 +13651,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.provider.x__read_vendor__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_non_object_config_reports_file_name. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 51.
 
 ```diff
@@ -13573,6 +13672,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.row_selector.xǁRowSelectorǁfrom_dict__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 6.
 
 ```diff
@@ -13590,6 +13691,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.row_selector.xǁRowSelectorǁfrom_dict__mutmut_25`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 6.
 
 ```diff
@@ -13604,6 +13707,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.row_selector.xǁRowSelectorǁfrom_section__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 103.
 
@@ -14056,6 +14161,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_40`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
 ```diff
@@ -14073,6 +14180,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_85`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
@@ -14092,6 +14201,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_93`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
 ```diff
@@ -14109,6 +14220,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_103`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
@@ -14128,6 +14241,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_113`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
 ```diff
@@ -14145,6 +14260,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁBehaviorConfigǁfrom_dict__mutmut_121`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 149.
 
 ```diff
@@ -14160,6 +14277,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.slot_configs.xǁCategoryConfigǁfrom_dict__mutmut_28`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 188.
 
@@ -14179,6 +14298,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁCategoryConfigǁfrom_dict__mutmut_113`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 188.
 
 ```diff
@@ -14194,6 +14315,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.slot_configs.xǁPricingConfigǁfrom_dict__mutmut_28`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 163.
 
@@ -14213,6 +14336,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.slot_configs.xǁTitleConfigǁfrom_dict__mutmut_26`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 180.
 
 ```diff
@@ -14230,6 +14355,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.slot_configs.xǁTitleConfigǁfrom_dict__mutmut_98`
+
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_error_message_contains_full_path. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 180.
 
@@ -14249,6 +14376,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.strategy_names.x__require_name__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_unknown_strategy_error_lists_allowed_names. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 38.
 
 ```diff
@@ -14265,6 +14394,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 
 ### `parsers.vendor_config.strategy_names.x__require_name__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: исторический diff отдельно даёт exit 1 в R47; падает test_unknown_strategy_error_lists_allowed_names. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 38.
 
 ```diff
@@ -14280,6 +14411,8 @@ VendorSection.from_dict, проверка адреса/селектора сек
 ```
 
 ### `parsers.vendor_config.strategy_names.x_validate_strategy_names__mutmut_44`
+
+Классификация 2026-11-14: Эквивалент в основной цепочке VendorConfig.from_dict: Цикл выше уже вызвал read_object(payload, behavior, where); ошибка не-объекта возникает до повторного чтения с None. Прямой прогон R47 оставляет survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 205.
 

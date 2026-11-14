@@ -169,6 +169,13 @@ def test_markup_comes_from_pricing_rules(percent: float, expected: str, recommen
         ({'title': {'lines': []}}, 'title → lines'),
         ({'title': {'lines': ['  ']}}, 'title → lines'),
         ({'title': {'lines': ['XTREME', 'xtreme']}}, 'title → lines'),
+        ({'pricing': {'unknown': 1}}, 'pricing → unknown'),
+        ({'pricing': {'rules': {'min_recommended_percent_markup': 'x'}}}, 'pricing → rules'),
+        ({'pricing': {'rules': []}}, 'rules'),
+        ({'behavior': {'min_rest': 'x'}}, 'behavior'),
+        ({'title': {'lines': 42}}, 'title'),
+        ({'title': {'strategy': 42}}, 'title'),
+        ({'pricing': []}, 'pricing'),
     ],
 )
 def test_invalid_battery_setting_has_source_and_slot(setting: RawConfig, path: str) -> None:
