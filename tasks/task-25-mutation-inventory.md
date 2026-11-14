@@ -877,6 +877,32 @@ Diff применялись по одному во временной копии
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: токены, категории и homoglyph
+
+Проверка 2026-11-14 завершает 29 записей `_tire_title_tokens`, `_tire_title_usage`,
+`_tube_title_parser`, `category` и `homoglyph*`: **15 killed** (9 существующими
+тестами, 6 после усиления) и **14 эквивалентов**. Всего завершены **795 из 894**,
+остаются **99**: 95 без классификации и четыре ранее открытых разбора.
+Все девять timeout разобраны.
+
+- R71: каждый исторический diff отдельно, база 310 passed; 9 killed, 20 survived.
+- R72: после пяти новых сценариев база 314 passed; 15 killed с конкретными
+  провалами ниже, 14 survived (314 passed, exit 0).
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_strategies/test_tire_title_parser.py" "$copy/tests/test_parsers/test_strategies/test_tube_title_parser.py" "$copy/tests/test_parsers/test_strategies/test_category.py" "$copy/tests/test_parsers/test_strategies/test_homoglyphs.py"`.
+Номера новой генерации mutmut не использовались для индивидуальных результатов.
+
+Закреплены дефолт прямого FieldMapCategory, пустые поля и title при ключе xxxx,
+равные алфавиты без цифры, точные пары исправлений и title в предупреждении.
+Эквиваленты основаны на IGNORECASE, неизменном результате trailing_paren_start,
+отсутствии кириллического двойника в одиночной латинской части и равных длинах zip.
+Код приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -11310,6 +11336,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies._tire_title_tokens.x_prepare_text__mutmut_25`
 
+Классификация 2026-11-14: Эквивалент: _LAYER_SOURCE и последующий разбор слойности нечувствительны к регистру; итоговое поле layering канонизируется в NPR независимо от написания замены.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 238.
 
 ```diff
@@ -11326,6 +11354,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies._tire_title_tokens.x_prepare_text__mutmut_38`
+
+Классификация 2026-11-14: Эквивалент: _SPLIT_PR имеет IGNORECASE, а последующий разбор слойности канонизирует значение в верхний регистр; строчная замена не меняет публичные поля.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 238.
 
@@ -11344,6 +11374,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies._tire_title_usage.x_trailing_paren_start__mutmut_27`
 
+Классификация 2026-11-14: Эквивалент для возвращаемого индекса: досрочный break по закрывающей скобке лишь избегает более раннего (; если такой ( найден, полное русское описание всё равно не совпадёт из-за внутренней ), поэтому результат остаётся len(tokens).
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 210.
 
 ```diff
@@ -11360,6 +11392,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies._tire_title_usage.x_trailing_paren_start__mutmut_30`
+
+Классификация 2026-11-14: Эквивалент для возвращаемого индекса: проверка tokens[index-2] меняет только момент выхода; более ранняя открывающая скобка не даёт _USAGE_PAREN.fullmatch при промежуточной ), поэтому возвращается тот же len(tokens).
 
 Статус: **survived**; тип: `number`; выбрано тестов: 210.
 
@@ -11380,6 +11414,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies._tube_title_parser.x_parse_tube_title__mutmut_11`
 
+Классификация 2026-11-14: Эквивалент: parse_leading_size использует _INCH_SIZE с IGNORECASE, поэтому прописная X распознаётся как разделитель так же, как строчная x.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 85.
 
 ```diff
@@ -11397,6 +11433,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies._tube_title_parser.x_parse_tube_title__mutmut_18`
+
+Классификация 2026-11-14: Эквивалент: parse_leading_size использует _INCH_SIZE с IGNORECASE, поэтому X в преобразованном трёхкомпонентном размере даёт те же поля.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 85.
 
@@ -11418,6 +11456,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.category.xǁFieldMapCategoryǁ__init____mutmut_1`
 
+Классификация 2026-11-14: Killed в R72: test_field_map_constructor_does_not_refine_by_diameter_by_default требует Легковая шина при 15C; дефолт True ошибочно возвращает Легкогрузовая шина.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 11.
 
 ```diff
@@ -11436,6 +11476,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.category.xǁFieldMapCategoryǁ_has_light_truck_suffix__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент: _LIGHT_TRUCK_DIAMETER требует цифру перед C/LT в конце; XXXX не совпадает, как и пустая строка.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 5.
 
 ```diff
@@ -11449,6 +11491,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.category.xǁFieldMapCategoryǁresolve__mutmut_7`
+
+Классификация 2026-11-14: Killed в R72: test_field_map_empty_value_does_not_match_literal_placeholder_key требует default; fallback XXXX ошибочно выбирает категорию по пользовательскому ключу xxxx.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 10.
 
@@ -11467,6 +11511,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.category.xǁTitleKeywordsCategoryǁresolve__mutmut_4`
+
+Классификация 2026-11-14: Killed в R72: test_title_keywords_empty_title_does_not_match_literal_placeholder_key требует default; fallback XXXX ошибочно находит пользовательский ключ xxxx.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 3.
 
@@ -11487,6 +11533,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_alphabet.x_convert__mutmut_3`
 
+Классификация 2026-11-14: Killed на существующем test_convert_uses_requested_alphabet: or True всегда выбирает латиницу вместо запрошенной кириллицы.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 35.
 
 ```diff
@@ -11500,6 +11548,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyph_alphabet.x_forced_alphabets__mutmut_2`
+
+Классификация 2026-11-14: Killed на существующем test_forced_alphabets_returns_only_known_alphabets: or вместо and добавляет LATIN для не-латинских букв.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 9.
 
@@ -11519,6 +11569,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_alphabet.x_forced_alphabets__mutmut_9`
 
+Классификация 2026-11-14: Killed на существующем test_forced_alphabets_returns_only_known_alphabets: None вместо CYRILLIC меняет множество подтверждённых алфавитов.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 9.
 
 ```diff
@@ -11535,6 +11587,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_cyrillic__mutmut_3`
 
+Классификация 2026-11-14: Эквивалент: char.lower() всегда не ниже строчной а; прописная А в нижней границе меньше строчной а, поэтому множество принимаемых символов не меняется.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 22.
 
 ```diff
@@ -11548,6 +11602,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_cyrillic__mutmut_6`
+
+Классификация 2026-11-14: Killed на существующих граничных тестах я/Я: строгая верхняя граница исключает последнюю букву алфавита.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 22.
 
@@ -11563,6 +11619,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_cyrillic__mutmut_9`
 
+Классификация 2026-11-14: Killed на существующих граничных тестах ё/Ё: сравнение upper со строчной ё не распознаёт букву.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 22.
 
 ```diff
@@ -11576,6 +11634,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_latin__mutmut_1`
+
+Классификация 2026-11-14: Killed на существующем test_is_latin_boundaries[`]: обрамлённая нижняя граница меняет лексикографическое сравнение и принимает не-букву.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 22.
 
@@ -11591,6 +11651,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_latin__mutmut_2`
 
+Классификация 2026-11-14: Killed на существующем test_is_latin_boundaries[`]: прописная A ниже строчной a и ошибочно принимает символ между ними.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 22.
 
 ```diff
@@ -11604,6 +11666,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyph_alphabet.x_is_latin__mutmut_3`
+
+Классификация 2026-11-14: Killed на существующем test_is_latin_boundaries[a]: строгая нижняя граница исключает первую букву алфавита.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 22.
 
@@ -11621,6 +11685,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_parts.x__target_alphabet__mutmut_16`
 
+Классификация 2026-11-14: Killed в R72: test_fix_token_reports_equal_alphabets_without_digit_as_unresolved требует (АA, True); or True ошибочно выбирает латиницу и возвращает (AA, False).
+
 Статус: **survived**; тип: `other`; выбрано тестов: 9.
 
 ```diff
@@ -11637,6 +11703,8 @@ Diff применялись по одному во временной копии
 ## src/parsers/strategies/homoglyph_tokens.py
 
 ### `parsers.strategies.homoglyph_tokens.x__fix_word__mutmut_5`
+
+Классификация 2026-11-14: Эквивалент: для одиночной части latin_sibling может стать True только у чисто латинской части; fix_token не вызывает _fix_word без кириллического двойника, а смешанная часть обрабатывается независимо от этого флага.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 22.
 
@@ -11656,6 +11724,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_tokens.x__fix_word__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент: разделитель всегда остаётся отдельным элементом split, поэтому слово с разделителем имеет минимум три части; без разделителя аргумент latin_sibling не меняет допустимый результат.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 22.
 
 ```diff
@@ -11674,6 +11744,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_tokens.x__fix_word__mutmut_18`
 
+Классификация 2026-11-14: Эквивалент: fixed — список пар (text, flag), созданный одним list comprehension; zip(*fixed) всегда получает равные длины, strict не различим.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 22.
 
 ```diff
@@ -11690,6 +11762,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyph_tokens.x__fix_word__mutmut_20`
 
+Классификация 2026-11-14: Эквивалент: fixed — список пар (text, flag), созданный одним list comprehension; zip(*fixed) всегда получает равные длины, опущенный strict не различим.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 22.
 
 ```diff
@@ -11705,6 +11779,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyph_tokens.x__fix_word__mutmut_21`
+
+Классификация 2026-11-14: Эквивалент: fixed — список пар (text, flag), созданный одним list comprehension; zip(*fixed) всегда получает равные длины, strict=False не различим.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 22.
 
@@ -11724,6 +11800,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyphs.x__fix_fields__mutmut_11`
 
+Классификация 2026-11-14: Killed в R72: точный fixes.fixed требует (Н, H); convert(raw, None) записывает кириллическую H вместо латинской, хотя поле отдельно исправляется правильно.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 16.
 
 ```diff
@@ -11739,6 +11817,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyphs.x_fix_row_homoglyphs__mutmut_5`
+
+Классификация 2026-11-14: Эквивалент: XXXX не содержит кириллических двойников и fix_text возвращает его без исправлений; guard title ложен в обоих случаях, поле не меняется.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 16.
 
@@ -11758,6 +11838,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.homoglyphs.x_fix_row_homoglyphs__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент: при пустом title fixed_title тоже пуст, поэтому or вместо and не входит в ветку; при непустом title условие различия сохраняется.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 16.
 
 ```diff
@@ -11775,6 +11857,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.homoglyphs.x_fix_row_homoglyphs__mutmut_18`
+
+Классификация 2026-11-14: Killed в R72: test_fix_row_homoglyphs_logs_suspects требует // Каzантип в полном предупреждении; title=None заменяет контекст на None.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 16.
 

@@ -113,6 +113,27 @@ def test_field_map_light_truck_by_diameter(tire_type: str, diameter: str, expect
     assert strategy.resolve(RowItem({'tire_type': tire_type, 'diameter': diameter})) == expected
 
 
+def test_field_map_constructor_does_not_refine_by_diameter_by_default() -> None:
+    """Прямой конструктор по умолчанию не уточняет легковую шину по суффиксу диаметра."""
+    strategy = FieldMapCategory('tire_type', {}, 'Легковая шина')
+
+    assert strategy.resolve(RowItem({'diameter': '15C'})) == 'Легковая шина'
+
+
+def test_field_map_empty_value_does_not_match_literal_placeholder_key() -> None:
+    """Пустое поле использует default, даже если справочник содержит ключ xxxx."""
+    strategy = FieldMapCategory('tire_type', {'xxxx': 'Диск'}, 'Легковая шина')
+
+    assert strategy.resolve(RowItem({})) == 'Легковая шина'
+
+
+def test_title_keywords_empty_title_does_not_match_literal_placeholder_key() -> None:
+    """Пустое название использует default, даже если справочник содержит ключ xxxx."""
+    strategy = TitleKeywordsCategory({'xxxx': 'Диск'}, 'Прочие')
+
+    assert strategy.resolve(RowItem({})) == 'Прочие'
+
+
 def test_field_map_ignores_diameter_suffix_without_flag() -> None:
     strategy = FieldMapCategory.from_config(
         _config(field_name='tire_type', mapping={'vned': 'Легковая шина'}, default_value='Легковая шина'),
