@@ -284,6 +284,38 @@ XLSX после указанной последовательности и чи�
 
 Все девять команд AGENTS.md завершились с exit 0: 4172 теста, покрытие 99,46 %.
 
+## Продолжение индивидуальной классификации: имена входных файлов и шаблонов CLI
+
+Проверка 2026-11-14 выполнена поверх `a0c211d` с тестами этого блока.
+Завершены восемь записей `supplier_file_rules` и `templates.all_templates`:
+**5 killed после усиления**, **3 эквивалента** с указанными границами контрактов.
+Всего завершены **344 из 894**, остаются **550**: 548 без классификации
+и два незавершённых разбора (`base_finder._search` и `_update_width`).
+Все девять timeout разобраны ранее.
+
+- R25: восемь исторических diff отдельно применены во временной копии
+  `src/`, `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc` до новых тестов.
+  База и каждый мутант: **57 passed**, exit 0.
+- R26: тот же набор после четырёх новых случаев plan_files.
+  База: **61 passed**; пять мутантов — exit 1 с конкретными провалами
+  новых тестов; три — 61 passed, exit 0.
+
+Перед заменой проверено единственное точное вхождение полного удаляемого
+блока вместе с контекстом; исходный файл восстановлен после каждого запуска.
+Команда R25/R26 (repo — исходный репозиторий, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_load_supplier_prices.py" "$copy/tests/test_parsers/test_writer/test_all_templates.py"`.
+В R26 дополнительно передан `"$copy/tests/test_parsers/test_supplier_file_rules.py"`.
+Номера текущей генерации mutmut не использовались для сопоставления.
+
+Корень пробелов в слое parsers — отсутствие граничного набора Excel,
+JSON с маской price*.json и проверки поставщика в сообщении о дубликате.
+Новые проверки вызывают публичный plan_files; код приложения не менялся.
+Эквиваленты rsplit обоснованы выбором последней части строки; замена индекса
+ограничена пятью зарегистрированными шаблонами с точкой в имени модуля.
+Исторические статусы сохранены; это не новый полный отчёт mutmut.
+
+Все девять команд AGENTS.md завершились с exit 0: 4176 тестов, покрытие 99,46 %.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -11647,6 +11679,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.supplier_file_rules.x__free_price_name__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: безусловный подбор имени переименовывает catalog.json в price.json при маске price*.json. Публичный plan_files обязан переименовывать только Excel. Новый test_plan_files_does_not_rename_json обнаруживает отсутствие SupplierPriceFileNameError: R26 — 1 failed, 60 passed, exit 1; R25 — survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 18.
 
 ```diff
@@ -11663,6 +11697,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.supplier_file_rules.x__kept_names__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: None вместо folder теряет имя поставщика в диагностике повторяющегося имени. Новый test_plan_files_preserves_duplicate_context проверяет полное сообщение через plan_files: R26 — 1 failed, 60 passed, exit 1; R25 — survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 24.
 
@@ -11681,6 +11717,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.supplier_file_rules.x__price_names__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: range(2, 98) заканчивается номером 97, поэтому набор из 99 Excel не помещается. Новый test_plan_files_numbered_name_limit для .xls и .xlsx требует допустимый price_99: R26 — 2 failed, 59 passed, exit 1; R25 — survived.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 17.
 
 ```diff
@@ -11696,6 +11734,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.supplier_file_rules.x__price_names__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: range(2, 101) разрешает price_100 сверх предела 99. Новый test_plan_files_numbered_name_limit для .xls и .xlsx требует отклонения сотого файла: R26 — 2 failed, 59 passed, exit 1; R25 — survived.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 17.
 
 ```diff
@@ -11710,6 +11750,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.supplier_file_rules.x_plan_files__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: передача None в _kept_names теряет поставщика при конфликте имён. Новый test_plan_files_preserves_duplicate_context проверяет полную диагностику публичного plan_files: R26 — 1 failed, 60 passed, exit 1; R25 — survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 24.
 
@@ -14530,6 +14572,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.templates.all_templates.x_writer_template_name__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент: неограниченный rsplit и rsplit с maxsplit=1 имеют одинаковый последний элемент — суффикс после последней точки, а при отсутствии точки всю строку. Используется только [-1], остальные части не наблюдаются. R25 — 57 passed; R26 — 61 passed, exit 0.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 88.
 
 ```diff
@@ -14544,6 +14588,8 @@ XLSX после указанной последовательности и чи�
 
 ### `parsers.writer.templates.all_templates.x_writer_template_name__mutmut_7`
 
+Классификация 2026-11-14: Эквивалент: maxsplit=2 вместо 1 меняет лишь части перед последней точкой; извлекаемый [-1] неизменен для любой строки имени модуля. R25 — 57 passed; R26 — 61 passed, exit 0.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 88.
 
 ```diff
@@ -14557,6 +14603,8 @@ XLSX после указанной последовательности и чи�
 ```
 
 ### `parsers.writer.templates.all_templates.x_writer_template_name__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент в реестре поддерживаемых шаблонов: все пять классов имеют точку в __module__; rsplit с maxsplit=1 даёт два элемента, и [+1] совпадает с [-1]. Имя внешнего класса из модуля без точки различит мутацию (IndexError), поэтому вне зарегистрированных шаблонов эквивалентность не заявляется. R25 — 57 passed; R26 — 61 passed, exit 0.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 88.
 
