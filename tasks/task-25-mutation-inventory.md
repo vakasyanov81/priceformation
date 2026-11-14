@@ -719,6 +719,32 @@ Diff применялись по одному во временной копии
 проходят через публичные output_sources/write_group_prices; код приложения
 не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: потоки CommonPriceOut
+
+Проверка 2026-11-14 завершает все 16 записей `common_price.output`:
+**8 killed после усиления** и **8 эквивалентов** в публичных контрактах.
+Всего завершены **697 из 894**, остаются **197**: 193 без классификации
+и четыре ранее открытых разбора. Все девять timeout разобраны.
+
+- R58: каждый исторический diff отдельно с полным контекстом, база и все
+  16 мутантов — 21 passed.
+- R59: после проверок даты, провайдера и JSONL дублей база 22 passed;
+  шесть мутаций даты/провайдера — 1 failed, 21 passed, остальные — 22 passed.
+- R60: две мутации _write_jsonl повторены после проверки полного JSONL:
+  база 23 passed, каждая — 1 failed, 22 passed.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному полному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_common_price_output.py"`.
+Номера новой генерации mutmut не использовались.
+
+Закреплены разные правила ForInner/ForDoubles, настройки дублей, явная дата
+валидации и имени, ConfigProvider поправки. Дефолт приватного _write_with_template
+не читается публичными вызовами; write_all_prices сам вычисляет текущую дату,
+а None в XLSX-ветке as_jsonl эквивалентен False. Код приложения не менялся.
+Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -8287,6 +8313,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_jsonl__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: фильтровать нужно только ForDoubles, не обычный прайс. Падает test_write_all_prices_jsonl_keeps_template_specific_double_rules; R60: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 3.
 
 ```diff
@@ -8304,6 +8332,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_jsonl__mutmut_13`
+
+Классификация 2026-11-14: Закрытый пробел проверки: TireOutputSource обязан получить настройки исключения дублей. Падает test_write_all_prices_jsonl_keeps_template_specific_double_rules; R60: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
@@ -8323,6 +8353,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_jsonl__mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: явная дата обязана попасть в имя плана JSONL. Падает test_jsonl_preserves_explicit_date_in_validation_and_file_name; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
 ```diff
@@ -8340,6 +8372,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_jsonl__mutmut_22`
+
+Классификация 2026-11-14: Закрытый пробел проверки: пропущенная дата заменяет явную дату текущей в имени плана. Падает test_jsonl_preserves_explicit_date_in_validation_and_file_name; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
@@ -8359,6 +8393,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_with_template__mutmut_1`
 
+Классификация 2026-11-14: Эквивалент в публичном контракте: write_doubles_report и write_all_prices всегда передают as_jsonl явно; дефолт приватного _write_with_template не читается. R58/R59: passed, exit 0.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 12.
 
 ```diff
@@ -8376,6 +8412,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_with_template__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: validate_outputs обязан получить явную дату вызова. Падает test_jsonl_preserves_explicit_date_in_validation_and_file_name; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
@@ -8395,6 +8433,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_with_template__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: пропущенный current_date скрывает явную дату от validate_outputs. Падает test_jsonl_preserves_explicit_date_in_validation_and_file_name; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 12.
 
 ```diff
@@ -8412,6 +8452,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁ_write_with_template__mutmut_10`
+
+Классификация 2026-11-14: Закрытый пробел проверки: _write_jsonl обязан получить явную дату для имени файла. Падает test_jsonl_preserves_explicit_date_in_validation_and_file_name; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
@@ -8431,6 +8473,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁnomenclature_title_correction__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: поправка названий обязана использовать injected ConfigProvider. Падает test_nomenclature_title_correction; R59: 1 failed, 21 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -8445,6 +8489,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_7`
+
+Классификация 2026-11-14: Эквивалент в публичном контракте: current_date только что вычислен date.today().isoformat(); validate_outputs сам использует текущую дату при None. Пользователь не передаёт другую дату в write_all_prices. R58/R59: passed.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
@@ -8463,6 +8509,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_10`
+
+Классификация 2026-11-14: Эквивалент в публичном контракте: пропущенный current_date валидации заменяется текущей датой, которая только что вычислена в write_all_prices. Иного входа даты у метода нет. R58/R59: passed.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 12.
 
@@ -8483,6 +8531,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_13`
 
+Классификация 2026-11-14: Эквивалент в публичном контракте: prepare_output_plan заменяет None текущей датой, совпадающей с только что вычисленной current_date. Вызов write_all_prices не принимает иную дату. R58/R59: passed.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
 ```diff
@@ -8500,6 +8550,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_19`
+
+Классификация 2026-11-14: Эквивалент: изменённый вызов находится только в XLSX-ветке, где as_jsonl=False; None даёт ту же ложную ветку _write_with_template. При True метод возвращается раньше. R58/R59: passed.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
@@ -8519,6 +8571,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_23`
 
+Классификация 2026-11-14: Эквивалент: в достижимой XLSX-ветке as_jsonl=False совпадает с дефолтом _write_with_template. JSONL-ветка завершается раньше и этого вызова не делает. R58/R59: passed.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 12.
 
 ```diff
@@ -8536,6 +8590,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_26`
 
+Классификация 2026-11-14: Эквивалент: write_doubles_report вызывается только в XLSX-ветке с as_jsonl=False; None выбирает тот же XLSX. JSONL возвращается раньше. R58/R59: passed.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 12.
 
 ```diff
@@ -8551,6 +8607,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.output.xǁCommonPriceOutǁwrite_all_prices__mutmut_28`
+
+Классификация 2026-11-14: Эквивалент: в достижимой XLSX-ветке пропущенный as_jsonl использует дефолт False; JSONL-ветка не доходит до write_doubles_report. R58/R59: passed.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 12.
 
