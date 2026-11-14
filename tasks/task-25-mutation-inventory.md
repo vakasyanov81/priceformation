@@ -698,6 +698,27 @@ R55 запускает только первый файл. Номера ново
 и нормализацией регистра цвета в доменной модели. Код приложения не менялся.
 Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: источники и планы группового вывода
+
+Проверка 2026-11-14 завершает все 10 записей `group_output`: **10 killed
+после усиления**. Всего завершена **681 из 894** записей, остаются **213**:
+209 без классификации и четыре ранее открытых разбора. Все девять timeout разобраны.
+
+- R56: каждый исторический diff отдельно, база и все 10 мутантов — 18 passed.
+- R57: после пяти новых сценариев база 23 passed; каждый мутант —
+  1 failed, 22 passed, exit 1. Конкретные провалы приведены ниже.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_group_prices.py" "$copy/tests/test_parsers/test_group_doubles.py"`.
+Номера новой генерации mutmut не использовались.
+
+Пробелы были в отсутствии полностью пустого набора пакетов, конфига дублей,
+наблюдаемой номенклатурной поправки и ограниченного selected. Новые проверки
+проходят через публичные output_sources/write_group_prices; код приложения
+не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -7610,6 +7631,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_output_sources__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: пустой шинный пакет по умолчанию обязан поддерживать skip_empty. Падает test_empty_packages_keep_empty_output_sources; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
 ```diff
@@ -7627,6 +7650,8 @@ R55 запускает только первый файл. Номера ново
 ```
 
 ### `parsers.common_price.group_output.x_output_sources__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: пустой аккумуляторный пакет по умолчанию обязан поддерживать skip_empty. Падает test_empty_packages_keep_empty_output_sources; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
@@ -7646,6 +7671,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_output_sources__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: doubles.json должен проверяться по полному реестру известных шаблонов, а не по None. Падает test_output_sources_validates_all_known_templates; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
 ```diff
@@ -7664,6 +7691,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_output_sources__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: шинный источник обязан применять номенклатурную поправку с переданным ConfigProvider. Падает test_output_sources_applies_nomenclature_correction; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
 ```diff
@@ -7681,6 +7710,8 @@ R55 запускает только первый файл. Номера ново
 ```
 
 ### `parsers.common_price.group_output.x_output_sources__mutmut_18`
+
+Классификация 2026-11-14: Закрытый пробел проверки: удаление номенклатурной поправки меняет подготовленное название. Падает test_output_sources_applies_nomenclature_correction; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
@@ -7701,6 +7732,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_write_group_prices__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: для стандартных шаблонов selections ограничивает группы пересечением с selected. Падает test_default_outputs_honor_selected_groups; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 20.
 
 ```diff
@@ -7718,6 +7751,8 @@ R55 запускает только первый файл. Номера ново
 ```
 
 ### `parsers.common_price.group_output.x_write_group_prices__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: prepare_output_plan обязан получить вычисленные selections, иначе записываются невыбранные группы. Падает test_default_outputs_honor_selected_groups; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 20.
 
@@ -7737,6 +7772,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_write_group_prices__mutmut_18`
 
+Классификация 2026-11-14: Закрытый пробел проверки: пропущенный аргумент selections включает невыбранные группы в стандартный план. Падает test_default_outputs_honor_selected_groups; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 
 ```diff
@@ -7755,6 +7792,8 @@ R55 запускает только первый файл. Номера ново
 
 ### `parsers.common_price.group_output.x_write_group_prices__mutmut_26`
 
+Классификация 2026-11-14: Закрытый пробел проверки: именованный шаблон обязан сохранять пустой selected, а не заменять его всеми группами. Падает test_named_output_honors_empty_selection; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 20.
 
 ```diff
@@ -7771,6 +7810,8 @@ R55 запускает только первый файл. Номера ново
 ```
 
 ### `parsers.common_price.group_output.x_write_group_prices__mutmut_30`
+
+Классификация 2026-11-14: Закрытый пробел проверки: пропущенный selected в именованном плане записывает группы вне выбора. Падает test_named_output_honors_empty_selection; R57: 1 failed, 22 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 

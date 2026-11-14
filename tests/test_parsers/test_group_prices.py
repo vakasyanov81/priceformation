@@ -4,6 +4,7 @@ import json
 from contextlib import closing
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from openpyxl import load_workbook
@@ -16,6 +17,8 @@ from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.common_price.group_output import output_sources, write_group_prices
 from parsers.writer.output_plan import GroupOutputSource
+from parsers.writer.templates.all_templates import writer_templates_by_name
+from parsers.writer.templates.group_templates import named_group_output
 from tests.group_output_examples import group_writer
 
 _TIRES = ProductGroup.TIRE_AND_DISK
@@ -75,6 +78,64 @@ def test_group_prices_skip_empty_groups(
     assert _sheets(paths) == _expected(template, names)
     written = [str(path) for path in folder.iterdir()]
     assert sorted(written) == sorted(paths)
+
+
+def test_empty_packages_keep_empty_output_sources(fake_config_provider: FakeConfigProvider) -> None:
+    sources = output_sources({}, fake_config_provider)
+
+    paths = write_group_prices(
+        group_writer(Path(fake_config_provider.result_folder())),
+        sources,
+        template=None,
+        as_jsonl=False,
+        selected={_TIRES, _BATTERIES},
+    )
+
+    assert not paths
+
+
+def test_output_sources_validates_all_known_templates(fake_config_provider: FakeConfigProvider) -> None:
+    packages = {_TIRES: TireAndDiskResult()}
+
+    with patch('parsers.common_price.group_output.load_doubles_settings') as load_settings:
+        output_sources(packages, fake_config_provider)
+
+    assert load_settings.call_args.args[0] == tuple(writer_templates_by_name())
+
+
+def test_output_sources_applies_nomenclature_correction(fake_config_provider: FakeConfigProvider) -> None:
+    packages = {_TIRES: TireAndDiskResult((RowItem({'title': 'old', 'rest_count': 1}),))}
+    output = named_group_output('for_inner')
+    settings = next(group for group in output.groups if group.id is _TIRES)
+
+    with patch('parsers.common_price.group_output.get_nomenclature_corrected_title', return_value='fixed'):
+        sources = output_sources(packages, fake_config_provider)
+
+    assert sources[_TIRES].prepare('for_inner', settings)[0]['title'] == 'fixed'
+
+
+def test_default_outputs_honor_selected_groups(fake_config_provider: FakeConfigProvider) -> None:
+    paths = write_group_prices(
+        group_writer(Path(fake_config_provider.result_folder())),
+        _sources((), fake_config_provider),
+        template=None,
+        as_jsonl=False,
+        selected={_TIRES},
+    )
+
+    assert _sheets(paths) == _expected(None, ['Шины и диски'])
+
+
+def test_named_output_honors_empty_selection(fake_config_provider: FakeConfigProvider) -> None:
+    paths = write_group_prices(
+        group_writer(Path(fake_config_provider.result_folder())),
+        _sources((), fake_config_provider),
+        template='for_inner',
+        as_jsonl=False,
+        selected=set(),
+    )
+
+    assert not paths
 
 
 def test_jsonl_skips_empty_group_metadata(fake_config_provider: FakeConfigProvider) -> None:
