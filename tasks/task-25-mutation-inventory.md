@@ -316,6 +316,39 @@ JSON с маской price*.json и проверки поставщика в с�
 
 Все девять команд AGENTS.md завершились с exit 0: 4176 тестов, покрытие 99,46 %.
 
+## Продолжение индивидуальной классификации: шаблон Дрома и значения ячеек writer
+
+Проверка 2026-11-14 выполнена поверх `c3899fa` с усилением тестов этого блока.
+Завершены все 18 оставшихся записей `writer.templates.group_templates` и
+`writer.xls_writer`: **17 killed** (15 на существующих тестах, 2 после усиления)
+и **1 эквивалент** в контракте аккумуляторной модели.
+Всего завершены **362 из 894**, остаются **532**: 530 без классификации
+и два открытых разбора (`base_finder._search` и `_update_width`).
+Все девять timeout разобраны ранее.
+
+- R27: все 18 исторических diff отдельно применены во временной копии
+  `src/`, `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc` до усиления.
+  База: **310 passed**; 15 killed, 3 survived.
+- R28: тот же набор после усиления проверки логического преобразования
+  и двух случаев колонки без поля. База: **312 passed**; 17 killed
+  (каждый — 1 failed, 311 passed, exit 1), один — 312 passed, exit 0.
+
+Перед каждой заменой проверено единственное точное вхождение удаляемого
+блока с полным контекстом; исходный файл восстановлен перед следующим запуском.
+Команда R27/R28 (repo — корень исходного репозитория, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_writer" "$copy/tests/test_parsers/test_battery/test_output.py"`.
+Номера новой генерации mutmut для сопоставления не использовались.
+
+Проверки через реальную книгу уже обнаруживают все 14 различимых мутаций
+шаблона Дрома: отсутствие фильтра, формат цены, точные наличие и состояние.
+Пропуски оставались у конвертера False (через get_value ветка недостижима)
+и у чтения пустого имени поля колонки-константы. Они закрыты в слое writer.
+Эквивалент фильтра обоснован типом rest_count (int | None), а не одним survived.
+Код приложения и пользовательские тесты аккумуляторного вывода не менялись.
+Исторические статусы сохранены; целевые прогоны не заменяют полный отчёт mutmut.
+
+Все девять команд AGENTS.md завершились с exit 0: 4178 тестов, покрытие 99,46 %.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -14622,6 +14655,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Удаление filters пропускает аккумулятор с rest_count=None: в сохранённой книге появляется лишняя строка. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 27.
 
 ```diff
@@ -14637,6 +14672,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_32`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ XXformatXX не распознаётся ColumnHelper; цена сохраняется без обязательного текстового формата @. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -14656,6 +14693,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_33`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ FORMAT регистрозависим и не распознаётся ColumnHelper; цена теряет текстовый формат @. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
 ```diff
@@ -14673,6 +14712,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_34`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Формат XX@XX отличается от обязательного @ в сохранённой ячейке цены. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -14692,6 +14733,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_43`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ XXdefault_valueXX не распознаётся; вместо фиксированного наличия выводится пустая ячейка. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
 ```diff
@@ -14709,6 +14752,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_44`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ DEFAULT_VALUE не распознаётся; вместо фиксированного наличия выводится пустая ячейка. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
@@ -14728,6 +14773,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_45`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Наличие получает лишнее обрамление XX вместо точного значения «В наличии». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
 ```diff
@@ -14745,6 +14792,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_46`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Наличие меняет регистр начальной буквы: «в наличии» вместо «В наличии». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
@@ -14764,6 +14813,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_47`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Наличие меняет регистр всей строки: «В НАЛИЧИИ» вместо «В наличии». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
 ```diff
@@ -14781,6 +14832,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_51`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ XXdefault_valueXX не распознаётся; вместо фиксированного состояния выводится пустая ячейка. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -14800,6 +14853,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_52`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Ключ DEFAULT_VALUE не распознаётся; вместо фиксированного состояния выводится пустая ячейка. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
 ```diff
@@ -14817,6 +14872,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_53`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Состояние получает лишнее обрамление XX вместо точного значения «Новое». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -14836,6 +14893,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_54`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Состояние меняет регистр начальной буквы: «новое» вместо «Новое». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
 ```diff
@@ -14854,6 +14913,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_55`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Состояние меняет регистр всей строки: «НОВОЕ» вместо «Новое». R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_battery/test_output.py::test_drom_battery_defaults_format_and_empty_stock_filter` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 27.
 
 ```diff
@@ -14871,6 +14932,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.templates.group_templates.x__drom_batteries__mutmut_121`
+
+Классификация 2026-11-14: Эквивалент в контракте аккумуляторного вывода: BatteryOffer проверяет rest_count как int | None, BatteryOffer.from_fields преобразует пустую строку в None через stock → integer → number, а battery_fields передаёт position.offer.rest_count без текстового преобразования. Поэтому ни пустая строка, ни XXXX до фильтра BatteryOutputSource.prepare не доходят; оба списка исключают ровно None и сохраняют все целые остатки, включая 0. R27: 310 passed; R28: 312 passed, exit 0. Вывод не основан только на survived. Применение GroupOutput к произвольным словарям вне аккумуляторной модели этим доказательством не покрывается. Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 27.
 
@@ -14891,6 +14954,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.writer.xls_writer.xǁXlsWriterǁwrite_sheet__mutmut_18`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Без аргумента offset шапка остаётся в строке 0, хотя легенда отчёта дублей требует сдвига. R27: killed на существующих тестах; R28: killed. В R28 падает `tests/test_parsers/test_writer/test_writer_doubles.py::test_xls_write_for_doubles_writes_legend_above_head` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 62.
 
 ```diff
@@ -14907,6 +14972,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.xls_writer.x__to_str__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Ложь должна преобразовываться в пустую ячейку, а не в «Да», согласно контракту _to_str. Прежняя проверка через get_value не достигала этой ветки: raw_value or col.def_value превращает False в None до вызова конвертера. В параметризованную проверку добавлен прямой вызов конвертера для True, False и None; тесты списков уже использовали тот же API. R27: survived; R28: killed после усиления теста. В R28 падает `tests/test_parsers/test_writer/test_writer.py::test_boolean_cells_use_yes_or_empty[False-None]` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 143.
 
@@ -14925,6 +14992,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.writer.xls_writer.x_cell_value__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Колонка-константа с field="" должна брать default_value, даже если исходный словарь содержит значение по пустому строковому ключу. Принудительное чтение этого ключа подменяет константу посторонним значением. Новый тест использует обычный dict[str, str] и публичный get_value; field=None проверен как контрольный случай. R27: survived; R28: killed после усиления теста. В R28 падает `tests/test_parsers/test_writer/test_writer.py::test_column_without_field_uses_default[]` (1 failed, 311 passed, exit 1). Исторический diff применён по единственному точному совпадению полного удаляемого блока с контекстом; исторический статус сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 143.
 
