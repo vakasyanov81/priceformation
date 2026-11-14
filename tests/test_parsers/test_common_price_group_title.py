@@ -5,6 +5,7 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price.group_title import unify_group_title
 from parsers.common_price.grouper import CommonPriceGrouper
+from parsers.common_price.title_tail import split_title
 
 _PRIORITY = {'Форточки': 1, 'Запаска': 3, 'Мим': 4}
 _ALIASES: dict[str, Any] = {'Cordiant': []}
@@ -169,3 +170,10 @@ def test_single_word_code_in_brackets_still_merges() -> None:
     CommonPriceGrouper([code, named], _ALIASES, _PRIORITY).group_by_params()
 
     assert code.duplicate.group_by_params == named.duplicate.group_by_params
+
+
+def test_split_title_keeps_last_load_token_in_head() -> None:
+    """Граница проходит после последнего индекса, даже если модель содержит такой же токен."""
+    row_item = _tire('Мим', '205/65R15 Cordiant 94H Road 94H XL TL', '94H Road')
+    expected_head = ['205/65R15', 'Cordiant', '94H', 'Road', '94H']
+    assert split_title(row_item) == (expected_head, ['XL', 'TL'])

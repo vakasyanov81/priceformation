@@ -92,3 +92,16 @@ def test_transliterated_cyrillic_model_joins_longer_latin_one() -> None:
     merged = merge_models(entries)
     long_key = clear_model(long_model)
     assert merged[clear_model(short_model)] == merged[long_key] == long_key
+
+
+def test_word_prefix_does_not_merge_unrelated_models() -> None:
+    """Совпавшего префикса недостаточно: обе раздельные части должны входить в короткую модель."""
+    assert merge_models(_entries('ice', 'icewinter')) == {'ice': 'ice', 'icewinter': 'icewinter'}
+
+
+def test_entries_with_only_key_or_only_tokens_are_skipped() -> None:
+    """Пустые слова и пустой ключ независимо исключают запись из карты моделей."""
+    no_words: ModelEntry = ('empty', frozenset())
+    no_key: ModelEntry = ('', frozenset(('ice',)))
+    entries = [no_words, no_key, *_entries('winter')]
+    assert merge_models(entries) == {'winter': 'winter'}

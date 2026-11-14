@@ -349,6 +349,34 @@ JSON с маской price*.json и проверки поставщика в с�
 
 Все девять команд AGENTS.md завершились с exit 0: 4178 тестов, покрытие 99,46 %.
 
+## Продолжение индивидуальной классификации: слияние моделей и хвосты названий
+
+Проверка 2026-11-14: R29/R30 применяют девять исторических diff `model_merge`
+и `title_tail` по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc`. Перед каждой заменой проверяется единственное точное
+совпадение полного удаляемого блока с контекстом; исходник восстанавливается.
+Номера текущей генерации mutmut не используются.
+
+- R29: база 23 passed; четыре killed, пять survived до усиления тестов.
+- R30: база 26 passed; семь killed, два survived после трёх новых тестов.
+
+Команда из временной копии (repo — исходный репозиторий, copy — копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_common_price_model_merge.py" "$copy/tests/test_parsers/test_common_price_group_title.py"`.
+
+Завершены семь записей: четыре killed существующими тестами, три после
+усиления. Всего завершены **369 из 894**, остаются **525**: 523 без
+классификации и два ранее открытых разбора. Две survived этого блока
+(`_split_pair__mutmut_3`, `split_title__mutmut_3`) остаются без классификации:
+26 passed не доказывают эквивалентность. Для первой требуется проверить
+неоднозначные разбиения слова и влияние порядка обхода set; для второй —
+допустимые значения нагрузки/скорости при пустом названии и fallback XXXX.
+
+Причины пробелов находятся в тестах parsers/common_price: отсутствовали
+совпавший префикс без второй части, отдельно пустой ключ и пустые слова,
+точная граница разбиения после последнего токена нагрузки. Новые проверки
+проходят на исходнике и падают на соответствующих исторических diff.
+Код приложения не менялся. Полный новый отчёт mutmut ещё не сформирован.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -7511,6 +7539,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.common_price.model_merge.x__split_pair__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed после усиления тестов. Проверка: `tests/test_parsers/test_common_price_model_merge.py::test_word_prefix_does_not_merge_unrelated_models`. Исторический статус сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 8.
 
 ```diff
@@ -7527,6 +7557,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.common_price.model_merge.x_merge_models__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed после усиления тестов. Проверка: `tests/test_parsers/test_common_price_model_merge.py::test_entries_with_only_key_or_only_tokens_are_skipped`. Исторический статус сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 86.
 
@@ -8085,6 +8117,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.common_price.title_tail.x__is_addable__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed на существующих тестах. Проверка: `tests/test_parsers/test_common_price_group_title.py::test_only_one_axis_is_added_to_group_title`. Исторический статус сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 4.
 
 ```diff
@@ -8097,6 +8131,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.common_price.title_tail.x__rank__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed на существующих тестах. Проверка: `tests/test_parsers/test_common_price_group_title.py::test_unknown_tokens_from_other_titles_are_not_added`. Исторический статус сохранён.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 4.
 
@@ -8113,6 +8149,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.common_price.title_tail.x__tail_start__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed после усиления тестов. Проверка: `tests/test_parsers/test_common_price_group_title.py::test_split_title_keeps_last_load_token_in_head`. Исторический статус сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 18.
 
 ```diff
@@ -8127,6 +8165,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.common_price.title_tail.x_merge_tails__mutmut_8`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed на существующих тестах. Проверка: `tests/test_parsers/test_common_price_group_title.py::test_only_one_axis_is_added_to_group_title`, `tests/test_parsers/test_common_price_group_title.py::test_unknown_tokens_from_other_titles_are_not_added`. Исторический статус сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 9.
 
@@ -8145,6 +8185,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.common_price.title_tail.x_merge_tails__mutmut_15`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff отдельно применён во временной копии; R30 подтвердил killed на существующих тестах. Проверка: `tests/test_parsers/test_common_price_group_title.py::test_only_one_axis_is_added_to_group_title`. Исторический статус сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 9.
 
