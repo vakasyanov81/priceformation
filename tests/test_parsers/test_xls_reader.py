@@ -275,3 +275,35 @@ def test_raw_tables_keep_source_values_sheet_and_row_numbers() -> None:
     assert first_data_row.row_number == 2
     assert first_data_row.fields['1'] == SHEET_2[0]['col_1']
     assert 'col_1' not in first_data_row.fields
+
+
+def test_sheets_reads_each_named_sheet() -> None:
+    """Полное чтение сохраняет порядок и содержимое всех вкладок книги."""
+    sheets = make_reader().sheets()
+    titles = [sheet[1][1] for sheet in sheets]
+    expected = [rows[0]['col_1'] for rows in (SHEET_1, SHEET_2, SHEET_3)]
+
+    assert len(sheets) == 3
+    assert titles == expected
+
+
+def test_raw_tables_allow_exact_row_limit_and_limit_columns() -> None:
+    """Ровно max_rows строк допустимы, колонки за max_columns не читаются."""
+    reader = _row_reader(max_rows=3, max_columns=1)
+
+    rows = read_raw_tables(reader, [1])[0].rows
+
+    assert len(rows) == 3
+    assert rows[1].fields == {'0': SHEET_2[0]['col_0']}
+
+
+def test_raw_tables_keep_empty_sheet(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Пустая вкладка возвращает пустую таблицу без чтения первой строки."""
+    reader = make_reader()
+    monkeypatch.setattr(reader, '_load_sheet', lambda _name: [])
+
+    tables = read_raw_tables(reader, [1])
+
+    assert len(tables) == 1
+    assert tables[0].sheet_index == 1
+    assert tables[0].rows == ()

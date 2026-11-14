@@ -178,10 +178,11 @@ def test_load_two_suppliers(tmp_path: Path, prices_root: Path) -> None:
 
 
 def test_load_rejects_extension(tmp_path: Path, prices_root: Path) -> None:
-    """csv нельзя."""
+    """Ошибка называет исходное расширение и файл; источник остаётся на месте."""
     source = _write_source(tmp_path, 'a.csv', b'csv')
-    with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError, match='csv'):
+    with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError) as exc_info:
         _load({'1': str(source)})
+    assert str(exc_info.value) == ("Недопустимое расширение '.csv' у файла a.csv. Допустимые: xls, xlsx, json, zip")
     assert source.exists()
 
 
