@@ -1,5 +1,7 @@
 """tests for model merge by token sets."""
 
+import pytest
+
 from domain.row_item.row_item import RowItem
 from parsers.common_price.group_key import MODEL_KEY_INDEX
 from parsers.common_price.model import clear_model, model_tokens
@@ -105,3 +107,31 @@ def test_entries_with_only_key_or_only_tokens_are_skipped() -> None:
     no_key: ModelEntry = ('', frozenset(('ice',)))
     entries = [no_words, no_key, *_entries('winter')]
     assert merge_models(entries) == {'winter': 'winter'}
+
+
+def test_models_from_different_manufacturers_stay_apart() -> None:
+    """Надмножество слов чужого производителя не меняет модель своей группы."""
+    rows = [
+        RowItem({'model': 'Gravity', 'manufacturer_name': 'Cordiant'}),
+        RowItem({'model': 'Gravity SUV', 'manufacturer_name': 'Ikon'}),
+    ]
+
+    keyed = keys_with_merged_models(rows, {})
+
+    assert [key[MODEL_KEY_INDEX] for key, _row in keyed] == ['gravity', 'gravitysuv']
+    assert [row for _key, row in keyed] == rows
+
+
+@pytest.mark.parametrize('prefix_field', ['manufacturer_name', 'brand'])
+def test_prefix_on_short_model_does_not_prevent_merging(prefix_field: str) -> None:
+    """Префикс короткой модели удаляется до поиска её надмножества без префикса."""
+    rows = [
+        RowItem({prefix_field: 'Cordiant', 'model': 'Cordiant Gravity'}),
+        RowItem({prefix_field: 'Cordiant', 'model': 'Gravity SUV'}),
+    ]
+
+    keyed = keys_with_merged_models(rows, {})
+
+    assert keyed[0][0] == keyed[1][0]
+    assert keyed[0][0][MODEL_KEY_INDEX] == 'gravitysuv'
+    assert [row for _key, row in keyed] == rows
