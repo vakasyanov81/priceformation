@@ -82,35 +82,46 @@ def test_territories_are_read_once(fake_config_provider: FakeConfigProvider) -> 
 
 
 def test_missing_file_is_error(fake_config_provider: FakeConfigProvider) -> None:
+    path = Path(fake_config_provider.price_folder(_FOLDER)) / 'territories.json'
     with (
         patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(WarehouseFilterError, match='Не найден список складов'),
+        pytest.raises(WarehouseFilterError, match='Не найден список складов') as raised,
     ):
         _allowed(1)
+    assert str(raised.value) == (
+        f'Не найден список складов {path}. Выгрузите данные поставщика по API, чтобы отфильтровать склады по городу.'
+    )
 
 
 @pytest.mark.parametrize(
     'payload', ['не json', '{"id": 1}', '[{"id": "1"}]', '[{"id": "x", "name": "a", "address": "b"}]']
 )
 def test_broken_file_is_error(fake_config_provider: FakeConfigProvider, payload: str) -> None:
-    _write_territories(fake_config_provider, payload)
+    path = _write_territories(fake_config_provider, payload)
 
     with (
         patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(WarehouseFilterError, match='не разобран'),
+        pytest.raises(WarehouseFilterError, match='не разобран') as raised,
     ):
         _allowed(1)
+    assert str(raised.value) == (
+        f'Список складов {path} не разобран: ожидается JSON-массив территорий с полями id, name, address.'
+    )
 
 
 def test_no_matching_city_is_error(fake_config_provider: FakeConfigProvider) -> None:
     """Город, которого нет в списке, — ошибка настройки, а не молча пустой прайс."""
-    _write_territories(fake_config_provider, _TERRITORIES)
+    path = _write_territories(fake_config_provider, _TERRITORIES)
 
     with (
         patch.object(CoreExceptionError, _TO_LOG),
-        pytest.raises(WarehouseFilterError, match='Атлантида'),
+        pytest.raises(WarehouseFilterError, match='Атлантида') as raised,
     ):
-        _allowed(1, cities=('Атлантида',))
+        _allowed(1, cities=('Атлантида', 'Эльдорадо'))
+    assert str(raised.value) == (
+        f'В списке складов {path} нет складов для городов: Атлантида, Эльдорадо. '
+        'Проверьте warehouse_cities в настройках.'
+    )
 
 
 def test_base_parser_drops_foreign_warehouses_before_enrich(fake_config_provider: FakeConfigProvider) -> None:

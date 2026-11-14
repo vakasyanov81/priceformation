@@ -117,3 +117,16 @@ def test_missing_rest_counts_as_zero_in_sum() -> None:
 
     merged = merge_warehouse_rows([_row('A', 5000, 3), no_rest])
     assert merged[0].stock.rest_count == 3
+
+
+def test_missing_supplier_does_not_merge_with_literal_name() -> None:
+    """Пустой поставщик отличается от явно заданного имени, даже похожего на заглушку."""
+    rows = [
+        _row('A', 5000, 3, supplier_name=None),
+        _row('A', 5000, 4, supplier_name='XXXX'),
+    ]
+
+    merged = merge_warehouse_rows(rows)
+
+    assert merged == rows
+    assert [row.stock.rest_count for row in merged] == [3, 4]
