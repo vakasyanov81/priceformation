@@ -22,6 +22,17 @@ from services.vendor_activation import VendorActivationService
 from services.zapaska_service import ZapaskaService
 
 
+def test_tire_vendor_factory_preserves_parse_config() -> None:
+    """Общая фабрика передаёт конфигурацию шинного поставщика без подмены."""
+    vendor_cls = MagicMock()
+    config = MagicMock(vendor_section=None)
+
+    with patch('cfg.vendor_parser.tire_parser_for_vendor') as tire_factory:
+        parser_for_vendor(vendor_cls, config)
+
+    tire_factory.assert_called_once_with(vendor_cls, config)
+
+
 def test_configure_registers_factories() -> None:
     """configure_services регистрирует все фабрики приложения."""
     ServiceProvider.clear()

@@ -645,6 +645,32 @@ RowItem приводит None остатка к 0; отсутствующая Р
 от opt; fallback XXXX названия отсечён bool(title). Код приложения не менялся.
 Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: фабрика поставщика и аккумуляторные названия
+
+Проверка 2026-11-14 завершает 10 записей `cfg.vendor_parser`, `battery.group_keys`
+и `battery.title`: **6 killed** (1 существующим тестом, 5 после усиления)
+и **4 эквивалента**. Всего завершена **661 из 894** записей, остаются **233**:
+229 без классификации и четыре ранее открытых разбора. Все девять timeout разобраны.
+
+- R51: каждый исторический diff отдельно, база 116 passed; 1 killed, 9 survived.
+- R52: после проверки фабрики cfg и прямых вызовов normalize_title база 98 passed;
+  6 killed с индивидуальными провалами ниже, 4 survived (98 passed, exit 0).
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. В R51 проверялись test_parse_orchestrator.py,
+test_grouping.py и test_handler.py; в R52 первый файл заменён на test_configure.py,
+чтобы проверять именно композиционную фабрику cfg. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_services/test_configure.py" "$copy/tests/test_parsers/test_battery/test_grouping.py" "$copy/tests/test_parsers/test_battery/test_handler.py"`.
+Номера новой генерации mutmut не использовались.
+
+Закреплены передача ParseConfiguration в шинную фабрику и нормализация пустого,
+нераспознанного и распознанного названий при прямом публичном вызове. Строгость
+zip в resolve_optional не различима: variants строится через zip(*keys) из ключей
+одинаковой длины. При declared is None normalized_model не читается в условии,
+а возвращается распознанная model, поэтому fallback XXXX эквивалентен.
+Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -1768,6 +1794,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 ## src/cfg/vendor_parser.py
 
 ### `cfg.vendor_parser.x_parser_for_vendor__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: после добавления прямой проверки композиционной фабрики diff даёт exit 1; падает test_tire_vendor_factory_preserves_parse_config (R52). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
@@ -5939,6 +5967,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.group_keys.x_normalized__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: существующий test_identity_key_uses_single_spaces обнаруживает изменение разделителя; отдельный diff даёт 1 failed, 115 passed в R51 и 1 failed, 97 passed в R52. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 38.
 
 ```diff
@@ -5955,6 +5985,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.group_keys.x_resolve_optional__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент в рабочей цепочке: split_optional строит variants через zip(*keys), поэтому число наборов равно длине каждого key. strict не влияет на пары одинаковой длины. Прогоны R51/R52 оставляют survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 38.
 
 ```diff
@@ -5970,6 +6002,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.group_keys.x_resolve_optional__mutmut_7`
 
+Классификация 2026-11-14: Эквивалент в рабочей цепочке: split_optional строит variants через zip(*keys), поэтому число наборов равно длине каждого key. Пропущенный strict не влияет на пары одинаковой длины. Прогоны R51/R52 оставляют survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 38.
 
 ```diff
@@ -5984,6 +6018,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 ```
 
 ### `parsers.battery.group_keys.x_resolve_optional__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент в рабочей цепочке: split_optional строит variants через zip(*keys), поэтому число наборов равно длине каждого key. strict=False не влияет на пары одинаковой длины. Прогоны R51/R52 оставляют survived.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 38.
 
@@ -6788,6 +6824,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.title.x_normalize_title__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: прямой вызов normalize_title с title=None обязан вернуть пустое название, а не XXXX. Падает test_normalize_title_handles_direct_unknown_titles[None-]; diff даёт 1 failed, 97 passed (R52). Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 32.
 
 ```diff
@@ -6804,6 +6842,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 ```
 
 ### `parsers.battery.title.x_normalize_title__mutmut_15`
+
+Классификация 2026-11-14: Закрытый пробел проверки: прямой вызов с нераспознанным названием обязан сохранить нормализованные пробелы. Оба случая test_normalize_title_handles_direct_unknown_titles падают; diff даёт 2 failed, 96 passed (R52). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
@@ -6823,6 +6863,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.title.x_normalize_title__mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: прямой вызов с нераспознанным названием обязан заменить title в identity. Оба случая test_normalize_title_handles_direct_unknown_titles падают; diff даёт 2 failed, 96 passed (R52). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
 ```diff
@@ -6841,6 +6883,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 
 ### `parsers.battery.title.x_normalize_title__mutmut_30`
 
+Классификация 2026-11-14: Эквивалент: при declared is None вычисленное normalized_model не читается из-за короткого замыкания условия, а в результат попадает распознанная model. Для непустого declared fallback не используется. Прогоны R51/R52 оставляют survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 32.
 
 ```diff
@@ -6858,6 +6902,8 @@ RowItem приводит None остатка к 0; отсутствующая Р
 ```
 
 ### `parsers.battery.title.x_normalize_title__mutmut_43`
+
+Классификация 2026-11-14: Закрытый пробел проверки: при распознанной линейке прямой вызов обязан вернуть title с нормализованными пробелами. Падает test_normalize_title_normalizes_matched_title_without_declared_model; diff даёт 1 failed, 97 passed (R52). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
