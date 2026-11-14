@@ -903,6 +903,36 @@ Diff применялись по одному во временной копии
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: стратегии названий и наценки
+
+Проверка 2026-11-14 завершает 64 записи `poshk_stk_title`, `pricing`,
+`tire_category`, `title*` и `tube_title`: **43 killed** (19 существующими
+тестами, 24 после усиления) и **21 эквивалент**. Всего завершены **869 из 894**,
+остаются **25**: 21 без классификации и четыре ранее открытых разбора.
+Все девять timeout разобраны.
+
+- R73: каждый исторический diff отдельно, база 287 passed; 19 killed, 45 survived.
+- R74: после первого набора новых сценариев база 295 passed; 39 killed, 25 survived.
+- R75: после PercentRange и прямого вызова камеры база 296 passed;
+  41 killed, 23 survived.
+- R76: две мутации _split_owner повторены с канонизацией бренда: база 296 passed;
+  каждая — 1 failed, 295 passed. Итог 43 killed с провалами ниже, 21 survived.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_strategies/test_poshk_stk_title.py" "$copy/tests/test_parsers/test_strategies/test_pricing_registry.py" "$copy/tests/test_parsers/test_strategies/test_category.py" "$copy/tests/test_parsers/test_strategies/test_title.py" "$copy/tests/test_parsers/test_strategies/test_title_compose.py" "$copy/tests/test_parsers/test_strategies/test_title_conflicts.py" "$copy/tests/test_parsers/test_strategies/test_title_params.py" "$copy/tests/test_parsers/test_strategies/test_title_registry.py" "$copy/tests/test_parsers/test_nomenclature_tube_title.py"`.
+Номера новой генерации mutmut не использовались для индивидуальных результатов.
+
+Закреплены диапазон наценки без категории, владельцы бренда, скобки модели диска,
+пустой title при маркере XXXX, дефолт column_first, передача ConfigProvider и
+прямая сборка камеры без probe. Эквиваленты ограничены неизменным публичным
+результатом: fallback не распознаётся, оба элемента find_word_in_title меняются
+вместе, а column_first=None и опущенный аргумент сохраняют False. Код приложения
+не менялся; это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -11878,6 +11908,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.poshk_stk_title.xǁPoshkStkTireComposeǁ_camera_for_kind__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент в публичном prepare: _camera_for_kind вызывается только после успешного parse_tire_title(title), поэтому title непустой и fallback XXXX недостижим.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 18.
 
 ```diff
@@ -11894,6 +11926,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.poshk_stk_title.xǁPoshkStkTireComposeǁprepare__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент: для успешно разобранной шины compose_tube_title_from_text возвращает None, поскольку TUBE_PREFIX и размер камеры не совпадают; затем используются те же parts.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 42.
 
@@ -11915,6 +11949,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.pricing.xǁPercentByThresholdMarkupPolicyǁ__init____mutmut_1`
 
+Классификация 2026-11-14: Эквивалент: apply использует только threshold/low/high и get_markup; rules и price_map базового класса не читаются, поэтому None вместо пустого конфига ненаблюдаемо.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
 ```diff
@@ -11931,6 +11967,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.pricing.xǁRecommendedRangeMarkupPolicyǁapply__mutmut_4`
+
+Классификация 2026-11-14: Killed в R75: test_recommended_range_empty_category_does_not_match_placeholder_key требует 1000 без категории; fallback XXXX ошибочно применяет диапазон 50–70 %.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 11.
 
@@ -11951,6 +11989,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.tire_category.x__category_by_title__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент: XXXX не содержит признаков не-шины, размера или спец/грузовой категории; _tire_category возвращает ту же Легковая шина, как для пустого title.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 31.
 
 ```diff
@@ -11963,6 +12003,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.tire_category.x_non_tire_product_type__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент: XXXX не содержит уплотнительн/кольц/камер/лент/диск; обе ветки возвращают пустой результат.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 36.
 
@@ -11984,6 +12026,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁDiskComposeTochkiǁprepare__mutmut_3`
 
+Классификация 2026-11-14: Эквивалент: disk_name_suffix не находит толщину, усиление или камерность в XXXX, а disk_name_extras отбрасывает служебный маркер; suffix остаётся пустым.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 4.
 
 ```diff
@@ -12000,6 +12044,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁDiskComposeTochkiǁprepare__mutmut_14`
 
+Классификация 2026-11-14: Эквивалент: при пустой модели fallback XXXX обрабатывается disk_name_extras как служебный маркер и не меняет публичный suffix.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 4.
 
 ```diff
@@ -12014,6 +12060,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title.xǁManufacturerFromCategoryǁ_prepend_manufacturer__mutmut_13`
+
+Классификация 2026-11-14: Эквивалент: split(None) и split(" ") различаются только на повторных пробелах, но RowItem.set_field нормализует whitespace; итоговый title совпадает.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 6.
 
@@ -12032,6 +12080,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁNormalizeSizeChunksǁ_replace_leading_ship__mutmut_12`
 
+Классификация 2026-11-14: Эквивалент: при пустом remainder or True добавляет trailing space к fallback_brand, но последующий _trim_wrappers.strip удаляет его; результат совпадает.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 31.
 
 ```diff
@@ -12046,6 +12096,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_29`
+
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение камерности удаляет обязательный TT.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
@@ -12064,6 +12116,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_30`
 
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение axis удаляет токен Ведущая.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
 ```diff
@@ -12079,6 +12133,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_33`
+
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение камерности удаляет обязательный TT.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
@@ -12096,6 +12152,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_34`
 
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение axis удаляет токен Ведущая.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
 ```diff
@@ -12111,6 +12169,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_35`
+
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение камерности удаляет обязательный TT.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 7.
 
@@ -12129,6 +12189,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_36`
 
+Классификация 2026-11-14: Killed на существующем test_tire_compose_mim_truck_includes_camera_and_axis: изменение axis удаляет токен Ведущая.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 7.
 
 ```diff
@@ -12144,6 +12206,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title.xǁTireComposeǁ_mim_truck__mutmut_37`
+
+Классификация 2026-11-14: Эквивалент: fallback XXXX не распознаётся axis_label и не добавляет токен, как и пустая ось.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 7.
 
@@ -12163,6 +12227,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_brand__mutmut_6`
 
+Классификация 2026-11-14: Killed в R74: test_column_first_unknown_manufacturer_drops_owner_without_placeholder требует Unknown; замена скобок на XXXX оставляет служебный текст в бренде.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 19.
 
 ```diff
@@ -12181,6 +12247,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_brand__mutmut_9`
 
+Классификация 2026-11-14: Killed на существующих тестах column_first: and вместо or теряет fallback parts.brand при неизвестном производителе.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
 ```diff
@@ -12196,6 +12264,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_brand__mutmut_10`
+
+Классификация 2026-11-14: Killed в R74: тесты column_first различают приоритет неизвестной колонки и поиска в title; and вместо or меняет выбранный бренд.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
@@ -12213,6 +12283,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_brand__mutmut_13`
 
+Классификация 2026-11-14: Killed на существующем test_column_first_brand_falls_back_without_known_manufacturer: probe(None) не находит Ikon в названии и оставляет неверный бренд.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 19.
 
 ```diff
@@ -12228,6 +12300,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose__mutmut_42`
+
+Классификация 2026-11-14: Killed на существующем test_sidewall_marks_and_run_flat_column_stay_in_title: потеря переданного поля удаляет XL из канонического title.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
@@ -12247,6 +12321,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose__mutmut_44`
 
+Классификация 2026-11-14: Killed на существующем test_sidewall_marks_and_run_flat_column_stay_in_title: потеря переданного поля удаляет XL из канонического title.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
 ```diff
@@ -12264,6 +12340,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose__mutmut_49`
+
+Классификация 2026-11-14: Killed на существующем test_sidewall_marks_and_run_flat_column_stay_in_title: потеря переданного поля удаляет M+S/3PMSF из канонического title.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
@@ -12283,6 +12361,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose__mutmut_51`
 
+Классификация 2026-11-14: Killed на существующем test_sidewall_marks_and_run_flat_column_stay_in_title: потеря переданного поля удаляет M+S/3PMSF из канонического title.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
 ```diff
@@ -12301,6 +12381,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose__mutmut_59`
 
+Классификация 2026-11-14: Killed на существующем test_sidewall_marks_and_run_flat_column_stay_in_title: потеря переданного поля удаляет RunFlat из канонического title.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
 ```diff
@@ -12317,6 +12399,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose_disk__mutmut_16`
 
+Классификация 2026-11-14: Killed в R74: test_disk_model_brackets_are_not_duplicated_in_suffix требует одну (Logan); без полной модели исходный хвост добавляет её повторно.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
 ```diff
@@ -12331,6 +12415,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose_disk__mutmut_18`
+
+Классификация 2026-11-14: Killed в R74: test_disk_model_brackets_are_not_duplicated_in_suffix требует одну (Logan); без полной модели исходный хвост добавляет её повторно.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
@@ -12347,6 +12433,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose_disk__mutmut_19`
 
+Классификация 2026-11-14: Killed в R74: test_disk_model_brackets_are_not_duplicated_in_suffix требует одну (Logan); без полной модели исходный хвост добавляет её повторно.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 5.
 
 ```diff
@@ -12361,6 +12449,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_compose_disk__mutmut_20`
+
+Классификация 2026-11-14: Эквивалент: fallback XXXX вместо пустой модели обрабатывается disk_name_extras как служебный маркер; итоговый suffix не меняется.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 5.
 
@@ -12377,6 +12467,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_owner_and_model__mutmut_6`
 
+Классификация 2026-11-14: Killed в R74: test_title_owner_is_kept_without_model_column требует (Bridgestone) из названия; and вместо or выбирает пустого владельца колонки.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 19.
 
 ```diff
@@ -12391,6 +12483,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_split_owner__mutmut_1`
+
+Классификация 2026-11-14: Killed в R76: test_owner_is_removed_when_brand_is_canonicalized требует Ikon Tyres Bar; match=None оставляет (Nokian) в модели вместо удаления владельца.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 19.
 
@@ -12409,6 +12503,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁ_split_owner__mutmut_6`
 
+Классификация 2026-11-14: Killed в R76: test_owner_is_removed_when_brand_is_canonicalized требует Ikon Tyres Bar; probe(None) не признаёт владельца и оставляет (Nokian) в модели.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 19.
 
 ```diff
@@ -12425,6 +12521,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁprepare__mutmut_13`
+
+Классификация 2026-11-14: Эквивалент: ветка _compose достигается только при parts is not None, что требует непустого разбираемого title; fallback XXXX недостижим.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 31.
 
@@ -12443,6 +12541,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_compose.xǁTitleFromFieldsǁprepare__mutmut_30`
+
+Классификация 2026-11-14: Эквивалент: для диска без title служебный XXXX не даёт дополнительного suffix; при наличии title fallback не используется.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 31.
 
@@ -12464,6 +12564,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_conflicts.x__canon__mutmut_2`
 
+Классификация 2026-11-14: Эквивалент для сравнения: upper и lower одинаково канонизируют регистр букв, а числовое преобразование не зависит от регистра; равенство пар значений сохраняется.
+
 Статус: **survived**; тип: `method_swap`; выбрано тестов: 15.
 
 ```diff
@@ -12483,6 +12585,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_markers.xǁTitleWithMarkersǁ_apply_markers__mutmut_4`
 
+Классификация 2026-11-14: Killed в R74: test_title_with_markers_empty_title_does_not_match_placeholder требует spike=None; fallback XXXX активирует пользовательский маркер.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 13.
 
 ```diff
@@ -12501,6 +12605,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_params.x__parse_bare_disk__mutmut_1`
 
+Классификация 2026-11-14: Killed на существующем test_before_title_parses_disk_without_disk_prefix: изменение raw/bare отключает разбор крепежа и ET диска API.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
 ```diff
@@ -12514,6 +12620,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_params.x__parse_bare_disk__mutmut_2`
+
+Классификация 2026-11-14: Killed на существующем test_before_title_parses_disk_without_disk_prefix: изменение raw/bare отключает разбор крепежа и ET диска API.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
@@ -12529,6 +12637,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_params.x__parse_bare_disk__mutmut_3`
 
+Классификация 2026-11-14: Killed на существующих тестах ParamsBeforeTitle: удаление обязательного raw вызывает TypeError при разборе названия.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -12543,6 +12653,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_params.x__parse_bare_disk__mutmut_4`
 
+Классификация 2026-11-14: Killed на существующем test_before_title_parses_disk_without_disk_prefix: изменение raw/bare отключает разбор крепежа и ET диска API.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -12556,6 +12668,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_params.x__parse_bare_disk__mutmut_5`
+
+Классификация 2026-11-14: Killed на существующем test_before_title_parses_disk_without_disk_prefix: изменение raw/bare отключает разбор крепежа и ET диска API.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 3.
 
@@ -12573,6 +12687,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_registry.x__brand_probe__mutmut_5`
 
+Классификация 2026-11-14: Killed в R74: test_fallback_brand_passes_explicit_provider требует переданный _PROVIDER; load_aliases_map(None) теряет его.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
 ```diff
@@ -12587,6 +12703,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_registry.x__brand_probe__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент: find_word_in_title возвращает каноническое имя и найденный алиас; при успехе оба не None, при неуспехе оба None, поэтому предикат сохраняется.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 2.
 
@@ -12603,6 +12721,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_registry.x__fallback_probe__mutmut_3`
 
+Классификация 2026-11-14: Killed в R74: test_fallback_brand_passes_explicit_provider требует переданный _PROVIDER; _brand_probe(None) теряет его.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 6.
 
 ```diff
@@ -12616,6 +12736,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_registry.x_make_title_strategy__mutmut_1`
+
+Классификация 2026-11-14: Killed в R74: test_compose_defaults_to_title_brand_and_uses_manufacturer_probe требует Ikon Tyres из title; дефолт True ошибочно выбирает Unknown из колонки.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 39.
 
@@ -12635,6 +12757,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_registry.x_make_title_strategy__mutmut_3`
 
+Классификация 2026-11-14: Killed в R74: test_params_first_requires_params_from_title требует полный WHERE в начале ошибки; where=None заменяет контекст на None.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 39.
 
 ```diff
@@ -12652,6 +12776,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_registry.x_make_title_strategy__mutmut_21`
+
+Классификация 2026-11-14: Killed в R74: test_aliases_wraps_strategy требует переданный _PROVIDER; load_title_aliases получает None.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 39.
 
@@ -12671,6 +12797,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_registry.x_make_title_strategy__mutmut_28`
 
+Классификация 2026-11-14: Эквивалент: column_first=None проверяется по истинности как False; поведение сборки совпадает с исходным False.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 39.
 
 ```diff
@@ -12688,6 +12816,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_registry.x_make_title_strategy__mutmut_32`
+
+Классификация 2026-11-14: Эквивалент: опущенный column_first получает дефолт False в wrap_with_params/TitleFromFields; поведение не меняется.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 39.
 
@@ -12709,6 +12839,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_wrap.x_manufacturer_probe__mutmut_6`
 
+Классификация 2026-11-14: Killed в R74: test_compose_defaults_to_title_brand_and_uses_manufacturer_probe требует канонический Ikon Tyres; изменение lambda/аргумента/элемента результата его теряет.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
 ```diff
@@ -12723,6 +12855,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_wrap.x_manufacturer_probe__mutmut_7`
+
+Классификация 2026-11-14: Killed в R74: test_compose_defaults_to_title_brand_and_uses_manufacturer_probe требует канонический Ikon Tyres; изменение lambda/аргумента/элемента результата его теряет.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
@@ -12739,6 +12873,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_wrap.x_manufacturer_probe__mutmut_8`
 
+Классификация 2026-11-14: Killed в R74: test_compose_defaults_to_title_brand_and_uses_manufacturer_probe требует канонический Ikon Tyres; изменение lambda/аргумента/элемента результата его теряет.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 5.
 
 ```diff
@@ -12753,6 +12889,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_wrap.x_wrap_with_params__mutmut_7`
+
+Классификация 2026-11-14: Killed в R74: test_compose_defaults_to_title_brand_and_uses_manufacturer_probe требует Ikon Tyres; manufacturer_probe=None оставляет неканонический Ikon.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
@@ -12769,6 +12907,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_wrap.x_wrap_with_params__mutmut_8`
 
+Классификация 2026-11-14: Эквивалент: column_first=None сохраняет ложность исходного False при выборе приоритета бренда.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 32.
 
 ```diff
@@ -12784,6 +12924,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.title_wrap.x_wrap_with_params__mutmut_10`
 
+Классификация 2026-11-14: Killed в R74: удаление обязательного manufacturer_probe вызывает TypeError в test_compose_defaults_to_title_brand_and_uses_manufacturer_probe.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
 ```diff
@@ -12798,6 +12940,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.title_wrap.x_wrap_with_params__mutmut_11`
+
+Классификация 2026-11-14: Эквивалент: опущенный column_first получает дефолт False в TitleFromFields, совпадающий с исходным аргументом.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 32.
 
@@ -12816,6 +12960,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.tube_title.x__brand__mutmut_3`
 
+Классификация 2026-11-14: Killed в R75: прямой compose_tube_title_from_text без probe обязан вернуть Камера 12.5/80-18 с вентилем; or True вызывает None как функцию.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 10.
 
 ```diff
@@ -12830,6 +12976,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент: TUBE_PREFIX требует слово камера/лента в начале; XXXX не совпадает, как и пустая строка, поэтому title_not_composed не меняется.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 23.
 
@@ -12849,6 +12997,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_16`
 
+Классификация 2026-11-14: Killed в R75: test_tube_profile_and_valve_are_composed_without_probe требует 12.5/80-18; height=None удаляет профиль.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
 ```diff
@@ -12866,6 +13016,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_29`
+
+Классификация 2026-11-14: Эквивалент: _RIM_TAPE_WORD не находит лент ни в XXXX, ни в пустой строке; is_rim_tape остаётся False.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 23.
 
@@ -12885,6 +13037,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_46`
 
+Классификация 2026-11-14: Killed в R75: test_tube_profile_and_valve_are_composed_without_probe требует с вентилем; изменение valve удаляет признак.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
 ```diff
@@ -12900,6 +13054,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_51`
 
+Классификация 2026-11-14: Killed в R75: test_tube_profile_and_valve_are_composed_without_probe требует с вентилем; изменение valve удаляет признак.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
 ```diff
@@ -12914,6 +13070,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.strategies.tube_title.x_compose_tube_title_from_text__mutmut_52`
+
+Классификация 2026-11-14: Killed в R75: test_tube_profile_and_valve_are_composed_without_probe требует с вентилем; изменение valve удаляет признак.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 23.
 

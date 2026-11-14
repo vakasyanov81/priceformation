@@ -322,6 +322,16 @@ def test_disk_compose_keeps_suffix_from_original_name() -> None:
     assert strategy.prepare(row) == '7.5x20 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'
 
 
+def test_title_with_markers_empty_title_does_not_match_placeholder() -> None:
+    """Пустое название не активирует пользовательский маркер XXXX."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'XXXX': {'spike': 'да'}})
+    row = RowItem({})
+
+    strategy.prepare(row)
+
+    assert row.tire.spike is None
+
+
 def test_title_with_markers_sets_fields_on_match() -> None:
     """Маркер в исходном названии проставляет незаполненные поля позиции."""
     strategy = TitleWithMarkers(DefaultTitle(), {'шип': {'season': 'зима', 'spike': 'да'}})
