@@ -140,3 +140,22 @@ def test_prefix_on_short_model_does_not_prevent_merging(prefix_field: str) -> No
 def test_hyphen_between_manufacturer_and_brand_does_not_leave_brand_tokens() -> None:
     """Удаление первого префикса открывает второй, даже если они разделены дефисом."""
     assert model_tokens('Cordiant-Road PS-1', 'Cordiant', 'Road') == frozenset(('ps1',))
+
+
+@pytest.mark.parametrize(
+    ('short', 'long', 'target'),
+    [
+        ('a ab abc ba bc', 'aba abcab bc', 'long'),
+        ('a ab abc ba bc', 'aba abcab bc extra', 'long'),
+        ('a ab abc bc', 'aba abcab bc', 'short'),
+        ('ice', 'iceice', 'short'),
+    ],
+)
+def test_joined_words_require_consistent_pairs(short: str, long: str, target: str) -> None:
+    """Все раздельные слова покрываются непересекающимися парами, лишние слитные допустимы."""
+    short_entry = ('short', frozenset(short.split()))
+    long_entry = ('long', frozenset(long.split()))
+    entries = [short_entry, long_entry]
+    expected = {'short': target, 'long': 'long'}
+    assert merge_models(entries) == expected
+    assert merge_models(reversed(entries)) == expected
