@@ -1000,6 +1000,29 @@ Diff применялись отдельно во временной копии 
 Исторические статусы сохранены; новый полный отчёт mutmut ещё не сформирован.
 Все девять проверок завершились с exit 0 (`just ci-compact`: `check is ok`).
 
+## Продолжение индивидуальной классификации: отсутствующее название шины
+
+Проверка 2026-11-14 выполнена поверх `9ac1d3d`. Завершена запись
+`title_tail.split_title__mutmut_3`: **killed после усиления тестов**.
+Всего завершена **891 из 894** запись; остаются **три открытых разбора**:
+`base_finder._search`, `_update_width`, `_split_pair`.
+
+- R81: точный исторический diff отдельно применён во временной копии `src/`,
+  `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc`. Проверено единственное
+  точное вхождение удаляемой строки; её контекст совпадает с исходным diff.
+  База: **19 passed**, exit 0; мутант: **1 failed, 18 passed**, exit 1.
+  Команда (repo — исходный репозиторий, copy — временная копия):
+  `PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_common_price_group_title.py"`.
+
+Корень пробела в тестах parsers — не проверялось отсутствие названия при
+индексе, совпадающем с искусственным fallback. RowItem и load_velocity
+сохраняют строковый индекс XXXX; split_title обязан искать токен в исходном
+названии. Новый тест требует None и обнаруживает подстановку несуществующего
+слова. Код приложения не менялся. Исторический статус сохранён;
+новый полный отчёт mutmut ещё не сформирован.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -9288,6 +9311,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.common_price.title_tail.x_split_title__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: RowItem сохраняет буквальный index_velocity=XXXX при пустом title. Исходный split_title возвращает None, точный исторический diff создаёт искусственную голову ([XXXX], []). Новый test_empty_title_has_no_tail_even_when_index_matches_fallback убивает мутацию. R81: база 19 passed, exit 0; мутант 1 failed, 18 passed, exit 1. Эквивалентность опровергнута публичным входом; код приложения не менялся.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 18.
 

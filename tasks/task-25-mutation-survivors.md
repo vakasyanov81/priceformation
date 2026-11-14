@@ -768,3 +768,15 @@ R79/R80 в [реестре](task-25-mutation-inventory.md) завершают 16
 **четыре открытых разбора**: base_finder._search, _update_width,
 _split_pair и split_title. Новый полный отчёт mutmut ещё не сформирован.
 Все девять проверок завершились с exit 0 (`just ci-compact`: `check is ok`).
+
+
+## Продолжение 2026-11-14: отсутствующее название шины
+
+R81 в [реестре](task-25-mutation-inventory.md) завершает split_title:
+мутация killed новым тестом. При пустом названии и буквальном строковом
+индексе XXXX исходник возвращает None, мутант создаёт голову из fallback.
+База: 19 passed; мутант: 1 failed, 18 passed. Код приложения не менялся.
+Всего завершена **891 из 894** запись; остаются **три открытых разбора**:
+base_finder._search, _update_width и _split_pair. Полный отчёт не обновлён.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.

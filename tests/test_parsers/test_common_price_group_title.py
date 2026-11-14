@@ -179,6 +179,13 @@ def test_split_title_keeps_last_load_token_in_head() -> None:
     assert split_title(row_item) == (expected_head, ['XL', 'TL'])
 
 
+def test_empty_title_has_no_tail_even_when_index_matches_fallback() -> None:
+    """Индекс сам по себе не создаёт отсутствующие слова названия."""
+    row_item = RowItem({'title': '', 'index_velocity': 'XXXX'})
+
+    assert split_title(row_item) is None
+
+
 def test_model_fullness_takes_priority_over_extra_title_features() -> None:
     """Длинный хвост названия не делает короткую модель полнее."""
     short = _tire('Мим', '205/65R15 Cordiant Road Runner 94H XL TL M+S', 'Road Runner')
