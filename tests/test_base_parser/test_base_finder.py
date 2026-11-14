@@ -1,8 +1,12 @@
 """tests for BaseFinder alias search."""
 
+from pathlib import Path
+
+from domain.protocols import ConfigProvider
 from parsers.base_parser.alias_container import AliasContainer
 from parsers.base_parser.alias_search import _has_word_boundaries, find_bounded
 from parsers.base_parser.base_finder import BaseFinder
+from parsers.data_provider.manufacturer_aliases import ManufacturerAliasesProviderFromUserConfig, aliases_for_finder
 
 
 def test_find_uses_first_alias_occurrence() -> None:
@@ -116,3 +120,13 @@ def test_find_word_in_title_caches_by_title() -> None:
     finder._found['xx brnd yy'] = ('cached', None)
     assert first == ('Brand', 'brnd')
     assert finder.find_word_in_title('xx brnd yy') == ('cached', None)
+
+
+def test_empty_canonical_name_allows_bracket_fallback(fake_config_provider: ConfigProvider) -> None:
+    """Пустое каноническое имя из JSON не останавливает поиск бренда в скобках."""
+    config_path = Path(fake_config_provider.config_file('manufacturer_aliases.json'))
+    config_path.write_text('{"": ["Unknown"], "Brand": []}', encoding='utf-8')
+    aliases = ManufacturerAliasesProviderFromUserConfig(fake_config_provider).get_aliases()
+    finder = BaseFinder(AliasContainer(aliases_for_finder(aliases)))
+
+    assert finder.find_word_in_title('Unknown (Brand)') == ('Brand', 'Brand')
