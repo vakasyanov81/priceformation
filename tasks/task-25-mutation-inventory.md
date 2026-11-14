@@ -671,6 +671,33 @@ zip в resolve_optional не различима: variants строится че�
 а возвращается распознанная model, поэтому fallback XXXX эквивалентен.
 Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: выбор и упорядочение дублей
+
+Проверка 2026-11-14 завершает 10 записей `availability`, `doubles_order`,
+`exclude_doubles`, `grouper` и `main_double`: **3 killed после усиления**
+и **7 эквивалентов** в публичных контрактах. Всего завершена **671 из 894**
+записей, остаются **223**: 219 без классификации и четыре ранее открытых разбора.
+Все девять timeout разобраны.
+
+- R53: каждый исторический diff отдельно, база и все 10 мутантов — 93 passed.
+- R54: после четырёх новых сценариев база 97 passed; supplier_rank и
+  is_doubtful_price — 1 failed, 96 passed; остальные — 97 passed.
+- R55: reference_priority повторён отдельно после исправления лексикографического
+  порядка тестовых названий: база 68 passed, мутант — 1 failed, 67 passed.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда R53/R54:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_common_price_grouper.py" "$copy/tests/test_parsers/test_common_price_exclude_doubles.py" "$copy/tests/test_parsers/test_common_price_main_double.py"`.
+R55 запускает только первый файл. Номера новой генерации mutmut не использовались.
+
+Закреплены отличие пустого поставщика от литерального XXXX, приоритет эталона
+и нулевая цена главного дубля. Эквиваленты обоснованы отсутствием маркера заказа
+в XXXX, единой ProductGroup у RowItem, одинаковым fallback номера группы,
+повторным дефолтом aliases_map в group_key, последующей установкой _is_grouped=True
+и нормализацией регистра цвета в доменной модели. Код приложения не менялся.
+Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -6922,6 +6949,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.availability.x_is_on_order__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент: fallback XXXX после lower равен xxxx и не содержит маркер «заказ», поэтому результат для None остаётся False. Для непустого available fallback не используется. R53/R54: passed, exit 0.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 76.
 
 ```diff
@@ -7266,6 +7295,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.doubles_order.x__group_of__mutmut_1`
 
+Классификация 2026-11-14: Эквивалент для RowItem: product_group всегда TIRE_AND_DISK, поэтому замена компонента на None у всех строк одинакова. Равенство групп, их ранги и относительный порядок priority_first сохраняются; внутренний ключ не возвращается. R53/R54: passed.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 9.
 
 ```diff
@@ -7279,6 +7310,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.doubles_order.x__group_of__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент: fallback применяется только к falsy group_by_params; исходный 0 и изменённый 1 одинаковы для всех таких строк. Истинные номера не меняются, поэтому равенство групп и их порядок сохраняются. R53/R54: passed.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 9.
 
 ```diff
@@ -7291,6 +7324,8 @@ zip в resolve_optional не различима: variants строится че�
 ```
 
 ### `parsers.common_price.doubles_order.x__supplier_rank__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: пустой supplier_name не должен наследовать ранг литерального XXXX. Падает test_missing_supplier_does_not_inherit_literal_priority; R54: 1 failed, 96 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 9.
 
@@ -7306,6 +7341,8 @@ zip в resolve_optional не различима: variants строится че�
 ## src/parsers/common_price/exclude_doubles.py
 
 ### `parsers.common_price.exclude_doubles.x__double_group__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент для RowItem: product_group одинакова у всех входных строк. Замена компонента ключа на None сохраняет равенство групп, а exclude_doubles использует ключ только для группировки и emitted, не возвращая его. R53/R54: passed.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 6.
 
@@ -7854,6 +7891,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.grouper.xǁCommonPriceGrouperǁ__init____mutmut_3`
 
+Классификация 2026-11-14: Эквивалент: при aliases_map=None группер передаёт None в keys_with_merged_models и далее group_key, который повторно заменяет None пустой картой. Непустая карта сохраняется. R53/R54: passed.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 85.
 
 ```diff
@@ -7872,6 +7911,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.grouper.xǁCommonPriceGrouperǁ__init____mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: конструктор обязан сохранить очередь эталонов. Падает test_reference_priority_is_preserved_by_grouper; R55: 1 failed, 67 passed, exit 1. Первый вариант теста с совпавшим лексикографическим победителем не различал мутацию и был исправлен по входу, а не по ожиданию. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 85.
 
 ```diff
@@ -7889,6 +7930,8 @@ zip в resolve_optional не различима: variants строится че�
 
 ### `parsers.common_price.grouper.xǁCommonPriceGrouperǁ__init____mutmut_11`
 
+Классификация 2026-11-14: Эквивалент: None и False одинаково запускают первую группировку по истинности; group_by_params завершается присваиванием True. До этого вызова _is_grouped не участвует в другом наблюдаемом поведении. R53/R54: passed.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 85.
 
 ```diff
@@ -7903,6 +7946,8 @@ zip в resolve_optional не различима: variants строится че�
 ```
 
 ### `parsers.common_price.grouper.x__optional_parts__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент в доменном контракте: RowItem уже нормализует disk.color к нижнему регистру, поэтому последующие lower и upper дают одинаковый ключ. Новый test_disk_color_case_does_not_split_group подтверждает входной контракт; R53/R54: passed.
 
 Статус: **survived**; тип: `method_swap`; выбрано тестов: 78.
 
@@ -7922,6 +7967,8 @@ zip в resolve_optional не различима: variants строится че�
 ## src/parsers/common_price/main_double.py
 
 ### `parsers.common_price.main_double.x_is_doubtful_price__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: при нулевой цене главного дубля отклонение не определено и результат обязан быть False. Падает test_zero_main_price_is_not_doubtful; R54: 1 failed, 96 passed, exit 1. Исторический survived сохранён.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 46.
 

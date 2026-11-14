@@ -3,7 +3,7 @@
 from typing import Any
 
 from domain.row_item.row_item import RowItem
-from parsers.common_price.main_double import main_double
+from parsers.common_price.main_double import is_doubtful_price, main_double
 
 _ON_ORDER = 'Под заказ'
 _PRIORITY = 'Автоснабжение'
@@ -102,6 +102,13 @@ def test_all_on_order_keeps_previous_order() -> None:
     dear = _row(20, available=_ON_ORDER, rest_count=1)
     cheap = _row(10, available=_ON_ORDER, rest_count=1)
     assert main_double([dear, cheap]) is cheap
+
+
+def test_zero_main_price_is_not_doubtful() -> None:
+    main = _row(100, price_opt=0)
+    other = _row(200, price_opt=200)
+
+    assert not is_doubtful_price(other, main)
 
 
 def test_warehouse_rows_are_merged_before_choice() -> None:

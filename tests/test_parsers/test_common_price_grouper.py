@@ -384,6 +384,19 @@ def test_empty_disk_field_matches_filled(field: str, filled: Any) -> None:
     _assert_grouped(_disk_row(), _disk_high(**{field: filled}))
 
 
+def test_disk_color_case_does_not_split_group() -> None:
+    _assert_grouped(_disk_row(color='Black'), _disk_high(color=' black '))
+
+
+def test_reference_priority_is_preserved_by_grouper() -> None:
+    first = _row(title='А эталон', supplier_name='first')
+    second = _high(title='Я эталон', supplier_name='second')
+
+    CommonPriceGrouper([first, second], reference_priority={'second': 0, 'first': 1}).group_by_params()
+
+    assert first.identity.title == second.identity.title == 'Я эталон'
+
+
 def test_empty_pcd1_does_not_glue_distinct_values() -> None:
     _assert_split(
         _disk_row(pcd1=108),
