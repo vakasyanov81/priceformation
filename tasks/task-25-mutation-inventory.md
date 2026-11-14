@@ -469,6 +469,36 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: реестр и выбор корневых разделов
+
+Проверка 2026-11-14 выполнена поверх `9fa0f4d`. Завершены все 23 записи
+`registry` и `section_selection`: **17 killed** (16 существующими тестами,
+1 новым тестом) и **6 эквивалентов** в указанных контрактах маршрутизации.
+Всего завершены **464 из 894**, остаются **430**: 426 без классификации
+и четыре открытых разбора. Все девять timeout разобраны ранее.
+
+- R37: каждый исторический diff отдельно, база 49 passed;
+  16 killed (две мутации — 3 failed, 46 passed; остальные — 1 failed, 48 passed),
+  7 survived.
+- R38: с проверкой standalone-секции, база 50 passed; 17 killed
+  (две мутации — 3 failed, 47 passed; остальные — 1 failed, 49 passed),
+  6 survived (50 passed). Индивидуальные провалы приведены ниже.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному совпадению полного
+удаляемого блока с контекстом; исходник восстановлен после каждого запуска.
+Номера новой генерации mutmut не использовались. Команда (repo — корень, copy — копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_registry.py" "$copy/tests/test_base_parser/test_section_selection.py" "$copy/tests/test_base_parser/test_routing.py"`.
+
+Корень нового пробела в тестах реестра — проверялось только создание записи
+с товарными группами. Новый случай требует отсутствие routing для отдельной
+секции без групп поставщика, сохраняя остальные переданные объекты.
+Эквиваленты ограничены рабочей цепочкой section_candidates: равная длина списков,
+наличие ключа после проверки title и проверка состояния по истинности.
+Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -5301,6 +5331,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.section_selection.xǁSectionSelectionǁ__init____mutmut_2`
 
+Классификация 2026-11-14: Эквивалент в указанном контракте: В контракте section_candidates состояние до первого корня проверяется только условием if selection.accepts(row). False и None не добавляют секцию; первый корень заменяет состояние результатом matches. Различие типа прямого вызова accepts вне этого контракта не считается эквивалентным. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 15.
 
 ```diff
@@ -5314,6 +5346,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.section_selection.xǁSectionSelectionǁaccepts__mutmut_14`
+
+Классификация 2026-11-14: Эквивалент в указанном контракте: Перед pop получено непустое строковое title через row.fields.get(selector.column). Ключ гарантированно присутствует в копии other_fields; default=None не используется. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
 
 Статус: **survived**; тип: `none_to_empty`; выбрано тестов: 15.
 
@@ -5333,6 +5367,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.section_selection.x__selected_sections__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент в указанном контракте: Единственный рабочий вызов из section_candidates создаёт selections списковым включением из тех же sections. Длины равны, списки не меняются до zip; strict не меняет обход. Прямой приватный вызов со списками разных длин вне контракта. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 10.
 
 ```diff
@@ -5351,6 +5387,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.section_selection.x__selected_sections__mutmut_7`
 
+Классификация 2026-11-14: Эквивалент в указанном контракте: Единственный рабочий вызов из section_candidates создаёт selections списковым включением из тех же sections. Длины равны, списки не меняются до zip; strict не меняет обход. Прямой приватный вызов со списками разных длин вне контракта. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 10.
 
 ```diff
@@ -5368,6 +5406,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.section_selection.x__selected_sections__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент в указанном контракте: Единственный рабочий вызов из section_candidates создаёт selections списковым включением из тех же sections. Длины равны, списки не меняются до zip; strict не меняет обход. Прямой приватный вызов со списками разных длин вне контракта. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 10.
 
@@ -9577,6 +9617,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x__build_parse_config__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 3 failed, 47 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id; FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config; FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 22.
 
 ```diff
@@ -9593,6 +9635,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x__build_parse_config__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 3 failed, 47 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config; FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries; FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 22.
 
 ```diff
@@ -9608,6 +9652,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x__vendor_entries__mutmut_8`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
@@ -9627,6 +9673,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x__vendor_entries__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
 ```diff
@@ -9644,6 +9692,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x__vendor_entries__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
@@ -9663,6 +9713,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x__vendor_entries__mutmut_17`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
 ```diff
@@ -9680,6 +9732,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x__vendor_entries__mutmut_18`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_all_vendors_returns_entries`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 5.
 
@@ -9699,6 +9753,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_all_vendors_from_registry__mutmut_2`
 
+Классификация 2026-11-14: Эквивалент в указанном контракте: include_disabled используется только в not include_disabled; False и None одинаково исключают отключённых поставщиков. R37: 49 passed; R38: 50 passed, exit 0. Обоснование основано на потоке данных.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 5.
 
 ```diff
@@ -9713,6 +9769,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x_make_vendor_entry__mutmut_1`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 8.
 
@@ -9730,6 +9788,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_make_vendor_entry__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 8.
 
 ```diff
@@ -9745,6 +9805,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x_make_vendor_entry__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Новый тест test_standalone_section_has_no_routing требует routing=None для секции без product_groups; принудительное создание маршрутизатора меняет режим чтения. R38: 1 failed, 49 passed in 0.23s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_standalone_section_has_no_routing`. R37: 49 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 8.
 
@@ -9762,6 +9824,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_make_vendor_entry__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 8.
 
 ```diff
@@ -9777,6 +9841,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_make_vendor_entry__mutmut_12`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.24s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_make_vendor_entry_attaches_section_and_config`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 8.
 
 ```diff
@@ -9791,6 +9857,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x_vendor_entry_for__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.24s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 11.
 
@@ -9809,6 +9877,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_vendor_entry_for__mutmut_11`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 11.
 
 ```diff
@@ -9824,6 +9894,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x_vendor_entry_for__mutmut_12`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 11.
 
@@ -9841,6 +9913,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.registry.x_vendor_entry_for__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 11.
 
 ```diff
@@ -9856,6 +9930,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.registry.x_vendor_entry_for__mutmut_16`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие проверки фабрик требуют переданный провайдер и VendorRouting в возвращённой конфигурации; потеря аргумента обнаруживается напрямую. R38: 1 failed, 49 passed in 0.22s, exit 1; `FAILED tests/test_parsers/test_registry.py::test_vendor_entry_for_finds_by_id`. R37: killed на существующих тестах.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 11.
 

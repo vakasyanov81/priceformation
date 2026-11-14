@@ -5,6 +5,7 @@ Tests use the duplicated configs from ``tests/parse_config_example/vendors/``
 guarantee fresh reads and independence from the real ``parse_config/vendors/``.
 """
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
@@ -143,6 +144,23 @@ def test_legacy_config_without_vendor_is_enabled_and_has_no_markup_policy() -> N
 
     assert config.is_enabled
     assert vendor_markup_policy_for(MagicMock(), config) is None
+
+
+def test_standalone_section_has_no_routing() -> None:
+    """Отдельная секция без групп поставщика использует прямое чтение прайса."""
+    provider = get_config_provider()
+    _, registered = vendor_entry_for('22', provider)
+    assert registered.vendor_section is not None
+    assert registered.vendor_config is not None
+    standalone = replace(registered.vendor_config, product_groups=())
+
+    parser_cls, config = make_vendor_entry(registered.vendor_section, standalone, provider)
+
+    assert parser_cls is BaseParser
+    assert config.routing is None
+    assert config.vendor_section is registered.vendor_section
+    assert config.vendor_config is standalone
+    assert config.config_provider is provider
 
 
 def test_is_enabled_for_disabled() -> None:
