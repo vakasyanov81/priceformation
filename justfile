@@ -81,3 +81,37 @@ check: lint types audit
 
 # Полный набор перед коммитом: проверки + тесты
 ci: check test
+
+# Полный набор CI: только ошибки, при успехе — check is ok
+ci-compact:
+    #!/usr/bin/env bash
+    set -eu
+    log_file=$(mktemp)
+    trap 'rm -f "$log_file"' EXIT
+    failed=0
+
+    check() {
+        if "$@" >"$log_file" 2>&1; then
+            return 0
+        else
+            code=$?
+            printf '\nFAILED: %s (exit %s)\n' "$*" "$code"
+            cat "$log_file"
+            failed=1
+        fi
+    }
+
+    check uv run pytest
+    check uv run black --check --diff .
+    check uv run ruff check .
+    check uv run flake8 .
+    check uv run mypy .
+    check uv run lint-imports
+    check uv run vulture
+    check uv run bandit -r src -c pyproject.toml
+    check uv run pip-audit
+
+    if [ "$failed" -ne 0 ]; then
+        exit 1
+    fi
+    printf 'check is ok\n'
