@@ -102,12 +102,13 @@ def test_parse_prices_json_non_string_value() -> None:
 def test_load_moves_and_renames(tmp_path: Path, prices_root: Path) -> None:
     """файл перемещается в папку поставщика как price.xls."""
     source = _write_source(tmp_path, 'any_price_name.xls', _XLS_BYTES)
-    with patch(_CATALOG_PATCH, return_value=_CATALOG):
+    with patch(_CATALOG_PATCH, return_value=_CATALOG), patch(_RULES_PATCH, return_value=_RULES) as rules:
         dests = _load({'1': str(source)})
     dest = prices_root / 'poshk' / 'price.xls'
     assert dests == [str(dest)]
     assert dest.read_bytes() == _XLS_BYTES
     assert not source.exists()
+    rules.assert_called_once_with(get_config_provider())
 
 
 def test_load_xlsx_keeps_extension(tmp_path: Path, prices_root: Path) -> None:

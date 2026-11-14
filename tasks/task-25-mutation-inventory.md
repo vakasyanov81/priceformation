@@ -785,6 +785,28 @@ Diff применялись во временной копии `src/`, `tests/`,
 Побочное обновление приватного кэша не входит в контракт результата. Код и тесты
 не менялись; это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: провайдер загрузки прайсов
+
+Проверка 2026-11-14 завершает пять записей `load_supplier_prices`: **2 killed
+после усиления** и **3 эквивалента**. Всего завершены **713 из 894**, остаются
+**181**: 177 без классификации и четыре ранее открытых разбора. Все девять
+timeout разобраны.
+
+- R63: каждый исторический diff отдельно; база и все пять мутантов — 47 passed.
+- R64: после проверки ConfigProvider база 47 passed; две мутации — 1 failed,
+  46 passed; три — 47 passed. Конкретные провалы приведены ниже.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`, `setup.cfg`,
+`.coveragerc` по единственному полному удаляемому блоку; исходник восстановлен.
+Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_load_supplier_prices.py"`.
+Номера новой генерации mutmut не использовались.
+
+Корень пробелов — автоматический mock vendor_file_rules не проверял переданный
+провайдер. Три варианта strict не различимы: folders строится по ключам mapping,
+а values идут в том же порядке и имеют ту же длину. Код приложения не менялся;
+это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -9163,6 +9185,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.load_supplier_prices.x__plan_upload__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_load_moves_and_renames проверяет vendor_file_rules(get_config_provider()); None вместо переданного провайдера нарушает выбор пользовательских правил. Прогон R64: 1 failed, 46 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 31.
 
 ```diff
@@ -9180,6 +9204,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.load_supplier_prices.x__supplier_folders__mutmut_13`
 
+Классификация 2026-11-14: Эквивалент: folders содержит ровно один элемент на каждый ключ mapping, mapping.values() имеет ту же длину, поэтому strict=True и strict=None дают одинаковый список пар. Прогон R64: 47 passed.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 34.
 
 ```diff
@@ -9194,6 +9220,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.load_supplier_prices.x__supplier_folders__mutmut_16`
+
+Классификация 2026-11-14: Эквивалент: удаление strict оставляет нестрогий zip, но folders и mapping.values() всегда равной длины, поэтому результат и ошибки не меняются. Прогон R64: 47 passed.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 34.
 
@@ -9210,6 +9238,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.load_supplier_prices.x__supplier_folders__mutmut_17`
 
+Классификация 2026-11-14: Эквивалент: strict=False отличается от True только при разной длине последовательностей; здесь обе строятся из одного mapping и равной длины. Прогон R64: 47 passed.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 34.
 
 ```diff
@@ -9224,6 +9254,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.load_supplier_prices.x_load_supplier_prices__mutmut_10`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_load_moves_and_renames проверяет передачу активного ConfigProvider в vendor_file_rules; подмена аргумента _plan_upload на None обнаруживается. Прогон R64: 1 failed, 46 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 34.
 
