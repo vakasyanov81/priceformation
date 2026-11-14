@@ -56,6 +56,7 @@ def test_brand_label_keeps_brand_case() -> None:
     ('brand', 'model', 'expected'),
     [
         ('Ikon', 'Ikon Character Eco C2', 'Character Eco C2'),
+        ('Ikon', 'Ikon-Xenon', 'Xenon'),
         ('Кама', 'КАМА-NF 701', 'NF 701'),
         ('Cordiant', 'CORDIANT PROFESSIONAL DR-1', 'PROFESSIONAL DR-1'),
         ('LS', 'LS FG10', 'FG10'),

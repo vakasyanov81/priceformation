@@ -807,6 +807,28 @@ Diff применялись во временной копии `src/`, `tests/`,
 а values идут в том же порядке и имеют ту же длину. Код приложения не менялся;
 это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: бренд и метки названия
+
+Проверка 2026-11-14 завершает восемь записей `nomenclature.brand` и `labels`:
+**1 killed после усиления** и **7 эквивалентов**. Всего завершены **721 из 894**,
+остаются **173**: 169 без классификации и четыре ранее открытых разбора.
+Все девять timeout разобраны.
+
+- R65: каждый исторический diff отдельно; база и все восемь мутантов — 55 passed.
+- R66: после случая модели Xenon база 56 passed; _brand_rest — 1 failed,
+  55 passed. Остальные результаты R65 не перезапускались.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`, `setup.cfg`,
+`.coveragerc` по единственному полному удаляемому блоку; исходник восстановлен.
+Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_nomenclature_labels.py" "$copy/tests/test_parsers/test_nomenclature_title.py"`.
+Номера новой генерации mutmut не использовались.
+
+Добавленный X в lstrip удаляет первую букву модели Xenon. Fallback XXXX не
+совпадает с шаблонами оси, слойности, RunFlat, XL и сезонных меток; дополнительный
+X в наборе Mm недостижим, поскольку regex допускает первым символом только M/m/3.
+Код приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -9616,6 +9638,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.nomenclature.brand.x__brand_rest__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_model_label_drops_leading_brand[Ikon-Ikon-Xenon-Xenon] требует сохранить начальную X модели после удаления бренда; расширенный набор lstrip превращает Xenon в enon. Прогон R66: 1 failed, 55 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 100.
 
 ```diff
@@ -9634,6 +9658,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.nomenclature.labels.x_axis_label__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент: при falsy raw строка XXXX не начинается ни с одного корня _AXIS_LABELS, поэтому возвращается та же пустая метка. Прогон R65: 55 passed.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 173.
 
 ```diff
@@ -9651,6 +9677,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.nomenclature.labels.x_layering_label__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент: XXXX не содержит цифр, поэтому для falsy raw layering_label по-прежнему возвращает пустую строку. Прогон R65: 55 passed.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 264.
 
 ```diff
@@ -9665,6 +9693,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.nomenclature.labels.x_run_flat_label__mutmut_5`
+
+Классификация 2026-11-14: Эквивалент: XXXX после lower не входит в _RUN_FLAT_YES, поэтому falsy flag по-прежнему не отмечает RunFlat; обработка title не меняется. Прогон R65: 55 passed.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 68.
 
@@ -9681,6 +9711,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.nomenclature.labels.x_run_flat_label__mutmut_15`
 
+Классификация 2026-11-14: Эквивалент: _RUN_FLAT не находит RunFlat/Run Flat/RFT в XXXX, поэтому falsy title по-прежнему не добавляет метку; flag обрабатывается без изменений. Прогон R65: 55 passed.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 68.
 
 ```diff
@@ -9695,6 +9727,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.nomenclature.labels.x_season_marks_label__mutmut_9`
+
+Классификация 2026-11-14: Эквивалент: regex _SEASON_MARK допускает первым символом совпадения только M, m или 3; добавление X в проверяемый набор Mm не меняет выбор M+S или 3PMSF. Прогон R65: 55 passed.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 270.
 
@@ -9714,6 +9748,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.nomenclature.labels.x_season_marks_label__mutmut_17`
 
+Классификация 2026-11-14: Эквивалент: XXXX не содержит M+S, M&S или 3PMSF, поэтому falsy source не добавляет сезонных меток, как и пустая строка. Прогон R65: 55 passed.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 270.
 
 ```diff
@@ -9730,6 +9766,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.nomenclature.labels.x_xl_label__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент: границы (?<!\w)xl(?!\w) не позволяют найти XL внутри XXXX, поэтому falsy sources по-прежнему дают пустую метку. Прогон R65: 55 passed.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 269.
 
