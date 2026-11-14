@@ -850,6 +850,33 @@ Diff применялись во временной копии `src/`, `tests/`,
 эквивалентен пустому: axis_label не распознаёт XXXX и не добавляет токен. Код
 приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: вспомогательные стратегии размеров и названий
+
+Проверка 2026-11-14 завершает 34 записи `_autosnab_helper`, `_disk_title_parser`,
+`_four_tochki_*` и `_tire_size_parts`: **13 killed после усиления** и
+**21 эквивалент** в указанных контрактах. Всего завершены **766 из 894**,
+остаются **128**: 124 без классификации и четыре ранее открытых разбора.
+Все девять timeout разобраны.
+
+- R69: каждый исторический diff отдельно, база 300 passed; 12 killed,
+  22 survived.
+- R70: после случая `(XSilver)` база 301 passed;
+  13 killed (каждый — 1 failed, 300 passed), 21 survived (301 passed).
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_strategies/test_autosnab_helper.py" "$copy/tests/test_parsers/test_strategies/test_disk_title_parser.py" "$copy/tests/test_parsers/test_strategies/test_tire_title_parser.py" "$copy/tests/test_parsers/test_vendors/test_four_tochki/test_four_tochki_title.py" "$copy/tests/test_parsers/test_vendors/test_four_tochki/test_four_tochki_disk_title.py"`.
+Номера новой генерации mutmut не использовались для индивидуальных результатов.
+
+Новые проверки закрепляют ось только у спецшины, ось грузовой шины, сохранение
+нуля ширины диагонального дюймового размера и неизвестный цвет с префиксом X.
+Эквиваленты обоснованы якорями regex,
+целочисленным внешним диаметром, последующим split и нераспознаваемым fallback.
+Код приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -10638,6 +10665,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._autosnab_helper.x__lstrip_name__mutmut_14`
 
+Классификация 2026-11-14: Эквивалент: после _lstrip_name модель собирается через leftover.split(); ведущие пробелы, сохранённые rstrip вместо lstrip, не попадают в токены и итоговую строку.
+
 Статус: **survived**; тип: `method_swap`; выбрано тестов: 20.
 
 ```diff
@@ -10652,6 +10681,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._autosnab_helper.x__parse_size__mutmut_33`
+
+Классификация 2026-11-14: Эквивалент: _SIZE_INCH принимает ext только как целые цифры, поэтому ext.replace не может получить запятую; обе замены аргумента не меняют результат.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 21.
 
@@ -10671,6 +10702,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._autosnab_helper.x__parse_size__mutmut_34`
 
+Классификация 2026-11-14: Эквивалент: _SIZE_INCH принимает ext только как целые цифры, поэтому ext.replace не может получить запятую; обе замены результата не меняют ext.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 21.
 
 ```diff
@@ -10688,6 +10721,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._autosnab_helper.x_fill_from_title__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент: XXXX не совпадает ни с одним anchored regex размера, как и пустая строка; fill_from_title в обоих случаях ничего не меняет.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 21.
 
@@ -10708,6 +10743,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._disk_title_parser.x__first_known__mutmut_5`
 
+Классификация 2026-11-14: Killed в R70: test_parse_color[(XSilver)] требует пустой цвет; расширенный набор strip ошибочно признаёт XSilver значением Silver.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 43.
 
 ```diff
@@ -10726,6 +10763,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._disk_title_parser.x__thickness__mutmut_15`
 
+Классификация 2026-11-14: Эквивалент: замена пробелов на XX XX по-прежнему скрывает диаметр отверстия: перед 26мм возникает словесный X, запрещённый lookbehind; другие голые значения толщины сохраняются.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 43.
 
 ```diff
@@ -10743,6 +10782,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_disk_helper.x_disk_name_suffix__mutmut_1`
 
+Классификация 2026-11-14: Эквивалент: disk_name_extras отбрасывает литеральный XXXX как служебный маркер и при пустой модели; дефолт XXXX не меняет публичный suffix.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 12.
 
 ```diff
@@ -10757,6 +10798,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_disk_helper.x_fill_disk_thickness__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент: regex толщины требует число и мм в скобках; ни пустая строка, ни XXXX не дают совпадения.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 10.
 
@@ -10777,6 +10820,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x__camera__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент: _CAMERA не находит камерность ни в пустой строке, ни в XXXX; затем одинаково возвращается intimacy.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 47.
 
 ```diff
@@ -10794,6 +10839,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x__compose_title__mutmut_8`
+
+Классификация 2026-11-14: Эквивалент: join_size_parts отбрасывает пустые части по истинности, поэтому height=None и пустая строка дают одинаковый size.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 44.
 
@@ -10813,6 +10860,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_1`
 
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[спецтехника] требует токен Ведущая; special=None отбрасывает ось.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 39.
 
 ```diff
@@ -10829,6 +10878,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_6`
+
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[спецтехника] требует токен Ведущая; axis=None её удаляет.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 39.
 
@@ -10847,6 +10898,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_11`
 
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[спецтехника] требует токен Ведущая; удаление axis её удаляет.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 39.
 
 ```diff
@@ -10862,6 +10915,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_15`
+
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[спецтехника] требует токен Ведущая; and False отбрасывает ось.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 39.
 
@@ -10880,6 +10935,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_16`
 
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[Легковая] запрещает ось обычной шины; or True ошибочно её добавляет.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 39.
 
 ```diff
@@ -10896,6 +10953,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_17`
+
+Классификация 2026-11-14: Killed в R69: test_default_title_axis_only_for_special_tire[спецтехника] требует токен Ведущая; and вместо or возвращает пустую ось.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 39.
 
@@ -10914,6 +10973,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_18`
 
+Классификация 2026-11-14: Эквивалент: при спецшине без оси fallback XXXX передаётся в axis_label, который его не распознаёт и не добавляет токен, как и пустая строка.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 39.
 
 ```diff
@@ -10930,6 +10991,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_default_tire_title__mutmut_19`
+
+Классификация 2026-11-14: Эквивалент: для обычной шины fallback XXXX передаётся в axis_label, который его не распознаёт и не добавляет токен, как и пустая строка.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 39.
 
@@ -10948,6 +11011,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_truck_title__mutmut_4`
 
+Классификация 2026-11-14: Killed в R69: test_truck_title_includes_axis требует токен Ведущая; axis=None её удаляет.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 8.
 
 ```diff
@@ -10963,6 +11028,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_truck_title__mutmut_8`
+
+Классификация 2026-11-14: Killed в R69: test_truck_title_includes_axis требует токен Ведущая; удаление axis её удаляет.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 8.
 
@@ -10980,6 +11047,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_helper.x_truck_title__mutmut_11`
 
+Классификация 2026-11-14: Killed в R69: test_truck_title_includes_axis требует токен Ведущая; and вместо or возвращает пустую ось.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 8.
 
 ```diff
@@ -10995,6 +11064,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_helper.x_truck_title__mutmut_12`
+
+Классификация 2026-11-14: Эквивалент: fallback XXXX не распознаётся axis_label и не добавляет токен, как и пустая строка.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 8.
 
@@ -11014,6 +11085,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_7`
 
+Классификация 2026-11-14: Эквивалент: _SIZE_PREFIX имеет якорь ^ и поэтому может заменить не более одного префикса; count=0, 1 и 2 дают одинаковый текст.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
 ```diff
@@ -11029,6 +11102,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_9`
+
+Классификация 2026-11-14: Эквивалент: _SIZE_PREFIX имеет якорь ^ и поэтому может заменить не более одного префикса; count=0, 1 и 2 дают одинаковый текст.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 15.
 
@@ -11046,6 +11121,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_16`
 
+Классификация 2026-11-14: Эквивалент: _ALT_AFTER_SIZE имеет якорь ^ и допускает не более одной замены; count=0, 1 и 2 эквивалентны.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
 ```diff
@@ -11061,6 +11138,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_18`
+
+Классификация 2026-11-14: Эквивалент: _ALT_AFTER_SIZE имеет якорь ^ и допускает не более одной замены; count=0, 1 и 2 эквивалентны.
 
 Статус: **survived**; тип: `number`; выбрано тестов: 15.
 
@@ -11078,6 +11157,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_24`
 
+Классификация 2026-11-14: Эквивалент: _RIM_AFTER_SIZE имеет якорь ^ и допускает не более одной замены; count=0, 1 и 2 эквивалентны.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
 ```diff
@@ -11093,6 +11174,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x__strip_size_noise__mutmut_26`
 
+Классификация 2026-11-14: Эквивалент: _RIM_AFTER_SIZE имеет якорь ^ и допускает не более одной замены; count=0, 1 и 2 эквивалентны.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 15.
 
 ```diff
@@ -11107,6 +11190,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_size.x_fill_size_from_title__mutmut_20`
+
+Классификация 2026-11-14: Эквивалент: _ZR_SIZE имеет якорь ^ и допускает не более одной замены; опущенный count и count=2 сохраняют результат.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 46.
 
@@ -11126,6 +11211,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x_fill_size_from_title__mutmut_22`
 
+Классификация 2026-11-14: Эквивалент: _ZR_SIZE и разбор конструкции нечувствительны к регистру; заменённая строчная r канонизируется так же, как прописная R.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 46.
 
 ```diff
@@ -11144,6 +11231,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._four_tochki_tire_size.x_fill_size_from_title__mutmut_23`
 
+Классификация 2026-11-14: Эквивалент: _ZR_SIZE имеет якорь ^ и допускает не более одной замены; count=2 сохраняет результат count=1.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 46.
 
 ```diff
@@ -11161,6 +11250,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._four_tochki_tire_size.x_fill_size_suffix__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент: _SIZE_SUFFIX требует размер с суффиксом в начале строки; XXXX не совпадает, как и пустая строка.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 45.
 
@@ -11182,6 +11273,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.strategies._tire_size_parts.x_find_size__mutmut_11`
 
+Классификация 2026-11-14: Эквивалент: остаток названия далее разбивается по whitespace; ведущие пробелы, сохранённые rstrip, не становятся токенами и не меняют поля разбора.
+
 Статус: **survived**; тип: `method_swap`; выбрано тестов: 238.
 
 ```diff
@@ -11196,6 +11289,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.strategies._tire_size_parts.x_inch_label__mutmut_13`
+
+Классификация 2026-11-14: Killed в R69: test_diagonal_inch_size_keeps_trailing_zero требует 31x10.50-15; or True ошибочно срезает ноль у диагонального размера.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 20.
 

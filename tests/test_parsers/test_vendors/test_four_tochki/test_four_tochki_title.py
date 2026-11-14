@@ -53,6 +53,13 @@ def test_truck_title_keeps_camera_and_sidewall() -> None:
     assert title == '315/80R22.5 Triangle TRD06 157/154K 20PR TL 3PMSF'
 
 
+def test_truck_title_includes_axis() -> None:
+    """Ось грузовой шины сохраняется в собранном названии."""
+    row = RowItem({'model': 'TRD06', 'axis': 'ведущая'})
+
+    assert truck_title(row, '315/80R22.5') == '315/80R22.5 TRD06 Ведущая'
+
+
 def test_default_title_includes_runflat() -> None:
     row = RowItem(
         {
@@ -66,6 +73,20 @@ def test_default_title_includes_runflat() -> None:
     )
     title = default_tire_title(row, '235/60R18')
     assert title == '235/60R18 Pirelli Scorpion Verde All-Season 103H TL RunFlat'
+
+
+@pytest.mark.parametrize(
+    ('tire_type', 'expected'),
+    [('спецтехника', '10.0/75-15.3 IM-17 Ведущая'), ('Легковая', '205/55R16 Model')],
+)
+def test_default_title_axis_only_for_special_tire(tire_type: str, expected: str) -> None:
+    """Ось попадает в title спецшины и отбрасывается у обычной шины."""
+    row = RowItem(
+        {'model': 'IM-17' if tire_type == 'спецтехника' else 'Model', 'axis': 'ведущая', 'tire_type': tire_type}
+    )
+    size = '10.0/75-15.3' if tire_type == 'спецтехника' else _SIZE
+
+    assert default_tire_title(row, size) == expected
 
 
 def test_ext_diameter_title_skips_empty_optional() -> None:
