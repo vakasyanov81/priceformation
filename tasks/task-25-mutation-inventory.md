@@ -829,6 +829,27 @@ Diff применялись во временной копии `src/`, `tests/`,
 X в наборе Mm недостижим, поскольку regex допускает первым символом только M/m/3.
 Код приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: сборщики названий
+
+Проверка 2026-11-14 завершает 12 записей `nomenclature.title` и `tube_title`:
+**11 killed** (7 существующими тестами, 4 после усиления) и **1 эквивалент**.
+Всего завершены **733 из 894**, остаются **161**: 157 без классификации и четыре
+ранее открытых разбора. Все девять timeout разобраны.
+
+- R67: каждый исторический diff отдельно; база 31 passed, 7 killed, 5 survived.
+- R68: после трёх прямых вызовов с дефолтами база 34 passed; 11 killed,
+  compose_tire_title__mutmut_2 — 34 passed. Каждый killed — 1 failed, 33 passed.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`, `setup.cfg`,
+`.coveragerc` по единственному полному удаляемому блоку; исходник восстановлен.
+Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_nomenclature_title.py" "$copy/tests/test_parsers/test_nomenclature_tube_title.py"`.
+Номера новой генерации mutmut не использовались.
+
+Пробелы были в явной передаче всех необязательных аргументов. Дефолт axis=XXXX
+эквивалентен пустому: axis_label не распознаёт XXXX и не добавляет токен. Код
+приложения не менялся; это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -9786,6 +9807,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.title.x_compose_disk_title__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_disk_title_has_empty_suffix_by_default вызывает сборщик без suffix и требует отсутствие постороннего токена XXXX. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 8.
 
 ```diff
@@ -9800,6 +9823,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.title.x_compose_tire_title__mutmut_2`
+
+Классификация 2026-11-14: Эквивалент: дефолт axis=XXXX передаётся в axis_label, где XXXX не начинается ни с одного известного корня и превращается в пустую строку, как и исходный дефолт. Прогон R68: 34 passed.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 64.
 
@@ -9819,6 +9844,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.title.x_compose_tire_title__mutmut_32`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tire_title_keeps_xl_and_season_marks помещает XL только в надпись на боковине; None вместо sidewall удаляет обязательный токен. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 64.
 
 ```diff
@@ -9836,6 +9863,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.title.x_compose_tire_title__mutmut_34`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tire_title_keeps_xl_and_season_marks помещает XL только в надпись на боковине; удаление аргумента sidewall удаляет обязательный токен. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 64.
 
@@ -9857,6 +9886,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title_has_empty_brand_model_and_no_valve_by_default вызывает сборщик только с типом и размером; brand=XXXX добавляет запрещённый токен. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 15.
 
 ```diff
@@ -9871,6 +9902,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title_has_empty_brand_model_and_no_valve_by_default вызывает сборщик только с типом и размером; model=XXXX добавляет запрещённый токен. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 15.
 
@@ -9887,6 +9920,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title_has_empty_brand_model_and_no_valve_by_default требует название камеры без вентиля при вызове только с типом и размером; valve=True меняет результат. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 15.
 
 ```diff
@@ -9901,6 +9936,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title[rim-tape-valve] требует метку «с вентилем» для ободной ленты; None вместо аргумента удаляет её. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
@@ -9918,6 +9955,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_11`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title[rim-tape-valve] требует метку «с вентилем» для ободной ленты; удаление аргумента удаляет её. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
 ```diff
@@ -9933,6 +9972,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_16`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title[rim-tape-valve] требует метку «с вентилем» для ободной ленты; and False всегда подавляет её. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 15.
 
@@ -9950,6 +9991,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_18`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title[rim-tape-valve] проверяет точное каноническое название; обрамление XX меняет метку вентиля. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 15.
 
 ```diff
@@ -9965,6 +10008,8 @@ X в наборе Mm недостижим, поскольку regex допуск
 ```
 
 ### `parsers.nomenclature.tube_title.x_compose_tube_title__mutmut_19`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_compose_tube_title[rim-tape-valve] проверяет точное каноническое название; верхний регистр меняет метку вентиля. Прогон R68: 1 failed, 33 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 15.
 

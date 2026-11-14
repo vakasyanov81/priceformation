@@ -32,3 +32,7 @@ def test_tube_size_label(size: tuple[str, ...], expected: str) -> None:
 )
 def test_compose_tube_title(is_rim_tape: bool, brand: str, model: str, valve: bool, expected: str) -> None:
     assert compose_tube_title(is_rim_tape, '11.00-20', brand, model, valve=valve) == expected
+
+
+def test_compose_tube_title_has_empty_brand_model_and_no_valve_by_default() -> None:
+    assert compose_tube_title(False, '11.00-20') == 'Камера 11.00-20'
