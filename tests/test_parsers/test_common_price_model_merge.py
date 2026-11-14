@@ -135,3 +135,8 @@ def test_prefix_on_short_model_does_not_prevent_merging(prefix_field: str) -> No
     assert keyed[0][0] == keyed[1][0]
     assert keyed[0][0][MODEL_KEY_INDEX] == 'gravitysuv'
     assert [row for _key, row in keyed] == rows
+
+
+def test_hyphen_between_manufacturer_and_brand_does_not_leave_brand_tokens() -> None:
+    """Удаление первого префикса открывает второй, даже если они разделены дефисом."""
+    assert model_tokens('Cordiant-Road PS-1', 'Cordiant', 'Road') == frozenset(('ps1',))

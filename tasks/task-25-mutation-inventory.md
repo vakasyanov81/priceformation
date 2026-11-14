@@ -528,6 +528,34 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: выбор эталона и префиксы модели
+
+Проверка 2026-11-14 выполнена поверх `88d5486`. Завершены 11 записей
+`group_title`, `model` и `title_flags`: **8 killed** (2 существующими тестами,
+6 после усиления) и **3 эквивалента**. Всего завершены **493 из 894**,
+остаются **401**: 397 без классификации и четыре открытых разбора.
+Все девять timeout разобраны ранее.
+
+- R41: каждый исторический diff отдельно, база 133 passed;
+  2 killed (1 failed, 132 passed и 2 failed, 131 passed), 9 survived.
+- R42: после пяти новых сценариев база 138 passed; 8 killed
+  (3 — 1 failed, 137 passed; 4 — 2 failed, 136 passed; 1 — 3 failed, 135 passed),
+  3 survived (138 passed). Индивидуальные провалы приведены ниже.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному совпадению полного
+удаляемого блока с контекстом; исходник восстановлен после каждого запуска.
+Номера новой генерации mutmut не использовались. Команда (repo — корень, copy — копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_common_price_group_key.py" "$copy/tests/test_parsers/test_common_price_group_title.py" "$copy/tests/test_parsers/test_common_price_model_merge.py"`.
+
+Пробелы слоя parsers/common_price — полнота модели совпадала с длиной названия,
+не было пустого эталона и отсутствующего поставщика в очереди. Новый сценарий
+префиксов проверяет первый неверный шаг: дефис после производителя мешает
+распознать следующий бренд до токенизации. Код приложения проходит все новые
+проверки и не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -7477,6 +7505,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.common_price.group_title.x__merged_title__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Приоритетный эталон с пустым title обязан оставить пустое название; fallback XXXX изменяет все названия группы. R42: 2 failed, 136 passed in 0.17s, exit 1; `FAILED tests/test_parsers/test_common_price_group_title.py::test_empty_title_sorts_before_nonempty_with_same_model`; `FAILED tests/test_parsers/test_common_price_group_title.py::test_empty_reference_title_is_preserved`. R41: 133 passed, survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 18.
 
 ```diff
@@ -7495,6 +7525,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.common_price.group_title.x__reference_key__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Полнота модели имеет преимущество над количеством слов в названии: признаки XL/TL/M+S у короткой модели не делают её эталоном. R42: 2 failed, 136 passed in 0.17s, exit 1; `FAILED tests/test_parsers/test_common_price_group_title.py::test_empty_title_sorts_before_nonempty_with_same_model`; `FAILED tests/test_parsers/test_common_price_group_title.py::test_model_fullness_takes_priority_over_extra_title_features`. R41: 133 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 18.
 
 ```diff
@@ -7511,6 +7543,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.group_title.x__reference_key__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: При равной модели и приоритете пустой title лексикографически предшествует AAA; искусственный XXXX меняет выбор эталона. R42: 1 failed, 137 passed in 0.17s, exit 1; `FAILED tests/test_parsers/test_common_price_group_title.py::test_empty_title_sorts_before_nonempty_with_same_model`. R41: 133 passed, survived.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 18.
 
@@ -7530,6 +7564,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.common_price.group_title.x__reference_key__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Принудительный выбор длины названия вместо числа слов модели выбирает короткую модель с длинным хвостом. R42: 2 failed, 136 passed in 0.17s, exit 1; `FAILED tests/test_parsers/test_common_price_group_title.py::test_empty_title_sorts_before_nonempty_with_same_model`; `FAILED tests/test_parsers/test_common_price_group_title.py::test_model_fullness_takes_priority_over_extra_title_features`. R41: 133 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 18.
 
 ```diff
@@ -7547,6 +7583,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.group_title.x__reference_key__mutmut_16`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Поставщик без имени не наследует приоритет явно заданного XXXX; новый тест отличает их приоритетом и названием. R42: 1 failed, 137 passed in 0.16s, exit 1; `FAILED tests/test_parsers/test_common_price_group_title.py::test_missing_supplier_does_not_inherit_literal_name_priority`. R41: 133 passed, survived.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 18.
 
@@ -7654,6 +7692,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.common_price.model.x__lstrip_brand_prefix__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: После удаления Cordiant- должен открыться следующий префикс Road. lstrip(None) оставляет дефис перед Road, который мешает удалить второй префикс до разбиения на слова. R42: 1 failed, 137 passed in 0.16s, exit 1; `FAILED tests/test_parsers/test_common_price_model_merge.py::test_hyphen_between_manufacturer_and_brand_does_not_leave_brand_tokens`. R41: 133 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 128.
 
 ```diff
@@ -7669,6 +7709,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.model.x_model_tokens__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующий тест короткой модели с префиксом производителя обнаруживает потерю manufacturer. R42: 2 failed, 136 passed in 0.16s, exit 1; `FAILED tests/test_parsers/test_common_price_model_merge.py::test_prefix_on_short_model_does_not_prevent_merging[manufacturer_name]`; `FAILED tests/test_parsers/test_common_price_model_merge.py::test_hyphen_between_manufacturer_and_brand_does_not_leave_brand_tokens`. R41: killed существующими тестами.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 94.
 
@@ -7687,6 +7729,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.model.x_model_tokens__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Существующие тесты раздельного бренд-префикса и слияния короткой модели обнаруживают потерю brand. R42: 3 failed, 135 passed in 0.18s, exit 1; `FAILED tests/test_parsers/test_common_price_model_merge.py::test_hyphen_between_manufacturer_and_brand_does_not_leave_brand_tokens`; `FAILED tests/test_parsers/test_common_price_model_merge.py::test_prefix_on_short_model_does_not_prevent_merging[brand]`; `FAILED tests/test_parsers/test_common_price_group_key.py::test_model_tokens_strip_separate_brand_prefix`. R41: killed существующими тестами.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 94.
 
@@ -8409,6 +8453,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.common_price.title_flags.x__kind__mutmut_3`
 
+Классификация 2026-11-14: Эквивалент: Ни пустая строка, ни xxxx не содержат диск/камер/лент. valve_key продолжает проверку вентиля одинаково, tube_model возвращает пустую строку в обоих случаях. R41: 133 passed; R42: 138 passed, exit 0. Обоснование по потребителям и шаблонам, не только survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 146.
 
 ```diff
@@ -8421,6 +8467,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.title_flags.x_has_valve__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент: XXXX не совпадает с кириллическим шаблоном отдельного с вент, как и пустая строка; bool поиска остаётся False. R41: 133 passed; R42: 138 passed, exit 0. Обоснование по потребителям и шаблонам, не только survived.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 123.
 
@@ -8435,6 +8483,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.common_price.title_flags.x_tube_model_from_title__mutmut_7`
+
+Классификация 2026-11-14: Эквивалент: XXXX не содержит кириллических букв, дефиса или цифр и не совпадает ни с шаблоном камеры, ни с шаблоном ободной ленты; результат пуст. R41: 133 passed; R42: 138 passed, exit 0. Обоснование по потребителям и шаблонам, не только survived.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 25.
 

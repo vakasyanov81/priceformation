@@ -177,3 +177,43 @@ def test_split_title_keeps_last_load_token_in_head() -> None:
     row_item = _tire('Мим', '205/65R15 Cordiant 94H Road 94H XL TL', '94H Road')
     expected_head = ['205/65R15', 'Cordiant', '94H', 'Road', '94H']
     assert split_title(row_item) == (expected_head, ['XL', 'TL'])
+
+
+def test_model_fullness_takes_priority_over_extra_title_features() -> None:
+    """Длинный хвост названия не делает короткую модель полнее."""
+    short = _tire('Мим', '205/65R15 Cordiant Road Runner 94H XL TL M+S', 'Road Runner')
+    full = _tire('Мим', '205/65R15 Cordiant Road Runner PS-1 94H', 'Road Runner PS-1')
+
+    unify_group_title([short, full], _PRIORITY)
+
+    assert _titles([short, full]) == {'205/65R15 Cordiant Road Runner PS-1 94H XL TL M+S'}
+
+
+def test_empty_reference_title_is_preserved() -> None:
+    """Приоритетный эталон без названия не заменяется искусственным текстом."""
+    reference = _tire('Форточки', '', 'Road Runner')
+    other = _tire('Мим', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
+
+    unify_group_title([reference, other], _PRIORITY)
+
+    assert _titles([reference, other]) == {''}
+
+
+def test_empty_title_sorts_before_nonempty_with_same_model() -> None:
+    """После одинаковой полноты модели сравнивается само название, включая пустое."""
+    empty = _tire('Мим', '', 'Road Runner')
+    titled = _tire('Мим', 'AAA', 'Road Runner')
+
+    unify_group_title([titled, empty], _PRIORITY)
+
+    assert _titles([titled, empty]) == {''}
+
+
+def test_missing_supplier_does_not_inherit_literal_name_priority() -> None:
+    """Пустое имя поставщика не получает место другого имени в очереди эталонов."""
+    unknown = _tire('', 'AAA', 'Road Runner')
+    known = _tire('XXXX', 'ZZZ', 'Road Runner')
+
+    unify_group_title([unknown, known], {'XXXX': 0})
+
+    assert _titles([unknown, known]) == {'ZZZ'}
