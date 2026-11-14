@@ -8,6 +8,7 @@ from domain.row_item.row_item import RowItem
 from parsers.nomenclature.brand import brand_label, model_label
 from parsers.nomenclature.title import (
     TireTitleTokens,
+    compose_disk_title,
     compose_tire_title,
     join_size_parts,
     join_title_parts,
@@ -56,6 +57,7 @@ def test_brand_label_keeps_brand_case() -> None:
     ('brand', 'model', 'expected'),
     [
         ('Ikon', 'Ikon Character Eco C2', 'Character Eco C2'),
+        ('Ikon', 'Ikon-Xenon', 'Xenon'),
         ('Кама', 'КАМА-NF 701', 'NF 701'),
         ('Cordiant', 'CORDIANT PROFESSIONAL DR-1', 'PROFESSIONAL DR-1'),
         ('LS', 'LS FG10', 'FG10'),
@@ -68,6 +70,14 @@ def test_brand_label_keeps_brand_case() -> None:
 def test_model_label_drops_leading_brand(brand: str, model: str, expected: str) -> None:
     """Бренд в начале модели не повторяется в title; слитное начало и пустой остаток модель не трогают."""
     assert model_label(_row(manufacturer_name=brand, model=model)) == expected
+
+
+def test_compose_disk_title_has_empty_suffix_by_default() -> None:
+    assert compose_disk_title(_row()) == 'x x ET'
+
+
+def test_compose_tire_title_has_empty_axis_by_default() -> None:
+    assert compose_tire_title(_row(manufacturer_name='Ikon'), '205/55R16') == '205/55R16 Ikon'
 
 
 def test_load_velocity_concatenates() -> None:
@@ -110,8 +120,8 @@ def test_compose_tire_title_canonical_order() -> None:
 def test_compose_tire_title_keeps_xl_and_season_marks() -> None:
     """`XL`, `M+S` и `3PMSF` берутся из названия поставщика и надписи на боковине; `M+S` стоит сразу за камерностью."""
     row = _row(
-        title='245/45ZR17 99W XL Ingens A1 TL M+S',
-        inscription_on_the_side='3PMSF',
+        title='245/45ZR17 99W Ingens A1 TL M+S',
+        inscription_on_the_side='XL 3PMSF',
         manufacturer_name='Antares',
         model='Ingens A1',
         index_load='99',

@@ -9,40 +9,17 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Iterator
 from pathlib import Path
 
-import pytest
 from log_watch import LoggerWatcher
 
-from cfg import init_cfg
 from domain.config_context import get_config_provider
-from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.registry import clear_registry
 from services.parse_orchestrator import ParseOrchestrator
 from services.service_provider import ServiceProvider
 
 _INTEGRATION_ROOT = Path(__file__).resolve().parent
 _CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
-_PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
 _ROW_LOGGER = 'parsers.base_parser.row_enricher'
-
-
-@pytest.fixture
-def _fixture_config_provider() -> Iterator[None]:
-    """Провайдер путей: конфиги и цены — из фикстур (без боевого parse_config/file_prices)."""
-    init_cfg(
-        FakeConfigProvider(
-            _INTEGRATION_ROOT,
-            config_folder=_CONFIG_DIR,
-            prices_folder=_PRICES_DIR,
-            result_folder=_INTEGRATION_ROOT / 'result_for_test',
-        ),
-    )
-    clear_registry()
-    yield
-    clear_registry()
-    init_cfg()
 
 
 class TestFullParsePipeline:

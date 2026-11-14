@@ -26,8 +26,13 @@ def test_tube_size_label(size: tuple[str, ...], expected: str) -> None:
         (False, '', '', True, 'Камера 11.00-20 с вентилем'),
         (True, '', '', False, 'Ободная лента 11.00-20'),
         (True, 'Nortec', '300-508А', False, 'Ободная лента 300-508А Nortec'),
+        (True, 'Nortec', '300-508А', True, 'Ободная лента 300-508А Nortec с вентилем'),
     ],
-    ids=['plain', 'brand-and-model', 'valve', 'rim-tape', 'rim-tape-model-replaces-size'],
+    ids=['plain', 'brand-and-model', 'valve', 'rim-tape', 'rim-tape-model-replaces-size', 'rim-tape-valve'],
 )
 def test_compose_tube_title(is_rim_tape: bool, brand: str, model: str, valve: bool, expected: str) -> None:
     assert compose_tube_title(is_rim_tape, '11.00-20', brand, model, valve=valve) == expected
+
+
+def test_compose_tube_title_has_empty_brand_model_and_no_valve_by_default() -> None:
+    assert compose_tube_title(False, '11.00-20') == 'Камера 11.00-20'

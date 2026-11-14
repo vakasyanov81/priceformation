@@ -194,6 +194,15 @@ map_manufacturer = {
 }
 
 
+def test_default_prefers_manufacturer_from_title() -> None:
+    finder = ManufacturerFinder({'Ikon Tyres': ['Ikon'], 'Nordman': []})
+    row_item = RowItem({'title': '195/55R15 Nordman RS2 89R', 'manufacturer_name': 'Ikon'})
+
+    finder.process(row_item)
+
+    assert row_item.identity.manufacturer == 'Nordman'
+
+
 def test_column_first_keeps_column_manufacturer_over_title() -> None:
     """column_first: непустая колонка (с нормализацией алиаса) приоритетнее найденного в названии."""
     finder = ManufacturerFinder({'Ikon Tyres': ['Ikon'], 'Nordman': []})

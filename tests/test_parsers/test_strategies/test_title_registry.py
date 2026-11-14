@@ -111,6 +111,26 @@ def test_poshk_stk_tire_compose_camera_by_kind_wired() -> None:
     assert prepared == '11R22.5 TAITONG HS103 146/143M 16PR TL Ведущая'
 
 
+def test_fallback_brand_passes_explicit_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Детектор fallback_brand читает алиасы через переданный ConfigProvider."""
+    seen: list[object] = []
+
+    def _aliases(provider: object) -> dict[str, list[str]]:
+        seen.append(provider)
+        return {}
+
+    monkeypatch.setattr('parsers.strategies.title_registry.load_aliases_map', _aliases)
+    make_title_strategy(
+        TitleConfig(strategy='normalize_size_chunks', fallback_brand='Алтайшина'),
+        WHERE,
+        config_provider=_PROVIDER,
+    )
+
+    assert seen == [_PROVIDER]
+
+
 def test_normalize_size_chunks_without_fallback_does_not_read_aliases(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -147,10 +167,11 @@ def test_unknown_disk_variant_raises() -> None:
 
 def test_aliases_wraps_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
     """Обёртка aliases читает таблицу поставщика и применяет её к title."""
-    seen: dict[str, str] = {}
+    seen: dict[str, object] = {}
 
-    def _aliases(supplier_name: str, _provider: object) -> dict[str, str]:
+    def _aliases(supplier_name: str, provider: object) -> dict[str, str]:
         seen['supplier_name'] = supplier_name
+        seen['provider'] = provider
         return {'Старый': 'Новый'}
 
     monkeypatch.setattr('parsers.strategies.title_registry.load_title_aliases', _aliases)
@@ -161,6 +182,7 @@ def test_aliases_wraps_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
     assert isinstance(strategy, TitleWithAliases)
     assert strategy.prepare(RowItem({'title': 'Старый'})) == 'Новый'
     assert seen['supplier_name'] == 's'
+    assert seen['provider'] is _PROVIDER
 
 
 def test_markers_wrap_strategy_and_set_fields() -> None:
@@ -176,6 +198,22 @@ def test_markers_wrap_strategy_and_set_fields() -> None:
     assert strategy.prepare(row) == '205/55 R16 Torero MP30 шипы'
     assert row.tire.season == 'зима'
     assert row.tire.spike == 'да'
+
+
+def test_compose_defaults_to_title_brand_and_uses_manufacturer_probe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Без column_first канонический бренд ищется в title через переданные алиасы."""
+    monkeypatch.setattr(
+        'parsers.strategies.title_wrap.load_aliases_map',
+        lambda _provider: {'Ikon Tyres': ('Ikon',)},
+    )
+    config = TitleConfig(strategy='normalize_title', params_from_title=True, compose=True)
+    row = RowItem({'title': '205/55R16 Ikon Bar 91V', 'manufacturer_name': 'Unknown'})
+
+    strategy = make_title_strategy(config, WHERE, config_provider=_PROVIDER)
+
+    assert strategy.prepare(row) == '205/55R16 Ikon Tyres Bar 91V'
 
 
 def test_params_from_title_wraps_strategy() -> None:
@@ -214,8 +252,10 @@ def test_params_first_wraps_before_compose() -> None:
 def test_params_first_requires_params_from_title() -> None:
     config = TitleConfig(strategy='tire_compose', variant='four_tochki', params_first=True)
 
-    with pytest.raises(ConfigValidationError, match='params_first'):
+    with pytest.raises(ConfigValidationError, match='params_first') as exc_info:
         make_title_strategy(config, WHERE, config_provider=_PROVIDER)
+
+    assert str(exc_info.value).startswith(f'{WHERE}:')
 
 
 def test_params_first_strategy_prepares_title_end_to_end() -> None:

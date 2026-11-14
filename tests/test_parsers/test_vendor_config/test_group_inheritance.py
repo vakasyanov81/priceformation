@@ -78,6 +78,17 @@ def test_reading_settings_follow_five_levels(level: int) -> None:
     assert section.file_templates == (f'{level}.xlsx',)
 
 
+def test_absent_reading_settings_use_first_excel_row() -> None:
+    vendor = _vendor()
+    vendor.pop('defaults')
+    raw_section = {'id': 'tires', 'columns': {'0': 'title'}}
+    vendor['product_groups'] = [{'id': 'tire_and_disk', 'sections': [raw_section]}]
+
+    section = _load(vendor, {'defaults': {'file_templates': ['*.xlsx']}}).sections[0]
+
+    assert section.start_row == 1
+
+
 def test_common_settings_do_not_leak_between_groups() -> None:
     config = _load(_vendor(), _common())
     tires, batteries = config.product_groups
@@ -199,6 +210,34 @@ def test_common_reading_defaults_reject_model_settings(key: str) -> None:
 def test_invalid_common_groups_report_source(groups: object) -> None:
     with pytest.raises(ConfigValidationError, match=r'_common\.json → product_groups'):
         CommonVendorSettings.from_dict({'product_groups': groups}, '_common.json')
+
+
+def test_common_group_defaults_must_be_object_with_source() -> None:
+    raw = {'product_groups': [{'id': 'tire_and_disk', 'defaults': []}]}
+
+    with pytest.raises(ConfigValidationError) as caught:
+        CommonVendorSettings.from_dict(raw, '_common.json')
+
+    assert str(caught.value).startswith('_common.json → product_groups[0]')
+
+
+def test_unknown_group_error_lists_allowed_ids() -> None:
+    with pytest.raises(ConfigValidationError) as caught:
+        _load({'code': 'demo', 'name': 'demo', 'product_groups': [{'id': 'unknown'}]}, {})
+
+    assert str(caught.value).endswith('допустимы tire_and_disk, batteries')
+
+
+def test_unknown_strategy_error_lists_allowed_names() -> None:
+    vendor = _vendor()
+    vendor['product_groups'][0]['category'] = {'strategy': 'unknown'}
+
+    with pytest.raises(ConfigValidationError) as caught:
+        _load(vendor, _common())
+
+    assert str(caught.value).endswith(
+        'доступны: none, fixed, title_keywords, field_map, column_canonical, header_rows, tire_size_category)'
+    )
 
 
 def test_common_duplicate_groups_report_both_paths() -> None:

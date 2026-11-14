@@ -39,6 +39,15 @@ def test_boolean_cells_use_yes_or_empty(flag: bool | None, expected: str | None)
     column = {'EFB': {'field': 'efb'}}
 
     assert writer_mod.get_value(column, {'efb': flag}) == expected
+    assert writer_mod._to_str(flag) == expected
+
+
+@pytest.mark.parametrize('field', [None, ''])
+def test_column_without_field_uses_default(field: str | None) -> None:
+    """Колонка-константа не читает значение по пустому ключу исходной строки."""
+    column = {'Наличие': {'field': field, 'default_value': 'В наличии'}}
+
+    assert writer_mod.get_value(column, {'': 'Постороннее значение'}) == 'В наличии'
 
 
 def test_true_value_replaces_true_with_text() -> None:

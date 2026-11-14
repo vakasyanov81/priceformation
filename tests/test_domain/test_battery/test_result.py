@@ -51,13 +51,22 @@ def test_common_result_keeps_real_models_separate() -> None:
 )
 def test_foreign_or_mutable_input_is_rejected(positions: object) -> None:
     constructor: Callable[..., BatteryResult] = BatteryResult
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc_info:
         constructor(positions)
+
+    expected = (
+        'Пакет batteries принимает только BatteryItem'
+        if isinstance(positions, tuple)
+        else 'Позиции пакета должны быть кортежем'
+    )
+    assert str(exc_info.value) == expected
 
 
 def test_merge_rejects_tire_package() -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc_info:
         BatteryResult().merge(TireAndDiskResult())
+
+    assert str(exc_info.value) == 'Пакет batteries объединяется только с той же моделью'
 
 
 @pytest.mark.parametrize('attribute', ['product_group', 'positions'])

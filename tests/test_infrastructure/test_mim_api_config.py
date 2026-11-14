@@ -53,7 +53,7 @@ def test_missing_token_with_env_file(tmp_path: Any, monkeypatch: Any) -> None:
     with (
         patch.object(CoreExceptionError, _TO_LOG),
         patch('infrastructure.config.mim_api_config.load_dotenv', return_value=True),
-        pytest.raises(MimApiConfigError, match=_TOKEN_ENV),
+        pytest.raises(MimApiConfigError, match=r'^В файле \.env не задан токен API МИМ\. Укажите MIM_API_TOKEN\.$'),
     ):
         get_mim_api_config()
 

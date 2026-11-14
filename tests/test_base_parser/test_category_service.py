@@ -36,7 +36,10 @@ def test_record_unknown_category_goes_to_stats() -> None:
 
 
 def test_find_canonical_category_works_without_reset() -> None:
-    assert CategoryLookup(ParserStats()).find_canonical_category(None) is None
+    lookup = CategoryLookup(ParserStats())
+
+    assert lookup.find_canonical_category(None) is None
+    assert lookup.find_canonical_category('легковая') == 'Легковая шина'
 
 
 def test_correction_category_is_noop_before_reset() -> None:

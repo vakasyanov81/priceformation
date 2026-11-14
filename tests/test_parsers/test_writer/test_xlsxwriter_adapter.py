@@ -12,6 +12,12 @@ from parsers.writer.xlsxwriter_adapter import XlsxWriterAdapter
 
 _FILE_NAME = 'prices.xlsx'
 _COLOR = '#12ab34'
+_SHORT_VALUES = [
+    ('x', 5),
+    ('', 4),
+    (None, 4),
+    (0, 4),
+]
 
 
 def _write_example(driver: XlsxWriterAdapter, folder: Path) -> Path:
@@ -108,7 +114,7 @@ def test_operations_require_workbook(operation: str) -> None:
     """Ошибки незапущенной записи сохраняют прежний контракт."""
     driver = XlsxWriterAdapter()
     args = ['Шины'] if operation == 'add_sheet' else []
-    with pytest.raises(WorkbookNotInitializedError, match='workbook is not initialized'):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         getattr(driver, operation)(*args)
 
 
@@ -118,14 +124,14 @@ def test_operations_require_workbook(operation: str) -> None:
 )
 def test_operations_require_sheet(operation: str, args: tuple[object, ...]) -> None:
     """Нельзя записать ячейки или форматы до выбора листа."""
-    with pytest.raises(WorksheetNotInitializedError, match='worksheet is not initialized'):
+    with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
         getattr(XlsxWriterAdapter(), operation)(*args)
 
 
 def test_save_requires_sheet(tmp_path: Path) -> None:
     driver = XlsxWriterAdapter()
     book = driver.init_workbook(str(tmp_path), _FILE_NAME)
-    with pytest.raises(WorkbookNotInitializedError, match='workbook is not initialized'):
+    with pytest.raises(WorkbookNotInitializedError, match=r'^workbook is not initialized$'):
         driver.save()
     book.close()
 
@@ -150,3 +156,71 @@ def test_out_of_bounds_cell_is_reported(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match='Не удалось записать ячейку'):
         driver.write(-1, 0, 'Позиция')
     driver.save()
+
+
+@pytest.mark.parametrize(
+    'operation, args',
+    [('write', (0, 0, 'x')), ('set_column_format', ({1: '@'},))],
+)
+def test_operations_require_sheet_after_workbook_init(tmp_path: Path, operation: str, args: tuple[object, ...]) -> None:
+    """Открытая книга без листа сохраняет доменную ошибку операции."""
+    driver = XlsxWriterAdapter()
+    book = driver.init_workbook(str(tmp_path), _FILE_NAME)
+    try:
+        with pytest.raises(WorksheetNotInitializedError, match=r'^worksheet is not initialized$'):
+            getattr(driver, operation)(*args)
+    finally:
+        book.close()
+
+
+def test_column_formats_are_saved_without_cells(tmp_path: Path) -> None:
+    """Формат колонки сохраняется и на листе без записанных ячеек."""
+    driver = XlsxWriterAdapter()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    driver.add_sheet('Пустой')
+    driver.set_column_format({1: '@', 3: '#,##0.00'})
+    driver.save()
+    book = openpyxl.load_workbook(tmp_path / _FILE_NAME)
+    try:
+        sheet = book['Пустой']
+        assert list(sheet.values) == []
+        assert {column: dim.number_format for column, dim in sheet.column_dimensions.items()} == {
+            'A': '@',
+            'C': '#,##0.00',
+        }
+    finally:
+        book.close()
+
+
+@pytest.mark.parametrize('cell_value, width', _SHORT_VALUES)
+def test_short_values_set_column_width(tmp_path: Path, cell_value: str | int | None, width: int) -> None:
+    """Первая короткая или пустая ячейка тоже задаёт ширину колонки."""
+    driver = XlsxWriterAdapter()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    driver.add_sheet('Коротко')
+    driver.write(0, 0, cell_value)
+    driver.save()
+    book = openpyxl.load_workbook(tmp_path / _FILE_NAME)
+    try:
+        assert book['Коротко'].column_dimensions['A'].width == width
+    finally:
+        book.close()
+
+
+@pytest.mark.parametrize('following', [None, 'y', ''])
+def test_format_change_preserves_width(tmp_path: Path, following: str | None) -> None:
+    """Смена формата сохраняет ширину даже без следующей строки или при короткой строке."""
+    driver = XlsxWriterAdapter()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    driver.add_sheet('Шины')
+    driver.write(0, 0, 'x')
+    driver.set_column_format({1: '@'})
+    if following is not None:
+        driver.write(1, 0, following)
+    driver.save()
+    book = openpyxl.load_workbook(tmp_path / _FILE_NAME)
+    try:
+        assert book.active is not None
+        assert book.active.column_dimensions['A'].width == 5
+    finally:
+        book.close()

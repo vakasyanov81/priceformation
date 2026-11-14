@@ -1,6 +1,7 @@
 """Тесты config-driven парсера (этап 3): хуки делегируют стратегиям."""
 
 import logging
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,12 +19,16 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.config_driven_parser import (
     make_config_driven_parser,
+    make_tire_and_disk_handler,
     strategy_hooks_from_section,
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.file_reader import FileReader, data_reader_for
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
+from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.price_source import FilePricesSource
+from parsers.base_parser.row_pipeline import make_row_pipeline
 from parsers.base_parser.section_params import parser_params_from_section
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
@@ -66,7 +71,11 @@ def _mock_parse_config() -> ParseConfiguration:
 
 def _parser_with_hooks(hooks: StrategyHooks) -> BaseParser:
     parse_config = _mock_parse_config()
-    group_handler = TireAndDiskHandler(settings=ParserSettings(parse_config), strategy_hooks=hooks)
+    settings = ParserSettings(parse_config)
+    stats = ParserStats()
+    group_handler = TireAndDiskHandler(
+        settings=settings, stats=stats, pipeline=make_row_pipeline(settings, stats, hooks)
+    )
     return BaseParser(parse_config=parse_config, group_handler=group_handler)
 
 
@@ -75,6 +84,7 @@ def _section(
     category: CategoryConfig | None = None,
     title: TitleConfig | None = None,
     pricing: PricingConfig | None = None,
+    behavior: BehaviorConfig | None = None,
 ) -> VendorSection:
     """Минимальная секция поставщика для проверки сборки парсера."""
     return VendorSection(
@@ -88,6 +98,7 @@ def _section(
         category=category or CategoryConfig(),
         title=title or TitleConfig(),
         pricing=pricing or PricingConfig(),
+        behavior=behavior or BehaviorConfig(),
     )
 
 
@@ -130,14 +141,36 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
         reader='json',
     )
 
-    parser = make_config_driven_parser(section, vendor_config, _mock_parse_config())
+    parse_config = _mock_parse_config()
+    parser = make_config_driven_parser(section, vendor_config, parse_config)
 
+    assert parser.settings.parse_config() is parse_config
     assert parser.group_handler.product_group is ProductGroup.TIRE_AND_DISK
-    assert parser.pipeline.hooks is not None
-    assert parser.pipeline.hooks.min_rest == section.behavior.min_rest
+    graph = parser.group_handler.pipeline
+    assert graph.hooks is not None
+    assert graph.hooks.min_rest == section.behavior.min_rest
     file_reader = parser.price_files.file_reader
     assert isinstance(file_reader, FileReader)
     assert file_reader.data_reader is JsonPriceReader
+    price_source = file_reader._price_source
+    assert isinstance(price_source, FilePricesSource)
+    assert price_source._config_provider is parse_config.config_provider
+
+
+def test_handler_factory_passes_provider_and_vendor_folder() -> None:
+    provider = get_config_provider()
+    parse_config = _mock_parse_config()
+    parse_config.config_provider = provider
+    section = _section(behavior=BehaviorConfig(warehouse_cities=('Новосибирск',)))
+
+    group = make_tire_and_disk_handler(section, VendorConfig(folder='vendor', code='c', name='n'), parse_config)
+
+    hooks = group.pipeline.hooks
+    assert hooks is not None
+    warehouse_filter = hooks.warehouse_filter
+    assert warehouse_filter is not None
+    assert warehouse_filter._folder == 'vendor'
+    assert warehouse_filter._config_provider is provider
 
 
 def test_group_sections_keep_independent_columns_and_behavior() -> None:
@@ -178,7 +211,8 @@ def test_group_sections_keep_independent_columns_and_behavior() -> None:
     columns = [parser.price_files.parser_params.columns for parser in parsers]
     min_rests = []
     for parser in parsers:
-        hooks = parser.pipeline.hooks
+        graph = parser.group_handler.pipeline
+        hooks = graph.hooks
         assert hooks is not None
         min_rests.append(hooks.min_rest)
     assert columns == [{0: 'title'}, {1: 'model'}]
@@ -198,6 +232,9 @@ def test_strategy_hooks_with_cities_get_warehouse_filter() -> None:
     )
 
     assert hooks.warehouse_filter is not None
+    assert hooks.warehouse_filter._folder == 'mim'
+    assert hooks.warehouse_filter._cities == ('Новосибирск',)
+    assert hooks.warehouse_filter._config_provider is get_config_provider()
 
 
 def test_strategy_hooks_from_section_keeps_all_fields() -> None:
@@ -206,6 +243,8 @@ def test_strategy_hooks_from_section_keeps_all_fields() -> None:
         min_rest=7,
         zero_rest_without_category=True,
         find_manufacturer_on_enrich=False,
+        manufacturer_column_first=True,
+        order_from_warehouse_name=True,
         pipeline=('category', 'markup'),
     )
 
@@ -216,6 +255,8 @@ def test_strategy_hooks_from_section_keeps_all_fields() -> None:
     assert hooks.rest is not None
     assert hooks.min_rest == 7
     assert hooks.find_manufacturer_on_enrich is False
+    assert hooks.manufacturer_column_first is True
+    assert hooks.order_from_warehouse_name is True
     assert hooks.zero_rest_without_category is True
     assert hooks.pipeline == ('category', 'markup')
 
@@ -240,6 +281,18 @@ def test_strategy_hooks_error_carries_section_path(
     assert str(exc_info.value).startswith(f'{fragment}:')
 
 
+def test_title_strategy_receives_provider_and_column_priority(monkeypatch: pytest.MonkeyPatch) -> None:
+    factory = MagicMock()
+    monkeypatch.setattr('parsers.base_parser.config_driven_parser.make_title_strategy', factory)
+    provider = get_config_provider()
+    behavior = BehaviorConfig(manufacturer_column_first=True)
+
+    strategy_hooks_from_section(_section(), behavior, provider)
+
+    assert factory.call_args.kwargs['config_provider'] is provider
+    assert factory.call_args.kwargs['column_first'] is True
+
+
 def test_vendor_markup_policy_error_carries_location() -> None:
     """Неизвестная политика наценки сообщает путь section.pricing."""
     with pytest.raises(ConfigValidationError) as exc_info:
@@ -257,9 +310,10 @@ def test_category_strategy_is_called() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Шина'})
-    category = parser.enricher.categories.category_for(row)
+    graph = parser.group_handler.pipeline
+    category = graph.enricher.categories.category_for(row)
     assert category == 'Автошина'
-    strategy.resolve.assert_called_once_with(row, parser.enricher.categories.lookup)
+    strategy.resolve.assert_called_once_with(row, graph.enricher.categories.lookup)
 
 
 def test_manufacturer_correction_survives_title_recompose() -> None:
@@ -275,7 +329,8 @@ def test_manufacturer_correction_survives_title_recompose() -> None:
     parser.settings._manufacturer_finder = ManufacturerFinder({'TopTrust': ()})
 
     row = RowItem({'title': '10-16.5 Toptrust L-2 10 TL', 'manufacturer_name': 'TopTrust'})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.identity.title == '10-16.5 TopTrust L-2 10 TL'
     assert row.identity.manufacturer == 'TopTrust'
@@ -290,7 +345,8 @@ def test_manufacturer_found_after_pipeline_when_enrich_disabled() -> None:
     parser.settings._manufacturer_finder = ManufacturerFinder({'Triangle': ()})
 
     row = RowItem({'title': '195/75R16 TR652'})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.identity.manufacturer == 'Triangle'
 
@@ -349,7 +405,8 @@ def test_title_strategy_is_called() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': '385/65 R22.5'})
-    prepared_title = parser.enricher.titles.get_prepared_title(row)
+    graph = parser.group_handler.pipeline
+    prepared_title = graph.enricher.titles.get_prepared_title(row)
     assert prepared_title == '385/65R22.5'
     strategy.prepare.assert_called_once_with(row)
 
@@ -363,7 +420,8 @@ def test_rest_strategy_is_called() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'rest_count': 3})
-    parser.row_filters.skip_by_min_rest(row)
+    graph = parser.group_handler.pipeline
+    graph.row_filters.skip_by_min_rest(row)
     strategy.item_rest.assert_called_once_with(row)
     assert row.stock.rest_count == 0  # обнулился, т.к. 3 < 4
 
@@ -377,7 +435,8 @@ def test_rest_strategy_passes_large_rest() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'rest_count': 5})
-    parser.row_filters.skip_by_min_rest(row)
+    graph = parser.group_handler.pipeline
+    graph.row_filters.skip_by_min_rest(row)
     assert row.stock.rest_count == 5  # не обнулился
 
 
@@ -389,7 +448,8 @@ def test_find_manufacturer_from_hooks() -> None:
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder
 
-    parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
+    graph = parser.group_handler.pipeline
+    graph.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 
     finder.process.assert_not_called()
 
@@ -400,7 +460,8 @@ def test_find_manufacturer_default_when_no_hooks() -> None:
     finder = MagicMock()
     parser.settings._manufacturer_finder = finder
 
-    parser.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
+    graph = parser.group_handler.pipeline
+    graph.enricher.manufacturers.apply_manufacturer(RowItem({'title': 'Тест'}))
 
     finder.process.assert_called_once()
 
@@ -418,13 +479,14 @@ def test_pipeline_default_order() -> None:
 
     parser = _parser_with_hooks(hooks)
     title_filter = MagicMock()
-    parser.enricher.titles.title_filter = title_filter
+    graph = parser.group_handler.pipeline
+    graph.enricher.titles.title_filter = title_filter
     title_filter.get_prepared_title.return_value = 'Стандарт'
     row_processor = MagicMock()
-    parser.pipeline.row_processor = row_processor
+    pipeline = replace(graph, row_processor=row_processor)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
-    parser.pipeline.process_row(row)
+    pipeline.process_row(row)
 
     # title → min_rest → category → markup
     title_filter.get_prepared_title.assert_called_once()
@@ -445,13 +507,14 @@ def test_pipeline_custom_order() -> None:
 
     parser = _parser_with_hooks(hooks)
     title_filter = MagicMock()
-    parser.enricher.titles.title_filter = title_filter
+    graph = parser.group_handler.pipeline
+    graph.enricher.titles.title_filter = title_filter
     title_filter.get_prepared_title.return_value = 'Стандарт'
     row_processor = MagicMock()
-    parser.pipeline.row_processor = row_processor
+    pipeline = replace(graph, row_processor=row_processor)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
-    parser.pipeline.process_row(row)
+    pipeline.process_row(row)
 
     # категория должна быть вызвана первой
     # title — последним
@@ -472,7 +535,8 @@ def test_zero_rest_when_category_unknown() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.stock.rest_count == 0
 
@@ -489,7 +553,8 @@ def test_rest_kept_without_category_when_flag_disabled() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.stock.rest_count == 5
 
@@ -507,10 +572,11 @@ def test_pipeline_skips_missing_step() -> None:
 
     parser = _parser_with_hooks(hooks)
     row_processor = MagicMock()
-    parser.pipeline.row_processor = row_processor
+    graph = parser.group_handler.pipeline
+    pipeline = replace(graph, row_processor=row_processor)
 
     row = RowItem({'title': 'Тест', 'price_opt': 1000, 'rest_count': 5})
-    parser.pipeline.process_row(row)
+    pipeline.process_row(row)
 
     # категория вызвана
     cat_strategy.resolve.assert_called_once()
@@ -549,7 +615,8 @@ def test_pipeline_applies_category_fields() -> None:
     parser = _parser_with_hooks(hooks)
 
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.vendor.type_production == 'Автошина'
     assert row.tire.season == 'Всесезонная'
@@ -588,7 +655,8 @@ def test_apply_category_marks_concrete_mismatch() -> None:
     parser = _classifier_parser(LIGHT_TRUCK)
     row = RowItem({'title': '275/65R20 112T'})
 
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.vendor.type_production == PASSENGER
     assert row.vendor.type_corrected is True
@@ -599,7 +667,8 @@ def test_apply_category_matching_declared_not_marked() -> None:
     parser = _classifier_parser(TRUCK)
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось'})
 
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.vendor.type_production == TRUCK
     assert row.vendor.type_corrected is False
@@ -610,7 +679,8 @@ def test_apply_category_generic_declared_not_marked() -> None:
     parser = _classifier_parser('Автошина')
     row = RowItem({'title': '275/65R20 112T'})
 
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.vendor.type_production == PASSENGER
     assert row.vendor.type_corrected is False
@@ -621,7 +691,8 @@ def test_apply_category_logs_correction(watch_logger: LoggerWatcher) -> None:
     parser = _classifier_parser(LIGHT_TRUCK)
     watch = watch_logger('parsers.base_parser.category_service', logging.DEBUG)
 
-    parser.pipeline.process_row(RowItem({'title': '275/65R20 112T'}))
+    graph = parser.group_handler.pipeline
+    graph.process_row(RowItem({'title': '275/65R20 112T'}))
 
     corrections = [message for _level, message in watch() if 'Тип товара изменён' in message]
     assert corrections == [
@@ -634,8 +705,9 @@ def test_type_corrections_counts_only_rows_kept_in_price() -> None:
     parser = _classifier_parser(LIGHT_TRUCK)
     kept = RowItem({'title': '275/65R20 112T', 'price_opt': 100, 'rest_count': 4})
     dropped = RowItem({'title': '275/65R20 112T', 'price_opt': 0, 'rest_count': 0})
+    graph = parser.group_handler.pipeline
     for row_item in (kept, dropped):
-        parser.pipeline.process_row(row_item)
+        graph.process_row(row_item)
 
     parser.group_handler.process([kept, dropped])
 
@@ -648,7 +720,8 @@ def test_apply_category_matching_does_not_count() -> None:
     """Совпавший тип расхождением не помечается и счётчик не увеличивает."""
     parser = _classifier_parser(TRUCK)
     row = RowItem({'title': '10.00 R20 DOUBLEROAD DR-801 18PR унив.ось', 'price_opt': 100, 'rest_count': 4})
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     parser.group_handler.process([row])
 
@@ -660,7 +733,8 @@ def test_apply_category_falls_back_to_declared_when_unknown() -> None:
     parser = _classifier_parser(LIGHT_TRUCK)
     row = RowItem({'title': 'Nortec без размера'})
 
-    parser.pipeline.process_row(row)
+    graph = parser.group_handler.pipeline
+    graph.process_row(row)
 
     assert row.vendor.type_production == LIGHT_TRUCK
     assert row.vendor.type_corrected is False

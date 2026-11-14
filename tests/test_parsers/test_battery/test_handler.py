@@ -1,5 +1,6 @@
 """Контракты обработки аккумуляторов: линейки, публикация и независимость цен."""
 
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
@@ -10,6 +11,7 @@ from domain.battery.result import BatteryResult
 from domain.product_group_handler import ProductGroupHandler
 from domain.product_groups import ProductGroup
 from parsers.battery.handler import BatteryHandler
+from parsers.battery.title import normalize_title
 from parsers.vendor_config.battery_settings import BatterySettings
 from parsers.vendor_config.group_models import BatterySection
 
@@ -127,6 +129,27 @@ def test_unknown_line_preserves_title_without_inventing_model(title: str) -> Non
     assert parsed.positions[0].identity.model is None
 
 
+@pytest.mark.parametrize('raw_title, expected', [('  Новая   серия  60  ', 'Новая серия 60'), (None, '')])
+def test_normalize_title_handles_direct_unknown_titles(raw_title: str | None, expected: str) -> None:
+    position = _battery_handler().create_position(_fields())
+    position = replace(position, identity=replace(position.identity, title=raw_title))
+
+    actual = normalize_title(position, ('XTREME +EFB',))
+
+    assert actual.identity.title == expected
+    assert actual.identity.model is None
+
+
+def test_normalize_title_normalizes_matched_title_without_declared_model() -> None:
+    position = _battery_handler().create_position(_fields(model=None))
+    position = replace(position, identity=replace(position.identity, title='  xtreme   +EFB  60  '))
+
+    actual = normalize_title(position, ('XTREME +EFB',))
+
+    assert actual.identity.title == 'xtreme +EFB 60'
+    assert actual.identity.model == 'XTREME +EFB'
+
+
 def test_line_matching_normalizes_case_and_spaces_without_removing_words() -> None:
     battery_handler = _battery_handler()
     position = battery_handler.create_position(_fields(title='  xtreme  ARCTIC 100 обр ', model='xtreme Arctic'))
@@ -207,3 +230,61 @@ def test_plant_warranty_is_normalized_before_model_creation(raw: str, expected: 
 def test_unlisted_declared_model_is_preserved() -> None:
     parsed = _battery_handler().process_fields([_fields(title='Новая серия 60', model='Новая серия')])
     assert parsed.positions[0].identity.model == 'Новая серия'
+
+
+def test_unpublishable_offer_does_not_stop_following_positions() -> None:
+    battery_handler = _battery_handler()
+    skipped = battery_handler.create_position(_fields(code='skipped', rest_count=0))
+    published = battery_handler.create_position(_fields(code='published'))
+
+    parsed = battery_handler.process([skipped, published])
+
+    assert [position.identity.code for position in parsed.positions] == ['published']
+
+
+def test_line_conflict_error_contains_offer_code() -> None:
+    battery_handler = _battery_handler()
+    position = battery_handler.create_position(_fields(code='A-17', model='XTREME Arctic'))
+
+    with pytest.raises(ValueError) as caught:
+        battery_handler.process([position])
+
+    assert str(caught.value).startswith('[batteries] plant, код A-17: ')
+
+
+def test_all_missing_required_fields_are_listed_in_order(caplog: pytest.LogCaptureFixture) -> None:
+    battery_handler = _battery_handler()
+    position = battery_handler.create_position(_fields(code=None, title=None, price_recommended=None))
+
+    assert battery_handler.process([position]) == BatteryResult()
+
+    assert 'отсутствуют обязательные поля: code, title, price_recommended' in caplog.text
+
+
+def test_unknown_line_title_is_normalized() -> None:
+    parsed = _battery_handler().process_fields([_fields(title='  Новая   серия  60  ')])
+
+    assert parsed.positions[0].identity.title == 'Новая серия 60'
+    assert parsed.positions[0].identity.model is None
+
+
+def test_markup_uses_rule_matching_purchase_instead_of_default() -> None:
+    settings = BatterySettings.from_dict(
+        {
+            'pricing': {
+                'rules': {
+                    'markup_rules': [
+                        {'min': 0, 'max': 100, 'percent': 0.2},
+                        {'min': 101, 'max': 1000, 'percent': 0.5},
+                    ]
+                }
+            }
+        },
+        'plant.json',
+    )
+    battery_handler = BatteryHandler(settings, 'plant')
+    position = battery_handler.create_position(_fields(price_opt=200, price_recommended=200))
+
+    parsed = battery_handler.process([position])
+
+    assert parsed.positions[0].offer.sale_price == Decimal(300)

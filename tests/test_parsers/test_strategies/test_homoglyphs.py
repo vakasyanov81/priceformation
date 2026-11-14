@@ -7,8 +7,48 @@ import logging
 import pytest
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies.homoglyph_alphabet import CYRILLIC, LATIN, convert, forced_alphabets, is_cyrillic, is_latin
 from parsers.strategies.homoglyph_tokens import fix_token
 from parsers.strategies.homoglyphs import fix_row_homoglyphs, fix_text
+
+
+@pytest.mark.parametrize(
+    ('char', 'expected'),
+    [
+        ('a', True),
+        ('Z', True),
+        ('z', True),
+        ('`', False),
+        ('{', False),
+    ],
+)
+def test_is_latin_boundaries(char: str, expected: bool) -> None:
+    assert is_latin(char) is expected
+
+
+@pytest.mark.parametrize(
+    ('char', 'expected'),
+    [
+        ('а', True),
+        ('Я', True),
+        ('я', True),
+        ('Ё', True),
+        ('ё', True),
+        ('`', False),
+    ],
+)
+def test_is_cyrillic_boundaries(char: str, expected: bool) -> None:
+    assert is_cyrillic(char) is expected
+
+
+def test_convert_uses_requested_alphabet() -> None:
+    assert convert('AС', LATIN) == 'AC'
+    assert convert('AС', CYRILLIC) == 'АС'
+
+
+def test_forced_alphabets_returns_only_known_alphabets() -> None:
+    assert forced_alphabets(['z', 'и']) == {LATIN, CYRILLIC}
+    assert forced_alphabets(['A']) == set()
 
 
 @pytest.mark.parametrize(
@@ -70,6 +110,11 @@ def test_fix_token_reports_unfixable_mix() -> None:
     assert fix_token(word) == (word, True)
 
 
+def test_fix_token_reports_equal_alphabets_without_digit_as_unresolved() -> None:
+    """Равное число латинских и кириллических букв без цифры не выбирает латиницу автоматически."""
+    assert fix_token('АA') == ('АA', True)
+
+
 def test_fix_text_keeps_spaces_and_collects_fixes() -> None:
     """Пробелы сохраняются; список содержит «было → стало» и подозрительные токены."""
     text, fixes = fix_text('195/75  R16С TТ Каzантип')
@@ -89,7 +134,7 @@ def test_fix_row_homoglyphs_fixes_title_and_technical_fields(caplog: pytest.LogC
     assert row.identity.title == '215/75R16C Kama TT'
     assert row.tire.index_velocity == 'H'
     assert row.tire.layering == '8PR'
-    assert len(fixes.fixed) == 3
+    assert fixes.fixed == [('215/75R16С', '215/75R16C'), ('TТ', 'TT'), ('Н', 'H')]
     assert 'исправлена' in caplog.text
 
 
@@ -102,4 +147,4 @@ def test_fix_row_homoglyphs_logs_suspects(caplog: pytest.LogCaptureFixture) -> N
 
     assert row.identity.title == 'Каzантип'
     assert fixes.suspects == ['Каzантип']
-    assert 'не исправлено' in caplog.text
+    assert "не исправлено: 'Каzантип' // Каzантип" in caplog.text

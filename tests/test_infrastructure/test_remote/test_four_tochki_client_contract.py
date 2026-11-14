@@ -13,7 +13,9 @@ from infrastructure.config.four_tochki_api_config import FourTochkiApiConfig
 from infrastructure.remote.four_tochki_client import (
     FourTochkiApiConnectionError,
     FourTochkiApiError,
+    _HttpReply,
     _post,
+    _raise_on_http_status,
     download_catalogs,
     fetch_warehouses,
 )
@@ -142,6 +144,24 @@ def test_post_sends_exact_request() -> None:
         },
     )
     connection.close.assert_called_once_with()
+
+
+def test_http_status_accepts_upper_success_boundary() -> None:
+    """HTTP 299 остаётся успешным ответом."""
+    _raise_on_http_status(_HttpReply(299, 'OK', b''), 'GetWarehouses')
+
+
+def test_http_error_replaces_invalid_utf8() -> None:
+    """Повреждённые байты тела не скрывают HTTP-ошибку исключением декодирования."""
+    with (
+        patch.object(CoreExceptionError, 'to_log') as to_log,
+        pytest.raises(FourTochkiApiError),
+    ):
+        _raise_on_http_status(_HttpReply(500, 'Failure', b'\xff'), 'GetWarehouses')
+
+    to_log.assert_called_once_with(
+        'API Форточек ответил HTTP-статусом, отличным от 2xx. status=500 Failure method=GetWarehouses\n�'
+    )
 
 
 def test_connection_error_detail_names_endpoint_and_method() -> None:

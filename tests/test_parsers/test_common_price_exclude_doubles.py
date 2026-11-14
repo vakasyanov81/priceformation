@@ -6,6 +6,7 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price.availability import is_on_order
 from parsers.common_price.double_selection import pick_double
+from parsers.common_price.doubles_order import priority_first
 from parsers.common_price.exclude_doubles import exclude_doubles
 
 _AUTOSNAB = 'Автоснабжение'
@@ -156,6 +157,15 @@ def test_unassigned_duplicates_remain_separate_from_zero_group() -> None:
 
     assert kept == [unassigned, zero_group[1], another]
     assert [row.stock.rest_count for row in kept] == [2, 4, 3]
+
+
+def test_missing_supplier_does_not_inherit_literal_priority() -> None:
+    unnamed = _double('', 5000, 1, group=1)
+    literal = _double('XXXX', 5000, 1, group=2)
+
+    ordered = priority_first([unnamed, literal], ('XXXX',))
+
+    assert ordered == [literal, unnamed]
 
 
 def test_on_order_detected_by_word_in_available() -> None:

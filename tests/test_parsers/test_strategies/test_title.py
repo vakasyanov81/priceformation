@@ -270,6 +270,22 @@ def test_tire_compose_mim_truck_includes_load_velocity() -> None:
     assert strategy.prepare(row) == '295/75R22.5 152M'
 
 
+def test_tire_compose_mim_truck_includes_camera_and_axis() -> None:
+    """Камерность и ось грузовой шины сохраняются в каноническом названии."""
+    strategy = TireCompose('mim_truck')
+    row = RowItem(
+        {
+            'width': '295',
+            'height_percent': '75',
+            'diameter': '22.5',
+            'intimacy': 'tt',
+            'axis': 'ведущая',
+        },
+    )
+
+    assert strategy.prepare(row) == '295/75R22.5 TT Ведущая'
+
+
 def test_normalize_size_chunks_empty_title_stays_empty() -> None:
     """Пустой title не превращается в заглушку."""
     assert NormalizeSizeChunks().prepare(RowItem({})) == ''
@@ -304,6 +320,16 @@ def test_disk_compose_keeps_suffix_from_original_name() -> None:
     )
 
     assert strategy.prepare(row) == '7.5x20 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'
+
+
+def test_title_with_markers_empty_title_does_not_match_placeholder() -> None:
+    """Пустое название не активирует пользовательский маркер XXXX."""
+    strategy = TitleWithMarkers(DefaultTitle(), {'XXXX': {'spike': 'да'}})
+    row = RowItem({})
+
+    strategy.prepare(row)
+
+    assert row.tire.spike is None
 
 
 def test_title_with_markers_sets_fields_on_match() -> None:

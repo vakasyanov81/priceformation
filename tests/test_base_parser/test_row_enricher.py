@@ -2,13 +2,14 @@
 
 import logging
 from typing import NamedTuple
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.row_enricher import RowEnricher
+from parsers.strategies.homoglyphs import HomoglyphFix
 
 _SUPPLIER = 'Поставщик'
 _START_ROW = 3
@@ -52,6 +53,22 @@ def test_enrich_runs_services_and_sets_service_fields() -> None:
     assert row.tire.season == 'Зимняя'
 
 
+def test_enrich_accumulates_homoglyph_statistics_across_rows() -> None:
+    setup = _setup()
+    rows = [RowItem({'title': _TITLE}) for _ in range(3)]
+    fixes = (
+        HomoglyphFix(fixed=[('R16С', 'R16C'), ('ЕТ35', 'ET35')]),
+        HomoglyphFix(suspects=['АБВabc']),
+        HomoglyphFix(),
+    )
+
+    with patch('parsers.base_parser.row_enricher.fix_row_homoglyphs', side_effect=fixes):
+        assert setup.enricher.enrich(rows) == rows
+
+    assert setup.stats.homoglyph_fixes == 2
+    assert setup.stats.homoglyph_suspects == 1
+
+
 def test_enrich_drops_invalid_title_and_counts_only_non_empty() -> None:
     setup = _setup()
     kept = RowItem({'title': _TITLE})
@@ -81,6 +98,7 @@ def test_enrich_drops_rows_with_parse_errors(caplog: pytest.LogCaptureFixture) -
         assert setup.enricher.enrich([broken]) == []
 
     assert f'(№ {_START_ROW})' in caplog.text
+    assert _SUPPLIER in caplog.text
 
 
 def test_keep_requires_price_when_rest_present() -> None:

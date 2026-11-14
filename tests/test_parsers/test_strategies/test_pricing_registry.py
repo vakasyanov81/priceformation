@@ -9,7 +9,7 @@ from parsers.base_parser.markup_policy import (
     MarkupPolicy,
     RecommendedOrMapMarkupPolicy,
 )
-from parsers.data_provider.models import MarkUpRule, MarkupRulesConfig
+from parsers.data_provider.models import MarkUpRule, MarkupRulesConfig, PercentRange
 from parsers.strategies.pricing import PercentByThresholdMarkupPolicy, RecommendedRangeMarkupPolicy
 from parsers.strategies.pricing_registry import make_pricing_strategy
 from parsers.vendor_config.slot_configs import PricingConfig
@@ -84,6 +84,14 @@ def test_policy_keeps_rules_and_price_map(name: str, expected_type: type) -> Non
     assert isinstance(policy, expected_type)
     assert policy._rules is rules
     assert policy._price_map == (rule,)
+
+
+def test_recommended_range_empty_category_does_not_match_placeholder_key() -> None:
+    """Без категории применяется общая политика, даже если диапазон задан для ключа XXXX."""
+    rules = MarkupRulesConfig(category_markup_ranges={'XXXX': PercentRange(min=0.5, max=0.7)})
+    policy = RecommendedRangeMarkupPolicy(rules, ())
+
+    assert policy.apply(1000, None) == pytest.approx(1000)
 
 
 def test_threshold_policy_keeps_params() -> None:

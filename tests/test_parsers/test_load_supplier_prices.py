@@ -102,12 +102,13 @@ def test_parse_prices_json_non_string_value() -> None:
 def test_load_moves_and_renames(tmp_path: Path, prices_root: Path) -> None:
     """файл перемещается в папку поставщика как price.xls."""
     source = _write_source(tmp_path, 'any_price_name.xls', _XLS_BYTES)
-    with patch(_CATALOG_PATCH, return_value=_CATALOG):
+    with patch(_CATALOG_PATCH, return_value=_CATALOG), patch(_RULES_PATCH, return_value=_RULES) as rules:
         dests = _load({'1': str(source)})
     dest = prices_root / 'poshk' / 'price.xls'
     assert dests == [str(dest)]
     assert dest.read_bytes() == _XLS_BYTES
     assert not source.exists()
+    rules.assert_called_once_with(get_config_provider())
 
 
 def test_load_xlsx_keeps_extension(tmp_path: Path, prices_root: Path) -> None:
@@ -177,10 +178,11 @@ def test_load_two_suppliers(tmp_path: Path, prices_root: Path) -> None:
 
 
 def test_load_rejects_extension(tmp_path: Path, prices_root: Path) -> None:
-    """csv нельзя."""
+    """Ошибка называет исходное расширение и файл; источник остаётся на месте."""
     source = _write_source(tmp_path, 'a.csv', b'csv')
-    with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError, match='csv'):
+    with patch(_CATALOG_PATCH, return_value=_CATALOG), pytest.raises(InvalidPriceExtensionError) as exc_info:
         _load({'1': str(source)})
+    assert str(exc_info.value) == ("Недопустимое расширение '.csv' у файла a.csv. Допустимые: xls, xlsx, json, zip")
     assert source.exists()
 
 

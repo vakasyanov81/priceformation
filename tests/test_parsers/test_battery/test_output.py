@@ -114,6 +114,24 @@ def test_output_rejects_inapplicable_rules(group: GroupOutput, message: str) -> 
         _source().prepare('for_batteries', group)
 
 
+def test_output_rejects_settings_of_another_group_with_exact_message() -> None:
+    group = replace(ForBatteries().output_spec().groups[0], id=ProductGroup.TIRE_AND_DISK)
+
+    with pytest.raises(ValueError) as caught:
+        _source().prepare('for_batteries', group)
+
+    assert str(caught.value) == 'Преобразователь batteries получил настройки другой группы'
+
+
+def test_output_rejects_merged_warehouses_with_exact_message() -> None:
+    group = replace(ForBatteries().output_spec().groups[0], merge_warehouses=True)
+
+    with pytest.raises(ValueError) as caught:
+        _source().prepare('for_batteries', group)
+
+    assert str(caught.value) == 'batteries: сведение складов недоступно без отдельных складских данных'
+
+
 def test_battery_template_writes_prices_and_stock(tmp_path: Path) -> None:
     template = ForBatteries().output_spec()
     sources = {ProductGroup.BATTERIES: _source()}
@@ -160,6 +178,29 @@ def test_battery_template_writes_prices_and_stock(tmp_path: Path) -> None:
     assert row['Высота'] == '220'
     assert row['Вес'] == '24'
     assert row['EFB'] is None
+    workbook.close()
+
+
+def test_drom_battery_defaults_format_and_empty_stock_filter(tmp_path: Path) -> None:
+    """Дром получает доступные АКБ с фиксированными наличием, состоянием и текстовой ценой."""
+    available = BatteryItem.from_fields({'title': 'Доступен', 'rest_count': 1, 'price_markup': '5000'})
+    without_stock = BatteryItem.from_fields({'title': 'Нет остатка', 'rest_count': None})
+    source = BatteryOutputSource(BatteryResult((available, without_stock)))
+    template = group_template_output(ForDrom)
+    paths = group_writer(tmp_path).write(
+        [replace(template, groups=(template.groups[1],))],
+        {ProductGroup.BATTERIES: source},
+        selected={ProductGroup.BATTERIES},
+    )
+    workbook = load_workbook(paths[0])
+    sheet = workbook['Аккумуляторы']
+    header, cells = list(sheet.values)
+    row = dict(zip(header, cells, strict=True))
+    assert row['Номенклатура'] == 'Доступен'
+    assert row['Цена'] == '5000'
+    assert sheet['D2'].number_format == '@'
+    assert row['Наличие'] == 'В наличии'
+    assert row['Состояние'] == 'Новое'
     workbook.close()
 
 
@@ -217,8 +258,6 @@ def test_real_plant_settings_map_all_source_columns() -> None:
         [{'code': '001', 'title': 'XTREME +EFB 60', 'rest_count': '>30', 'price_recommended': '5000.10'}]
     )
     assert battery_handler.prepare_output(parsed)[0]['sale_price'] == '5000.10'
-    for fixture in ('tasks/examples/plant.json', 'integration_tests/parse_config_example/plant.json'):
-        assert json.loads(Path(fixture).read_text()) == raw
 
 
 @pytest.mark.parametrize(

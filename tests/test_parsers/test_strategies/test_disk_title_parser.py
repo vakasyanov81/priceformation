@@ -75,6 +75,7 @@ def test_parse_thickness_ignores_hole_diameter(raw: str, thickness: str) -> None
         ('Диск штамп ТЗСК 6.5x16 5x139.7 ET40 d108 УАЗ-Патриот металлик', 'металлик'),
         ('Диск штамп Kronprinz 6x15 5x139.7 ЕТ22 d108.5 УАЗ 450 грунт', 'грунт'),
         ('Диск штамп Nortec-16 11.75x22.5 10x335 ET0 d281', ''),
+        ('Диск штамп Nortec-16 11.75x22.5 10x335 ET0 d281 (XSilver)', ''),
     ],
 )
 def test_parse_color(raw: str, color: str) -> None:

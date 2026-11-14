@@ -25,6 +25,22 @@ _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
 _CREDENTIALS = MailCredentials(login='user', password='secret')
 
 
+@pytest.mark.parametrize(
+    ('entry', 'expected'),
+    [
+        (None, None),
+        (b'garbage', None),
+        ((), None),
+        ((b'header',), None),
+        ((b'header', 'body'), None),
+        ((b'header', b'body'), b'body'),
+        ((b'header', bytearray(b'body')), b'body'),
+    ],
+)
+def test_fetch_message_body_boundaries(entry: Any, expected: bytes | None) -> None:
+    assert imap_adapter._message_body(entry) == expected
+
+
 def _profile(**overrides: Any) -> MailProfile:
     base: dict[str, Any] = {
         'sender': 'a@b.ru',
@@ -315,11 +331,13 @@ def test_connect_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
     fake.login.return_value = ('OK', [b''])
     fake.select.return_value = ('OK', [b''])
-    monkeypatch.setattr(imaplib, 'IMAP4_SSL', MagicMock(return_value=fake))
+    open_client = MagicMock(return_value=fake)
+    monkeypatch.setattr(imap_adapter, 'open_client', open_client)
 
     client = connect(_ACCOUNT.host, _ACCOUNT.port, _ACCOUNT.folder, _CREDENTIALS)
 
     assert client is fake
+    open_client.assert_called_once_with('imap.example.ru', 993)
     fake.login.assert_called_once_with('user', 'secret')
     fake.select.assert_called_once_with('INBOX', True)
 

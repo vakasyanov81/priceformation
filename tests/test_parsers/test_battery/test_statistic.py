@@ -28,6 +28,13 @@ def test_empty_result_has_zero_statistics() -> None:
     assert stats.real_percents_markup() == (0, 0)
 
 
+def test_fractional_purchase_price_is_included() -> None:
+    stats = BatteryResultStatistic([BatteryItem.from_fields({'price_opt': '0.5', 'price_recommended': '1'})])
+
+    assert stats.real_absolute_markup() == (0.5, 0.5)
+    assert stats.real_percents_markup() == (100.0, 100.0)
+
+
 def test_negative_zero_and_fractional_margins() -> None:
     positions = [
         BatteryItem.from_fields({'price_opt': 100, 'price_recommended': '90.13'}),

@@ -1,7 +1,7 @@
 """tests for menu items"""
 
 from app.run_dialog import MENU_ITEMS
-from app.run_dialog.items import ACTIVATION_KEY, ANSWER_MAP, AnswerResult, index_by_key
+from app.run_dialog.items import ACTIVATION_KEY, ANSWER_MAP, AnswerResult, _assign_keys, index_by_key
 
 
 def test_answer_map_keys() -> None:
@@ -10,6 +10,18 @@ def test_answer_map_keys() -> None:
     assert ANSWER_MAP['2'] == AnswerResult.UPDATE_ALL_SUPPLIER_PRICES
     assert ANSWER_MAP['4'] == AnswerResult.SHOW_HELP
     assert ANSWER_MAP['q'] == AnswerResult.EXIT
+
+
+def test_assigned_keys_reserve_activation_before_help() -> None:
+    """Повторный расчёт проверяет функцию, а не сохранённые при импорте константы."""
+    keys, activation = _assign_keys()
+    assert keys == {
+        AnswerResult.MAKE_PRICE_BY_SUPPLIER: '1',
+        AnswerResult.UPDATE_ALL_SUPPLIER_PRICES: '2',
+        AnswerResult.SHOW_HELP: '4',
+        AnswerResult.EXIT: 'q',
+    }
+    assert activation == '3'
 
 
 def test_menu_items_order_and_keys() -> None:

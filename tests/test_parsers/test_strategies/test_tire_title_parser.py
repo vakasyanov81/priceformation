@@ -647,6 +647,14 @@ def test_inch_size_decimal_comma(raw: str, ext: str, width: str) -> None:
     assert (parts.size.ext_diameter, parts.size.width) == (ext, width)
 
 
+def test_diagonal_inch_size_keeps_trailing_zero() -> None:
+    """Лишний ноль ширины срезается только у радиального дюймового размера."""
+    parts = parse_tire_title('31x10.50-15 Brand Model')
+
+    assert parts is not None
+    assert parts.size.label == '31x10.50-15'
+
+
 def test_size_inside_title_followed_by_bracket_is_not_a_tire() -> None:
     """После размера в середине названия сразу скобка — это не шина."""
     assert parse_tire_title('Brand 185/65R15 (foo) Model') is None

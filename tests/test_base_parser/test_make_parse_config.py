@@ -27,9 +27,16 @@ def _parser_params() -> ParserParams:
 
 def test_make_parse_config_keeps_parser_params() -> None:
     parser_params = _parser_params()
-    config = make_parse_config(parser_params, config_provider=MagicMock())
+    provider = MagicMock()
+    routing = MagicMock()
+    config = make_parse_config(parser_params, config_provider=provider, routing=routing)
     assert config.parser_params is parser_params
     assert config.supplier is parser_params.supplier
+    assert config.config_provider is provider
+    assert config.routing is routing
+    markup_provider = config.parse_config.markup_rules_provider
+    assert isinstance(markup_provider, MarkupRulesProviderFromUserConfig)
+    assert markup_provider._config_provider is provider
 
 
 def test_markup_provider_uses_folder_name() -> None:

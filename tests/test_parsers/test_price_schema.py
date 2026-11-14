@@ -7,7 +7,8 @@ import openpyxl
 import pytest
 
 from parsers.price_schema.diff import compare_schemas
-from parsers.price_schema.models import FileHead, PriceSchema, SheetHead
+from parsers.price_schema.header import column_header
+from parsers.price_schema.models import FileHead, PriceSchema, SheetHead, SheetSchema
 from parsers.price_schema.schema import build_schema, read_file_head
 
 _COLUMNS: dict[int | str, str] = {0: 'code', 2: 'title'}
@@ -31,6 +32,91 @@ def _schema(head: FileHead, start_row: int) -> PriceSchema:
 
 def _changes(old: FileHead, new: FileHead, *, start_row: int = 3) -> list[str]:
     return compare_schemas(_schema(old, start_row), _schema(new, start_row), _COLUMNS)
+
+
+def test_only_selected_sheets_are_compared() -> None:
+    old = FileHead(
+        sheets=(
+            SheetHead('Первый', (('Старый', 'Цена', 'Название'),)),
+            SheetHead('Второй', (('Артикул', 'Цена', 'Название'),)),
+        )
+    )
+    new = FileHead(
+        sheets=(
+            SheetHead('Первый', (('Новый', 'Цена', 'Название'),)),
+            SheetHead('Второй', (('Артикул', 'Цена', 'Название'),)),
+        )
+    )
+    selected = (1,)
+
+    before = build_schema(old, start_row=2, sheet_indexes=selected, columns=_COLUMNS)
+    after = build_schema(new, start_row=2, sheet_indexes=selected, columns=_COLUMNS)
+
+    assert set(before.sheets) == {1}
+    assert compare_schemas(before, after, _COLUMNS) == []
+
+
+def test_sheet_index_equal_to_sheet_count_is_ignored() -> None:
+    head = FileHead(sheets=(SheetHead('Первый', ()), SheetHead('Второй', ())))
+
+    schema = build_schema(head, start_row=2, sheet_indexes=(2,), columns=_COLUMNS)
+
+    assert schema.sheets == {}
+
+
+def test_first_data_row_has_no_header_rows() -> None:
+    schema = _schema(_head(('Артикул', 'Цена', 'Название')), start_row=1)
+
+    assert schema.sheets[0].headers == {}
+
+
+def test_short_header_row_has_no_column_cell() -> None:
+    schema = _schema(_head(('Артикул',)), start_row=2)
+
+    assert schema.sheets[0].headers == {0: 'Артикул'}
+
+
+def test_column_at_row_length_has_no_header() -> None:
+    """Индекс сразу после последней ячейки означает отсутствующий заголовок."""
+    assert column_header((('Артикул',),), 1) == ''
+
+
+def test_header_normalizes_spaces_between_words() -> None:
+    """Несколько слов заголовка разделяются одним пробелом."""
+    assert column_header((('  Цена\t поставщика  ',),), 0) == 'Цена поставщика'
+
+
+def test_empty_sheet_selection_uses_all_sheets() -> None:
+    """Пустой выбор вкладок включает каждую имеющуюся вкладку."""
+    first = SheetHead('Первый', (('Код',),))
+    second = SheetHead('Второй', (('Артикул',),))
+    head = FileHead(sheets=(first, second))
+    schema = build_schema(head, start_row=2, sheet_indexes=(), columns={0: 'code'})
+    assert set(schema.sheets) == {0, 1}
+    assert schema.sheets[0].headers == {0: 'Код'}
+    assert schema.sheets[1].headers == {0: 'Артикул'}
+
+
+def test_json_scalar_has_no_record_keys(tmp_path: Path) -> None:
+    """JSON без списка записей не создаёт схему колонок."""
+    path = tmp_path / 'scalar.json'
+    path.write_text('123', encoding='utf-8')
+    assert read_file_head(path).json_keys == frozenset()
+
+
+def test_xlsx_head_stops_at_hundred_rows(tmp_path: Path) -> None:
+    """Чтение шапки ограничено первыми ста строками прайса."""
+    book = openpyxl.Workbook()
+    sheet = book.active
+    assert sheet is not None
+    for number in range(1, 102):
+        sheet.append([f'Строка {number}'])
+    path = tmp_path / 'long.xlsx'
+    book.save(path)
+
+    rows = read_file_head(path).sheets[0].rows
+    assert len(rows) == 100
+    assert rows[-1] == ('Строка 100',)
 
 
 def test_same_schema_no_changes() -> None:
@@ -91,6 +177,23 @@ def test_json_missing_key() -> None:
     new = _json_schema(['name', 'x'], columns)
 
     assert compare_schemas(old, new, columns) == ['в данных больше нет поля «article» (используется как «code»)']
+
+
+@pytest.mark.parametrize('json_price', (False, True))
+def test_schema_change_without_current_column_mapping(json_price: bool) -> None:
+    """Отсутствие поля в текущем отображении не мешает описать изменение сохранённой схемы."""
+    if json_price:
+        old = PriceSchema(sheets={}, json_keys=frozenset(('article',)))
+        new = PriceSchema(sheets={}, json_keys=frozenset())
+        expected = 'в данных больше нет поля «article»'
+    else:
+        before = SheetSchema('Лист', {0: 'Артикул'})
+        after = SheetSchema('Лист', {})
+        old = PriceSchema(sheets={0: before}, json_keys=frozenset())
+        new = PriceSchema(sheets={0: after}, json_keys=frozenset())
+        expected = 'вкладка «Лист», колонка A: пропал заголовок «Артикул»'
+
+    assert compare_schemas(old, new, {}) == [expected]
 
 
 def _json_schema(keys: list[str], columns: dict[int | str, str]) -> PriceSchema:

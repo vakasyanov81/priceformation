@@ -42,6 +42,78 @@ def _section(config: VendorConfig) -> BatterySection:
     return group.sections[0]
 
 
+def test_battery_section_reads_public_routing_fields() -> None:
+    config = _config(
+        {
+            'sections': [
+                {
+                    'id': 'second',
+                    'name': 'Аккумуляторы второй лист',
+                    'sheet_info': 'АКБ',
+                    'sheet_indexes': [1],
+                }
+            ]
+        }
+    )
+
+    section = _section(config)
+
+    assert section.name == 'Аккумуляторы второй лист'
+    assert section.sheet_info == 'АКБ'
+    assert section.sheet_indexes == (1,)
+
+
+def test_battery_section_invalid_public_field_has_full_path() -> None:
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'name': 42}]})
+
+    assert 'plant.json → product_groups[0] → sections[0] → name' in str(caught.value)
+
+
+@pytest.mark.parametrize('field, invalid', [('sheet_indexes', 'x'), ('sheet_info', 42)])
+def test_battery_sheet_field_error_has_section_path(field: str, invalid: object) -> None:
+    """Метаданные листа проверяются с адресом секции, а не безымянным None."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', field: invalid}]})
+
+    assert str(caught.value).startswith('plant.json → product_groups[0] → sections[0]')
+
+
+def test_json_battery_section_rejects_sheet_indexes() -> None:
+    """JSON не имеет листов, даже если в секции указан числовой индекс."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'sheet_indexes': [0]}]}, reader='json')
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → sheet_indexes: JSON не содержит листов'
+    )
+
+
+def test_missing_battery_templates_has_section_diagnostic() -> None:
+    """Для отсутствующих шаблонов сохраняется диагностика итоговой аккумуляторной секции."""
+    payload: RawConfig = {
+        'code': 'plant',
+        'name': 'План-Т',
+        'product_groups': [{'id': 'batteries', 'sections': [{'id': 'plant_battery'}]}],
+    }
+    with pytest.raises(ConfigValidationError) as caught:
+        VendorConfig.from_dict(payload, 'plant', 'plant.json')
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → file_templates: требуется непустой список'
+    )
+
+
+def test_battery_section_cannot_declare_tire_category() -> None:
+    """Проверка принадлежности слотов действует и на уровне секции, даже для пустого category."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'category': {}}]})
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → category: слот недоступен для batteries'
+    )
+
+
 COLUMN_EXAMPLES = [('xls', {'0': 'capacity_ah'}), ('json', ['capacity_ah'])]
 
 
@@ -50,6 +122,7 @@ def test_battery_columns_use_own_registry(reader: str, columns: object) -> None:
     section = _section(_config({'columns': columns}, reader=reader))
     expected_key = 0 if reader == 'xls' else 'capacity_ah'
     assert section.columns == {expected_key: 'capacity_ah'}
+    assert section.sheet_info == ''
     assert section.processing.min_rest == 1
 
 
@@ -96,6 +169,13 @@ def test_markup_comes_from_pricing_rules(percent: float, expected: str, recommen
         ({'title': {'lines': []}}, 'title → lines'),
         ({'title': {'lines': ['  ']}}, 'title → lines'),
         ({'title': {'lines': ['XTREME', 'xtreme']}}, 'title → lines'),
+        ({'pricing': {'unknown': 1}}, 'pricing → unknown'),
+        ({'pricing': {'rules': {'min_recommended_percent_markup': 'x'}}}, 'pricing → rules'),
+        ({'pricing': {'rules': []}}, 'rules'),
+        ({'behavior': {'min_rest': 'x'}}, 'behavior'),
+        ({'title': {'lines': 42}}, 'title'),
+        ({'title': {'strategy': 42}}, 'title'),
+        ({'pricing': []}, 'pricing'),
     ],
 )
 def test_invalid_battery_setting_has_source_and_slot(setting: RawConfig, path: str) -> None:

@@ -45,8 +45,10 @@ def test_default_order_without_hooks() -> None:
 def test_hooks_pipeline_order_between_warehouse_order_and_final_manufacturer() -> None:
     setup = _setup(StrategyHooks(pipeline=('markup', 'title')))
 
-    setup.pipeline.process_row(RowItem({}))
+    row = RowItem({})
+    setup.pipeline.process_row(row)
 
+    setup.calls.row_filters.apply_warehouse_order.assert_called_once_with(row)
     assert _names(setup.calls) == [
         'row_filters.apply_warehouse_order',
         'row_processor.add_price_markup',

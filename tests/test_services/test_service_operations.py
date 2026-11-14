@@ -6,12 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from domain.four_tochki import FourTochkiApiWarehouse, FourTochkiWarehouse, FourTochkiWarehouseGroup
+from domain.product_group_result import TireAndDiskResult
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from services.doubles_service import DoublesReport, DoublesService
 from services.four_tochki_service import FourTochkiService
 from services.four_tochki_service import load_remote_vendor_data as load_four_tochki_data
-from services.parse_result import ParseResult
+from services.parse_result import ParseResult, ParseSelection
 from services.price_report import PriceReportService
 from services.zapaska_service import ZapaskaService
 
@@ -106,9 +107,37 @@ def test_make_report_without_selected_groups_creates_no_file() -> None:
     orchestrator.parse_all.return_value = ParseResult()
     reporter = MagicMock()
     report = DoublesService(orchestrator=orchestrator, report_service=reporter).make_report(as_jsonl=True)
+    assert report.parse_result is orchestrator.parse_all.return_value
     assert report.path is None
     assert report.doubles == []
     reporter.write_result.assert_not_called()
+
+
+def test_make_report_passes_selection() -> None:
+    """Отчёт передаёт оркестратору тот же объект выбора групп."""
+    selection = ParseSelection()
+    orchestrator = MagicMock()
+    orchestrator.parse_all.return_value = ParseResult()
+    service = DoublesService(orchestrator=orchestrator, report_service=MagicMock())
+
+    service.make_report(selection=selection)
+
+    orchestrator.parse_all.assert_called_once_with(selection=selection)
+
+
+def test_make_report_without_output_files() -> None:
+    """Выбранная пустая группа сохраняется в отчёте даже без выходного файла."""
+    parsed = ParseResult()
+    parsed.add_package(TireAndDiskResult(()))
+    orchestrator = MagicMock(parse_all=MagicMock(return_value=parsed))
+    reporter = MagicMock(write_result=MagicMock(return_value=[]))
+
+    report = DoublesService(orchestrator=orchestrator, report_service=reporter).make_report()
+
+    assert report.parse_result is parsed
+    assert report.path is None
+    assert report.files == []
+    reporter.write_result.assert_called_once_with(parsed, template='for_doubles', as_jsonl=False)
 
 
 def test_writer_factory_receives_items() -> None:
@@ -161,17 +190,18 @@ def test_upload_zapaska_data() -> None:
     mock_load.assert_called_once_with(api=api)
 
 
-def test_upload_four_tochki_data() -> None:
+def test_upload_four_tochki_data(fake_config_provider: FakeConfigProvider) -> None:
     """upload_data вызывает загрузку данных Форточек с API-конфигом."""
     api = MagicMock()
     groups = (MagicMock(),)
     with (
         patch('services.vendor_activity.load_vendor_configs', return_value={}),
         patch('services.four_tochki_service.get_four_tochki_api_config', return_value=api),
-        patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups),
+        patch('services.four_tochki_service.load_four_tochki_warehouse_groups', return_value=groups) as load_groups,
         patch('services.four_tochki_service.load_remote_vendor_data') as mock_load,
     ):
-        assert FourTochkiService().upload_data() is True
+        assert FourTochkiService(fake_config_provider).upload_data() is True
+    load_groups.assert_called_once_with(fake_config_provider)
     mock_load.assert_called_once_with(api=api, groups=groups)
 
 
@@ -182,11 +212,12 @@ def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
     api = MagicMock()
     groups = (FourTochkiWarehouseGroup(name='novosibirsk', keywords=('Новосибирск',), merge=True),)
     with (
-        patch('services.four_tochki_service.fetch_warehouses', return_value=_API_DIRECTORY),
+        patch('services.four_tochki_service.fetch_warehouses', return_value=_API_DIRECTORY) as fetch,
         patch('services.four_tochki_service.download_catalogs') as mock_download,
     ):
         load_four_tochki_data(api=api, groups=groups)
 
+    fetch.assert_called_once_with(api)
     mock_download.assert_called_once_with(
         dest_dir=Path(fake_config_provider.price_folder('four_tochki')),
         api=api,
@@ -196,8 +227,9 @@ def test_four_tochki_load_selects_warehouses_and_downloads_to_price_folder(
 
 def test_write_result_logs_start_before_writing_and_elapsed(caplog: pytest.LogCaptureFixture) -> None:
     """Запись объявляется до подготовки данных, время включает сохранение файлов."""
+    writer = MagicMock()
     service = PriceReportService(
-        writer_factory=MagicMock(), group_writer_factory=MagicMock(), config_provider=MagicMock()
+        writer_factory=MagicMock(), group_writer_factory=lambda: writer, config_provider=MagicMock()
     )
     start_message = 'Начало формирования и сохранения итоговых прайсов'
 
@@ -208,10 +240,11 @@ def test_write_result_logs_start_before_writing_and_elapsed(caplog: pytest.LogCa
     with (
         caplog.at_level('INFO', logger='services.price_report'),
         patch('services.price_report.output_sources', side_effect=prepare_sources),
-        patch('services.price_report.write_group_prices', return_value=[_REPORT_PATH]),
+        patch('services.price_report.write_group_prices', return_value=[_REPORT_PATH]) as write,
         patch('services.price_report.time.monotonic', side_effect=[10.0, 12.5]),
     ):
         written = service.write_result(ParseResult())
 
     assert written == [_REPORT_PATH]
+    write.assert_called_once_with(writer, {}, template=None, as_jsonl=False, selected={}.keys())
     assert 'Итоговые прайсы сформированы и сохранены (2.50 сек), файлов: 1' in caplog.text

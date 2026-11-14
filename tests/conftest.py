@@ -1,15 +1,11 @@
 """global fixtures"""
 
-import logging
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from log_watch import LoggerWatch, LoggerWatcher, records_of
+import shared_fixtures
 
-from cfg import init_cfg
-from cfg.services import configure_services
-from domain.config_context import get_config_provider, set_config_provider
+from domain.config_context import set_config_provider
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache
 from parsers.data_provider.manufacturer_aliases import (
@@ -17,26 +13,8 @@ from parsers.data_provider.manufacturer_aliases import (
 )
 from parsers.mail.provider import clear_mail_config_cache
 from parsers.vendor_config.provider import clear_vendor_configs_cache
-from services.service_provider import ServiceProvider
 
 _ROOT = Path(__file__).resolve().parent
-
-
-@pytest.fixture
-def watch_logger(caplog: pytest.LogCaptureFixture) -> LoggerWatcher:
-    """Поднять уровень логгера и отдавать его записи: (уровень, текст) — после вызова кода."""
-
-    def _watch(logger_name: str, level: int = logging.INFO) -> LoggerWatch:
-        caplog.set_level(level, logger=logger_name)
-        return lambda: records_of(caplog, logger_name)
-
-    return _watch
-
-
-def pytest_configure() -> None:
-    """Композиция тестов: те же пути, что и init_cfg в run.main."""
-    init_cfg()
-    configure_services()
 
 
 @pytest.fixture
@@ -61,14 +39,6 @@ def example_vendors_provider(tmp_path: Path) -> FakeConfigProvider:
 
 
 @pytest.fixture(autouse=True)
-def _config_provider_restored() -> Iterator[None]:
-    """Провайдер путей, какой был до теста, возвращается после."""
-    previous = get_config_provider()
-    yield
-    set_config_provider(previous)
-
-
-@pytest.fixture(autouse=True)
 def _clear_process_file_caches(monkeypatch: pytest.MonkeyPatch) -> None:
     """Сброс модульных кэшей файлов, чтобы тесты не зависели от порядка; разбор не обнуляет боевые логи."""
     monkeypatch.setattr('services.parse_orchestrator.clear_log_files', lambda: None)
@@ -78,10 +48,7 @@ def _clear_process_file_caches(monkeypatch: pytest.MonkeyPatch) -> None:
     clear_mail_config_cache()
 
 
-@pytest.fixture(autouse=True)
-def _service_provider_isolated() -> Iterator[None]:
-    """DI-контейнер: базовая сборка до теста, сброс после (без глобальных завязок)."""
-    ServiceProvider.clear()
-    configure_services()
-    yield
-    ServiceProvider.reset()
+watch_logger = shared_fixtures.watch_logger
+pytest_configure = shared_fixtures.pytest_configure
+_config_provider_restored = shared_fixtures.config_provider_restored
+_service_provider_isolated = shared_fixtures.service_provider_isolated

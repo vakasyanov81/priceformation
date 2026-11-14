@@ -36,6 +36,10 @@ class _RecordingReader:
         self.parsed_indexes = sheet_indexes
         return []
 
+    def raw_tables(self, sheet_indexes: Any = None) -> list[Any]:
+        self.parsed_indexes = sheet_indexes
+        return []
+
 
 def test_raw_parse_passes_path_and_sheet_indexes() -> None:
     """Путь и вкладки доходят до читателя без подмены на None."""
@@ -49,6 +53,14 @@ def test_raw_parse_passes_path_and_sheet_indexes() -> None:
     assert instance.file_path == _PATH
     assert instance.reader_params == {'start_row': _START_ROW - 1, 'columns': _COLUMNS}
     assert instance.parsed_indexes == _SHEET_INDEXES
+
+
+def test_raw_tables_start_at_first_sheet_row() -> None:
+    _RecordingReader.created.clear()
+    reader = FileReader(data_reader=_RecordingReader, price_source=MagicMock())
+
+    assert reader.raw_tables(_PATH, ()) == []
+    assert _RecordingReader.created[0].reader_params == {'start_row': 0, 'columns': {}}
 
 
 def test_raw_tables_use_real_xls_adapter() -> None:

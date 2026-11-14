@@ -1,6 +1,6 @@
 """ManufacturerService: когда запускается поиск производителя — без BaseParser."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -51,5 +51,4 @@ def test_column_first_flag_reaches_finder(hooks: StrategyHooks | None, column_fi
     service.apply_manufacturer(row)
     service.apply_manufacturer_after_pipeline(row)
 
-    finder.process.assert_called_with(row, column_first)
-    assert finder.process.call_count == 2
+    assert finder.process.call_args_list == [call(row, column_first), call(row, column_first)]

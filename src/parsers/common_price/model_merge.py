@@ -13,6 +13,8 @@
 from collections.abc import Iterable
 from functools import partial
 
+from parsers.common_price.model_word_join import can_join
+
 Tokens = frozenset[str]
 ModelEntry = tuple[str, Tokens]
 CanonicalKeys = dict[Tokens, str]
@@ -52,23 +54,10 @@ def _contains_any(outer: Tokens, candidates: list[Tokens]) -> bool:
     return any(_is_inside(inner, outer) for inner in candidates if inner != outer)
 
 
-def _split_pair(word: str, unmatched: set[str]) -> tuple[str, str] | None:
-    """Две раздельные части из `unmatched`, дающие `word` при склейке."""
-    for first in unmatched:
-        second = word.removeprefix(first)
-        if second not in {word, first} and second in unmatched:
-            return first, second
-    return None
-
-
 def _is_inside(tokens: Tokens, other: Tokens) -> bool:
-    """Все слова `tokens` есть в `other`, а раздельно написанные слитно (`ice`+`guard` = `iceguard`) входят в него."""
+    """Все слова входят напрямую или непересекающимися парами в слитные слова другой модели."""
     if tokens < other:
         return True
-    unmatched = set(tokens - other)
     joined_words = other - tokens
-    for word in joined_words:
-        pair = _split_pair(word, unmatched)
-        if pair:
-            unmatched.difference_update(pair)
-    return not unmatched and bool(joined_words)
+    unmatched = tokens - other
+    return bool(joined_words) and can_join(unmatched, tuple(sorted(joined_words)))

@@ -5,6 +5,7 @@ from typing import Any
 from domain.row_item.row_item import RowItem
 from parsers.common_price.group_title import unify_group_title
 from parsers.common_price.grouper import CommonPriceGrouper
+from parsers.common_price.title_tail import split_title
 
 _PRIORITY = {'Форточки': 1, 'Запаска': 3, 'Мим': 4}
 _ALIASES: dict[str, Any] = {'Cordiant': []}
@@ -83,6 +84,27 @@ def test_reference_layering_and_unknown_tokens_are_kept() -> None:
     assert _titles([reference, other]) == {'205/65R15 Cordiant Road Runner 94H Extra XL 8PR TT RunFlat'}
 
 
+def test_unknown_tokens_from_other_titles_are_not_added() -> None:
+    """Незнакомые слова сохраняются только у эталона, а не собираются со всей группы."""
+    reference = _tire('Форточки', '205/65R15 Cordiant Road Runner 94H Extra', 'Road Runner')
+    other = _tire('Мим', '205/65R15 Cordiant Road Runner 94H Unknown', 'Road Runner')
+
+    unify_group_title([reference, other], _PRIORITY)
+
+    assert _titles([reference, other]) == {'205/65R15 Cordiant Road Runner 94H Extra'}
+
+
+def test_only_one_axis_is_added_to_group_title() -> None:
+    """Оси остальных позиций не накапливаются: эталон получает только первую найденную."""
+    reference = _tire('Форточки', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
+    steering = _tire('Запаска', '205/65R15 Cordiant Road Runner 94H Рулевая', 'Road Runner')
+    driving = _tire('Мим', '205/65R15 Cordiant Road Runner 94H Ведущая', 'Road Runner')
+
+    unify_group_title([reference, steering, driving], _PRIORITY)
+
+    assert _titles([reference, steering, driving]) == {'205/65R15 Cordiant Road Runner 94H Рулевая'}
+
+
 def test_title_without_load_index_is_taken_as_is() -> None:
     """Нет нагрузки+скорости в названии эталона — признаки не добавляются, берётся название эталона."""
     reference = _tire('Форточки', '205/65R15 Cordiant Road Runner', 'Road Runner', index_load='', index_velocity='')
@@ -148,3 +170,57 @@ def test_single_word_code_in_brackets_still_merges() -> None:
     CommonPriceGrouper([code, named], _ALIASES, _PRIORITY).group_by_params()
 
     assert code.duplicate.group_by_params == named.duplicate.group_by_params
+
+
+def test_split_title_keeps_last_load_token_in_head() -> None:
+    """Граница проходит после последнего индекса, даже если модель содержит такой же токен."""
+    row_item = _tire('Мим', '205/65R15 Cordiant 94H Road 94H XL TL', '94H Road')
+    expected_head = ['205/65R15', 'Cordiant', '94H', 'Road', '94H']
+    assert split_title(row_item) == (expected_head, ['XL', 'TL'])
+
+
+def test_empty_title_has_no_tail_even_when_index_matches_fallback() -> None:
+    """Индекс сам по себе не создаёт отсутствующие слова названия."""
+    row_item = RowItem({'title': '', 'index_velocity': 'XXXX'})
+
+    assert split_title(row_item) is None
+
+
+def test_model_fullness_takes_priority_over_extra_title_features() -> None:
+    """Длинный хвост названия не делает короткую модель полнее."""
+    short = _tire('Мим', '205/65R15 Cordiant Road Runner 94H XL TL M+S', 'Road Runner')
+    full = _tire('Мим', '205/65R15 Cordiant Road Runner PS-1 94H', 'Road Runner PS-1')
+
+    unify_group_title([short, full], _PRIORITY)
+
+    assert _titles([short, full]) == {'205/65R15 Cordiant Road Runner PS-1 94H XL TL M+S'}
+
+
+def test_empty_reference_title_is_preserved() -> None:
+    """Приоритетный эталон без названия не заменяется искусственным текстом."""
+    reference = _tire('Форточки', '', 'Road Runner')
+    other = _tire('Мим', '205/65R15 Cordiant Road Runner 94H', 'Road Runner')
+
+    unify_group_title([reference, other], _PRIORITY)
+
+    assert _titles([reference, other]) == {''}
+
+
+def test_empty_title_sorts_before_nonempty_with_same_model() -> None:
+    """После одинаковой полноты модели сравнивается само название, включая пустое."""
+    empty = _tire('Мим', '', 'Road Runner')
+    titled = _tire('Мим', 'AAA', 'Road Runner')
+
+    unify_group_title([titled, empty], _PRIORITY)
+
+    assert _titles([titled, empty]) == {''}
+
+
+def test_missing_supplier_does_not_inherit_literal_name_priority() -> None:
+    """Пустое имя поставщика не получает место другого имени в очереди эталонов."""
+    unknown = _tire('', 'AAA', 'Road Runner')
+    known = _tire('XXXX', 'ZZZ', 'Road Runner')
+
+    unify_group_title([unknown, known], {'XXXX': 0})
+
+    assert _titles([unknown, known]) == {'ZZZ'}

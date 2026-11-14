@@ -11,6 +11,7 @@ from parsers.strategies.normalize import NormalizeTitle
 from parsers.strategies.title_compose import TitleFromFields, titles_not_composed_message
 from parsers.strategies.title_params import ParamsFromTitle
 from parsers.strategies.title_registry import make_title_strategy
+from parsers.strategies.tube_title import compose_tube_title_from_text
 from parsers.vendor_config.slot_configs import TitleConfig
 
 _FINDER = BaseFinder(
@@ -142,6 +143,14 @@ def test_owner_in_brackets_stays_in_title_and_is_not_the_brand(raw: str, expecte
     assert _probe(title) == expected.split()[1]
 
 
+def test_column_first_unknown_manufacturer_drops_owner_without_placeholder() -> None:
+    """Владелец в скобках удаляется из неизвестной колонки без вставки служебного текста."""
+    composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
+    row = RowItem({'title': '205/55R16 Foo Bar 91V', 'manufacturer_name': 'Unknown (Bridgestone)'})
+
+    assert composer.prepare(row) == '205/55R16 Unknown Bar 91V'
+
+
 def test_brand_without_probe_comes_from_manufacturer_field_then_title() -> None:
     with_field = RowItem({'title': '205/55R16 Foo Bar 91V', 'manufacturer_name': 'Baz'})
     without_field = RowItem({'title': '205/55R16 Foo Bar 91V'})
@@ -179,6 +188,19 @@ def test_fields_win_over_parsed_title() -> None:
     )
 
     assert _compose(row) == '11R22.5 Taitong HS103 146/143M 18PR TT Прицепная'
+
+
+def test_sidewall_marks_and_run_flat_column_stay_in_title() -> None:
+    """Свойства шины из отдельных полей не теряются при канонической сборке."""
+    row = RowItem(
+        {
+            'title': '285/70R19.5 Triangle TRD02 146/144L 18PR TL ведущая',
+            'inscription_on_the_side': 'XL M+S 3PMSF',
+            'run_flat': 'да',
+        },
+    )
+
+    assert _compose(row) == '285/70R19.5 Triangle TRD02 146/144L XL 18PR TL M+S 3PMSF RunFlat Ведущая'
 
 
 @pytest.mark.parametrize(
@@ -289,6 +311,24 @@ def test_disk_title_keeps_suffix_from_supplier_text() -> None:
     assert _compose(row) == '7.5x16 5x114.3 ET49.5 67.1 MGMF Replay HND369 усил.'
 
 
+def test_disk_model_brackets_are_not_duplicated_in_suffix() -> None:
+    """Скобки из полной модели удаляются из исходного хвоста и не повторяются в title."""
+    row = _zapaska_disk(
+        '5,5x14/4x100 ET43 D60,1 R004 (Logan) BL',
+        manufacturer_name='RST',
+        model='R004 (Logan)',
+        width='5.5',
+        diameter='14',
+        slot_count='4',
+        pcd1='100',
+        eet='43',
+        central_diameter='60.1',
+        color='BL',
+    )
+
+    assert _compose(row) == '5.5x14 4x100 ET43 60.1 BL RST R004 (Logan)'
+
+
 def test_disk_without_model_keeps_supplier_text_and_is_marked() -> None:
     """Без модели диск собрать нельзя: остаётся текст поставщика, позиция помечена для статистики."""
     row = _zapaska_disk('Диск 6.0x15 4x98 ET35', manufacturer_name='СКАД', width='6.0', diameter='15')
@@ -338,6 +378,15 @@ def test_tube_is_composed_from_size(title: str, expected: str) -> None:
     assert row.vendor.title_not_composed is None
 
 
+def test_tube_profile_and_valve_are_composed_without_probe() -> None:
+    """Профиль камеры и вентиль сохраняются даже без детектора производителя."""
+    title = 'Автокамера 12.5/80-18 с вентилем ЛК'
+    row = RowItem({'title': title})
+
+    assert compose_tube_title_from_text(row, title) == 'Камера 12.5/80-18 с вентилем'
+    assert TitleFromFields(NormalizeTitle()).prepare(row) == 'Камера 12.5/80-18 с вентилем'
+
+
 def test_tube_without_size_keeps_supplier_text_and_is_marked() -> None:
     """Камера без размера (`УК-14-02 ОШЗ`) остаётся текстом поставщика и считается в «не собрано»."""
     row = RowItem({'title': 'Камера УК-14-02 ОШЗ'})
@@ -362,14 +411,32 @@ def _nordman_row(manufacturer: str) -> RowItem:
     )
 
 
+def test_title_owner_is_kept_without_model_column() -> None:
+    """Известный владелец из названия сохраняется при отсутствии колонки модели."""
+    row = RowItem({'title': '175/70R13 Gislaved (Bridgestone) SpikeControl 82T'})
+
+    assert TitleFromFields(NormalizeTitle(), _probe).prepare(row) == '175/70R13 Gislaved (Bridgestone) SpikeControl 82T'
+
+
+def test_owner_is_removed_when_brand_is_canonicalized() -> None:
+    """После канонизации бренда владелец из модели удаляется, а не остаётся повторно в модели."""
+    row = RowItem({'title': '205/55R16 Ikon Bar 91V', 'model': '(Nokian) Bar'})
+
+    def probe(text: str | None) -> str | None:
+        if text == '(Nokian)':
+            return 'Nokian'
+        return 'Ikon Tyres' if text and 'Ikon' in text else None
+
+    assert TitleFromFields(NormalizeTitle(), probe).prepare(row) == '205/55R16 Ikon Tyres Bar 91V'
+
+
 def test_column_first_brand_comes_from_manufacturer_column() -> None:
     """Колонка `Ikon` приоритетнее модели `Nordman` из названия: бренд — Ikon Tyres, модель остаётся целой."""
     composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
 
     title = composer.prepare(_nordman_row('Ikon'))
 
-    assert title is not None
-    assert 'Ikon Tyres Nordman RS2' in title
+    assert title == '195/55R15 Ikon Tyres Nordman RS2 (Character Snow 2) 89R XL TL'
 
 
 def test_column_first_brand_from_title_when_column_empty() -> None:
@@ -378,5 +445,14 @@ def test_column_first_brand_from_title_when_column_empty() -> None:
 
     title = composer.prepare(_nordman_row(''))
 
-    assert title is not None
-    assert 'Nordman' in title
+    assert title == '195/55R15 Nordman Nordman RS2 (Character Snow 2) 89R XL TL'
+
+
+def test_column_first_brand_falls_back_without_known_manufacturer() -> None:
+    """При пустой колонке бренд берётся из разбора, при неизвестной — сохраняется текст колонки."""
+    composer = TitleFromFields(ParamsFromTitle(NormalizeTitle()), _ikon_probe, column_first=True)
+
+    assert composer.prepare(RowItem({'title': '205/55R16 Foo Bar 91V'})) == '205/55R16 Foo Bar 91V'
+    assert composer.prepare(RowItem({'title': '205/55R16 Ikon Bar 91V'})) == '205/55R16 Ikon Tyres Bar 91V'
+    row = RowItem({'title': '205/55R16 Foo Bar 91V', 'manufacturer_name': 'Unknown'})
+    assert composer.prepare(row) == '205/55R16 Unknown Bar 91V'

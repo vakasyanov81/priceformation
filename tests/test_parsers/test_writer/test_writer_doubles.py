@@ -101,6 +101,7 @@ def test_xls_write_for_doubles_main_row_is_light_green(tmp_path: Any) -> None:
 def test_xls_write_for_doubles_writes_legend_above_head(tmp_path: Any) -> None:
     """над шапкой: образец цвета и пояснение, затем пустая строка"""
     fake_driver = _write([], tmp_path)
+    assert fake_driver._head_row == len(_LEGEND) + 1
     for row_index, (color, text) in enumerate(_LEGEND):
         assert fake_driver.cell_colors[f'cell({row_index},0)'] == color
         assert fake_driver.body[f'cell({row_index},1)'] == text

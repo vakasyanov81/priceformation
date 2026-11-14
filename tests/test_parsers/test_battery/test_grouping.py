@@ -5,10 +5,13 @@ from itertools import permutations
 
 import pytest
 
+from domain.battery.duplicate import BatteryDuplicate
 from domain.battery.item import BatteryItem
 from domain.battery.result import BatteryResult
+from parsers.battery.group_keys import identity_key
 from parsers.battery.grouping import group_batteries
 from parsers.battery.handler import BatteryHandler
+from parsers.battery.offer_repeats import unique_offers
 from parsers.vendor_config.battery_settings import BatterySettings
 
 
@@ -213,3 +216,32 @@ def test_empty_package_retains_batteries() -> None:
 def test_blank_main_string_prevents_merging() -> None:
     positions = (_position(model=' '), _position(code='002', model=''))
     assert _group_ids(group_batteries(BatteryResult(positions))) == [1, 2]
+
+
+def test_regrouping_replaces_previous_duplicate_marks() -> None:
+    first = replace(_position(), duplicate=BatteryDuplicate(91, True))
+    second = replace(_position(code='002'), duplicate=BatteryDuplicate(92, True))
+
+    grouped = group_batteries(BatteryResult((first, second)))
+
+    assert _group_ids(grouped) == [1, 1]
+    assert [position.duplicate.is_main for position in grouped.positions] == [True, False]
+
+
+def test_unique_offers_clears_previous_duplicate_marks() -> None:
+    marked = replace(_position(), duplicate=BatteryDuplicate(91, True))
+
+    assert unique_offers((marked,))[0].duplicate == BatteryDuplicate()
+
+
+def test_identity_key_uses_single_spaces() -> None:
+    single = _position()
+    spaced = _position(
+        code='002',
+        manufacturer_name='  АЛЬКОР   (ТЮМЕНЬ) ',
+        model=' xtreme  +efb ',
+        polarity=' 0,  L ',
+    )
+
+    assert identity_key(spaced) == identity_key(single)
+    assert identity_key(spaced)[0] == 'алькор (тюмень)'

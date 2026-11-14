@@ -1,15 +1,22 @@
 """Итоговый лог аккумуляторной секции через настоящий парсер и обработчик."""
 
+import json
 import logging
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams, make_parse_config
+from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.price_files import PriceFiles
+from parsers.base_parser.routing import VendorRouting
 from parsers.battery.handler import BatteryHandler
 from parsers.battery.parser import BatteryParser
 from parsers.vendor_config.battery_settings import BatterySettings
+from parsers.vendor_config.group_models import BatteryConfig
+from parsers.vendor_config.models import VendorConfig
 
 
 def _parser() -> BatteryParser:
@@ -56,3 +63,80 @@ def test_battery_parser_logs_empty_result(caplog: pytest.LogCaptureFixture) -> N
         assert not parser.parse().positions
     assert 'Обработано позиций - 0' in caplog.text
     assert 'План-Т [batteries] // финиш' in caplog.text
+
+
+def test_battery_parser_has_independent_empty_statistics() -> None:
+    parser = _parser()
+    other = _parser()
+
+    assert parser.stats == ParserStats()
+    assert other.stats == ParserStats()
+    parser.stats.unknown_category_skips.append('чужая категория')
+    parser.stats.black_list_skips = 1
+    assert other.stats == ParserStats()
+
+
+@pytest.mark.parametrize('routed', [False, True])
+def test_battery_parser_reads_real_json_price(tmp_path: Path, routed: bool, caplog: pytest.LogCaptureFixture) -> None:
+    provider = FakeConfigProvider(tmp_path)
+    price_folder = Path(provider.price_folder('plant'))
+    price_folder.mkdir(parents=True)
+    price_path = price_folder / 'battery.json'
+    row = {'code': '001', 'title': '  XTREME   Arctic 60 ', 'rest_count': 1, 'price_recommended': '5500.25'}
+    rows = [row]
+    if routed:
+        row['kind'] = 'battery'
+        rows.append(
+            {'code': 'other', 'title': 'Другая секция', 'rest_count': 1, 'price_recommended': '100', 'kind': 'other'}
+        )
+    price_path.write_text(json.dumps(rows))
+    selected_section = {
+        'id': 'plant_batteries',
+        'file_templates': ['*.json'],
+        'columns': ['code', 'title', 'rest_count', 'price_recommended'],
+        'row_selector': {'column': 'kind', 'values': ['battery']},
+    }
+    sections = [selected_section]
+    if routed:
+        other_section = {'id': 'other', 'row_selector': {'column': 'kind', 'values': ['other']}}
+        sections.append({**selected_section, **other_section})
+    config = VendorConfig.from_dict(
+        {
+            'code': 'plant',
+            'name': 'План-Т',
+            'reader': 'json',
+            'product_groups': [{'id': 'batteries', 'sections': sections}],
+        },
+        'plant',
+        'plant.json',
+    )
+    group = config.product_groups[0]
+    assert isinstance(group, BatteryConfig)
+    section = group.sections[0]
+    parser_params = ParserParams(
+        supplier=ParseParamsSupplier('plant', section.name, section.id),
+        start_row=section.start_row,
+        sheet_info=section.sheet_info,
+        columns=dict(section.columns),
+        stop_words=(),
+        file_templates=section.file_templates,
+        sheet_indexes=section.sheet_indexes,
+    )
+    parse_config = make_parse_config(
+        parser_params,
+        config_provider=provider,
+        vendor_section=section,
+        vendor_config=config,
+        routing=VendorRouting(config) if routed else None,
+    )
+
+    with caplog.at_level(logging.INFO):
+        package = BatteryParser(parse_config, BatteryHandler(BatterySettings(), section.name)).parse()
+
+    assert len(package.positions) == 1
+    position = package.positions[0]
+    assert position.identity.code == '001'
+    assert position.identity.title == 'XTREME Arctic 60'
+    assert position.identity.model == 'XTREME Arctic'
+    assert str(position.offer.sale_price) == '5500.25'
+    assert str(price_path) in caplog.text

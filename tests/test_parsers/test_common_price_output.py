@@ -60,9 +60,10 @@ def test_nomenclature_title_correction() -> None:
     with patch(
         'parsers.common_price.output.get_nomenclature_corrected_title',
         side_effect=lambda title, _provider: f'fixed-{title}' if title == 'old' else title,
-    ):
+    ) as correct_title:
         out.nomenclature_title_correction()
 
+    assert correct_title.call_args.args[1] is get_config_provider()
     assert row_old.identity.title == 'fixed-old'
     assert row_keep.identity.title == 'keep'
 
@@ -158,6 +159,30 @@ def test_write_all_prices_jsonl(fake_config_provider: FakeConfigProvider) -> Non
     assert Path(written[1]).read_text(encoding='utf-8') == ''
 
 
+def test_write_all_prices_jsonl_keeps_template_specific_double_rules() -> None:
+    plain = _double_row('plain', 5000)
+    priority = _double_row('priority', 4000)
+    out = CommonPriceOut(
+        [plain, priority, RowItem({_TITLE: 'unique', 'supplier_name': 'unique'})],
+        xls_writer=MagicMock(),
+        write_driver=MagicMock(),
+        config_provider=get_config_provider(),
+        doubles_settings=DoublesSettings(exclude_in_templates=('for_inner',), priority_suppliers=('priority',)),
+    )
+
+    with (
+        patch.object(out, 'nomenclature_title_correction'),
+        patch('parsers.common_price.output.write_plan_jsonl', return_value=['inner.jsonl', 'doubles.jsonl']) as write,
+    ):
+        out.write_all_prices(as_jsonl=True, result_template='for_inner')
+
+    inner, doubles = write.call_args.args[0]
+    inner_rows = inner.sheets[0].rows
+    doubles_rows = doubles.sheets[0].rows
+    assert [row['supplier_name'] for row in inner_rows] == ['priority', 'unique']
+    assert [row['supplier_name'] for row in doubles_rows] == ['priority', 'plain']
+
+
 def test_write_all_prices_reloads_nomenclature() -> None:
     """второй write_all_prices в том же процессе видит новую карту номенклатуры"""
     row = RowItem({_TITLE: 'old'})
@@ -223,14 +248,15 @@ def test_write_doubles_report() -> None:
 
 
 def test_write_doubles_report_jsonl() -> None:
-    """as_jsonl для дублей идёт в jsonl."""
-    double_row = RowItem({_TITLE: 'dup'})
-    double_row.set_field('is_double', True)
+    """JSONL дублей исключает уникальные строки и сохраняет приоритет поставщиков."""
+    plain = _double_row('plain', 5000)
+    priority = _double_row('priority', 4000)
     out = CommonPriceOut(
-        [double_row],
+        [plain, priority, RowItem({_TITLE: 'unique'})],
         xls_writer=cast(type[XlsWriter], MagicMock),
         write_driver=cast(type[XlsxWriterAdapter], MagicMock),
         config_provider=get_config_provider(),
+        doubles_settings=DoublesSettings(priority_suppliers=('priority',)),
     )
     jsonl_path = 'file_prices/result/doubles.jsonl'
 
@@ -238,7 +264,7 @@ def test_write_doubles_report_jsonl() -> None:
         report_path = out.write_doubles_report(as_jsonl=True)
     books = mock_jsonl.call_args.args[0]
     sheet = books[0].sheets[0]
-    assert sheet.rows[0]['title'] == 'dup'
+    assert [row['supplier_name'] for row in sheet.rows] == ['priority', 'plain']
     assert mock_jsonl.call_args.args[1] == _result_folder()
     assert report_path == jsonl_path
 
@@ -444,6 +470,26 @@ def test_doubles_settings_are_read_from_config(fake_config_provider: FakeConfigP
 
     drom_rows = writer_cls.call_args.args[1]
     assert [row['supplier_name'] for row in drom_rows] == ['Мим']
+
+
+def test_jsonl_preserves_explicit_date_in_validation_and_file_name() -> None:
+    out = CommonPriceOut(
+        [RowItem({_TITLE: 't1'})],
+        xls_writer=MagicMock(),
+        write_driver=MagicMock(),
+        config_provider=get_config_provider(),
+        doubles_settings=DoublesSettings(),
+    )
+
+    with (
+        patch('parsers.common_price.output.validate_outputs') as validate,
+        patch('parsers.common_price.output.write_plan_jsonl', return_value=['x.jsonl']) as write_jsonl,
+    ):
+        out.write_doubles_report(as_jsonl=True, current_date='2000-01-02')
+
+    books = write_jsonl.call_args.args[0]
+    assert validate.call_args.kwargs['current_date'] == '2000-01-02'
+    assert books[0].file_name.endswith('2000-01-02.xlsx')
 
 
 def test_result_folder_comes_from_injected_provider() -> None:

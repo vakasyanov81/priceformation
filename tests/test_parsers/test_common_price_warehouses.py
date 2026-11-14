@@ -54,7 +54,7 @@ def test_cheapest_price_shared_by_several_rows_sums_their_rests() -> None:
     """Если наименьшую цену дают несколько складов, их остатки складываются, более дорогие — нет."""
     rows = [
         _row('A', 5000, 2),
-        _row('A', 5000, 3),
+        _row('A', 5000, 3, warehouse_name='ОХ г. Новосибирск Чехова'),
         _row('A', 6000, 9),
     ]
 
@@ -62,6 +62,7 @@ def test_cheapest_price_shared_by_several_rows_sums_their_rests() -> None:
 
     assert len(merged) == 1
     assert merged[0].stock.rest_count == 5
+    assert merged[0].stock.warehouse_name == _NSK['warehouse_name']
 
 
 def test_rows_without_group_are_kept_as_is() -> None:
@@ -116,3 +117,16 @@ def test_missing_rest_counts_as_zero_in_sum() -> None:
 
     merged = merge_warehouse_rows([_row('A', 5000, 3), no_rest])
     assert merged[0].stock.rest_count == 3
+
+
+def test_missing_supplier_does_not_merge_with_literal_name() -> None:
+    """Пустой поставщик отличается от явно заданного имени, даже похожего на заглушку."""
+    rows = [
+        _row('A', 5000, 3, supplier_name=None),
+        _row('A', 5000, 4, supplier_name='XXXX'),
+    ]
+
+    merged = merge_warehouse_rows(rows)
+
+    assert merged == rows
+    assert [row.stock.rest_count for row in merged] == [3, 4]

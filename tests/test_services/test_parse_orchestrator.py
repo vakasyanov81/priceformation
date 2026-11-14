@@ -167,19 +167,23 @@ def test_other_group_is_not_sent_to_tire_and_disk_grouper() -> None:
     orchestrator._grouper_factory.assert_not_called()
 
 
-def test_other_package_keeps_only_common_counters() -> None:
+def test_other_package_keeps_only_common_counters(caplog: pytest.LogCaptureFixture) -> None:
     """Сбор результата не объявляет шинные исправления статистикой другой модели."""
     parser = MagicMock()
     parser.parse.return_value = TestGroupResult(())
-    parser.stats = ParserStats(black_list_skips=3, type_corrections=2, unknown_category_skips=['SUV'])
+    parser.stats = ParserStats(
+        black_list_skips=3, type_corrections=2, unknown_category_skips=['SUV'], homoglyph_fixes=1, titles_not_composed=1
+    )
     parsed = ParseResult()
 
-    _orchestrator()._parse_supplier(parsed, parser)
+    with caplog.at_level(logging.INFO, logger=_ORCHESTRATOR_LOGGER):
+        _orchestrator()._parse_supplier(parsed, parser)
 
     assert parsed.tire_and_disk_diagnostics.type_corrections == 0
     assert parsed.tire_and_disk_diagnostics.unknown_category_skips == []
     assert parsed.total_statistics().black_list_skips == 3
     assert set(parsed.statistics) == {ProductGroup.BATTERIES}
+    assert not caplog.records
 
 
 def test_parse_all_uses_injected_parser_factory_with_vendor_entry() -> None:

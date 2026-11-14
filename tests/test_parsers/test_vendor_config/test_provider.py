@@ -64,6 +64,15 @@ def test_broken_json_reports_file_name(fake_config_provider: FakeConfigProvider)
         load_vendor_configs(fake_config_provider)
 
 
+def test_non_object_config_reports_file_name(fake_config_provider: FakeConfigProvider) -> None:
+    _vendors_dir(fake_config_provider).joinpath('bad.json').write_text('[]', encoding='utf-8')
+
+    with pytest.raises(ConfigValidationError) as caught:
+        load_vendor_configs(fake_config_provider)
+
+    assert str(caught.value).startswith('bad.json')
+
+
 def test_invalid_config_reports_file_name(fake_config_provider: FakeConfigProvider) -> None:
     _vendors_dir(fake_config_provider).joinpath('mim.json').write_text('{"enabled": 0}', encoding='utf-8')
 
