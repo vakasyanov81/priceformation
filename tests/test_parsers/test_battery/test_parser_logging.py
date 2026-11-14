@@ -9,6 +9,7 @@ import pytest
 
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.base_parser_config import ParseParamsSupplier, ParserParams, make_parse_config
+from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.routing import VendorRouting
 from parsers.battery.handler import BatteryHandler
@@ -62,6 +63,17 @@ def test_battery_parser_logs_empty_result(caplog: pytest.LogCaptureFixture) -> N
         assert not parser.parse().positions
     assert 'Обработано позиций - 0' in caplog.text
     assert 'План-Т [batteries] // финиш' in caplog.text
+
+
+def test_battery_parser_has_independent_empty_statistics() -> None:
+    parser = _parser()
+    other = _parser()
+
+    assert parser.stats == ParserStats()
+    assert other.stats == ParserStats()
+    parser.stats.unknown_category_skips.append('чужая категория')
+    parser.stats.black_list_skips = 1
+    assert other.stats == ParserStats()
 
 
 @pytest.mark.parametrize('routed', [False, True])

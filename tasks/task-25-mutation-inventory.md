@@ -966,6 +966,40 @@ Diff применялись отдельно во временной копии 
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: аккумуляторный парсер
+
+Проверка 2026-11-14 выполнена поверх `b1c2359`. Завершены 16 записей
+`battery.handler`, `battery.parser` и `battery.processing`: **13 killed**
+(12 существующими тестами, одна новым) и **3 эквивалента** с индивидуальными
+обоснованиями. Код приложения не менялся.
+
+- R79: 16 исторических diff отдельно до усиления: база **188 passed**;
+  12 killed, четыре survived.
+- R80: после добавления теста независимой пустой статистики: база **189 passed**;
+  13 killed, три survived. Для каждого killed ниже указаны конкретные провалы.
+
+Каждый diff применён во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному совпадению полного удаляемого
+блока с контекстом; исходник восстановлен после каждого запуска.
+Команда (repo — исходный репозиторий, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_battery"`.
+Номера текущей генерации mutmut не использовались.
+
+Корень пропуска в тестах parsers — отсутствие проверки публичного stats,
+который обязателен протоколом SupplierParser и читается оркестратором.
+Новый тест проверяет начальные значения и независимость статистики двух
+парсеров; замена ParserStats на None теперь даёт конкретный провал.
+Эквиваленты ограничены нечитаемыми rules и одинаковым выбором XLSX-ридера.
+
+Пересчёт всех 894 заголовков уточняет прежний итог: перед этим блоком были
+**874 завершённые записи**, 16 без классификации и четыре открытых разбора,
+а не 877/13/4. Теперь завершены **890 из 894**, остаются **четыре открытых
+разбора**: `base_finder._search`, `_update_width`, `_split_pair`, `split_title`.
+Это 892 записи со строкой классификации (две из них явно незавершённые)
+и две без такой строки. Все девять timeout разобраны ранее.
+Исторические статусы сохранены; новый полный отчёт mutmut ещё не сформирован.
+Все девять проверок завершились с exit 0 (`just ci-compact`: `check is ok`).
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -6486,6 +6520,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.handler.xǁBatteryHandlerǁ__init____mutmut_4`
 
+Классификация 2026-11-14: Эквивалент в контракте BatteryHandler: _rules хранится в MarkupPolicy, но аккумуляторный apply_markup вызывает только markup_percent_for_opt. Этот метод читает исключительно _price_map, переданную без изменений; apply и проверки шинных правил не вызываются. None вместо rules не меняет создание, обработку и вывод аккумулятора. R79: 188 passed; R80: 189 passed, exit 0.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 45.
 
 ```diff
@@ -6647,6 +6683,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит после нового теста. R80: 1 failed, 188 passed in 0.36s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_has_independent_empty_statistics`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
 ```diff
@@ -6663,6 +6701,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.37s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
@@ -6801,6 +6841,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_14`
 
+Классификация 2026-11-14: Эквивалент: при наличии vendor fallback не вычисляется; без vendor data_reader_for сравнивает аргумент только с json и для xls, XXxlsXX и XLS возвращает один и тот же XlsReader. Аргумент далее не сохраняется и не используется. R79: 188 passed; R80: 189 passed, exit 0.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 2.
 
 ```diff
@@ -6818,6 +6860,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_15`
+
+Классификация 2026-11-14: Эквивалент: при наличии vendor fallback не вычисляется; без vendor data_reader_for сравнивает аргумент только с json и для xls, XXxlsXX и XLS возвращает один и тот же XlsReader. Аргумент далее не сохраняется и не используется. R79: 188 passed; R80: 189 passed, exit 0.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 2.
 
@@ -6837,6 +6881,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_16`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.36s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -6854,6 +6900,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_18`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.35s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -6868,6 +6916,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_19`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.36s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
@@ -6884,6 +6934,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_20`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.35s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -6898,6 +6950,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_21`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.37s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
@@ -6914,6 +6968,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_22`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 2 failed, 187 passed in 0.37s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`, `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -6928,6 +6984,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.parser.xǁBatteryParserǁ__init____mutmut_23`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.41s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[True]`.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
@@ -6984,6 +7042,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.parser.xǁBatteryParserǁparse__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.37s, exit 1. Проверки: `tests/test_parsers/test_battery/test_parser_logging.py::test_battery_parser_reads_real_json_price[False]`.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
 ```diff
@@ -7003,6 +7063,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.processing.x__required_issue__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.40s, exit 1. Проверки: `tests/test_parsers/test_battery/test_handler.py::test_all_missing_required_fields_are_listed_in_order`.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 38.
 
 ```diff
@@ -7021,6 +7083,8 @@ Diff применялись отдельно во временной копии 
 
 ### `parsers.battery.processing.x__required_issue__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.40s, exit 1. Проверки: `tests/test_parsers/test_battery/test_handler.py::test_all_missing_required_fields_are_listed_in_order`.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 38.
 
 ```diff
@@ -7038,6 +7102,8 @@ Diff применялись отдельно во временной копии 
 ```
 
 ### `parsers.battery.processing.x__required_issue__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: точный исторический diff убит на существующих тестах. R80: 1 failed, 188 passed in 0.36s, exit 1. Проверки: `tests/test_parsers/test_battery/test_handler.py::test_all_missing_required_fields_are_listed_in_order`.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 38.
 
