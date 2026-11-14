@@ -377,6 +377,38 @@ JSON с маской price*.json и проверки поставщика в с�
 проходят на исходнике и падают на соответствующих исторических diff.
 Код приложения не менялся. Полный новый отчёт mutmut ещё не сформирован.
 
+## Продолжение индивидуальной классификации: общая маршрутизация секций
+
+Проверка 2026-11-14 выполнена поверх `60ddddf`. Завершены все 39 записей
+`base_parser.routing`, `routing_rows` и `routing_validation`: **37 killed**
+(19 на существующих тестах, 18 после усиления) и **2 эквивалента** начальных логических флагов. Всего завершены **408 из 894**,
+остаются **486**: 482 без классификации и четыре открытых разбора
+(`base_finder._search`, `_update_width`, `_split_pair`, `split_title`).
+Все девять timeout разобраны ранее.
+
+- R31: каждый из 39 исторических diff отдельно применён во временной копии
+  `src/`, `tests/`, `pyproject.toml`, `setup.cfg`, `.coveragerc`; файл тестов
+  маршрутизации взят из `60ddddf`. База: **11 passed**; 19 killed, 20 survived.
+- R32: тот же набор с усиленными тестами. База: **17 passed**;
+  37 мутаций дали exit 1 с конкретными провалами, две — 17 passed, exit 0.
+  После прогона вложенные выражения создания строк вынесены в локальные
+  переменные для flake8; входы и проверки не менялись.
+
+Перед каждой заменой проверено единственное точное вхождение полного
+удаляемого блока с контекстом; исходник восстановлен после каждого запуска.
+Команда (repo — корень репозитория, copy — временная копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_base_parser/test_routing.py"`.
+Номера новой генерации mutmut не использовались.
+
+Корень пробелов в тестах parsers: неполные проверки параметров поиска,
+начальной статистики, различных канонических путей, JSON-диагностик и сочетания
+двух типов селекторов. Прежний вывод о недостижимости `_selector_overlap`
+ошибочен: `_has_selector` допускает section_selector без row_selector.
+Новый тест обоих порядков секций проходит на исходнике и обнаруживает
+AttributeError при замене `or` на `and`. Это различимая мутация, не эквивалент.
+Код приложения не менялся. Целевые прогоны не заменяют новый полный отчёт mutmut.
+Все девять команд AGENTS.md завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -4314,6 +4346,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ__init____mutmut_6`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_initial_routing_state_requires_resolved_files`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `none_to_empty`; выбрано тестов: 29.
 
 ```diff
@@ -4332,6 +4366,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ__init____mutmut_14`
 
+Классификация 2026-11-14: Эквивалент в публичном контракте VendorRouting: начальное _resolved читается только по истинности (`if not self._resolved`), False и None запускают одну и ту же ветку. После успешного выполнения флаг становится True; прямое наблюдение приватного атрибута не входит в контракт. R32: 17 passed, exit 0.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 29.
 
 ```diff
@@ -4349,6 +4385,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ__init____mutmut_16`
 
+Классификация 2026-11-14: Эквивалент в публичном контракте VendorRouting: начальное _routed читается только по истинности (`if not self._routed`), False и None запускают одну и ту же ветку. После успешного выполнения флаг становится True; прямое наблюдение приватного атрибута не входит в контракт. R32: 17 passed, exit 0.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 29.
 
 ```diff
@@ -4365,6 +4403,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ__init____mutmut_18`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_initial_routing_state_requires_resolved_files`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 29.
 
 ```diff
@@ -4380,6 +4420,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ__init____mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_initial_routing_state_requires_resolved_files`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 29.
 
 ```diff
@@ -4394,6 +4436,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_1`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`, `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
@@ -4411,6 +4455,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`, `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
@@ -4430,6 +4476,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
 ```diff
@@ -4447,6 +4495,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 29.
 
@@ -4466,6 +4516,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_6`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`, `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
 ```diff
@@ -4483,6 +4535,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`, `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
 ```diff
@@ -4498,6 +4552,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_15`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
@@ -4516,6 +4572,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_16`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
 ```diff
@@ -4532,6 +4590,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_params_for__mutmut_17`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`, `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 29.
 
@@ -4550,6 +4610,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_remember_paths__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_canonical_paths_preserve_distinct_files`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
 ```diff
@@ -4567,6 +4629,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁ_remember_paths__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_canonical_paths_preserve_distinct_files`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
 ```diff
@@ -4583,6 +4647,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁresolve__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`, `tests/test_base_parser/test_routing.py::test_discovery_receives_complete_section_parameters`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4602,6 +4668,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁresolve__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
 ```diff
@@ -4619,6 +4687,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.xǁVendorRoutingǁresolve__mutmut_11`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_routes_before_mapping_and_counts_unrouted`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 14.
 
@@ -4638,6 +4708,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.x__assign_row__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 10.
 
 ```diff
@@ -4656,6 +4728,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing.x__route_file__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_missing_selected_sheet_is_an_error`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
 ```diff
@@ -4671,6 +4745,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.x__route_table__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_requires_selectors_before_rows`, `tests/test_base_parser/test_routing.py::test_shared_sheet_requires_common_start_row_with_both_paths`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 13.
 
@@ -4689,6 +4765,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing.x__route_table__mutmut_21`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 13.
 
@@ -4710,6 +4788,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_log_unrouted__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_json_unrouted_log_identifies_json_source`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -4725,6 +4805,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_log_unrouted__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_json_unrouted_log_identifies_json_source`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 2.
 
@@ -4742,6 +4824,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_log_unrouted__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_json_unrouted_log_identifies_json_source`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 2.
 
 ```diff
@@ -4757,6 +4841,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 2.
 
@@ -4776,6 +4862,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
 ```diff
@@ -4793,6 +4881,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_5`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
@@ -4812,6 +4902,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_6`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -4829,6 +4921,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 2.
 
@@ -4848,6 +4942,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 2.
 
 ```diff
@@ -4865,6 +4961,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_9`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 2.
 
@@ -4884,6 +4982,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 2.
 
 ```diff
@@ -4901,6 +5001,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_rows.x_raise_ambiguous__mutmut_11`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed на существующих тестах (R31); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[0]`, `tests/test_base_parser/test_routing.py::test_dynamic_overlap_reports_row_and_all_routes[None]`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 2.
 
@@ -4921,6 +5023,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_validation.x__selector_overlap__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_accepts_mixed_selector_types[True]`, `tests/test_base_parser/test_routing.py::test_shared_sheet_accepts_mixed_selector_types[False]`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 5.
 
 ```diff
@@ -4936,6 +5040,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_validation.x__validate_required_selectors__mutmut_10`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_requires_selectors_before_rows`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 12.
 
@@ -4953,6 +5059,8 @@ JSON с маской price*.json и проверки поставщика в с�
 
 ### `parsers.base_parser.routing_validation.x_validate_table__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_requires_common_start_row_with_both_paths`. Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 13.
 
 ```diff
@@ -4967,6 +5075,8 @@ JSON с маской price*.json и проверки поставщика в с�
 ```
 
 ### `parsers.base_parser.routing_validation.x_validate_table__mutmut_7`
+
+Классификация 2026-11-14: Закрытый пробел проверки: killed после усиления (R31: survived); точный исторический diff в R32 дал exit 1; провалились `tests/test_base_parser/test_routing.py::test_shared_sheet_requires_selectors_before_rows`. Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 13.
 

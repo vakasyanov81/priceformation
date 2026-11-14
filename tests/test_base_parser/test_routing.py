@@ -18,6 +18,7 @@ from parsers.vendor_config.group_models import TireAndDiskConfig
 from parsers.vendor_config.models import VendorConfig
 from parsers.vendor_config.row_selector import RowSelector
 from parsers.vendor_config.section_models import VendorSection
+from parsers.vendor_config.section_selector import SectionSelector
 from parsers.vendor_config.slot_configs import BehaviorConfig
 from parsers.xls_reader import IXlsReader
 
@@ -164,8 +165,13 @@ def test_shared_sheet_requires_selectors_before_rows() -> None:
     reader = _Reader(['prices.xlsx'], [_table(0, row)])
     routing.resolve('tires', reader)
 
-    with pytest.raises(ConfigValidationError, match='каждая секция должна задать row_selector'):
+    with pytest.raises(ConfigValidationError) as error:
         routing.read_rows('tires')
+
+    assert str(error.value) == (
+        'Общий лист prices.xlsx, 0: каждая секция должна задать row_selector или section_selector; '
+        'demo.json → sections[tires], demo.json → sections[disks]'
+    )
 
 
 def test_shared_sheet_requires_common_start_row_with_both_paths() -> None:
@@ -178,8 +184,10 @@ def test_shared_sheet_requires_common_start_row_with_both_paths() -> None:
     with pytest.raises(ConfigValidationError) as error:
         routing.read_rows('tires')
 
-    assert 'sections[tires] → start_row' in str(error.value)
-    assert 'sections[disks] → start_row' in str(error.value)
+    assert str(error.value) == (
+        'Общий лист prices.xlsx, 0: разные start_row; '
+        'demo.json → sections[tires] → start_row и demo.json → sections[disks] → start_row'
+    )
 
 
 def test_statically_overlapping_selectors_are_rejected() -> None:
@@ -193,19 +201,21 @@ def test_statically_overlapping_selectors_are_rejected() -> None:
         routing.read_rows('tires')
 
 
-def test_dynamic_overlap_reports_row_and_all_routes() -> None:
+@pytest.mark.parametrize('sheet_index', [None, 0])
+def test_dynamic_overlap_reports_row_and_all_routes(sheet_index: int | None) -> None:
     tires = _section('tires', selector=_selector('0', 'товар'))
     disks = _section('disks', selector=_selector('1', 'да'))
     routing = _routing(tires, disks)
     row = _row(4, {'0': 'товар', '1': 'да'})
-    reader = _Reader(['prices.xlsx'], [_table(0, row)])
+    reader = _Reader(['prices.xlsx'], [_table(sheet_index, row)])
     routing.resolve('tires', reader)
 
     with pytest.raises(RowRoutingError) as error:
         routing.read_rows('tires')
 
+    sheet = 'JSON' if sheet_index is None else str(sheet_index)
     assert str(error.value) == (
-        'Поставщик demo, файл prices.xlsx, лист 0, строка 4: '
+        f'Поставщик demo, файл prices.xlsx, лист {sheet}, строка 4: '
         'неоднозначная маршрутизация — tires (tire_and_disk), disks (tire_and_disk)'
     )
 
@@ -226,8 +236,10 @@ def test_missing_selected_sheet_is_an_error() -> None:
     reader: FileReaderProtocol = _Reader(['prices.xlsx'], [_table(0)])
     routing.resolve('tires', reader)
 
-    with pytest.raises(ConfigValidationError, match=r'листы \[2\] отсутствуют'):
+    with pytest.raises(ConfigValidationError) as error:
         routing.read_rows('tires')
+
+    assert str(error.value) == 'demo.json → sections[tires] → sheet_indexes: файл prices.xlsx, листы [2] отсутствуют'
 
 
 def test_price_files_pass_explicit_paths_to_shared_routing() -> None:
@@ -255,3 +267,47 @@ def test_json_routing_preserves_values_and_ignores_missing_columns() -> None:
     routing.resolve('tires', reader)
 
     assert routing.read_rows('tires') == [{'title': ' Шина без strip '}]
+
+
+def test_initial_routing_state_requires_resolved_files() -> None:
+    routing = _routing(_section('tires'))
+
+    assert routing.unrouted_rows == 0
+    with pytest.raises(RuntimeError, match='Файлы поставщика не разрешены перед маршрутизацией'):
+        routing.read_rows('tires')
+
+
+def test_discovery_receives_complete_section_parameters() -> None:
+    section = replace(_section('tires'), name='Шины поставщика', sheet_info='Лист шин')
+    routing = _routing(section)
+    reader = _Reader(['prices.xlsx'], [])
+
+    routing.resolve('tires', reader)
+
+    assert reader.price_calls == [parser_params_from_section(section, 'demo')]
+
+
+def test_canonical_paths_preserve_distinct_files() -> None:
+    routing = _routing(_section('tires'))
+    table = _table(0, _row(1, {'1': 'Шина'}))
+    reader = _Reader(['first.xlsx', './first.xlsx', 'second.xlsx'], [table])
+
+    assert routing.resolve('tires', reader) == ['first.xlsx', 'second.xlsx']
+    assert routing.read_rows('tires') == [{'title': 'Шина'}, {'title': 'Шина'}]
+    assert reader.raw_calls == ['first.xlsx', 'second.xlsx']
+
+
+@pytest.mark.parametrize('reverse', [False, True])
+def test_shared_sheet_accepts_mixed_selector_types(reverse: bool) -> None:
+    tires = replace(_section('tires'), section_selector=SectionSelector('1', ('шины',)))
+    disks = _section('disks', selector=_selector('0', 'диск'))
+    sections = (disks, tires) if reverse else (tires, disks)
+    routing = _routing(*sections)
+    heading = _row(1, {'1': 'Шины'})
+    position = _row(2, {'0': 'шина', '1': 'Шина'})
+    table = _table(0, heading, position)
+    reader = _Reader(['prices.xlsx'], [table])
+    routing.resolve('tires', reader)
+
+    assert routing.read_rows('tires') == [{'title': 'Шина'}]
+    assert routing.read_rows('disks') == []
