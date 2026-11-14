@@ -1,44 +1,18 @@
 """fixtures for integration tests"""
 
-import logging
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
-from log_watch import LoggerWatch, LoggerWatcher, records_of
+import shared_fixtures
 
 from cfg import init_cfg
-from cfg.services import configure_services
-from domain.config_context import get_config_provider, set_config_provider
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.base_parser.nomenclature_correction import clear_nomenclature_cache
 from parsers.data_provider.manufacturer_aliases import (
     clear_manufacturer_aliases_cache,
 )
-from services.service_provider import ServiceProvider
-
-
-@pytest.fixture
-def watch_logger(caplog: pytest.LogCaptureFixture) -> LoggerWatcher:
-    """Поднять уровень логгера и отдавать его записи: (уровень, текст) — после вызова кода."""
-
-    def _watch(logger_name: str, level: int = logging.INFO) -> LoggerWatch:
-        caplog.set_level(level, logger=logger_name)
-        return lambda: records_of(caplog, logger_name)
-
-    return _watch
-
-
-def pytest_configure() -> None:
-    """Композиция интеграционных тестов: пути логов и parse_config."""
-    init_cfg()
-    configure_services()
-
-
-@pytest.fixture(autouse=True)
-def _config_provider_restored() -> Iterator[None]:
-    """Провайдер путей, какой был до теста, возвращается после."""
-    previous = get_config_provider()
-    yield
-    set_config_provider(previous)
+from parsers.registry import clear_registry
 
 
 @pytest.fixture(autouse=True)
@@ -54,10 +28,27 @@ def _clear_process_file_caches() -> None:
     clear_manufacturer_aliases_cache()
 
 
-@pytest.fixture(autouse=True)
-def _service_provider_isolated() -> Iterator[None]:
-    """DI-контейнер: базовая сборка до теста, сброс после (без глобальных завязок)."""
-    ServiceProvider.clear()
-    configure_services()
+_FIXTURES = Path(__file__).resolve().parent
+
+
+@pytest.fixture
+def _fixture_config_provider() -> Iterator[None]:
+    """Провайдер путей: конфиги и цены — из фикстур (без боевого parse_config/file_prices)."""
+    init_cfg(
+        FakeConfigProvider(
+            _FIXTURES,
+            config_folder=_FIXTURES / 'parse_config_example',
+            prices_folder=_FIXTURES / 'file_prices_for_test',
+            result_folder=_FIXTURES / 'result_for_test',
+        ),
+    )
+    clear_registry()
     yield
-    ServiceProvider.reset()
+    clear_registry()
+    init_cfg()
+
+
+watch_logger = shared_fixtures.watch_logger
+pytest_configure = shared_fixtures.pytest_configure
+_config_provider_restored = shared_fixtures.config_provider_restored
+_service_provider_isolated = shared_fixtures.service_provider_isolated

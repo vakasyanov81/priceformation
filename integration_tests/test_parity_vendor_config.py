@@ -6,22 +6,14 @@
 """
 
 import logging
-from collections.abc import Iterator
-from pathlib import Path
 
-import pytest
 from log_watch import LoggerWatcher
 
-from cfg import init_cfg
 from domain.config_context import get_config_provider
-from infrastructure.config.fake_config_provider import FakeConfigProvider
-from parsers.registry import clear_registry, vendor_entry_for
+from parsers.registry import vendor_entry_for
 from services.parse_orchestrator import ParseOrchestrator
 from services.service_provider import ServiceProvider
 
-_INTEGRATION_ROOT = Path(__file__).resolve().parent
-_PRICES_DIR = _INTEGRATION_ROOT / 'file_prices_for_test'
-_CONFIG_DIR = _INTEGRATION_ROOT / 'parse_config_example'
 _ROW_LOGGER = 'parsers.base_parser.row_enricher'
 _MIM_IDS = ('4', '42', '43')
 _FOUR_TOCHKI_IDS = ('5', '55')
@@ -29,43 +21,27 @@ _OTHER_IDS = ('1', '2', '22', '3', '6', '7')
 _SECTION_IDS = frozenset((*_OTHER_IDS, *_MIM_IDS, *_FOUR_TOCHKI_IDS, 'plant_batteries'))
 
 
-@pytest.fixture
-def _four_tochki_provider() -> Iterator[None]:
-    """Провайдер путей: и конфиги, и цены — из фикстур (без боевого parse_config)."""
-    init_cfg(
-        FakeConfigProvider(
-            _INTEGRATION_ROOT,
-            config_folder=_CONFIG_DIR,
-            prices_folder=_PRICES_DIR,
-            result_folder=_INTEGRATION_ROOT / 'result_for_test',
-        ),
-    )
-    clear_registry()
-    yield
-    clear_registry()
-    init_cfg()
-
-
 class TestFourTochkiConfigDriven:
     """Config-driven разбор four_tochki через ParseOrchestrator."""
 
     def test_config_driven_parse_has_no_errors(
         self,
-        _four_tochki_provider: None,
+        _fixture_config_provider: None,
         watch_logger: LoggerWatcher,
     ) -> None:
         """Разбор real прайса без ошибок строк."""
         watch = watch_logger(_ROW_LOGGER, logging.ERROR)
+        parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
+
         errors = [msg for _level, msg in watch() if 'Не удалось разобрать строку' in msg]
         assert not errors, f'Есть ошибки разбора строк:\n{errors}'
 
-        parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all([vendor_entry_for('5', get_config_provider())])
         assert parsed.tire_and_disk_items, 'Нет разобранных строк'
         assert parsed.tire_and_disk_diagnostics.unknown_category_skips == []
 
     def test_catalog_contains_every_section(
         self,
-        _four_tochki_provider: None,
+        _fixture_config_provider: None,
     ) -> None:
         """Каталог содержит отдельную запись каждой из 12 секций."""
         from parsers.all_vendors import all_vendor_supplier_info
@@ -77,7 +53,7 @@ class TestFourTochkiConfigDriven:
 
     def test_parse_all_warns_about_disabled_vendors(
         self,
-        _four_tochki_provider: None,
+        _fixture_config_provider: None,
         watch_logger: LoggerWatcher,
     ) -> None:
         """parse_all логирует предупреждение о каждом отключённом поставщике.
@@ -103,7 +79,7 @@ class TestSupplierCatalog:
 
     def test_suppliers_have_unique_sections(
         self,
-        _four_tochki_provider: None,
+        _fixture_config_provider: None,
     ) -> None:
         """Все 12 секций доступны по согласованным уникальным ключам."""
         from parsers.all_vendors import all_vendor_supplier_catalog
@@ -115,7 +91,7 @@ class TestSupplierCatalog:
 
     def test_zapaska_has_two_ids(
         self,
-        _four_tochki_provider: None,
+        _fixture_config_provider: None,
     ) -> None:
         """Запаска: два ИД — 2 (диски) и 22 (шины)."""
         from parsers.all_vendors import all_vendor_supplier_info

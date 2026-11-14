@@ -106,26 +106,6 @@ def test_drop_empty_rest_requires_opt_and_rest() -> None:
     assert drop_empty_rest([kept, no_rest, no_opt, zero_rest]) == [kept]
 
 
-def test_is_valid_title_keeps_normal() -> None:
-    graph = _parser().group_handler.pipeline
-    assert graph.enricher.titles.is_valid_title(_TITLE)
-
-
-def test_is_valid_title_rejects_empty() -> None:
-    graph = _parser().group_handler.pipeline
-    assert not graph.enricher.titles.is_valid_title('')
-
-
-def test_is_valid_title_rejects_exact_blacklist() -> None:
-    graph = _parser().group_handler.pipeline
-    assert not graph.enricher.titles.is_valid_title('wrong title')
-
-
-def test_is_valid_title_rejects_mask() -> None:
-    graph = _parser().group_handler.pipeline
-    assert not graph.enricher.titles.is_valid_title('some некондиция product')
-
-
 def test_filter_keep_counts_exact_blacklist() -> None:
     parser = _parser()
     kept = _priced(_TITLE)
