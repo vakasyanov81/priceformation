@@ -83,3 +83,15 @@ def test_set_prepared_title_without_changes_has_no_source_title() -> None:
 
     assert row.vendor.source_title is None
     assert row.original_title == _SOURCE
+
+
+def test_set_prepared_title_reads_features_from_rebuilt_title() -> None:
+    title_filter = MagicMock()
+    title_filter.get_prepared_title.return_value = '205/55R16 Уценка 2024 г.в. НкШЗ'
+    row = RowItem({'title': '205/55R16'})
+
+    TitleService(None, title_filter).set_prepared_title(row)
+
+    assert row.stock.marked_down is True
+    assert row.stock.production_year == 2024
+    assert row.stock.production_plant == 'НкШЗ'

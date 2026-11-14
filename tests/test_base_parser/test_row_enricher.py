@@ -98,6 +98,7 @@ def test_enrich_drops_rows_with_parse_errors(caplog: pytest.LogCaptureFixture) -
         assert setup.enricher.enrich([broken]) == []
 
     assert f'(№ {_START_ROW})' in caplog.text
+    assert _SUPPLIER in caplog.text
 
 
 def test_keep_requires_price_when_rest_present() -> None:

@@ -18,12 +18,14 @@ from parsers.base_parser.base_parser_config import (
 )
 from parsers.base_parser.config_driven_parser import (
     make_config_driven_parser,
+    make_tire_and_disk_handler,
     strategy_hooks_from_section,
     vendor_markup_policy_from_config,
 )
 from parsers.base_parser.file_reader import FileReader, data_reader_for
 from parsers.base_parser.manufacturer_finder import ManufacturerFinder
 from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.price_source import FilePricesSource
 from parsers.base_parser.section_params import parser_params_from_section
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
@@ -75,6 +77,7 @@ def _section(
     category: CategoryConfig | None = None,
     title: TitleConfig | None = None,
     pricing: PricingConfig | None = None,
+    behavior: BehaviorConfig | None = None,
 ) -> VendorSection:
     """Минимальная секция поставщика для проверки сборки парсера."""
     return VendorSection(
@@ -88,6 +91,7 @@ def _section(
         category=category or CategoryConfig(),
         title=title or TitleConfig(),
         pricing=pricing or PricingConfig(),
+        behavior=behavior or BehaviorConfig(),
     )
 
 
@@ -130,14 +134,35 @@ def test_make_config_driven_parser_injects_hooks_and_reader() -> None:
         reader='json',
     )
 
-    parser = make_config_driven_parser(section, vendor_config, _mock_parse_config())
+    parse_config = _mock_parse_config()
+    parser = make_config_driven_parser(section, vendor_config, parse_config)
 
+    assert parser.settings.parse_config() is parse_config
     assert parser.group_handler.product_group is ProductGroup.TIRE_AND_DISK
     assert parser.pipeline.hooks is not None
     assert parser.pipeline.hooks.min_rest == section.behavior.min_rest
     file_reader = parser.price_files.file_reader
     assert isinstance(file_reader, FileReader)
     assert file_reader.data_reader is JsonPriceReader
+    price_source = file_reader._price_source
+    assert isinstance(price_source, FilePricesSource)
+    assert price_source._config_provider is parse_config.config_provider
+
+
+def test_handler_factory_passes_provider_and_vendor_folder() -> None:
+    provider = get_config_provider()
+    parse_config = _mock_parse_config()
+    parse_config.config_provider = provider
+    section = _section(behavior=BehaviorConfig(warehouse_cities=('Новосибирск',)))
+
+    group = make_tire_and_disk_handler(section, VendorConfig(folder='vendor', code='c', name='n'), parse_config)
+
+    hooks = group.pipeline.hooks
+    assert hooks is not None
+    warehouse_filter = hooks.warehouse_filter
+    assert warehouse_filter is not None
+    assert warehouse_filter._folder == 'vendor'
+    assert warehouse_filter._config_provider is provider
 
 
 def test_group_sections_keep_independent_columns_and_behavior() -> None:
@@ -198,6 +223,9 @@ def test_strategy_hooks_with_cities_get_warehouse_filter() -> None:
     )
 
     assert hooks.warehouse_filter is not None
+    assert hooks.warehouse_filter._folder == 'mim'
+    assert hooks.warehouse_filter._cities == ('Новосибирск',)
+    assert hooks.warehouse_filter._config_provider is get_config_provider()
 
 
 def test_strategy_hooks_from_section_keeps_all_fields() -> None:
@@ -206,6 +234,8 @@ def test_strategy_hooks_from_section_keeps_all_fields() -> None:
         min_rest=7,
         zero_rest_without_category=True,
         find_manufacturer_on_enrich=False,
+        manufacturer_column_first=True,
+        order_from_warehouse_name=True,
         pipeline=('category', 'markup'),
     )
 
@@ -216,6 +246,8 @@ def test_strategy_hooks_from_section_keeps_all_fields() -> None:
     assert hooks.rest is not None
     assert hooks.min_rest == 7
     assert hooks.find_manufacturer_on_enrich is False
+    assert hooks.manufacturer_column_first is True
+    assert hooks.order_from_warehouse_name is True
     assert hooks.zero_rest_without_category is True
     assert hooks.pipeline == ('category', 'markup')
 
@@ -238,6 +270,18 @@ def test_strategy_hooks_error_carries_section_path(
         strategy_hooks_from_section(section, behavior, get_config_provider())
 
     assert str(exc_info.value).startswith(f'{fragment}:')
+
+
+def test_title_strategy_receives_provider_and_column_priority(monkeypatch: pytest.MonkeyPatch) -> None:
+    factory = MagicMock()
+    monkeypatch.setattr('parsers.base_parser.config_driven_parser.make_title_strategy', factory)
+    provider = get_config_provider()
+    behavior = BehaviorConfig(manufacturer_column_first=True)
+
+    strategy_hooks_from_section(_section(), behavior, provider)
+
+    assert factory.call_args.kwargs['config_provider'] is provider
+    assert factory.call_args.kwargs['column_first'] is True
 
 
 def test_vendor_markup_policy_error_carries_location() -> None:

@@ -618,6 +618,33 @@ Diff применялись во временной копии `src/`, `tests/`,
 или идентификатора; изменённый контекст повторной ошибки недостижим.
 Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: коллабораторы BaseParser
+
+Проверка 2026-11-14 завершает 57 записей `base_parser`: **51 killed**
+(4 существующим тестом homoglyph, 43 после первого усиления, 4 после проверки
+фабрики обработчика) и **6 эквивалентов**. Всего завершены **651 из 894**,
+остаются **243**: 239 без классификации и четыре открытых разбора.
+
+- R48: каждый исторический diff отдельно, база 413 passed; 4 killed, 53 survived.
+- R49: после проверки зависимостей и поведения база 419 passed;
+  47 killed, 10 survived.
+- R50: четыре изменения make_tire_and_disk_handler повторены после проверки
+  folder/config_provider в фильтре складов; база 41 passed, все 4 killed.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда R48/R49:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_base_parser" "$copy/tests/test_parsers/test_strategies/test_config_driven_parser.py"`.
+R50 запускает только второй файл. Номера новой генерации mutmut не использовались.
+
+Закреплены маршрутизация, ConfigProvider и TitleFilter в BaseParser, все поля
+StrategyHooks, приоритет производителя, признаки пересобранного title, начало
+сырой таблицы и контекст ошибок строки. Эквиваленты: parse_config не читается
+при переданном group_handler; strict у zip не различим для внутренних пар;
+RowItem приводит None остатка к 0; отсутствующая РРЦ делает процент независимым
+от opt; fallback XXXX названия отсечён bool(title). Код приложения не менялся.
+Это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -3854,6 +3881,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser.xǁBaseParserǁ__init____mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_diagnostic_group_matches_handler (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 79.
 
 ```diff
@@ -3872,6 +3901,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser.xǁBaseParserǁ__init____mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 79.
 
 ```diff
@@ -3889,6 +3920,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser.xǁBaseParserǁ__init____mutmut_18`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 79.
 
@@ -3909,6 +3942,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser.xǁBaseParserǁ__init____mutmut_29`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_diagnostic_group_matches_handler (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 79.
 
 ```diff
@@ -3926,6 +3961,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser.xǁBaseParserǁ__init____mutmut_33`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 79.
 
@@ -3946,6 +3983,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser.x__default_file_reader__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 75.
 
 ```diff
@@ -3960,6 +3999,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser.x__default_file_reader__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 75.
 
@@ -3976,6 +4017,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser.x__default_file_reader__mutmut_4`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 75.
 
 ```diff
@@ -3990,6 +4033,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser.x_make_parser__mutmut_2`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4011,6 +4056,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser_config.xǁParseConfigurationǁ__init____mutmut_6`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 99.
 
 ```diff
@@ -4028,6 +4075,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser_config.xǁParseConfigurationǁ__init____mutmut_9`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 99.
 
@@ -4047,6 +4096,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser_config.x_make_parse_config__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 28.
 
 ```diff
@@ -4063,6 +4114,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.base_parser_config.x_make_parse_config__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 28.
 
 ```diff
@@ -4078,6 +4131,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser_config.x_make_parse_config__mutmut_13`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 28.
 
@@ -4096,6 +4151,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.base_parser_config.x_make_parse_config__mutmut_20`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 28.
 
@@ -4117,6 +4174,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.category_finder.x_skipped_unknown_categories_message__mutmut_3`
 
+Классификация 2026-11-14: Эквивалент в рабочем контракте: zip распаковывает внутренние пары (supplier, category), сформированные одним append; длины равны по построению, поэтому strict не меняет сообщение. Прямые прогоны R49/R50 оставляют survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 49.
 
 ```diff
@@ -4135,6 +4194,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.category_finder.x_skipped_unknown_categories_message__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент в рабочем контракте: zip распаковывает внутренние пары (supplier, category), сформированные одним append; длины равны по построению, поэтому strict не меняет сообщение. Прямые прогоны R49/R50 оставляют survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 49.
 
 ```diff
@@ -4152,6 +4213,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.category_finder.x_skipped_unknown_categories_message__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент в рабочем контракте: zip распаковывает внутренние пары (supplier, category), сформированные одним append; длины равны по построению, поэтому strict не меняет сообщение. Прямые прогоны R49/R50 оставляют survived.
 
 Статус: **survived**; тип: `keyword`; выбрано тестов: 49.
 
@@ -4173,6 +4236,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.category_service.xǁCategoryLookupǁfind_canonical_category__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 1.
 
 ```diff
@@ -4187,6 +4252,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.category_service.xǁCategoryServiceǁzero_rest_without_category__mutmut_6`
+
+Классификация 2026-11-14: Эквивалент в рабочем контракте: RowItem.set_field приводит None числового rest_count к 0; публичный остаток совпадает. Прямые прогоны R49/R50 оставляют survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 18.
 
@@ -4204,6 +4271,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ## src/parsers/base_parser/config_driven_parser.py
 
 ### `parsers.base_parser.config_driven_parser.x_make_config_driven_parser__mutmut_1`
+
+Классификация 2026-11-14: Эквивалент в рабочем контракте: При переданном group_handler BaseParser берёт settings из него; make_handler уже получил тот же parse_config, поэтому отдельный аргумент конструктора не читается. Прямые прогоны R49/R50 оставляют survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 3.
 
@@ -4223,6 +4292,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_make_config_driven_parser__mutmut_4`
 
+Классификация 2026-11-14: Эквивалент в рабочем контракте: При переданном group_handler BaseParser берёт settings из него; make_handler уже получил тот же parse_config, поэтому отдельный аргумент конструктора не читается. Прямые прогоны R49/R50 оставляют survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -4239,6 +4310,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_make_tire_and_disk_handler__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
@@ -4258,6 +4331,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_make_tire_and_disk_handler__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -4275,6 +4350,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_make_tire_and_disk_handler__mutmut_8`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
@@ -4294,6 +4371,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_make_tire_and_disk_handler__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 3.
 
 ```diff
@@ -4311,6 +4390,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_21`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4330,6 +4411,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_25`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
 ```diff
@@ -4345,6 +4428,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_33`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4363,6 +4448,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_37`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
 ```diff
@@ -4378,6 +4465,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_41`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
@@ -4397,6 +4486,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_42`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
 ```diff
@@ -4414,6 +4505,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_47`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4434,6 +4527,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_55`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
 ```diff
@@ -4450,6 +4545,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.config_driven_parser.x_strategy_hooks_from_section__mutmut_56`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 14.
 
@@ -4470,6 +4567,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.file_reader.xǁFileReaderǁraw_tables__mutmut_8`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `number`; выбрано тестов: 6.
 
 ```diff
@@ -4488,6 +4587,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.manufacturer_finder.xǁManufacturerFinderǁprocess__mutmut_1`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `keyword`; выбрано тестов: 35.
 
 ```diff
@@ -4505,6 +4606,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.manufacturer_service.xǁManufacturerServiceǁapply_manufacturer__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
 ```diff
@@ -4518,6 +4621,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.manufacturer_service.xǁManufacturerServiceǁapply_manufacturer__mutmut_13`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
@@ -4534,6 +4639,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ## src/parsers/base_parser/markup_policy.py
 
 ### `parsers.base_parser.markup_policy.xǁMarkupPolicyǁapply__mutmut_23`
+
+Классификация 2026-11-14: Эквивалент в рабочем контракте: Ветка выполняется только при not price_recommended; recommended_percent тогда возвращает 0 независимо от opt. Прямые прогоны R49/R50 оставляют survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 18.
 
@@ -5304,6 +5411,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.row_enricher.xǁRowEnricherǁ_try_prepare_row__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 14.
 
 ```diff
@@ -5321,6 +5430,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.row_enricher.xǁRowEnricherǁ_try_prepare_row__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 14.
 
@@ -5340,6 +5451,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.row_enricher.xǁRowEnricherǁ_try_prepare_row__mutmut_5`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 14.
 
 ```diff
@@ -5357,6 +5470,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.row_enricher.xǁRowEnricherǁ_try_prepare_row__mutmut_6`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 14.
 
@@ -5376,6 +5491,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.row_enricher.xǁRowEnricherǁ_try_prepare_row__mutmut_12`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 14.
 
 ```diff
@@ -5393,6 +5510,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.row_enricher.x_make_row_enricher__mutmut_21`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 82.
 
@@ -5414,6 +5533,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.row_pipeline.xǁRowPipelineǁprocess_row__mutmut_6`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 23.
 
 ```diff
@@ -5432,6 +5553,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ## src/parsers/base_parser/row_processor.py
 
 ### `parsers.base_parser.row_processor.x_apply_min_rest__mutmut_5`
+
+Классификация 2026-11-14: Эквивалент в рабочем контракте: RowItem.set_field приводит None числового rest_count к 0; публичный остаток совпадает. Прямые прогоны R49/R50 оставляют survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 16.
 
@@ -5548,6 +5671,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.strategy_hooks.x_warehouse_filter_for__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 11.
 
 ```diff
@@ -5563,6 +5688,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.strategy_hooks.x_warehouse_filter_for__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 11.
 
 ```diff
@@ -5577,6 +5704,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.strategy_hooks.x_warehouse_filter_for__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 11.
 
@@ -5595,6 +5724,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.tire_and_disk_handler.xǁTireAndDiskHandlerǁ__init____mutmut_10`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 82.
 
 ```diff
@@ -5611,6 +5742,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.tire_and_disk_handler.xǁTireAndDiskHandlerǁ__init____mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 82.
 
@@ -5631,6 +5764,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.title_filter.xǁTitleFilterǁis_valid_title__mutmut_6`
 
+Классификация 2026-11-14: Эквивалент в рабочем контракте: bool(title) отсекает пустое название до вычисления второго операнда; при истинном title выражение title or XXXX равно title. Прямые прогоны R49/R50 оставляют survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 21.
 
 ```diff
@@ -5645,6 +5780,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ## src/parsers/base_parser/title_service.py
 
 ### `parsers.base_parser.title_service.xǁTitleServiceǁset_prepared_title__mutmut_24`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
@@ -5664,6 +5801,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.base_parser.title_service.xǁTitleServiceǁset_prepared_title__mutmut_35`
 
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 
 ```diff
@@ -5681,6 +5820,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.base_parser.title_service.xǁTitleServiceǁset_prepared_title__mutmut_45`
+
+Классификация 2026-11-14: Закрытый пробел проверки: отдельный исторический diff даёт exit 1; падает test_default_file_reader_uses_parse_config / test_missing_vendor_is_disabled (R48–R50). Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 23.
 

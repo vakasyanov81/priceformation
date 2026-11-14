@@ -3,10 +3,13 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from domain.product_group_result import TireAndDiskResult
 from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.base_parser import BaseParser
+from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.price_files import PriceFiles
+from parsers.base_parser.price_source import FilePricesSource
 from parsers.base_parser.row_enricher import RowEnricher
 from parsers.base_parser.row_pipeline import RowPipeline
 
@@ -79,6 +82,21 @@ def test_diagnostic_group_matches_handler() -> None:
     """Контекст ошибки берётся из обработчика той же модели, что и пакет результата."""
     parser = _parser({})
     assert parser.product_group is ProductGroup.TIRE_AND_DISK
+    assert isinstance(parser._package, TireAndDiskResult)
+
+
+def test_default_file_reader_uses_parse_config() -> None:
+    parse_config = _parse_config()
+    title_filter = MagicMock()
+    parser = BaseParser(parse_config, title_filter=title_filter)
+
+    assert parser.price_files.routing is parse_config.routing
+    file_reader = parser.price_files.file_reader
+    assert isinstance(file_reader, FileReader)
+    price_source = file_reader._price_source
+    assert isinstance(price_source, FilePricesSource)
+    assert price_source._config_provider is parse_config.config_provider
+    assert parser.enricher.titles.title_filter is title_filter
 
 
 def test_process_sums_rows_from_two_files() -> None:

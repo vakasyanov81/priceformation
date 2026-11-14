@@ -14,6 +14,16 @@ def _group_handler() -> TireAndDiskHandler:
     return TireAndDiskHandler(settings=MagicMock(), stats=ParserStats())
 
 
+def test_handler_keeps_title_filter_and_category_stats() -> None:
+    title_filter = MagicMock()
+    stats = ParserStats()
+
+    group = TireAndDiskHandler(settings=MagicMock(), stats=stats, title_filter=title_filter)
+
+    assert group.enricher.titles.title_filter is title_filter
+    assert group.enricher.categories.lookup._stats is stats
+
+
 def test_handler_preserves_model_for_creation_and_output() -> None:
     group_handler: ProductGroupHandler[RowItem] = _group_handler()
 
