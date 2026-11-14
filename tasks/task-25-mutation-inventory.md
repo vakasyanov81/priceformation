@@ -765,6 +765,26 @@ Diff применялись по одному во временной копии
 output_sources/TireOutputSource; код приложения не менялся. Это целевые прогоны,
 не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: алиасы производителей
+
+Проверка 2026-11-14 завершает три записи `manufacturer_aliases` и
+`manufacturer_group`: **3 эквивалента** в публичных контрактах. Всего завершены
+**708 из 894**, остаются **186**: 182 без классификации и четыре ранее открытых
+разбора. Все девять timeout разобраны.
+
+- R62: каждый исторический diff отдельно с полным контекстом; база и все три
+  мутанта — 22 passed, exit 0. Номера новой генерации mutmut не использовались.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`, `setup.cfg`,
+`.coveragerc`; исходник восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_data_provider/test_stop_aliases.py"`.
+
+Отсутствующий список aliases превращается в пустой кортеж и при дефолте None, и
+при дефолте []. Пустой aliases_map не добавляет соответствий: изменение or на and
+лишь строит пустой lookup, а manufacturer_group возвращает тот же lowercase name.
+Побочное обновление приватного кэша не входит в контракт результата. Код и тесты
+не менялись; это целевые прогоны, не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -9079,6 +9099,8 @@ output_sources/TireOutputSource; код приложения не менялся
 
 ### `parsers.data_provider.manufacturer_aliases.x_aliases_for_finder__mutmut_5`
 
+Классификация 2026-11-14: Эквивалент: при отсутствующем ключе aliases raw=None не проходит ветки str/tuple/list и возвращается пустой кортеж, как и для исходного пустого списка. Состав и тип результата aliases_for_finder сохраняются. Прогон R62: 22 passed, exit 0.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 55.
 
 ```diff
@@ -9096,6 +9118,8 @@ output_sources/TireOutputSource; код приложения не менялся
 ```
 
 ### `parsers.data_provider.manufacturer_aliases.x_aliases_for_finder__mutmut_7`
+
+Классификация 2026-11-14: Эквивалент: удаление дефолта entry.get эквивалентно дефолту None; неподдерживаемое значение превращается в пустой кортеж так же, как исходный пустой список. Прогон R62: 22 passed, exit 0.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 55.
 
@@ -9116,6 +9140,8 @@ output_sources/TireOutputSource; код приложения не менялся
 ## src/parsers/data_provider/manufacturer_group.py
 
 ### `parsers.data_provider.manufacturer_group.x_manufacturer_group__mutmut_4`
+
+Классификация 2026-11-14: Эквивалент в публичном результате: при пустом aliases_map и непустом manufacturer исходник возвращает name.lower() раньше построения lookup, мутант строит пустой lookup и возвращает тот же fallback. Меняется только приватное состояние кэша, не результат функции. Прогон R62: 22 passed, exit 0.
 
 Статус: **survived**; тип: `operator`; выбрано тестов: 140.
 
