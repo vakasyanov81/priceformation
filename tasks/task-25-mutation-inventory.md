@@ -745,6 +745,26 @@ Diff применялись по одному во временной копии
 а None в XLSX-ветке as_jsonl эквивалентен False. Код приложения не менялся.
 Это целевые прогоны, не новый полный отчёт mutmut.
 
+## Продолжение индивидуальной классификации: выходной преобразователь шин и дисков
+
+Проверка 2026-11-14 завершает все восемь записей `common_price.tire_output`:
+**8 killed после усиления**. Всего завершены **705 из 894**, остаются **189**:
+185 без классификации и четыре ранее открытых разбора. Все девять timeout разобраны.
+
+- R61: каждый исторический diff отдельно с полным контекстом, база 20 passed;
+  каждый мутант — 1 failed, 19 passed, exit 1. Конкретные провалы приведены ниже.
+
+Diff применялись по одному во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному полному удаляемому блоку; исходник
+восстановлен после каждого запуска. Команда:
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_group_prices.py"`.
+Номера новой генерации mutmut не использовались.
+
+Закреплены аргумент и результат номенклатурной поправки, ключ поля title и точное
+сообщение при настройках чужой товарной группы. Проверки проходят через публичные
+output_sources/TireOutputSource; код приложения не менялся. Это целевые прогоны,
+не новый полный отчёт mutmut.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -8719,6 +8739,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_2`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction требует замену исходного title на fixed; инверсия условия оставляет старое название. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `operator`; выбрано тестов: 78.
 
 ```diff
@@ -8735,6 +8757,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction проверяет итоговое поле title; None вместо ключа приводит к ошибке обращения к неизвестному полю. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 78.
 
 ```diff
@@ -8749,6 +8773,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction требует результат поправки fixed; None вместо возвращаемого функцией значения стирает название. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 78.
 
@@ -8765,6 +8791,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_7`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction проверяет поле title после prepare; обрамлённый ключ XXtitleXX не изменяет выходное название. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 78.
 
 ```diff
@@ -8779,6 +8807,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_8`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction проверяет поле title после prepare; ключ TITLE не изменяет выходное название. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 78.
 
@@ -8795,6 +8825,8 @@ Diff применялись по одному во временной копии
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁ_correct_titles__mutmut_9`
 
+Классификация 2026-11-14: Закрытый пробел проверки: test_output_sources_applies_nomenclature_correction теперь проверяет вызов get_nomenclature_corrected_title('old', config_provider=fake_config_provider); None вместо исходного title нарушает контракт. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 78.
 
 ```diff
@@ -8809,6 +8841,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁpositions_for__mutmut_3`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_tire_source_rejects_other_group_with_exact_message передаёт настройки batteries и ограничивает исключение полным сообщением; обрамление XX нарушает диагностику. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 78.
 
@@ -8827,6 +8861,8 @@ Diff применялись по одному во временной копии
 ```
 
 ### `parsers.common_price.tire_output.xǁTireOutputSourceǁpositions_for__mutmut_4`
+
+Классификация 2026-11-14: Закрытый пробел проверки: test_tire_source_rejects_other_group_with_exact_message передаёт настройки batteries и ограничивает исключение полным сообщением; строчная первая буква нарушает диагностику. Целевой прогон R61: 1 failed, 19 passed. Исторический survived сохранён.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 78.
 

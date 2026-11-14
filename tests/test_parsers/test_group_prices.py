@@ -16,6 +16,7 @@ from domain.product_groups import ProductGroup
 from domain.row_item.row_item import RowItem
 from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.common_price.group_output import output_sources, write_group_prices
+from parsers.common_price.tire_output import TireOutputSource
 from parsers.writer.output_plan import GroupOutputSource
 from parsers.writer.templates.all_templates import writer_templates_by_name
 from parsers.writer.templates.group_templates import named_group_output
@@ -108,10 +109,20 @@ def test_output_sources_applies_nomenclature_correction(fake_config_provider: Fa
     output = named_group_output('for_inner')
     settings = next(group for group in output.groups if group.id is _TIRES)
 
-    with patch('parsers.common_price.group_output.get_nomenclature_corrected_title', return_value='fixed'):
+    with patch('parsers.common_price.group_output.get_nomenclature_corrected_title', return_value='fixed') as correct:
         sources = output_sources(packages, fake_config_provider)
 
     assert sources[_TIRES].prepare('for_inner', settings)[0]['title'] == 'fixed'
+    correct.assert_called_once_with('old', config_provider=fake_config_provider)
+
+
+def test_tire_source_rejects_other_group_with_exact_message(fake_config_provider: FakeConfigProvider) -> None:
+    output = named_group_output('for_inner')
+    battery_settings = next(group for group in output.groups if group.id is _BATTERIES)
+    source = TireOutputSource(TireAndDiskResult())
+
+    with pytest.raises(ValueError, match=r'^Преобразователь tire_and_disk получил настройки другой группы$'):
+        source.positions_for('for_inner', battery_settings)
 
 
 def test_default_outputs_honor_selected_groups(fake_config_provider: FakeConfigProvider) -> None:
