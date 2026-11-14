@@ -556,6 +556,41 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
 
+## Продолжение индивидуальной классификации: загрузка шинных и аккумуляторных секций
+
+Проверка 2026-11-14 выполнена поверх `29d434c`. Завершены все 54 записи
+`vendor_config.group_loading` и `section_models`: **44 killed**
+(14 существующими тестами, 30 после усиления), **10 эквивалентов** в цепочке
+VendorConfig.from_dict. Всего завершены **547 из 894**, остаются **347**:
+343 без классификации и четыре открытых разбора. Все девять timeout разобраны.
+
+- R43: каждый исторический diff отдельно, база 373 passed;
+  14 killed с индивидуальными провалами, 40 survived.
+- R44: после 21 нового случая база 394 passed; 43 killed с индивидуальными
+  провалами ниже, 11 survived. Позже убран неиспользуемый импорт и сложное
+  выражение inherited вынесено в переменную; входы и assertions не менялись.
+- R45: после ещё одного случая аккумуляторного category только
+  read_group__mutmut_25: база 395 passed, мутант 1 failed, 394 passed, exit 1.
+  Остальные результаты R44 не запускались повторно.
+
+Diff применялись во временной копии `src/`, `tests/`, `pyproject.toml`,
+`setup.cfg`, `.coveragerc` по единственному точному совпадению полного
+удаляемого блока с контекстом; исходник восстановлен после каждого запуска.
+Номера новой генерации mutmut не использовались. Команда (repo — корень, copy — копия):
+`PYTHONPATH="$copy/src" PYTHONDONTWRITEBYTECODE=1 uv run --project "$repo" python -m pytest -c "$copy/pyproject.toml" --rootdir "$copy" --no-cov -n=0 "$copy/tests/test_parsers/test_vendor_config" "$copy/tests/test_parsers/test_battery/test_settings.py" "$copy/tests/test_base_parser/test_section_selection.py" "$copy/tests/test_base_parser/test_routing.py"`.
+
+Пробелы слоя parsers/vendor_config: отсутствовали прямые ошибки публичного
+VendorSection.from_dict, проверка адреса/селектора секции, метаданные листов
+аккумуляторов с неверным типом, запрет sheet_indexes для JSON, отсутствие
+шаблонов целиком и шинный слот category в аккумуляторной секции.
+Десять эквивалентов ограничены основной цепочкой: раньше проверяются исходные
+уровни, затем merge_config сохраняет проверенные типы; изменённый контекст
+повторной ошибки недостижим. Для публичного прямого from_dict это ограничение
+не применялось: новые тесты убивают все 22 мутации section_models.
+Код приложения не менялся. Это целевые прогоны, не новый полный отчёт mutmut.
+
+Все девять проверок завершились с exit 0: `just ci-compact` → `check is ok`.
+
 ## src/app/parse_report.py
 
 ### `app.parse_report.x_dump_json__mutmut_2`
@@ -12692,6 +12727,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_9`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: Тип file_templates проверяется validate_reading_settings на каждом уровне до merge_config; при отсутствии списка используется прежний пустой кортеж и собственная ошибка секции. У изменённого where нет достижимой ошибки в read_str_list. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -12709,6 +12746,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_10`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_missing_battery_templates_has_section_diagnostic`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
@@ -12728,6 +12767,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_13`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_missing_battery_templates_has_section_diagnostic`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12745,6 +12786,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_missing_battery_templates_has_section_diagnostic`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
@@ -12764,6 +12807,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_21`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 3 failed, 391 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_indexes-x]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_json_battery_section_rejects_sheet_indexes`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12781,6 +12826,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_22`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.57s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_indexes-x]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
@@ -12800,6 +12847,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_26`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 3 failed, 391 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_json_battery_section_rejects_sheet_indexes`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_indexes-x]`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 60.
 
 ```diff
@@ -12817,6 +12866,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_27`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 3 failed, 391 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_json_battery_section_rejects_sheet_indexes`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_indexes-x]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 60.
 
@@ -12836,6 +12887,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_30`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_json_battery_section_rejects_sheet_indexes`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 60.
 
 ```diff
@@ -12853,6 +12906,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_31`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_json_battery_section_rejects_sheet_indexes`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 60.
 
@@ -12872,6 +12927,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_36`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 4 failed, 390 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_columns_use_own_registry[json-columns1]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_columns_use_own_registry[xls-columns0]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12890,6 +12947,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_47`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12907,6 +12966,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_48`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12923,6 +12984,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_56`
+
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: read_group уже вызывает read_text(section, id, адрес.id) до входа в _read_battery_section. Повторное чтение того же id не может выбросить ошибку; where не влияет на результат. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
@@ -12942,6 +13005,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_63`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.71s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_invalid_public_field_has_full_path`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
 ```diff
@@ -12959,6 +13024,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_64`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 1.11s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_invalid_public_field_has_full_path`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
@@ -12978,6 +13045,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_70`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.96s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_invalid_public_field_has_full_path`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 60.
 
 ```diff
@@ -12995,6 +13064,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_71`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_invalid_public_field_has_full_path`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `string_case`; выбрано тестов: 60.
 
@@ -13014,6 +13085,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_74`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: start_row либо отсутствует (DEFAULT_START_ROW), либо уже проверен validate_reading_settings на каждом уровне. merge_config заменяет скаляр готовым валидным целым; повторный read_int не ошибается. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -13031,6 +13104,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_83`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 60.
 
@@ -13050,6 +13125,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_84`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -13067,6 +13144,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_90`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.56s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 60.
 
@@ -13086,6 +13165,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_91`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_reads_public_routing_fields`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_sheet_field_error_has_section_path[sheet_info-42]`. R43: killed существующими тестами.
+
 Статус: **survived**; тип: `string_case`; выбрано тестов: 60.
 
 ```diff
@@ -13103,6 +13184,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_92`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Проверяется контракт аккумуляторной секции: собственные метаданные листа, запрет листов JSON и контекст ConfigValidationError. Для отсутствующих шаблонов требуется точная ошибка итоговой секции. R44: 2 failed, 392 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_columns_use_own_registry[xls-columns0]`; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_columns_use_own_registry[json-columns1]`. R43: killed существующими тестами.
 
 Статус: **survived**; тип: `string_wrap`; выбрано тестов: 60.
 
@@ -13122,6 +13205,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_94`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: RowSelector проверен _validate_row_selector для той же section до вызова. Он не наследуется, вход повторного from_section не меняется; where нужен только для ошибки. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -13139,6 +13224,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_98`
+
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: SectionSelector проверен validate_group_settings на исходных уровнях; допустимые selector-объекты имеют строку column и непустой список keywords, а merge_config сохраняет эти типы. При отсутствии селектора возвращается None; новый where не наблюдается. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
@@ -13158,6 +13245,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_102`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: read_columns проверяет каждый исходный уровень тем же аккумуляторным реестром и режимом JSON/XLS. Слияние словарей сохраняет валидные пары, списки JSON заменяются целиком; повторное чтение не порождает ошибку с изменённым where. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -13175,6 +13264,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x__read_battery_section__mutmut_113`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: BatterySettings уже проверены validate_battery_settings на каждом исходном уровне. После merge каждый выбор strategy/policy/rest остаётся разрешённой константой, lines заменяется целиком валидным списком, min_rest остаётся >=1, поля rules проверяются независимо по типам. Ошибка с изменённым where недостижима. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 60.
 
 ```diff
@@ -13190,6 +13281,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x_read_group__mutmut_5`
+
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: _group_payload вызывает object_list для sections до _inherit_group/read_group. Слияние копирует этот список без изменения структуры. Повторный object_list получает уже непустой список объектов; where не используется для успешного результата. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 149.
 
@@ -13209,6 +13302,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x_read_group__mutmut_25`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Слот category запрещён в аккумуляторной секции: потеря группы переключает в шинный валидатор и пропускает недопустимый конфиг. R45: 1 failed, 394 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_battery/test_settings.py::test_battery_section_cannot_declare_tire_category`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 149.
 
 ```diff
@@ -13227,6 +13322,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.group_loading.x_read_group__mutmut_65`
 
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: BehaviorConfig шинной группы уже проверен _validate_tire_settings на уровне объявления и общих defaults. После deep merge типы отдельных полей сохраняются; повторный from_dict не ошибается. Для аккумуляторов эта ветка не исполняется. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 149.
 
 ```diff
@@ -13242,6 +13339,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.group_loading.x_read_group__mutmut_70`
+
+Классификация 2026-11-14: Эквивалент в цепочке VendorConfig.from_dict: behavior уже проверен как объект на каждом исходном уровне, merge_config объединяет только объекты. Повторный read_object не ошибается; where не используется в успешном результате. Для аккумуляторов эта ветка не исполняется. R43: 373 passed; R44: 394 passed, exit 0. Приватный вызов в обход предварительной валидации вне этого контракта; survived не используется как единственное доказательство.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 149.
 
@@ -13523,6 +13622,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_3`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw0]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13540,6 +13641,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_14`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw1]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
@@ -13559,6 +13662,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_15`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_missing_templates_has_section_diagnostic`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13576,6 +13681,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_18`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 2 failed, 392 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_missing_templates_has_section_diagnostic`; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw1]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13595,6 +13702,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_19`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_missing_templates_has_section_diagnostic`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
 ```diff
@@ -13612,6 +13721,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_26`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw2]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
@@ -13631,6 +13742,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_58`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 2 failed, 392 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_section_keeps_root_selector_and_config_path`; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw14]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
 ```diff
@@ -13648,6 +13761,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_59`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_section_keeps_root_selector_and_config_path`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13663,6 +13778,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_72`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 2 failed, 392 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw14]`; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_section_keeps_root_selector_and_config_path`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13680,6 +13797,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_73`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_section_keeps_root_selector_and_config_path`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
 ```diff
@@ -13695,6 +13814,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_76`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw3]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13714,6 +13835,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_94`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw4]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13731,6 +13854,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_114`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw6]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13750,6 +13875,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_119`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw5]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13767,6 +13894,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_126`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw8]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13786,6 +13915,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_131`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw7]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13803,6 +13934,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_138`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw10]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13822,6 +13955,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_143`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.55s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw9]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13839,6 +13974,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_150`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw12]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `other`; выбрано тестов: 93.
 
@@ -13858,6 +13995,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_155`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw11]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13876,6 +14015,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_162`
 
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.53s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw13]`. R43: 373 passed, survived.
+
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 
 ```diff
@@ -13893,6 +14034,8 @@ Diff применялись во временной копии `src/`, `tests/`,
 ```
 
 ### `parsers.vendor_config.section_models.xǁVendorSectionǁfrom_dict__mutmut_166`
+
+Классификация 2026-11-14: Закрытый пробел проверки: Прямой публичный VendorSection.from_dict обязан сохранять адрес ошибки и метаданные селектора даже без предварительной VendorConfig-валидации. R44: 1 failed, 393 passed in 0.54s, exit 1; `FAILED tests/test_parsers/test_vendor_config/test_section_contracts.py::test_direct_section_error_preserves_source_path[raw14]`. R43: 373 passed, survived.
 
 Статус: **survived**; тип: `to_none`; выбрано тестов: 93.
 

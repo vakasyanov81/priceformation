@@ -70,6 +70,50 @@ def test_battery_section_invalid_public_field_has_full_path() -> None:
     assert 'plant.json → product_groups[0] → sections[0] → name' in str(caught.value)
 
 
+@pytest.mark.parametrize('field, invalid', [('sheet_indexes', 'x'), ('sheet_info', 42)])
+def test_battery_sheet_field_error_has_section_path(field: str, invalid: object) -> None:
+    """Метаданные листа проверяются с адресом секции, а не безымянным None."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', field: invalid}]})
+
+    assert str(caught.value).startswith('plant.json → product_groups[0] → sections[0]')
+
+
+def test_json_battery_section_rejects_sheet_indexes() -> None:
+    """JSON не имеет листов, даже если в секции указан числовой индекс."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'sheet_indexes': [0]}]}, reader='json')
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → sheet_indexes: JSON не содержит листов'
+    )
+
+
+def test_missing_battery_templates_has_section_diagnostic() -> None:
+    """Для отсутствующих шаблонов сохраняется диагностика итоговой аккумуляторной секции."""
+    payload: RawConfig = {
+        'code': 'plant',
+        'name': 'План-Т',
+        'product_groups': [{'id': 'batteries', 'sections': [{'id': 'plant_battery'}]}],
+    }
+    with pytest.raises(ConfigValidationError) as caught:
+        VendorConfig.from_dict(payload, 'plant', 'plant.json')
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → file_templates: требуется непустой список'
+    )
+
+
+def test_battery_section_cannot_declare_tire_category() -> None:
+    """Проверка принадлежности слотов действует и на уровне секции, даже для пустого category."""
+    with pytest.raises(ConfigValidationError) as caught:
+        _config({'sections': [{'id': 'plant_battery', 'category': {}}]})
+
+    assert str(caught.value) == (
+        'plant.json → product_groups[0] → sections[0] → category: слот недоступен для batteries'
+    )
+
+
 COLUMN_EXAMPLES = [('xls', {'0': 'capacity_ah'}), ('json', ['capacity_ah'])]
 
 
