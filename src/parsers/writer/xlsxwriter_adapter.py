@@ -54,7 +54,8 @@ class XlsxWriterAdapter(IXlsDriver):
         for index, number_format in column_format.items():
             col = index - 1
             cell_format = _cell_format(self._book, self._formats, number_format)
-            self._sheet.set_column(col, col, None, cell_format)
+            width = _column_width(self._widths.get(col))
+            self._sheet.set_column(col, col, width, cell_format)
 
     def write(
         self,
@@ -115,5 +116,11 @@ def _update_width(
     if length <= widths.get(column, -1):
         return
     widths[column] = length
-    width = length + _WIDTH_PADDING - _COLUMN_PADDING_PIXELS / _CHAR_PIXELS
-    sheet.set_column(column, column, width, cell_format)
+    sheet.set_column(column, column, _column_width(length), cell_format)
+
+
+def _column_width(length: int | None) -> float | None:
+    """Перевести длину в ширину XlsxWriter; пустой колонке оставить ширину по умолчанию."""
+    if length is None:
+        return None
+    return length + _WIDTH_PADDING - _COLUMN_PADDING_PIXELS / _CHAR_PIXELS

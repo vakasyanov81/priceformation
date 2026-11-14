@@ -205,3 +205,22 @@ def test_short_values_set_column_width(tmp_path: Path, cell_value: str | int | N
         assert book['Коротко'].column_dimensions['A'].width == width
     finally:
         book.close()
+
+
+@pytest.mark.parametrize('following', [None, 'y', ''])
+def test_format_change_preserves_width(tmp_path: Path, following: str | None) -> None:
+    """Смена формата сохраняет ширину даже без следующей строки или при короткой строке."""
+    driver = XlsxWriterAdapter()
+    driver.init_workbook(str(tmp_path), _FILE_NAME)
+    driver.add_sheet('Шины')
+    driver.write(0, 0, 'x')
+    driver.set_column_format({1: '@'})
+    if following is not None:
+        driver.write(1, 0, following)
+    driver.save()
+    book = openpyxl.load_workbook(tmp_path / _FILE_NAME)
+    try:
+        assert book.active is not None
+        assert book.active.column_dimensions['A'].width == 5
+    finally:
+        book.close()
