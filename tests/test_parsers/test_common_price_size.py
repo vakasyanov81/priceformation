@@ -26,6 +26,7 @@ def _row(**fields: Any) -> RowItem:
         ('12.50', '12.5'),
         ('16', '16'),
         ('R16', 'R16'),
+        ('XXXX', 'XXXX'),
     ],
 )
 def test_canon_number(raw: Any, expected: str) -> None:
