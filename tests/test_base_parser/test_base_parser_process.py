@@ -11,7 +11,10 @@ from parsers.base_parser.file_reader import FileReader
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.price_source import FilePricesSource
 from parsers.base_parser.row_enricher import RowEnricher
+from parsers.base_parser.row_filters import RowFilters
 from parsers.base_parser.row_pipeline import RowPipeline
+from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 
 type RawRowsByFile = dict[str, list[dict[str, Any]]]
 
@@ -41,22 +44,24 @@ class _PassThroughEnricher(RowEnricher):
         return row_items
 
 
-class _NoRowSteps(RowPipeline):
-    """File-loop stub: построчные шаги (наценка и т.п.) отключены."""
-
-    def process_row(self, row_item: RowItem) -> None:
-        """Ничего не делает."""
-
-
 def _parser(rows_by_file: RawRowsByFile) -> BaseParser:
     """Парсер с заготовленными файлами; enrich и построчные шаги отключены."""
-    parser = BaseParser(_parse_config())
-    parser.price_files = _CannedPriceFiles(rows_by_file)
-    enricher = parser.enricher
-    parser.enricher = _PassThroughEnricher(
-        parser.settings, enricher.titles, enricher.categories, enricher.manufacturers, parser.stats
+    original = BaseParser(_parse_config())
+    enricher = original.group_handler.pipeline.enricher
+    group = TireAndDiskHandler(
+        settings=original.settings,
+        stats=original.stats,
+        pipeline=RowPipeline(
+            StrategyHooks(pipeline=()),
+            RowFilters(),
+            _PassThroughEnricher(
+                original.settings, enricher.titles, enricher.categories, enricher.manufacturers, original.stats
+            ),
+            MagicMock(),
+        ),
     )
-    parser.pipeline = _NoRowSteps(None, parser.row_filters, parser.enricher, MagicMock())
+    parser = BaseParser(group_handler=group)
+    parser.price_files = _CannedPriceFiles(rows_by_file)
     return parser
 
 
@@ -96,7 +101,8 @@ def test_default_file_reader_uses_parse_config() -> None:
     price_source = file_reader._price_source
     assert isinstance(price_source, FilePricesSource)
     assert price_source._config_provider is parse_config.config_provider
-    assert parser.enricher.titles.title_filter is title_filter
+    graph = parser.group_handler.pipeline
+    assert graph.enricher.titles.title_filter is title_filter
 
 
 def test_process_sums_rows_from_two_files() -> None:

@@ -81,7 +81,8 @@ def test_enrich_builds_finder_once(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(ManufacturerFinder, '__init__', counting_init)
     parser = BaseParser(parse_config=_configuration()[0])
-    parser.enricher.enrich(
+    graph = parser.group_handler.pipeline
+    graph.enricher.enrich(
         [
             RowItem({'title': 'Aeolus winter'}),
             RowItem({'title': 'Aeolus summer'}),

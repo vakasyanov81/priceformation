@@ -1,29 +1,28 @@
 """Pipeline шагов разбора строки: порядок из стратегий или дефолтный."""
 
+from dataclasses import dataclass
+
 from domain.row_item.row_item import RowItem
-from parsers.base_parser.protocols import RowProcessorProtocol
-from parsers.base_parser.row_enricher import RowEnricher
+from parsers.base_parser.parse_statistic import ParserStats
+from parsers.base_parser.parser_settings import ParserSettings
+from parsers.base_parser.protocols import RowProcessorProtocol, TitleFilterProtocol
+from parsers.base_parser.row_enricher import RowEnricher, make_row_enricher
 from parsers.base_parser.row_filters import RowFilters
+from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.strategy_hooks import StrategyHooks
 
 # Порядок шагов без стратегий (обратная совместимость).
 _DEFAULT_STEPS = ('min_rest', 'category', 'markup')
 
 
+@dataclass(frozen=True)
 class RowPipeline:
     """Шаги обработки строки после enrich."""
 
-    def __init__(
-        self,
-        hooks: StrategyHooks | None,
-        row_filters: RowFilters,
-        enricher: RowEnricher,
-        row_processor: RowProcessorProtocol,
-    ) -> None:
-        self.hooks = hooks
-        self.row_filters = row_filters
-        self.enricher = enricher
-        self.row_processor = row_processor
+    hooks: StrategyHooks | None
+    row_filters: RowFilters
+    enricher: RowEnricher
+    row_processor: RowProcessorProtocol
 
     def run(self, row_items: list[RowItem]) -> None:
         for row_item in row_items:
@@ -65,3 +64,19 @@ class RowPipeline:
         run_simple = simple_steps.get(step)
         if run_simple is not None:
             run_simple(row_item)
+
+
+def make_row_pipeline(
+    settings: ParserSettings,
+    stats: ParserStats,
+    hooks: StrategyHooks | None = None,
+    row_processor: RowProcessorProtocol | None = None,
+    title_filter: TitleFilterProtocol | None = None,
+) -> RowPipeline:
+    """Собрать согласованный граф стандартных компонентов обработки строк."""
+    return RowPipeline(
+        hooks,
+        RowFilters(hooks),
+        make_row_enricher(settings, stats, hooks, title_filter),
+        row_processor or RowProcessor(),
+    )

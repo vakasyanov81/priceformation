@@ -11,11 +11,9 @@ from parsers.base_parser.base_parser_config import ParseConfiguration
 from parsers.base_parser.parse_statistic import ParserStats
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_markup import fill_absolute_markup, fill_percent_markup
-from parsers.base_parser.protocols import RowProcessorProtocol, TitleFilterProtocol
-from parsers.base_parser.row_enricher import make_row_enricher
-from parsers.base_parser.row_filters import RowFilters, drop_empty_rest
-from parsers.base_parser.row_pipeline import RowPipeline
-from parsers.base_parser.row_processor import RowProcessor
+from parsers.base_parser.protocols import RowProcessorProtocol
+from parsers.base_parser.row_filters import drop_empty_rest
+from parsers.base_parser.row_pipeline import RowPipeline, make_row_pipeline
 from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.common_price.grouper import CommonPriceGrouper
 
@@ -40,49 +38,51 @@ def make_handler(
     row_processor: RowProcessorProtocol,
     strategy_hooks: StrategyHooks,
 ) -> TireAndDiskHandler:
+    settings = ParserSettings(parse_config)
+    stats = ParserStats()
     return TireAndDiskHandler(
-        settings=ParserSettings(parse_config), row_processor=row_processor, strategy_hooks=strategy_hooks
+        settings=settings, stats=stats, pipeline=make_row_pipeline(settings, stats, strategy_hooks, row_processor)
     )
 
 
 class TireAndDiskHandler:
     """Реализация группы: модель, стратегии, pipeline и выходные поля."""
 
+    product_group: Literal[ProductGroup.TIRE_AND_DISK] = ProductGroup.TIRE_AND_DISK
+
     def __init__(
         self,
         *,
         settings: ParserSettings,
         stats: ParserStats | None = None,
-        row_processor: RowProcessorProtocol | None = None,
-        title_filter: TitleFilterProtocol | None = None,
-        strategy_hooks: StrategyHooks | None = None,
+        pipeline: RowPipeline | None = None,
         grouper_factory: Callable[[list[RowItem]], CommonPriceGrouper] | None = None,
     ) -> None:
         self.settings = settings
         self.stats = stats or ParserStats()
-        self.row_filters = RowFilters(strategy_hooks)
-        self.enricher = make_row_enricher(self.settings, self.stats, strategy_hooks, title_filter)
-        self.pipeline = RowPipeline(strategy_hooks, self.row_filters, self.enricher, row_processor or RowProcessor())
+        self._pipeline = make_row_pipeline(settings, self.stats) if pipeline is None else pipeline
         self._grouper_factory = grouper_factory or CommonPriceGrouper
 
     @property
-    def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
-        return ProductGroup.TIRE_AND_DISK
+    def pipeline(self) -> RowPipeline:
+        """Граф собирается один раз; зависимости pipeline нельзя заменить по отдельности."""
+        return self._pipeline
 
     def create_position(self, fields: InputFields) -> RowItem:
         return RowItem(dict(fields))
 
     def process_rows(self, positions: Sequence[RowItem]) -> list[RowItem]:
         """Выполнить фильтры, обогащение и шаги pipeline до финальной наценки."""
-        row_items = self.row_filters.filter_warehouses(list(positions))
-        row_items = self.enricher.keep(row_items)
-        row_items = self.enricher.enrich(row_items)
+        row_items = self.pipeline.row_filters.filter_warehouses(list(positions))
+        row_items = self.pipeline.enricher.keep(row_items)
+        row_items = self.pipeline.enricher.enrich(row_items)
         self.pipeline.run(row_items)
         return row_items
 
     def process(self, positions: Sequence[RowItem]) -> TireAndDiskResult:
         """Обработать строки секции: сбросить кэш категорий, прогнать фильтры и завершить расчёт."""
-        self.enricher.categories.lookup.reset()
+        categories = self.pipeline.enricher.categories
+        categories.lookup.reset()
         return TireAndDiskResult(tuple(finish_processing(self.process_rows(positions), self.stats)))
 
     def group(self, package: ProductGroupResult[RowItem]) -> TireAndDiskResult:

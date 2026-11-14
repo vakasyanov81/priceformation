@@ -14,6 +14,7 @@ from parsers.base_parser.parse_statistic import ParserStats, ParseResultStatisti
 from parsers.base_parser.parser_settings import ParserSettings
 from parsers.base_parser.price_files import PriceFiles
 from parsers.base_parser.protocols import FileReaderProtocol, RowProcessorProtocol, TitleFilterProtocol
+from parsers.base_parser.row_pipeline import make_row_pipeline
 from parsers.base_parser.row_processor import RowProcessor
 from parsers.base_parser.tire_and_disk_handler import TireAndDiskHandler
 
@@ -61,12 +62,10 @@ class BaseParser:
         self.group_handler = group_handler or TireAndDiskHandler(
             settings=self.settings,
             stats=self.stats,
-            row_processor=row_processor,
-            title_filter=title_filter,
+            pipeline=make_row_pipeline(
+                self.settings, self.stats, row_processor=row_processor, title_filter=title_filter
+            ),
         )
-        self.row_filters = self.group_handler.row_filters
-        self.enricher = self.group_handler.enricher
-        self.pipeline = self.group_handler.pipeline
 
     def __repr__(self) -> str:
         """Название поставщика из конфига; имя класса (BaseParser) не показываем."""
@@ -97,9 +96,6 @@ class BaseParser:
         mapped = self.price_files.read_positions(files, self.group_handler.create_position)
         raw_count = len(mapped)
         self.parsed_items += mapped
-        self.group_handler.row_filters = self.row_filters
-        self.group_handler.enricher = self.enricher
-        self.group_handler.pipeline = self.pipeline
         self._package = self.group_handler.process(self.parsed_items)
         self.parsed_items = list(self._package.positions)
         return raw_count

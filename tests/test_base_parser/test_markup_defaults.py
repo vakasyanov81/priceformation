@@ -109,7 +109,8 @@ def test_missing_vendor_is_disabled() -> None:
     """Вендор без vendor_config считается активным (обратная совместимость)."""
     parser = _parser(_base_params())
     assert parser.settings.is_active is True
-    assert isinstance(parser.pipeline.row_processor.require_markup_policy(), MarkupPolicy)
+    graph = parser.group_handler.pipeline
+    assert isinstance(graph.row_processor.require_markup_policy(), MarkupPolicy)
 
 
 def test_markup_without_prices_is_zero() -> None:
