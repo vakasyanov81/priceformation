@@ -77,11 +77,15 @@ class ParamsFromTitle:
 
     def prepare(self, row_item: RowItem) -> str | None:
         """Подготовить title вложенной стратегией и записать параметры из него."""
-        title = self._inner.prepare(row_item)
+        title = self.compose(row_item)
         from_columns = column_values(row_item)
         _fill_from_title(row_item, title, _EXTRACTORS)
         log_title_conflicts(row_item, from_columns, title)
         return title
+
+    def compose(self, row_item: RowItem) -> str | None:
+        """Повторно собрать title после назначения производителя и категории."""
+        return self._inner.prepare(row_item)
 
 
 class ParamsBeforeTitle:
@@ -102,4 +106,8 @@ class ParamsBeforeTitle:
         from_columns = column_values(row_item)
         _fill_from_title(row_item, source_title, _BARE_EXTRACTORS)
         log_title_conflicts(row_item, from_columns, source_title)
+        return self.compose(row_item)
+
+    def compose(self, row_item: RowItem) -> str | None:
+        """Повторно собрать title после назначения производителя и категории."""
         return self._inner.prepare(row_item)

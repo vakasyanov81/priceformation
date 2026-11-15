@@ -23,6 +23,14 @@ def test_fills_disk_fields_and_keeps_title() -> None:
     assert row.disk.eet == 0
 
 
+def test_compose_does_not_extract_params_again() -> None:
+    row = RowItem({'title': _PIONER})
+    strategy = ParamsFromTitle(DefaultTitle())
+
+    assert strategy.compose(row) == _PIONER
+    assert row.tire.width is None
+
+
 def test_fills_tire_fields_for_pioner() -> None:
     row = RowItem({'title': _PIONER, 'price_opt': 1000})
 

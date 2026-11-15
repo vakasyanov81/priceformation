@@ -6,6 +6,7 @@ from domain.row_item.production_year import production_year
 from domain.row_item.row_item import RowItem
 from parsers.base_parser.protocols import TitleFilterProtocol
 from parsers.base_parser.strategy_hooks import StrategyHooks
+from parsers.strategies.title_params import ParamsBeforeTitle, ParamsFromTitle
 
 
 class TitleService:
@@ -21,10 +22,10 @@ class TitleService:
             return self._hooks.title.prepare(row_item)
         return self.title_filter.get_prepared_title(row_item)
 
-    def set_prepared_title(self, row_item: RowItem) -> bool:
+    def set_prepared_title(self, row_item: RowItem, *, compose_only: bool = False) -> bool:
         """Подготовить title; уценка, год и завод читаются и из текста поставщика: собранное название их не несёт."""
         source_title = row_item.identity.title
-        prepared_title = self.get_prepared_title(row_item)
+        prepared_title = self._pipeline_title(row_item, compose_only)
         title_is_prepared = source_title == prepared_title
         if source_title and prepared_title and not title_is_prepared:
             row_item.set_field('source_title', source_title)
@@ -38,6 +39,12 @@ class TitleService:
         if plant:
             row_item.set_field('production_plant', plant)
         return title_is_prepared
+
+    def _pipeline_title(self, row_item: RowItem, compose_only: bool) -> str | None:
+        strategy = self._hooks.title if self._hooks else None
+        if compose_only and isinstance(strategy, (ParamsFromTitle, ParamsBeforeTitle)):
+            return strategy.compose(row_item)
+        return self.get_prepared_title(row_item)
 
     def is_valid_title(self, title: str | None) -> bool:
         return self.title_filter.is_valid_title(title)
