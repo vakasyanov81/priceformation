@@ -258,14 +258,14 @@ def test_manufacturer_finder_uses_config_aliases(monkeypatch: pytest.MonkeyPatch
     """Манипулятор строится на алиасах из конфига, а не на None."""
     parser = _parser()
     captured: dict[str, object] = {}
-    sentinel = object()
+    expected_finder = object()
 
     def _fake(aliases: object) -> object:
         captured['aliases'] = aliases
-        return sentinel
+        return expected_finder
 
     monkeypatch.setattr(base_parser_module, 'ManufacturerFinder', _fake)
-    assert parser.settings.manufacturer_finder() is sentinel
+    assert parser.settings.manufacturer_finder() is expected_finder
     assert captured['aliases'] == parser.settings.parse_config().manufacturer_aliases()
 
 
