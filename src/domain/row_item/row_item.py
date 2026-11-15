@@ -161,32 +161,26 @@ class RowItem:
     doubtful_price = RowField('doubtful_price')
 
     def __init__(self, raw_row: dict[str, Any] | None = None):
-        """init"""
-        self.identity = ProductIdentity()
-        self.tire = TireDimensions()
-        self.disk = DiskParameters()
-        self.pricing = Pricing()
-        self.stock = Stock()
-        self.duplicate = DuplicateInfo()
-        self.vendor = VendorMeta()
+        """Привести поля до сборки VO, не создавая промежуточные пустые объекты."""
         self.extra = {}
         self._errors = {}
         self._set_keys = {}
         self._load_raw_row(raw_row or {})
 
     def _load_raw_row(self, raw_row: dict[str, Any]) -> None:
-        """Заполнить позицию из сырого словаря: один replace на value object, а не на каждое поле."""
+        """Собрать каждый VO один раз из приведённых полей и штатных дефолтов."""
         updates: dict[str, dict[str, Any]] = {}
         for key, attr_value in raw_row.items():
             spec, coerced = self._coerce(key, attr_value)
             if spec is not None:
                 updates.setdefault(spec.group, {})[spec.attribute] = coerced
-        self._write_groups(updates)
-
-    def _write_groups(self, updates: dict[str, dict[str, Any]]) -> None:
-        """Применить накопленные изменения: по одному replace на value object."""
-        for group, changes in updates.items():
-            setattr(self, group, replace(getattr(self, group), **changes))
+        self.identity = ProductIdentity(**updates.get('identity', {}))
+        self.tire = TireDimensions(**updates.get('tire', {}))
+        self.disk = DiskParameters(**updates.get('disk', {}))
+        self.pricing = Pricing(**updates.get('pricing', {}))
+        self.stock = Stock(**updates.get('stock', {}))
+        self.duplicate = DuplicateInfo(**updates.get('duplicate', {}))
+        self.vendor = VendorMeta(**updates.get('vendor', {}))
 
     def _coerce(self, key: str, attr_value: Any) -> tuple[FieldSpec | None, Any]:
         """Привести значение и запомнить ключ; вендорский ключ без описания уходит в extra.
