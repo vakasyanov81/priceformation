@@ -57,7 +57,7 @@ class RowPipeline:
             categories.apply_category_fields(row_item)
             return
         simple_steps = {
-            'title': self.enricher.titles.set_prepared_title,
+            'title': lambda row_item: self.enricher.titles.set_prepared_title(row_item, compose_only=True),
             'min_rest': self.row_filters.skip_by_min_rest,
             'markup': self.row_processor.add_price_markup,
         }
