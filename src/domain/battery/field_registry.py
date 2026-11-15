@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from types import MappingProxyType
 from typing import Final
 
 from domain.battery import conversions
@@ -41,7 +40,7 @@ _NUMBER_FIELDS = (
 )
 _FLAG_FIELDS = ('efb', 'agm', 'serviceable')
 
-FIELD_CONVERTERS: Final[Converters] = MappingProxyType(
+FIELD_CONVERTERS: Final[Converters] = frozendict(
     {
         **dict.fromkeys(_TEXT_FIELDS, conversions.text),
         **dict.fromkeys(_NUMBER_FIELDS, conversions.number),
