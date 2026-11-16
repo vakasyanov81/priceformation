@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Literal
 
 from domain.product_groups import ProductGroup
@@ -38,7 +39,7 @@ class BatterySection:
     row_selector: RowSelector | None = None
     section_selector: SectionSelector | None = None
     config_path: str = field(default='', compare=False, repr=False)
-    columns: Mapping[int | str, str] = field(default_factory=frozendict)
+    columns: Mapping[int | str, str] = field(default_factory=lambda: MappingProxyType({}))
     processing: BatterySettings = field(default_factory=BatterySettings)
 
     @property
