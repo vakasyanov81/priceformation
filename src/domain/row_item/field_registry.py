@@ -11,6 +11,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any, Final
 
 from domain.row_item import row_item_formatter as row_format
@@ -127,7 +128,7 @@ FIELD_SPECS: Final[tuple[FieldSpec, ...]] = (
 
 FIELD_KEYS: Final[tuple[str, ...]] = tuple(spec.key for spec in FIELD_SPECS)
 
-SPEC_BY_KEY: Final[Mapping[str, FieldSpec]] = frozendict({spec.key: spec for spec in FIELD_SPECS})
+SPEC_BY_KEY: Final[Mapping[str, FieldSpec]] = MappingProxyType({spec.key: spec for spec in FIELD_SPECS})
 
 
 def spec_of(key: str) -> FieldSpec | None:
