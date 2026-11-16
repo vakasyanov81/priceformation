@@ -42,7 +42,8 @@ def _sheets_schema(
 
 def _sheet_head(book: CalamineWorkbook, name: str) -> SheetHead:
     """Первые строки вкладки."""
-    rows = islice(book.get_sheet_by_name(name).iter_rows(), _HEADER_ROWS_LIMIT)
+    sheet = book.get_sheet_by_name(name)
+    rows = islice(sheet.to_python(skip_empty_area=False), _HEADER_ROWS_LIMIT)
     return SheetHead(name, tuple(tuple(row) for row in rows))
 
 
