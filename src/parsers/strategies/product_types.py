@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+import re
+
 from parsers.strategies.normalize import normalize_text
 
 PASSENGER = 'Легковая шина'
@@ -91,6 +93,9 @@ _DECLARED_ALIASES: dict[str, str] = {
     'уплотнительное кольцо': O_RING,
     'кольцо': O_RING,
 }
+
+
+ROCKBUSTER_H989 = re.compile(r'\brockbuster\s+h989\b')
 
 
 def canonical_declared(declared: str | None) -> str | None:

@@ -79,6 +79,6 @@ class CategoryService:
             row_item.set_field('rest_count', 0)
 
     def apply_category_fields(self, row_item: RowItem) -> None:
-        """Дописать поля по категории-размеру названия (`category.size_fields`)."""
+        """Применить правила полей по итоговому типу и размеру шины."""
         if self._hooks is not None and self._hooks.category_fields is not None:
             self._hooks.category_fields.apply(row_item)

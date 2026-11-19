@@ -43,7 +43,16 @@
           ],
           "category": {
             "strategy": "column_canonical",
-            "unknown_skip": true
+            "unknown_skip": true,
+            "map": {
+              "грузовые": "Грузовая шина",
+              "спецшины": "Спецшина",
+              "индустриальная": "Спецшина"
+            },
+            "type_fields": {
+              "Грузовая шина": {"season": "Всесезонная"},
+              "Спецшина": {"season": "Всесезонная"}
+            }
           },
           "columns": {
             "cae": "code_art",

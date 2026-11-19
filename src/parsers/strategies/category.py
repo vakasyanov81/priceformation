@@ -131,19 +131,21 @@ class FieldMapCategory:
 class ColumnCanonicalCategory:
     """Канонизация категории из колонки; неизвестная — пустая строка."""
 
-    def __init__(self, unknown_skip: bool) -> None:
-        """Запомнить, нужно ли фиксировать неизвестные категории."""
+    def __init__(self, unknown_skip: bool, mapping: Mapping[str, str] | None = None) -> None:
+        """Запомнить карту поставщика и флаг учёта неизвестных категорий."""
         self._unknown_skip = unknown_skip
+        self._mapping = mapping or {}
 
     @classmethod
     def from_config(cls, config: CategoryConfig) -> ColumnCanonicalCategory:
         """Взять флаг `unknown_skip` из конфига."""
-        return cls(config.unknown_skip)
+        return cls(config.unknown_skip, config.mapping)
 
     def resolve(self, row_item: RowItem, context: CategoryContext | None = None) -> str | None:
         """Канонизировать категорию; неизвестную — вернуть пустой строкой."""
         raw_type = row_item.get_field(_CATEGORY_FIELD)
-        resolved = _canonical(raw_type, context)
+        key = str(raw_type or '').strip().lower()
+        resolved = self._mapping.get(key) or _canonical(raw_type, context)
         if resolved:
             return resolved
         if self._unknown_skip and context is not None:
