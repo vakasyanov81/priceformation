@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 
 from domain.row_item.row_item import RowItem
+from parsers.strategies.normalize import replace_homoglyphs
+from parsers.strategies.product_types import ROCKBUSTER_H989
 from parsers.strategies.protocols import CategoryContext
 from parsers.vendor_config.slot_configs import CategoryConfig
 
@@ -79,7 +81,7 @@ def non_tire_product_type(raw_title: str | None) -> str | None:
 
 
 def _tire_category(title: str) -> str:
-    if _is_special(title):
+    if _is_special(title) or ROCKBUSTER_H989.search(replace_homoglyphs(title)):
         return SPECIAL
     if _LIGHT_TRUCK_SUFFIX.search(title):
         return LIGHT_TRUCK

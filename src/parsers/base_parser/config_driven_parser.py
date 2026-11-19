@@ -72,9 +72,9 @@ def strategy_hooks_from_section(
 
 def _category_fields(section: VendorSection) -> CategoryFields | None:
     """Стратегия полей по категории-размеру из слота `category`, если задана."""
-    if not section.category.size_fields:
+    if not (section.category.size_fields or section.category.type_fields):
         return None
-    return CategoryFields(section.category.size_fields)
+    return CategoryFields(section.category.size_fields, section.category.type_fields)
 
 
 def _product_type(section: VendorSection) -> ProductTypeClassifier | None:

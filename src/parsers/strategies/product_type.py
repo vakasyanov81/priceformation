@@ -23,6 +23,7 @@ from parsers.strategies.product_types import (
     O_RING,
     PASSENGER,
     RIM_TAPE,
+    ROCKBUSTER_H989,
     SPECIAL,
     TRUCK,
 )
@@ -160,7 +161,7 @@ class ProductTypeClassifier:
         non_tire = _non_tire_product(text, tech)
         if non_tire:
             return non_tire
-        if _has_any(text, _SPEC_WORDS):
+        if _has_any(text, _SPEC_WORDS) or ROCKBUSTER_H989.search(tech):
             return SPECIAL
         if _has_any(text, _MOTO_WORDS):
             return MOTO
