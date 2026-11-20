@@ -51,6 +51,12 @@ def test_unrelated_models_stay_apart() -> None:
     assert merged == {'gravity': 'gravity', 'winterdrive': 'winterdrive'}
 
 
+def test_generation_number_keeps_models_apart() -> None:
+    """Числовой суффикс поколения (`FR` / `FR 3`) — другая модель, не детализация."""
+    merged = merge_models(_entries('ice zero fr', 'ice zero fr 3'))
+    assert merged == {'icezerofr': 'icezerofr', 'icezerofr3': 'icezerofr3'}
+
+
 def test_models_without_words_are_skipped() -> None:
     entries = [('', frozenset[str]()), *_entries('x')]
     assert merge_models(entries) == {'x': 'x'}

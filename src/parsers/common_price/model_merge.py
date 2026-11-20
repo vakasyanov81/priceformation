@@ -57,7 +57,12 @@ def _contains_any(outer: Tokens, candidates: list[Tokens]) -> bool:
 def _is_inside(tokens: Tokens, other: Tokens) -> bool:
     """Все слова входят напрямую или непересекающимися парами в слитные слова другой модели."""
     if tokens < other:
-        return True
+        return not _generation_suffix(other - tokens)
     joined_words = other - tokens
     unmatched = tokens - other
     return bool(joined_words) and can_join(unmatched, tuple(sorted(joined_words)))
+
+
+def _generation_suffix(extra: Tokens) -> bool:
+    """Лишние слова — только номера поколения (`FR` / `FR 3`): это разные модели, не детализация одной."""
+    return bool(extra) and all(token.isdigit() for token in extra)
