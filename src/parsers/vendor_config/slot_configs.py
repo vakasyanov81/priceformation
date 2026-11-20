@@ -70,18 +70,23 @@ class CategoryConfig:
 
 type ModelSeasonRules = tuple[tuple[re.Pattern[str], str], ...]
 
+_MODEL_SEASONS = frozenset(('Зимняя', 'Летняя', 'Всесезонная'))
+
 
 def _read_model_seasons(payload: RawConfig, where: str) -> ModelSeasonRules:
     rules = read_str_map(payload, 'model_seasons', where).items()
-    compiled_rules = ((_compile_model_pattern(pattern, where), season) for pattern, season in rules)
+    compiled_rules = (_read_model_season(pattern, season, where) for pattern, season in rules)
     return tuple(compiled_rules)
 
 
-def _compile_model_pattern(pattern: str, where: str) -> re.Pattern[str]:
+def _read_model_season(pattern: str, season: str, where: str) -> tuple[re.Pattern[str], str]:
+    rule_path = f'{where} → model_seasons → {pattern}'
+    if season not in _MODEL_SEASONS:
+        raise ConfigValidationError(f'{rule_path}: неизвестный сезон {season!r}')
     try:
-        return re.compile(pattern)
+        return re.compile(pattern), season
     except re.error as exc:
-        raise ConfigValidationError(f'{where} → model_seasons → {pattern}: {exc}') from exc
+        raise ConfigValidationError(f'{rule_path}: {exc}') from exc
 
 
 @dataclass(frozen=True, slots=True)

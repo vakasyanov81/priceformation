@@ -19,13 +19,11 @@ def get_spike_title(row_item: RowItem) -> str:
 
 
 def replace_season(row_item: RowItem, rules: ModelSeasonRules) -> str | None:
-    """Определить сезон известной модели или нормализовать значение поставщика."""
-    prepared_season = _model_season(row_item.identity.title, rules)
-    model_season = prepared_season or _model_season(row_item.vendor.source_title, rules)
-    if model_season:
-        return model_season
+    """Нормализовать сезон поставщика или заполнить пропуск по модели."""
     season = row_item.tire.season
-    return _SEASON_TITLES.get(season.lower(), season) if season else None
+    if season:
+        return _SEASON_TITLES.get(season.lower(), season)
+    return _model_season(row_item.identity.title, rules) or _model_season(row_item.vendor.source_title, rules)
 
 
 def _model_season(raw_title: str | None, rules: ModelSeasonRules) -> str | None:

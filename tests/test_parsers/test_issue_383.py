@@ -16,6 +16,7 @@ from parsers.vendor_config.slot_configs import ModelSeasonRules, TitleConfig
 
 _ALL_SEASON = 'Всесезонная'
 _WINTER = 'Зимняя'
+_SUMMER = 'Летняя'
 _SPECIAL = 'Спецшина'
 
 
@@ -39,27 +40,45 @@ def model_seasons(example_vendors_provider: FakeConfigProvider) -> ModelSeasonRu
         ('215/75R16C Triangle TRIN 113/111Q 8PR LL01', _WINTER),
         ('21x8-9 Rockbuster H989 14PR TT', _ALL_SEASON),
         ('8.15-15 (28x9-15) Rockbuster H989 16PR TT', _ALL_SEASON),
+        ('195/75R16C Triangle TR652 107/105R 8PR TL', _SUMMER),
+        ('195/75R16C Triangle TV701 110/108T 10PR TL', _SUMMER),
+        ('225/75R16C Triangle TV701 121/120S 12PR TL', _SUMMER),
+        ('235/65R16C Triangle TV701 115/113S 8PR TL', _SUMMER),
+        ('Triangle ConneX Van TV701', _SUMMER),
+        ('Triangle SnowLink Trin PL02', _WINTER),
+        ('Triangle TR680', _ALL_SEASON),
         ('185/75R16C ДругойБренд TR646', None),
+        ('Triangle TV7010', None),
     ],
 )
 def test_missing_season_by_model(title: str, season: str | None, model_seasons: ModelSeasonRules) -> None:
     assert replace_season(RowItem({'title': title}), model_seasons) == season
 
 
-def test_known_model_season_corrects_supplier_value(model_seasons: ModelSeasonRules) -> None:
+@pytest.mark.parametrize(('supplier_season', 'expected'), [(None, _ALL_SEASON), ('лето', _SUMMER)])
+def test_model_season_from_source_title(
+    supplier_season: str | None,
+    expected: str,
+    model_seasons: ModelSeasonRules,
+) -> None:
     row = RowItem(
         {
             'title': '185/75R16 Triangle 104/102Q',
             'source_title': '185/75R16 Triangle TR646 104/102Q',
-            'season': 'лето',
+            'season': supplier_season,
         },
     )
-    assert replace_season(row, model_seasons) == _ALL_SEASON
+    assert replace_season(row, model_seasons) == expected
 
 
 def test_invalid_model_season_pattern_has_config_path() -> None:
     with pytest.raises(ConfigValidationError, match=r'demo\.json → title → model_seasons'):
         TitleConfig.from_dict({'model_seasons': {'(': _WINTER}}, 'demo.json → title')
+
+
+def test_invalid_model_season_has_config_path() -> None:
+    with pytest.raises(ConfigValidationError, match=r'demo\.json → title → model_seasons → triangle tv701'):
+        TitleConfig.from_dict({'model_seasons': {'triangle tv701': 'Летнняя'}}, 'demo.json → title')
 
 
 @pytest.mark.parametrize('size', ['21x8-9', '8.15-15 (28x9-15)'])
