@@ -19,6 +19,7 @@ from app.run_argv import (
     LOAD_SUPPLIER_PRICES,
     MIM_LOAD_API_DATA,
     PARSE,
+    PRODUCT_TYPES_BY_GROUP,
     TOGGLE_VENDOR,
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
@@ -31,7 +32,6 @@ from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
 from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
-from parsers.strategies.product_types import CANONICAL_TYPES
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
 from services.mail_service import MailService
@@ -105,15 +105,12 @@ def machine_json(
     *,
     all_result: bool = False,
     result_template: str | None = None,
-    supplier_prices: str | None = None,
-    config_path: str | None = None,
-    vendor_folder: str | None = None,
+    payload_arg: str | None = None,
 ) -> int:
     """Выполнить команду, JSON в stdout. Логи в этом режиме не печатаются."""
     ensure_services_configured()
-    payload_args = {LOAD_CONFIG: config_path, TOGGLE_VENDOR: vendor_folder}
     with quiet_console():
-        return _emit_command(command, all_result, result_template, payload_args.get(command, supplier_prices))
+        return _emit_command(command, all_result, result_template, payload_arg)
 
 
 def _emit_command(
@@ -182,7 +179,11 @@ def _reference_payload(command: str, payload_arg: str | None) -> Mapping[str, An
     if command == GET_SUPLIERS:
         return all_vendor_supplier_catalog(get_config_provider())
     if command == GET_PRODUCT_TYPES:
-        return {_JSON_OK: True, _JSON_ACTION: GET_PRODUCT_TYPES, 'types': list(CANONICAL_TYPES)}
+        return {
+            _JSON_OK: True,
+            _JSON_ACTION: GET_PRODUCT_TYPES,
+            'types': list(PRODUCT_TYPES_BY_GROUP[payload_arg or '']),
+        }
     if command == GET_VENDORS:
         return _vendors_payload()
     if command == TOGGLE_VENDOR:

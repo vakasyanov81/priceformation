@@ -4,6 +4,8 @@ import argparse
 from collections.abc import Sequence
 from typing import Any, cast
 
+from domain.battery import BATTERY_PRODUCT_TYPE
+from parsers.strategies.product_types import CANONICAL_TYPES
 from parsers.writer.templates.all_templates import (
     all_writer_templates,
     writer_template_name,
@@ -19,6 +21,8 @@ FETCH_MAIL_PRICES = 'fetch_mail_prices'
 UPDATE_ALL_SUPPLIER_PRICES = 'update_all_supplier_prices'
 GET_SUPLIERS = 'get_supliers'
 GET_PRODUCT_TYPES = 'get_product_types'
+PRODUCT_TYPES_BY_GROUP = {'tire': CANONICAL_TYPES, 'akb': (BATTERY_PRODUCT_TYPE,)}
+PAYLOAD_ARG = 'payload_arg'
 GET_VENDORS = 'get_vendors'
 TOGGLE_VENDOR = 'toggle_vendor'
 LOAD_SUPPLIER_PRICES = 'load_supplier_prices'
@@ -56,7 +60,6 @@ _PLAIN_COMMANDS = (
     (FETCH_MAIL_PRICES, 'Скачать прайсы поставщиков из почты.'),
     (UPDATE_ALL_SUPPLIER_PRICES, 'Обновить прайсы всех поставщиков: API и почта.'),
     (GET_SUPLIERS, 'Получить названия поставщиков.'),
-    (GET_PRODUCT_TYPES, 'Получить типы товара, которые бывают в прайсах.'),
     (GET_VENDORS, 'Получить поставщиков (файлы конфигов) с признаком активности.'),
 )
 
@@ -109,21 +112,27 @@ def _attach_commands(parser: argparse.ArgumentParser, json_flag: argparse.Argume
         json_flag,
         TOGGLE_VENDOR,
         'Переключить активность поставщика (файла конфига) по папке.',
-    ).add_argument('folder', help=_VENDOR_FOLDER_HELP)
+    ).add_argument(PAYLOAD_ARG, metavar='folder', help=_VENDOR_FOLDER_HELP)
+    _json_parser(
+        subparsers,
+        json_flag,
+        GET_PRODUCT_TYPES,
+        'Получить типы товара выбранной группы.',
+    ).add_argument(PAYLOAD_ARG, choices=PRODUCT_TYPES_BY_GROUP, help='Товарная группа.')
     load_cmd = _json_parser(
         subparsers,
         json_flag,
         LOAD_SUPPLIER_PRICES,
         'Загрузить прайсы поставщиков в file_prices.',
     )
-    load_cmd.add_argument('prices', help=_PRICES_HELP)
+    load_cmd.add_argument(PAYLOAD_ARG, metavar='prices', help=_PRICES_HELP)
     config_cmd = _json_parser(
         subparsers,
         json_flag,
         LOAD_CONFIG,
         'Загрузить файл или папку настроек в parse_config.',
     )
-    config_cmd.add_argument('config', help=_CONFIG_HELP)
+    config_cmd.add_argument(PAYLOAD_ARG, metavar='config', help=_CONFIG_HELP)
 
 
 def _json_parser(

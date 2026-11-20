@@ -278,7 +278,7 @@ def test_json_keyboard_interrupt(capsys: pytest.CaptureFixture[str]) -> None:
 def test_json_keyboard_interrupt_compact_command(capsys: pytest.CaptureFixture[str]) -> None:
     """Прерывание компактной команды: ответ без полей разбора, только ошибка."""
     with patch('app.run_machine.load_config', side_effect=KeyboardInterrupt):
-        code = machine_json(LOAD_CONFIG, config_path='/incoming/settings')
+        code = machine_json(LOAD_CONFIG, payload_arg='/incoming/settings')
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     _assert_elapsed(payload)
@@ -488,7 +488,7 @@ def test_json_fetch_mail_error(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_json_get_product_types(capsys: pytest.CaptureFixture[str]) -> None:
     """get_product_types: канонические типы товара в порядке словаря."""
-    code = machine_json(GET_PRODUCT_TYPES)
+    code = machine_json(GET_PRODUCT_TYPES, payload_arg='tire')
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -507,6 +507,23 @@ def test_json_get_product_types(capsys: pytest.CaptureFixture[str]) -> None:
             'Диск',
         ],
     }
+
+
+def test_cli_get_battery_product_types(capsys: pytest.CaptureFixture[str]) -> None:
+    """Запрос группы akb возвращает тип товара аккумуляторного прайса."""
+    from app.run import main
+
+    with (
+        patch('app.run.sys.argv', ['pf', GET_PRODUCT_TYPES, 'akb']),
+        patch('app.run.init_cfg'),
+        pytest.raises(SystemExit) as exit_info,
+    ):
+        main()
+
+    assert exit_info.value.code == 0
+    payload = json.loads(capsys.readouterr().out)
+    _assert_elapsed(payload)
+    assert payload == {'ok': True, 'action': GET_PRODUCT_TYPES, 'types': ['Аккумулятор']}
 
 
 def test_json_update_all_reports_each_source(capsys: pytest.CaptureFixture[str]) -> None:
@@ -591,7 +608,7 @@ def test_json_toggle_vendor(capsys: pytest.CaptureFixture[str]) -> None:
     vendor_service.list_vendors.return_value = [VendorState('poshk', 'Пошк', True)]
     vendor_service.toggle.return_value = VendorState('poshk', 'Пошк', False)
     with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
-        code = machine_json(TOGGLE_VENDOR, vendor_folder='poshk')
+        code = machine_json(TOGGLE_VENDOR, payload_arg='poshk')
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -608,7 +625,7 @@ def test_json_toggle_unknown_vendor_changes_nothing(capsys: pytest.CaptureFixtur
     vendor_service = MagicMock()
     vendor_service.list_vendors.return_value = [VendorState('poshk', 'Пошк', True)]
     with patch(_RESOLVE, side_effect={VendorActivationService: vendor_service}.__getitem__):
-        code = machine_json(TOGGLE_VENDOR, vendor_folder='unknown')
+        code = machine_json(TOGGLE_VENDOR, payload_arg='unknown')
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert payload['ok'] is False
@@ -628,7 +645,7 @@ def test_json_load_supplier_prices(capsys: pytest.CaptureFixture[str]) -> None:
         patch('app.run_machine.load_supplier_prices', return_value=files) as mock_load,
         patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog) as mock_catalog,
     ):
-        code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
+        code = machine_json(LOAD_SUPPLIER_PRICES, payload_arg=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -654,7 +671,7 @@ def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str
         patch('app.run_machine.load_supplier_prices', return_value=files),
         patch('app.run_machine.all_vendor_supplier_catalog', return_value=catalog),
     ):
-        code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices=raw)
+        code = machine_json(LOAD_SUPPLIER_PRICES, payload_arg=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -668,7 +685,7 @@ def test_json_load_supplier_prices_by_sup_code(capsys: pytest.CaptureFixture[str
 
 def test_json_load_supplier_prices_bad_json(capsys: pytest.CaptureFixture[str]) -> None:
     """битый JSON загрузки → ok=false."""
-    code = machine_json(LOAD_SUPPLIER_PRICES, supplier_prices='not-json')
+    code = machine_json(LOAD_SUPPLIER_PRICES, payload_arg='not-json')
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     _assert_elapsed(payload)
@@ -684,7 +701,7 @@ def test_json_load_config(capsys: pytest.CaptureFixture[str]) -> None:
     dests = ['parse_config/vendor_list.json']
     raw = '/incoming/vendor_list.json'
     with patch('app.run_machine.load_config', return_value=dests) as mock_load:
-        code = machine_json(LOAD_CONFIG, config_path=raw)
+        code = machine_json(LOAD_CONFIG, payload_arg=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -701,7 +718,7 @@ def test_json_load_config_folder(capsys: pytest.CaptureFixture[str]) -> None:
     dests = ['parse_config/black_list', 'parse_config/vendor_list.json']
     raw = '/incoming/settings'
     with patch('app.run_machine.load_config', return_value=dests) as mock_load:
-        code = machine_json(LOAD_CONFIG, config_path=raw)
+        code = machine_json(LOAD_CONFIG, payload_arg=raw)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
@@ -735,7 +752,7 @@ def test_json_load_supplier_prices_without_raw_is_empty(capsys: pytest.CaptureFi
 
 def test_json_load_config_error(capsys: pytest.CaptureFixture[str]) -> None:
     """ошибка load_config → compact JSON."""
-    code = machine_json(LOAD_CONFIG, config_path='')
+    code = machine_json(LOAD_CONFIG, payload_arg='')
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     _assert_elapsed(payload)
@@ -764,9 +781,7 @@ def test_run_machine_json_load_config() -> None:
             'load_config',
             all_result=False,
             result_template=None,
-            supplier_prices=None,
-            config_path=raw,
-            vendor_folder=None,
+            payload_arg=raw,
         )
 
 
@@ -815,7 +830,7 @@ def test_run_machine_human_exit_code_zero() -> None:
 
 
 def test_run_machine_json_passes_supplier_prices() -> None:
-    """load_supplier_prices передаёт JSON-карту из args.prices, а не None."""
+    """load_supplier_prices передаёт JSON-карту из аргументов CLI."""
     raw = '{"1": "/incoming/any.xls"}'
     with (
         patch('app.run.sys.argv', ['app.run.py', 'load_supplier_prices', raw]),
@@ -832,7 +847,5 @@ def test_run_machine_json_passes_supplier_prices() -> None:
             'load_supplier_prices',
             all_result=False,
             result_template=None,
-            supplier_prices=raw,
-            config_path=None,
-            vendor_folder=None,
+            payload_arg=raw,
         )

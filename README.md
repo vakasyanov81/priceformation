@@ -135,7 +135,8 @@ XLSX-шаблон задаёт общую книгу; правила имён и
 - `get_supliers` — вернуть каталог поставщиков:
   `{"1": {"sup_code": "poshk", "sup_title": "Пошк"}}`;
 - `get_product_types` — вернуть типы товара, которые priceformation ставит в
-  колонку «Тип товара» прайсов (в порядке словаря):
+  колонку «Тип товара» прайсов (в порядке словаря). Обязательный аргумент: `tire` для шин
+  и дисков или `akb` для аккумуляторов (`["Аккумулятор"]`). Пример ответа для `tire`:
   `{"ok": true, "action": "get_product_types", "types": ["Легковая шина", …]}`;
 - `get_vendors` — вернуть поставщиков (файлы конфигов `parse_config/vendors/*.json`) с
   признаком активности, как в интерактивном меню:
@@ -231,7 +232,8 @@ uv run pf four_tochki_load_api_data --json
 uv run pf mim_load_api_data --json
 uv run pf fetch_mail_prices --json
 uv run pf get_supliers
-uv run pf get_product_types
+uv run pf get_product_types tire
+uv run pf get_product_types akb
 uv run pf get_vendors --json
 uv run pf toggle_vendor poshk --json
 uv run pf load_supplier_prices='{"poshk": "/full/path/price.xls"}'
