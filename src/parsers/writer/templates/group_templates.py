@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 
+from domain.battery import BATTERY_PRODUCT_TYPE
 from parsers.writer.templates.all_templates import get_writer_template
 from parsers.writer.templates.group_output import GroupOutput, OutputMode, TemplateOutput
 from parsers.writer.templates.iwrite_template import IWriteTemplate
@@ -36,7 +37,7 @@ def _drom_batteries(group: GroupOutput) -> GroupOutput:
     return replace(
         group,
         columns=[
-            {'Тип товара': {'default_value': 'Аккумулятор'}},
+            {'Тип товара': {'default_value': BATTERY_PRODUCT_TYPE}},
             {'Бренд': {_FIELD: 'manufacturer_name'}},
             {'Номенклатура': {_FIELD: 'title'}},
             {'Цена': {_FIELD: 'sale_price', 'format': '@'}},

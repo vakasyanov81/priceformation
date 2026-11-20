@@ -16,7 +16,8 @@
     uv run pf mim_load_api_data --json
     uv run pf fetch_mail_prices --json
     uv run pf get_supliers --json
-    uv run pf get_product_types --json
+    uv run pf get_product_types tire --json
+    uv run pf get_product_types akb --json
     uv run pf get_vendors --json
     uv run pf toggle_vendor poshk --json
     uv run pf load_supplier_prices={"1": "/full/path/any_price_name.xls"}
@@ -38,6 +39,7 @@ from app.run_argv import (
     JSON_ONLY_COMMANDS,
     MIM_LOAD_API_DATA,
     PARSE,
+    PAYLOAD_ARG,
     UPDATE_ALL_SUPPLIER_PRICES,
     ZAPASKA_LOAD_API_DATA,
     is_machine_argv,
@@ -94,9 +96,7 @@ def _run_machine(argv: list[str]) -> int:
             command,
             all_result=bool(args.all_result),
             result_template=result_template,
-            supplier_prices=getattr(args, 'prices', None),
-            config_path=getattr(args, 'config', None),
-            vendor_folder=getattr(args, 'folder', None),
+            payload_arg=getattr(args, PAYLOAD_ARG, None),
         )
     return _machine_human(command, result_template)
 

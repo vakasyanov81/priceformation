@@ -137,9 +137,18 @@ def test_parse_fetch_mail_prices() -> None:
 
 def test_parse_get_product_types() -> None:
     """команда get_product_types."""
-    args = parse_machine_args([GET_PRODUCT_TYPES])
+    args = parse_machine_args([GET_PRODUCT_TYPES, 'tire'])
+    assert args.payload_arg == 'tire'
     assert args.command == GET_PRODUCT_TYPES
     assert args.json is False
+
+
+@pytest.mark.parametrize('arguments', [[], ['unknown']])
+def test_product_types_requires_known_group(arguments: list[str]) -> None:
+    """Для справочника требуется известная товарная группа."""
+    with pytest.raises(SystemExit) as error:
+        parse_machine_args([GET_PRODUCT_TYPES, *arguments])
+    assert error.value.code == 2
 
 
 def test_parse_get_supliers() -> None:
@@ -160,7 +169,7 @@ def test_parse_toggle_vendor_folder() -> None:
     """toggle_vendor принимает папку поставщика."""
     args = parse_machine_args([TOGGLE_VENDOR, 'poshk', '--json'])
     assert args.command == TOGGLE_VENDOR
-    assert args.folder == 'poshk'
+    assert args.payload_arg == 'poshk'
     assert args.json is True
 
 
@@ -175,7 +184,7 @@ def test_parse_load_supplier_prices() -> None:
     raw = '{"1": "/incoming/any_price_name.xls"}'
     args = parse_machine_args([LOAD_SUPPLIER_PRICES, raw])
     assert args.command == LOAD_SUPPLIER_PRICES
-    assert args.prices == raw
+    assert args.payload_arg == raw
 
 
 def test_parse_load_supplier_prices_inline() -> None:
@@ -183,7 +192,7 @@ def test_parse_load_supplier_prices_inline() -> None:
     raw = '{"1": "/incoming/any_price_name.xlsx"}'
     args = parse_machine_args([f'{LOAD_SUPPLIER_PRICES}={raw}'])
     assert args.command == LOAD_SUPPLIER_PRICES
-    assert args.prices == raw
+    assert args.payload_arg == raw
 
 
 def test_parse_load_supplier_prices_requires_json() -> None:
@@ -198,7 +207,7 @@ def test_parse_load_config() -> None:
     raw = '/incoming/vendor_list.json'
     args = parse_machine_args([_CONFIG_CMD, raw])
     assert args.command == _CONFIG_CMD
-    assert args.config == raw
+    assert args.payload_arg == raw
 
 
 def test_parse_load_config_inline() -> None:
@@ -206,7 +215,7 @@ def test_parse_load_config_inline() -> None:
     raw = '/incoming/black_list'
     args = parse_machine_args([f'{_CONFIG_CMD}={raw}'])
     assert args.command == _CONFIG_CMD
-    assert args.config == raw
+    assert args.payload_arg == raw
 
 
 def test_parse_load_config_requires_path() -> None:
@@ -221,7 +230,7 @@ def test_parse_load_config_folder() -> None:
     raw = '/incoming/settings'
     args = parse_machine_args([_CONFIG_CMD, raw])
     assert args.command == _CONFIG_CMD
-    assert args.config == raw
+    assert args.payload_arg == raw
 
 
 def test_parse_clear_previous_result_flag() -> None:
@@ -256,7 +265,7 @@ def test_inline_keeps_extra_flags() -> None:
     """load_config=path разворачивается в команду, хвост argv не теряется."""
     args = parse_machine_args([f'{_CONFIG_CMD}=/incoming/black_list', '--json'])
     assert args.command == _CONFIG_CMD
-    assert args.config == '/incoming/black_list'
+    assert args.payload_arg == '/incoming/black_list'
     assert args.json is True
 
 
@@ -265,7 +274,7 @@ def test_inline_prices_keeps_extra_flags() -> None:
     raw = '{"1": "/incoming/any_price_name.xlsx"}'
     args = parse_machine_args([f'{LOAD_SUPPLIER_PRICES}={raw}', '--json'])
     assert args.command == LOAD_SUPPLIER_PRICES
-    assert args.prices == raw
+    assert args.payload_arg == raw
     assert args.json is True
 
 

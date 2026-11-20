@@ -21,9 +21,7 @@ def test_run_machine_json_dispatch() -> None:
             main()
 
         mock_fail.assert_called_once_with('parse', None, json_mode=True)
-        mock_json.assert_called_once_with(
-            'parse', all_result=False, result_template=None, supplier_prices=None, config_path=None, vendor_folder=None
-        )
+        mock_json.assert_called_once_with('parse', all_result=False, result_template=None, payload_arg=None)
         mock_exit.assert_called_with(0)
 
 
@@ -40,9 +38,7 @@ def test_run_machine_json_all_result_dispatch() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with(
-            'parse', all_result=True, result_template=None, supplier_prices=None, config_path=None, vendor_folder=None
-        )
+        mock_json.assert_called_once_with('parse', all_result=True, result_template=None, payload_arg=None)
 
 
 def test_run_machine_human_parse() -> None:
@@ -160,9 +156,7 @@ def test_run_machine_json_get_supliers() -> None:
             'get_supliers',
             all_result=False,
             result_template=None,
-            supplier_prices=None,
-            config_path=None,
-            vendor_folder=None,
+            payload_arg=None,
         )
 
 
@@ -183,9 +177,7 @@ def test_run_machine_json_toggle_vendor_passes_folder() -> None:
             'toggle_vendor',
             all_result=False,
             result_template=None,
-            supplier_prices=None,
-            config_path=None,
-            vendor_folder='poshk',
+            payload_arg='poshk',
         )
 
 
@@ -220,9 +212,7 @@ def test_run_machine_all_result_implies_json() -> None:
         with pytest.raises(SystemExit):
             main()
 
-        mock_json.assert_called_once_with(
-            'parse', all_result=True, result_template=None, supplier_prices=None, config_path=None, vendor_folder=None
-        )
+        mock_json.assert_called_once_with('parse', all_result=True, result_template=None, payload_arg=None)
 
 
 def test_run_machine_clears_result_folder() -> None:
@@ -240,9 +230,7 @@ def test_run_machine_clears_result_folder() -> None:
             main()
 
         mock_clear.assert_called_once()
-        mock_json.assert_called_once_with(
-            'parse', all_result=False, result_template=None, supplier_prices=None, config_path=None, vendor_folder=None
-        )
+        mock_json.assert_called_once_with('parse', all_result=False, result_template=None, payload_arg=None)
 
 
 def test_run_machine_skips_clear_without_flag() -> None:
@@ -279,9 +267,7 @@ def test_json_passes_result_template() -> None:
             'parse',
             all_result=False,
             result_template='for_drom',
-            supplier_prices=None,
-            config_path=None,
-            vendor_folder=None,
+            payload_arg=None,
         )
 
 
