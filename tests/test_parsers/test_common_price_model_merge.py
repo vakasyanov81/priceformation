@@ -8,6 +8,9 @@ from parsers.common_price.model import clear_model, model_tokens
 from parsers.common_price.model_keys import keys_with_merged_models
 from parsers.common_price.model_merge import ModelEntry, merge_models
 
+_ICE_ZERO_FR = 'ice zero fr'
+_ICE_ZERO_FR_3 = 'ice zero fr 3'
+
 
 def _entry(model: str) -> ModelEntry:
     return model.replace(' ', ''), frozenset(model.split())
@@ -49,6 +52,20 @@ def test_same_words_different_order_merge() -> None:
 def test_unrelated_models_stay_apart() -> None:
     merged = merge_models(_entries('gravity', 'winter drive'))
     assert merged == {'gravity': 'gravity', 'winterdrive': 'winterdrive'}
+
+
+@pytest.mark.parametrize('new_generation', [_ICE_ZERO_FR_3, 'icezero fr 3'])
+def test_generation_number_keeps_models_apart(new_generation: str) -> None:
+    """Номер поколения учитывается и при слитном написании части модели."""
+    merged = merge_models(_entries(_ICE_ZERO_FR, new_generation))
+    assert merged == {'icezerofr': 'icezerofr', 'icezerofr3': 'icezerofr3'}
+
+
+def test_generation_number_with_description_keeps_models_apart() -> None:
+    """Описание SUV уточняет модель только в пределах одного поколения."""
+    merged = merge_models(_entries(_ICE_ZERO_FR, _ICE_ZERO_FR_3, 'ice zero fr 3 suv'))
+    suv_key = 'icezerofr3suv'
+    assert merged == {'icezerofr': 'icezerofr', 'icezerofr3': suv_key, suv_key: suv_key}
 
 
 def test_models_without_words_are_skipped() -> None:

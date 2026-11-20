@@ -1,4 +1,4 @@
-"""Слияние моделей в ключе группировки: модель с лишними словами — та же, что и короткая.
+"""Слияние вариантов написания модели в ключе группировки.
 
 Поставщики пишут модель по-разному: ``Gravity`` / ``GRAVITY SUV``, ``G075`` / ``Ice Guard G075``,
 ``НК-241 GRANT`` / ``Grant (НК-241)``. Ключ ``clear_model`` склеивает слова в строку, и такие варианты
@@ -8,6 +8,7 @@
 (``G075`` входит и в ``Ice Guard G075``, и в ``iceGuard Studless G075``), неясно, какая из них нужна, —
 ничего не склеиваем. Слова, написанные раздельно (``ice guard``), входят в слитное слово другой модели
 (``iceGuard``), поэтому ``Ice Guard G075`` считается вложенной в ``iceGuard Studless G075``.
+Если длинная модель добавляет отдельное число, считаем его номером поколения и сохраняем разные ключи.
 """
 
 from collections.abc import Iterable
@@ -55,9 +56,8 @@ def _contains_any(outer: Tokens, candidates: list[Tokens]) -> bool:
 
 
 def _is_inside(tokens: Tokens, other: Tokens) -> bool:
-    """Все слова входят напрямую или непересекающимися парами в слитные слова другой модели."""
-    if tokens < other:
-        return True
-    joined_words = other - tokens
-    unmatched = tokens - other
-    return bool(joined_words) and can_join(unmatched, tuple(sorted(joined_words)))
+    """Все слова входят напрямую или парами, а среди добавленных слов нет отдельного числа."""
+    extra_words = other - tokens
+    if not extra_words or any(word.isdigit() for word in extra_words):
+        return False
+    return can_join(tokens - other, tuple(sorted(extra_words)))
