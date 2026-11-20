@@ -13,6 +13,7 @@ from parsers.base_parser.strategy_hooks import StrategyHooks
 from parsers.base_parser.title_filter import TitleFilter
 from parsers.base_parser.title_service import TitleService
 from parsers.strategies.homoglyphs import fix_row_homoglyphs
+from parsers.vendor_config.slot_configs import ModelSeasonRules
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,14 @@ class RowEnricher:
         categories: CategoryService,
         manufacturers: ManufacturerService,
         stats: ParserStats,
+        model_seasons: ModelSeasonRules = (),
     ) -> None:
         self._settings = settings
         self.titles = titles
         self.categories = categories
         self.manufacturers = manufacturers
         self._stats = stats
+        self._model_seasons = model_seasons
 
     def enrich(self, row_items: list[RowItem]) -> list[RowItem]:
         """Title, отсев по ошибкам/stop/black и служебные поля."""
@@ -95,7 +98,7 @@ class RowEnricher:
         self.categories.lookup.correction_category(row_item)
         row_item.set_field('supplier_name', self._settings.parser_params().supplier.name)
         row_item.set_field('spike', get_spike_title(row_item))
-        row_item.set_field('season', replace_season(row_item))
+        row_item.set_field('season', replace_season(row_item, self._model_seasons))
         return row_item
 
 
@@ -112,4 +115,5 @@ def make_row_enricher(
         CategoryService(hooks, CategoryLookup(stats)),
         ManufacturerService(settings, hooks),
         stats,
+        hooks.model_seasons if hooks else (),
     )

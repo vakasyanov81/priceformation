@@ -29,7 +29,12 @@
           }
         },
         "title": {
-          "params_from_title": true
+          "params_from_title": true,
+          "model_seasons": {
+            "\\btriangle (?:trd99\\b|(?:snowlink )?trin\\b.*\\bll01\\b|ll01\\b)": "Зимняя",
+            "\\b(?:greenstone st896|triangle (?:tr646|tr558|tr668a?))\\b": "Всесезонная",
+            "\\brockbuster\\s+h989\\b": "Всесезонная"
+          }
         },
         "pricing": {
           "rules": {

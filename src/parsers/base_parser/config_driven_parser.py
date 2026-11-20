@@ -67,6 +67,7 @@ def strategy_hooks_from_section(
         pipeline=behavior.pipeline,
         warehouse_filter=warehouse_filter_for(behavior, folder, config_provider),
         order_from_warehouse_name=behavior.order_from_warehouse_name,
+        model_seasons=section.title.model_seasons,
     )
 
 

@@ -1,9 +1,11 @@
 """Слоты конфигурации поставщика: категория, заголовок, наценка, поведение."""
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from parsers.data_provider.json_fields import as_config_object, read_flag, read_number, read_object
+from domain.exceptions import ConfigValidationError
+from parsers.data_provider.json_fields import RawConfig, as_config_object, read_flag, read_number, read_object
 from parsers.data_provider.models import MarkupRulesConfig
 from parsers.vendor_config.field_map import read_field_map
 from parsers.vendor_config.fields import read_int, read_int_list, read_str_list, read_str_map, read_text
@@ -66,6 +68,22 @@ class CategoryConfig:
         )
 
 
+type ModelSeasonRules = tuple[tuple[re.Pattern[str], str], ...]
+
+
+def _read_model_seasons(payload: RawConfig, where: str) -> ModelSeasonRules:
+    rules = read_str_map(payload, 'model_seasons', where).items()
+    compiled_rules = ((_compile_model_pattern(pattern, where), season) for pattern, season in rules)
+    return tuple(compiled_rules)
+
+
+def _compile_model_pattern(pattern: str, where: str) -> re.Pattern[str]:
+    try:
+        return re.compile(pattern)
+    except re.error as exc:
+        raise ConfigValidationError(f'{where} → model_seasons → {pattern}: {exc}') from exc
+
+
 @dataclass(frozen=True, slots=True)
 class TitleConfig:
     """Стратегия заголовка строки (слот `title`).
@@ -73,6 +91,7 @@ class TitleConfig:
     `markers` дополняет стратегию: подстрока исходного названия → поля позиции.
     Название содержит маркер — незаполненные поля получают заданные значения
     (Пошк: ``шип`` → ``season: зима``, ``spike: да``).
+    `model_seasons` задаёт упорядоченную карту «регулярное выражение в нормализованном названии → сезон».
     `params_from_title` включает извлечение параметров из названия в поля позиции
     (шины: размер, нагрузка, скорость, слойность, камерность, модель; диски: размер,
     крепёж, ET, DIA, толщина, цвет, тип); название не меняется.
@@ -96,6 +115,7 @@ class TitleConfig:
     compose: bool = False
     markers: dict[str, dict[str, str]] = field(default_factory=dict)
     camera_by_kind: dict[str, str] = field(default_factory=dict)
+    model_seasons: ModelSeasonRules = ()
 
     @classmethod
     def from_dict(cls, raw: Any, where: str) -> TitleConfig:
@@ -111,6 +131,7 @@ class TitleConfig:
             compose=read_flag(payload, 'compose', where),
             markers=read_field_map(payload, 'markers', where),
             camera_by_kind=read_str_map(payload, 'camera_by_kind', where),
+            model_seasons=_read_model_seasons(payload, where),
         )
 
 

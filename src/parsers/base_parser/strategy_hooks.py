@@ -12,7 +12,7 @@ from parsers.base_parser.warehouse_filter import CityWarehouseFilter
 from parsers.strategies.category_fields import CategoryFields
 from parsers.strategies.product_type import ProductTypeClassifier
 from parsers.strategies.protocols import CategoryStrategy, RestStrategy, TitleStrategy
-from parsers.vendor_config.slot_configs import DEFAULT_PIPELINE, BehaviorConfig
+from parsers.vendor_config.slot_configs import DEFAULT_PIPELINE, BehaviorConfig, ModelSeasonRules
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +34,7 @@ class StrategyHooks:
     pipeline: tuple[str, ...] = DEFAULT_PIPELINE
     warehouse_filter: CityWarehouseFilter | None = None
     order_from_warehouse_name: bool = False
+    model_seasons: ModelSeasonRules = ()
 
 
 def warehouse_filter_for(
