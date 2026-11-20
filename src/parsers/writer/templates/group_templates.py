@@ -9,6 +9,7 @@ from parsers.writer.templates.iwrite_template import IWriteTemplate
 from parsers.writer.templates.tmpl.for_batteries import ForBatteries
 from parsers.writer.templates.tmpl.for_doubles import ForDoubles
 from parsers.writer.templates.tmpl.for_drom import ForDrom
+from parsers.writer.templates.tmpl.for_full import ForFull
 from parsers.writer.templates.tmpl.for_inner import ForInner
 
 _FIELD = 'field'
@@ -17,11 +18,11 @@ _FIELD = 'field'
 def group_template_output(template: type[IWriteTemplate]) -> TemplateOutput:
     """Штатные прайсы включают обе модели с независимыми колонками."""
     output = template().output_spec()
-    if template not in {ForInner, ForDrom, ForDoubles}:
+    if template not in {ForInner, ForDrom, ForFull, ForDoubles}:
         return output
     tires = output.groups[0]
     batteries = ForBatteries().output_spec().groups[0]
-    if template in {ForInner, ForDoubles}:
+    if template is not ForDrom:
         return replace(
             output,
             mode=OutputMode.WORKBOOK_SHEETS,

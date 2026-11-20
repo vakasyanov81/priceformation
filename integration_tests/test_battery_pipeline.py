@@ -61,7 +61,7 @@ class TestGroupOutputs:
         assert parsed.total_statistics().item_count == _BATTERY_COUNT + len(tires.positions)
         assert not list((supplier_root / _RESULT_DIR).iterdir())
 
-    @pytest.mark.parametrize('template', [None, 'for_product_groups'])
+    @pytest.mark.parametrize('template', [None, 'for_product_groups', 'for_full'])
     def test_two_groups_write_xlsx(self, supplier_root: Path, template: str | None) -> None:
         parsed = ServiceProvider.resolve(ParseOrchestrator).parse_all()
         files = ServiceProvider.resolve(PriceReportService).write_result(parsed, template=template)
@@ -74,7 +74,7 @@ class TestGroupOutputs:
         assert all(expected_columns <= row.keys() for row in prices)
         assert isinstance(parsed.groups[ProductGroup.BATTERIES], BatteryResult)
 
-    @pytest.mark.parametrize('template', [None, 'for_product_groups'])
+    @pytest.mark.parametrize('template', [None, 'for_product_groups', 'for_full'])
     def test_json_cli_keeps_group_schemas(
         self, supplier_root: Path, template: str | None, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -87,7 +87,7 @@ class TestGroupOutputs:
         assert row['sale_price'] == row['price_recommended']
         _check_jsonl_metadata(supplier_root / _RESULT_DIR)
 
-    @pytest.mark.parametrize('template', ['for_batteries', 'for_product_groups'])
+    @pytest.mark.parametrize('template', ['for_batteries', 'for_product_groups', 'for_full'])
     def test_battery_only_cli(self, supplier_root: Path, capsys: pytest.CaptureFixture[str], template: str) -> None:
         path = supplier_root / 'parse_config/vendors/plant.json'
         raw = json.loads(path.read_text())
