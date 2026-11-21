@@ -50,8 +50,7 @@ _JSON_OK = 'ok'
 _JSON_ACTION = 'action'
 _JSON_FILES = 'files'
 _Errors = dict[str, str]
-_Update = Callable[[], bool | None]
-_UPDATE_ALL_SOURCES = ('zapaska', 'four_tochki', 'mim', 'mail')
+_Update = Callable[[], bool]
 _DOWNLOAD_COMMANDS = frozenset(
     (
         ZAPASKA_LOAD_API_DATA,
@@ -244,29 +243,32 @@ def upload_four_tochki_data() -> bool:
 def _json_update_all() -> Mapping[str, Any]:
     """Все источники подряд: ошибка одного не отменяет остальные; ответ — итог по каждому источнику."""
     errors: _Errors = {}
+    sources: dict[str, str] = {}
     with ServiceProvider.resolve(PriceSchemaService).guard():
         for source, update in (
             ('zapaska', _upload_zapaska),
             ('four_tochki', upload_four_tochki_data),
             ('mim', _upload_mim),
         ):
-            _collect_error(errors, source, update)
+            sources[source] = _api_update_status(errors, source, update)
         files = _collect_mail(errors)
+        sources['mail'] = 'error' if 'mail' in errors else 'ok'
     return {
         _JSON_OK: not errors,
         _JSON_ACTION: UPDATE_ALL_SUPPLIER_PRICES,
-        'sources': {name: 'error' if name in errors else 'ok' for name in _UPDATE_ALL_SOURCES},
+        'sources': sources,
         'errors': errors,
         _JSON_FILES: files,
     }
 
 
-def _collect_error(errors: _Errors, source: str, update: _Update) -> None:
+def _api_update_status(errors: _Errors, source: str, update: _Update) -> str:
     """Выполнить выгрузку источника; ошибка домена записывается в errors по имени источника."""
     try:
-        update()
+        return 'ok' if update() else 'skipped'
     except CoreExceptionError as exc:
         errors[source] = str(exc)
+        return 'error'
 
 
 def _collect_mail(errors: _Errors) -> list[str]:
@@ -283,21 +285,21 @@ def _fetch_mail_paths() -> list[str]:
     return [entry.path for entry in ServiceProvider.resolve(MailService).fetch_prices()]
 
 
-def _upload_zapaska() -> None:
+def _upload_zapaska() -> bool:
     """Выгрузить данные запаски по API."""
-    ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
+    return ServiceProvider.resolve(zapaska_service.ZapaskaService).upload_data()
 
 
-def _upload_mim() -> None:
+def _upload_mim() -> bool:
     """Выгрузить данные МИМ по API."""
-    ServiceProvider.resolve(MimService).upload_data()
+    return ServiceProvider.resolve(MimService).upload_data()
 
 
 def _json_load_prices(raw: str | None) -> dict[str, object]:
     mapping = parse_prices_json(raw or '')
     catalog = all_vendor_supplier_catalog(get_config_provider())
     return {
-        'ok': True,
+        _JSON_OK: True,
         'action': LOAD_SUPPLIER_PRICES,
         _JSON_FILES: load_supplier_prices(mapping, get_config_provider()),
         'suppliers': {key: catalog_entry_for(key, catalog)['sup_title'] for key in mapping},
