@@ -27,6 +27,7 @@ GET_VENDORS = 'get_vendors'
 TOGGLE_VENDOR = 'toggle_vendor'
 LOAD_SUPPLIER_PRICES = 'load_supplier_prices'
 LOAD_CONFIG = 'load_config'
+CLEAR_RESULT = 'clear_result'
 MACHINE_COMMANDS = (
     PARSE,
     DOUBLES,
@@ -41,9 +42,10 @@ MACHINE_COMMANDS = (
     TOGGLE_VENDOR,
     LOAD_SUPPLIER_PRICES,
     LOAD_CONFIG,
+    CLEAR_RESULT,
 )
 JSON_ONLY_COMMANDS = frozenset(
-    (GET_SUPLIERS, GET_PRODUCT_TYPES, GET_VENDORS, TOGGLE_VENDOR, LOAD_SUPPLIER_PRICES, LOAD_CONFIG),
+    (GET_SUPLIERS, GET_PRODUCT_TYPES, GET_VENDORS, TOGGLE_VENDOR, LOAD_SUPPLIER_PRICES, LOAD_CONFIG, CLEAR_RESULT),
 )
 _LOAD_INLINE_PREFIX = f'{LOAD_SUPPLIER_PRICES}='
 _CONFIG_INLINE_PREFIX = f'{LOAD_CONFIG}='
@@ -53,6 +55,7 @@ _VENDOR_FOLDER_HELP = 'Папка поставщика из get_vendors (имя 
 
 # Подкоманды без собственных аргументов: только общие флаги (--json и др.).
 _PLAIN_COMMANDS = (
+    (CLEAR_RESULT, 'Очистить папку результатов разбора.'),
     (DOUBLES, 'Разобрать прайсы и записать отчёт о дублях.'),
     (ZAPASKA_LOAD_API_DATA, 'Выгрузить прайсы запаски по API.'),
     (FOUR_TOCHKI_LOAD_API_DATA, 'Выгрузить данные Форточек по API.'),
