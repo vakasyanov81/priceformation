@@ -81,3 +81,14 @@ def test_mail_failure_is_reported_without_files(capsys: _Capsys) -> None:
     assert payload['errors'] == {'mail': 'нет доступа к ящику'}
     assert payload['files'] == []
     services[ZapaskaService].upload_data.assert_called_once_with()
+
+
+def test_disabled_api_source_is_skipped(capsys: _Capsys) -> None:
+    """Отключённый поставщик получает статус skipped в отчёте по источникам."""
+    services = _services()
+    services[ZapaskaService].upload_data.return_value = False
+    payload = _run(services, capsys)
+    assert payload['ok'] is True
+    assert payload['sources'] == {'zapaska': 'skipped', 'four_tochki': 'ok', 'mim': 'ok', 'mail': 'ok'}
+    assert payload['errors'] == {}
+    assert payload['files'] == [_MAIL_FILE]
