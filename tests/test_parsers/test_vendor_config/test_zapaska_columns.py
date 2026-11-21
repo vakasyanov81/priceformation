@@ -9,7 +9,7 @@ from parsers.raw_table import RawRow
 from parsers.vendor_config.provider import load_vendor_configs
 
 
-@pytest.mark.parametrize('section_id', ['2', '22'])
+@pytest.mark.parametrize('section_id', ['2', '2-2'])
 def test_zapaska_json_preserves_offer_and_dimensions(
     example_vendors_provider: FakeConfigProvider,
     section_id: str,

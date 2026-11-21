@@ -13,7 +13,7 @@ def test_supplier_info_maps_code_to_name() -> None:
     clear_vendor_configs_cache()
     supplier_info = all_vendor_supplier_info(get_config_provider())
     assert supplier_info['2'] == 'Запаска (диски)'
-    assert supplier_info['22'] == 'Запаска (шины)'
+    assert supplier_info['2-2'] == 'Запаска (шины)'
 
 
 def test_catalog_maps_code_to_folder() -> None:
@@ -23,7 +23,7 @@ def test_catalog_maps_code_to_folder() -> None:
     assert catalog['1'] == {'sup_code': 'poshk', 'sup_title': 'Пошк'}
     assert catalog['4'] == {'sup_code': 'mim', 'sup_title': 'Мим'}
     assert catalog['2'] == {'sup_code': 'zapaska', 'sup_title': 'Запаска (диски)'}
-    assert catalog['22'] == {'sup_code': 'zapaska', 'sup_title': 'Запаска (шины)'}
+    assert catalog['2-2'] == {'sup_code': 'zapaska', 'sup_title': 'Запаска (шины)'}
 
 
 def test_split_separates_disabled() -> None:
@@ -36,7 +36,7 @@ def test_split_separates_disabled() -> None:
     assert '5' in enabled  # four_tochki
     assert '4' in enabled  # mim
     assert '2' in enabled  # zapaska disk
-    assert '22' in enabled  # zapaska tire
+    assert '2-2' in enabled  # zapaska tire
     # disabled: те, у кого enabled: 0 (stk, pioner)
     assert '7' in disabled  # stk
     assert '3' in disabled  # pioner
