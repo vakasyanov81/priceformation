@@ -1,9 +1,12 @@
 """Диспетчер неинтерактивных команд app.run.main."""
 
 import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 
 
 def test_run_machine_json_dispatch() -> None:
@@ -213,6 +216,37 @@ def test_run_machine_all_result_implies_json() -> None:
             main()
 
         mock_json.assert_called_once_with('parse', all_result=True, result_template=None, payload_arg=None)
+
+
+def test_clear_result_command_removes_only_results(
+    fake_config_provider: FakeConfigProvider, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Самостоятельная команда очищает результаты и отдаёт JSON без флага."""
+    from app.run import main
+
+    output_folder = Path(fake_config_provider.result_folder())
+    nested = output_folder / 'nested'
+    nested.mkdir()
+    (nested / 'report.jsonl').touch()
+    (output_folder / 'result_meta.json').touch()
+    price = Path(fake_config_provider.price_folder('mim')) / 'price.xlsx'
+    price.parent.mkdir()
+    price.touch()
+
+    with (
+        patch('app.run.sys.argv', ['pf', 'clear_result']),
+        patch('app.run.init_cfg'),
+        pytest.raises(SystemExit) as stopped,
+    ):
+        main()
+
+    assert stopped.value.code == 0
+    assert output_folder.is_dir()
+    assert not list(output_folder.iterdir())
+    assert price.is_file()
+    payload = json.loads(capsys.readouterr().out)
+    assert payload['ok'] is True
+    assert payload['action'] == 'clear_result'
 
 
 def test_run_machine_clears_result_folder() -> None:

@@ -5,10 +5,11 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from app.parse_report import emit_json, error_payload
+from app import parse_report
 from app.parse_report_build import report_from_result
 from app.parse_report_types import JsonReport
 from app.run_argv import (
+    CLEAR_RESULT,
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
@@ -27,6 +28,7 @@ from app.run_argv import (
 from cfg.services import ensure_services_configured
 from domain.config_context import get_config_provider
 from domain.exceptions import ConfigValidationError, CoreExceptionError
+from infrastructure.config.result_folder import clear_result_folder
 from infrastructure.logging.exception_logging import log_exception_once
 from infrastructure.logging.json_mode import quiet_console
 from parsers.all_vendors import all_vendor_supplier_catalog
@@ -63,6 +65,7 @@ _DOWNLOAD_COMMANDS = frozenset(
 )
 _COMPACT_ERROR_COMMANDS = frozenset(
     (
+        CLEAR_RESULT,
         LOAD_SUPPLIER_PRICES,
         LOAD_CONFIG,
         ZAPASKA_LOAD_API_DATA,
@@ -90,8 +93,8 @@ def fail_unknown_result_template(
         get_writer_template(name)
     except UnknownWriterTemplateError as exc:
         if json_mode:
-            emit_json(
-                error_payload(command, type(exc).__name__, str(exc)),
+            parse_report.emit_json(
+                parse_report.error_payload(command, type(exc).__name__, str(exc)),
                 started=started,
             )
         else:
@@ -122,10 +125,12 @@ def _emit_command(
     started = time.monotonic()
     selection = ParseSelection()
     try:
-        emit_json(_command_payload(command, all_result, result_template, payload_arg, selection), started=started)
+        parse_report.emit_json(
+            _command_payload(command, all_result, result_template, payload_arg, selection), started=started
+        )
     except KeyboardInterrupt:
-        emit_json(
-            error_payload(
+        parse_report.emit_json(
+            parse_report.error_payload(
                 command,
                 'KeyboardInterrupt',
                 _INTERRUPT,
@@ -137,8 +142,8 @@ def _emit_command(
         return 1
     except Exception as exc:
         log_exception_once(logger, f'Команда {command} завершилась ошибкой // {exc}', exc)
-        emit_json(
-            error_payload(
+        parse_report.emit_json(
+            parse_report.error_payload(
                 command,
                 type(exc).__name__,
                 str(exc),
@@ -161,17 +166,25 @@ def _command_payload(
     reference = _reference_payload(command, payload_arg)
     if reference is not None:
         return reference
-    if command == LOAD_SUPPLIER_PRICES:
-        return _json_load_prices(payload_arg)
-    if command == LOAD_CONFIG:
-        return {
-            _JSON_OK: True,
-            _JSON_ACTION: LOAD_CONFIG,
-            _JSON_FILES: load_config(payload_arg or '', get_config_provider()),
-        }
+    if command in {CLEAR_RESULT, LOAD_CONFIG, LOAD_SUPPLIER_PRICES}:
+        return _file_command_payload(command, payload_arg)
     if command in _DOWNLOAD_COMMANDS:
         return _json_download(command)
     return {PARSE: _json_parse, DOUBLES: _json_doubles}[command](all_result, result_template, selection)
+
+
+def _file_command_payload(command: str, payload_arg: str | None) -> Mapping[str, Any]:
+    """Команды загрузки локальных файлов и очистки результатов."""
+    if command == CLEAR_RESULT:
+        clear_result_folder()
+        return {_JSON_OK: True, _JSON_ACTION: CLEAR_RESULT}
+    if command == LOAD_SUPPLIER_PRICES:
+        return _json_load_prices(payload_arg)
+    return {
+        _JSON_OK: True,
+        _JSON_ACTION: LOAD_CONFIG,
+        _JSON_FILES: load_config(payload_arg or '', get_config_provider()),
+    }
 
 
 def _reference_payload(command: str, payload_arg: str | None) -> Mapping[str, Any] | None:

@@ -11,6 +11,7 @@
     uv run pf parse --json --all-result
     uv run pf parse --json --result-template for_drom
     uv run pf doubles --json
+    uv run pf clear_result
     uv run pf zapaska_load_api_data --json
     uv run pf four_tochki_load_api_data --json
     uv run pf mim_load_api_data --json
@@ -33,6 +34,7 @@ import sys
 from collections.abc import Callable
 
 from app.run_argv import (
+    CLEAR_RESULT,
     DOUBLES,
     FETCH_MAIL_PRICES,
     FOUR_TOCHKI_LOAD_API_DATA,
@@ -89,7 +91,7 @@ def _run_machine(argv: list[str]) -> int:
     rejected = fail_unknown_result_template(command, result_template, json_mode=json_mode)
     if rejected is not None:
         return rejected
-    if args.clear_previous_result:
+    if args.clear_previous_result and command != CLEAR_RESULT:
         clear_result_folder()
     if json_mode:
         return machine_json(
