@@ -35,6 +35,7 @@ from infrastructure.logging.log_setup import setup_logging
 from parsers.writer.jsonl_writer import jsonl_output_files
 from services.doubles_service import DoublesService
 from services.four_tochki_service import FourTochkiService
+from services.mail_results import MailFetchReport
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
@@ -527,14 +528,15 @@ def test_cli_get_battery_product_types(capsys: pytest.CaptureFixture[str]) -> No
 
 
 def test_json_update_all_reports_each_source(capsys: pytest.CaptureFixture[str]) -> None:
-    """Сводное обновление возвращает стабильные имена всех четырёх источников."""
+    """Сводное обновление возвращает стабильные имена поставщиков с API."""
     schema = MagicMock()
+    mail = MagicMock()
+    mail.fetch_report.return_value = MailFetchReport([], {})
     with (
-        patch(_RESOLVE, side_effect={PriceSchemaService: schema}.__getitem__),
+        patch(_RESOLVE, side_effect={PriceSchemaService: schema, MailService: mail}.__getitem__),
         patch('app.run_machine._upload_zapaska'),
         patch('app.run_machine.upload_four_tochki_data'),
         patch('app.run_machine._upload_mim'),
-        patch('app.run_machine._fetch_mail_paths', return_value=[]),
     ):
         code = machine_json(UPDATE_ALL_SUPPLIER_PRICES)
     payload = json.loads(capsys.readouterr().out)
@@ -543,7 +545,11 @@ def test_json_update_all_reports_each_source(capsys: pytest.CaptureFixture[str])
     assert payload == {
         'ok': True,
         'action': UPDATE_ALL_SUPPLIER_PRICES,
-        'sources': {'zapaska': 'ok', 'four_tochki': 'ok', 'mim': 'ok', 'mail': 'ok'},
+        'sources': {
+            'zapaska': {'status': 'ok', 'source': 'api'},
+            'four_tochki': {'status': 'ok', 'source': 'api'},
+            'mim': {'status': 'ok', 'source': 'api'},
+        },
         'errors': {},
         'files': [],
     }
@@ -552,19 +558,24 @@ def test_json_update_all_reports_each_source(capsys: pytest.CaptureFixture[str])
 def test_json_update_all_errors_use_canonical_source_names(capsys: pytest.CaptureFixture[str]) -> None:
     """Ошибки API привязаны к именам источников из публичной схемы ответа."""
     schema = MagicMock()
+    mail = MagicMock()
+    mail.fetch_report.return_value = MailFetchReport([], {})
     with (
-        patch(_RESOLVE, side_effect={PriceSchemaService: schema}.__getitem__),
+        patch(_RESOLVE, side_effect={PriceSchemaService: schema, MailService: mail}.__getitem__),
         patch('app.run_machine._upload_zapaska'),
         patch('app.run_machine.upload_four_tochki_data', side_effect=CoreExceptionError('four failed')),
         patch('app.run_machine._upload_mim', side_effect=CoreExceptionError('mim failed')),
-        patch('app.run_machine._fetch_mail_paths', return_value=[]),
     ):
         code = machine_json(UPDATE_ALL_SUPPLIER_PRICES)
     payload = json.loads(capsys.readouterr().out)
     assert code == 0
     _assert_elapsed(payload)
     assert payload['ok'] is False
-    assert payload['sources'] == {'zapaska': 'ok', 'four_tochki': 'error', 'mim': 'error', 'mail': 'ok'}
+    assert payload['sources'] == {
+        'zapaska': {'status': 'ok', 'source': 'api'},
+        'four_tochki': {'status': 'error', 'source': 'api'},
+        'mim': {'status': 'error', 'source': 'api'},
+    }
     assert payload['errors'] == {'four_tochki': 'four failed', 'mim': 'mim failed'}
 
 

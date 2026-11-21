@@ -15,20 +15,10 @@ from infrastructure.mail.imap import connect, list_price_folders, save_price
 from parsers.mail.client import FoundPrice, find_latest_price
 from parsers.mail.models import MailConfig
 from parsers.mail.provider import load_mail_config
+from services.mail_results import MailFetchReport, MailFetchResult
 from services.vendor_activity import skip_mail_fetch
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, slots=True)
-class MailFetchResult:
-    """Результат выгрузки прайса одного поставщика."""
-
-    folder: str
-    subject: str
-    date: str
-    filename: str
-    path: str
 
 
 @dataclass(slots=True)
@@ -54,6 +44,10 @@ class MailService:
 
     def fetch_prices(self) -> list[MailFetchResult]:
         """Скачать по одному свежему прайсу на каждый активный профиль."""
+        return self.fetch_report().fetched
+
+    def fetch_report(self) -> MailFetchReport:
+        """Скачать прайсы и вернуть статусы всех настроенных профилей."""
         provider = self._config_provider or get_config_provider()
         config = load_mail_config(provider)
         account = config.account
@@ -64,7 +58,7 @@ class MailService:
 
 def _collect(
     client: ImapClient, config: MailConfig, folders: list[str], config_provider: ConfigProvider
-) -> list[MailFetchResult]:
+) -> MailFetchReport:
     """Обойти активные профили: найти письмо, записать вложение, собрать итог."""
     fetched: list[MailFetchResult] = []
     for folder, profile in config.enabled_profiles().items():
@@ -77,7 +71,7 @@ def _collect(
         saved = _save_found(folder, found)
         if saved is not None:
             fetched.append(saved)
-    return fetched
+    return MailFetchReport.from_profiles(config.profiles, fetched)
 
 
 def _save_found(folder: str, found: FoundPrice) -> MailFetchResult | None:
