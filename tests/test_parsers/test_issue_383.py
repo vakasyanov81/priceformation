@@ -105,7 +105,7 @@ def test_zapaska_season_by_declared_type(
     season: str,
 ) -> None:
     config = load_vendor_configs(example_vendors_provider)['zapaska']
-    section = next(section for section in config.sections if section.id == '22')
+    section = next(section for section in config.sections if section.id == '2-2')
     hooks = strategy_hooks_from_section(section, section.behavior, example_vendors_provider)
     categories = CategoryService(hooks, CategoryLookup(ParserStats()))
     row = RowItem({'type_production': category, 'season': 'Летняя'})

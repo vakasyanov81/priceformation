@@ -6,6 +6,7 @@
       "sections": [
         {
           "name": "Мим",
+          "catalog_name": "Мим (шины)",
           "sheet_info": "Вкладка #1",
           "sheet_indexes": [
             0
@@ -76,6 +77,7 @@
         },
         {
           "name": "Мим",
+          "catalog_name": "Мим (грузовые шины)",
           "sheet_info": "Вкладка #2",
           "sheet_indexes": [
             1
@@ -114,10 +116,11 @@
               "high": 0.05
             }
           },
-          "id": "42"
+          "id": "4-2"
         },
         {
           "name": "Мим",
+          "catalog_name": "Мим (грузовые диски)",
           "sheet_info": "Вкладка #3",
           "sheet_indexes": [
             2
@@ -180,7 +183,7 @@
               }
             }
           },
-          "id": "43"
+          "id": "4-3"
         }
       ],
       "title": {

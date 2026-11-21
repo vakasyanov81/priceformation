@@ -1,5 +1,5 @@
 {
-  "code": "plant",
+  "code": "8",
   "name": "План-Т",
   "reader": "xls",
   "product_groups": [
@@ -61,6 +61,7 @@
       "sections": [
         {
           "id": "plant_batteries",
+          "catalog_name": "План-Т (Акб)",
           "sheet_indexes": [
             0
           ]

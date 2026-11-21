@@ -60,7 +60,7 @@ class TestFullParsePipeline:
         from parsers.json_reader import JsonPriceReader
         from parsers.registry import vendor_entry_for
 
-        _entry, parse_config = vendor_entry_for('22', get_config_provider())  # zapaska tires
+        _entry, parse_config = vendor_entry_for('2-2', get_config_provider())  # zapaska tires
         section = parse_config.vendor_section
         vendor_cfg = parse_config.vendor_config
         from parsers.vendor_config.section_models import VendorSection

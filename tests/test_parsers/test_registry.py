@@ -66,7 +66,7 @@ def test_vendor_entry_for_finds_by_id() -> None:
 def test_vendor_entry_for_finds_tire_section() -> None:
     """Запаска (шины) с id=22."""
     clear_registry()
-    _, config = vendor_entry_for('22', get_config_provider())
+    _, config = vendor_entry_for('2-2', get_config_provider())
     assert config.vendor_section.name == 'Запаска (шины)'
 
 
@@ -149,7 +149,7 @@ def test_legacy_config_without_vendor_is_enabled_and_has_no_markup_policy() -> N
 def test_standalone_section_has_no_routing() -> None:
     """Отдельная секция без групп поставщика использует прямое чтение прайса."""
     provider = get_config_provider()
-    _, registered = vendor_entry_for('22', provider)
+    _, registered = vendor_entry_for('2-2', provider)
     assert registered.vendor_section is not None
     assert registered.vendor_config is not None
     standalone = replace(registered.vendor_config, product_groups=())
@@ -198,8 +198,8 @@ def test_stk_markup_is_six_percent_on_opt() -> None:
 def test_supplier_info_in_config() -> None:
     """ParseConfiguration несёт верные данные поставщика."""
     clear_registry()
-    _, config = vendor_entry_for('22', get_config_provider())
-    assert config.supplier.code == '22'
+    _, config = vendor_entry_for('2-2', get_config_provider())
+    assert config.supplier.code == '2-2'
     assert config.supplier.name == 'Запаска (шины)'
     assert config.supplier.folder_name == 'zapaska'
 
@@ -227,4 +227,4 @@ def test_all_vendors_returns_all_enabled() -> None:
     # autosnab (1 секция) + poshk (1) + four_tochki (2) + mim (3) + zapaska (2) = 9
     assert len(entries) == 9
     ids = {config.vendor_section.id for _, config in entries if config.vendor_section}
-    assert ids == {'6', '1', '5', '55', '4', '42', '43', '2', '22'}
+    assert ids == {'6', '1', '5', '5-2', '4', '4-2', '4-3', '2', '2-2'}

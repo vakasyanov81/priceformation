@@ -54,7 +54,7 @@ def test_dump_json_roundtrip() -> None:
         stats=empty_stats(0),
         warnings=[],
         files=[_RESULT_A],
-        suppliers={'22': 'Запаска'},
+        suppliers={'2': ['Запаска (диски)', 'Запаска (шины)']},
     )
     text = dump_json(payload)
     assert '"ok": true' in text
@@ -102,7 +102,7 @@ def test_ok_payload_exact() -> None:
         stats=empty_stats(0),
         warnings=['w'],
         files=[_RESULT_A],
-        suppliers={'22': 'Запаска'},
+        suppliers={'2': ['Запаска (диски)', 'Запаска (шины)']},
     )
     assert payload == {
         'ok': True,
@@ -112,7 +112,7 @@ def test_ok_payload_exact() -> None:
         'stats': empty_stats(0),
         'warnings': ['w'],
         'files': [_RESULT_A],
-        'suppliers': {'22': 'Запаска'},
+        'suppliers': {'2': ['Запаска (диски)', 'Запаска (шины)']},
         'disabled_suppliers': {},
         'error': None,
     }

@@ -15,9 +15,9 @@ from services.parse_orchestrator import ParseOrchestrator
 from services.service_provider import ServiceProvider
 
 _ROW_LOGGER = 'parsers.base_parser.row_enricher'
-_MIM_IDS = ('4', '42', '43')
-_FOUR_TOCHKI_IDS = ('5', '55')
-_OTHER_IDS = ('1', '2', '22', '3', '6', '7')
+_MIM_IDS = ('4', '4-2', '4-3')
+_FOUR_TOCHKI_IDS = ('5', '5-2')
+_OTHER_IDS = ('1', '2', '2-2', '3', '6', '7')
 _SECTION_IDS = frozenset((*_OTHER_IDS, *_MIM_IDS, *_FOUR_TOCHKI_IDS, 'plant_batteries'))
 
 
@@ -47,8 +47,8 @@ class TestFourTochkiConfigDriven:
         from parsers.all_vendors import all_vendor_supplier_info
 
         supplier_info = all_vendor_supplier_info(get_config_provider())
-        # Коды: 1-пошк, 2-запаска(диски), 22-запаска(шины), 3-пионер,
-        # 4/42/43-мим, 5/55-форточки, 6-автоснабжение, 7-STK
+        # Коды: 1-пошк, 2-запаска(диски), 2-2-запаска(шины), 3-пионер,
+        # 4/4-2/4-3-мим, 5/5-2-форточки, 6-автоснабжение, 7-STK
         assert set(supplier_info) == _SECTION_IDS
 
     def test_parse_all_warns_about_disabled_vendors(
@@ -86,8 +86,8 @@ class TestSupplierCatalog:
 
         catalog = all_vendor_supplier_catalog(get_config_provider())
         assert set(catalog) == _SECTION_IDS
-        assert catalog['55']['sup_code'] == 'four_tochki'
-        assert catalog['42']['sup_code'] == catalog['43']['sup_code'] == 'mim'
+        assert catalog['5-2']['sup_code'] == 'four_tochki'
+        assert catalog['4-2']['sup_code'] == catalog['4-3']['sup_code'] == 'mim'
 
     def test_zapaska_has_two_ids(
         self,
@@ -98,4 +98,4 @@ class TestSupplierCatalog:
 
         supplier_info = all_vendor_supplier_info(get_config_provider())
         assert supplier_info.get('2') == 'Запаска (диски)'
-        assert supplier_info.get('22') == 'Запаска (шины)'
+        assert supplier_info.get('2-2') == 'Запаска (шины)'

@@ -2,6 +2,8 @@
 
 from typing import Any, TypedDict
 
+from parsers.all_vendors import SupplierDescriptions
+
 
 class JsonError(TypedDict):
     """Ошибка запуска."""
@@ -27,6 +29,6 @@ class JsonReport(TypedDict):
     stats: dict[str, Any]
     warnings: list[str]
     files: list[str]
-    suppliers: dict[str, str]
-    disabled_suppliers: dict[str, str]
+    suppliers: SupplierDescriptions
+    disabled_suppliers: SupplierDescriptions
     error: JsonError | None
