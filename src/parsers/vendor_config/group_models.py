@@ -41,6 +41,7 @@ class BatterySection:
     config_path: str = field(default='', compare=False, repr=False)
     columns: Mapping[int | str, str] = field(default_factory=lambda: MappingProxyType({}))
     processing: BatterySettings = field(default_factory=BatterySettings)
+    catalog_name: str = ''
 
     @property
     def product_group(self) -> Literal[ProductGroup.BATTERIES]:

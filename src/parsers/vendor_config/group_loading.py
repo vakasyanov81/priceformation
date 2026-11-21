@@ -65,4 +65,5 @@ def _read_battery_section(section: RawConfig, where: str, inherited: RawConfig, 
         config_path=where,
         columns=read_columns(payload, where, reads_json=vendor.reader == 'json', group=ProductGroup.BATTERIES),
         processing=BatterySettings.from_dict(payload, where),
+        catalog_name=read_text(payload, 'catalog_name', where, ''),
     )

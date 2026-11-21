@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from typing import Any, TextIO
 
 from app.parse_report_types import JsonError, JsonGroup, JsonReport
+from parsers.all_vendors import SupplierDescriptions
 
 REPORT_VERSION = 2
 _OK_KEY = 'ok'
@@ -51,7 +52,7 @@ def ok_payload(
     stats: dict[str, Any],
     warnings: list[str],
     files: list[str],
-    suppliers: dict[str, str],
+    suppliers: SupplierDescriptions,
 ) -> JsonReport:
     """Собрать успешный ответ."""
     return {

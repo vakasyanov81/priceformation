@@ -40,6 +40,7 @@ class VendorSection:
     row_selector: RowSelector | None = None
     section_selector: SectionSelector | None = None
     config_path: str = field(default='', compare=False, repr=False)
+    catalog_name: str = ''
 
     @property
     def product_group(self) -> Literal[ProductGroup.TIRE_AND_DISK]:
@@ -75,4 +76,5 @@ class VendorSection:
             row_selector=RowSelector.from_section(section, where),
             section_selector=SectionSelector.from_payload(payload, where),
             config_path=where,
+            catalog_name=read_text(payload, 'catalog_name', where, ''),
         )

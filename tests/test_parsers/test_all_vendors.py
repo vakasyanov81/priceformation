@@ -21,7 +21,7 @@ def test_catalog_maps_code_to_folder() -> None:
     clear_vendor_configs_cache()
     catalog = all_vendor_supplier_catalog(get_config_provider())
     assert catalog['1'] == {'sup_code': 'poshk', 'sup_title': 'Пошк'}
-    assert catalog['4'] == {'sup_code': 'mim', 'sup_title': 'Мим'}
+    assert catalog['4'] == {'sup_code': 'mim', 'sup_title': 'Мим (шины)'}
     assert catalog['2'] == {'sup_code': 'zapaska', 'sup_title': 'Запаска (диски)'}
     assert catalog['2-2'] == {'sup_code': 'zapaska', 'sup_title': 'Запаска (шины)'}
 
@@ -30,16 +30,8 @@ def test_split_separates_disabled() -> None:
     """enabled и disabled — разные словари код → имя."""
     clear_vendor_configs_cache()
     enabled, disabled = split_vendor_supplier_info(get_config_provider())
-    # enabled: те, у кого enabled: 1 (poshk, autosnab, mim, four_tochki, zapaska)
-    assert '1' in enabled  # poshk
-    assert '6' in enabled  # autosnab54_ru
-    assert '5' in enabled  # four_tochki
-    assert '4' in enabled  # mim
-    assert '2' in enabled  # zapaska disk
-    assert '2-2' in enabled  # zapaska tire
-    # disabled: те, у кого enabled: 0 (stk, pioner)
-    assert '7' in disabled  # stk
-    assert '3' in disabled  # pioner
-    # Убедимся, что нет пересечения
-    for code in enabled:
-        assert code not in disabled
+    assert list(enabled) == ['1', '2', '4', '5', '6']
+    assert list(disabled) == ['3', '7', '8']
+    assert enabled['4'] == ['Мим (шины)', 'Мим (грузовые шины)', 'Мим (грузовые диски)']
+    assert enabled['2'] == ['Запаска (диски)', 'Запаска (шины)']
+    assert disabled['8'] == 'План-Т (Акб)'

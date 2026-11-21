@@ -366,7 +366,7 @@ def test_suppliers_info() -> None:
     """supplier maps cover vendor codes and do not overlap."""
     enabled, disabled = split_vendor_supplier_info(get_config_provider())
     combined = {**enabled, **disabled}
-    assert combined['2-2'] == 'Запаска (шины)'
+    assert combined['2'] == ['Запаска (диски)', 'Запаска (шины)']
     assert None not in combined.values()
     assert not set(enabled) & set(disabled)
 
