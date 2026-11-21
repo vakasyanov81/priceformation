@@ -34,6 +34,7 @@ from parsers.load_config import load_config
 from parsers.load_supplier_prices import catalog_entry_for, load_supplier_prices, parse_prices_json
 from parsers.writer.templates.all_templates import UnknownWriterTemplateError, get_writer_template
 from services import doubles_service, four_tochki_service, zapaska_service
+from services.mail_results import MailFetchReport
 from services.mail_service import MailService
 from services.mim_service import MimService
 from services.parse_orchestrator import ParseOrchestrator
@@ -243,22 +244,30 @@ def upload_four_tochki_data() -> bool:
 def _json_update_all() -> Mapping[str, Any]:
     """Все источники подряд: ошибка одного не отменяет остальные; ответ — итог по каждому источнику."""
     errors: _Errors = {}
-    sources: dict[str, str] = {}
     with ServiceProvider.resolve(PriceSchemaService).guard():
-        for source, update in (
-            ('zapaska', _upload_zapaska),
-            ('four_tochki', upload_four_tochki_data),
-            ('mim', _upload_mim),
-        ):
-            sources[source] = _api_update_status(errors, source, update)
-        files = _collect_mail(errors)
-        sources['mail'] = 'error' if 'mail' in errors else 'ok'
+        sources = _collect_api_updates(errors)
+        mail = _collect_mail(errors)
+        for folder, status in mail.statuses.items():
+            if folder not in sources or sources[folder]['status'] == 'skipped':
+                sources[folder] = {'status': status, 'source': 'email'}
     return {
         _JSON_OK: not errors,
         _JSON_ACTION: UPDATE_ALL_SUPPLIER_PRICES,
         'sources': sources,
         'errors': errors,
-        _JSON_FILES: files,
+        _JSON_FILES: [entry.path for entry in mail.fetched],
+    }
+
+
+def _collect_api_updates(errors: _Errors) -> dict[str, dict[str, str]]:
+    """Выполнить загрузки по API и собрать статусы поставщиков."""
+    return {
+        folder: {'status': _api_update_status(errors, folder, update), 'source': 'api'}
+        for folder, update in (
+            ('zapaska', _upload_zapaska),
+            ('four_tochki', upload_four_tochki_data),
+            ('mim', _upload_mim),
+        )
     }
 
 
@@ -271,18 +280,13 @@ def _api_update_status(errors: _Errors, source: str, update: _Update) -> str:
         return 'error'
 
 
-def _collect_mail(errors: _Errors) -> list[str]:
+def _collect_mail(errors: _Errors) -> MailFetchReport:
     """Скачать прайсы из почты; ошибка домена — в errors, файлов нет."""
     try:
-        return _fetch_mail_paths()
+        return ServiceProvider.resolve(MailService).fetch_report()
     except CoreExceptionError as exc:
         errors['mail'] = str(exc)
-        return []
-
-
-def _fetch_mail_paths() -> list[str]:
-    """Скачать прайсы поставщиков из почты и вернуть пути сохранённых файлов."""
-    return [entry.path for entry in ServiceProvider.resolve(MailService).fetch_prices()]
+        return MailFetchReport([], {})
 
 
 def _upload_zapaska() -> bool:

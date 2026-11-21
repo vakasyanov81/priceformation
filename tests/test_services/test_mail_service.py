@@ -17,6 +17,7 @@ from parsers.mail.client import FoundPrice
 from parsers.mail.models import MailAccount, MailConfig, MailProfile
 from parsers.vendor_config.models import VendorConfig
 from services import mail_service
+from services.mail_results import MailFetchResult
 
 _ACCOUNT = MailAccount(host='imap.example.ru', port=993, folder='INBOX')
 _CREDENTIALS = MailCredentials(login='user', password='secret')
@@ -157,7 +158,7 @@ def test_fetch_prices_continues_after_missing_letter(
     fetched = mail_service.MailService().fetch_prices()
 
     assert fetched == [
-        mail_service.MailFetchResult(
+        MailFetchResult(
             folder=folder,
             subject='Прайс',
             date='01.01.2025 10:00',
@@ -253,7 +254,7 @@ def test_fetch_prices_loads_active_file_vendor(
     wired.find.assert_called_once()
 
 
-def test_fetch_prices_continues_after_skipped_vendor(
+def test_fetch_report_includes_skipped_vendors(
     fake_config_provider: FakeConfigProvider,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -270,9 +271,10 @@ def test_fetch_prices_continues_after_skipped_vendor(
     }
     monkeypatch.setattr('services.vendor_activity.load_vendor_configs', lambda _provider: vendors)
 
-    fetched = mail_service.MailService().fetch_prices()
+    report = mail_service.MailService().fetch_report()
 
-    assert [entry.folder for entry in fetched] == ['pioner']
+    assert report.statuses == {'disabled': 'skipped', 'api': 'skipped', 'pioner': 'ok'}
+    assert [entry.folder for entry in report.fetched] == ['pioner']
     wired.find.assert_called_once_with(wired.client, _FOLDERS, profile=config.profiles['pioner'])
     wired.save.assert_called_once_with(Path(fake_config_provider.price_folder('pioner')) / 'price.xlsx', b'bytes')
 
