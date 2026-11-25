@@ -2,11 +2,13 @@
 
 from dataclasses import replace
 from pathlib import Path
+from shutil import copytree
 from unittest.mock import patch
 
 import pytest
 
 from domain.config_context import get_config_provider
+from infrastructure.config.fake_config_provider import FakeConfigProvider
 from parsers.all_vendors import all_vendor_supplier_catalog, all_vendor_supplier_info, split_vendor_supplier_info
 from parsers.vendor_config.provider import clear_vendor_configs_cache, load_vendor_configs
 
@@ -41,11 +43,14 @@ def test_split_separates_disabled_by_supplier_folder() -> None:
     assert disabled['plant'] == 'План-Т (Акб)'
 
 
-def test_split_covers_every_vendor_config_folder() -> None:
+def test_split_covers_every_vendor_config_folder(tmp_path: Path) -> None:
     """Каждый файл поставщика представлен ровно одним ключом сводки."""
-    provider = get_config_provider()
+    provider = FakeConfigProvider(tmp_path)
     vendors_folder = Path(provider.config_file('vendors'))
-    config_folders = {path.stem for path in vendors_folder.glob('*.json')}
+    copytree(get_config_provider().config_file('vendors'), vendors_folder)
+    vendors_folder.joinpath('_common.json').write_text('{}', encoding='utf-8')
+    config_files = vendors_folder.glob('*.json')
+    config_folders = {path.stem for path in config_files if not path.name.startswith('_')}
 
     enabled, disabled = split_vendor_supplier_info(provider)
 
