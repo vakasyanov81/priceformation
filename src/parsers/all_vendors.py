@@ -13,8 +13,10 @@ from parsers.vendor_config.provider import load_vendor_configs
 
 SupplierName = str
 SupplierCode = str
+SupplierFolder = str
 
-type SupplierDescriptions = dict[SupplierCode, SupplierName | list[SupplierName]]
+type SupplierDescription = SupplierName | list[SupplierName]
+type SupplierDescriptions = dict[SupplierFolder, SupplierDescription]
 
 type VendorEntry = tuple[type[BaseParser], ParseConfiguration]
 
@@ -52,7 +54,7 @@ def all_vendor_supplier_catalog(config_provider: ConfigProvider) -> dict[Supplie
 def split_vendor_supplier_info(
     config_provider: ConfigProvider,
 ) -> tuple[SupplierDescriptions, SupplierDescriptions]:
-    """Активные и отключённые поставщики по коду, с названиями их секций."""
+    """Активные и отключённые поставщики по папке, с названиями их секций."""
     enabled: SupplierDescriptions = {}
     disabled: SupplierDescriptions = {}
     for config in sorted(load_vendor_configs(config_provider).values(), key=_supplier_order):
@@ -60,7 +62,7 @@ def split_vendor_supplier_info(
         if not names:
             continue
         target = enabled if config.enabled else disabled
-        target[config.code] = _supplier_description(names)
+        target[config.folder] = _supplier_description(names)
     return enabled, disabled
 
 

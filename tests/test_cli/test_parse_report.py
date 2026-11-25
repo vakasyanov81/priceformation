@@ -377,11 +377,11 @@ def test_report_splits_disabled_suppliers() -> None:
     parsed = ParseResult()
     with patch(
         'app.parse_report_build.split_vendor_supplier_info',
-        return_value=({'3': 'Пионер'}, {'7': 'STK'}),
+        return_value=({'pioner': 'Пионер'}, {'stk': 'STK'}),
     ):
         report = report_from_result('parse', parsed, [_RESULT_A], 0)
-    assert report['suppliers'] == {'3': 'Пионер'}
-    assert report['disabled_suppliers'] == {'7': 'STK'}
+    assert report['suppliers'] == {'pioner': 'Пионер'}
+    assert report['disabled_suppliers'] == {'stk': 'STK'}
 
 
 def test_result_elapsed_rounds_to_hundredths() -> None:
