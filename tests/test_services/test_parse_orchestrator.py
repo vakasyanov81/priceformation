@@ -363,10 +363,10 @@ def test_black_list_skips_logged(watch_logger: LoggerWatcher) -> None:
 
 @pytest.mark.usefixtures('example_vendors_provider')
 def test_suppliers_info() -> None:
-    """supplier maps cover vendor codes and do not overlap."""
+    """supplier maps cover vendor folders and do not overlap."""
     enabled, disabled = split_vendor_supplier_info(get_config_provider())
     combined = {**enabled, **disabled}
-    assert combined['2'] == ['Запаска (диски)', 'Запаска (шины)']
+    assert combined['zapaska'] == ['Запаска (диски)', 'Запаска (шины)']
     assert None not in combined.values()
     assert not set(enabled) & set(disabled)
 
